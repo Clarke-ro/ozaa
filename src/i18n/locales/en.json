@@ -1,7 +1,8 @@
 {
   "landing": {
     "title": "Scan the code on your table",
-    "body": "Ozaa opens that restaurant's page in your browser. No app to install, and no account."
+    "body": "Ozaa opens that restaurant's page in your browser. No app to install, and no account.",
+    "sample": "Open Mama's Kitchen"
   },
   "notFound": {
     "title": "We can't find that page",
