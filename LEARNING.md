@@ -4,6 +4,32 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-10-31 · Dietary filters on the menu
+
+**What we built**
+
+The "Show only" chips are gone from the menu header. A filter icon sits next to search. It opens a sheet where a guest can pick more than one diet, then Apply or Clear. A small orange number appears on the icon while filters are on. If nothing matches, the list says so.
+
+**How it works**
+
+```
+tap filter → tick Vegetarian and Gluten free → Apply → only dishes with both tags
+```
+
+Clear removes every tick and closes the sheet. Closing the sheet without Apply leaves the menu as it was.
+
+**Files to look at**
+
+- `src/features/menu/MenuScreen.tsx`: the icon, the badge, and the empty line.
+- `src/features/menu/DietFilterSheet.tsx`: the sheet.
+- `src/features/menu/filterMenu.ts`: an item must have every selected tag.
+
+**Try it yourself**
+
+Open Mama's Kitchen menu, apply Vegetarian, and read the empty line. The sample dishes have no diet tags yet, so the list goes empty. Clear brings the dishes back.
+
+---
+
 ## 2026-10-31 · Languages, money and phone numbers
 
 **What we built**

@@ -1,14 +1,14 @@
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Plus, Search } from 'lucide-react-native';
+import { Plus, Search, SlidersHorizontal } from 'lucide-react-native';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
-import type { MenuItem } from '@/lib/api/types';
 import { cartCount, cartEstimate, useCart } from '@/features/cart';
 import { useVenue } from '@/features/venue';
 import { DEFAULT_CURRENCY, formatMoney } from '@/lib/money';
+import { tokens } from '@/theme/tokens';
 import { PageHeader } from '@/ui/PageHeader';
 import { SafeScreen } from '@/ui/Screen';
 import { PriceText } from '@/ui/PriceText';
@@ -16,8 +16,8 @@ import { Text } from '@/ui/Text';
 import { VenueImage } from '@/ui/VenueImage';
 import { ErrorState, LoadingState } from '@/ui/states';
 import { useTheme } from '@/ui/theme';
-
-const DIET = ['vegetarian', 'vegan', 'gluten_free', 'halal'] as const;
+import { DietFilterSheet } from './DietFilterSheet';
+import { filterMenuItems, type DietTag } from './filterMenu';
 
 export function MenuScreen({ slug }: { slug: string }) {
   const { t } = useTranslation();
@@ -28,7 +28,8 @@ export function MenuScreen({ slug }: { slug: string }) {
   const lines = useCart((state) => state.lines);
   const [kind, setKind] = useState<'food' | 'drinks'>('food');
   const [categoryId, setCategoryId] = useState<string | null>(null);
-  const [diet, setDiet] = useState<string | null>(null);
+  const [diets, setDiets] = useState<DietTag[]>([]);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [search, setSearch] = useState(false);
 
   const categories = useMemo(
@@ -39,11 +40,7 @@ export function MenuScreen({ slug }: { slug: string }) {
     categoryId && categories.some((category) => category.id === categoryId)
       ? categoryId
       : categories[0]?.id;
-  const items = (menu.data?.items ?? []).filter((item) => {
-    if (item.categoryId !== active) return false;
-    if (diet && !item.dietary.includes(diet as MenuItem['dietary'][number])) return false;
-    return true;
-  });
+  const items = filterMenuItems(menu.data?.items ?? [], active, diets);
 
   if (menu.isLoading) return <LoadingState />;
   if (menu.isError || !menu.data) return <ErrorState onRetry={() => void menu.refetch()} />;
@@ -54,13 +51,40 @@ export function MenuScreen({ slug }: { slug: string }) {
         title={t('menu.title')}
         subtitle={venue.data?.name ?? ''}
         right={
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t('menu.search')}
-            onPress={() => setSearch((value) => !value)}
-          >
-            <Search color={theme.black} size={22} />
-          </Pressable>
+          <View style={styles.headerActions}>
+            <View>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={
+                  diets.length > 0
+                    ? t('menu.filtersOn', { count: diets.length })
+                    : t('menu.filters')
+                }
+                onPress={() => setFiltersOpen(true)}
+                style={styles.headerIcon}
+              >
+                <SlidersHorizontal color={theme.black} size={22} strokeWidth={2} />
+              </Pressable>
+              {diets.length > 0 ? (
+                <View
+                  pointerEvents="none"
+                  style={[styles.count, { backgroundColor: tokens.color.primary.hex }]}
+                >
+                  <Text variant="caption" style={styles.countText}>
+                    {diets.length}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('menu.search')}
+              onPress={() => setSearch((value) => !value)}
+              style={styles.headerIcon}
+            >
+              <Search color={theme.black} size={22} strokeWidth={2} />
+            </Pressable>
+          </View>
         }
       />
       <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
@@ -109,35 +133,14 @@ export function MenuScreen({ slug }: { slug: string }) {
             );
           })}
         </ScrollView>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chips}
-        >
-          <Text variant="caption" style={{ color: theme.muted, alignSelf: 'center' }}>
-            {t('menu.showOnly')}
-          </Text>
-          {DIET.map((tag) => {
-            const on = diet === tag;
-            return (
-              <Pressable
-                key={tag}
-                accessibilityRole="button"
-                onPress={() => setDiet(on ? null : tag)}
-                style={[
-                  styles.chip,
-                  { borderColor: theme.line, backgroundColor: on ? theme.tint : theme.white },
-                ]}
-              >
-                <Text variant="caption">{t(`dietary.${tag}`)}</Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
         <Text variant="display-m" style={styles.section}>
           {categories.find((category) => category.id === active)?.name.en}
         </Text>
-        {items.length === 0 ? <Text style={styles.section}>{t('menu.empty')}</Text> : null}
+        {items.length === 0 ? (
+          <Text variant="body" style={[styles.empty, { color: theme.muted }]}>
+            {diets.length > 0 ? t('menu.noMatch') : t('menu.empty')}
+          </Text>
+        ) : null}
         {search ? (
           <Text variant="caption" style={styles.section}>
             {t('menu.search')}
@@ -207,11 +210,39 @@ export function MenuScreen({ slug }: { slug: string }) {
           </Text>
         </Pressable>
       ) : null}
+      {filtersOpen ? (
+        <DietFilterSheet
+          selected={diets}
+          onApply={(tags) => {
+            setDiets(tags);
+            setFiltersOpen(false);
+          }}
+          onClear={() => {
+            setDiets([]);
+            setFiltersOpen(false);
+          }}
+          onClose={() => setFiltersOpen(false)}
+        />
+      ) : null}
     </SafeScreen>
   );
 }
 
 const styles = StyleSheet.create({
+  headerActions: { flexDirection: 'row', alignItems: 'center' },
+  headerIcon: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  count: {
+    position: 'absolute',
+    top: 4,
+    right: 2,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    paddingHorizontal: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  countText: { color: tokens.color.white.hex, fontSize: 11, lineHeight: 13 },
   tabs: { flexDirection: 'row', gap: 20, paddingHorizontal: 20, paddingTop: 16 },
   underline: { height: 2, marginTop: 6 },
   chips: { paddingHorizontal: 20, gap: 8, paddingTop: 14 },
@@ -224,6 +255,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   section: { paddingHorizontal: 20, marginTop: 18, marginBottom: 8 },
+  empty: { paddingHorizontal: 20, paddingTop: 28, textAlign: 'center' },
   item: { flexDirection: 'row', paddingHorizontal: 20, paddingVertical: 14, gap: 8 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
   badge: { overflow: 'hidden', borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 },
