@@ -1,4 +1,4 @@
-import Ajv2020 from 'ajv/dist/2020.js'; import addFormats from 'ajv-formats'; import yaml from 'js-yaml'; import fs from 'node:fs';
+import Ajv2020 from 'ajv/dist/2020.js'; import addFormats from 'ajv-formats'; import * as yaml from 'js-yaml'; import fs from 'node:fs';
 // Checks every fixture against api/openapi.yaml. Needs: npm i -D ajv ajv-formats js-yaml
 const k=new URL('../../', import.meta.url).pathname;
 const spec=yaml.load(fs.readFileSync(k+'api/openapi.yaml','utf8'));
