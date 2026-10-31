@@ -5,6 +5,7 @@ import { api } from '@/lib/api';
 import { formatCedis } from '@/lib/money';
 import { pesewas } from '@/lib/brand';
 import { useOwnerSession } from '@/features/session';
+import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { ozaaTheme, ThemeProvider, useTheme } from '@/ui/theme';
 
@@ -20,6 +21,7 @@ export function OwnerOrders() {
   const made = (orders.data?.items ?? []).reduce((sum, order) => sum + order.paidPesewas, 0);
   return (
     <ThemeProvider theme={ozaaTheme}>
+      <SafeScreen includeBottom={false}>
       <ScrollView contentContainerStyle={styles.page}>
         <Text variant="body">{t('owner.made', { amount: formatCedis(pesewas(made)) })}</Text>
         {(orders.data?.items ?? []).map((order) => (
@@ -29,6 +31,7 @@ export function OwnerOrders() {
           </View>
         ))}
       </ScrollView>
+      </SafeScreen>
     </ThemeProvider>
   );
 }
@@ -48,6 +51,7 @@ export function OwnerServices() {
   const theme = useTheme();
   return (
     <ThemeProvider theme={ozaaTheme}>
+      <SafeScreen includeBottom={false}>
       <ScrollView contentContainerStyle={styles.page}>
         {(services.data?.services ?? []).map((service) => (
           <Pressable
@@ -70,6 +74,7 @@ export function OwnerServices() {
         ))}
         <Text variant="caption" style={{ color: theme.meta }}>{save.isPending ? '…' : ''}</Text>
       </ScrollView>
+      </SafeScreen>
     </ThemeProvider>
   );
 }
@@ -80,6 +85,7 @@ export function OwnerReviews() {
   const reviews = useQuery({ queryKey: ['owner-reviews', venueId], queryFn: () => api.ownerListVideoReviews(venueId), enabled: Boolean(venueId) });
   return (
     <ThemeProvider theme={ozaaTheme}>
+      <SafeScreen includeBottom={false}>
       <ScrollView contentContainerStyle={styles.page}>
         <Text variant="display-m">{t('owner.reviews')}</Text>
         {(reviews.data?.items ?? []).map((review) => (
@@ -89,6 +95,7 @@ export function OwnerReviews() {
           </View>
         ))}
       </ScrollView>
+      </SafeScreen>
     </ThemeProvider>
   );
 }
@@ -99,12 +106,14 @@ export function OwnerCustomise() {
   const venue = useQuery({ queryKey: ['owner-venue', venueId], queryFn: () => api.ownerGetVenue(venueId), enabled: Boolean(venueId) });
   return (
     <ThemeProvider theme={ozaaTheme}>
+      <SafeScreen includeBottom={false}>
       <ScrollView contentContainerStyle={styles.page}>
         <Text variant="display-m">{t('owner.customise')}</Text>
         <Text>{venue.data?.name}</Text>
         <TextInput accessibilityLabel="Colour" defaultValue={venue.data?.theme.accent ?? '#D24000'} style={styles.input} />
         <Text variant="caption">{venue.data?.theme.derived.notes.join(' ')}</Text>
       </ScrollView>
+      </SafeScreen>
     </ThemeProvider>
   );
 }

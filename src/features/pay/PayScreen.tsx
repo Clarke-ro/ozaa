@@ -10,6 +10,7 @@ import { pesewas } from '@/lib/brand';
 import { useGuestSession } from '@/features/session';
 import { Button } from '@/ui/Button';
 import { PageHeader } from '@/ui/PageHeader';
+import { SafeScreen } from '@/ui/Screen';
 import { PriceText } from '@/ui/PriceText';
 import { Text } from '@/ui/Text';
 import { EmptyState, ErrorState, LoadingState } from '@/ui/states';
@@ -85,7 +86,7 @@ export function PayScreen({ slug }: { slug: string }) {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.white }}>
+    <SafeScreen>
       <PageHeader title={t('pay.title')} subtitle={t('home.table', { code: order.data.tableCode ?? '' })} />
       <View style={{ padding: 20, gap: 14 }}>
         {payState.kind === 'paid' ? <Text variant="display-m">{t('pay.paid')}</Text> : null}
@@ -157,7 +158,7 @@ export function PayScreen({ slug }: { slug: string }) {
           </>
         ) : null}
       </View>
-    </View>
+    </SafeScreen>
   );
 }
 

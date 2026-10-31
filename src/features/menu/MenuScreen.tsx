@@ -10,6 +10,7 @@ import { cartCount, cartEstimate, useCart } from '@/features/cart';
 import { useVenue } from '@/features/venue';
 import { formatCedis } from '@/lib/money';
 import { PageHeader } from '@/ui/PageHeader';
+import { SafeScreen } from '@/ui/Screen';
 import { PriceText } from '@/ui/PriceText';
 import { Text } from '@/ui/Text';
 import { VenueImage } from '@/ui/VenueImage';
@@ -45,7 +46,7 @@ export function MenuScreen({ slug }: { slug: string }) {
   if (menu.isError || !menu.data) return <ErrorState onRetry={() => void menu.refetch()} />;
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.white }}>
+    <SafeScreen>
       <PageHeader
         title={t('menu.title')}
         subtitle={venue.data?.name ?? ''}
@@ -140,7 +141,7 @@ export function MenuScreen({ slug }: { slug: string }) {
           </Text>
         </Pressable>
       ) : null}
-    </View>
+    </SafeScreen>
   );
 }
 

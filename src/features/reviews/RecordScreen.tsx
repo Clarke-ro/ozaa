@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useVenue } from '@/features/venue';
 import { Button } from '@/ui/Button';
@@ -9,11 +10,12 @@ import { useTheme } from '@/ui/theme';
 export function RecordScreen({ slug }: { slug: string }) {
   const { t } = useTranslation();
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const venue = useVenue(slug);
   const [consent, setConsent] = useState(true);
   const [seconds, setSeconds] = useState(0);
   return (
-    <View style={[styles.page, { backgroundColor: theme.black }]}>
+    <View style={[styles.page, { backgroundColor: theme.black, paddingTop: insets.top + 20, paddingBottom: insets.bottom + 20 }]}>
       <Text variant="body" style={styles.light}>{t('review.hint')}</Text>
       <Text variant="display-m" style={styles.light}>{`0:${String(seconds).padStart(2, '0')} / 0:30`}</Text>
       <Text variant="caption" style={styles.light}>{t('review.consent', { name: venue.data?.name ?? '' })}</Text>

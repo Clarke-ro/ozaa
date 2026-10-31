@@ -7,6 +7,7 @@ import { api } from '@/lib/api';
 import type { WaiterReason } from '@/lib/api/types';
 import { Button } from '@/ui/Button';
 import { PageHeader } from '@/ui/PageHeader';
+import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { useGuestSession } from '@/features/session';
@@ -31,7 +32,7 @@ export function WaiterScreen({ slug }: { slug: string }) {
   });
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.white }}>
+    <SafeScreen>
       <PageHeader title={t('waiter.title')} subtitle={table ? t('home.table', { code: table }) : slug} />
       <View style={{ padding: 20, gap: 12 }}>
         {call.data?.status === 'acknowledged' ? (
@@ -64,7 +65,7 @@ export function WaiterScreen({ slug }: { slug: string }) {
           </>
         )}
       </View>
-    </View>
+    </SafeScreen>
   );
 }
 

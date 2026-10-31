@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import { useGuestSession } from '@/features/session';
 import { Button } from '@/ui/Button';
 import { PageHeader } from '@/ui/PageHeader';
+import { SafeScreen } from '@/ui/Screen';
 import { PriceText } from '@/ui/PriceText';
 import { Text } from '@/ui/Text';
 import { EmptyState, ErrorState, LoadingState } from '@/ui/states';
@@ -31,7 +32,7 @@ export function StatusScreen({ slug }: { slug: string }) {
   const current = STEPS.indexOf(order.data.status as (typeof STEPS)[number]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.white }}>
+    <SafeScreen>
       <PageHeader title={t('status.title', { number: order.data.number })} subtitle={t('home.table', { code: order.data.tableCode ?? '' })} />
       <View style={{ padding: 20, gap: 8 }}>
         <Text variant="caption" style={{ color: theme.meta }}>
@@ -68,7 +69,7 @@ export function StatusScreen({ slug }: { slug: string }) {
         </View>
         <Button label={t('status.pay')} onPress={() => router.push(`/${slug}/pay`)} />
       </View>
-    </View>
+    </SafeScreen>
   );
 }
 

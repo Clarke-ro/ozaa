@@ -1,10 +1,12 @@
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Globe, MapPin, Share2, Utensils } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { describeHours } from '@/lib/time';
+import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { VenueImage } from '@/ui/VenueImage';
 import { useTheme } from '@/ui/theme';
@@ -17,6 +19,7 @@ import { useGuestSession } from '@/features/session';
 export function HomeScreen({ slug }: { slug: string }) {
   const { t } = useTranslation();
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const venue = useVenue(slug);
   const stories = useStories(slug);
@@ -36,15 +39,14 @@ export function HomeScreen({ slug }: { slug: string }) {
   const longName = place.name.length > 16;
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.white }}>
+    <SafeScreen includeTop={false}>
     <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 96 }}>
-      <View style={styles.banner}>
+      <View style={[styles.banner, { height: 170 + insets.top }]}>
         <VenueImage url={place.banner.url} alt={place.banner.alt ?? place.name} style={styles.bannerImage} />
-        <View style={styles.shade} />
-        <Pressable accessibilityRole="button" accessibilityLabel={t('home.share')} style={[styles.fab, styles.share]}>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('home.share')} style={[styles.fab, styles.share, { top: insets.top + 12 }]}>
           <Share2 color={theme.black} size={18} strokeWidth={2} />
         </Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel={t('home.language')} style={[styles.fab, styles.lang]}>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('home.language')} style={[styles.fab, styles.lang, { top: insets.top + 12 }]}>
           <Globe color={theme.black} size={16} strokeWidth={2} />
           <Text variant="caption" style={styles.langText}>
             {t('home.language')}
@@ -106,7 +108,7 @@ export function HomeScreen({ slug }: { slug: string }) {
           </View>
         </Pressable>
       ) : null}
-    </View>
+    </SafeScreen>
   );
 }
 
@@ -125,19 +127,10 @@ function serviceHref(slug: string, id: string): `/${string}` {
 }
 
 const styles = StyleSheet.create({
-  banner: { height: 217, backgroundColor: '#ddd' },
+  banner: { backgroundColor: '#ddd' },
   bannerImage: { width: '100%', height: '100%' },
-  shade: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    height: 120,
-    backgroundColor: 'rgba(0,0,0,0.28)',
-  },
   fab: {
     position: 'absolute',
-    top: 16,
     height: 40,
     borderRadius: 20,
     backgroundColor: 'rgba(255,255,255,0.94)',

@@ -8,6 +8,7 @@ import { cartEstimate, useCart } from '@/features/cart';
 import { useGuestSession } from '@/features/session';
 import { formatCedis } from '@/lib/money';
 import { Button } from '@/ui/Button';
+import { SafeScreen } from '@/ui/Screen';
 import { PriceText } from '@/ui/PriceText';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
@@ -23,6 +24,7 @@ export function OrderSheet({ slug }: { slug: string }) {
   const [error, setError] = useState(false);
 
   return (
+    <SafeScreen>
     <View style={[styles.sheet, { backgroundColor: theme.white }]}>
       <Text variant="display-m">{t('menu.viewOrder')}</Text>
       {lines.map((line) => (
@@ -73,6 +75,7 @@ export function OrderSheet({ slug }: { slug: string }) {
         }}
       />
     </View>
+    </SafeScreen>
   );
 }
 

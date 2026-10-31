@@ -8,6 +8,7 @@ import { useGuestSession } from '@/features/session';
 import { stampsLeftPhrase } from './loyaltyRules';
 import { Button } from '@/ui/Button';
 import { PageHeader } from '@/ui/PageHeader';
+import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 
@@ -48,7 +49,7 @@ export function LoyaltyScreen({ slug }: { slug: string }) {
   });
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.white }}>
+    <SafeScreen>
       <PageHeader title={t('loyalty.title')} />
       <View style={{ padding: 20, gap: 12 }}>
         {card.data ? (
@@ -75,7 +76,7 @@ export function LoyaltyScreen({ slug }: { slug: string }) {
           </>
         )}
       </View>
-    </View>
+    </SafeScreen>
   );
 }
 

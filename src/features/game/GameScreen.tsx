@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useVenue } from '@/features/venue';
 import { PageHeader } from '@/ui/PageHeader';
+import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { Button } from '@/ui/Button';
 import { useTheme } from '@/ui/theme';
@@ -41,7 +42,7 @@ export function GameScreen({ slug }: { slug: string }) {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.white }}>
+    <SafeScreen>
       <PageHeader title={t('game.title')} subtitle={venue.data?.name} />
       <View style={{ padding: 16, gap: 10 }}>
         <View style={styles.scores}>
@@ -83,7 +84,7 @@ export function GameScreen({ slug }: { slug: string }) {
         <Text variant="caption" style={{ color: theme.meta }}>{t('game.offline')}</Text>
         <Pressable accessibilityRole="button" accessibilityLabel="Align" onPress={() => setState((current) => dropAligned(current, rule))} />
       </View>
-    </View>
+    </SafeScreen>
   );
 }
 

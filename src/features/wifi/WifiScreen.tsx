@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { qrSvg } from '@/lib/qrSvg';
 import { Button } from '@/ui/Button';
 import { PageHeader } from '@/ui/PageHeader';
+import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { ErrorState, LoadingState } from '@/ui/states';
 import { useTheme } from '@/ui/theme';
@@ -23,7 +24,7 @@ export function WifiScreen({ slug }: { slug: string }) {
     if (board) void board.writeText(password);
   };
   return (
-    <View style={{ flex: 1, backgroundColor: theme.white }}>
+    <SafeScreen>
       <PageHeader title={t('wifi.title')} subtitle={venue.data?.name} />
       <View style={{ padding: 20, gap: 16 }}>
         <Text variant="display-m">{t('wifi.heading')}</Text>
@@ -54,7 +55,7 @@ export function WifiScreen({ slug }: { slug: string }) {
       <View style={styles.footer}>
         <Button label={t('wifi.copyPassword')} onPress={copy} />
       </View>
-    </View>
+    </SafeScreen>
   );
 }
 

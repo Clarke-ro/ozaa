@@ -8,6 +8,7 @@ import { pesewas } from '@/lib/brand';
 import { formatCedis } from '@/lib/money';
 import { useCart } from '@/features/cart';
 import { Button } from '@/ui/Button';
+import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { VenueImage } from '@/ui/VenueImage';
 import { ErrorState, LoadingState } from '@/ui/states';
@@ -28,6 +29,7 @@ export function ItemScreen({ slug, itemId }: { slug: string; itemId: string }) {
 
   const total = item.pricePesewas * quantity;
   return (
+    <SafeScreen>
     <View style={[styles.sheet, { backgroundColor: theme.white }]}>
       {item.photo ? <VenueImage url={item.photo.url} alt={item.name.en} style={styles.photo} /> : null}
       <Text variant="display-m">{item.name.en}</Text>
@@ -67,6 +69,7 @@ export function ItemScreen({ slug, itemId }: { slug: string; itemId: string }) {
         }}
       />
     </View>
+    </SafeScreen>
   );
 }
 

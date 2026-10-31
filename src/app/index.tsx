@@ -4,12 +4,14 @@ import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
+import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 
 export default function LandingScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   return (
+    <SafeScreen>
     <View style={styles.page}>
       <Image source={require('../../assets/images/icon.png')} alt="Ozaa" style={styles.logo} accessibilityLabel="Ozaa" />
       <Text variant="display-l" style={styles.title}>
@@ -20,6 +22,7 @@ export default function LandingScreen() {
       </Text>
       <Button label={t('landing.sample')} onPress={() => router.push('/mamas-kitchen/t/12')} style={styles.button} />
     </View>
+    </SafeScreen>
   );
 }
 

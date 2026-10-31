@@ -7,6 +7,7 @@ import { api } from '@/lib/api';
 import { useVenue } from '@/features/venue';
 import { Button } from '@/ui/Button';
 import { PageHeader } from '@/ui/PageHeader';
+import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 
@@ -23,7 +24,7 @@ export function ReviewScreen({ slug }: { slug: string }) {
   const [done, setDone] = useState<{ google: string | null } | null>(null);
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.white }}>
+    <SafeScreen>
       <PageHeader title={t('review.title')} subtitle={venue.data?.name} />
       <View style={{ padding: 20, gap: 12 }}>
         <Text variant="display-m" style={{ textAlign: 'center' }}>{t('review.how')}</Text>
@@ -64,7 +65,7 @@ export function ReviewScreen({ slug }: { slug: string }) {
           }}
         />
       </View>
-    </View>
+    </SafeScreen>
   );
 }
 

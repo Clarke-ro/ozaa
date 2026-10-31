@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
 import { Button } from '@/ui/Button';
 import { PageHeader } from '@/ui/PageHeader';
+import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { ErrorState, LoadingState } from '@/ui/states';
 import { useTheme } from '@/ui/theme';
@@ -20,7 +21,7 @@ export function SimpleScreen({ slug, kind }: { slug: string; kind: 'offers' | 'a
   if (!venue.data) return <ErrorState onRetry={() => void venue.refetch()} />;
   const title = t(`services.${kind}.title`);
   return (
-    <View style={{ flex: 1, backgroundColor: theme.white }}>
+    <SafeScreen>
       <PageHeader title={title} subtitle={venue.data.name} />
       <View style={{ padding: 20, gap: 12 }}>
         {kind === 'offers'
@@ -53,7 +54,7 @@ export function SimpleScreen({ slug, kind }: { slug: string; kind: 'offers' | 'a
           </>
         ) : null}
       </View>
-    </View>
+    </SafeScreen>
   );
 }
 

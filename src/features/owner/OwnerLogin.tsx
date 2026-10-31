@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import { parseGhanaPhone } from '@/lib/phone';
 import { useOwnerSession } from '@/features/session';
 import { Button } from '@/ui/Button';
+import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { ozaaTheme, ThemeProvider } from '@/ui/theme';
 
@@ -20,6 +21,7 @@ export function OwnerLogin() {
 
   return (
     <ThemeProvider theme={ozaaTheme}>
+      <SafeScreen>
       <View style={styles.page}>
         <Text variant="display-m">{t('owner.login')}</Text>
         <Text variant="caption">{t('owner.sample')}</Text>
@@ -54,6 +56,7 @@ export function OwnerLogin() {
           }}
         />
       </View>
+      </SafeScreen>
     </ThemeProvider>
   );
 }
