@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { tokens } from '@/theme/tokens';
 import { useTheme } from '@/ui/theme';
 
@@ -15,7 +15,7 @@ export function DeskCard({
   onPress?: () => void;
   label?: string;
   tone?: 'plain' | 'wash' | 'selected' | 'alert';
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
 }) {
   const theme = useTheme();
   const look: ViewStyle = {
