@@ -18,11 +18,20 @@ test('the banner photo shows and share and language respond', async ({ page }) =
   expect(copied).toContain('/mamas-kitchen/t/12');
 
   await page.getByRole('button', { name: 'Language' }).click();
-  await expect(page.getByText('Twi')).toBeVisible();
-  await expect(page.getByText('Hausa')).toBeVisible();
+  await expect(page.getByText('Français')).toBeVisible();
+  await expect(page.getByText('Português')).toBeVisible();
+  await expect(page.getByText('Español')).toBeVisible();
+  await expect(page.getByText('العربية')).toBeVisible();
+  await expect(page.getByText('Kiswahili')).toBeVisible();
+  await expect(page.getByText('Twi')).toHaveCount(0);
   await expect(page.getByText('Coming soon').first()).toBeVisible();
-  await page.getByRole('button', { name: 'Twi' }).click();
+  await expect(page.locator('html')).toHaveAttribute('dir', 'ltr');
+  await page.getByRole('button', { name: 'Français' }).click();
   await expect(page.getByRole('button', { name: 'Language' })).toBeVisible();
   await page.getByRole('button', { name: 'English' }).click();
-  await expect(page.getByText('Twi')).toBeHidden();
+  await expect(page.getByText('Français')).toBeHidden();
+
+  await page.goto('/mamas-kitchen/menu');
+  await expect(page.getByText('Jollof & chicken')).toBeVisible();
+  await expect(page.getByText('GH₵65').first()).toBeVisible();
 });

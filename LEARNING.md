@@ -4,6 +4,37 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-10-31 · Languages, money and phone numbers
+
+**What we built**
+
+The language list is now a global one: English, French, Portuguese, Spanish, Arabic and Swahili. Only English can be selected. The others say "Coming soon". Prices and phone numbers follow the venue. Ghana is still the sample, so Mama's Kitchen shows cedis and `+233`.
+
+**How it works**
+
+```
+venue currency + minor units → formatMoney → GH₵65 in Accra, ₦65 if the currency is NGN
+guest types a phone → parsePhone(text, country) → +233… in Ghana, +234… in Nigeria
+```
+
+Arabic is set up to run right to left when it becomes selectable. The empty language files are waiting for a person who speaks that language. We do not machine-translate them.
+
+**Files to look at**
+
+- `src/features/venue/languages.ts`: the list, and which rows are ready.
+- `src/lib/money.ts`: `formatMoney`. 6500 minor units is GH₵65 for the Ghana sample.
+- `src/lib/phone.ts`: the country is an argument. Ghana is the default.
+
+**New idea: a default sample**
+
+The app is global, and the first screens still use Accra data. The formatter does not contain the letters "GH₵" as a fixed string. Intl prints that symbol because the currency is `GHS`.
+
+**Try it yourself**
+
+Open Mama's Kitchen, tap Language, and see French and Arabic marked Coming soon. Tapping them leaves the app in English.
+
+---
+
 ## 2026-10-31 · How the app is put together (BUILD.md Phase 0)
 
 **What we built**
@@ -24,7 +55,7 @@ Every screen asks one object, `api`, for data. Today `api` is the mock, filled f
 
 - `src/app/[venue]/index.tsx`: the route. It only reads the venue name from the URL and shows `HomeScreen`.
 - `src/features/theming/deriveTheme.ts`: turns one venue colour into button, icon, and badge colours that stay readable.
-- `src/lib/money.ts`: prices are whole pesewas. `GH₵65` is `6500`.
+- `src/lib/money.ts`: prices are whole minor units. In the Ghana sample, `GH₵65` is `6500` pesewas. `formatMoney` takes the venue currency.
 - `src/mocks/mockClient.ts`: the stand-in server.
 
 **New idea: a boundary**
