@@ -10,18 +10,46 @@ import { payments } from "../content/page";
 
 <section class="section" id={id} aria-labelledby={`${id}-title`}>
   <div class="wrap">
-    <h2 id={`${id}-title`}>{heading}</h2>
-    <p>{payments.lead}</p>
-    <div class="methods">
+    <div class="section-head">
+      <span class="section-tag">Checkout &amp; settlement</span>
+      <h2 id={`${id}-title`}>{heading}</h2>
+      <p class="section-sub">{payments.lead}</p>
+    </div>
+
+    <div class="bento-grid bento-grid--payments">
       {
-        payments.methods.map((method) => (
-          <article>
+        payments.methods.map((method, idx) => (
+          <article
+            class={`bento-card bento-card--pay ${
+              idx === 1 ? "bento-card--tone-tint" : ""
+            }`}
+          >
+            <div class="pay-card-top">
+              <span class="icon-badge" aria-hidden="true">
+                {idx === 0 ? (
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M12 18h.01"/></svg>
+                )}
+              </span>
+              <span class="bento-pill">{idx === 0 ? "Visa / Mastercard" : "MoMo & wallets"}</span>
+            </div>
             <h3>{method.title}</h3>
             <p>{method.body}</p>
           </article>
         ))
       }
+
+      <article class="bento-card bento-card--pay-direct bento-card--tone-dark">
+        <div class="pay-card-top">
+          <span class="icon-badge icon-badge--dark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+          </span>
+          <span class="bento-pill bento-pill--dark">Direct settlement</span>
+        </div>
+        <h3>Direct to the venue</h3>
+        <p class="close">{payments.close}</p>
+      </article>
     </div>
-    <p class="close">{payments.close}</p>
   </div>
 </section>

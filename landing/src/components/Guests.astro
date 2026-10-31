@@ -5,34 +5,67 @@ interface Props {
 }
 
 const { id, heading } = Astro.props;
-import { guestFeatures, guestNote, screenSize, screens } from "../content/page";
+import { guestFeatures, guestNote, screenSize, screens, type ScreenName } from "../content/page";
+import IPhoneMockup from "./IPhoneMockup.astro";
+
+const bentoMeta: Record<
+  ScreenName,
+  { span: "wide" | "standard"; badge: string; tone?: "tint" | "dark" | "default" }
+> = {
+  menu: { span: "wide", badge: "Order from table", tone: "tint" },
+  pay: { span: "wide", badge: "Split or full bill", tone: "dark" },
+  wifi: { span: "standard", badge: "Instant access" },
+  waiter: { span: "standard", badge: "Service request" },
+  loyalty: { span: "wide", badge: "Repeat visits", tone: "tint" },
+  home: { span: "wide", badge: "Venue hub", tone: "default" },
+  review: { span: "standard", badge: "Video & text" },
+  game: { span: "standard", badge: "Ad-free fun" },
+  reviews: { span: "standard", badge: "Owner review" },
+  services: { span: "standard", badge: "Owner switch" },
+};
 ---
 
 <section class="section" id={id} aria-labelledby={`${id}-title`}>
   <div class="wrap">
-    <h2 id={`${id}-title`}>{heading}</h2>
-    <p>{guestNote}</p>
-    {
-      guestFeatures.map((feature) => {
-        const shot = screens[feature.screen];
-        return (
-          <article class="feature">
-            <div>
-              <h3>{feature.title}</h3>
-              <p>{feature.body}</p>
-            </div>
-            <img
-              class="phone"
-              src={shot.src}
-              alt={shot.alt}
-              width={screenSize.width}
-              height={screenSize.height}
-              loading="lazy"
-              decoding="async"
-            />
-          </article>
-        );
-      })
-    }
+    <div class="section-head">
+      <span class="section-tag">Guest experience</span>
+      <h2 id={`${id}-title`}>{heading}</h2>
+      <p class="section-sub">{guestNote}</p>
+    </div>
+
+    <div class="bento-grid bento-grid--guests">
+      {
+        guestFeatures.map((feature) => {
+          const shot = screens[feature.screen];
+          const meta = bentoMeta[feature.screen] ?? {
+            span: "standard",
+            badge: "Table service",
+            tone: "default",
+          };
+          return (
+            <article
+              class={`bento-card bento-card--feature bento-card--${meta.span} ${
+                meta.tone ? `bento-card--tone-${meta.tone}` : ""
+              }`}
+            >
+              <div class="bento-copy">
+                <span class="bento-pill">{meta.badge}</span>
+                <h3>{feature.title}</h3>
+                <p>{feature.body}</p>
+              </div>
+              <div class="bento-mockup">
+                <IPhoneMockup
+                  src={shot.src}
+                  alt={shot.alt}
+                  width={screenSize.width}
+                  height={screenSize.height}
+                  size={meta.span === "wide" ? "bento" : "compact"}
+                />
+              </div>
+            </article>
+          );
+        })
+      }
+    </div>
   </div>
 </section>

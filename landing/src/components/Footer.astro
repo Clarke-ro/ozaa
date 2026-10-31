@@ -4,16 +4,20 @@ import { footer, sections } from "../content/page";
 
 <footer class="footer">
   <div class="wrap">
-    <a class="logo" href="#top">
-      <img src="/logo/ozaa-lockup.svg" alt="Ozaa" width="451" height="140" />
-    </a>
-    <p>{footer.line}</p>
-    <nav class="nav" aria-label="On this page">
-      {
-        sections.map((section) => (
-          <a href={`#${section.id}`}>{section.nav}</a>
-        ))
-      }
-    </nav>
+    <div class="footer-bento">
+      <div class="footer-brand">
+        <a class="logo" href="#top">
+          <img src="/logo/ozaa-lockup.svg" alt="Ozaa" width="451" height="140" />
+        </a>
+        <p>{footer.line}</p>
+      </div>
+      <nav class="footer-nav" aria-label="Footer navigation">
+        {
+          sections.map((section) => (
+            <a href={`#${section.id}`}>{section.nav}</a>
+          ))
+        }
+      </nav>
+    </div>
   </div>
 </footer>

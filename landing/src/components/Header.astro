@@ -3,15 +3,10 @@ import { sections } from "../content/page";
 ---
 
 <header class="header">
-  <div class="wrap">
-    <div class="bar">
-      <a class="logo" href="#top">
-        <img src="/logo/ozaa-lockup.svg" alt="Ozaa" width="451" height="140" />
-      </a>
-      <a class="button" href="#contact">
-        Get Ozaa<span class="visually-hidden"> for your restaurant</span>
-      </a>
-    </div>
+  <div class="wrap bar">
+    <a class="logo" href="#top">
+      <img src="/logo/ozaa-lockup.svg" alt="Ozaa" width="451" height="140" />
+    </a>
     <nav class="nav" aria-label="On this page">
       {
         sections.map((section) => (
@@ -19,5 +14,8 @@ import { sections } from "../content/page";
         ))
       }
     </nav>
+    <a class="button button--sm" href="#contact">
+      Get Ozaa<span class="visually-hidden"> for your restaurant</span>
+    </a>
   </div>
 </header>
