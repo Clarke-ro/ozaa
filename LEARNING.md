@@ -4,6 +4,52 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-10-31 · Owner app redesign: design kit and full feature layouts
+
+**What we built**
+
+A complete overhaul of the Ozaa Owner App from bare text rows into a high-fidelity, polished management dashboard across all 15 screens. We created a shared owner kit (`DeskCard`, `StatTile`, `BigStat`, `StatusPill`, `Toggle`, `DeskTabs`, `IconTile`, `CodeTile`, `ChipRow`) matching Ozaa brand tokens.
+
+Every screen now has full features:
+- **Dashboard**: Today's sales Unbounded headline, 3 metric cards, quick actions, and live order items with table code tiles.
+- **Floor**: Responsive table layout grid, derived status pills, and interactive table bill sheet with cash payment marking.
+- **Orders (Kitchen)**: Status tabs, ticket cards with checklists, elapsed timers, and "Start preparing" / "Mark ready" actions.
+- **Calls**: Waiter call queue with caller table badge, reason pills, elapsed wait times, and resolve buttons.
+- **Menu**: Food & Drinks tabs, dietary chips, available/sold-out toggles, and new dish creator.
+- **Services**: Grouped toggles (`AT YOUR TABLE`, `REWARDS`, `FUN WHILE YOU WAIT`), game score stepper, and Wi-Fi credentials.
+- **Reviews**: Video moderation queue with video thumbnails, star ratings, story featuring, and written review private replies.
+- **Payments**: Payout account verification, transaction list with MoMo/Card/Cash filter chips, and instant refunds.
+- **Tables & QR**: Table tent card / sticker visualizer with Ozaa logo, print action, and batch table creator.
+- **Branding**: Live phone preview, palette presets, live WCAG contrast checker, and photo uploads.
+- **Staff**: Team member cards, role tags, and phone-based invites.
+- **Insights**: Range tabs, sales bar chart, top selling items, and peak service hours.
+- **Setup**: 4-step onboarding wizard with progress tracker.
+- **Prototypes**: Interactive prototypes for POS register, Stock inventory with auto-86, Multilingual AI waiter, and Marketing broadcast.
+
+**How it works**
+
+```
+Ozaa Tokens (tokens.json) → Owner Kit (DeskCard, StatTile, StatusPill...) → 15 High-Fidelity Owner Screens
+```
+
+All owner screens adhere strictly to the Ozaa brand rules: clean white cards, black text, Unbounded for big money numbers, and `#D24000` orange strictly on buttons, active icons, and small status words.
+
+**Files to look at**
+
+- `src/features/owner/kit/`: the reusable owner UI parts.
+- `src/features/owner/screens/`: the 15 screen components.
+- `e2e/owner.spec.ts`: Playwright test suite capturing screenshots at 390×844 and 1024×768.
+
+**New idea: Design system kits**
+
+Instead of styling every screen individually with different borders, paddings, and font sizes, creating a shared "Kit" ensures that every screen in the app looks like it came from the exact same designer. When a color or radius changes, updating the kit updates the entire app at once.
+
+**Try it yourself**
+
+Open `http://localhost:8081/owner` in your browser (or scan the Expo Go tunnel QR). Sign in with `0240000001` and code `123456`, and explore the Dashboard, Floor, Kitchen tickets, Table QR tent cards, and Brand Customiser.
+
+---
+
 ## 2026-10-31 · The owner app (BUILD.md section 18)
 
 **What we built**

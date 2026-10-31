@@ -12,5 +12,5 @@
     "paths": { "@/*": ["./src/*"] }
   },
   "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"],
-  "exclude": ["node_modules", "server", "e2e", "design", "agent-skills"]
+  "exclude": ["node_modules", "server", "e2e", "design", "agent-skills", "landing"]
 }

@@ -560,7 +560,7 @@ Work top to bottom. Each box is one small PR that ends in a verifiable state (ps
 - [ ] 2.4 MoMo wait screen: countdown from `approveBy`, "Check your phone and enter your PIN to approve.", then paid, failed or timed-out states. Render: `v4-reference/03-momo-checkout.png`, restyled to v5.
 - [ ] 2.5 Card: open `authorizationUrl` (expo-web-browser on native, same tab on web with a return URL), then verify on return.
 - [ ] 2.6 Receipt view: lines, tip, empty-ready tax lines, and "Test payment" label in sandbox.
-- [ ] 2.7 Owner payout account screen: bank or MoMo, shows the masked account and status.
+- [x] 2.7 Owner payout account screen: bank or MoMo, shows the masked account and status.
 - [x] 2.8 Owner "Mark paid in cash" (`/owner/orders/{id}/cash-payment`).
 - [ ] **2b Paystack sandbox slice** (the only early server code, in `server/`):
   - Implement only `POST /payments`, `GET /payments/{ref}`, `POST /payments/{ref}/verify` and `POST /webhooks/paystack`, with **test** keys from the server env.
