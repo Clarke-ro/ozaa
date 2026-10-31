@@ -1,0 +1,46 @@
+---
+interface Props {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+  priority?: boolean;
+  size?: "hero" | "bento" | "compact";
+  caption?: string;
+}
+
+const {
+  src,
+  alt,
+  width,
+  height,
+  priority = false,
+  size = "bento",
+  caption,
+} = Astro.props;
+---
+
+<figure class={`iphone-stage iphone-stage--${size}`}>
+  <div class="iphone-frame">
+    <span class="iphone-btn iphone-btn--action" aria-hidden="true"></span>
+    <span class="iphone-btn iphone-btn--vol-up" aria-hidden="true"></span>
+    <span class="iphone-btn iphone-btn--vol-down" aria-hidden="true"></span>
+    <span class="iphone-btn iphone-btn--power" aria-hidden="true"></span>
+    <span class="iphone-btn iphone-btn--camera" aria-hidden="true"></span>
+
+    <div class="iphone-bezel">
+      <span class="iphone-speaker" aria-hidden="true"></span>
+      <div class="iphone-screen">
+        <img
+          class="iphone-img"
+          src={src}
+          alt={alt}
+          width={width}
+          height={height}
+          fetchpriority={priority ? "high" : undefined}
+        />
+      </div>
+    </div>
+  </div>
+  {caption && <figcaption class="caption">{caption}</figcaption>}
+</figure>
