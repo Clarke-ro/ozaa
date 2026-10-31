@@ -131,5 +131,36 @@ export function createHttpClient(baseUrl: string, tokens: TokenSource): ApiClien
     ownerReplyToReview: (reviewId, body, call) =>
       ok(client.POST('/owner/written-reviews/{writtenReviewId}/reply', { body, params: { path: { writtenReviewId: reviewId }, header: { 'Idempotency-Key': call?.idempotencyKey ?? '' } }, headers: headers('access', call) })),
     ownerGetInsights: (venueId, range) => ok(client.GET('/owner/venues/{venueId}/insights', { params: { path: { venueId }, query: range ? { range } : {} }, headers: headers('access') })),
+    async ownerRevokeStaff(venueId, staffId) {
+      const result = await client.DELETE('/owner/venues/{venueId}/staff/{staffId}', { params: { path: { venueId, staffId } }, headers: headers('access') });
+      if (!result.response.ok) throw problem(result.error, result.response.status);
+    },
+    ownerListFeedback: (venueId, query) => ok(client.GET('/owner/venues/{venueId}/feedback', { params: { path: { venueId }, query: query ?? {} }, headers: headers('access') })),
+    ownerArchiveFeedback: (venueId, feedbackId, body) => ok(client.PATCH('/owner/venues/{venueId}/feedback/{feedbackId}/archive', { body, params: { path: { venueId, feedbackId } }, headers: headers('access') })),
+    ownerAskFeedbackAi: (venueId, body) => ok(client.POST('/owner/venues/{venueId}/feedback/ask', { body, params: { path: { venueId } }, headers: headers('access') })),
+    ownerListCustomLinks: (venueId) => ok(client.GET('/owner/venues/{venueId}/links', { params: { path: { venueId } }, headers: headers('access') })),
+    ownerCreateCustomLink: (venueId, body) => ok(client.POST('/owner/venues/{venueId}/links', { body, params: { path: { venueId } }, headers: headers('access') })),
+    ownerUpdateCustomLink: (venueId, linkId, body) => ok(client.PATCH('/owner/venues/{venueId}/links/{linkId}', { body, params: { path: { venueId, linkId } }, headers: headers('access') })),
+    async ownerDeleteCustomLink(venueId, linkId) {
+      const result = await client.DELETE('/owner/venues/{venueId}/links/{linkId}', { params: { path: { venueId, linkId } }, headers: headers('access') });
+      if (!result.response.ok) throw problem(result.error, result.response.status);
+    },
+    ownerGetLoyaltyAnalytics: (venueId, range) => ok(client.GET('/owner/venues/{venueId}/loyalty/analytics', { params: { path: { venueId }, query: range ? { range } : {} }, headers: headers('access') })),
+    ownerListLoyaltyCustomers: (venueId, query) => ok(client.GET('/owner/venues/{venueId}/loyalty/customers', { params: { path: { venueId }, query: query ?? {} }, headers: headers('access') })),
+    ownerScanLoyaltyCard: (venueId, body) => ok(client.POST('/owner/venues/{venueId}/loyalty/scan', { body, params: { path: { venueId } }, headers: headers('access') })),
+    ownerGetBusiness: () => ok(client.GET('/owner/business', { headers: headers('access') })),
+    ownerUpdateBusiness: (body) => ok(client.PATCH('/owner/business', { body, headers: headers('access') })),
+    ownerCreateLocation: (body) => ok(client.POST('/owner/business/locations', { body, headers: headers('access') })),
+    ownerUpdateLocation: (locationId, body) => ok(client.PATCH('/owner/business/locations/{locationId}', { body, params: { path: { locationId } }, headers: headers('access') })),
+    ownerListScannerDevices: (venueId) => ok(client.GET('/owner/venues/{venueId}/devices', { params: { path: { venueId } }, headers: headers('access') })),
+    ownerPairScannerDevice: (venueId, body) => ok(client.POST('/owner/venues/{venueId}/devices/pair', { body, params: { path: { venueId } }, headers: headers('access') })),
+    async ownerRevokeScannerDevice(venueId, deviceId) {
+      const result = await client.DELETE('/owner/venues/{venueId}/devices/{deviceId}', { params: { path: { venueId, deviceId } }, headers: headers('access') });
+      if (!result.response.ok) throw problem(result.error, result.response.status);
+    },
+    async deleteAccount(body) {
+      const result = await client.DELETE('/auth/account', { body, headers: headers('access') });
+      if (!result.response.ok) throw problem(result.error, result.response.status);
+    },
   };
 }

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { setAccessToken, setGuestToken, setLoyaltyToken as setApiLoyaltyToken } from '@/lib/api';
+import type { StaffRole } from '@/lib/api/types';
 
 type GuestSessionState = {
   token: string | null;
@@ -16,13 +17,13 @@ type OwnerSessionState = {
   accessToken: string | null;
   refreshToken: string | null;
   venueId: string | null;
-  role: 'owner' | 'manager' | 'waiter' | 'kitchen' | null;
+  role: StaffRole | null;
   firstName: string | null;
   saveOwner: (input: {
     accessToken: string;
     refreshToken: string;
     venueId: string;
-    role: 'owner' | 'manager' | 'waiter' | 'kitchen';
+    role: StaffRole;
     firstName: string;
   }) => void;
   clearOwner: () => void;
@@ -34,14 +35,14 @@ export const useGuestSession = create<GuestSessionState>((set) => ({
   tableCode: null,
   orderId: null,
   loyaltyToken: null,
-  saveGuest: (input) => {
-    setGuestToken(input.token);
-    set({ token: input.token, slug: input.slug, tableCode: input.tableCode, orderId: input.orderId ?? null });
+  saveGuest: ({ token, slug, tableCode, orderId = null }) => {
+    setGuestToken(token);
+    set({ token, slug, tableCode, orderId });
   },
   setOrderId: (orderId) => set({ orderId }),
-  setLoyaltyToken: (token) => {
-    setApiLoyaltyToken(token);
-    set({ loyaltyToken: token });
+  setLoyaltyToken: (loyaltyToken) => {
+    setApiLoyaltyToken(loyaltyToken);
+    set({ loyaltyToken });
   },
 }));
 
@@ -51,9 +52,9 @@ export const useOwnerSession = create<OwnerSessionState>((set) => ({
   venueId: null,
   role: null,
   firstName: null,
-  saveOwner: (input) => {
-    setAccessToken(input.accessToken);
-    set(input);
+  saveOwner: ({ accessToken, refreshToken, venueId, role, firstName }) => {
+    setAccessToken(accessToken);
+    set({ accessToken, refreshToken, venueId, role, firstName });
   },
   clearOwner: () => {
     setAccessToken(null);

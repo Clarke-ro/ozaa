@@ -14,7 +14,7 @@ import { useOwnerSession } from '@/features/session';
 import { DeskWait, OwnerPage } from '../chrome/OwnerPage';
 import { BigStat, DeskCard, IconTile } from '../kit';
 
-const RANGES: InsightsReport['range'][] = ['today', '7d', '30d'];
+const RANGES: InsightsReport['range'][] = ['today', '7d', '30d', '90d'];
 
 export function InsightsScreen() {
   const { t } = useTranslation();
@@ -33,10 +33,11 @@ export function InsightsScreen() {
   const maxPeakOrders = Math.max(1, ...(data?.peakHours.map((h) => h.orders) ?? [1]));
   const totalTopItemPesewas = data?.topItems.reduce((acc, item) => acc + item.pesewas, 0) ?? 1;
 
-  const labels = {
+  const labels: Record<InsightsReport['range'], string> = {
     today: t('owner.rangeToday'),
     '7d': t('owner.rangeWeek'),
     '30d': t('owner.rangeMonth'),
+    '90d': '90 days',
   };
 
   return (

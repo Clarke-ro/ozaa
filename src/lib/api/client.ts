@@ -2,13 +2,25 @@ import type {
   AuthTokens,
   BillQuote,
   BillQuoteRequest,
+  Business,
   Call,
   ConsentInput,
   CreateOrderRequest,
+  CustomLink,
+  CustomLinkInput,
+  FeedbackItem,
+  FloorTable,
   GuestSession,
   InitializePaymentRequest,
+  InsightsReport,
+  Location,
+  LocationInput,
+  LocationPatchInput,
+  LoyaltyAnalyticsReport,
   LoyaltyCard,
+  LoyaltyCustomerSummary,
   LoyaltyProgram,
+  LoyaltyScanResult,
   Menu,
   MenuCategory,
   MenuCategoryInput,
@@ -17,30 +29,29 @@ import type {
   Offer,
   Order,
   OtpPurpose,
-  Payment,
-  Currency,
-  InsightsReport,
   OwnerDashboard,
+  Payment,
   PayoutAccount,
   PayoutAccountInput,
-  VenueTransaction,
-  WrittenReview,
+  ScannerDevice,
   ServiceSettings,
   StaffMember,
   StaffRole,
   StaffUser,
   Story,
-  FloorTable,
   Table,
   ThemeInput,
   VenuePublic,
   VenueSettings,
   VenueSettingsPatch,
   VenueTheme,
+  VenueTransaction,
   VideoReview,
   WaiterCall,
   WaiterReason,
   Wifi,
+  WrittenReview,
+  Currency,
 } from './types';
 
 export type TokenSource = {
@@ -90,6 +101,7 @@ export type ApiClient = {
   ownerSetServices(venueId: string, body: ServiceSettings): Promise<ServiceSettings>;
   ownerListStaff(venueId: string): Promise<{ items: StaffMember[] }>;
   ownerInviteStaff(venueId: string, body: { phone: string; role: StaffRole; firstName: string }): Promise<StaffMember>;
+  ownerRevokeStaff(venueId: string, staffId: string): Promise<void>;
   ownerListCategories(venueId: string): Promise<{ items: MenuCategory[] }>;
   ownerCreateCategory(venueId: string, body: MenuCategoryInput): Promise<MenuCategory>;
   ownerUpdateCategory(venueId: string, categoryId: string, body: MenuCategoryInput): Promise<MenuCategory>;
@@ -111,6 +123,9 @@ export type ApiClient = {
   ownerSetLoyalty(venueId: string, body: LoyaltyProgram): Promise<LoyaltyProgram>;
   ownerListLoyaltyMembers(venueId: string): Promise<{ items: LoyaltyCard[]; nextCursor?: string | null }>;
   ownerConfirmRedemption(venueId: string, body: { code: string }, call?: Call): Promise<LoyaltyCard>;
+  ownerGetLoyaltyAnalytics(venueId: string, range?: '7d' | '30d' | '90d'): Promise<LoyaltyAnalyticsReport>;
+  ownerListLoyaltyCustomers(venueId: string, query?: { search?: string; wantsOffers?: boolean }): Promise<{ items: LoyaltyCustomerSummary[]; totalCount: number }>;
+  ownerScanLoyaltyCard(venueId: string, body: { qrPayload: string; action: 'stamp' | 'redeem' }): Promise<LoyaltyScanResult>;
   ownerGetPayoutAccount(venueId: string): Promise<PayoutAccount>;
   ownerSetPayoutAccount(venueId: string, body: PayoutAccountInput): Promise<PayoutAccount>;
   ownerGetDashboard(venueId: string): Promise<OwnerDashboard>;
@@ -120,6 +135,21 @@ export type ApiClient = {
   ownerListWrittenReviews(venueId: string): Promise<{ items: WrittenReview[] }>;
   ownerReplyToReview(reviewId: string, body: { text: string }, call?: Call): Promise<WrittenReview>;
   ownerGetInsights(venueId: string, range?: InsightsReport['range']): Promise<InsightsReport>;
+  ownerListFeedback(venueId: string, query?: { state?: 'all' | 'new' | 'archived'; search?: string }): Promise<{ items: FeedbackItem[] }>;
+  ownerArchiveFeedback(venueId: string, feedbackId: string, body: { archived: boolean }): Promise<FeedbackItem>;
+  ownerAskFeedbackAi(venueId: string, body: { question: string }): Promise<{ reply: string; suggestions?: string[] }>;
+  ownerListCustomLinks(venueId: string): Promise<{ items: CustomLink[] }>;
+  ownerCreateCustomLink(venueId: string, body: CustomLinkInput): Promise<CustomLink>;
+  ownerUpdateCustomLink(venueId: string, linkId: string, body: CustomLinkInput): Promise<CustomLink>;
+  ownerDeleteCustomLink(venueId: string, linkId: string): Promise<void>;
+  ownerGetBusiness(): Promise<{ business: Business; locations: Location[] }>;
+  ownerUpdateBusiness(body: { name: string }): Promise<Business>;
+  ownerCreateLocation(body: LocationInput): Promise<Location>;
+  ownerUpdateLocation(locationId: string, body: LocationPatchInput): Promise<Location>;
+  ownerListScannerDevices(venueId: string): Promise<{ items: ScannerDevice[] }>;
+  ownerPairScannerDevice(venueId: string, body: { name: string; code?: string }): Promise<ScannerDevice>;
+  ownerRevokeScannerDevice(venueId: string, deviceId: string): Promise<void>;
+  deleteAccount(body: { confirmText: string }): Promise<void>;
 };
 
 export type { Currency };

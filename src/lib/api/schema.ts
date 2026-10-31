@@ -1034,6 +1034,281 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/owner/venues/{venueId}/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List feedback items for a venue. */
+        get: operations["ownerListFeedback"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/feedback/{feedbackId}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Archive or unarchive a feedback item. */
+        patch: operations["ownerArchiveFeedback"];
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/feedback/ask": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ask AI assistant questions grounded on this venue's feedback. */
+        post: operations["ownerAskFeedbackAi"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List custom link buttons. */
+        get: operations["ownerListCustomLinks"];
+        put?: never;
+        /** Create a custom link button. */
+        post: operations["ownerCreateCustomLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/links/{linkId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a custom link button. */
+        delete: operations["ownerDeleteCustomLink"];
+        options?: never;
+        head?: never;
+        /** Update a custom link button. */
+        patch: operations["ownerUpdateCustomLink"];
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/loyalty/analytics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Loyalty analytics KPIs and trend series. */
+        get: operations["ownerGetLoyaltyAnalytics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/loyalty/customers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List enrolled loyalty customers with offer preference filter. */
+        get: operations["ownerListLoyaltyCustomers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/loyalty/scan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Scan a customer loyalty card QR to issue stamp or redeem. */
+        post: operations["ownerScanLoyaltyCard"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/business": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get business and its locations. */
+        get: operations["ownerGetBusiness"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update business name. */
+        patch: operations["ownerUpdateBusiness"];
+        trace?: never;
+    };
+    "/owner/business/locations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add a new location. */
+        post: operations["ownerCreateLocation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/business/locations/{locationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update location details. */
+        patch: operations["ownerUpdateLocation"];
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/devices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List paired scanner devices. */
+        get: operations["ownerListScannerDevices"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/devices/pair": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Pair a scanner device or generate a pairing code. */
+        post: operations["ownerPairScannerDevice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/devices/{deviceId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke a paired scanner device. */
+        delete: operations["ownerRevokeScannerDevice"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/staff/{staffId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke staff access. */
+        delete: operations["ownerRevokeStaff"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/account": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete account and personal data. */
+        delete: operations["deleteAccount"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1105,7 +1380,7 @@ export interface components {
          * @description owner does everything incl. payouts; manager everything except payouts and staff; waiter orders and waiter calls; kitchen order status only.
          * @enum {string}
          */
-        StaffRole: "owner" | "manager" | "waiter" | "kitchen";
+        StaffRole: "owner" | "manager" | "waiter" | "kitchen" | "viewer" | "staff_scanner";
         StaffUser: {
             id: string;
             firstName: string;
@@ -1234,6 +1509,13 @@ export interface components {
             googleReviewUrl?: string | null;
             /** @description False until the payout account is checked. */
             payEnabled: boolean;
+            tagline?: string;
+            /** @enum {string} */
+            buttonTint?: "auto" | "light" | "dark";
+            /** @enum {string} */
+            stylePreset?: "default" | "classic" | "editorial" | "modern";
+            buttonOrder?: string[];
+            socials?: components["schemas"]["SocialLinks"];
         };
         VenueSettings: components["schemas"]["VenuePublic"] & {
             wifi?: components["schemas"]["Wifi"];
@@ -1255,12 +1537,20 @@ export interface components {
             /** Format: uri */
             googleReviewUrl?: string | null;
             languages?: components["schemas"]["Language"][];
+            tagline?: string;
+            /** @enum {string} */
+            buttonTint?: "auto" | "light" | "dark";
+            /** @enum {string} */
+            stylePreset?: "default" | "classic" | "editorial" | "modern";
+            buttonOrder?: string[];
+            socials?: components["schemas"]["SocialLinks"];
         };
         Wifi: {
             ssid: string;
             password?: string;
             /** @enum {string} */
-            security: "WPA" | "WEP" | "nopass";
+            security: "WPA" | "WPA2" | "WPA3" | "WEP" | "nopass" | "OPEN";
+            hidden?: boolean;
         };
         Table: {
             id: string;
@@ -1285,12 +1575,28 @@ export interface components {
              */
             kind: "food" | "drinks";
             position: number;
+            hidden?: boolean;
+            schedule?: {
+                days?: number[];
+                /** @example 12:00 */
+                startTime?: string;
+                /** @example 15:00 */
+                endTime?: string;
+            };
         };
         MenuCategoryInput: {
             name: components["schemas"]["LocalizedText"];
             /** @enum {string} */
             kind: "food" | "drinks";
             position?: number;
+            hidden?: boolean;
+            schedule?: {
+                days?: number[];
+                /** @example 12:00 */
+                startTime?: string;
+                /** @example 15:00 */
+                endTime?: string;
+            };
         };
         /** @description Add-ons like spice level or extra meat. min 1 and max 1 is a required single choice. */
         ModifierGroup: {
@@ -1316,6 +1622,8 @@ export interface components {
             dietary: components["schemas"]["Dietary"][];
             badges: ("popular" | "new" | "chef_pick")[];
             modifierGroups: components["schemas"]["ModifierGroup"][];
+            allergens?: string[];
+            calories?: number;
             prepMinutes?: number;
         };
         MenuItemInput: {
@@ -1328,6 +1636,8 @@ export interface components {
             dietary?: components["schemas"]["Dietary"][];
             badges?: ("popular" | "new" | "chef_pick")[];
             modifierGroups?: components["schemas"]["ModifierGroup"][];
+            allergens?: string[];
+            calories?: number;
             prepMinutes?: number;
         };
         Menu: {
@@ -1549,6 +1859,27 @@ export interface components {
             claimTtlSeconds: number;
             birthdayTreat: string | null;
             readonly memberCount?: number;
+            /** @enum {string} */
+            programKind?: "rewards_pass" | "stamp_card" | "both";
+            /** @enum {string} */
+            cooldown?: "none" | "1h" | "4h" | "1d";
+            lockscreenMessage?: string;
+            stampsRequired?: number;
+            secondTierReward?: string;
+            secondTierStamps?: number;
+            automations?: {
+                welcomeReward?: string;
+                birthdayReward?: string;
+                winbackDays?: number;
+                winbackReward?: string;
+                reviewAskReward?: string;
+            };
+            passAppearance?: {
+                bgHex?: components["schemas"]["HexColor"];
+                textHex?: components["schemas"]["HexColor"];
+                coverUrl?: string;
+                logoUrl?: string;
+            };
         };
         LoyaltyEarnSource: {
             /** @constant */
@@ -1758,11 +2089,30 @@ export interface components {
         };
         InsightsReport: {
             /** @enum {string} */
-            range: "today" | "7d" | "30d";
+            range: "today" | "7d" | "30d" | "90d";
             currency: components["schemas"]["Currency"];
             salesPesewas: components["schemas"]["Pesewas"];
             /** @description True until the ledger is real. Show the Sample label. */
             sample: boolean;
+            scansCount?: number;
+            menuViewsCount?: number;
+            loyaltyMetrics?: {
+                enrolled?: number;
+                active?: number;
+                rewardReady?: number;
+                redeemed?: number;
+            };
+            feedbackSentimentSeries?: {
+                date: string;
+                positive: number;
+                neutral: number;
+                negative: number;
+            }[];
+            loyaltySeries?: {
+                date: string;
+                enrollments: number;
+                stamps: number;
+            }[];
             series: {
                 label: string;
                 pesewas: components["schemas"]["Pesewas"];
@@ -1780,6 +2130,153 @@ export interface components {
                 count: number;
                 sharePercent: number;
             };
+        };
+        /** @enum {string} */
+        FeedbackSentiment: "positive" | "neutral" | "negative";
+        FeedbackItem: {
+            /** @example fbk_123 */
+            id: string;
+            venueId: string;
+            sentiment: components["schemas"]["FeedbackSentiment"];
+            score: number;
+            text: string;
+            photoUrl?: string | null;
+            contactName?: string | null;
+            contactPhone?: string | null;
+            archived: boolean;
+            /** Format: date-time */
+            visibleAfter: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        SocialLinks: {
+            /** Format: uri */
+            googleReviewUrl?: string | null;
+            googleReviewMinStars?: number;
+            instagram?: string | null;
+            facebook?: string | null;
+            tiktok?: string | null;
+            tripadvisor?: string | null;
+            whatsapp?: string | null;
+            x?: string | null;
+            youtube?: string | null;
+            phone?: string | null;
+            email?: string | null;
+            website?: string | null;
+            enabledLinks?: string[];
+        };
+        CustomLink: {
+            /** @example lnk_123 */
+            id: string;
+            venueId: string;
+            title: string;
+            url: string;
+            icon?: string;
+            /** @enum {string} */
+            placement: "button" | "banner" | "menu";
+            /** Format: date-time */
+            startDate?: string | null;
+            /** Format: date-time */
+            endDate?: string | null;
+            sortOrder: number;
+            clicks: number;
+            enabled: boolean;
+        };
+        CustomLinkInput: {
+            title: string;
+            url: string;
+            icon?: string;
+            /** @enum {string} */
+            placement?: "button" | "banner" | "menu";
+            /** Format: date-time */
+            startDate?: string | null;
+            /** Format: date-time */
+            endDate?: string | null;
+            sortOrder?: number;
+            enabled?: boolean;
+        };
+        LoyaltyCustomerSummary: {
+            id: string;
+            name: string;
+            phoneMasked: string;
+            email?: string | null;
+            stamps: number;
+            rewardsAvailable: number;
+            wantsOffers: boolean;
+            /** Format: date-time */
+            lastStampAt: string;
+        };
+        LoyaltyAnalyticsReport: {
+            /** @enum {string} */
+            range: "7d" | "30d" | "90d";
+            enrolledCount: number;
+            stampsIssued: number;
+            rewardsRedeemed: number;
+            newEnrollments: number;
+            series: {
+                date: string;
+                newEnrollments: number;
+                stampsIssued: number;
+                rewardsRedeemed: number;
+            }[];
+        };
+        LoyaltyScanResult: {
+            success: boolean;
+            card: components["schemas"]["LoyaltyCard"];
+            customerName: string;
+            stamps: number;
+            cooldownViolated?: boolean;
+            cooldownRemainingSeconds?: number;
+            rewardUnlocked?: boolean;
+            message?: string;
+        };
+        Business: {
+            id: string;
+            name: string;
+            ownerId: string;
+        };
+        Location: {
+            id: string;
+            businessId: string;
+            slug: string;
+            name: string;
+            email?: string | null;
+            phone?: string | null;
+            address1?: string | null;
+            address2?: string | null;
+            city?: string | null;
+            postcode?: string | null;
+            country: string;
+            currency: components["schemas"]["Currency"];
+        };
+        LocationInput: {
+            name: string;
+            address1?: string;
+            city?: string;
+            postcode?: string;
+            country: string;
+            isSeparateBusiness?: boolean;
+        };
+        LocationPatchInput: {
+            name?: string;
+            email?: string;
+            phone?: string;
+            address1?: string;
+            address2?: string;
+            city?: string;
+            postcode?: string;
+            country?: string;
+        };
+        ScannerDevice: {
+            id: string;
+            venueId: string;
+            name: string;
+            platform?: string;
+            /** Format: date-time */
+            pairedAt: string;
+            /** Format: date-time */
+            lastSeen: string;
+            pairingCode?: string | null;
         };
     };
     responses: {
@@ -3821,7 +4318,7 @@ export interface operations {
     ownerGetInsights: {
         parameters: {
             query?: {
-                range?: "today" | "7d" | "30d";
+                range?: "today" | "7d" | "30d" | "90d";
             };
             header?: never;
             path: {
@@ -3839,6 +4336,491 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["InsightsReport"];
                 };
+            };
+        };
+    };
+    ownerListFeedback: {
+        parameters: {
+            query?: {
+                state?: "all" | "new" | "archived";
+                search?: string;
+            };
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List of feedback. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["FeedbackItem"][];
+                    };
+                };
+            };
+        };
+    };
+    ownerArchiveFeedback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+                feedbackId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    archived: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated feedback item. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedbackItem"];
+                };
+            };
+        };
+    };
+    ownerAskFeedbackAi: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    question: string;
+                };
+            };
+        };
+        responses: {
+            /** @description AI answer. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        reply: string;
+                        suggestions?: string[];
+                    };
+                };
+            };
+        };
+    };
+    ownerListCustomLinks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List of custom links. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["CustomLink"][];
+                    };
+                };
+            };
+        };
+    };
+    ownerCreateCustomLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CustomLinkInput"];
+            };
+        };
+        responses: {
+            /** @description Created custom link. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomLink"];
+                };
+            };
+        };
+    };
+    ownerDeleteCustomLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+                linkId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ownerUpdateCustomLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+                linkId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CustomLinkInput"];
+            };
+        };
+        responses: {
+            /** @description Updated custom link. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomLink"];
+                };
+            };
+        };
+    };
+    ownerGetLoyaltyAnalytics: {
+        parameters: {
+            query?: {
+                range?: "7d" | "30d" | "90d";
+            };
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Loyalty analytics report. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoyaltyAnalyticsReport"];
+                };
+            };
+        };
+    };
+    ownerListLoyaltyCustomers: {
+        parameters: {
+            query?: {
+                search?: string;
+                wantsOffers?: boolean;
+            };
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Enrolled loyalty customers. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["LoyaltyCustomerSummary"][];
+                        totalCount: number;
+                    };
+                };
+            };
+        };
+    };
+    ownerScanLoyaltyCard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    qrPayload: string;
+                    /** @enum {string} */
+                    action: "stamp" | "redeem";
+                };
+            };
+        };
+        responses: {
+            /** @description Scan result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoyaltyScanResult"];
+                };
+            };
+        };
+    };
+    ownerGetBusiness: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Business details. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        business: components["schemas"]["Business"];
+                        locations: components["schemas"]["Location"][];
+                    };
+                };
+            };
+        };
+    };
+    ownerUpdateBusiness: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated business. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Business"];
+                };
+            };
+        };
+    };
+    ownerCreateLocation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LocationInput"];
+            };
+        };
+        responses: {
+            /** @description Created location. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Location"];
+                };
+            };
+        };
+    };
+    ownerUpdateLocation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                locationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LocationPatchInput"];
+            };
+        };
+        responses: {
+            /** @description Updated location. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Location"];
+                };
+            };
+        };
+    };
+    ownerListScannerDevices: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List of paired scanner devices. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["ScannerDevice"][];
+                    };
+                };
+            };
+        };
+    };
+    ownerPairScannerDevice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name: string;
+                    code?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Paired device or generated pairing code. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScannerDevice"];
+                };
+            };
+        };
+    };
+    ownerRevokeScannerDevice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+                deviceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Revoked. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ownerRevokeStaff: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+                staffId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Revoked. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    deleteAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    confirmText: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Account deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

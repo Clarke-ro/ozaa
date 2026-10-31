@@ -23,6 +23,11 @@ import type {
   Story,
   Table,
   VenuePublic,
+  Business,
+  CustomLink,
+  FeedbackItem,
+  Location,
+  ScannerDevice,
   VenueTransaction,
   VideoReview,
   WaiterCall,
@@ -85,6 +90,10 @@ export type World = {
   staff: (StaffMember & { venueId: string; phone: string })[];
   videos: (VideoReview & { venueId: string })[];
   tables: Record<string, Table[]>;
+  feedback: (FeedbackItem & { venueId: string })[];
+  customLinks: (CustomLink & { venueId: string })[];
+  business: { business: Business; locations: Location[] };
+  devices: (ScannerDevice & { venueId: string })[];
   quotes: Map<string, { orderId: string; share: number; tip: number; lineIds: string[]; expiresAt: number }>;
   payments: Map<string, { payment: import('@/lib/api/types').Payment; phone: string; applied: boolean }>;
   idempotency: Map<string, unknown>;
@@ -141,6 +150,103 @@ function seedOwnerDesk(world: World, now: number): void {
   });
   world.seatedCodes[mama.id] = ['7'];
   world.yesterdayPesewas[mama.id] = 221429;
+
+  // Seed feedback
+  world.feedback.push(
+    {
+      id: 'fbk_1',
+      venueId: mama.id,
+      sentiment: 'positive',
+      score: 5,
+      text: 'The grilled tilapia and hot pepper was incredible! Best in Osu.',
+      photoUrl: null,
+      contactName: 'Kofi Mensah',
+      contactPhone: '+233241234567',
+      archived: false,
+      visibleAfter: new Date(now - 12 * 3600_000).toISOString(),
+      createdAt: new Date(now - 14 * 3600_000).toISOString(),
+    },
+    {
+      id: 'fbk_2',
+      venueId: mama.id,
+      sentiment: 'neutral',
+      score: 3,
+      text: 'Food took about 25 minutes to arrive on a busy Friday night.',
+      photoUrl: null,
+      contactName: null,
+      contactPhone: null,
+      archived: false,
+      visibleAfter: new Date(now - 3 * 3600_000).toISOString(),
+      createdAt: new Date(now - 5 * 3600_000).toISOString(),
+    },
+    {
+      id: 'fbk_3',
+      venueId: mama.id,
+      sentiment: 'negative',
+      score: 2,
+      text: 'The kelewele was a bit too salty and we waited long for the bill.',
+      photoUrl: null,
+      contactName: 'Esi Boateng',
+      contactPhone: '+233209876543',
+      archived: false,
+      visibleAfter: new Date(now - 1 * 3600_000).toISOString(),
+      createdAt: new Date(now - 2 * 3600_000).toISOString(),
+    },
+    {
+      id: 'fbk_4',
+      venueId: mama.id,
+      sentiment: 'negative',
+      score: 1,
+      text: 'Recent feedback test note that is still held in anonymity delay window.',
+      photoUrl: null,
+      contactName: null,
+      contactPhone: null,
+      archived: false,
+      visibleAfter: new Date(now + 4 * 3600_000).toISOString(),
+      createdAt: new Date(now - 30 * 60_000).toISOString(),
+    },
+  );
+
+  // Seed custom links
+  world.customLinks.push(
+    {
+      id: 'lnk_1',
+      venueId: mama.id,
+      title: 'Reserve Weekend Table',
+      url: 'https://mamas.kitchen/reserve',
+      icon: 'calendar',
+      placement: 'button',
+      startDate: null,
+      endDate: null,
+      sortOrder: 1,
+      clicks: 42,
+      enabled: true,
+    },
+    {
+      id: 'lnk_2',
+      venueId: mama.id,
+      title: 'Follow our Instagram',
+      url: 'https://instagram.com/mamas_kitchen_gh',
+      icon: 'instagram',
+      placement: 'button',
+      startDate: null,
+      endDate: null,
+      sortOrder: 2,
+      clicks: 128,
+      enabled: true,
+    },
+  );
+
+  // Seed paired scanner device
+  world.devices.push({
+    id: 'dev_ipad1',
+    venueId: mama.id,
+    name: 'Floor iPad Pro (Register)',
+    platform: 'iOS 18.2',
+    pairedAt: new Date(now - 7 * 86400_000).toISOString(),
+    lastSeen: new Date(now - 10 * 60_000).toISOString(),
+    pairingCode: null,
+  });
   world.calls.push({
     id: 'wcl_mamas4',
     venueId: mama.id,
@@ -345,6 +451,16 @@ export function createWorld(now: number): World {
     staff,
     videos: [],
     tables,
+    feedback: [],
+    customLinks: [],
+    business: {
+      business: { id: 'biz_mamas', name: "Mama's Hospitality Group", ownerId: 'usr_ama' },
+      locations: [
+        { id: 'ven_mamas', businessId: 'biz_mamas', slug: 'mamas-kitchen', name: "Mama's Kitchen - Osu", address1: '14 Cantonments Rd', city: 'Accra', country: 'Ghana', currency: 'GHS', email: 'mama@mamasosu.com', phone: '+233240000001', postcode: 'GA-042-1234' },
+        { id: 'ven_bean', businessId: 'biz_mamas', slug: 'bean-there', name: 'Bean There Cafe', address1: 'Liberation Rd, Airport', city: 'Accra', country: 'Ghana', currency: 'GHS', email: 'bean@mamasosu.com', phone: '+233240000004', postcode: 'GA-112-5678' },
+      ],
+    },
+    devices: [],
     quotes: new Map(),
     payments: new Map(),
     idempotency: new Map(),

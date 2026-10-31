@@ -653,7 +653,14 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       const venue = venueById(world, venueId);
       const menu = world.menus[venue.slug];
       if (!menu) throw new ApiError(404, 'order_not_found', 'Menu not found');
-      const category = { id: nextId(world, 'cat'), name: body.name, kind: body.kind, position: body.position ?? menu.categories.length };
+      const category = {
+        id: nextId(world, 'cat'),
+        name: body.name,
+        kind: body.kind,
+        position: body.position ?? menu.categories.length,
+        schedule: body.schedule,
+        hidden: body.hidden ?? false,
+      };
       menu.categories.push(category);
       return category;
     },
@@ -665,6 +672,8 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       category.name = body.name;
       category.kind = body.kind;
       if (body.position !== undefined) category.position = body.position;
+      if (body.schedule !== undefined) category.schedule = body.schedule;
+      if (body.hidden !== undefined) category.hidden = body.hidden;
       return category;
     },
     async ownerDeleteCategory(venueId, categoryId) {
@@ -690,6 +699,8 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
         photo: null,
         available: body.available ?? true,
         dietary: body.dietary ?? [],
+        allergens: body.allergens ?? [],
+        calories: body.calories,
         badges: body.badges ?? [],
         modifierGroups: body.modifierGroups ?? [],
         prepMinutes: body.prepMinutes,
@@ -874,6 +885,265 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       await gate();
       accessOf(world, tokens);
       return insightsFor(world, venueId, range);
+    },
+    async ownerRevokeStaff(venueId, staffId) {
+      await gate();
+      world.staff = world.staff.filter((s) => s.id !== staffId);
+    },
+    async ownerListFeedback(venueId, query) {
+      await gate();
+      const nowTime = now();
+      let items = (world.feedback ?? []).filter((fb) => fb.venueId === venueId);
+      // Enforce anonymity delay: items with future visibleAfter remain hidden
+      items = items.filter((fb) => new Date(fb.visibleAfter).getTime() <= nowTime);
+      if (query?.state === 'new') items = items.filter((fb) => !fb.archived);
+      else if (query?.state === 'archived') items = items.filter((fb) => fb.archived);
+      if (query?.search) {
+        const q = query.search.toLowerCase();
+        items = items.filter((fb) => fb.text.toLowerCase().includes(q) || (fb.contactName?.toLowerCase().includes(q) ?? false) || (fb.contactPhone?.includes(q) ?? false));
+      }
+      return { items };
+    },
+    async ownerArchiveFeedback(venueId, feedbackId, body) {
+      await gate();
+      const item = (world.feedback ?? []).find((fb) => fb.id === feedbackId);
+      if (!item) throw new ApiError(404, 'not_found', 'Feedback item not found');
+      item.archived = body.archived;
+      return item;
+    },
+    async ownerAskFeedbackAi(venueId, body) {
+      await gate();
+      const nowTime = now();
+      const items = (world.feedback ?? []).filter((fb) => fb.venueId === venueId && new Date(fb.visibleAfter).getTime() <= nowTime);
+      if (items.length === 0) {
+        return {
+          reply: "I haven't found any feedback yet for this location. Once diners leave feedback via the suggestion box, I will summarise trends and complaints here.",
+          suggestions: ['Summarise my recent feedback', 'What are my biggest complaints?', 'What are customers loving?', 'How has feedback changed this month?'],
+        };
+      }
+      const q = body.question.toLowerCase();
+      if (q.includes('complaint') || q.includes('biggest')) {
+        return {
+          reply: "Based on recent feedback, 1 customer noted that kelewele was too salty and requested faster bill settlement, while another mentioned a 25-minute wait during Friday peak dinner. Overall complaints are low at under 15% of submissions.",
+          suggestions: ['How can we speed up Friday wait times?', 'Summarise positive comments', 'View unhappy customer contact notes'],
+        };
+      }
+      if (q.includes('loving') || q.includes('love') || q.includes('positive')) {
+        return {
+          reply: "Guests consistently praise the grilled lake tilapia with spicy shito and the smoky firewood jollof rice. Several guests specifically mentioned warm hospitality from floor staff.",
+          suggestions: ['What are our top dishes by rating?', 'Show recent 5-star comments'],
+        };
+      }
+      return {
+        reply: 'Analyzed ' + items.length + ' feedback submissions: 75% positive, 15% neutral, and 10% negative. Top praise focuses on food seasoning and vibe. Suggestions center on peak-hour billing speed.',
+        suggestions: ['What are my biggest complaints?', 'What are customers loving?', 'Summarise my recent feedback'],
+      };
+    },
+    async ownerListCustomLinks(venueId) {
+      await gate();
+      return { items: (world.customLinks ?? []).filter((l) => l.venueId === venueId).sort((a, b) => a.sortOrder - b.sortOrder) };
+    },
+    async ownerCreateCustomLink(venueId, body) {
+      await gate();
+      const link = {
+        id: nextId(world, 'lnk'),
+        venueId,
+        title: body.title,
+        url: body.url,
+        icon: body.icon ?? 'globe',
+        placement: body.placement ?? 'button',
+        startDate: body.startDate ?? null,
+        endDate: body.endDate ?? null,
+        sortOrder: body.sortOrder ?? (world.customLinks?.length ?? 0) + 1,
+        clicks: 0,
+        enabled: body.enabled ?? true,
+      };
+      world.customLinks.push(link);
+      return link;
+    },
+    async ownerUpdateCustomLink(venueId, linkId, body) {
+      await gate();
+      const link = (world.customLinks ?? []).find((l) => l.id === linkId);
+      if (!link) throw new ApiError(404, 'not_found', 'Custom link not found');
+      if (body.title !== undefined) link.title = body.title;
+      if (body.url !== undefined) link.url = body.url;
+      if (body.icon !== undefined) link.icon = body.icon;
+      if (body.placement !== undefined) link.placement = body.placement;
+      if (body.startDate !== undefined) link.startDate = body.startDate;
+      if (body.endDate !== undefined) link.endDate = body.endDate;
+      if (body.sortOrder !== undefined) link.sortOrder = body.sortOrder;
+      if (body.enabled !== undefined) link.enabled = body.enabled;
+      return link;
+    },
+    async ownerDeleteCustomLink(venueId, linkId) {
+      await gate();
+      world.customLinks = (world.customLinks ?? []).filter((l) => l.id !== linkId);
+    },
+    async ownerGetLoyaltyAnalytics(venueId, range = '30d') {
+      await gate();
+      const scale = range === '7d' ? 1 : range === '90d' ? 6 : 3;
+      return {
+        range,
+        enrolledCount: 76 * scale,
+        stampsIssued: 312 * scale,
+        rewardsRedeemed: 28 * scale,
+        newEnrollments: 22 * scale,
+        series: [
+          { date: 'Mon', newEnrollments: 3, stampsIssued: 14, rewardsRedeemed: 1 },
+          { date: 'Tue', newEnrollments: 5, stampsIssued: 20, rewardsRedeemed: 2 },
+          { date: 'Wed', newEnrollments: 4, stampsIssued: 18, rewardsRedeemed: 1 },
+          { date: 'Thu', newEnrollments: 8, stampsIssued: 28, rewardsRedeemed: 3 },
+          { date: 'Fri', newEnrollments: 12, stampsIssued: 45, rewardsRedeemed: 5 },
+          { date: 'Sat', newEnrollments: 16, stampsIssued: 62, rewardsRedeemed: 8 },
+          { date: 'Sun', newEnrollments: 11, stampsIssued: 51, rewardsRedeemed: 6 },
+        ],
+      };
+    },
+    async ownerListLoyaltyCustomers(venueId, query) {
+      await gate();
+      let customers = [
+        {
+          id: 'cst_1',
+          name: 'Kofi Mensah',
+          phoneMasked: '024 *** 4567',
+          email: 'kofi@example.com',
+          stamps: 8,
+          rewardsAvailable: 1,
+          wantsOffers: true,
+          lastStampAt: new Date(now() - 3600_000 * 2).toISOString(),
+        },
+        {
+          id: 'cst_2',
+          name: 'Abena Osei',
+          phoneMasked: '020 *** 9821',
+          email: 'abena@example.com',
+          stamps: 4,
+          rewardsAvailable: 0,
+          wantsOffers: true,
+          lastStampAt: new Date(now() - 3600_000 * 26).toISOString(),
+        },
+        {
+          id: 'cst_3',
+          name: 'Kwame Asante',
+          phoneMasked: '055 *** 1122',
+          email: null,
+          stamps: 10,
+          rewardsAvailable: 2,
+          wantsOffers: false,
+          lastStampAt: new Date(now() - 3600_000 * 72).toISOString(),
+        },
+        {
+          id: 'cst_4',
+          name: 'Yaa Konadu',
+          phoneMasked: '024 *** 3344',
+          email: 'yaa@example.com',
+          stamps: 2,
+          rewardsAvailable: 0,
+          wantsOffers: true,
+          lastStampAt: new Date(now() - 3600_000 * 120).toISOString(),
+        },
+      ];
+      if (query?.wantsOffers) customers = customers.filter((c) => c.wantsOffers);
+      if (query?.search) {
+        const q = query.search.toLowerCase();
+        customers = customers.filter((c) => c.name.toLowerCase().includes(q) || c.phoneMasked.includes(q) || (c.email?.toLowerCase().includes(q) ?? false));
+      }
+      return { items: customers, totalCount: customers.length };
+    },
+    async ownerScanLoyaltyCard(venueId, body) {
+      await gate();
+      const venue = venueById(world, venueId);
+      const current = world.loyalty[venueId] ?? blankVenue(venueId, venue.currency);
+      const card = toWire(current, { kind: 'member', memberId: 'mem_sample' }) as LoyaltyCard | null;
+      if (body.action === 'stamp') {
+        return {
+          success: true,
+          card: card ?? ({} as any),
+          customerName: 'Kofi Mensah',
+          stamps: 8,
+          cooldownViolated: false,
+          cooldownRemainingSeconds: 0,
+          rewardUnlocked: false,
+          message: '+1 Stamp recorded successfully.',
+        };
+      }
+      return {
+        success: true,
+        card: card ?? ({} as any),
+        customerName: 'Kofi Mensah',
+        stamps: 0,
+        cooldownViolated: false,
+        cooldownRemainingSeconds: 0,
+        rewardUnlocked: true,
+        message: 'Reward Free Jollof redeemed successfully.',
+      };
+    },
+    async ownerGetBusiness() {
+      await gate();
+      return world.business;
+    },
+    async ownerUpdateBusiness(body) {
+      await gate();
+      world.business.business.name = body.name;
+      return world.business.business;
+    },
+    async ownerCreateLocation(body) {
+      await gate();
+      const loc = {
+        id: nextId(world, 'ven'),
+        businessId: world.business.business.id,
+        slug: body.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        name: body.name,
+        email: null,
+        phone: null,
+        address1: body.address1 ?? null,
+        address2: null,
+        city: body.city ?? null,
+        postcode: body.postcode ?? null,
+        country: body.country,
+        currency: 'GHS' as const,
+      };
+      world.business.locations.push(loc);
+      return loc;
+    },
+    async ownerUpdateLocation(locationId, body) {
+      await gate();
+      const loc = world.business.locations.find((l) => l.id === locationId);
+      if (!loc) throw new ApiError(404, 'not_found', 'Location not found');
+      if (body.name !== undefined) loc.name = body.name;
+      if (body.email !== undefined) loc.email = body.email;
+      if (body.phone !== undefined) loc.phone = body.phone;
+      if (body.address1 !== undefined) loc.address1 = body.address1;
+      if (body.address2 !== undefined) loc.address2 = body.address2;
+      if (body.city !== undefined) loc.city = body.city;
+      if (body.postcode !== undefined) loc.postcode = body.postcode;
+      if (body.country !== undefined) loc.country = body.country;
+      return loc;
+    },
+    async ownerListScannerDevices(venueId) {
+      await gate();
+      return { items: (world.devices ?? []).filter((d) => d.venueId === venueId) };
+    },
+    async ownerPairScannerDevice(venueId, body) {
+      await gate();
+      const device = {
+        id: nextId(world, 'dev'),
+        venueId,
+        name: body.name,
+        platform: 'Android / iOS',
+        pairedAt: new Date(now()).toISOString(),
+        lastSeen: new Date(now()).toISOString(),
+        pairingCode: body.code ? null : '842916',
+      };
+      world.devices.push(device);
+      return device;
+    },
+    async ownerRevokeScannerDevice(venueId, deviceId) {
+      await gate();
+      world.devices = (world.devices ?? []).filter((d) => d.id !== deviceId);
+    },
+    async deleteAccount() {
+      await gate();
     },
   };
 

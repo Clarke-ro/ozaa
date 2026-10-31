@@ -1,6 +1,8 @@
+import type { StaffRole } from '@/lib/api/types';
+
 export type OrderStatus = 'received' | 'preparing' | 'ready' | 'served' | 'cancelled';
 export type OrderMove = 'start' | 'ready' | 'serve' | 'cancel';
-export type StaffRole = 'owner' | 'manager' | 'waiter' | 'kitchen';
+export type { StaffRole };
 
 const NEXT: Record<OrderStatus, Partial<Record<OrderMove, OrderStatus>>> = {
   received: { start: 'preparing', cancel: 'cancelled' },
@@ -15,6 +17,8 @@ const ALLOWED: Record<StaffRole, OrderMove[]> = {
   manager: ['start', 'ready', 'serve', 'cancel'],
   waiter: ['serve'],
   kitchen: ['start', 'ready'],
+  viewer: [],
+  staff_scanner: [],
 };
 
 /** The guest banner, including over the game, keys off this and nothing else. */

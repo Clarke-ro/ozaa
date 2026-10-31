@@ -37,6 +37,16 @@ const ROLE_INFO: Record<StaffRole, { label: string; desc: string; icon: typeof U
     desc: 'Unrestricted access to all venue settings, payouts, and team invites.',
     icon: UserCheck,
   },
+  viewer: {
+    label: 'Viewer',
+    desc: 'Read-only access to sales reports, customer feedback and live floor.',
+    icon: Users,
+  },
+  staff_scanner: {
+    label: 'Scanner',
+    desc: 'Dedicated camera scanner access to verify cards, stamp visits and redeem rewards.',
+    icon: UserCheck,
+  },
 };
 
 export function StaffScreen() {
