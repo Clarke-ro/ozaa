@@ -95,16 +95,15 @@ function ServiceRow({
         <Icon id={id} color={theme.ink} />
       </View>
       <View style={styles.copy}>
-        <Text variant="body-strong">{t(`services.${id}.title`)}</Text>
-        <Text variant="caption" style={{ color: theme.muted }}>
-          {subtitle ?? t(`services.${id}.body`)}
+        <Text variant="body-strong" numberOfLines={1}>
+          {t(`services.${id}.title`)}
         </Text>
+        {id === 'play' ? null : (
+          <Text variant="caption" numberOfLines={1} style={{ color: theme.muted }}>
+            {subtitle ?? t(`services.${id}.body`)}
+          </Text>
+        )}
       </View>
-      {id === 'play' ? (
-        <Text variant="caption" style={[styles.stamp, { color: theme.ink }]}>
-          {t('game.stamp', { score: 15 })}
-        </Text>
-      ) : null}
       <ChevronRight color={theme.meta} size={18} />
     </Pressable>
   );
@@ -130,5 +129,4 @@ const styles = StyleSheet.create({
   },
   copy: { flex: 1 },
   icon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  stamp: { fontFamily: 'Inter_600' },
 });
