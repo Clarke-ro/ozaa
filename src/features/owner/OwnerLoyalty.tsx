@@ -108,7 +108,11 @@ function OwnerLoyaltyBody() {
 
   return (
     <SafeScreen includeBottom={false}>
-      <ScrollView contentContainerStyle={styles.page}>
+      <ScrollView
+        contentContainerStyle={styles.page}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+      >
         <Text variant="display-m">{t('owner.loyalty')}</Text>
         <View style={styles.rowWrap}>
           {VENUES.map((v) => {

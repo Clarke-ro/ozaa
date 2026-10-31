@@ -1,5 +1,12 @@
 import type { ReactNode } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
@@ -17,17 +24,26 @@ export function OwnerPage({
 }) {
   const theme = useTheme();
   return (
-    <ScrollView contentContainerStyle={styles.page}>
-      <View style={styles.head}>
-        <Text variant="display-m">{title}</Text>
-        {subtitle ? (
-          <Text variant="body" style={{ color: theme.meta }}>
-            {subtitle}
-          </Text>
-        ) : null}
-      </View>
-      {children}
-    </ScrollView>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={styles.keyboardWrap}
+    >
+      <ScrollView
+        contentContainerStyle={styles.page}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+      >
+        <View style={styles.head}>
+          <Text variant="display-m">{title}</Text>
+          {subtitle ? (
+            <Text variant="body" style={{ color: theme.meta }}>
+              {subtitle}
+            </Text>
+          ) : null}
+        </View>
+        {children}
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -63,6 +79,9 @@ export function DeskWait({
 }
 
 const styles = StyleSheet.create({
+  keyboardWrap: {
+    flex: 1,
+  },
   page: {
     paddingHorizontal: tokens.grid.mobile.margin,
     paddingTop: tokens.space[5],

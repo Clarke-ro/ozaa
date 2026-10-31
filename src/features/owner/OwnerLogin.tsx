@@ -1,5 +1,14 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import {
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
@@ -28,7 +37,15 @@ export function OwnerLogin() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
+  const dismissKeyboard = () => {
+    Keyboard.dismiss();
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      (document.activeElement as HTMLElement)?.blur?.();
+    }
+  };
+
   const handleSubmit = () => {
+    dismissKeyboard();
     const parsed = parseGhanaPhone(phone);
     if (!parsed) return;
     setError(false);
@@ -72,138 +89,172 @@ export function OwnerLogin() {
   return (
     <ThemeProvider theme={ozaaTheme}>
       <SafeScreen>
-        <View style={styles.container}>
-          <DeskCard style={styles.authCard}>
-            {/* Ozaa brand lockup */}
-            <View style={styles.brandLockup}>
-              <OzaaMark size={44} />
-              <Text variant="caption" style={styles.brandLabel}>
-                OZAA RESTAURANT MANAGEMENT
-              </Text>
-              <Text variant="display-m" style={styles.title}>
-                {t('owner.login')}
-              </Text>
-              <Text variant="body" style={styles.subtitle}>
-                {sent
-                  ? 'Enter the 6-digit verification code sent to your phone.'
-                  : 'Sign in to access your orders dashboard, kitchen tickets, and floor status.'}
-              </Text>
-            </View>
-
-            {/* Phone input */}
-            <View style={styles.formGroup}>
-              <Text variant="caption" style={styles.inputLabel}>
-                {t('owner.phone')}
-              </Text>
-              <View style={styles.phoneInputWrapper}>
-                <View style={styles.phonePrefixBadge}>
-                  <Text variant="body-strong" style={styles.prefixText}>
-                    🇬🇭 +233
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.keyboardAvoid}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 24 : 0}
+        >
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+            showsVerticalScrollIndicator={false}
+          >
+            <Pressable style={styles.touchableDismissArea} onPress={dismissKeyboard}>
+              <DeskCard style={styles.authCard}>
+                {/* Ozaa brand lockup */}
+                <View style={styles.brandLockup}>
+                  <OzaaMark size={44} />
+                  <Text variant="caption" style={styles.brandLabel}>
+                    OZAA RESTAURANT MANAGEMENT
+                  </Text>
+                  <Text variant="display-m" style={styles.title}>
+                    {t('owner.login')}
+                  </Text>
+                  <Text variant="body" style={styles.subtitle}>
+                    {sent
+                      ? 'Enter the 6-digit verification code sent to your phone.'
+                      : 'Sign in to access your orders dashboard, kitchen tickets, and floor status.'}
                   </Text>
                 </View>
-                <TextInput
-                  accessibilityLabel={t('owner.phone')}
-                  value={phone}
-                  onChangeText={setPhone}
-                  placeholder="024 123 4567"
-                  placeholderTextColor="#9CA3AF"
-                  keyboardType="phone-pad"
-                  editable={!sent}
-                  style={styles.phoneInput}
-                />
-              </View>
-            </View>
 
-            {/* OTP Code input */}
-            {sent ? (
-              <View style={styles.formGroup}>
-                <View style={styles.codeHeaderRow}>
+                {/* Phone input */}
+                <View style={styles.formGroup}>
                   <Text variant="caption" style={styles.inputLabel}>
-                    {t('owner.code')}
+                    {t('owner.phone')}
                   </Text>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="Change phone"
-                    onPress={() => setSent(false)}
-                  >
-                    <Text variant="caption" style={{ color: '#D24000', fontWeight: '600' }}>
-                      Change number
-                    </Text>
-                  </Pressable>
-                </View>
-                <TextInput
-                  accessibilityLabel={t('owner.code')}
-                  value={code}
-                  onChangeText={setCode}
-                  placeholder="123456"
-                  placeholderTextColor="#9CA3AF"
-                  keyboardType="number-pad"
-                  maxLength={6}
-                  autoFocus
-                  style={styles.codeInput}
-                />
-              </View>
-            ) : null}
-
-            {error ? (
-              <View style={styles.errorBox}>
-                <Text variant="caption" style={{ color: '#DC2626', fontWeight: '600' }}>
-                  {t('errors.generic')}
-                </Text>
-              </View>
-            ) : null}
-
-            {/* Submit button */}
-            <Button
-              label={sent ? t('owner.enter') : t('owner.send')}
-              onPress={handleSubmit}
-              loading={loading}
-              disabled={!phone.trim() || (sent && !code.trim())}
-            />
-
-            {/* Sample login helpers */}
-            {!sent ? (
-              <View style={styles.sampleSection}>
-                <Text variant="caption" style={{ color: '#6B7280', textAlign: 'center' }}>
-                  {t('owner.sample')}
-                </Text>
-                <View style={styles.sampleChips}>
-                  {SAMPLES.map((s) => (
-                    <Pressable
-                      key={s.phone}
-                      accessibilityRole="button"
-                      accessibilityLabel={s.label}
-                      onPress={() => setPhone(s.phone)}
-                      style={[
-                        styles.sampleChip,
-                        {
-                          borderColor: phone === s.phone ? '#111111' : '#E5E7EB',
-                          backgroundColor: phone === s.phone ? '#F3F4F6' : '#FFFFFF',
-                        },
-                      ]}
-                    >
-                      <Text variant="caption" style={{ fontWeight: '600', color: '#374151' }}>
-                        {s.label}
+                  <View style={styles.phoneInputWrapper}>
+                    <View style={styles.phonePrefixBadge}>
+                      <Text variant="body-strong" style={styles.prefixText}>
+                        🇬🇭 +233
                       </Text>
-                    </Pressable>
-                  ))}
+                    </View>
+                    <TextInput
+                      accessibilityLabel={t('owner.phone')}
+                      value={phone}
+                      onChangeText={setPhone}
+                      placeholder="024 123 4567"
+                      placeholderTextColor="#9CA3AF"
+                      keyboardType="phone-pad"
+                      inputMode="tel"
+                      returnKeyType={sent ? 'done' : 'next'}
+                      onSubmitEditing={() => {
+                        if (!sent) handleSubmit();
+                        else dismissKeyboard();
+                      }}
+                      editable={!sent}
+                      style={styles.phoneInput}
+                    />
+                  </View>
                 </View>
-              </View>
-            ) : null}
-          </DeskCard>
-        </View>
+
+                {/* OTP Code input */}
+                {sent ? (
+                  <View style={styles.formGroup}>
+                    <View style={styles.codeHeaderRow}>
+                      <Text variant="caption" style={styles.inputLabel}>
+                        {t('owner.code')}
+                      </Text>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Change phone"
+                        onPress={() => setSent(false)}
+                      >
+                        <Text variant="caption" style={{ color: '#D24000', fontWeight: '600' }}>
+                          Change number
+                        </Text>
+                      </Pressable>
+                    </View>
+                    <TextInput
+                      accessibilityLabel={t('owner.code')}
+                      value={code}
+                      onChangeText={setCode}
+                      placeholder="123456"
+                      placeholderTextColor="#9CA3AF"
+                      keyboardType="number-pad"
+                      inputMode="numeric"
+                      maxLength={6}
+                      returnKeyType="done"
+                      onSubmitEditing={handleSubmit}
+                      autoFocus
+                      style={styles.codeInput}
+                    />
+                  </View>
+                ) : null}
+
+                {error ? (
+                  <View style={styles.errorBox}>
+                    <Text variant="caption" style={{ color: '#DC2626', fontWeight: '600' }}>
+                      {t('errors.generic')}
+                    </Text>
+                  </View>
+                ) : null}
+
+                {/* Submit button */}
+                <Button
+                  label={sent ? t('owner.enter') : t('owner.send')}
+                  onPress={handleSubmit}
+                  loading={loading}
+                  disabled={!phone.trim() || (sent && !code.trim())}
+                />
+
+                {/* Sample login helpers */}
+                {!sent ? (
+                  <View style={styles.sampleSection}>
+                    <Text variant="caption" style={{ color: '#6B7280', textAlign: 'center' }}>
+                      {t('owner.sample')}
+                    </Text>
+                    <View style={styles.sampleChips}>
+                      {SAMPLES.map((s) => (
+                        <Pressable
+                          key={s.phone}
+                          accessibilityRole="button"
+                          accessibilityLabel={s.label}
+                          onPress={() => {
+                            dismissKeyboard();
+                            setPhone(s.phone);
+                          }}
+                          style={[
+                            styles.sampleChip,
+                            {
+                              borderColor: phone === s.phone ? '#111111' : '#E5E7EB',
+                              backgroundColor: phone === s.phone ? '#F3F4F6' : '#FFFFFF',
+                            },
+                          ]}
+                        >
+                          <Text variant="caption" style={{ fontWeight: '600', color: '#374151' }}>
+                            {s.label}
+                          </Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                  </View>
+                ) : null}
+              </DeskCard>
+            </Pressable>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </SafeScreen>
     </ThemeProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  keyboardAvoid: {
     flex: 1,
     backgroundColor: '#FAFAFA',
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: tokens.space[4],
+    paddingHorizontal: tokens.space[4],
+  },
+  touchableDismissArea: {
+    width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: tokens.space[4],
   },
   authCard: {
     width: '100%',
