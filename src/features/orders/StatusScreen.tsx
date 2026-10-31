@@ -4,6 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
 import { useGuestSession } from '@/features/session';
+import { useVenue } from '@/features/venue';
+import { DEFAULT_CURRENCY } from '@/lib/money';
 import { Button } from '@/ui/Button';
 import { PageHeader } from '@/ui/PageHeader';
 import { SafeScreen } from '@/ui/Screen';
@@ -18,6 +20,8 @@ export function StatusScreen({ slug }: { slug: string }) {
   const { t } = useTranslation();
   const theme = useTheme();
   const router = useRouter();
+  const venue = useVenue(slug);
+  const currency = venue.data?.currency ?? DEFAULT_CURRENCY;
   const orderId = useGuestSession((state) => (state.slug === slug ? state.orderId : null));
   const order = useQuery({
     queryKey: ['order', orderId],
@@ -33,7 +37,10 @@ export function StatusScreen({ slug }: { slug: string }) {
 
   return (
     <SafeScreen>
-      <PageHeader title={t('status.title', { number: order.data.number })} subtitle={t('home.table', { code: order.data.tableCode ?? '' })} />
+      <PageHeader
+        title={t('status.title', { number: order.data.number })}
+        subtitle={t('home.table', { code: order.data.tableCode ?? '' })}
+      />
       <View style={{ padding: 20, gap: 8 }}>
         <Text variant="caption" style={{ color: theme.meta }}>
           {t('status.now')}
@@ -45,7 +52,15 @@ export function StatusScreen({ slug }: { slug: string }) {
         <View style={{ marginTop: 16, gap: 14 }}>
           {STEPS.map((step, index) => (
             <View key={step} style={styles.step}>
-              <View style={[styles.dot, { borderColor: index <= current ? theme.fill : theme.line, backgroundColor: index < current ? theme.fill : theme.white }]} />
+              <View
+                style={[
+                  styles.dot,
+                  {
+                    borderColor: index <= current ? theme.fill : theme.line,
+                    backgroundColor: index < current ? theme.fill : theme.white,
+                  },
+                ]}
+              />
               <View>
                 <Text variant="body-strong">{t(`status.${step}`)}</Text>
               </View>
@@ -59,12 +74,12 @@ export function StatusScreen({ slug }: { slug: string }) {
               <Text>
                 {line.quantity} × {line.name}
               </Text>
-              <PriceText amount={line.totalPesewas} />
+              <PriceText amount={line.totalPesewas} currency={currency} />
             </View>
           ))}
           <View style={styles.row}>
             <Text variant="body-strong">{t('status.total')}</Text>
-            <PriceText amount={order.data.totalPesewas} />
+            <PriceText amount={order.data.totalPesewas} currency={currency} />
           </View>
         </View>
         <Button label={t('status.pay')} onPress={() => router.push(`/${slug}/pay`)} />

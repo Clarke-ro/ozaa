@@ -6,6 +6,7 @@ export type OwnerNavId =
   | 'orders'
   | 'calls'
   | 'menu'
+  | 'loyalty'
   | 'services'
   | 'payments'
   | 'reviews'
@@ -36,6 +37,7 @@ export const OWNER_NAV: readonly OwnerNavItem[] = [
   { id: 'orders', href: '/owner/orders', roles: ALL, phone: true },
   { id: 'calls', href: '/owner/calls', roles: FRONT, phone: true },
   { id: 'menu', href: '/owner/menu', roles: DESK },
+  { id: 'loyalty', href: '/owner/loyalty', roles: FRONT },
   { id: 'services', href: '/owner/services', roles: DESK },
   { id: 'payments', href: '/owner/payments', roles: ['owner'] },
   { id: 'reviews', href: '/owner/reviews', roles: DESK },

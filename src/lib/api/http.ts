@@ -17,8 +17,8 @@ function problem(error: unknown, status: number): ApiError {
 
 export function createHttpClient(baseUrl: string, tokens: TokenSource): ApiClient {
   const client = createClient<paths>({ baseUrl });
-  const headers = (kind: 'guest' | 'access', call?: { idempotencyKey?: string; ifNoneMatch?: string; deleteToken?: string }) => {
-    const token = kind === 'guest' ? tokens.guest() : tokens.access();
+  const headers = (kind: 'guest' | 'access' | 'loyalty', call?: { idempotencyKey?: string; ifNoneMatch?: string; deleteToken?: string }) => {
+    const token = kind === 'guest' ? tokens.guest() : kind === 'loyalty' ? (tokens.loyalty?.() ?? tokens.access()) : tokens.access();
     const value: Record<string, string> = {};
     if (token) value.Authorization = `Bearer ${token}`;
     if (call?.idempotencyKey) value['Idempotency-Key'] = call.idempotencyKey;
@@ -60,13 +60,14 @@ export function createHttpClient(baseUrl: string, tokens: TokenSource): ApiClien
     },
     callWaiter: (body, call) => ok(client.POST('/waiter-calls', { body, params: { header: { 'Idempotency-Key': call.idempotencyKey ?? '' } }, headers: headers('guest', call) })),
     getWaiterCall: (id) => ok(client.GET('/waiter-calls/{waiterCallId}', { params: { path: { waiterCallId: id } }, headers: headers('guest') })),
-    getMyLoyaltyCard: (slug) => ok(client.GET('/venues/{venueSlug}/loyalty/me', { params: { path: { venueSlug: slug } }, headers: headers('access') })),
-    joinLoyalty: (slug, body) => ok(client.PUT('/venues/{venueSlug}/loyalty/me', { body, params: { path: { venueSlug: slug } }, headers: headers('access') })),
+    getVenueLoyaltyProgram: (slug) => ok(client.GET('/venues/{venueSlug}/loyalty', { params: { path: { venueSlug: slug } } })),
+    getMyLoyaltyCard: (slug) => ok(client.GET('/venues/{venueSlug}/loyalty/me', { params: { path: { venueSlug: slug } }, headers: headers('loyalty') })),
+    joinLoyalty: (slug, body) => ok(client.PUT('/venues/{venueSlug}/loyalty/me', { body, params: { path: { venueSlug: slug } }, headers: headers('loyalty') })),
     async leaveLoyalty(slug) {
-      const result = await client.DELETE('/venues/{venueSlug}/loyalty/me', { params: { path: { venueSlug: slug } }, headers: headers('access') });
+      const result = await client.DELETE('/venues/{venueSlug}/loyalty/me', { params: { path: { venueSlug: slug } }, headers: headers('loyalty') });
       if (!result.response.ok) throw problem(result.error, result.response.status);
     },
-    redeemReward: (slug, body, call) => ok(client.POST('/venues/{venueSlug}/loyalty/me/redeem', { body, params: { path: { venueSlug: slug }, header: { 'Idempotency-Key': call.idempotencyKey ?? '' } }, headers: headers('access', call) })),
+    redeemReward: (slug, body, call) => ok(client.POST('/venues/{venueSlug}/loyalty/me/redeem', { body, params: { path: { venueSlug: slug }, header: { 'Idempotency-Key': call.idempotencyKey ?? '' } }, headers: headers('loyalty', call) })),
     createReview: (body, call) => ok(client.POST('/reviews', { body, params: { header: { 'Idempotency-Key': call.idempotencyKey ?? '' } }, headers: headers('guest', call) })),
     createVideoUpload: (body) => ok(client.POST('/video-reviews/uploads', { body: body as never, headers: headers('guest') })),
     createVideoReview: (body, call) => ok(client.POST('/video-reviews', { body, params: { header: { 'Idempotency-Key': call.idempotencyKey ?? '' } }, headers: headers('guest', call) })),
@@ -75,7 +76,7 @@ export function createHttpClient(baseUrl: string, tokens: TokenSource): ApiClien
       if (!result.response.ok) throw problem(result.error, result.response.status);
     },
     getLeaderboard: (slug) => ok(client.GET('/venues/{venueSlug}/game/leaderboard', { params: { path: { venueSlug: slug } } })),
-    submitScore: (slug, body) => ok(client.POST('/venues/{venueSlug}/game/scores', { body, params: { path: { venueSlug: slug } } })),
+    submitScore: (slug, body) => ok(client.POST('/venues/{venueSlug}/game/scores', { body, params: { path: { venueSlug: slug } }, headers: headers('loyalty') })),
     async sendFeedback(body) {
       const result = await client.POST('/feedback', { body, headers: headers('guest') });
       if (!result.response.ok) throw problem(result.error, result.response.status);
@@ -118,6 +119,7 @@ export function createHttpClient(baseUrl: string, tokens: TokenSource): ApiClien
     ownerGetLoyalty: (venueId) => ok(client.GET('/owner/venues/{venueId}/loyalty', { params: { path: { venueId } }, headers: headers('access') })),
     ownerSetLoyalty: (venueId, body) => ok(client.PUT('/owner/venues/{venueId}/loyalty', { body, params: { path: { venueId } }, headers: headers('access') })),
     ownerListLoyaltyMembers: (venueId) => ok(client.GET('/owner/venues/{venueId}/loyalty/members', { params: { path: { venueId } }, headers: headers('access') })),
+    ownerConfirmRedemption: (venueId, body, call) => ok(client.POST('/owner/venues/{venueId}/loyalty/confirm', { body, params: { path: { venueId }, header: { 'Idempotency-Key': call?.idempotencyKey ?? '' } }, headers: headers('access', call) })),
     ownerGetPayoutAccount: (venueId) => ok(client.GET('/owner/venues/{venueId}/payout-account', { params: { path: { venueId } }, headers: headers('access') })),
     ownerSetPayoutAccount: (venueId, body) => ok(client.PUT('/owner/venues/{venueId}/payout-account', { body, params: { path: { venueId } }, headers: headers('access') })),
     ownerGetDashboard: (venueId) => ok(client.GET('/owner/venues/{venueId}/dashboard', { params: { path: { venueId } }, headers: headers('access') })),

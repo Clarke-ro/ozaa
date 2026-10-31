@@ -1,4 +1,5 @@
 export { OwnerLogin } from './OwnerLogin';
+export { OwnerLoyalty } from './OwnerLoyalty';
 export { OwnerChrome } from './chrome/OwnerChrome';
 export { DashboardScreen } from './screens/DashboardScreen';
 export { FloorScreen } from './screens/FloorScreen';

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { setAccessToken, setGuestToken } from '@/lib/api';
+import { setAccessToken, setGuestToken, setLoyaltyToken as setApiLoyaltyToken } from '@/lib/api';
 
 type GuestSessionState = {
   token: string | null;
@@ -40,7 +40,7 @@ export const useGuestSession = create<GuestSessionState>((set) => ({
   },
   setOrderId: (orderId) => set({ orderId }),
   setLoyaltyToken: (token) => {
-    setAccessToken(token);
+    setApiLoyaltyToken(token);
     set({ loyaltyToken: token });
   },
 }));
