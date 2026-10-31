@@ -360,6 +360,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/venues/{venueSlug}/loyalty": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get the venue's loyalty programme (earn mode, tiers, rewards, expiry) before joining. */
+        get: operations["getVenueLoyaltyProgram"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/venues/{venueSlug}/loyalty/me": {
         parameters: {
             query?: never;
@@ -388,7 +405,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Redeem reward. */
+        /** Open a short-lived redemption claim code for staff to confirm. */
         post: operations["redeemReward"];
         delete?: never;
         options?: never;
@@ -853,10 +870,27 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Members with masked phone numbers. Only members who agreed to marketing can be messaged. */
+        /** Members with masked phone numbers and fact history. Only members who agreed to marketing can be messaged. */
         get: operations["ownerListLoyaltyMembers"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/loyalty/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm a guest's 6-character redemption claim code. Staff confirmation is the only debit. */
+        post: operations["ownerConfirmRedemption"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1366,57 +1400,105 @@ export interface components {
             /** @example consent-2026-10-v1 */
             textVersion: string;
         };
-        Reward: {
+        LoyaltyEarnMode: {
+            /** @constant */
+            kind: "stamps";
+        } | {
+            /** @constant */
+            kind: "points";
+            points: number;
+            perMinor: number;
+        };
+        LoyaltyTierBand: {
+            /** @enum {string} */
+            id: "bronze" | "silver" | "gold";
+            minLifetime: number;
+        };
+        RewardOffer: {
             id: string;
             /** @example Free jollof & chicken */
             title: string;
-            stampsNeeded: number;
+            cost: number;
         };
         LoyaltyProgram: {
             enabled: boolean;
-            stampsNeeded: number;
-            /** @description Spend per stamp when stampRule is one_per_min_spend. */
-            minSpendPesewas?: components["schemas"]["Pesewas"];
-            reward: components["schemas"]["Reward"];
-            birthdayTreat?: string | null;
-            /**
-             * @default one_per_paid_order
-             * @enum {string}
-             */
-            stampRule: "one_per_paid_order" | "one_per_min_spend";
+            /** @example GHS */
+            currency: string;
+            earn: components["schemas"]["LoyaltyEarnMode"];
+            tiers: components["schemas"]["LoyaltyTierBand"][];
+            rewards: components["schemas"]["RewardOffer"][];
+            expiryDays: number | null;
+            claimTtlSeconds: number;
+            birthdayTreat: string | null;
             readonly memberCount?: number;
         };
-        LoyaltyHistoryEntry: {
+        LoyaltyEarnSource: {
+            /** @constant */
+            type: "paid_visit";
+            orderId: string;
+            amountMinor: components["schemas"]["Pesewas"];
+            currency: string;
+        } | {
+            /** @constant */
+            type: "game";
+            runId: string;
+            /** Format: date */
+            day: string;
+        } | {
+            /** @constant */
+            type: "birthday";
+            year: string;
+            title: string;
+        };
+        LoyaltyFact: {
+            /** @constant */
+            kind: "earn";
+            id: string;
             /** Format: date-time */
             at: string;
-            change: number;
-            /** @enum {string} */
-            reason: "paid_order" | "game_score" | "reward_redeemed" | "birthday";
+            units: number;
+            source: components["schemas"]["LoyaltyEarnSource"];
+        } | {
+            /** @constant */
+            kind: "claim";
+            id: string;
+            /** Format: date-time */
+            at: string;
+            code: string;
+            rewardId: string;
+            title: string;
+            units: number;
+            /** Format: date-time */
+            expiresAt: string;
+        } | {
+            /** @constant */
+            kind: "confirm";
+            id: string;
+            /** Format: date-time */
+            at: string;
+            claimId: string;
+            rewardId: string;
+            title: string;
+            units: number;
         };
-        LoyaltyCard: {
-            venueId: string;
-            stamps: number;
-            stampsNeeded: number;
-            reward: components["schemas"]["Reward"];
-            rewardReady: boolean;
+        LoyaltyMember: {
+            id: string;
+            firstName: string | null;
+            phoneMasked: string;
+            birthdayMonthDay: string | null;
             /** Format: date */
             memberSince: string;
-            history?: components["schemas"]["LoyaltyHistoryEntry"][];
             consent: {
                 marketing: boolean;
                 /** Format: date-time */
                 at: string;
+                textVersion: string;
             };
+            facts: components["schemas"]["LoyaltyFact"][];
         };
-        LoyaltyMember: {
-            id: string;
-            firstName?: string | null;
-            phoneMasked: string;
-            stamps: number;
-            visits: number;
-            marketingConsent: boolean;
-            /** Format: date-time */
-            joinedAt: string;
+        LoyaltyCard: {
+            programme: components["schemas"]["LoyaltyProgram"];
+            member: components["schemas"]["LoyaltyMember"];
         };
         /** @enum {string} */
         ModerationState: "pending" | "featured" | "hidden";
@@ -2158,6 +2240,29 @@ export interface operations {
             404: components["responses"]["NotFound"];
         };
     };
+    getVenueLoyaltyProgram: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueSlug: components["parameters"]["VenueSlug"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The venue's loyalty programme. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoyaltyProgram"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
     getMyLoyaltyCard: {
         parameters: {
             query?: never;
@@ -2169,7 +2274,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description The guest's stamp card at this venue. */
+            /** @description The guest's loyalty card and fact ledger at this venue. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -2178,13 +2283,7 @@ export interface operations {
                     "application/json": components["schemas"]["LoyaltyCard"];
                 };
             };
-            /** @description Not a member yet. Show the join screen. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+            404: components["responses"]["NotFound"];
         };
     };
     joinLoyalty: {
@@ -2217,6 +2316,7 @@ export interface operations {
                 };
             };
             400: components["responses"]["BadRequest"];
+            409: components["responses"]["Conflict"];
         };
     };
     leaveLoyalty: {
@@ -2260,7 +2360,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Reward applied. The card shows the new stamp count. */
+            /** @description Claim opened. Staff confirmation is the only debit. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -2269,6 +2369,7 @@ export interface operations {
                     "application/json": components["schemas"]["LoyaltyCard"];
                 };
             };
+            404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
         };
     };
@@ -3226,6 +3327,8 @@ export interface operations {
                     "application/json": components["schemas"]["LoyaltyProgram"];
                 };
             };
+            400: components["responses"]["BadRequest"];
+            409: components["responses"]["Conflict"];
         };
     };
     ownerListLoyaltyMembers: {
@@ -3248,11 +3351,44 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        items: components["schemas"]["LoyaltyMember"][];
+                        items: components["schemas"]["LoyaltyCard"][];
                         nextCursor?: string | null;
                     };
                 };
             };
+        };
+    };
+    ownerConfirmRedemption: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description A new UUID per user action. Reuse it when retrying the same action. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    code: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Confirmed and debited on the member's card. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoyaltyCard"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
         };
     };
     ownerGetPayoutAccount: {

@@ -8,7 +8,6 @@ import type {
   GuestSession,
   InitializePaymentRequest,
   LoyaltyCard,
-  LoyaltyMember,
   LoyaltyProgram,
   Menu,
   MenuCategory,
@@ -41,6 +40,7 @@ import type {
 export type TokenSource = {
   guest: () => string | null;
   access: () => string | null;
+  loyalty?: () => string | null;
 };
 
 export type ApiClient = {
@@ -64,6 +64,7 @@ export type ApiClient = {
   paystackWebhook(rawBody: string, signature: string | null): Promise<void>;
   callWaiter(body: { reason: WaiterReason; note?: string }, call: Call): Promise<WaiterCall>;
   getWaiterCall(id: string): Promise<WaiterCall>;
+  getVenueLoyaltyProgram(slug: string): Promise<LoyaltyProgram>;
   getMyLoyaltyCard(slug: string): Promise<LoyaltyCard>;
   joinLoyalty(slug: string, body: { firstName?: string; birthdayMonthDay?: string; consent: ConsentInput }): Promise<LoyaltyCard>;
   leaveLoyalty(slug: string): Promise<void>;
@@ -102,7 +103,8 @@ export type ApiClient = {
   ownerModerateVideoReview(id: string, body: { state: 'featured' | 'hidden' }): Promise<VideoReview>;
   ownerGetLoyalty(venueId: string): Promise<LoyaltyProgram>;
   ownerSetLoyalty(venueId: string, body: LoyaltyProgram): Promise<LoyaltyProgram>;
-  ownerListLoyaltyMembers(venueId: string): Promise<{ items: LoyaltyMember[] }>;
+  ownerListLoyaltyMembers(venueId: string): Promise<{ items: LoyaltyCard[]; nextCursor?: string | null }>;
+  ownerConfirmRedemption(venueId: string, body: { code: string }, call?: Call): Promise<LoyaltyCard>;
   ownerGetPayoutAccount(venueId: string): Promise<PayoutAccount>;
   ownerSetPayoutAccount(venueId: string, body: PayoutAccountInput): Promise<PayoutAccount>;
 };

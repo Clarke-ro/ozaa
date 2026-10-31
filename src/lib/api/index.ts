@@ -5,6 +5,7 @@ import { createHttpClient } from './http';
 
 let guestToken: string | null = null;
 let accessToken: string | null = null;
+let loyaltyToken: string | null = null;
 
 export function setGuestToken(token: string | null): void {
   guestToken = token;
@@ -14,9 +15,14 @@ export function setAccessToken(token: string | null): void {
   accessToken = token;
 }
 
+export function setLoyaltyToken(token: string | null): void {
+  loyaltyToken = token;
+}
+
 const tokens = {
   guest: () => guestToken,
   access: () => accessToken,
+  loyalty: () => loyaltyToken,
 };
 
 const mock = createMockClient({

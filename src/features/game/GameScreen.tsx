@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import * as Crypto from 'expo-crypto';
+import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { api } from '@/lib/api';
 import { useVenue } from '@/features/venue';
 import { PageHeader } from '@/ui/PageHeader';
 import { SafeScreen } from '@/ui/Screen';
@@ -12,11 +15,13 @@ import { createStack, dropAligned, dropPlate, stepStack, topOfBoard, type StackS
 export function GameScreen({ slug }: { slug: string }) {
   const { t } = useTranslation();
   const theme = useTheme();
+  const client = useQueryClient();
   const venue = useVenue(slug);
   const [state, setState] = useState<StackState>(() => createStack());
   const [best, setBest] = useState(0);
   const [nick, setNick] = useState('');
   const [saved, setSaved] = useState<{ nickname: string; score: number; mine: true }[]>([]);
+  const [stampEarned, setStampEarned] = useState(false);
 
   useEffect(() => {
     if (state.kind !== 'playing') return;
@@ -33,10 +38,22 @@ export function GameScreen({ slug }: { slug: string }) {
   }, [state.kind]);
 
   const rule = { minScore: venue.data?.game?.minScore ?? 15, alreadyToday: false };
+  const recordFinish = (next: StackState) => {
+    if (next.kind === 'over') {
+      setBest((value) => Math.max(value, next.score));
+      void api
+        .submitScore(slug, { score: next.score, runId: Crypto.randomUUID(), durationMs: 15000 })
+        .then((res) => {
+          if (res.stampEarned) setStampEarned(true);
+          void client.invalidateQueries({ queryKey: ['loyalty'] });
+        })
+        .catch(() => undefined);
+    }
+  };
   const tap = () => {
     setState((current) => {
       const next = dropPlate(current, rule);
-      if (next.kind === 'over') setBest((value) => Math.max(value, next.score));
+      recordFinish(next);
       return next;
     });
   };
@@ -66,6 +83,11 @@ export function GameScreen({ slug }: { slug: string }) {
           {state.kind === 'over' ? (
             <View style={styles.overlay}>
               <Text variant="display-l">{state.score}</Text>
+              {stampEarned ? (
+                <Text variant="caption" style={{ color: theme.fill }}>
+                  {t('game.earned')}
+                </Text>
+              ) : null}
               <TextInput accessibilityLabel={t('game.nick')} value={nick} maxLength={14} onChangeText={setNick} placeholder={t('game.nick')} style={styles.nick} />
               <Button label={t('game.save')} onPress={() => nick.trim() && setSaved((rows) => [...rows, { nickname: nick.trim(), score: state.score, mine: true }])} />
               <Button label={t('game.again')} tone="secondary" onPress={() => setState(createStack())} />
@@ -82,7 +104,17 @@ export function GameScreen({ slug }: { slug: string }) {
           </Text>
         ))}
         <Text variant="caption" style={{ color: theme.meta }}>{t('game.offline')}</Text>
-        <Pressable accessibilityRole="button" accessibilityLabel="Align" onPress={() => setState((current) => dropAligned(current, rule))} />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Align"
+          onPress={() =>
+            setState((current) => {
+              const next = dropAligned(current, rule);
+              recordFinish(next);
+              return next;
+            })
+          }
+        />
       </View>
     </SafeScreen>
   );

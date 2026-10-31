@@ -4,6 +4,38 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-10-31 · Loyalty wallet card, points, tiers, and staff redemption
+
+**What we built**
+
+A venue-branded wallet card (`WalletCard.tsx`) with the Ozaa scan-frame watermark, Bronze/Silver/Gold tiers, stamps or spend points, a rewards catalogue, and an owner Loyalty tab (`OwnerLoyalty.tsx`) to set up the programme and confirm guest claim codes.
+
+**How it works**
+
+```
+paid order or game win → earn fact added → fold calculates balance & lifetime tier
+guest taps Get claim code → 6-char claim hold → staff enters code → confirm fact debits balance
+```
+
+We never store a separate `stamps` counter that could drift out of sync with history. Instead, every card stores an append-only list of facts (`earn`, `claim`, `confirm`), and `foldCard` calculates the available balance and lifetime tier from those facts. Showing a claim code only places a temporary hold; a reward is spent only when staff confirm the code.
+
+**Files to look at**
+
+- `src/features/loyalty/facts.ts`: the pure ledger commands (`apply`) and `foldCard`.
+- `src/features/loyalty/WalletCard.tsx`: the venue-coloured wallet card with front/back QR flip.
+- `src/features/loyalty/LoyaltyDetails.tsx`: rewards catalogue, claim banner, tier row, and activity history.
+- `src/features/owner/OwnerLoyalty.tsx`: staff code confirmation, programme setup, and members list.
+
+**New idea: folding a ledger of facts**
+
+If you store both a `stamps: 5` number and a history list, a bug can update one and forget the other. When you calculate `available` and `lifetime` by summing the history list every time (`foldCard`), the balance and history can never disagree.
+
+**Try it yourself**
+
+Open `/mamas-kitchen/loyalty`, tap "Get claim code" on a reward, copy the 6-character code, then open `/owner/loyalty` and confirm that code. Watch Ama's balance drop and the redemption appear in the owner log.
+
+---
+
 ## 2026-10-31 · Dietary filters on the menu
 
 **What we built**

@@ -440,6 +440,19 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
 
   # ---------------------------------------------------------------- loyalty (guest, phone proved by OTP)
+  /venues/{venueSlug}/loyalty:
+    get:
+      tags: [loyalty]
+      operationId: getVenueLoyaltyProgram
+      summary: Get the venue's loyalty programme (earn mode, tiers, rewards, expiry) before joining.
+      parameters: [{ $ref: '#/components/parameters/VenueSlug' }]
+      responses:
+        '200':
+          description: The venue's loyalty programme.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoyaltyProgram' }
+        '404': { $ref: '#/components/responses/NotFound' }
   /venues/{venueSlug}/loyalty/me:
     get:
       tags: [loyalty]
@@ -449,11 +462,11 @@ paths:
       parameters: [{ $ref: '#/components/parameters/VenueSlug' }]
       responses:
         '200':
-          description: The guest's stamp card at this venue.
+          description: The guest's loyalty card and fact ledger at this venue.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/LoyaltyCard' }
-        '404': { description: Not a member yet. Show the join screen. }
+        '404': { $ref: '#/components/responses/NotFound' }
     put:
       tags: [loyalty]
       operationId: joinLoyalty
@@ -478,6 +491,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/LoyaltyCard' }
         '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/Conflict' }
     delete:
       tags: [loyalty]
       operationId: leaveLoyalty
@@ -490,7 +504,7 @@ paths:
     post:
       tags: [loyalty]
       operationId: redeemReward
-      summary: Redeem reward.
+      summary: Open a short-lived redemption claim code for staff to confirm.
       security: [{ loyaltyAuth: [] }]
       parameters: [{ $ref: '#/components/parameters/VenueSlug' }, { $ref: '#/components/parameters/IdempotencyKey' }]
       requestBody:
@@ -505,10 +519,11 @@ paths:
                 orderId: { $ref: '#/components/schemas/OrderId' }
       responses:
         '200':
-          description: Reward applied. The card shows the new stamp count.
+          description: Claim opened. Staff confirmation is the only debit.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/LoyaltyCard' }
+        '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
 
   # ---------------------------------------------------------------- reviews
@@ -1187,12 +1202,14 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/LoyaltyProgram' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/Conflict' }
   /owner/venues/{venueId}/loyalty/members:
     get:
       tags: [owner-loyalty]
       operationId: ownerListLoyaltyMembers
       security: [{ ownerAuth: [] }]
-      summary: Members with masked phone numbers. Only members who agreed to marketing can be messaged.
+      summary: Members with masked phone numbers and fact history. Only members who agreed to marketing can be messaged.
       parameters: [{ $ref: '#/components/parameters/VenueId' }, { $ref: '#/components/parameters/Cursor' }]
       responses:
         '200':
@@ -1203,8 +1220,32 @@ paths:
                 type: object
                 required: [items]
                 properties:
-                  items: { type: array, items: { $ref: '#/components/schemas/LoyaltyMember' } }
+                  items: { type: array, items: { $ref: '#/components/schemas/LoyaltyCard' } }
                   nextCursor: { type: ['string', 'null'] }
+  /owner/venues/{venueId}/loyalty/confirm:
+    post:
+      tags: [owner-loyalty]
+      operationId: ownerConfirmRedemption
+      security: [{ ownerAuth: [] }]
+      summary: Confirm a guest's 6-character redemption claim code. Staff confirmation is the only debit.
+      parameters: [{ $ref: '#/components/parameters/VenueId' }, { $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code: { type: string, minLength: 6, maxLength: 6 }
+      responses:
+        '200':
+          description: Confirmed and debited on the member's card.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoyaltyCard' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
 
   /owner/venues/{venueId}/payout-account:
     get:
@@ -1862,61 +1903,127 @@ components:
         loyalty: { type: boolean, const: true, description: Must be true to join. }
         marketing: { type: boolean, description: Separate and unticked by default. WhatsApp or SMS promos only if true. }
         textVersion: { type: string, example: consent-2026-10-v1 }
-    Reward:
+    LoyaltyEarnMode:
+      oneOf:
+        - type: object
+          required: [kind]
+          properties:
+            kind: { type: string, const: stamps }
+        - type: object
+          required: [kind, points, perMinor]
+          properties:
+            kind: { type: string, const: points }
+            points: { type: integer, minimum: 1 }
+            perMinor: { type: integer, minimum: 1 }
+    LoyaltyTierBand:
       type: object
-      required: [id, title, stampsNeeded]
+      required: [id, minLifetime]
+      properties:
+        id: { type: string, enum: [bronze, silver, gold] }
+        minLifetime: { type: integer, minimum: 0 }
+    RewardOffer:
+      type: object
+      required: [id, title, cost]
       properties:
         id: { type: string }
-        title: { type: string, example: Free jollof & chicken }
-        stampsNeeded: { type: integer }
+        title: { type: string, maxLength: 80, example: Free jollof & chicken }
+        cost: { type: integer, minimum: 1 }
     LoyaltyProgram:
       type: object
-      required: [enabled, stampsNeeded, reward, stampRule]
+      required: [enabled, currency, earn, tiers, rewards, expiryDays, claimTtlSeconds, birthdayTreat]
       properties:
         enabled: { type: boolean }
-        stampsNeeded: { type: integer, minimum: 3, maximum: 20 }
-        minSpendPesewas:
-          description: Spend per stamp when stampRule is one_per_min_spend.
-          allOf: [{ $ref: '#/components/schemas/Pesewas' }]
-        reward: { $ref: '#/components/schemas/Reward' }
+        currency: { type: string, pattern: '^[A-Z]{3}$', example: GHS }
+        earn: { $ref: '#/components/schemas/LoyaltyEarnMode' }
+        tiers:
+          type: array
+          minItems: 3
+          maxItems: 3
+          items: { $ref: '#/components/schemas/LoyaltyTierBand' }
+        rewards:
+          type: array
+          items: { $ref: '#/components/schemas/RewardOffer' }
+        expiryDays: { type: ['integer', 'null'], minimum: 1 }
+        claimTtlSeconds: { type: integer, minimum: 60, maximum: 3600 }
         birthdayTreat: { type: ['string', 'null'] }
-        stampRule: { type: string, enum: [one_per_paid_order, one_per_min_spend], default: one_per_paid_order }
         memberCount: { type: integer, readOnly: true }
-    LoyaltyHistoryEntry:
-      type: object
-      required: [at, change, reason]
-      properties:
-        at: { type: string, format: date-time }
-        change: { type: integer }
-        reason: { type: string, enum: [paid_order, game_score, reward_redeemed, birthday] }
-    LoyaltyCard:
-      type: object
-      required: [venueId, stamps, stampsNeeded, reward, rewardReady, memberSince, consent]
-      properties:
-        venueId: { type: string }
-        stamps: { type: integer }
-        stampsNeeded: { type: integer }
-        reward: { $ref: '#/components/schemas/Reward' }
-        rewardReady: { type: boolean }
-        memberSince: { type: string, format: date }
-        history: { type: array, items: { $ref: '#/components/schemas/LoyaltyHistoryEntry' } }
-        consent:
-          type: object
-          required: [marketing, at]
+    LoyaltyEarnSource:
+      oneOf:
+        - type: object
+          required: [type, orderId, amountMinor, currency]
           properties:
-            marketing: { type: boolean }
+            type: { type: string, const: paid_visit }
+            orderId: { type: string }
+            amountMinor: { $ref: '#/components/schemas/Pesewas' }
+            currency: { type: string, pattern: '^[A-Z]{3}$' }
+        - type: object
+          required: [type, runId, day]
+          properties:
+            type: { type: string, const: game }
+            runId: { type: string }
+            day: { type: string, format: date }
+        - type: object
+          required: [type, year, title]
+          properties:
+            type: { type: string, const: birthday }
+            year: { type: string }
+            title: { type: string }
+    LoyaltyFact:
+      oneOf:
+        - type: object
+          required: [kind, id, at, units, source]
+          properties:
+            kind: { type: string, const: earn }
+            id: { type: string }
             at: { type: string, format: date-time }
+            units: { type: integer, minimum: 0 }
+            source: { $ref: '#/components/schemas/LoyaltyEarnSource' }
+        - type: object
+          required: [kind, id, at, code, rewardId, title, units, expiresAt]
+          properties:
+            kind: { type: string, const: claim }
+            id: { type: string }
+            at: { type: string, format: date-time }
+            code: { type: string, pattern: '^[A-Z0-9]{6}$' }
+            rewardId: { type: string }
+            title: { type: string }
+            units: { type: integer, minimum: 1 }
+            expiresAt: { type: string, format: date-time }
+        - type: object
+          required: [kind, id, at, claimId, rewardId, title, units]
+          properties:
+            kind: { type: string, const: confirm }
+            id: { type: string }
+            at: { type: string, format: date-time }
+            claimId: { type: string }
+            rewardId: { type: string }
+            title: { type: string }
+            units: { type: integer, minimum: 1 }
     LoyaltyMember:
       type: object
-      required: [id, phoneMasked, stamps, visits, marketingConsent, joinedAt]
+      required: [id, firstName, phoneMasked, birthdayMonthDay, memberSince, consent, facts]
       properties:
         id: { type: string }
         firstName: { type: ['string', 'null'] }
         phoneMasked: { type: string }
-        stamps: { type: integer }
-        visits: { type: integer }
-        marketingConsent: { type: boolean }
-        joinedAt: { type: string, format: date-time }
+        birthdayMonthDay: { type: ['string', 'null'] }
+        memberSince: { type: string, format: date }
+        consent:
+          type: object
+          required: [marketing, at, textVersion]
+          properties:
+            marketing: { type: boolean }
+            at: { type: string, format: date-time }
+            textVersion: { type: string }
+        facts:
+          type: array
+          items: { $ref: '#/components/schemas/LoyaltyFact' }
+    LoyaltyCard:
+      type: object
+      required: [programme, member]
+      properties:
+        programme: { $ref: '#/components/schemas/LoyaltyProgram' }
+        member: { $ref: '#/components/schemas/LoyaltyMember' }
 
     ModerationState:
       type: string

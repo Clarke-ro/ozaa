@@ -1,8 +1,16 @@
+import {
+  apply,
+  blankVenue,
+  featured,
+  LOYALTY_PROBLEMS,
+  samplePhone,
+  seedVenueLoyalty,
+  type Command,
+  type VenueLoyalty,
+} from '../features/loyalty/facts';
 import { ApiError } from '@/lib/api/errors';
 import type {
   LoyaltyCard,
-  LoyaltyMember,
-  LoyaltyProgram,
   Menu,
   MenuCategory,
   MenuItem,
@@ -66,9 +74,7 @@ export type World = {
   offers: Record<string, Offer[]>;
   orders: LiveOrder[];
   calls: WaiterCall[];
-  cards: Record<string, LoyaltyCard>;
-  members: LoyaltyMember[];
-  programs: Record<string, LoyaltyProgram>;
+  loyalty: Record<string, VenueLoyalty>;
   payouts: Record<string, PayoutAccount>;
   staff: (StaffMember & { venueId: string; phone: string })[];
   videos: VideoReview[];
@@ -93,18 +99,6 @@ function tablesFor(slug: string, code: string): Table[] {
     label: `Table ${item}`,
     qrUrl: `https://ozaa.app/${slug}/t/${item}`,
   }));
-}
-
-function programFor(venue: VenuePublic, memberCount: number): LoyaltyProgram {
-  const needed = venue.loyaltySummary?.stampsNeeded ?? 8;
-  const title = venue.loyaltySummary?.rewardTitle ?? 'A free plate';
-  return {
-    enabled: true,
-    stampsNeeded: needed,
-    reward: { id: `rwd_${venue.slug}`, title, stampsNeeded: needed },
-    stampRule: 'one_per_paid_order',
-    memberCount,
-  };
 }
 
 export function createWorld(now: number): World {
@@ -167,28 +161,22 @@ export function createWorld(now: number): World {
     });
   }
 
-  const cards: Record<string, LoyaltyCard> = {};
-  const members: LoyaltyMember[] = [];
-  for (const [slug, card] of Object.entries(cardFile)) {
-    const phone = slug === 'mamas-kitchen' ? '+233244000099' : slug === 'bean-there' ? '+233204000099' : '+233274000099';
-    cards[`${slug}:${phone}`] = card;
-    members.push({
-      id: `mem_${slug}`,
-      firstName: 'Ama',
-      phoneMasked: '024 *** 0099',
-      stamps: card.stamps,
-      visits: card.stamps,
-      marketingConsent: card.consent.marketing,
-      joinedAt: `${card.memberSince}T00:00:00Z`,
-    });
-  }
-
-  const programs: Record<string, LoyaltyProgram> = {};
+  const loyalty: Record<string, VenueLoyalty> = {};
   const payouts: Record<string, PayoutAccount> = {};
   const tables: Record<string, Table[]> = {};
   const staff: World['staff'] = [];
+  const access = new Map<string, { phone: string; purpose: 'owner_login' | 'guest_loyalty' }>();
   for (const venue of Object.values(venues)) {
-    programs[venue.id] = programFor(venue, members.filter((member) => member.id.endsWith(venue.slug)).length);
+    const phone = samplePhone(
+      venue.slug === 'mamas-kitchen'
+        ? '+233244000099'
+        : venue.slug === 'bean-there'
+          ? '+233204000099'
+          : '+233274000099',
+    );
+    access.set(`acc_guest_loyalty_${phone}`, { phone, purpose: 'guest_loyalty' });
+    const seeded = cardFile[venue.slug];
+    loyalty[venue.id] = seeded ? seedVenueLoyalty(venue.id, seeded, phone) : blankVenue(venue.id, venue.currency);
     payouts[venue.id] = {
       businessName: venue.name,
       settlementType: 'momo',
@@ -203,6 +191,7 @@ export function createWorld(now: number): World {
   for (const person of STAFF) {
     const venue = venues[person.slug];
     if (!venue) continue;
+    access.set(`acc_owner_login_${person.phone}`, { phone: person.phone, purpose: 'owner_login' });
     staff.push({
       id: `stf_${person.phone.slice(-4)}`,
       firstName: person.firstName,
@@ -222,9 +211,7 @@ export function createWorld(now: number): World {
     offers,
     orders,
     calls: [],
-    cards,
-    members,
-    programs,
+    loyalty,
     payouts,
     staff,
     videos: [],
@@ -235,10 +222,36 @@ export function createWorld(now: number): World {
     otpFails: new Map(),
     uploads: new Set(),
     sessions: new Map(),
-    access: new Map(),
+    access,
     refresh: new Map(),
     seq: 100,
   };
+}
+
+export function keepLoyalty(
+  world: World,
+  venueId: string,
+  command: Command,
+  nowIso: string,
+): { venue: VenueLoyalty; effect: 'posted' | 'duplicate' | 'skipped'; memberId: string | null } {
+  const place = venueById(world, venueId);
+  const current = world.loyalty[venueId] ?? blankVenue(venueId, place.currency);
+  const step = apply(current, command, nowIso);
+  if (!step.ok) {
+    const problem = LOYALTY_PROBLEMS[step.error.code];
+    throw new ApiError(problem.status, step.error.code, problem.title);
+  }
+  world.loyalty[venueId] = step.next;
+  if (command.type === 'save_programme') {
+    const best = featured(step.next.programme);
+    world.venues[place.slug] = {
+      ...place,
+      loyaltySummary: step.next.programme.enabled && best
+        ? { stampsNeeded: best.cost, rewardTitle: best.title }
+        : null,
+    };
+  }
+  return { venue: step.next, effect: step.effect, memberId: step.memberId };
 }
 
 export function venueBySlug(world: World, slug: string): VenuePublic {

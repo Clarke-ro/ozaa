@@ -1,7 +1,7 @@
 import { useEffect, useReducer, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import * as Crypto from 'expo-crypto';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
 import { asGhanaPhone, countryForVenue, parsePhone } from '@/lib/phone';
@@ -23,6 +23,7 @@ const TIPS = [0, 5, 10, 15] as const;
 export function PayScreen({ slug }: { slug: string }) {
   const { t } = useTranslation();
   const theme = useTheme();
+  const client = useQueryClient();
   const venue = useVenue(slug);
   const currency = venue.data?.currency ?? DEFAULT_CURRENCY;
   const country = countryForVenue({
@@ -53,12 +54,14 @@ export function PayScreen({ slug }: { slug: string }) {
 
   useEffect(() => {
     if (!payment.data) return;
-    if (payment.data.status === 'succeeded')
+    if (payment.data.status === 'succeeded') {
       send({ type: 'server_succeeded', reference: payment.data.reference });
+      void client.invalidateQueries({ queryKey: ['loyalty'] });
+    }
     if (payment.data.status === 'failed')
       send({ type: 'server_failed', message: payment.data.failureReason ?? t('pay.failed') });
     if (payment.data.status === 'abandoned') send({ type: 'verify_still_open' });
-  }, [payment.data, t]);
+  }, [client, payment.data, t]);
 
   if (!orderId) return <EmptyState message={t('menu.empty')} />;
   if (order.isLoading) return <LoadingState />;

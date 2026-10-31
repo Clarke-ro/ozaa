@@ -8,6 +8,7 @@ import { useOwnerSession } from '@/features/session';
 import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { ozaaTheme, ThemeProvider, useTheme } from '@/ui/theme';
+export { OwnerLoyalty } from './OwnerLoyalty';
 
 export function OwnerOrders() {
   const { t } = useTranslation();
