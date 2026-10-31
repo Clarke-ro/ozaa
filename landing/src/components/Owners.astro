@@ -1,0 +1,59 @@
+---
+interface Props {
+  id: string;
+  heading: string;
+}
+
+const { id, heading } = Astro.props;
+import {
+  later,
+  laterIntro,
+  ownerIntro,
+  ownerNow,
+  screenSize,
+  screens,
+} from "../content/page";
+---
+
+<section class="section" id={id} aria-labelledby={`${id}-title`}>
+  <div class="wrap">
+    <h2 id={`${id}-title`}>{heading}</h2>
+    <p>{ownerIntro}</p>
+    <div class="phone-row">
+      {
+        ownerNow.map((item) => {
+          const shot = screens[item.screen];
+          return (
+            <article>
+              <h3>{item.title}</h3>
+              <p>{item.body}</p>
+              <img
+                class="phone owner-shot"
+                src={shot.src}
+                alt={shot.alt}
+                width={screenSize.width}
+                height={screenSize.height}
+                loading="lazy"
+                decoding="async"
+              />
+            </article>
+          );
+        })
+      }
+    </div>
+    <div class="owner-copy">
+      <h3>Later</h3>
+      <p>{laterIntro}</p>
+      <div class="later">
+        {
+          later.map((item) => (
+            <article>
+              <h4>{item.title}</h4>
+              <p>{item.body}</p>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,26 @@
+---
+interface Props {
+  id: string;
+  heading: string;
+}
+
+const { id, heading } = Astro.props;
+import { steps } from "../content/page";
+---
+
+<section class="section" id={id} aria-labelledby={`${id}-title`}>
+  <div class="wrap">
+    <h2 id={`${id}-title`}>{heading}</h2>
+    <ol class="steps">
+      {
+        steps.map((step, index) => (
+          <li>
+            <div class="step-num">{index + 1}</div>
+            <h3>{step.title}</h3>
+            <p>{step.body}</p>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>

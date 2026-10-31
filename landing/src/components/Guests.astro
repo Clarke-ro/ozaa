@@ -1,0 +1,38 @@
+---
+interface Props {
+  id: string;
+  heading: string;
+}
+
+const { id, heading } = Astro.props;
+import { guestFeatures, guestNote, screenSize, screens } from "../content/page";
+---
+
+<section class="section" id={id} aria-labelledby={`${id}-title`}>
+  <div class="wrap">
+    <h2 id={`${id}-title`}>{heading}</h2>
+    <p>{guestNote}</p>
+    {
+      guestFeatures.map((feature) => {
+        const shot = screens[feature.screen];
+        return (
+          <article class="feature">
+            <div>
+              <h3>{feature.title}</h3>
+              <p>{feature.body}</p>
+            </div>
+            <img
+              class="phone"
+              src={shot.src}
+              alt={shot.alt}
+              width={screenSize.width}
+              height={screenSize.height}
+              loading="lazy"
+              decoding="async"
+            />
+          </article>
+        );
+      })
+    }
+  </div>
+</section>

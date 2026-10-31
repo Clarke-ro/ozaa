@@ -1,0 +1,27 @@
+---
+import { hero, screenSize, screens } from "../content/page";
+
+const shot = screens[hero.screen];
+---
+
+<section class="hero wrap" id="top" aria-labelledby="hero-title">
+  <div class="hero-copy">
+    <h1 id="hero-title">{hero.heading}</h1>
+    <p>{hero.lead}</p>
+    <p class="support">{hero.support}</p>
+    <p class="support">{hero.samples}</p>
+    <a class="button" href="#contact">{hero.cta}</a>
+  </div>
+  <figure>
+    <img
+      class="phone"
+      src={shot.src}
+      alt={shot.alt}
+      width={screenSize.width}
+      height={screenSize.height}
+      fetchpriority="high"
+      decoding="async"
+    />
+    <figcaption class="caption">{hero.caption}</figcaption>
+  </figure>
+</section>
