@@ -19,13 +19,19 @@ import type {
   Order,
   OtpPurpose,
   Payment,
+  Currency,
+  InsightsReport,
+  OwnerDashboard,
   PayoutAccount,
   PayoutAccountInput,
+  VenueTransaction,
+  WrittenReview,
   ServiceSettings,
   StaffMember,
   StaffRole,
   StaffUser,
   Story,
+  FloorTable,
   Table,
   ThemeInput,
   VenuePublic,
@@ -105,4 +111,13 @@ export type ApiClient = {
   ownerListLoyaltyMembers(venueId: string): Promise<{ items: LoyaltyMember[] }>;
   ownerGetPayoutAccount(venueId: string): Promise<PayoutAccount>;
   ownerSetPayoutAccount(venueId: string, body: PayoutAccountInput): Promise<PayoutAccount>;
+  ownerGetDashboard(venueId: string): Promise<OwnerDashboard>;
+  ownerGetFloor(venueId: string): Promise<{ items: FloorTable[] }>;
+  ownerListTransactions(venueId: string): Promise<{ items: VenueTransaction[] }>;
+  ownerRefundTransaction(transactionId: string, call?: Call): Promise<VenueTransaction>;
+  ownerListWrittenReviews(venueId: string): Promise<{ items: WrittenReview[] }>;
+  ownerReplyToReview(reviewId: string, body: { text: string }, call?: Call): Promise<WrittenReview>;
+  ownerGetInsights(venueId: string, range?: InsightsReport['range']): Promise<InsightsReport>;
 };
+
+export type { Currency };

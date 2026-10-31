@@ -9,7 +9,7 @@ info:
     and regenerate `src/lib/api/schema.ts` (openapi-typescript) in the same PR.
 
     Conventions:
-    - Money is always an integer number of pesewas (GH₵65.00 = 6500). Currency is GHS.
+    - Money is always an integer count of minor units (GH₵65.00 = 6500). The venue's `currency` says which unit. Sample venues are GHS. XOF stores the whole franc. Paystack charges in this build stay GHS.
     - Times are ISO 8601 strings in UTC (`2026-10-31T12:41:00Z`). The app shows them in the venue's time zone.
     - IDs are opaque strings with a prefix (`ven_`, `itm_`, `ord_`, `pay_`, `vrv_` ...). Never parse them.
     - Errors use Problem Details (RFC 9457) with `application/problem+json`.
@@ -41,6 +41,7 @@ tags:
   - name: owner-reviews
   - name: owner-loyalty
   - name: owner-payouts
+  - name: owner-insights
   - name: webhooks
 security: []
 paths:
@@ -1239,6 +1240,128 @@ paths:
               schema: { $ref: '#/components/schemas/PayoutAccount' }
         '422': { $ref: '#/components/responses/Unprocessable' }
 
+  /owner/venues/{venueId}/dashboard:
+    get:
+      tags: [owner-orders]
+      operationId: ownerGetDashboard
+      summary: Today's sales, open tables, live orders, waiter calls, rating and alerts.
+      security: [{ ownerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      responses:
+        '200':
+          description: Figures for the owner home. Sales count only money already taken.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OwnerDashboard' }
+  /owner/venues/{venueId}/floor:
+    get:
+      tags: [owner-tables]
+      operationId: ownerGetFloor
+      summary: Tables with a derived status.
+      security: [{ ownerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      responses:
+        '200':
+          description: Status comes from orders and waiter calls. It is not stored on the table.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/FloorTable' } }
+  /owner/venues/{venueId}/transactions:
+    get:
+      tags: [owner-payouts]
+      operationId: ownerListTransactions
+      summary: Paystack sandbox charges and cash taken at the table.
+      security: [{ ownerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      responses:
+        '200':
+          description: Owner role only. Settlement is mocked until the live Paystack account exists.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/VenueTransaction' } }
+  /owner/transactions/{transactionId}/refund:
+    post:
+      tags: [owner-payouts]
+      operationId: ownerRefundTransaction
+      summary: Refund a succeeded charge in full. Paystack sandbox, mocked.
+      security: [{ ownerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/TransactionId' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      responses:
+        '200':
+          description: The charge is marked refunded. Only a succeeded payment can be refunded, and only once.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/VenueTransaction' }
+        '409': { description: The charge cannot be refunded. }
+  /owner/venues/{venueId}/written-reviews:
+    get:
+      tags: [owner-reviews]
+      operationId: ownerListWrittenReviews
+      summary: Star ratings and the replies the owner has sent.
+      security: [{ ownerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      responses:
+        '200':
+          description: Written reviews. 1 to 3 stars stay private.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/WrittenReview' } }
+  /owner/written-reviews/{writtenReviewId}/reply:
+    post:
+      tags: [owner-reviews]
+      operationId: ownerReplyToReview
+      summary: Save a private reply on a written review.
+      security: [{ ownerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/WrittenReviewId' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text: { type: string, maxLength: 400 }
+      responses:
+        '200':
+          description: Saved.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WrittenReview' }
+  /owner/venues/{venueId}/insights:
+    get:
+      tags: [owner-insights]
+      operationId: ownerGetInsights
+      summary: Sales, top dishes, peak hours and repeat guests.
+      security: [{ ownerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/VenueId' }
+        - in: query
+          name: range
+          schema: { type: string, enum: [today, 7d, 30d], default: 7d }
+      responses:
+        '200':
+          description: Sample figures until the real ledger exists. The response says sample true.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InsightsReport' }
+
 components:
   securitySchemes:
     guestAuth:
@@ -1281,6 +1404,16 @@ components:
       name: venueId
       required: true
       schema: { type: string, pattern: '^ven_[A-Za-z0-9]+$' }
+    TransactionId:
+      in: path
+      name: transactionId
+      required: true
+      schema: { type: string, pattern: '^txn_[A-Za-z0-9]+$' }
+    WrittenReviewId:
+      in: path
+      name: writtenReviewId
+      required: true
+      schema: { type: string, pattern: '^rev_[A-Za-z0-9]+$' }
     OrderId:
       in: path
       name: orderId
@@ -1579,7 +1712,7 @@ components:
           properties:
             stampsNeeded: { type: integer }
             rewardTitle: { type: string }
-        currency: { type: string, const: GHS }
+        currency: { $ref: '#/components/schemas/Currency' }
         languages: { type: array, items: { $ref: '#/components/schemas/Language' } }
         googleReviewUrl: { type: ['string', 'null'], format: uri }
         payEnabled: { type: boolean, description: False until the payout account is checked. }
@@ -1997,3 +2130,117 @@ components:
         accountMasked: { type: string, example: '**** 4567' }
         verified: { type: boolean }
         ozaaFeePercent: { type: number, description: 'Ozaa''s share taken by the Paystack split. Set by Ozaa, read-only here.' }
+
+    Currency:
+      type: string
+      enum: [GHS, NGN, KES, ZAR, XOF, USD]
+      description: Sample venues use GHS. Amount fields are minor units (pesewas, kobo, cents) except XOF, which is the whole franc.
+    OwnerDashboard:
+      type: object
+      required: [salesTodayPesewas, currency, changePercent, direction, openTables, liveOrders, openCalls, ratingAverage, ratingCount, alerts]
+      properties:
+        salesTodayPesewas: { $ref: '#/components/schemas/Pesewas' }
+        currency: { $ref: '#/components/schemas/Currency' }
+        changePercent: { type: ['integer', 'null'], description: Versus the same venue yesterday. Null when yesterday was zero. }
+        direction: { type: string, enum: [up, down, flat, none] }
+        openTables: { type: integer }
+        liveOrders: { type: integer }
+        openCalls: { type: integer }
+        ratingAverage: { type: ['number', 'null'] }
+        ratingCount: { type: integer }
+        alerts:
+          type: array
+          items:
+            type: object
+            required: [code]
+            properties:
+              code: { type: string, enum: [calls, bills, payout, sold_out] }
+              count: { type: integer }
+              detail: { type: string }
+    FloorStatus:
+      type: string
+      enum: [free, seated, ordered, waiting_to_pay, needs_waiter]
+    FloorTable:
+      type: object
+      required: [id, code, status]
+      properties:
+        id: { type: string }
+        code: { type: string }
+        label: { type: string }
+        qrUrl: { type: string, format: uri }
+        status: { $ref: '#/components/schemas/FloorStatus' }
+        orderId: { type: ['string', 'null'] }
+        orderNumber: { type: ['integer', 'null'] }
+        orderStatus: { oneOf: [{ $ref: '#/components/schemas/OrderStatus' }, { type: 'null' }] }
+        paymentStatus: { oneOf: [{ $ref: '#/components/schemas/PaymentStatusSummary' }, { type: 'null' }] }
+        billPesewas: { oneOf: [{ $ref: '#/components/schemas/Pesewas' }, { type: 'null' }] }
+        waiterCallId: { type: ['string', 'null'] }
+        waiterReason: { oneOf: [{ $ref: '#/components/schemas/WaiterReason' }, { type: 'null' }] }
+    VenueTransaction:
+      type: object
+      required: [id, reference, orderId, orderNumber, method, amountPesewas, currency, status, settlement, createdAt, testMode]
+      properties:
+        id: { type: string }
+        reference: { type: string }
+        orderId: { $ref: '#/components/schemas/OrderId' }
+        orderNumber: { type: integer }
+        method: { type: string, enum: [momo, card, cash] }
+        provider: { $ref: '#/components/schemas/MomoProvider' }
+        amountPesewas: { $ref: '#/components/schemas/Pesewas' }
+        currency: { $ref: '#/components/schemas/Currency' }
+        status: { type: string, enum: [succeeded, failed, abandoned, pending] }
+        settlement: { type: string, enum: [pending, settled, refunded] }
+        createdAt: { type: string, format: date-time }
+        testMode: { type: boolean }
+    WrittenReview:
+      type: object
+      required: [id, stars, firstName, createdAt]
+      properties:
+        id: { type: string }
+        stars: { type: integer, minimum: 1, maximum: 5 }
+        firstName: { type: string }
+        text: { type: string }
+        highlights:
+          type: array
+          items: { type: string, enum: [food, service, speed, value, vibe, cleanliness] }
+        createdAt: { type: string, format: date-time }
+        reply: { type: ['string', 'null'] }
+    InsightsReport:
+      type: object
+      required: [range, currency, salesPesewas, series, topItems, peakHours, repeatGuests, sample]
+      properties:
+        range: { type: string, enum: [today, 7d, 30d] }
+        currency: { $ref: '#/components/schemas/Currency' }
+        salesPesewas: { $ref: '#/components/schemas/Pesewas' }
+        sample: { type: boolean, description: True until the ledger is real. Show the Sample label. }
+        series:
+          type: array
+          items:
+            type: object
+            required: [label, pesewas]
+            properties:
+              label: { type: string }
+              pesewas: { $ref: '#/components/schemas/Pesewas' }
+        topItems:
+          type: array
+          items:
+            type: object
+            required: [name, count, pesewas]
+            properties:
+              name: { type: string }
+              count: { type: integer }
+              pesewas: { $ref: '#/components/schemas/Pesewas' }
+        peakHours:
+          type: array
+          items:
+            type: object
+            required: [hour, orders]
+            properties:
+              hour: { type: integer, minimum: 0, maximum: 23 }
+              orders: { type: integer }
+        repeatGuests:
+          type: object
+          required: [count, sharePercent]
+          properties:
+            count: { type: integer }
+            sharePercent: { type: integer, minimum: 0, maximum: 100 }

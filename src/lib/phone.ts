@@ -24,6 +24,38 @@ const PREFIXES: Record<string, MomoProvider> = {
 
 export type ParsedPhone = { phone: GhanaPhone; provider: MomoProvider | null };
 
+const NATIONAL: { calling: string; groups: number[] }[] = [
+  { calling: '233', groups: [3, 3, 4] },
+  { calling: '234', groups: [4, 3, 4] },
+  { calling: '254', groups: [4, 3, 3] },
+  { calling: '27', groups: [3, 3, 4] },
+];
+
+function groupDigits(value: string, sizes: number[]): string {
+  const parts: string[] = [];
+  let index = 0;
+  for (const size of sizes) {
+    parts.push(value.slice(index, index + size));
+    index += size;
+  }
+  return parts.join(' ');
+}
+
+/** Display only. Storage stays E.164. Ghana, Nigeria, Kenya and South Africa use a leading 0. */
+export function formatPhone(e164: string): string {
+  const digits = e164.replace(/[^\d]/g, '');
+  const regions = [...NATIONAL].sort((left, right) => right.calling.length - left.calling.length);
+  for (const region of regions) {
+    if (!digits.startsWith(region.calling)) continue;
+    const national = `0${digits.slice(region.calling.length)}`;
+    const expected = region.groups.reduce((sum, size) => sum + size, 0);
+    if (national.length !== expected) break;
+    return groupDigits(national, region.groups);
+  }
+  if (digits.startsWith('1') && digits.length === 11) return `+1 ${groupDigits(digits.slice(1), [3, 3, 4])}`;
+  return e164.startsWith('+') ? e164 : `+${digits}`;
+}
+
 /** Accepts 024…, 24…, +233 24… and 233…. Stores +23324…. */
 export function parseGhanaPhone(input: string): ParsedPhone | null {
   const digits = input.replace(/[^\d+]/g, '');

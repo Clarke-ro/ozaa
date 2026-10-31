@@ -50,7 +50,7 @@ export function OwnerLogin() {
                   role: venue.role,
                   firstName: tokens.user.firstName,
                 });
-                router.replace('/owner');
+                router.replace(venue.role === 'kitchen' ? '/owner/orders' : '/owner');
               })
               .catch(() => setError(true));
           }}

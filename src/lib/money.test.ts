@@ -1,4 +1,4 @@
-import { formatCedis, percentOf, sumPesewas } from './money';
+import { formatCedis, formatMoney, parseMoneyInput, percentOf, sumPesewas } from './money';
 import { pesewas } from './brand';
 
 test('formats whole cedis without decimals', () => {
@@ -13,6 +13,23 @@ test('keeps pesewas when they are not zero', () => {
 
 test('sums pesewas as integers', () => {
   expect(sumPesewas([pesewas(6500), pesewas(1500), pesewas(1500)])).toBe(9500);
+});
+
+test('formats money from the venue currency, with cedis kept as GH₵', () => {
+  expect(formatMoney(pesewas(6500), 'GHS')).toBe('GH₵65');
+  expect(formatMoney(pesewas(6550), 'GHS')).toBe('GH₵65.50');
+  const naira = new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(1500);
+  expect(formatMoney(pesewas(150000), 'NGN')).toBe(naira);
+  expect(formatMoney(pesewas(5000), 'XOF')).toBe(new Intl.NumberFormat('fr-SN', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(5000));
+});
+
+test('reads a price the owner typed back into pesewas', () => {
+  expect(parseMoneyInput('65')).toBe(6500);
+  expect(parseMoneyInput('65.50')).toBe(6550);
+  expect(parseMoneyInput('GH₵2,480')).toBe(248000);
+  expect(parseMoneyInput('65.5')).toBe(6550);
+  expect(parseMoneyInput('')).toBeNull();
+  expect(parseMoneyInput('12.345')).toBeNull();
 });
 
 test('rounds a tip half-up to the pesewa', () => {

@@ -4,6 +4,38 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-10-31 · The owner app (BUILD.md section 18)
+
+**What we built**
+
+The venue side of Ozaa. After a phone code, the owner sees today's money, the floor, kitchen tickets, waiter calls, the menu, and the rest of the tools. On a phone the links sit on the bottom. On a tablet they sit in a sidebar.
+
+**How it works**
+
+The floor does not store a status on the table. It looks at the orders and the waiter calls and decides.
+
+```
+orders + waiter calls → deriveFloor → free, seated, ordered, waiting to pay, or needs a waiter
+```
+
+A call wins over everything else, because someone is waiting. When the kitchen marks an order ready, the guest's phone shows "Your food is ready!" on whatever screen they are on, including the game. Only that one status does it.
+
+**Files to look at**
+
+- `src/features/owner/floor/floorStatus.ts`: the table status rules, with no React in the file.
+- `src/features/owner/chrome/nav.ts`: which role sees which screen.
+- `src/app/owner/_layout.tsx`: the sidebar and the sign-in check.
+
+**New idea: a derived status**
+
+A state machine lists the moves a thing can make, like a ticket going from received to preparing. The floor is different. Its status is worked out from other facts. If you stored "free" and "has an order" as two flags, they could disagree. Deriving the word from the orders means they cannot.
+
+**Try it yourself**
+
+In `floorStatus.ts`, make a resolved waiter call keep the table on "needs a waiter". Run `npx jest src/features/owner/floor/floorStatus.test.ts` and read the failure. Put the rule back so the test passes.
+
+---
+
 ## 2026-10-31 · How the app is put together (BUILD.md Phase 0)
 
 **What we built**
