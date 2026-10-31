@@ -9,6 +9,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as SplashScreen from 'expo-splash-screen';
 import { I18nextProvider } from 'react-i18next';
 import i18n from '@/i18n';
+import { applySavedLanguage } from '@/features/venue';
 import { useAppFonts } from '@/theme/fonts';
 import { ThemeProvider, ozaaTheme } from '@/ui/theme';
 
@@ -22,6 +23,9 @@ const persister = createAsyncStoragePersister({ storage: AsyncStorage });
 
 export default function RootLayout() {
   const fontsReady = useAppFonts();
+  useEffect(() => {
+    void applySavedLanguage();
+  }, []);
   useEffect(() => {
     if (fontsReady) SplashScreen.hideAsync().catch(() => undefined);
   }, [fontsReady]);

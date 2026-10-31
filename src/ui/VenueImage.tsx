@@ -17,6 +17,7 @@ export function VenueImage({
       alt={alt}
       accessibilityLabel={alt}
       style={style}
+      pointerEvents="none"
       contentFit="cover"
       cachePolicy="memory-disk"
       transition={150}

@@ -15,7 +15,10 @@
     "powered": "Powered by Ozaa",
     "table": "Table {{code}}",
     "language": "English",
+    "chooseLanguage": "Language",
+    "comingSoon": "Coming soon",
     "share": "Share",
+    "linkCopied": "Link copied",
     "sections": {
       "table": "At your table",
       "rewards": "Rewards",

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -10,6 +11,9 @@ import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { VenueImage } from '@/ui/VenueImage';
 import { useTheme } from '@/ui/theme';
+import { LanguagePicker } from './LanguagePicker';
+import { languageByCode, chooseLanguage, type LanguageCode } from './languages';
+import { shareVenueLink } from './shareVenue';
 import { ServiceGrid } from './ServiceGrid';
 import { StoryRow } from './StoryRow';
 import { useStories, useVenue } from './useVenue';
@@ -17,9 +21,12 @@ import { ErrorState, LoadingState } from '@/ui/states';
 import { useGuestSession } from '@/features/session';
 
 export function HomeScreen({ slug }: { slug: string }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const [languageOpen, setLanguageOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const language = languageByCode(i18n.language);
   const router = useRouter();
   const venue = useVenue(slug);
   const stories = useStories(slug);
@@ -37,21 +44,43 @@ export function HomeScreen({ slug }: { slug: string }) {
   const place = venue.data;
   const hours = describeHours(place.hours, new Date());
   const longName = place.name.length > 16;
+  const pageLink = venuePageLink(slug, tableCode);
 
   return (
     <SafeScreen includeTop={false}>
     <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 96 }}>
       <View style={[styles.banner, { height: 170 + insets.top }]}>
         <VenueImage url={place.banner.url} alt={place.banner.alt ?? place.name} style={styles.bannerImage} />
-        <Pressable accessibilityRole="button" accessibilityLabel={t('home.share')} style={[styles.fab, styles.share, { top: insets.top + 12 }]}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('home.share')}
+          onPress={() => {
+            void shareVenueLink(pageLink, place.name).then((result) => {
+              if (result !== 'copied') return;
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
+            });
+          }}
+          style={[styles.fab, styles.share, { top: insets.top + 12 }]}
+        >
           <Share2 color={theme.black} size={18} strokeWidth={2} />
         </Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel={t('home.language')} style={[styles.fab, styles.lang, { top: insets.top + 12 }]}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('home.chooseLanguage')}
+          onPress={() => setLanguageOpen(true)}
+          style={[styles.fab, styles.lang, { top: insets.top + 12 }]}
+        >
           <Globe color={theme.black} size={16} strokeWidth={2} />
           <Text variant="caption" style={styles.langText}>
-            {t('home.language')}
+            {language.label}
           </Text>
         </Pressable>
+        {copied ? (
+          <View style={[styles.copied, { top: insets.top + 60 }]}>
+            <Text variant="caption">{t('home.linkCopied')}</Text>
+          </View>
+        ) : null}
         <View style={[styles.logo, { borderColor: theme.white, backgroundColor: theme.fill }]}>
           <Text variant="display-m" style={{ color: theme.onFill }}>
             {place.initials ?? place.name.slice(0, 2).toUpperCase()}
@@ -108,8 +137,23 @@ export function HomeScreen({ slug }: { slug: string }) {
           </View>
         </Pressable>
       ) : null}
+      <LanguagePicker
+        open={languageOpen}
+        selected={language.code}
+        onChoose={(code: LanguageCode) => {
+          void chooseLanguage(code);
+        }}
+        onClose={() => setLanguageOpen(false)}
+      />
     </SafeScreen>
   );
+}
+
+function venuePageLink(slug: string, tableCode: string | null): string {
+  const path = tableCode ? `/${slug}/t/${tableCode}` : `/${slug}`;
+  const origin = globalThis.location?.origin;
+  if (typeof origin === 'string' && origin.startsWith('http')) return `${origin}${path}`;
+  return `https://ozaa.app${path}`;
 }
 
 function serviceHref(slug: string, id: string): `/${string}` {
@@ -128,9 +172,10 @@ function serviceHref(slug: string, id: string): `/${string}` {
 
 const styles = StyleSheet.create({
   banner: { backgroundColor: '#ddd' },
-  bannerImage: { width: '100%', height: '100%' },
+  bannerImage: StyleSheet.absoluteFill,
   fab: {
     position: 'absolute',
+    zIndex: 2,
     height: 40,
     borderRadius: 20,
     backgroundColor: 'rgba(255,255,255,0.94)',
@@ -140,6 +185,15 @@ const styles = StyleSheet.create({
   share: { left: 16, width: 40 },
   lang: { right: 16, flexDirection: 'row', gap: 6, paddingHorizontal: 12 },
   langText: { fontFamily: 'Inter_600' },
+  copied: {
+    position: 'absolute',
+    left: 16,
+    zIndex: 2,
+    backgroundColor: '#fff',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
   logo: {
     position: 'absolute',
     left: 20,
