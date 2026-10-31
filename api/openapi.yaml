@@ -1,0 +1,1999 @@
+openapi: 3.1.0
+info:
+  title: Ozaa API
+  version: 0.1.0
+  summary: The fixed contract between the Ozaa app (guest web + owner app) and the Ozaa server.
+  description: |
+    The frontend is built first against a mock that follows this file exactly.
+    The real server is built later to the same file. Change this file only in its own PR,
+    and regenerate `src/lib/api/schema.ts` (openapi-typescript) in the same PR.
+
+    Conventions:
+    - Money is always an integer number of pesewas (GH₵65.00 = 6500). Currency is GHS.
+    - Times are ISO 8601 strings in UTC (`2026-10-31T12:41:00Z`). The app shows them in the venue's time zone.
+    - IDs are opaque strings with a prefix (`ven_`, `itm_`, `ord_`, `pay_`, `vrv_` ...). Never parse them.
+    - Errors use Problem Details (RFC 9457) with `application/problem+json`.
+    - Prices, totals, tips and fees are computed by the server. The app sends item ids and quantities only.
+    - Every POST that creates something accepts an `Idempotency-Key` header. Retrying with the same key returns the first result.
+    - Payment secrets (Paystack secret key) live only on the server. The app never sees them.
+    - Guests never hold an account. A guest session is created from the QR code (venue slug + table code).
+servers:
+  - url: https://api.ozaa.app/v1
+    description: Production (not live yet)
+  - url: http://localhost:4000/v1
+    description: Local server (Phase 5 and later)
+tags:
+  - name: auth
+  - name: guest-session
+  - name: venues
+  - name: menu
+  - name: orders
+  - name: payments
+  - name: waiter
+  - name: loyalty
+  - name: reviews
+  - name: game
+  - name: feedback
+  - name: owner-venue
+  - name: owner-menu
+  - name: owner-tables
+  - name: owner-orders
+  - name: owner-reviews
+  - name: owner-loyalty
+  - name: owner-payouts
+  - name: webhooks
+security: []
+paths:
+  # ---------------------------------------------------------------- auth (owner + staff, and guests joining loyalty)
+  /auth/otp/request:
+    post:
+      tags: [auth]
+      operationId: requestOtp
+      summary: Send a 6-digit login code by SMS to an owner, staff member, or a guest joining loyalty.
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone, purpose]
+              properties:
+                phone: { $ref: '#/components/schemas/GhanaPhone' }
+                purpose: { type: string, enum: [owner_login, guest_loyalty] }
+      responses:
+        '202':
+          description: Code sent. Same response whether or not the number is known, so numbers cannot be probed.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [expiresInSeconds, resendInSeconds]
+                properties:
+                  expiresInSeconds: { type: integer, example: 300 }
+                  resendInSeconds: { type: integer, example: 30 }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+  /auth/otp/verify:
+    post:
+      tags: [auth]
+      operationId: verifyOtp
+      summary: Exchange the SMS code for tokens.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone, code, purpose]
+              properties:
+                phone: { $ref: '#/components/schemas/GhanaPhone' }
+                code: { type: string, pattern: '^[0-9]{6}$' }
+                purpose: { type: string, enum: [owner_login, guest_loyalty] }
+      responses:
+        '200':
+          description: Logged in.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthTokens' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+  /auth/refresh:
+    post:
+      tags: [auth]
+      operationId: refreshTokens
+      summary: Refresh tokens.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken: { type: string }
+      responses:
+        '200':
+          description: New tokens. The old refresh token stops working.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthTokens' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /auth/logout:
+    post:
+      tags: [auth]
+      operationId: logout
+      summary: Log out.
+      security: [{ ownerAuth: [] }]
+      responses:
+        '204': { description: Logged out. }
+  /me:
+    get:
+      tags: [auth]
+      operationId: getMe
+      summary: The logged-in staff member.
+      security: [{ ownerAuth: [] }]
+      responses:
+        '200':
+          description: The logged-in owner or staff member and the venues they can manage.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StaffUser' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  # ---------------------------------------------------------------- guest session (from the QR code)
+  /guest-sessions:
+    post:
+      tags: [guest-session]
+      operationId: createGuestSession
+      summary: Start a guest session after a QR scan. No account and no personal data.
+      description: The QR code holds `https://ozaa.app/{venueSlug}/t/{tableCode}`. The web app calls this on load.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [venueSlug]
+              properties:
+                venueSlug: { $ref: '#/components/schemas/Slug' }
+                tableCode: { type: string, description: Missing when the guest opened the venue link without a table QR., example: '12' }
+                language: { $ref: '#/components/schemas/Language' }
+      responses:
+        '201':
+          description: Session started.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [guestToken, expiresAt, venue]
+                properties:
+                  guestToken: { type: string, description: Short-lived bearer token for guest calls. Kept in memory and sessionStorage only. }
+                  expiresAt: { type: string, format: date-time }
+                  venue: { $ref: '#/components/schemas/VenuePublic' }
+                  table: { $ref: '#/components/schemas/Table' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ---------------------------------------------------------------- venues (public)
+  /venues/{venueSlug}:
+    get:
+      tags: [venues]
+      operationId: getVenue
+      summary: Venue profile, theme, hours, and switched-on services for the guest home.
+      parameters: [{ $ref: '#/components/parameters/VenueSlug' }, { $ref: '#/components/parameters/AcceptLanguage' }]
+      responses:
+        '200':
+          description: OK
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/VenuePublic' }
+        '304': { description: Not modified (send If-None-Match). }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /venues/{venueSlug}/menu:
+    get:
+      tags: [menu]
+      operationId: getMenu
+      summary: Get menu.
+      parameters: [{ $ref: '#/components/parameters/VenueSlug' }, { $ref: '#/components/parameters/AcceptLanguage' }]
+      responses:
+        '200':
+          description: The full menu. Cache it for offline use (see BUILD.md, slow-network rules).
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Menu' }
+        '304': { description: Not modified. }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /venues/{venueSlug}/wifi:
+    get:
+      tags: [venues]
+      operationId: getWifi
+      security: [{ guestAuth: [] }]
+      summary: Wi-Fi details. Needs a guest session so the password is not public on the web.
+      parameters: [{ $ref: '#/components/parameters/VenueSlug' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Wifi' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /venues/{venueSlug}/stories:
+    get:
+      tags: [reviews]
+      operationId: listStories
+      summary: Featured video reviews shown as story circles on the guest home.
+      parameters: [{ $ref: '#/components/parameters/VenueSlug' }]
+      responses:
+        '200':
+          description: Newest first, at most 12.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/Story' } }
+  /venues/{venueSlug}/offers:
+    get:
+      tags: [venues]
+      operationId: listOffers
+      summary: List offers.
+      parameters: [{ $ref: '#/components/parameters/VenueSlug' }]
+      responses:
+        '200':
+          description: Specials and offers running today.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/Offer' } }
+
+  # ---------------------------------------------------------------- orders (guest)
+  /orders:
+    post:
+      tags: [orders]
+      operationId: createOrder
+      security: [{ guestAuth: [] }]
+      summary: Place an order for the guest's table. The server prices it from the menu.
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateOrderRequest' }
+      responses:
+        '201':
+          description: Order created with status `received` and payment status `unpaid`.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+  /orders/{orderId}:
+    get:
+      tags: [orders]
+      operationId: getOrder
+      security: [{ guestAuth: [] }]
+      summary: Order status for the Order status screen and the food-ready banner. Poll every 10 s while open.
+      parameters: [{ $ref: '#/components/parameters/OrderId' }]
+      responses:
+        '200':
+          description: OK
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+        '304': { description: Not modified. }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /orders/{orderId}/bill:
+    post:
+      tags: [payments]
+      operationId: quoteBill
+      security: [{ guestAuth: [] }]
+      summary: Work out what this guest pays (whole bill, equal split, or own items) plus tip. No money moves.
+      parameters: [{ $ref: '#/components/parameters/OrderId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BillQuoteRequest' }
+      responses:
+        '200':
+          description: The share to pay.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BillQuote' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  # ---------------------------------------------------------------- payments (Paystack, server-side)
+  /payments:
+    post:
+      tags: [payments]
+      operationId: initializePayment
+      security: [{ guestAuth: [] }]
+      summary: Start a MoMo or card payment for a bill quote.
+      description: |
+        The server calls Paystack with its secret key and the venue's subaccount (split payment),
+        so the money settles to the venue and Ozaa's fee comes off automatically. Ozaa never holds funds.
+        MoMo returns `pay_offline`: show `displayText` and poll `GET /payments/{reference}`.
+        The guest has 180 seconds to approve on their phone (network limit).
+        Card returns `open_url` with a Paystack checkout URL (open it in a browser tab or WebView).
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/InitializePaymentRequest' }
+      responses:
+        '201':
+          description: Payment started.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Payment' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '502': { $ref: '#/components/responses/ProviderError' }
+  /payments/{reference}:
+    get:
+      tags: [payments]
+      operationId: getPayment
+      security: [{ guestAuth: [] }]
+      summary: Payment status. The server re-checks with Paystack (Verify Transaction) while still pending.
+      parameters: [{ $ref: '#/components/parameters/PaymentReference' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Payment' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /payments/{reference}/verify:
+    post:
+      tags: [payments]
+      operationId: verifyPayment
+      security: [{ guestAuth: [] }]
+      summary: Force a fresh check with Paystack (the "I've approved it" button, and after a card redirect).
+      parameters: [{ $ref: '#/components/parameters/PaymentReference' }]
+      responses:
+        '200':
+          description: The verified state. `succeeded` only when Paystack says success AND amount and currency match.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Payment' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '502': { $ref: '#/components/responses/ProviderError' }
+  /webhooks/paystack:
+    post:
+      tags: [webhooks]
+      operationId: paystackWebhook
+      summary: Server-to-server events from Paystack. Not called by the app.
+      description: |
+        Check `x-paystack-signature` = HMAC-SHA512(raw body, secret key) before reading the body.
+        Handle `charge.success` idempotently (the same event can arrive twice). Re-verify the
+        reference with Paystack and compare amount and currency before marking anything paid.
+        Answer 200 fast. Port the logic from design/reference/table-qr-server.js.
+      parameters:
+        - in: header
+          name: x-paystack-signature
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [event, data]
+              properties:
+                event: { type: string, example: charge.success }
+                data: { type: object, additionalProperties: true }
+      responses:
+        '200': { description: Received. }
+        '401': { description: Bad signature. Nothing was changed. }
+
+  # ---------------------------------------------------------------- waiter
+  /waiter-calls:
+    post:
+      tags: [waiter]
+      operationId: callWaiter
+      summary: Call waiter.
+      security: [{ guestAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: { $ref: '#/components/schemas/WaiterReason' }
+                note: { type: string, maxLength: 140 }
+      responses:
+        '201':
+          description: Staff were alerted.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WaiterCall' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+  /waiter-calls/{waiterCallId}:
+    get:
+      tags: [waiter]
+      operationId: getWaiterCall
+      summary: Get waiter call.
+      security: [{ guestAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/WaiterCallId' }]
+      responses:
+        '200':
+          description: OK (shows "Kwesi is on the way" once acknowledged).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WaiterCall' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ---------------------------------------------------------------- loyalty (guest, phone proved by OTP)
+  /venues/{venueSlug}/loyalty/me:
+    get:
+      tags: [loyalty]
+      operationId: getMyLoyaltyCard
+      summary: Get my loyalty card.
+      security: [{ loyaltyAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/VenueSlug' }]
+      responses:
+        '200':
+          description: The guest's stamp card at this venue.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoyaltyCard' }
+        '404': { description: Not a member yet. Show the join screen. }
+    put:
+      tags: [loyalty]
+      operationId: joinLoyalty
+      security: [{ loyaltyAuth: [] }]
+      summary: Join the venue's loyalty program. Consent is required and recorded (Act 843).
+      parameters: [{ $ref: '#/components/parameters/VenueSlug' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [consent]
+              properties:
+                firstName: { type: string, maxLength: 40 }
+                birthdayMonthDay: { type: string, pattern: '^(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$', description: Optional MM-DD for a birthday treat. }
+                consent: { $ref: '#/components/schemas/ConsentInput' }
+      responses:
+        '200':
+          description: Joined (or already a member, consent updated).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoyaltyCard' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+    delete:
+      tags: [loyalty]
+      operationId: leaveLoyalty
+      security: [{ loyaltyAuth: [] }]
+      summary: Withdraw consent and delete the guest's loyalty data at this venue.
+      parameters: [{ $ref: '#/components/parameters/VenueSlug' }]
+      responses:
+        '204': { description: Deleted. }
+  /venues/{venueSlug}/loyalty/me/redeem:
+    post:
+      tags: [loyalty]
+      operationId: redeemReward
+      summary: Redeem reward.
+      security: [{ loyaltyAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/VenueSlug' }, { $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rewardId]
+              properties:
+                rewardId: { type: string }
+                orderId: { $ref: '#/components/schemas/OrderId' }
+      responses:
+        '200':
+          description: Reward applied. The card shows the new stamp count.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoyaltyCard' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  # ---------------------------------------------------------------- reviews
+  /reviews:
+    post:
+      tags: [reviews]
+      operationId: createReview
+      security: [{ guestAuth: [] }]
+      summary: Written review. 4-5 stars then offer the Google review link; 1-3 stars suggest private feedback.
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [stars]
+              properties:
+                stars: { type: integer, minimum: 1, maximum: 5 }
+                highlights: { type: array, items: { type: string, enum: [food, service, speed, value, vibe, cleanliness] } }
+                text: { type: string, maxLength: 1000 }
+                orderId: { $ref: '#/components/schemas/OrderId' }
+      responses:
+        '201':
+          description: Saved.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id, googleReviewUrl]
+                properties:
+                  id: { type: string }
+                  googleReviewUrl: { type: ['string', 'null'], format: uri, description: Null when the venue has not linked Google. }
+  /video-reviews/uploads:
+    post:
+      tags: [reviews]
+      operationId: createVideoUpload
+      security: [{ guestAuth: [] }]
+      summary: Get a one-time upload URL for a 15-30 s video (mp4, webm or mov, max 25 MB).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [contentType, durationSeconds, sizeBytes]
+              properties:
+                contentType: { type: string, enum: [video/mp4, video/webm, video/quicktime] }
+                durationSeconds: { type: number, minimum: 15, maximum: 30 }
+                sizeBytes: { type: integer, maximum: 26214400 }
+      responses:
+        '201':
+          description: PUT the file to `uploadUrl` within 15 minutes.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [uploadId, uploadUrl, expiresAt]
+                properties:
+                  uploadId: { type: string }
+                  uploadUrl: { type: string, format: uri }
+                  expiresAt: { type: string, format: date-time }
+  /video-reviews:
+    post:
+      tags: [reviews]
+      operationId: createVideoReview
+      summary: Create video review.
+      security: [{ guestAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [uploadId, stars, featureConsent]
+              properties:
+                uploadId: { type: string }
+                stars: { type: integer, minimum: 1, maximum: 5 }
+                firstName: { type: string, maxLength: 40 }
+                quote: { type: string, maxLength: 120 }
+                menuItemId: { $ref: '#/components/schemas/MenuItemId' }
+                featureConsent:
+                  type: boolean
+                  description: True lets the venue feature it as a story (first name and stars only). False keeps it a private review.
+      responses:
+        '201':
+          description: Saved with moderation state `pending`. A delete token is returned so the guest can remove it later.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id, deleteToken]
+                properties:
+                  id: { $ref: '#/components/schemas/VideoReviewId' }
+                  deleteToken: { type: string }
+  /video-reviews/{videoReviewId}:
+    delete:
+      tags: [reviews]
+      operationId: deleteMyVideoReview
+      summary: The guest removes their video at any time (needs the delete token).
+      parameters:
+        - { $ref: '#/components/parameters/VideoReviewId' }
+        - in: header
+          name: X-Delete-Token
+          required: true
+          schema: { type: string }
+      responses:
+        '204': { description: 'Deleted everywhere, including stories.' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ---------------------------------------------------------------- game: Play while you wait
+  /venues/{venueSlug}/game/leaderboard:
+    get:
+      tags: [game]
+      operationId: getLeaderboard
+      summary: Get leaderboard.
+      parameters:
+        - { $ref: '#/components/parameters/VenueSlug' }
+        - in: query
+          name: period
+          schema: { type: string, enum: [week], default: week }
+      responses:
+        '200':
+          description: Top 5 this week at this venue.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [period, entries, stampRule]
+                properties:
+                  period: { type: string }
+                  entries: { type: array, maxItems: 5, items: { $ref: '#/components/schemas/LeaderboardEntry' } }
+                  stampRule: { $ref: '#/components/schemas/GameStampRule' }
+  /venues/{venueSlug}/game/scores:
+    post:
+      tags: [game]
+      operationId: submitScore
+      security: [{ guestAuth: [] }]
+      summary: Save a score. Nickname is optional; without one nothing personal is stored.
+      parameters: [{ $ref: '#/components/parameters/VenueSlug' }, { $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [score, runId, durationMs]
+              properties:
+                score: { type: integer, minimum: 0, maximum: 500 }
+                runId: { type: string, format: uuid }
+                durationMs: { type: integer, minimum: 0, description: Used by the server to reject impossible scores. }
+                nickname: { type: string, minLength: 1, maxLength: 16 }
+      responses:
+        '201':
+          description: Saved.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [rank, stampEarned]
+                properties:
+                  rank: { type: ['integer', 'null'], description: 'Rank this week, null if outside the top 50.' }
+                  stampEarned: { type: boolean, description: True only once per visit when the venue's stamp rule is on and the score reaches it. }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+
+  # ---------------------------------------------------------------- private feedback
+  /feedback:
+    post:
+      tags: [feedback]
+      operationId: sendFeedback
+      security: [{ guestAuth: [] }]
+      summary: Private note to the manager. Never posted publicly.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message]
+              properties:
+                message: { type: string, minLength: 3, maxLength: 1000 }
+                contactPhone: { $ref: '#/components/schemas/GhanaPhone' }
+      responses:
+        '201': { description: Sent to the manager. }
+
+  # ================================================================ OWNER / STAFF (ownerAuth)
+  /owner/venues/{venueId}:
+    get:
+      tags: [owner-venue]
+      operationId: ownerGetVenue
+      summary: Get venue (owner app).
+      security: [{ ownerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      responses:
+        '200':
+          description: Everything the Customise screen edits.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/VenueSettings' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    patch:
+      tags: [owner-venue]
+      operationId: ownerUpdateVenue
+      security: [{ ownerAuth: [] }]
+      summary: Update profile, hours, Wi-Fi, Google review link (partial update).
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/VenueSettingsPatch' }
+      responses:
+        '200':
+          description: Saved.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/VenueSettings' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /owner/venues/{venueId}/theme:
+    put:
+      tags: [owner-venue]
+      operationId: ownerSetTheme
+      security: [{ ownerAuth: [] }]
+      summary: Save the venue colour and heading font. The server runs the same deriveTheme check and returns the safe colours and notes.
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ThemeInput' }
+      responses:
+        '200':
+          description: Saved. `derived` is what guests will see.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/VenueTheme' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+  /owner/venues/{venueId}/media:
+    post:
+      tags: [owner-venue]
+      operationId: ownerCreateMediaUpload
+      security: [{ ownerAuth: [] }]
+      summary: Upload URL for a banner, logo or dish photo (JPEG/PNG/WebP, max 5 MB). The server makes the sized copies.
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [kind, contentType, sizeBytes]
+              properties:
+                kind: { type: string, enum: [banner, logo, dish_photo] }
+                contentType: { type: string, enum: [image/jpeg, image/png, image/webp] }
+                sizeBytes: { type: integer, maximum: 5242880 }
+      responses:
+        '201':
+          description: PUT the file to `uploadUrl`, then use `mediaId` in the venue or menu item.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [mediaId, uploadUrl, expiresAt]
+                properties:
+                  mediaId: { type: string }
+                  uploadUrl: { type: string, format: uri }
+                  expiresAt: { type: string, format: date-time }
+  /owner/venues/{venueId}/services:
+    get:
+      tags: [owner-venue]
+      operationId: ownerGetServices
+      summary: Get services (owner app).
+      security: [{ ownerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      responses:
+        '200':
+          description: Every service with its on/off switch, plus the game stamp rule.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceSettings' }
+    put:
+      tags: [owner-venue]
+      operationId: ownerSetServices
+      summary: Set services (owner app).
+      security: [{ ownerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ServiceSettings' }
+      responses:
+        '200':
+          description: Saved. Guests see the change on their next load.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceSettings' }
+  /owner/venues/{venueId}/staff:
+    get:
+      tags: [owner-venue]
+      operationId: ownerListStaff
+      summary: List staff (owner app).
+      security: [{ ownerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { type: object, required: [items], properties: { items: { type: array, items: { $ref: '#/components/schemas/StaffMember' } } } }
+    post:
+      tags: [owner-venue]
+      operationId: ownerInviteStaff
+      summary: Invite staff (owner app).
+      security: [{ ownerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone, firstName, role]
+              properties:
+                phone: { $ref: '#/components/schemas/GhanaPhone' }
+                firstName: { type: string, maxLength: 40 }
+                role: { $ref: '#/components/schemas/StaffRole' }
+      responses:
+        '201':
+          description: Invited. They log in with an SMS code.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StaffMember' }
+
+  /owner/venues/{venueId}/menu/categories:
+    get:
+      tags: [owner-menu]
+      operationId: ownerListCategories
+      summary: List categories (owner app).
+      security: [{ ownerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { type: object, required: [items], properties: { items: { type: array, items: { $ref: '#/components/schemas/MenuCategory' } } } }
+    post:
+      tags: [owner-menu]
+      operationId: ownerCreateCategory
+      summary: Create category (owner app).
+      security: [{ ownerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MenuCategoryInput' }
+      responses:
+        '201':
+          description: Created.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MenuCategory' }
+  /owner/venues/{venueId}/menu/categories/{categoryId}:
+    patch:
+      tags: [owner-menu]
+      operationId: ownerUpdateCategory
+      summary: Update category (owner app).
+      security: [{ ownerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/VenueId' }, { $ref: '#/components/parameters/CategoryId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MenuCategoryInput' }
+      responses:
+        '200':
+          description: Saved.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MenuCategory' }
+    delete:
+      tags: [owner-menu]
+      operationId: ownerDeleteCategory
+      summary: Delete category (owner app).
+      security: [{ ownerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/VenueId' }, { $ref: '#/components/parameters/CategoryId' }]
+      responses:
+        '204': { description: Deleted. }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /owner/venues/{venueId}/menu/items:
+    post:
+      tags: [owner-menu]
+      operationId: ownerCreateItem
+      summary: Create item (owner app).
+      security: [{ ownerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MenuItemInput' }
+      responses:
+        '201':
+          description: Created.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MenuItem' }
+  /owner/venues/{venueId}/menu/items/{menuItemId}:
+    patch:
+      tags: [owner-menu]
+      operationId: ownerUpdateItem
+      security: [{ ownerAuth: [] }]
+      summary: Edit an item, including `available` for "sold out today".
+      parameters: [{ $ref: '#/components/parameters/VenueId' }, { $ref: '#/components/parameters/MenuItemIdParam' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MenuItemInput' }
+      responses:
+        '200':
+          description: Saved.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MenuItem' }
+    delete:
+      tags: [owner-menu]
+      operationId: ownerDeleteItem
+      summary: Delete item (owner app).
+      security: [{ ownerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/VenueId' }, { $ref: '#/components/parameters/MenuItemIdParam' }]
+      responses:
+        '204': { description: Deleted. }
+
+  /owner/venues/{venueId}/tables:
+    get:
+      tags: [owner-tables]
+      operationId: ownerListTables
+      summary: List tables (owner app).
+      security: [{ ownerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { type: object, required: [items], properties: { items: { type: array, items: { $ref: '#/components/schemas/Table' } } } }
+    post:
+      tags: [owner-tables]
+      operationId: ownerCreateTables
+      security: [{ ownerAuth: [] }]
+      summary: Add one or more tables (for example codes 1 to 12).
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [codes]
+              properties:
+                codes: { type: array, minItems: 1, maxItems: 200, items: { type: string, maxLength: 12 } }
+      responses:
+        '201':
+          description: Created.
+          content:
+            application/json:
+              schema: { type: object, required: [items], properties: { items: { type: array, items: { $ref: '#/components/schemas/Table' } } } }
+  /owner/venues/{venueId}/tables/{tableId}/qr:
+    get:
+      tags: [owner-tables]
+      operationId: ownerGetTableQr
+      security: [{ ownerAuth: [] }]
+      summary: Printable QR sticker for one table (Ozaa logo in the middle, table number under it).
+      parameters:
+        - { $ref: '#/components/parameters/VenueId' }
+        - { $ref: '#/components/parameters/TableId' }
+        - in: query
+          name: format
+          schema: { type: string, enum: [svg, png, pdf], default: svg }
+      responses:
+        '200':
+          description: The file.
+          content:
+            image/svg+xml: { schema: { type: string } }
+            image/png: { schema: { type: string, contentMediaType: image/png } }
+            application/pdf: { schema: { type: string, contentMediaType: application/pdf } }
+
+  /owner/venues/{venueId}/orders:
+    get:
+      tags: [owner-orders]
+      operationId: ownerListOrders
+      security: [{ ownerAuth: [] }]
+      summary: Orders dashboard. Poll every 5 s (realtime push comes later).
+      parameters:
+        - { $ref: '#/components/parameters/VenueId' }
+        - in: query
+          name: status
+          schema: { type: array, items: { $ref: '#/components/schemas/OrderStatus' } }
+          style: form
+          explode: false
+        - in: query
+          name: since
+          schema: { type: string, format: date-time }
+        - { $ref: '#/components/parameters/Cursor' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrderPage' }
+  /owner/orders/{orderId}/status:
+    put:
+      tags: [owner-orders]
+      operationId: ownerSetOrderStatus
+      security: [{ ownerAuth: [] }]
+      summary: Move an order forward. Only legal moves are accepted (see the Order state machine in BUILD.md).
+      parameters: [{ $ref: '#/components/parameters/OrderId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { $ref: '#/components/schemas/OrderStatus' }
+                cancelReason: { type: string, maxLength: 200 }
+      responses:
+        '200':
+          description: Saved. Setting `ready` fires the guest's food-ready banner.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /owner/orders/{orderId}/cash-payment:
+    post:
+      tags: [owner-orders]
+      operationId: ownerRecordCashPayment
+      security: [{ ownerAuth: [] }]
+      summary: Staff mark an order as paid in cash at the counter.
+      parameters: [{ $ref: '#/components/parameters/OrderId' }, { $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amountPesewas]
+              properties:
+                amountPesewas: { $ref: '#/components/schemas/Pesewas' }
+      responses:
+        '200':
+          description: Saved.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+  /owner/venues/{venueId}/waiter-calls:
+    get:
+      tags: [owner-orders]
+      operationId: ownerListWaiterCalls
+      summary: List waiter calls (owner app).
+      security: [{ ownerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/VenueId' }
+        - in: query
+          name: open
+          schema: { type: boolean, default: true }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { type: object, required: [items], properties: { items: { type: array, items: { $ref: '#/components/schemas/WaiterCall' } } } }
+  /owner/waiter-calls/{waiterCallId}:
+    patch:
+      tags: [owner-orders]
+      operationId: ownerUpdateWaiterCall
+      summary: Update waiter call (owner app).
+      security: [{ ownerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/WaiterCallId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [acknowledged, resolved] }
+      responses:
+        '200':
+          description: Saved. `acknowledged` shows the staff member's first name to the guest.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WaiterCall' }
+
+  /owner/venues/{venueId}/video-reviews:
+    get:
+      tags: [owner-reviews]
+      operationId: ownerListVideoReviews
+      summary: List video reviews (owner app).
+      security: [{ ownerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/VenueId' }
+        - in: query
+          name: state
+          schema: { $ref: '#/components/schemas/ModerationState' }
+        - { $ref: '#/components/parameters/Cursor' }
+      responses:
+        '200':
+          description: The To check, Featured and Hidden tabs.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/VideoReview' } }
+                  nextCursor: { type: ['string', 'null'] }
+  /owner/video-reviews/{videoReviewId}:
+    patch:
+      tags: [owner-reviews]
+      operationId: ownerModerateVideoReview
+      security: [{ ownerAuth: [] }]
+      summary: Feature (needs the guest's featureConsent) or hide a video review.
+      parameters: [{ $ref: '#/components/parameters/VideoReviewId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [state]
+              properties:
+                state: { type: string, enum: [featured, hidden] }
+      responses:
+        '200':
+          description: Saved.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/VideoReview' }
+        '409': { description: Cannot feature a video without the guest's consent. }
+
+  /owner/venues/{venueId}/loyalty:
+    get:
+      tags: [owner-loyalty]
+      operationId: ownerGetLoyalty
+      summary: Get loyalty (owner app).
+      security: [{ ownerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      responses:
+        '200':
+          description: Program settings and member count.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoyaltyProgram' }
+    put:
+      tags: [owner-loyalty]
+      operationId: ownerSetLoyalty
+      summary: Set loyalty (owner app).
+      security: [{ ownerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoyaltyProgram' }
+      responses:
+        '200':
+          description: Saved.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoyaltyProgram' }
+  /owner/venues/{venueId}/loyalty/members:
+    get:
+      tags: [owner-loyalty]
+      operationId: ownerListLoyaltyMembers
+      security: [{ ownerAuth: [] }]
+      summary: Members with masked phone numbers. Only members who agreed to marketing can be messaged.
+      parameters: [{ $ref: '#/components/parameters/VenueId' }, { $ref: '#/components/parameters/Cursor' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/LoyaltyMember' } }
+                  nextCursor: { type: ['string', 'null'] }
+
+  /owner/venues/{venueId}/payout-account:
+    get:
+      tags: [owner-payouts]
+      operationId: ownerGetPayoutAccount
+      summary: Get payout account (owner app).
+      security: [{ ownerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      responses:
+        '200':
+          description: Where the venue's money settles (Paystack subaccount). Account numbers are masked.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PayoutAccount' }
+        '404': { description: Not set up yet. Pay stays off until it is. }
+    put:
+      tags: [owner-payouts]
+      operationId: ownerSetPayoutAccount
+      security: [{ ownerAuth: [] }]
+      summary: Create or update the venue's Paystack subaccount (bank or MoMo settlement). Owner role only.
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PayoutAccountInput' }
+      responses:
+        '200':
+          description: Saved and checked by Paystack.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PayoutAccount' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+
+components:
+  securitySchemes:
+    guestAuth:
+      type: http
+      scheme: bearer
+      description: Token from POST /guest-sessions. Bound to one venue and table. Expires after 4 hours.
+    loyaltyAuth:
+      type: http
+      scheme: bearer
+      description: Guest token from POST /auth/otp/verify with purpose guest_loyalty (proves the phone number).
+    ownerAuth:
+      type: http
+      scheme: bearer
+      description: Owner or staff access token from POST /auth/otp/verify with purpose owner_login. Kept in expo-secure-store on native.
+
+  headers:
+    ETag:
+      schema: { type: string }
+      description: Send it back as If-None-Match to get 304 and save data.
+
+  parameters:
+    IdempotencyKey:
+      in: header
+      name: Idempotency-Key
+      required: false
+      schema: { type: string, format: uuid }
+      description: A new UUID per user action. Reuse it when retrying the same action.
+    AcceptLanguage:
+      in: header
+      name: Accept-Language
+      required: false
+      schema: { type: string, example: tw }
+    VenueSlug:
+      in: path
+      name: venueSlug
+      required: true
+      schema: { $ref: '#/components/schemas/Slug' }
+    VenueId:
+      in: path
+      name: venueId
+      required: true
+      schema: { type: string, pattern: '^ven_[A-Za-z0-9]+$' }
+    OrderId:
+      in: path
+      name: orderId
+      required: true
+      schema: { $ref: '#/components/schemas/OrderId' }
+    PaymentReference:
+      in: path
+      name: reference
+      required: true
+      schema: { type: string, description: Paystack transaction reference made by the Ozaa server. }
+    WaiterCallId:
+      in: path
+      name: waiterCallId
+      required: true
+      schema: { type: string, pattern: '^wcl_[A-Za-z0-9]+$' }
+    VideoReviewId:
+      in: path
+      name: videoReviewId
+      required: true
+      schema: { $ref: '#/components/schemas/VideoReviewId' }
+    CategoryId:
+      in: path
+      name: categoryId
+      required: true
+      schema: { type: string, pattern: '^cat_[A-Za-z0-9]+$' }
+    MenuItemIdParam:
+      in: path
+      name: menuItemId
+      required: true
+      schema: { $ref: '#/components/schemas/MenuItemId' }
+    TableId:
+      in: path
+      name: tableId
+      required: true
+      schema: { type: string, pattern: '^tbl_[A-Za-z0-9]+$' }
+    Cursor:
+      in: query
+      name: cursor
+      required: false
+      schema: { type: string }
+
+  responses:
+    BadRequest:
+      description: The request was malformed or failed validation.
+      content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } }
+    Unauthorized:
+      description: Missing, expired or wrong token or code.
+      content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } }
+    Forbidden:
+      description: Logged in, but this role cannot do this.
+      content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } }
+    NotFound:
+      description: Not found.
+      content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } }
+    Conflict:
+      description: Something changed under you (for example an item sold out, or the order is already paid).
+      content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } }
+    Unprocessable:
+      description: Valid shape, but the business rules say no (for example the venue has Pay switched off).
+      content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } }
+    TooManyRequests:
+      description: Slow down. See Retry-After.
+      headers:
+        Retry-After: { schema: { type: integer } }
+      content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } }
+    ProviderError:
+      description: Paystack or the mobile network did not answer. Nothing was charged. Safe to retry with the same Idempotency-Key.
+      content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } }
+
+  schemas:
+    Problem:
+      type: object
+      required: [type, title, status]
+      properties:
+        type: { type: string, format: uri-reference, example: 'https://ozaa.app/problems/item-sold-out' }
+        title: { type: string, example: Item sold out }
+        status: { type: integer }
+        detail: { type: string, description: Safe to show to the user. Written in plain words. }
+        code: { type: string, description: Stable machine code the app switches on., example: item_sold_out }
+        fields:
+          type: object
+          additionalProperties: { type: string }
+          description: Field name to message, for form errors.
+
+    Pesewas:
+      type: integer
+      minimum: 0
+      description: Money in pesewas (1 GH₵ = 100 pesewas).
+    Slug:
+      type: string
+      pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$'
+      maxLength: 48
+      example: mamas-kitchen
+    HexColor:
+      type: string
+      pattern: '^#[0-9A-Fa-f]{6}$'
+      example: '#B5432A'
+    GhanaPhone:
+      type: string
+      description: Ghana mobile number in E.164 (+233 then 9 digits). The app accepts "024 123 4567" and converts it.
+      pattern: '^\+233[0-9]{9}$'
+      example: '+233241234567'
+    Language:
+      type: string
+      enum: [en, tw, ga, ee, fr]
+      description: en English, tw Twi, ga Ga, ee Ewe, fr French.
+    LocalizedText:
+      type: object
+      required: [en]
+      properties:
+        en: { type: string }
+        tw: { type: string }
+        ga: { type: string }
+        ee: { type: string }
+        fr: { type: string }
+    Image:
+      type: object
+      required: [url, width, height]
+      properties:
+        url: { type: string, format: uri }
+        width: { type: integer }
+        height: { type: integer }
+        blurhash: { type: string, description: Shown by expo-image while the photo loads. }
+        alt: { type: string }
+    OrderId:
+      type: string
+      pattern: '^ord_[A-Za-z0-9]+$'
+    MenuItemId:
+      type: string
+      pattern: '^itm_[A-Za-z0-9]+$'
+    VideoReviewId:
+      type: string
+      pattern: '^vrv_[A-Za-z0-9]+$'
+
+    AuthTokens:
+      type: object
+      required: [accessToken, refreshToken, expiresAt]
+      properties:
+        accessToken: { type: string }
+        refreshToken: { type: string }
+        expiresAt: { type: string, format: date-time }
+        user: { $ref: '#/components/schemas/StaffUser' }
+    StaffRole:
+      type: string
+      enum: [owner, manager, waiter, kitchen]
+      description: owner does everything incl. payouts; manager everything except payouts and staff; waiter orders and waiter calls; kitchen order status only.
+    StaffUser:
+      type: object
+      required: [id, firstName, phone, venues]
+      properties:
+        id: { type: string }
+        firstName: { type: string }
+        phone: { $ref: '#/components/schemas/GhanaPhone' }
+        venues:
+          type: array
+          items:
+            type: object
+            required: [venueId, name, role]
+            properties:
+              venueId: { type: string }
+              name: { type: string }
+              role: { $ref: '#/components/schemas/StaffRole' }
+    StaffMember:
+      type: object
+      required: [id, firstName, role, phoneMasked, status]
+      properties:
+        id: { type: string }
+        firstName: { type: string }
+        role: { $ref: '#/components/schemas/StaffRole' }
+        phoneMasked: { type: string, example: '024 *** 4567' }
+        status: { type: string, enum: [invited, active, removed] }
+
+    ServiceId:
+      type: string
+      enum: [menu, waiter, status, pay, wifi, loyalty, offers, review, play, reserve, events, feedback, about]
+      description: Video menu is roadmap only and is not in this list.
+    ServiceSection:
+      type: string
+      enum: [table, rewards, fun, more]
+      description: table "At your table", rewards "Rewards", fun "Fun while you wait", more "More".
+    FontPair:
+      type: string
+      enum: [ozaa, serif, bold]
+      description: ozaa Unbounded+Inter, serif Noto Serif+Inter, bold Montserrat+Inter.
+    OpeningHours:
+      type: object
+      required: [timezone, weekly]
+      properties:
+        timezone: { type: string, example: Africa/Accra }
+        weekly:
+          type: array
+          description: Index 0 is Monday. An empty day means closed.
+          minItems: 7
+          maxItems: 7
+          items:
+            type: array
+            items:
+              type: object
+              required: [opens, closes]
+              properties:
+                opens: { type: string, pattern: '^[0-2][0-9]:[0-5][0-9]$', example: '09:00' }
+                closes: { type: string, pattern: '^[0-2][0-9]:[0-5][0-9]$', example: '22:00' }
+        exceptions:
+          type: array
+          items:
+            type: object
+            required: [date, closed]
+            properties:
+              date: { type: string, format: date }
+              closed: { type: boolean }
+    DerivedTheme:
+      type: object
+      description: Output of deriveTheme (design/prototype/theme.js). The app works it out locally for previews; the server value wins.
+      required: [fill, onAccent, pressed, ink, tint, badgeInk, notes, ozaaDistance, ratios]
+      properties:
+        fill: { $ref: '#/components/schemas/HexColor' }
+        onAccent: { $ref: '#/components/schemas/HexColor' }
+        pressed: { $ref: '#/components/schemas/HexColor' }
+        ink: { $ref: '#/components/schemas/HexColor' }
+        tint: { $ref: '#/components/schemas/HexColor' }
+        badgeInk: { $ref: '#/components/schemas/HexColor' }
+        notes: { type: array, items: { type: string } }
+        ozaaDistance: { type: number }
+        ratios:
+          type: object
+          required: [buttonText, inkOnWhite, badge]
+          properties:
+            buttonText: { type: number }
+            inkOnWhite: { type: number }
+            badge: { type: number }
+    VenueTheme:
+      type: object
+      required: [accent, fontPair, derived]
+      properties:
+        accent:
+          description: Null means the Ozaa default orange.
+          oneOf: [{ $ref: '#/components/schemas/HexColor' }, { type: 'null' }]
+        fontPair: { $ref: '#/components/schemas/FontPair' }
+        derived: { $ref: '#/components/schemas/DerivedTheme' }
+    ThemeInput:
+      type: object
+      required: [accent, fontPair]
+      properties:
+        accent:
+          oneOf: [{ $ref: '#/components/schemas/HexColor' }, { type: 'null' }]
+        fontPair: { $ref: '#/components/schemas/FontPair' }
+    ServiceToggle:
+      type: object
+      required: [id, section, enabled]
+      properties:
+        id: { $ref: '#/components/schemas/ServiceId' }
+        section: { $ref: '#/components/schemas/ServiceSection' }
+        enabled: { type: boolean }
+        subtitle: { type: string, description: 'Optional live line, e.g. "2 deals today".' }
+    GameStampRule:
+      type: object
+      required: [enabled, minScore]
+      properties:
+        enabled: { type: boolean }
+        minScore: { type: integer, minimum: 1, maximum: 200, example: 15 }
+    ServiceSettings:
+      type: object
+      required: [services, game]
+      properties:
+        services: { type: array, items: { $ref: '#/components/schemas/ServiceToggle' } }
+        game: { $ref: '#/components/schemas/GameStampRule' }
+    VenuePublic:
+      type: object
+      required: [id, slug, name, description, location, hours, theme, banner, services, currency, languages, payEnabled]
+      properties:
+        id: { type: string }
+        slug: { $ref: '#/components/schemas/Slug' }
+        name: { type: string, example: "Mama's Kitchen" }
+        initials: { type: string, example: MK }
+        description: { $ref: '#/components/schemas/LocalizedText' }
+        location:
+          type: object
+          required: [label]
+          properties:
+            label: { type: string, example: 'Oxford Street, Osu, Accra' }
+            lat: { type: number }
+            lng: { type: number }
+            mapsUrl: { type: string, format: uri }
+        hours: { $ref: '#/components/schemas/OpeningHours' }
+        phone: { $ref: '#/components/schemas/GhanaPhone' }
+        whatsapp: { $ref: '#/components/schemas/GhanaPhone' }
+        theme: { $ref: '#/components/schemas/VenueTheme' }
+        banner: { $ref: '#/components/schemas/Image' }
+        logo:
+          description: Null shows initials in the venue colour.
+          oneOf: [{ $ref: '#/components/schemas/Image' }, { type: 'null' }]
+        services: { type: array, items: { $ref: '#/components/schemas/ServiceToggle' }, description: Only switched-on services. }
+        game: { $ref: '#/components/schemas/GameStampRule' }
+        loyaltySummary:
+          type: ['object', 'null']
+          properties:
+            stampsNeeded: { type: integer }
+            rewardTitle: { type: string }
+        currency: { type: string, const: GHS }
+        languages: { type: array, items: { $ref: '#/components/schemas/Language' } }
+        googleReviewUrl: { type: ['string', 'null'], format: uri }
+        payEnabled: { type: boolean, description: False until the payout account is checked. }
+    VenueSettings:
+      allOf:
+        - { $ref: '#/components/schemas/VenuePublic' }
+        - type: object
+          properties:
+            wifi: { $ref: '#/components/schemas/Wifi' }
+    VenueSettingsPatch:
+      type: object
+      properties:
+        name: { type: string, maxLength: 60 }
+        description: { $ref: '#/components/schemas/LocalizedText' }
+        location: { type: object, properties: { label: { type: string }, lat: { type: number }, lng: { type: number } } }
+        hours: { $ref: '#/components/schemas/OpeningHours' }
+        phone: { $ref: '#/components/schemas/GhanaPhone' }
+        whatsapp: { $ref: '#/components/schemas/GhanaPhone' }
+        bannerMediaId: { type: string }
+        logoMediaId: { type: ['string', 'null'] }
+        wifi: { $ref: '#/components/schemas/Wifi' }
+        googleReviewUrl: { type: ['string', 'null'], format: uri }
+        languages: { type: array, items: { $ref: '#/components/schemas/Language' } }
+    Wifi:
+      type: object
+      required: [ssid, security]
+      properties:
+        ssid: { type: string, maxLength: 32 }
+        password: { type: string, maxLength: 63 }
+        security: { type: string, enum: [WPA, WEP, nopass] }
+    Table:
+      type: object
+      required: [id, code]
+      properties:
+        id: { type: string }
+        code: { type: string, example: '12' }
+        label: { type: string, example: Table 12 }
+        qrUrl: { type: string, format: uri, example: 'https://ozaa.app/mamas-kitchen/t/12' }
+
+    Dietary:
+      type: string
+      enum: [vegetarian, vegan, gluten_free, halal, spicy]
+    MenuCategory:
+      type: object
+      required: [id, name, kind, position]
+      properties:
+        id: { type: string }
+        name: { $ref: '#/components/schemas/LocalizedText' }
+        kind: { type: string, enum: [food, drinks], description: The Food and Drinks tabs. }
+        position: { type: integer }
+    MenuCategoryInput:
+      type: object
+      required: [name, kind]
+      properties:
+        name: { $ref: '#/components/schemas/LocalizedText' }
+        kind: { type: string, enum: [food, drinks] }
+        position: { type: integer }
+    ModifierGroup:
+      type: object
+      required: [id, name, min, max, options]
+      description: Add-ons like spice level or extra meat. min 1 and max 1 is a required single choice.
+      properties:
+        id: { type: string }
+        name: { $ref: '#/components/schemas/LocalizedText' }
+        min: { type: integer, minimum: 0 }
+        max: { type: integer, minimum: 1 }
+        options:
+          type: array
+          items:
+            type: object
+            required: [id, name, pricePesewas]
+            properties:
+              id: { type: string }
+              name: { $ref: '#/components/schemas/LocalizedText' }
+              pricePesewas: { $ref: '#/components/schemas/Pesewas' }
+    MenuItem:
+      type: object
+      required: [id, categoryId, name, description, pricePesewas, available, dietary, badges, modifierGroups]
+      properties:
+        id: { $ref: '#/components/schemas/MenuItemId' }
+        categoryId: { type: string }
+        name: { $ref: '#/components/schemas/LocalizedText' }
+        description: { $ref: '#/components/schemas/LocalizedText' }
+        pricePesewas: { $ref: '#/components/schemas/Pesewas' }
+        photo:
+          oneOf: [{ $ref: '#/components/schemas/Image' }, { type: 'null' }]
+        available: { type: boolean, description: False shows "Sold out" and blocks adding. }
+        dietary: { type: array, items: { $ref: '#/components/schemas/Dietary' } }
+        badges: { type: array, items: { type: string, enum: [popular, new, chef_pick] } }
+        modifierGroups: { type: array, items: { $ref: '#/components/schemas/ModifierGroup' } }
+        prepMinutes: { type: integer }
+    MenuItemInput:
+      type: object
+      properties:
+        categoryId: { type: string }
+        name: { $ref: '#/components/schemas/LocalizedText' }
+        description: { $ref: '#/components/schemas/LocalizedText' }
+        pricePesewas: { $ref: '#/components/schemas/Pesewas' }
+        photoMediaId: { type: ['string', 'null'] }
+        available: { type: boolean }
+        dietary: { type: array, items: { $ref: '#/components/schemas/Dietary' } }
+        badges: { type: array, items: { type: string, enum: [popular, new, chef_pick] } }
+        modifierGroups: { type: array, items: { $ref: '#/components/schemas/ModifierGroup' } }
+        prepMinutes: { type: integer }
+    Menu:
+      type: object
+      required: [venueId, updatedAt, categories, items]
+      properties:
+        venueId: { type: string }
+        updatedAt: { type: string, format: date-time }
+        categories: { type: array, items: { $ref: '#/components/schemas/MenuCategory' } }
+        items: { type: array, items: { $ref: '#/components/schemas/MenuItem' } }
+
+    OrderStatus:
+      type: string
+      enum: [received, preparing, ready, served, cancelled]
+      description: Legal moves received->preparing->ready->served, and received or preparing->cancelled.
+    PaymentStatusSummary:
+      type: string
+      enum: [unpaid, part_paid, paid, refunded]
+    OrderLineInput:
+      type: object
+      required: [menuItemId, quantity]
+      properties:
+        menuItemId: { $ref: '#/components/schemas/MenuItemId' }
+        quantity: { type: integer, minimum: 1, maximum: 50 }
+        modifierOptionIds: { type: array, items: { type: string } }
+        note: { type: string, maxLength: 140 }
+    CreateOrderRequest:
+      type: object
+      required: [lines, clientOrderId]
+      properties:
+        clientOrderId: { type: string, format: uuid, description: Made on the phone so an offline retry never creates two orders. }
+        lines: { type: array, minItems: 1, maxItems: 60, items: { $ref: '#/components/schemas/OrderLineInput' } }
+        note: { type: string, maxLength: 200 }
+    OrderLine:
+      type: object
+      required: [id, menuItemId, name, quantity, unitPricePesewas, totalPesewas, paid]
+      properties:
+        id: { type: string }
+        menuItemId: { $ref: '#/components/schemas/MenuItemId' }
+        name: { type: string }
+        quantity: { type: integer }
+        modifiers:
+          type: array
+          items:
+            type: object
+            required: [name, pricePesewas]
+            properties:
+              name: { type: string }
+              pricePesewas: { $ref: '#/components/schemas/Pesewas' }
+        unitPricePesewas: { $ref: '#/components/schemas/Pesewas' }
+        totalPesewas: { $ref: '#/components/schemas/Pesewas' }
+        note: { type: string }
+        paid: { type: boolean, description: True once this line was paid in a "my items" split. }
+    TaxLine:
+      type: object
+      required: [code, label, amountPesewas]
+      properties:
+        code: { type: string, enum: [vat, nhil, getfund] }
+        label: { type: string }
+        amountPesewas: { $ref: '#/components/schemas/Pesewas' }
+    Order:
+      type: object
+      required: [id, number, venueId, tableCode, status, paymentStatus, lines, subtotalPesewas, taxes, totalPesewas, paidPesewas, createdAt, updatedAt]
+      properties:
+        id: { $ref: '#/components/schemas/OrderId' }
+        number: { type: integer, example: 24, description: Short number shown to guests and staff. Resets daily. }
+        venueId: { type: string }
+        tableCode: { type: ['string', 'null'] }
+        status: { $ref: '#/components/schemas/OrderStatus' }
+        paymentStatus: { $ref: '#/components/schemas/PaymentStatusSummary' }
+        lines: { type: array, items: { $ref: '#/components/schemas/OrderLine' } }
+        subtotalPesewas: { $ref: '#/components/schemas/Pesewas' }
+        taxes:
+          type: array
+          description: Empty until E-VAT is switched on (later phase). Then VAT 15%, NHIL 2.5% and GETFund 2.5% lines.
+          items: { $ref: '#/components/schemas/TaxLine' }
+        totalPesewas: { $ref: '#/components/schemas/Pesewas' }
+        paidPesewas: { $ref: '#/components/schemas/Pesewas' }
+        etaMinutes: { type: ['integer', 'null'] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        readyAt: { type: ['string', 'null'], format: date-time }
+    OrderPage:
+      type: object
+      required: [items]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/Order' } }
+        nextCursor: { type: ['string', 'null'] }
+
+    BillQuoteRequest:
+      type: object
+      required: [mode]
+      properties:
+        mode: { type: string, enum: [whole, equal, items] }
+        parts: { type: integer, minimum: 2, maximum: 20, description: Needed for equal. }
+        lineIds: { type: array, items: { type: string }, description: Needed for items. }
+        tip:
+          type: object
+          properties:
+            percent: { type: integer, enum: [0, 5, 10, 15] }
+            customPesewas: { $ref: '#/components/schemas/Pesewas' }
+    BillQuote:
+      type: object
+      required: [quoteId, orderId, sharePesewas, tipPesewas, totalPesewas, remainingAfterPesewas, expiresAt]
+      properties:
+        quoteId: { type: string }
+        orderId: { $ref: '#/components/schemas/OrderId' }
+        sharePesewas: { $ref: '#/components/schemas/Pesewas' }
+        tipPesewas: { $ref: '#/components/schemas/Pesewas' }
+        totalPesewas:
+          description: What the guest pays now (share + tip).
+          allOf: [{ $ref: '#/components/schemas/Pesewas' }]
+        remainingAfterPesewas: { $ref: '#/components/schemas/Pesewas' }
+        expiresAt: { type: string, format: date-time }
+    MomoProvider:
+      type: string
+      enum: [mtn, vod, atl]
+      description: Paystack provider codes. mtn MTN MoMo, vod Telecel Cash, atl AT Money (AirtelTigo).
+    InitializePaymentRequest:
+      type: object
+      required: [quoteId, method]
+      properties:
+        quoteId: { type: string }
+        method: { type: string, enum: [momo, card] }
+        momo:
+          type: object
+          required: [phone, provider]
+          properties:
+            phone: { $ref: '#/components/schemas/GhanaPhone' }
+            provider: { $ref: '#/components/schemas/MomoProvider' }
+        email: { type: string, format: email, description: Optional receipt email. The server uses a placeholder when missing because Paystack needs one. }
+    PaymentStatus:
+      type: string
+      enum: [pending, pay_offline, open_url, succeeded, failed, abandoned]
+      description: See the Payment state machine in BUILD.md. Only `succeeded` puts money on the order.
+    Payment:
+      type: object
+      required: [id, reference, orderId, method, amountPesewas, currency, status, createdAt, testMode]
+      properties:
+        id: { type: string }
+        reference: { type: string }
+        orderId: { $ref: '#/components/schemas/OrderId' }
+        method: { type: string, enum: [momo, card] }
+        provider: { $ref: '#/components/schemas/MomoProvider' }
+        amountPesewas: { $ref: '#/components/schemas/Pesewas' }
+        tipPesewas: { $ref: '#/components/schemas/Pesewas' }
+        currency: { type: string, const: GHS }
+        status: { $ref: '#/components/schemas/PaymentStatus' }
+        displayText: { type: string, description: 'Text from Paystack for pay_offline, e.g. approve on your phone.' }
+        authorizationUrl: { type: string, format: uri, description: Card checkout URL for open_url. }
+        approveBy: { type: ['string', 'null'], format: date-time, description: createdAt + 180 s for MoMo. }
+        failureReason: { type: string, description: 'Plain words, safe to show.' }
+        createdAt: { type: string, format: date-time }
+        paidAt: { type: ['string', 'null'], format: date-time }
+        testMode: { type: boolean, description: True when the server uses Paystack test keys. Show a "Test payment" label. }
+
+    WaiterReason:
+      type: string
+      enum: [water, bill, cutlery, order_more, clean_table, other]
+    WaiterCall:
+      type: object
+      required: [id, tableCode, reason, status, createdAt]
+      properties:
+        id: { type: string }
+        tableCode: { type: string }
+        reason: { $ref: '#/components/schemas/WaiterReason' }
+        note: { type: string }
+        status: { type: string, enum: [open, acknowledged, resolved] }
+        staffFirstName: { type: ['string', 'null'], example: Kwesi }
+        createdAt: { type: string, format: date-time }
+        acknowledgedAt: { type: ['string', 'null'], format: date-time }
+
+    ConsentInput:
+      type: object
+      required: [loyalty, marketing, textVersion]
+      description: Act 843. Store what was agreed, when, and the exact text version shown.
+      properties:
+        loyalty: { type: boolean, const: true, description: Must be true to join. }
+        marketing: { type: boolean, description: Separate and unticked by default. WhatsApp or SMS promos only if true. }
+        textVersion: { type: string, example: consent-2026-10-v1 }
+    Reward:
+      type: object
+      required: [id, title, stampsNeeded]
+      properties:
+        id: { type: string }
+        title: { type: string, example: Free jollof & chicken }
+        stampsNeeded: { type: integer }
+    LoyaltyProgram:
+      type: object
+      required: [enabled, stampsNeeded, reward, stampRule]
+      properties:
+        enabled: { type: boolean }
+        stampsNeeded: { type: integer, minimum: 3, maximum: 20 }
+        minSpendPesewas:
+          description: Spend per stamp when stampRule is one_per_min_spend.
+          allOf: [{ $ref: '#/components/schemas/Pesewas' }]
+        reward: { $ref: '#/components/schemas/Reward' }
+        birthdayTreat: { type: ['string', 'null'] }
+        stampRule: { type: string, enum: [one_per_paid_order, one_per_min_spend], default: one_per_paid_order }
+        memberCount: { type: integer, readOnly: true }
+    LoyaltyHistoryEntry:
+      type: object
+      required: [at, change, reason]
+      properties:
+        at: { type: string, format: date-time }
+        change: { type: integer }
+        reason: { type: string, enum: [paid_order, game_score, reward_redeemed, birthday] }
+    LoyaltyCard:
+      type: object
+      required: [venueId, stamps, stampsNeeded, reward, rewardReady, memberSince, consent]
+      properties:
+        venueId: { type: string }
+        stamps: { type: integer }
+        stampsNeeded: { type: integer }
+        reward: { $ref: '#/components/schemas/Reward' }
+        rewardReady: { type: boolean }
+        memberSince: { type: string, format: date }
+        history: { type: array, items: { $ref: '#/components/schemas/LoyaltyHistoryEntry' } }
+        consent:
+          type: object
+          required: [marketing, at]
+          properties:
+            marketing: { type: boolean }
+            at: { type: string, format: date-time }
+    LoyaltyMember:
+      type: object
+      required: [id, phoneMasked, stamps, visits, marketingConsent, joinedAt]
+      properties:
+        id: { type: string }
+        firstName: { type: ['string', 'null'] }
+        phoneMasked: { type: string }
+        stamps: { type: integer }
+        visits: { type: integer }
+        marketingConsent: { type: boolean }
+        joinedAt: { type: string, format: date-time }
+
+    ModerationState:
+      type: string
+      enum: [pending, featured, hidden]
+    Story:
+      type: object
+      required: [id, firstName, stars, postedAt, poster, video, sample]
+      properties:
+        id: { $ref: '#/components/schemas/VideoReviewId' }
+        firstName: { type: string }
+        stars: { type: integer, minimum: 1, maximum: 5 }
+        quote: { type: string }
+        postedAt: { type: string, format: date-time }
+        avatar: { $ref: '#/components/schemas/Image' }
+        poster: { $ref: '#/components/schemas/Image' }
+        video:
+          type: object
+          required: [mp4Url, durationSeconds]
+          properties:
+            hlsUrl: { type: string, format: uri }
+            mp4Url: { type: string, format: uri, description: '480p, used on data saver.' }
+            durationSeconds: { type: number }
+        menuItemId: { $ref: '#/components/schemas/MenuItemId' }
+        sample: { type: boolean, description: True for demo content. Show the Sample label. }
+    VideoReview:
+      allOf:
+        - { $ref: '#/components/schemas/Story' }
+        - type: object
+          required: [state, featureConsent]
+          properties:
+            state: { $ref: '#/components/schemas/ModerationState' }
+            featureConsent: { type: boolean }
+            orderNumber: { type: ['integer', 'null'] }
+
+    LeaderboardEntry:
+      type: object
+      required: [rank, nickname, score]
+      properties:
+        rank: { type: integer }
+        nickname: { type: string }
+        score: { type: integer }
+        sample: { type: boolean }
+    Offer:
+      type: object
+      required: [id, title]
+      properties:
+        id: { type: string }
+        title: { $ref: '#/components/schemas/LocalizedText' }
+        detail: { $ref: '#/components/schemas/LocalizedText' }
+        menuItemId: { $ref: '#/components/schemas/MenuItemId' }
+        endsAt: { type: ['string', 'null'], format: date-time }
+
+    PayoutAccountInput:
+      type: object
+      required: [businessName, settlement]
+      properties:
+        businessName: { type: string, maxLength: 80 }
+        settlement:
+          oneOf:
+            - type: object
+              required: [type, bankCode, accountNumber]
+              properties:
+                type: { const: bank }
+                bankCode: { type: string, description: From Paystack List Banks (country=ghana). }
+                accountNumber: { type: string }
+            - type: object
+              required: [type, provider, phone]
+              properties:
+                type: { const: momo }
+                provider: { $ref: '#/components/schemas/MomoProvider' }
+                phone: { $ref: '#/components/schemas/GhanaPhone' }
+    PayoutAccount:
+      type: object
+      required: [businessName, settlementType, accountMasked, verified, ozaaFeePercent]
+      properties:
+        businessName: { type: string }
+        settlementType: { type: string, enum: [bank, momo] }
+        accountMasked: { type: string, example: '**** 4567' }
+        verified: { type: boolean }
+        ozaaFeePercent: { type: number, description: 'Ozaa''s share taken by the Paystack split. Set by Ozaa, read-only here.' }

@@ -1,0 +1,119 @@
+{
+  "mamas-kitchen": {
+    "period": "week",
+    "entries": [
+      {
+        "rank": 1,
+        "nickname": "Ama",
+        "score": 41,
+        "sample": true
+      },
+      {
+        "rank": 2,
+        "nickname": "Kojo",
+        "score": 37,
+        "sample": true
+      },
+      {
+        "rank": 3,
+        "nickname": "Efua",
+        "score": 29,
+        "sample": true
+      },
+      {
+        "rank": 4,
+        "nickname": "Yaw",
+        "score": 24,
+        "sample": true
+      },
+      {
+        "rank": 5,
+        "nickname": "Akua",
+        "score": 19,
+        "sample": true
+      }
+    ],
+    "stampRule": {
+      "enabled": true,
+      "minScore": 15
+    }
+  },
+  "bean-there": {
+    "period": "week",
+    "entries": [
+      {
+        "rank": 1,
+        "nickname": "Ama",
+        "score": 41,
+        "sample": true
+      },
+      {
+        "rank": 2,
+        "nickname": "Kojo",
+        "score": 37,
+        "sample": true
+      },
+      {
+        "rank": 3,
+        "nickname": "Efua",
+        "score": 29,
+        "sample": true
+      },
+      {
+        "rank": 4,
+        "nickname": "Yaw",
+        "score": 24,
+        "sample": true
+      },
+      {
+        "rank": 5,
+        "nickname": "Akua",
+        "score": 19,
+        "sample": true
+      }
+    ],
+    "stampRule": {
+      "enabled": false,
+      "minScore": 15
+    }
+  },
+  "auntie-akos": {
+    "period": "week",
+    "entries": [
+      {
+        "rank": 1,
+        "nickname": "Ama",
+        "score": 41,
+        "sample": true
+      },
+      {
+        "rank": 2,
+        "nickname": "Kojo",
+        "score": 37,
+        "sample": true
+      },
+      {
+        "rank": 3,
+        "nickname": "Efua",
+        "score": 29,
+        "sample": true
+      },
+      {
+        "rank": 4,
+        "nickname": "Yaw",
+        "score": 24,
+        "sample": true
+      },
+      {
+        "rank": 5,
+        "nickname": "Akua",
+        "score": 19,
+        "sample": true
+      }
+    ],
+    "stampRule": {
+      "enabled": true,
+      "minScore": 20
+    }
+  }
+}

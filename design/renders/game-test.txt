@@ -1,0 +1,7 @@
+after start: {"state":"play","score":0,"cur":{"x":-114.01500000000007,"w":210},"prev":{"x":74,"w":210},"stamp":false}
+aligned taps: 16, score: 16, stamp earned: true, loyalty stamps now: 6
+after miss: state=over, final score=16, best saved=16
+leaderboard saved: [{"n":"Clarke","s":16,"me":1}]
+leaderboard row shown: Top scores at Mama's Kitchen This week | 1 Kwame sample 23 | 2 Ama sample 19 | 3 Clarke you 16 | 4 Yaw sample 16 | 5 Esi sample 12
+food ready banner visible: Your food is ready!
+network requests to non-file URLs: 0

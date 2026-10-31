@@ -1,0 +1,239 @@
+{
+  "mamas-kitchen": {
+    "items": [
+      {
+        "id": "vrv_mamasama",
+        "firstName": "Ama",
+        "stars": 5,
+        "quote": "Best jollof in Osu. The smoky flavour is real!",
+        "postedAt": "2026-10-29T12:41:00.000Z",
+        "avatar": {
+          "url": "https://mock.ozaa.app/media/img/av-ama.jpg",
+          "width": 160,
+          "height": 160,
+          "alt": "Ama"
+        },
+        "poster": {
+          "url": "https://mock.ozaa.app/media/img/story-ama.jpg",
+          "width": 720,
+          "height": 1280,
+          "alt": ""
+        },
+        "video": {
+          "mp4Url": "https://mock.ozaa.app/media/media/review-ama.mp4",
+          "durationSeconds": 18
+        },
+        "menuItemId": "itm_mamas0",
+        "sample": true
+      },
+      {
+        "id": "vrv_mamaskofi",
+        "firstName": "Kofi",
+        "stars": 5,
+        "quote": "Tilapia was fresh and the pepper hits.",
+        "postedAt": "2026-10-28T12:41:00.000Z",
+        "avatar": {
+          "url": "https://mock.ozaa.app/media/img/av-kofi.jpg",
+          "width": 160,
+          "height": 160,
+          "alt": "Kofi"
+        },
+        "poster": {
+          "url": "https://mock.ozaa.app/media/img/story-kofi.jpg",
+          "width": 720,
+          "height": 1280,
+          "alt": ""
+        },
+        "video": {
+          "mp4Url": "https://mock.ozaa.app/media/media/review-ama.mp4",
+          "durationSeconds": 18
+        },
+        "menuItemId": "itm_mamas2",
+        "sample": true
+      },
+      {
+        "id": "vrv_mamasefua",
+        "firstName": "Efua",
+        "stars": 4,
+        "quote": "Big waakye portion, good price.",
+        "postedAt": "2026-10-26T12:41:00.000Z",
+        "avatar": {
+          "url": "https://mock.ozaa.app/media/img/av-efua.jpg",
+          "width": 160,
+          "height": 160,
+          "alt": "Efua"
+        },
+        "poster": {
+          "url": "https://mock.ozaa.app/media/img/story-efua.jpg",
+          "width": 720,
+          "height": 1280,
+          "alt": ""
+        },
+        "video": {
+          "mp4Url": "https://mock.ozaa.app/media/media/review-ama.mp4",
+          "durationSeconds": 18
+        },
+        "menuItemId": "itm_mamas1",
+        "sample": true
+      },
+      {
+        "id": "vrv_mamasyaw",
+        "firstName": "Yaw",
+        "stars": 5,
+        "quote": "Came for kelewele, stayed for sobolo.",
+        "postedAt": "2026-10-24T12:41:00.000Z",
+        "avatar": {
+          "url": "https://mock.ozaa.app/media/img/av-yaw.jpg",
+          "width": 160,
+          "height": 160,
+          "alt": "Yaw"
+        },
+        "poster": {
+          "url": "https://mock.ozaa.app/media/img/story-yaw.jpg",
+          "width": 720,
+          "height": 1280,
+          "alt": ""
+        },
+        "video": {
+          "mp4Url": "https://mock.ozaa.app/media/media/review-ama.mp4",
+          "durationSeconds": 18
+        },
+        "menuItemId": "itm_mamas3",
+        "sample": true
+      },
+      {
+        "id": "vrv_mamasakua",
+        "firstName": "Akua",
+        "stars": 4,
+        "quote": "Lovely staff, quick service.",
+        "postedAt": "2026-10-24T12:41:00.000Z",
+        "avatar": {
+          "url": "https://mock.ozaa.app/media/img/av-akua.jpg",
+          "width": 160,
+          "height": 160,
+          "alt": "Akua"
+        },
+        "poster": {
+          "url": "https://mock.ozaa.app/media/img/story-akua.jpg",
+          "width": 720,
+          "height": 1280,
+          "alt": ""
+        },
+        "video": {
+          "mp4Url": "https://mock.ozaa.app/media/media/review-ama.mp4",
+          "durationSeconds": 18
+        },
+        "menuItemId": "itm_mamas4",
+        "sample": true
+      }
+    ]
+  },
+  "bean-there": {
+    "items": [
+      {
+        "id": "vrv_beanefua",
+        "firstName": "Efua",
+        "stars": 5,
+        "quote": "Great spot to work. Strong coffee.",
+        "postedAt": "2026-10-30T12:41:00.000Z",
+        "avatar": {
+          "url": "https://mock.ozaa.app/media/img/av-efua.jpg",
+          "width": 160,
+          "height": 160,
+          "alt": "Efua"
+        },
+        "poster": {
+          "url": "https://mock.ozaa.app/media/img/story-efua.jpg",
+          "width": 720,
+          "height": 1280,
+          "alt": ""
+        },
+        "video": {
+          "mp4Url": "https://mock.ozaa.app/media/media/review-ama.mp4",
+          "durationSeconds": 18
+        },
+        "menuItemId": "itm_bean0",
+        "sample": true
+      },
+      {
+        "id": "vrv_beanyaw",
+        "firstName": "Yaw",
+        "stars": 4,
+        "quote": "Sobolo cold brew is a must.",
+        "postedAt": "2026-10-27T12:41:00.000Z",
+        "avatar": {
+          "url": "https://mock.ozaa.app/media/img/av-yaw.jpg",
+          "width": 160,
+          "height": 160,
+          "alt": "Yaw"
+        },
+        "poster": {
+          "url": "https://mock.ozaa.app/media/img/story-yaw.jpg",
+          "width": 720,
+          "height": 1280,
+          "alt": ""
+        },
+        "video": {
+          "mp4Url": "https://mock.ozaa.app/media/media/review-ama.mp4",
+          "durationSeconds": 18
+        },
+        "menuItemId": "itm_bean2",
+        "sample": true
+      },
+      {
+        "id": "vrv_beanakua",
+        "firstName": "Akua",
+        "stars": 5,
+        "quote": "Meat pie was warm and flaky.",
+        "postedAt": "2026-10-24T12:41:00.000Z",
+        "avatar": {
+          "url": "https://mock.ozaa.app/media/img/av-akua.jpg",
+          "width": 160,
+          "height": 160,
+          "alt": "Akua"
+        },
+        "poster": {
+          "url": "https://mock.ozaa.app/media/img/story-akua.jpg",
+          "width": 720,
+          "height": 1280,
+          "alt": ""
+        },
+        "video": {
+          "mp4Url": "https://mock.ozaa.app/media/media/review-ama.mp4",
+          "durationSeconds": 18
+        },
+        "menuItemId": "itm_bean1",
+        "sample": true
+      }
+    ]
+  },
+  "auntie-akos": {
+    "items": [
+      {
+        "id": "vrv_akoskofi",
+        "firstName": "Kofi",
+        "stars": 5,
+        "quote": "Fufu pounded right in front of you.",
+        "postedAt": "2026-10-29T12:41:00.000Z",
+        "avatar": {
+          "url": "https://mock.ozaa.app/media/img/av-kofi.jpg",
+          "width": 160,
+          "height": 160,
+          "alt": "Kofi"
+        },
+        "poster": {
+          "url": "https://mock.ozaa.app/media/img/story-kofi.jpg",
+          "width": 720,
+          "height": 1280,
+          "alt": ""
+        },
+        "video": {
+          "mp4Url": "https://mock.ozaa.app/media/media/review-ama.mp4",
+          "durationSeconds": 18
+        },
+        "menuItemId": "itm_akos0",
+        "sample": true
+      }
+    ]
+  }
+}
