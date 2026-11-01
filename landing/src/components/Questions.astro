@@ -1,0 +1,37 @@
+---
+interface Props {
+  id: string;
+  heading: string;
+}
+
+const { id, heading } = Astro.props;
+import { questions } from "../content/page";
+---
+
+<section class="section section--faq" id={id} aria-labelledby={`${id}-title`}>
+  <div class="wrap">
+    <div class="section-head text-center">
+      <span class="section-tag">Frequently asked questions</span>
+      <h2 id={`${id}-title`}>{heading}</h2>
+      <p class="section-sub">
+        Everything you need to know about setting up Ozaa in your dining room.
+      </p>
+    </div>
+
+    <div class="faq-bento">
+      {
+        questions.map((item, idx) => (
+          <details class="bento-card bento-card--faq" open={idx === 0}>
+            <summary class="faq-summary">
+              <span class="faq-q">{item.question}</span>
+              <span class="faq-icon" aria-hidden="true">+</span>
+            </summary>
+            <div class="faq-answer-wrap">
+              <p class="faq-a">{item.answer}</p>
+            </div>
+          </details>
+        ))
+      }
+    </div>
+  </div>
+</section>

@@ -1,0 +1,56 @@
+---
+const replaces = [
+  {
+    icon: "📋",
+    replaced: "Laminated menus",
+    benefit: "Update prices, ingredients & 86 items in real-time without print bills.",
+  },
+  {
+    icon: "📟",
+    replaced: "Order buzzers & pagers",
+    benefit: "Guests watch live kitchen preparation stages directly on their own phones.",
+  },
+  {
+    icon: "🧾",
+    replaced: "Paper receipt rolls",
+    benefit: "Itemized digital receipts sent via SMS with zero thermal paper waste.",
+  },
+  {
+    icon: "💳",
+    replaced: "Slow card machines",
+    benefit: "Guests split and settle tables in seconds via mobile money or debit card.",
+  },
+  {
+    icon: "📝",
+    replaced: "Paper survey slips",
+    benefit: "Private ratings and feedback delivered straight to owner devices.",
+  },
+] as const;
+---
+
+<section class="section section--replaces-strip wrap">
+  <div class="replaces-container bento-card">
+    <div class="replaces-header">
+      <span class="section-tag">All-in-one replacement</span>
+      <h2>One table tag replaces all five</h2>
+      <p class="section-sub">
+        Declutter your dining tables and eliminate recurring printing, hardware leasing, and paper receipt expenses.
+      </p>
+    </div>
+
+    <div class="replaces-grid">
+      {
+        replaces.map((item) => (
+          <div class="replaces-card">
+            <div class="replaces-icon-row">
+              <span class="replaces-emoji" aria-hidden="true">{item.icon}</span>
+              <span class="replaces-badge">Replaces</span>
+            </div>
+            <h3 class="replaces-title">{item.replaced}</h3>
+            <p class="replaces-desc">{item.benefit}</p>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>

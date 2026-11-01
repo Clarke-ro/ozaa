@@ -1,0 +1,171 @@
+---
+import { screens, screenSize } from "../content/page";
+import IPhoneMockup from "./IPhoneMockup.astro";
+
+const demoTabs = [
+  {
+    id: "menu",
+    label: "Digital Menu",
+    badge: "Browse & Order",
+    title: "Vibrant visual food & beverage menu",
+    desc: "Guests filter by dietary choices, see high-resolution photos, select modifiers, and send orders straight to the kitchen.",
+    screen: screens.menu,
+  },
+  {
+    id: "pay",
+    label: "Split & Pay",
+    badge: "Direct Settlement",
+    title: "Split bills by person or percentage",
+    desc: "No more calculation delays at the table. Diners settle instantly via MoMo or bank card with automatic tip calculation.",
+    screen: screens.pay,
+  },
+  {
+    id: "loyalty",
+    label: "Stamp Card",
+    badge: "Repeat Diners",
+    title: "Passes saved directly in mobile wallets",
+    desc: "One-tap pass save to Apple Wallet & Google Wallet. Automatic cooldown rules prevent duplicate stamps.",
+    screen: screens.loyalty,
+  },
+  {
+    id: "wifi",
+    label: "One-Tap Wi-Fi",
+    badge: "Quick Connect",
+    title: "Instant guest wireless access",
+    desc: "Guests copy the password or connect directly without asking floor staff for sticky notes.",
+    screen: screens.wifi,
+  },
+  {
+    id: "waiter",
+    label: "Call Waiter",
+    badge: "Floor Alert",
+    title: "Targeted service alerts for floor staff",
+    desc: "Guests select specific reasons (Water, Cutlery, More Napkins, Clean Table) so staff arrive prepared.",
+    screen: screens.waiter,
+  },
+] as const;
+---
+
+<section class="section section--try-it wrap" id="try-it" aria-labelledby="try-it-title">
+  <div class="section-head text-center">
+    <span class="section-tag">Interactive experience</span>
+    <h2 id="try-it-title">Try what your diners experience</h2>
+    <p class="section-sub">
+      Tap any table action below to test the guest journey on an iPhone 16 Pro mockup.
+    </p>
+  </div>
+
+  <div class="try-it-container bento-card">
+    <div class="try-it-tabs" role="tablist" aria-label="Demo table screens">
+      {
+        demoTabs.map((tab, idx) => (
+          <button
+            type="button"
+            role="tab"
+            class={`try-it-tab ${idx === 0 ? "try-it-tab--active" : ""}`}
+            data-target={tab.id}
+            aria-selected={idx === 0 ? "true" : "false"}
+            aria-controls={`panel-${tab.id}`}
+            id={`tab-${tab.id}`}
+          >
+            <span class="try-it-tab-label">{tab.label}</span>
+            <span class="try-it-tab-badge">{tab.badge}</span>
+          </button>
+        ))
+      }
+    </div>
+
+    <div class="try-it-stage">
+      <div class="try-it-mockup-wrap">
+        {
+          demoTabs.map((tab, idx) => (
+            <div
+              class={`try-it-screen-panel ${idx === 0 ? "try-it-screen-panel--active" : ""}`}
+              id={`panel-${tab.id}`}
+              role="tabpanel"
+              aria-labelledby={`tab-${tab.id}`}
+            >
+              <IPhoneMockup
+                src={tab.screen.src}
+                alt={tab.screen.alt}
+                width={screenSize.width}
+                height={screenSize.height}
+                size="bento"
+              />
+            </div>
+          ))
+        }
+      </div>
+
+      <div class="try-it-details">
+        {
+          demoTabs.map((tab, idx) => (
+            <div
+              class={`try-it-text-block ${idx === 0 ? "try-it-text-block--active" : ""}`}
+              data-text-id={tab.id}
+            >
+              <span class="bento-pill">{tab.badge}</span>
+              <h3 class="try-it-item-title">{tab.title}</h3>
+              <p class="try-it-item-desc">{tab.desc}</p>
+
+              <div class="try-it-perks">
+                <div class="try-it-perk">
+                  <span class="perk-check">✓</span>
+                  <span>Instant browser launch via table QR stand</span>
+                </div>
+                <div class="try-it-perk">
+                  <span class="perk-check">✓</span>
+                  <span>Zero diner registration or passwords required</span>
+                </div>
+                <div class="try-it-perk">
+                  <span class="perk-check">✓</span>
+                  <span>Fully controllable from your manager dashboard</span>
+                </div>
+              </div>
+
+              <div class="try-it-action">
+                <button type="button" class="button button--sm" data-open-lead-modal>
+                  Get this for your tables
+                </button>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  function setupTryIt() {
+    const tabs = document.querySelectorAll<HTMLButtonElement>(".try-it-tab");
+    const panels = document.querySelectorAll<HTMLElement>(".try-it-screen-panel");
+    const texts = document.querySelectorAll<HTMLElement>(".try-it-text-block");
+
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        const target = tab.dataset.target;
+        if (!target) return;
+
+        tabs.forEach((t) => {
+          t.classList.remove("try-it-tab--active");
+          t.setAttribute("aria-selected", "false");
+        });
+        panels.forEach((p) => p.classList.remove("try-it-screen-panel--active"));
+        texts.forEach((tx) => tx.classList.remove("try-it-text-block--active"));
+
+        tab.classList.add("try-it-tab--active");
+        tab.setAttribute("aria-selected", "true");
+
+        const activePanel = document.getElementById(`panel-${target}`);
+        if (activePanel) activePanel.classList.add("try-it-screen-panel--active");
+
+        const activeText = document.querySelector<HTMLElement>(`[data-text-id="${target}"]`);
+        if (activeText) activeText.classList.add("try-it-text-block--active");
+      });
+    });
+  }
+
+  setupTryIt();
+  document.addEventListener("astro:page-load", setupTryIt);
+</script>

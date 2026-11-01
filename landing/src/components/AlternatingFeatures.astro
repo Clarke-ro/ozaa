@@ -1,0 +1,104 @@
+---
+import { screens, screenSize } from "../content/page";
+import IPhoneMockup from "./IPhoneMockup.astro";
+
+const featureRows = [
+  {
+    tag: "Visual Dining Menu",
+    title: "Mouth-watering menus with live kitchen sync",
+    desc: "Empower your guests to browse crisp photography, filter by 14 dietary allergens, select customizable modifiers (e.g. spice level, sides), and place orders seamlessly.",
+    points: [
+      "Schedule breakfast, lunch and dinner menus automatically by time of day",
+      "86 sold-out ingredients in one tap from your phone to prevent kitchen confusion",
+      "Full multilingual support for international and local guests alike",
+    ],
+    screen: screens.menu,
+    reverse: false,
+  },
+  {
+    tag: "Repeat Dining Loyalty",
+    title: "Digital passes that live in Apple & Google Wallet",
+    desc: "Replace lost paper stamp cards with frictionless wallet passes that notify diners when they are nearby. Automatic server cooldowns ensure every stamp is authentic.",
+    points: [
+      "No customer app download required — installs with a single tap to native wallets",
+      "Anti-fraud cooldown timers enforce 1 visit per hour or day per customer",
+      "Automated anniversary, birthday and win-back milestone treats",
+    ],
+    screen: screens.loyalty,
+    reverse: true,
+  },
+  {
+    tag: "Feedback & Reviews",
+    title: "Protect your Google rating before guests walk out",
+    desc: "Diners with minor service complaints leave private notes for the manager with optional contact details. Diners leaving 4 or 5 stars are seamlessly routed to your public Google Review link.",
+    points: [
+      "Private manager inbox with an anonymity delay to ensure honest feedback",
+      "Star gating ensures only happy diners are directed to public review pages",
+      "Optional AI analysis summarizes guest trends, dish feedback and sentiment",
+    ],
+    screen: screens.review,
+    reverse: false,
+  },
+  {
+    tag: "Floor Service & Wi-Fi",
+    title: "One-tap guest wireless and targeted waiter calls",
+    desc: "Cut down on staff interruptions. Guests connect to your secure guest Wi-Fi instantly and request specific waiter assistance with pre-configured reasons.",
+    points: [
+      "WPA2/WPA3 Wi-Fi connection with single-tap password copy or QR connect",
+      "Reason-based waiter calls (Napkins, Water, Cutlery, More Drinks)",
+      "Reduces table call wait times and streamlines floor server trips",
+    ],
+    screen: screens.wifi,
+    reverse: true,
+  },
+] as const;
+---
+
+<section class="section section--alternating-features wrap" id="features">
+  <div class="section-head text-center">
+    <span class="section-tag">Feature deep dive</span>
+    <h2>Engineered for every corner of your dining floor</h2>
+    <p class="section-sub">
+      From kitchen ticket dispatch to contactless payment settlements, every feature operates in harmony.
+    </p>
+  </div>
+
+  <div class="alternating-rows">
+    {
+      featureRows.map((row) => (
+        <div class={`feature-row ${row.reverse ? "feature-row--reverse" : ""}`}>
+          <div class="feature-copy">
+            <span class="bento-pill">{row.tag}</span>
+            <h3 class="feature-title">{row.title}</h3>
+            <p class="feature-desc">{row.desc}</p>
+
+            <ul class="feature-checklist">
+              {row.points.map((pt) => (
+                <li>
+                  <span class="checklist-icon" aria-hidden="true">✓</span>
+                  <span>{pt}</span>
+                </li>
+              ))}
+            </ul>
+
+            <div class="feature-cta">
+              <button type="button" class="button button--sm" data-open-lead-modal>
+                See it in action
+              </button>
+            </div>
+          </div>
+
+          <div class="feature-mockup">
+            <IPhoneMockup
+              src={row.screen.src}
+              alt={row.screen.alt}
+              width={screenSize.width}
+              height={screenSize.height}
+              size="bento"
+            />
+          </div>
+        </div>
+      ))
+    }
+  </div>
+</section>

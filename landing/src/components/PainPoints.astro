@@ -1,0 +1,60 @@
+---
+const painPoints = [
+  {
+    num: "01",
+    tag: "Speed & Usability",
+    question: "Why do diners despise typical QR menus?",
+    pain: "Most restaurants link their QR codes to a 35MB static PDF file that requires slow downloading, clumsy pinch-to-zoom, and offers no ordering capabilities.",
+    solution: "Ozaa serves an ultra-lightweight mobile browser interface that loads in under 200ms with category tabs, dish photos, allergen tags and search.",
+  },
+  {
+    num: "02",
+    tag: "Staff Bottlenecks",
+    question: "Why does bill settlement kill table turnover?",
+    pain: "Waitstaff spend up to 20 minutes per table hand-calculating split checks, re-swiping individual debit cards, and resolving payment discrepancies.",
+    solution: "Diners view the live table tab, split by item or percentage, add tips, and settle independently via MoMo or card without waiting on staff.",
+  },
+  {
+    num: "03",
+    tag: "Reputation Risk",
+    question: "Why do minor dining hiccups turn into 1-star ratings?",
+    pain: "Unhappy guests rarely complain out loud to busy servers. Instead, they vent their frustration publicly on Google Maps hours after leaving.",
+    solution: "Ozaa gives diners an anonymous direct line to the manager while seated, allowing staff to resolve issues in private before a public review is posted.",
+  },
+] as const;
+---
+
+<section class="section section--pain-points wrap" id="why-ozaa">
+  <div class="section-head text-center">
+    <span class="section-tag">Pain-point resolution</span>
+    <h2>Built to solve real restaurant frustrations</h2>
+    <p class="section-sub">
+      We engineered Ozaa specifically to eliminate the friction that makes diners hate table technology.
+    </p>
+  </div>
+
+  <div class="pain-points-grid">
+    {
+      painPoints.map((item) => (
+        <article class="bento-card pain-point-card">
+          <div class="pain-point-top">
+            <span class="pain-point-num">{item.num}</span>
+            <span class="bento-pill">{item.tag}</span>
+          </div>
+
+          <h3 class="pain-point-q">{item.question}</h3>
+
+          <div class="pain-box">
+            <div class="pain-box-badge">The Typical Problem</div>
+            <p>{item.pain}</p>
+          </div>
+
+          <div class="solution-box">
+            <div class="solution-box-badge">The Ozaa Solution</div>
+            <p>{item.solution}</p>
+          </div>
+        </article>
+      ))
+    }
+  </div>
+</section>
