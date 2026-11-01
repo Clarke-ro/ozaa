@@ -12,35 +12,54 @@ const shot = screens[hero.screen];
         <span class="eyebrow-dot" aria-hidden="true"></span>
         <span>{hero.support}</span>
       </div>
+
       <h1 id="hero-title">{hero.heading}</h1>
       <p class="hero-lead">{hero.lead}</p>
 
       <ul class="hero-pills" aria-label="Included table services">
         <li>
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h12"/></svg>
-          Digital menu
-        </li>
-        <li>
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
-          One-tap Wi-Fi
-        </li>
-        <li>
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-          Call waiter
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          200ms Instant Browser Load
         </li>
         <li>
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
-          Split &amp; pay bill
+          0% Order Commissions
         </li>
         <li>
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          Stamp card &amp; video stories
+          Automated 5-Star Reviews
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 7h-7m7 5h-7m7 5h-7M4 7h.01M4 12h.01M4 17h.01"/></svg>
+          Apple &amp; Google Wallet Passes
         </li>
       </ul>
 
       <div class="hero-actions">
-        <button type="button" class="button" data-open-lead-modal>{hero.cta}</button>
-        <a class="button-secondary" href="#try-it">Try interactive preview</a>
+        <button type="button" class="button hero-main-btn" data-open-lead-modal>
+          {hero.cta}
+          <span class="btn-arrow" aria-hidden="true">&rarr;</span>
+        </button>
+        <a class="button-secondary hero-sec-btn" href="#try-it">
+          Explore interactive preview
+        </a>
+      </div>
+
+      <div class="hero-stats-strip" aria-label="Platform performance metrics">
+        <div class="hero-stat-cell">
+          <span class="hero-stat-num">3x</span>
+          <span class="hero-stat-tag">Faster table turns</span>
+        </div>
+        <div class="hero-stat-sep" aria-hidden="true"></div>
+        <div class="hero-stat-cell">
+          <span class="hero-stat-num">0%</span>
+          <span class="hero-stat-tag">Order commissions</span>
+        </div>
+        <div class="hero-stat-sep" aria-hidden="true"></div>
+        <div class="hero-stat-cell">
+          <span class="hero-stat-num">100%</span>
+          <span class="hero-stat-tag">Direct split settlements</span>
+        </div>
       </div>
 
       <p class="support hero-footnote">{hero.samples}</p>
@@ -50,14 +69,39 @@ const shot = screens[hero.screen];
       <div class="showcase-badges" aria-hidden="true">
         <span class="showcase-badge showcase-badge--live">
           <span class="status-dot"></span>
-          Scan at Table 12 · No app install
+          Scan Table 12 &middot; Zero App Install
         </span>
         <span class="showcase-badge showcase-badge--accent">
           iPhone 16 Pro
         </span>
       </div>
 
-      <div class="hero-phones">
+      <div class="hero-phones-stage">
+        <!-- Floating Interactive Badges (Owner.com signature sleek proof elements) -->
+        <div class="floating-badge floating-badge--top-left" aria-hidden="true">
+          <div class="floating-badge-icon floating-badge-icon--green">✓</div>
+          <div class="floating-badge-text">
+            <strong>Table 12 &middot; Paid</strong>
+            <span>Split 4 ways via MoMo</span>
+          </div>
+        </div>
+
+        <div class="floating-badge floating-badge--top-right" aria-hidden="true">
+          <div class="floating-badge-icon floating-badge-icon--gold">&#9733;</div>
+          <div class="floating-badge-text">
+            <strong>5.0 Rating</strong>
+            <span>Auto-routed to Google</span>
+          </div>
+        </div>
+
+        <div class="floating-badge floating-badge--bottom-left" aria-hidden="true">
+          <div class="floating-badge-icon floating-badge-icon--brand">&#127873;</div>
+          <div class="floating-badge-text">
+            <strong>Reward Stamp</strong>
+            <span>Apple &amp; Google Wallet</span>
+          </div>
+        </div>
+
         <IPhoneMockup
           src={shot.src}
           alt={shot.alt}

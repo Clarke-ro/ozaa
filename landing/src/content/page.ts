@@ -56,10 +56,10 @@ export const site = {
 } as const;
 
 export const hero = {
-  heading: "The table QR for your restaurant.",
-  lead: "Guests scan the code on the table. They get the menu, the Wi-Fi, the waiter, and the bill on their phone.",
+  heading: "The all-in-one table system built to turn walk-ins into regulars.",
+  lead: "Diners scan the table QR for interactive menus, instant bill splitting, and digital stamp cards in Apple and Google Wallet. Zero app downloads. Zero commission fees.",
   support: "Ozaa is for restaurants anywhere. The first launch is in Africa.",
-  samples: "The phone pictures on this page are samples.",
+  samples: "The phone pictures on this page are live interactive samples.",
   cta: "Get Ozaa for your restaurant",
   screen: "menu" as const satisfies ScreenName,
   caption: "Sample guest screen.",

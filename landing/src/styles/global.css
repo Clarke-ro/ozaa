@@ -2290,3 +2290,173 @@ details[open] .faq-icon {
   from { transform: translateY(20px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
+
+
+/* ==========================================================================
+   OWNER.COM-INSPIRED SLEEK HERO & FLOATING BADGES
+   ========================================================================== */
+
+.hero-phones-stage {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: 1.5rem 0;
+}
+
+.floating-badge {
+  position: absolute;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(228, 228, 231, 0.9);
+  border-radius: var(--radius-lg);
+  padding: 0.65rem 1rem;
+  box-shadow: 0 12px 32px -4px rgba(17, 17, 17, 0.12), 0 4px 12px -2px rgba(17, 17, 17, 0.06);
+  animation: floatSlow 4s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+.floating-badge--top-left {
+  top: 8%;
+  left: -12px;
+  animation-delay: 0s;
+}
+
+.floating-badge--top-right {
+  top: 22%;
+  right: -16px;
+  animation-delay: 1.5s;
+}
+
+.floating-badge--bottom-left {
+  bottom: 12%;
+  left: -8px;
+  animation-delay: 2.8s;
+}
+
+@media (max-width: 640px) {
+  .floating-badge {
+    display: none;
+  }
+}
+
+.floating-badge-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9375rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.floating-badge-icon--green {
+  background: #ecfdf3;
+  color: #15803d;
+}
+
+.floating-badge-icon--gold {
+  background: #fef9c3;
+  color: #a16207;
+}
+
+.floating-badge-icon--brand {
+  background: #fff1ea;
+  color: #fc5205;
+}
+
+.floating-badge-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+}
+
+.floating-badge-text strong {
+  font-size: 0.8125rem;
+  color: #111111;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.floating-badge-text span {
+  font-size: 0.6875rem;
+  color: #71717a;
+  line-height: 1.2;
+}
+
+/* Hero Performance Stats Strip */
+.hero-stats-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fafafa;
+  border: 1px solid var(--grey200);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.5rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.hero-stat-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hero-stat-num {
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: #111111;
+  line-height: 1.1;
+}
+
+.hero-stat-tag {
+  font-size: 0.75rem;
+  color: #71717a;
+  font-weight: 500;
+}
+
+.hero-stat-sep {
+  width: 1px;
+  height: 32px;
+  background: var(--grey200);
+}
+
+@media (max-width: 480px) {
+  .hero-stats-strip {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  .hero-stat-sep {
+    display: none;
+  }
+}
+
+.btn-arrow {
+  display: inline-block;
+  margin-left: 6px;
+  transition: transform 0.15s ease;
+}
+
+.hero-main-btn:hover .btn-arrow {
+  transform: translateX(4px);
+}
+
+@keyframes floatSlow {
+  0% {
+    transform: translateY(0px);
+  }
+  100% {
+    transform: translateY(-8px);
+  }
+}
