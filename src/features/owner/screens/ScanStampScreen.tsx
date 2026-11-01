@@ -24,6 +24,7 @@ import {
   X,
 } from 'lucide-react-native';
 import { api } from '@/lib/api';
+import { hapticSuccess, hapticWarning } from '@/lib/haptics';
 import type { LoyaltyScanResult } from '@/lib/api/types';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
@@ -52,10 +53,16 @@ export function ScanStampScreen() {
     onSuccess: (data) => {
       setScanResult(data);
       setErrorMessage(null);
+      if (data.cooldownViolated) {
+        void hapticWarning();
+      } else {
+        void hapticSuccess();
+      }
       void client.invalidateQueries({ queryKey: ['owner-loyalty', venueId] });
       void client.invalidateQueries({ queryKey: ['owner-loyalty-customers', venueId] });
     },
     onError: (err: any) => {
+      void hapticWarning();
       setErrorMessage(err.message || 'Cooldown active or card invalid.');
     },
   });

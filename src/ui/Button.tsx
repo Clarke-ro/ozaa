@@ -1,4 +1,5 @@
 import { ActivityIndicator, Pressable, StyleSheet, type ViewStyle } from 'react-native';
+import { hapticSelection } from '@/lib/haptics';
 import { tokens } from '@/theme/tokens';
 import { Text } from './Text';
 import { useTheme } from './theme';
@@ -28,7 +29,10 @@ export function Button({
       accessibilityLabel={label}
       accessibilityState={{ disabled: off }}
       disabled={off}
-      onPress={onPress}
+      onPress={() => {
+        void hapticSelection();
+        onPress();
+      }}
       style={({ pressed }) => [
         styles.base,
         tone === 'primary' && { backgroundColor: pressed ? theme.pressed : theme.fill },
