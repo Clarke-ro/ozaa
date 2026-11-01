@@ -26,6 +26,7 @@ type OwnerSessionState = {
     role: StaffRole;
     firstName: string;
   }) => void;
+  switchVenue: (venueId: string) => void;
   clearOwner: () => void;
 };
 
@@ -56,6 +57,7 @@ export const useOwnerSession = create<OwnerSessionState>((set) => ({
     setAccessToken(accessToken);
     set({ accessToken, refreshToken, venueId, role, firstName });
   },
+  switchVenue: (venueId) => set({ venueId }),
   clearOwner: () => {
     setAccessToken(null);
     set({ accessToken: null, refreshToken: null, venueId: null, role: null, firstName: null });

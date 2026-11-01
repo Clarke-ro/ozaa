@@ -86,10 +86,10 @@ export function DashboardScreen() {
   const liveList = (orders.data?.items ?? []).slice(0, 4);
 
   // Unified Loyalty KPIs from Insights
-  const cardsEnrolled = ins?.loyaltyMetrics?.cardsEnrolled ?? 142;
-  const activeCards = ins?.loyaltyMetrics?.activeCards ?? 86;
-  const rewardsReady = ins?.loyaltyMetrics?.rewardsReady ?? 18;
-  const rewardsRedeemed = ins?.loyaltyMetrics?.rewardsRedeemed ?? 29;
+  const cardsEnrolled = ins?.loyaltyMetrics?.enrolled ?? 142;
+  const activeCards = ins?.loyaltyMetrics?.active ?? 86;
+  const rewardsReady = ins?.loyaltyMetrics?.rewardReady ?? 18;
+  const rewardsRedeemed = ins?.loyaltyMetrics?.redeemed ?? 29;
   const scansCount = ins?.scansCount ?? 384;
   const menuViewsCount = ins?.menuViewsCount ?? 920;
 
@@ -445,10 +445,10 @@ export function DashboardScreen() {
                       label={order.status.toUpperCase()}
                       tone={
                         order.status === 'ready'
-                          ? 'ready'
+                          ? 'success'
                           : order.status === 'preparing'
-                          ? 'active'
-                          : 'idle'
+                          ? 'accent'
+                          : 'waiting'
                       }
                     />
                   </View>
