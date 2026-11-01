@@ -4,6 +4,42 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-01 · Completing the full owner suite and 13-section web landing page
+
+**What we built**
+
+We brought the entire Ozaa owner side and marketing landing page to production completeness:
+1. **Menu Builder & Table Print**: Custom category schedules, 14 standard allergen tags, modifier choices, sequential table codes, and printable vector table tent cards.
+2. **Venue Design & Reviews**: Star gating (4–5★ to Google, 1–3★ to private feedback), custom links with scheduling, Wi-Fi QR connect strings, and brand customizer.
+3. **Loyalty Hub & Camera Scanner**: Digital stamp cards with anti-fraud cooldown timers, customer roster with Act 843 filters, camera reticle scanner, and paired handheld devices.
+4. **Feedback Inbox & AI**: Private guest inbox with anonymity delays, sentiment badges, and conversational "Ask Ozaa" feedback assistant.
+5. **Business & Multi-Location**: Multi-branch manager, global location switcher scoping all screens, team roles (Manager, Waiter, Kitchen, Viewer, Scanner), and Act 843 typed account deletion.
+6. **13-Section Web Landing Page**: Sticky nav, hero with iPhone 16 Pro mockup, interactive live try-it preview, replaces strip, pain points, alternating feature deep dives, pricing with monthly/annual toggle, FAQ accordion, CTA band, and lead demo modal.
+
+**How it works**
+
+```
+Diner QR scan / Camera → In-memory / HTTP API → Scoped by active venueId in Zustand → Reactive Query Cache
+```
+
+When an owner switches branch locations in the header chip, the active `venueId` updates across Zustand. Every screen automatically refetches for that specific branch.
+
+**Files to look at**
+
+- `src/features/owner/screens/`: all polished screen implementations.
+- `src/features/owner/chrome/OwnerChrome.tsx`: location switcher and sidebar.
+- `landing/src/pages/index.astro`: the 13-section landing page.
+
+**New idea: Global location scoping**
+
+Instead of passing the active venue ID manually down to every button and query, keeping `venueId` in a reactive state store (`useOwnerSession`) lets any screen switch branches without restarting the app or getting stale data.
+
+**Try it yourself**
+
+Open `http://localhost:4321/` in your browser to test the interactive preview on the landing page. Then open `http://localhost:8081/owner` and tap the location switcher in the top bar to switch between Mama's Kitchen and Airport City!
+
+---
+
 ## 2026-10-31 · Owner app redesign: design kit and full feature layouts
 
 **What we built**
