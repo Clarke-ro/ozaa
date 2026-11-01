@@ -2,9 +2,19 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { ChefHat, ShieldAlert, UserCheck, UserPlus, Users, Utensils } from 'lucide-react-native';
+import {
+  ChefHat,
+  Eye,
+  ScanLine,
+  ShieldAlert,
+  Trash2,
+  UserCheck,
+  UserPlus,
+  Users,
+  Utensils,
+} from 'lucide-react-native';
 import { api } from '@/lib/api';
-import type { StaffRole } from '@/lib/api/types';
+import type { StaffMember, StaffRole } from '@/lib/api/types';
 import { parseGhanaPhone, formatPhone } from '@/lib/phone';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
@@ -12,9 +22,9 @@ import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { useOwnerSession } from '@/features/session';
 import { DeskWait, OwnerPage } from '../chrome/OwnerPage';
-import { DeskCard, IconTile, SectionLabel, StatTile, StatusPill } from '../kit';
+import { ConfirmDialog, DeskCard, EmptyCard, IconTile, SectionLabel, StatTile, StatusPill } from '../kit';
 
-const ROLES: StaffRole[] = ['manager', 'waiter', 'kitchen'];
+const ALL_ROLES: StaffRole[] = ['manager', 'waiter', 'kitchen', 'viewer', 'staff_scanner', 'owner'];
 
 const ROLE_INFO: Record<StaffRole, { label: string; desc: string; icon: typeof Users }> = {
   manager: {
@@ -40,12 +50,12 @@ const ROLE_INFO: Record<StaffRole, { label: string; desc: string; icon: typeof U
   viewer: {
     label: 'Viewer',
     desc: 'Read-only access to sales reports, customer feedback and live floor.',
-    icon: Users,
+    icon: Eye,
   },
   staff_scanner: {
     label: 'Scanner',
     desc: 'Dedicated camera scanner access to verify cards, stamp visits and redeem rewards.',
-    icon: UserCheck,
+    icon: ScanLine,
   },
 };
 
@@ -55,9 +65,10 @@ export function StaffScreen() {
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const client = useQueryClient();
   const [firstName, setFirstName] = useState('');
-  const [phone, setPhone] = useState('');
+  const [contact, setContact] = useState('');
   const [role, setRole] = useState<StaffRole>('waiter');
   const [error, setError] = useState(false);
+  const [staffToRevoke, setStaffToRevoke] = useState<StaffMember | null>(null);
 
   const staff = useQuery({
     queryKey: ['owner-staff', venueId],
@@ -67,21 +78,36 @@ export function StaffScreen() {
 
   const invite = useMutation({
     mutationFn: () => {
-      const parsed = parseGhanaPhone(phone);
-      if (!parsed || !firstName.trim()) throw new Error('phone');
+      const isEmail = contact.includes('@');
+      let phoneArg = contact.trim();
+      if (!isEmail) {
+        const parsed = parseGhanaPhone(contact);
+        if (!parsed) throw new Error('invalid_phone');
+        phoneArg = parsed.phone;
+      }
+      if (!firstName.trim()) throw new Error('missing_name');
+
       return api.ownerInviteStaff(venueId, {
-        phone: parsed.phone,
+        phone: phoneArg,
         role,
         firstName: firstName.trim(),
       });
     },
     onSuccess: () => {
       setFirstName('');
-      setPhone('');
+      setContact('');
       setError(false);
       void client.invalidateQueries({ queryKey: ['owner-staff', venueId] });
     },
     onError: () => setError(true),
+  });
+
+  const revokeMutation = useMutation({
+    mutationFn: (staffId: string) => api.ownerRevokeStaff(venueId, staffId),
+    onSuccess: () => {
+      setStaffToRevoke(null);
+      void client.invalidateQueries({ queryKey: ['owner-staff', venueId] });
+    },
   });
 
   const staffList = staff.data?.items ?? [];
@@ -113,52 +139,80 @@ export function StaffScreen() {
           caps
         />
 
-        <View style={styles.staffGrid}>
-          {staffList.map((person) => {
-            const roleDetails = ROLE_INFO[person.role as StaffRole] ?? ROLE_INFO.waiter;
-            const initials = person.firstName.slice(0, 2).toUpperCase();
-            return (
-              <DeskCard key={person.id} style={styles.staffCard}>
-                <View style={styles.staffMainRow}>
-                  <View style={styles.avatarCircle}>
-                    <Text variant="body-strong" style={styles.avatarText}>
-                      {initials}
-                    </Text>
-                  </View>
-
-                  <View style={styles.staffInfo}>
-                    <View style={styles.staffNameRow}>
-                      <Text variant="body-strong">{person.firstName}</Text>
-                      <StatusPill
-                        tone={person.role === 'manager' ? 'accent' : person.role === 'kitchen' ? 'waiting' : 'neutral'}
-                        label={t(`owner.roles.${person.role}`)}
-                        boxed
-                      />
+        {staffList.length === 0 ? (
+          <EmptyCard
+            icon={Users}
+            title="No team members yet"
+            description="Invite your waitstaff, kitchen team and floor managers below."
+          />
+        ) : (
+          <View style={styles.staffGrid}>
+            {staffList.map((person) => {
+              const roleDetails = ROLE_INFO[person.role as StaffRole] ?? ROLE_INFO.waiter;
+              const initials = person.firstName.slice(0, 2).toUpperCase();
+              const isOwnerRole = person.role === 'owner';
+              return (
+                <DeskCard key={person.id} style={styles.staffCard}>
+                  <View style={styles.staffMainRow}>
+                    <View style={styles.avatarCircle}>
+                      <Text variant="body-strong" style={styles.avatarText}>
+                        {initials}
+                      </Text>
                     </View>
-                    <Text variant="caption" style={{ color: theme.meta }}>
-                      {person.phoneMasked}
+
+                    <View style={styles.staffInfo}>
+                      <View style={styles.staffNameRow}>
+                        <Text variant="body-strong">{person.firstName}</Text>
+                        <StatusPill
+                          tone={
+                            person.role === 'manager'
+                              ? 'accent'
+                              : person.role === 'kitchen'
+                              ? 'waiting'
+                              : person.role === 'owner'
+                              ? 'success'
+                              : 'neutral'
+                          }
+                          label={roleDetails.label}
+                          boxed
+                        />
+                      </View>
+                      <Text variant="caption" style={{ color: theme.meta }}>
+                        {person.phoneMasked}
+                      </Text>
+                    </View>
+
+                    {!isOwnerRole ? (
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={`Revoke access for ${person.firstName}`}
+                        onPress={() => setStaffToRevoke(person)}
+                        style={[styles.revokeBtn, { borderColor: theme.line }]}
+                      >
+                        <Trash2 size={16} color="#DC2626" />
+                      </Pressable>
+                    ) : null}
+                  </View>
+
+                  <View style={styles.roleDescBox}>
+                    <Text variant="caption" style={{ color: '#4B5563' }}>
+                      {roleDetails.desc}
                     </Text>
                   </View>
-                </View>
-
-                <View style={styles.roleDescBox}>
-                  <Text variant="caption" style={{ color: '#4B5563' }}>
-                    {roleDetails.desc}
-                  </Text>
-                </View>
-              </DeskCard>
-            );
-          })}
-        </View>
+                </DeskCard>
+              );
+            })}
+          </View>
+        )}
 
         {/* Invite new staff card */}
         <DeskCard style={styles.inviteCard}>
           <View style={styles.inviteHeader}>
             <IconTile icon={UserPlus} tone="tint" size={36} />
-            <View>
+            <View style={{ flex: 1 }}>
               <Text variant="title">Invite team member</Text>
               <Text variant="caption" style={{ color: theme.meta }}>
-                Staff sign in securely via phone OTP. No passwords needed.
+                Staff sign in securely via phone OTP or email. No passwords needed.
               </Text>
             </View>
           </View>
@@ -166,7 +220,7 @@ export function StaffScreen() {
           {/* First Name Field */}
           <View style={styles.fieldBlock}>
             <Text variant="caption" style={styles.fieldLabel}>
-              {t('owner.firstName')}
+              {t('owner.firstName')} *
             </Text>
             <TextInput
               accessibilityLabel={t('owner.firstName')}
@@ -178,22 +232,24 @@ export function StaffScreen() {
             />
           </View>
 
-          {/* Phone Field */}
+          {/* Phone / Email Field */}
           <View style={styles.fieldBlock}>
             <Text variant="caption" style={styles.fieldLabel}>
-              {t('owner.phone')} (Ghana mobile)
+              Ghana Phone or Email *
             </Text>
             <TextInput
-              accessibilityLabel={t('owner.phone')}
-              value={phone}
+              accessibilityLabel="Contact phone or email"
+              value={contact}
               onChangeText={(value) => {
-                setPhone(value);
-                const parsed = parseGhanaPhone(value);
-                if (parsed) setPhone(formatPhone(parsed.phone));
+                setContact(value);
+                if (!value.includes('@')) {
+                  const parsed = parseGhanaPhone(value);
+                  if (parsed) setContact(formatPhone(parsed.phone));
+                }
               }}
-              placeholder="024 123 4567"
+              placeholder="024 123 4567 or staff@venue.com"
               placeholderTextColor={theme.meta}
-              keyboardType="phone-pad"
+              keyboardType="email-address"
               style={[styles.input, { borderColor: theme.line, color: theme.text }]}
             />
           </View>
@@ -204,13 +260,13 @@ export function StaffScreen() {
               {t('owner.role')}
             </Text>
             <View style={styles.rolesRow}>
-              {ROLES.map((value) => {
+              {ALL_ROLES.map((value) => {
                 const isSelected = role === value;
                 return (
                   <Pressable
                     key={value}
                     accessibilityRole="button"
-                    accessibilityLabel={t(`owner.roles.${value}`)}
+                    accessibilityLabel={ROLE_INFO[value]?.label ?? value}
                     onPress={() => setRole(value)}
                     style={[
                       styles.roleTile,
@@ -227,7 +283,7 @@ export function StaffScreen() {
                         fontWeight: '700',
                       }}
                     >
-                      {t(`owner.roles.${value}`)}
+                      {ROLE_INFO[value]?.label ?? value}
                     </Text>
                   </Pressable>
                 );
@@ -242,7 +298,7 @@ export function StaffScreen() {
             <View style={styles.errorBanner}>
               <ShieldAlert size={16} color="#DC2626" />
               <Text variant="caption" style={{ color: '#DC2626', fontWeight: '600' }}>
-                Please check the phone number. A valid Ghana number is required.
+                Please check the contact details. A valid Ghana number or email is required.
               </Text>
             </View>
           ) : null}
@@ -251,9 +307,26 @@ export function StaffScreen() {
             label={t('owner.invite')}
             onPress={() => invite.mutate()}
             loading={invite.isPending}
-            disabled={!firstName.trim() || !phone.trim()}
+            disabled={!firstName.trim() || !contact.trim()}
           />
         </DeskCard>
+
+        {/* Revoke confirmation dialog */}
+        <ConfirmDialog
+          visible={Boolean(staffToRevoke)}
+          title={`Revoke Access for ${staffToRevoke?.firstName}?`}
+          message="This team member will immediately lose access to this venue and will no longer be able to view orders, tables or settings."
+          confirmLabel="Revoke Access"
+          cancelLabel="Cancel"
+          destructive
+          loading={revokeMutation.isPending}
+          onConfirm={() => {
+            if (staffToRevoke) {
+              revokeMutation.mutate(staffToRevoke.id);
+            }
+          }}
+          onCancel={() => setStaffToRevoke(null)}
+        />
       </DeskWait>
     </OwnerPage>
   );
@@ -302,7 +375,16 @@ const styles = StyleSheet.create({
   staffNameRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: tokens.space[2],
+  },
+  revokeBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: tokens.radius.md,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FEF2F2',
   },
   roleDescBox: {
     backgroundColor: '#F9FAFB',
@@ -337,10 +419,11 @@ const styles = StyleSheet.create({
   rolesRow: {
     flexDirection: 'row',
     gap: tokens.space[2],
+    flexWrap: 'wrap',
   },
   roleTile: {
-    minHeight: 40,
-    paddingHorizontal: tokens.space[4],
+    minHeight: 38,
+    paddingHorizontal: tokens.space[3],
     borderWidth: 1,
     borderRadius: tokens.radius.full,
     alignItems: 'center',

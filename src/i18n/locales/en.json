@@ -28,19 +28,58 @@
     }
   },
   "services": {
-    "menu": { "title": "Menu", "body": "Food and drinks, order from your table" },
-    "waiter": { "title": "Call waiter", "body": "Water, the bill or a hand" },
-    "status": { "title": "Order status", "body": "See where your food is" },
-    "pay": { "title": "Pay & split bill", "body": "MoMo or card, split any way" },
-    "wifi": { "title": "Wi-Fi", "body": "Connect in one tap" },
-    "loyalty": { "title": "Loyalty card", "body": "Collect stamps, get free food" },
-    "offers": { "title": "Specials & offers", "body": "Today's deals" },
-    "review": { "title": "Leave a review", "body": "Write one or record a short video" },
-    "play": { "title": "Play while you wait", "body": "A quick game. Beat the top score here." },
-    "reserve": { "title": "Reserve a table", "body": "Book your next visit" },
-    "events": { "title": "Events", "body": "Live music, quiz nights and more" },
-    "feedback": { "title": "Feedback & complaints", "body": "Tell the manager in private" },
-    "about": { "title": "About & contact", "body": "Hours, map, phone and WhatsApp" }
+    "menu": {
+      "title": "Menu",
+      "body": "Food and drinks, order from your table"
+    },
+    "waiter": {
+      "title": "Call waiter",
+      "body": "Water, the bill or a hand"
+    },
+    "status": {
+      "title": "Order status",
+      "body": "See where your food is"
+    },
+    "pay": {
+      "title": "Pay & split bill",
+      "body": "MoMo or card, split any way"
+    },
+    "wifi": {
+      "title": "Wi-Fi",
+      "body": "Connect in one tap"
+    },
+    "loyalty": {
+      "title": "Loyalty card",
+      "body": "Collect stamps, get free food"
+    },
+    "offers": {
+      "title": "Specials & offers",
+      "body": "Today's deals"
+    },
+    "review": {
+      "title": "Leave a review",
+      "body": "Write one or record a short video"
+    },
+    "play": {
+      "title": "Play while you wait",
+      "body": "A quick game. Beat the top score here."
+    },
+    "reserve": {
+      "title": "Reserve a table",
+      "body": "Book your next visit"
+    },
+    "events": {
+      "title": "Events",
+      "body": "Live music, quiz nights and more"
+    },
+    "feedback": {
+      "title": "Feedback & complaints",
+      "body": "Tell the manager in private"
+    },
+    "about": {
+      "title": "About & contact",
+      "body": "Hours, map, phone and WhatsApp"
+    }
   },
   "orderBar": {
     "title": "Order #{{number}} · {{status}}",
@@ -448,7 +487,9 @@
       "owner": "Owner",
       "manager": "Manager",
       "waiter": "Waiter",
-      "kitchen": "Kitchen"
+      "kitchen": "Kitchen",
+      "viewer": "Viewer",
+      "staff_scanner": "Scanner"
     },
     "service": {
       "menu": "Menu",
