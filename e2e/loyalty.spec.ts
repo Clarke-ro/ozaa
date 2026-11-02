@@ -8,6 +8,8 @@ test('guest loyalty wallet card, earn history, claim code QR, and owner confirma
   await page.waitForTimeout(800);
   await page.screenshot({ path: 'test-results/loyalty-join.png', fullPage: false });
 
+  // The join form (with the sample card) opens after tapping Join.
+  await page.getByRole('button', { name: 'Join the card' }).click();
   await page.getByRole('button', { name: 'Open sample card (Ama)' }).click();
   await expect(page.getByText('Ama · Since 2026-03-14')).toBeVisible();
   await expect(page.getByText('Your reward is ready.')).toBeVisible();
@@ -25,12 +27,14 @@ test('guest loyalty wallet card, earn history, claim code QR, and owner confirma
   await page.screenshot({ path: 'test-results/loyalty-redeem-claim-qr.png', fullPage: false });
 
   await page.goto('/bean-there/loyalty', { waitUntil: 'domcontentloaded' });
+  await page.getByRole('button', { name: 'Join the card' }).click();
   await page.getByRole('button', { name: 'Open sample card (Ama)' }).click();
   await expect(page.getByText('Free flat white')).toBeVisible();
   await page.waitForTimeout(600);
   await page.screenshot({ path: 'test-results/loyalty-wallet-points-bean.png', fullPage: false });
 
   await page.goto('/auntie-akos/loyalty', { waitUntil: 'domcontentloaded' });
+  await page.getByRole('button', { name: 'Join the card' }).click();
   await page.getByRole('button', { name: 'Open sample card (Ama)' }).click();
   await expect(page.getByText('Free fufu & light soup')).toBeVisible();
   await page.waitForTimeout(600);
@@ -46,7 +50,7 @@ test('guest loyalty wallet card, earn history, claim code QR, and owner confirma
   await page.waitForTimeout(800);
   await page.screenshot({ path: 'test-results/owner-loyalty-setup.png', fullPage: false });
 
-  await page.getByRole('tab', { name: 'Members', exact: true }).click();
+  await page.getByRole('radio', { name: 'Members', exact: true }).click();
   await page.waitForTimeout(800);
   await page.screenshot({
     path: 'test-results/owner-loyalty-confirm-members.png',

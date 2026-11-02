@@ -6,6 +6,7 @@ import { pesewas } from '@/lib/brand';
 import { formatMoney } from '@/lib/money';
 import { qrSvg } from '@/lib/qrSvg';
 import { Text } from '@/ui/Text';
+import { tokens } from '@/theme/tokens';
 import { useTheme } from '@/ui/theme';
 import type { Programme, Wallet } from './facts';
 
@@ -45,7 +46,7 @@ export function LoyaltyDetails({
                 {t('loyalty.claimExpires', { time: wallet.liveClaim.expiresAt.slice(11, 16) })}
               </Text>
             </View>
-            <View style={styles.qrWrap}>
+            <View style={[styles.qrWrap, { backgroundColor: theme.white }]}>
               <SvgXml xml={qrSvg(wallet.liveClaim.code, 108)} width={108} height={108} />
             </View>
           </View>
@@ -62,8 +63,8 @@ export function LoyaltyDetails({
             ? Math.min(1, wallet.progress.balance / Math.max(1, reward.cost))
             : 0;
           return (
-            <View key={reward.id} style={[styles.rowCard, { borderColor: theme.line }]}>
-              <View style={[styles.iconBox, { backgroundColor: theme.tint }]}>
+            <View key={reward.id} style={[styles.rowCard, { backgroundColor: theme.surface }]}>
+              <View style={styles.iconBox}>
                 <Gift color={theme.ink} size={20} strokeWidth={2} />
               </View>
               <View style={{ flex: 1, gap: 4 }}>
@@ -98,7 +99,10 @@ export function LoyaltyDetails({
                 </Pressable>
               ) : wallet && wallet.progress.balance >= reward.cost ? (
                 <View style={[styles.readyPill, { backgroundColor: theme.tint }]}>
-                  <Text variant="caption" style={{ color: theme.badgeInk, fontFamily: 'Inter_600' }}>
+                  <Text
+                    variant="caption"
+                    style={{ color: theme.badgeInk, fontFamily: 'Inter_600' }}
+                  >
                     {t('loyalty.ready')}
                   </Text>
                 </View>
@@ -139,8 +143,8 @@ export function LoyaltyDetails({
 
       <View style={{ gap: 10 }}>
         <Text variant="display-m">{t('loyalty.howToEarn')}</Text>
-        <View style={[styles.rowCard, { borderColor: theme.line }]}>
-          <View style={[styles.iconBox, { backgroundColor: theme.wash }]}>
+        <View style={[styles.rowCard, { backgroundColor: theme.surface }]}>
+          <View style={styles.iconBox}>
             <Receipt color={theme.ink} size={20} strokeWidth={2} />
           </View>
           <View style={{ flex: 1 }}>
@@ -160,8 +164,8 @@ export function LoyaltyDetails({
           </View>
         </View>
         {gameMinScore != null ? (
-          <View style={[styles.rowCard, { borderColor: theme.line }]}>
-            <View style={[styles.iconBox, { backgroundColor: theme.wash }]}>
+          <View style={[styles.rowCard, { backgroundColor: theme.surface }]}>
+            <View style={styles.iconBox}>
               <Gamepad2 color={theme.ink} size={20} strokeWidth={2} />
             </View>
             <View style={{ flex: 1 }}>
@@ -173,8 +177,8 @@ export function LoyaltyDetails({
           </View>
         ) : null}
         {programme.birthdayTreat ? (
-          <View style={[styles.rowCard, { borderColor: theme.line }]}>
-            <View style={[styles.iconBox, { backgroundColor: theme.wash }]}>
+          <View style={[styles.rowCard, { backgroundColor: theme.surface }]}>
+            <View style={styles.iconBox}>
               <Gift color={theme.ink} size={20} strokeWidth={2} />
             </View>
             <View style={{ flex: 1 }}>
@@ -201,7 +205,10 @@ export function LoyaltyDetails({
             </Text>
           ) : (
             [...wallet.history].reverse().map((row, index) => (
-              <View key={`${row.at}-${index}`} style={[styles.historyRow, { borderColor: theme.line }]}>
+              <View
+                key={`${row.at}-${index}`}
+                style={[styles.historyRow, { backgroundColor: theme.surface }]}
+              >
                 <View style={{ flex: 1 }}>
                   <Text variant="body-strong">
                     {row.source === 'paid_visit'
@@ -214,7 +221,7 @@ export function LoyaltyDetails({
                       : row.source === 'game'
                         ? t('loyalty.historyGame')
                         : row.source === 'birthday'
-                          ? row.title ?? t('loyalty.historyBirthday')
+                          ? (row.title ?? t('loyalty.historyBirthday'))
                           : t('loyalty.historyRedeem', { title: row.title ?? '' })}
                   </Text>
                   <Text variant="caption" style={{ color: theme.meta }}>
@@ -240,31 +247,59 @@ export function LoyaltyDetails({
 }
 
 const styles = StyleSheet.create({
-  claimBox: { borderWidth: 1.5, borderRadius: 20, padding: 16, gap: 10 },
-  claimRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  claimBox: {
+    borderWidth: 1.5,
+    borderRadius: tokens.radius.lg + 4,
+    padding: tokens.space[4],
+    gap: tokens.space[2] + 2,
+  },
+  claimRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
   claimCode: { letterSpacing: 2, fontVariant: ['tabular-nums'] },
-  qrWrap: { backgroundColor: '#FFFFFF', borderRadius: 12, padding: 8 },
+  qrWrap: { borderRadius: tokens.radius.md, padding: tokens.space[2] },
+  // Clean cards like the guest home list: soft shadow, no outline, a plain line icon.
   rowCard: {
-    borderWidth: 1,
-    borderRadius: 16,
-    padding: 14,
+    borderRadius: tokens.radius.lg,
+    borderCurve: 'continuous',
+    padding: tokens.space[4],
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: tokens.space[4],
+    boxShadow: tokens.shadow.card,
   },
-  iconBox: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  barTrack: { height: 6, borderRadius: 999, overflow: 'hidden', marginTop: 4 },
-  barFill: { height: '100%', borderRadius: 999 },
-  redeemPill: { borderRadius: 999, paddingHorizontal: 14, height: 36, justifyContent: 'center' },
-  readyPill: { borderRadius: 999, paddingHorizontal: 12, height: 30, justifyContent: 'center' },
-  tierRow: { flexDirection: 'row', gap: 10 },
-  tierCard: { flex: 1, borderWidth: 1, borderRadius: 16, padding: 12, gap: 4 },
+  iconBox: { width: 28, alignItems: 'center', justifyContent: 'center' },
+  barTrack: {
+    height: 6,
+    borderRadius: tokens.radius.full,
+    overflow: 'hidden',
+    marginTop: tokens.space[1],
+  },
+  barFill: { height: '100%', borderRadius: tokens.radius.full },
+  redeemPill: {
+    borderRadius: tokens.radius.full,
+    paddingHorizontal: tokens.space[3] + 2,
+    height: 36,
+    justifyContent: 'center',
+  },
+  readyPill: {
+    borderRadius: tokens.radius.full,
+    paddingHorizontal: tokens.space[3],
+    height: 30,
+    justifyContent: 'center',
+  },
+  tierRow: { flexDirection: 'row', gap: tokens.space[2] + 2 },
+  tierCard: {
+    flex: 1,
+    borderRadius: tokens.radius.lg,
+    padding: tokens.space[3],
+    gap: tokens.space[1],
+    boxShadow: tokens.shadow.card,
+  },
   historyRow: {
-    borderWidth: 1,
-    borderRadius: 14,
-    padding: 12,
+    borderRadius: tokens.radius.md + 2,
+    padding: tokens.space[3],
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    boxShadow: tokens.shadow.card,
   },
 });

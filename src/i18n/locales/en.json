@@ -319,7 +319,10 @@
     "progressOneStamp": "1 of {{total}}. One more and the next one is on us.",
     "progressMoreStamps": "{{balance}} of {{total}}. {{left}} more and the next one is on us.",
     "progressPoints": "{{balance}} of {{total}} pts · {{left}} pts to go",
-    "privacyNote": "Act 843: your phone number is kept only for this venue's card. Deleting your card erases your record here."
+    "privacyNote": "Act 843: your phone number is kept only for this venue's card. Deleting your card erases your record here.",
+    "introTitle": "Collect stamps at {{venue}}",
+    "introReward": "Your first reward: {{reward}}.",
+    "introBody": "Free to join with your phone number. No app to install."
   },
   "review": {
     "title": "Leave a review",

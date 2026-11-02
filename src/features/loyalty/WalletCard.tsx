@@ -111,7 +111,11 @@ export function WalletCard({
                     style={[
                       styles.stampCircle,
                       filled
-                        ? { backgroundColor: theme.onFill, borderColor: theme.onFill, borderStyle: 'solid' }
+                        ? {
+                            backgroundColor: theme.onFill,
+                            borderColor: theme.onFill,
+                            borderStyle: 'solid',
+                          }
                         : { borderColor: theme.onFill, borderStyle: 'dashed' },
                     ]}
                   >

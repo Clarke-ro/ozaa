@@ -12,9 +12,11 @@ import { Button } from '@/ui/Button';
 import { PageHeader } from '@/ui/PageHeader';
 import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
+import { tokens } from '@/theme/tokens';
 import { useTheme } from '@/ui/theme';
 import { programmeFromWire, walletFromWire } from './facts';
 import { LoyaltyDetails } from './LoyaltyDetails';
+import { LoyaltyIntro } from './LoyaltyIntro';
 import { LoyaltyJoinCard } from './LoyaltyJoinCard';
 import { WalletCard } from './WalletCard';
 
@@ -48,6 +50,8 @@ export function LoyaltyScreen({ slug }: { slug: string }) {
   const [flipped, setFlipped] = useState(false);
   const [joinedCard, setJoinedCard] = useState<LoyaltyCard | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // The join form waits until the guest asks for it, so the page leads with what they get.
+  const [joining, setJoining] = useState(false);
 
   const programQuery = useQuery({
     queryKey: ['loyalty-program', slug],
@@ -162,7 +166,7 @@ export function LoyaltyScreen({ slug }: { slug: string }) {
               redeemingId={redeem.isPending ? (redeem.variables ?? null) : null}
               onRedeem={(rewardId) => redeem.mutate(rewardId)}
             />
-            <View style={[styles.privacyBox, { borderColor: theme.line }]}>
+            <View style={[styles.privacyBox, { backgroundColor: theme.surface }]}>
               <Text variant="caption" style={{ color: theme.meta }}>
                 {t('loyalty.privacyNote')}
               </Text>
@@ -187,28 +191,40 @@ export function LoyaltyScreen({ slug }: { slug: string }) {
           </>
         ) : (
           <>
-            <LoyaltyJoinCard
-              venueName={placeName}
-              firstName={firstName}
-              onFirstName={setFirstName}
-              phone={phone}
-              onPhone={setPhone}
-              birthday={birthday}
-              onBirthday={setBirthday}
-              code={code}
-              onCode={setCode}
-              sent={sent}
-              loyaltyBox={loyaltyBox}
-              onToggleLoyalty={() => setLoyaltyBox((value) => !value)}
-              marketing={marketing}
-              onToggleMarketing={() => setMarketing((value) => !value)}
-              sending={request.isPending}
-              verifying={verify.isPending}
-              errorMessage={errorMessage}
-              onSendCode={() => request.mutate()}
-              onConfirm={() => verify.mutate()}
-              onOpenSample={() => void openSample()}
-            />
+            {joining ? null : (
+              <LoyaltyIntro
+                venueName={placeName}
+                // The easiest reward to reach is the best hook.
+                firstReward={
+                  [...(programme?.rewards ?? [])].sort((a, b) => a.cost - b.cost)[0] ?? null
+                }
+                onJoin={() => setJoining(true)}
+              />
+            )}
+            {joining ? (
+              <LoyaltyJoinCard
+                venueName={placeName}
+                firstName={firstName}
+                onFirstName={setFirstName}
+                phone={phone}
+                onPhone={setPhone}
+                birthday={birthday}
+                onBirthday={setBirthday}
+                code={code}
+                onCode={setCode}
+                sent={sent}
+                loyaltyBox={loyaltyBox}
+                onToggleLoyalty={() => setLoyaltyBox((value) => !value)}
+                marketing={marketing}
+                onToggleMarketing={() => setMarketing((value) => !value)}
+                sending={request.isPending}
+                verifying={verify.isPending}
+                errorMessage={errorMessage}
+                onSendCode={() => request.mutate()}
+                onConfirm={() => verify.mutate()}
+                onOpenSample={() => void openSample()}
+              />
+            ) : null}
             {programme ? (
               <LoyaltyDetails
                 programme={programme}
@@ -225,7 +241,16 @@ export function LoyaltyScreen({ slug }: { slug: string }) {
 }
 
 const styles = StyleSheet.create({
-  page: { padding: 20, gap: 20, paddingBottom: 48 },
-  privacyBox: { borderWidth: 1, borderRadius: 16, padding: 16, gap: 12 },
-  privacyActions: { gap: 8 },
+  page: {
+    padding: tokens.grid.mobile.margin,
+    gap: tokens.space[6],
+    paddingBottom: tokens.space[12],
+  },
+  privacyBox: {
+    borderRadius: tokens.radius.lg,
+    padding: tokens.space[4],
+    gap: tokens.space[3],
+    boxShadow: tokens.shadow.card,
+  },
+  privacyActions: { gap: tokens.space[2] },
 });
