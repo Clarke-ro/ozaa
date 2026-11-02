@@ -20,8 +20,8 @@ import { hapticSelection } from '@/lib/haptics';
 import { ownerKeys } from '../data/keys';
 
 /**
- * Shows the active location. Tapping it drops a menu down from the button with every location,
- * Add location and Manage locations. `chip` sits in the Today panel; `block` heads the sidebar.
+ * Shows the active location. Tapping it drops one card from the button holding a pill per
+ * location (the current one tinted and outlined), then Add location and Manage locations. `chip` sits in the Today panel; `block` heads the sidebar.
  */
 export function LocationSwitcher({ variant }: { variant: 'chip' | 'block' }) {
   const theme = useTheme();
@@ -108,13 +108,9 @@ export function LocationSwitcher({ variant }: { variant: 'chip' | 'block' }) {
               ),
               width: menuWidth,
               backgroundColor: theme.surface,
-              borderColor: theme.line,
             },
           ]}
         >
-          <Text variant="caption" style={[styles.menuTitle, { color: theme.meta }]}>
-            {t('ownerKit.switchLocation')}
-          </Text>
           {locations.map((location) => {
             const selected = location.id === venueId;
             return (
@@ -129,35 +125,37 @@ export function LocationSwitcher({ variant }: { variant: 'chip' | 'block' }) {
                 }}
                 style={({ pressed }) => [
                   styles.option,
-                  { backgroundColor: pressed || selected ? theme.wash : undefined },
+                  {
+                    backgroundColor: selected ? theme.tint : pressed ? theme.wash : theme.surface,
+                    borderColor: selected ? theme.ink : theme.line,
+                  },
                 ]}
               >
-                <View style={styles.optionCopy}>
-                  <Text variant="body-strong" numberOfLines={1}>
-                    {location.name}
-                  </Text>
-                  {location.city || location.country ? (
-                    <Text variant="caption" numberOfLines={1} style={{ color: theme.muted }}>
-                      {[location.city, location.country].filter(Boolean).join(', ')}
+                <Building2 size={16} color={selected ? theme.ink : theme.text} />
+                <Text variant="body-strong" numberOfLines={1} style={styles.optionCopy}>
+                  {location.name}
+                  {location.city ? (
+                    <Text variant="caption" style={{ color: theme.muted }}>
+                      {`  ${location.city}`}
                     </Text>
                   ) : null}
-                </View>
+                </Text>
                 {selected ? <Check size={18} color={theme.ink} strokeWidth={2.5} /> : null}
               </Pressable>
             );
           })}
-          <View style={[styles.divider, { backgroundColor: theme.line }]} />
           <Pressable
             accessibilityRole="button"
             onPress={() => go('/owner/business?add=1')}
             style={({ pressed }) => [
-              styles.action,
-              { backgroundColor: pressed ? theme.wash : undefined },
+              styles.option,
+              {
+                backgroundColor: pressed ? theme.wash : theme.surface,
+                borderColor: theme.line,
+              },
             ]}
           >
-            <View style={[styles.addIcon, { backgroundColor: theme.tint }]}>
-              <Plus size={16} color={theme.ink} />
-            </View>
+            <Plus size={16} color={theme.ink} />
             <Text variant="body-strong" style={[styles.optionCopy, { color: theme.ink }]}>
               {t('ownerBusiness.addLocation')}
             </Text>
@@ -166,8 +164,11 @@ export function LocationSwitcher({ variant }: { variant: 'chip' | 'block' }) {
             accessibilityRole="link"
             onPress={() => go('/owner/business')}
             style={({ pressed }) => [
-              styles.action,
-              { backgroundColor: pressed ? theme.wash : undefined },
+              styles.option,
+              {
+                backgroundColor: pressed ? theme.wash : theme.surface,
+                borderColor: theme.line,
+              },
             ]}
           >
             <Text variant="body" style={[styles.optionCopy, { color: theme.muted }]}>
@@ -208,39 +209,23 @@ const styles = StyleSheet.create({
   },
   blockCopy: { flex: 1 },
   name: { fontSize: tokens.type.caption.size + 1 },
+  // One card holds the menu; inside it each location is a pill the size of the location button.
   menu: {
     position: 'absolute',
+    gap: tokens.space[2],
     padding: tokens.space[2],
-    borderWidth: StyleSheet.hairlineWidth,
     borderRadius: tokens.radius.lg,
     borderCurve: 'continuous',
     boxShadow: tokens.shadow.card,
   },
-  menuTitle: { paddingHorizontal: tokens.space[2], paddingVertical: tokens.space[1] },
   option: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: tokens.space[2],
-    minHeight: tokens.touchTarget + tokens.space[1],
-    paddingHorizontal: tokens.space[2],
-    borderRadius: tokens.radius.md,
-    borderCurve: 'continuous',
+    minHeight: tokens.touchTarget,
+    paddingHorizontal: tokens.space[3],
+    borderRadius: tokens.radius.full,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   optionCopy: { flex: 1, gap: 2 },
-  divider: { height: StyleSheet.hairlineWidth, marginVertical: tokens.space[1] },
-  action: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[2],
-    minHeight: tokens.touchTarget,
-    paddingHorizontal: tokens.space[2],
-    borderRadius: tokens.radius.md,
-  },
-  addIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: tokens.radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
 });

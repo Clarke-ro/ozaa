@@ -21,6 +21,7 @@ import {
 } from '../../kit';
 import { formFrom, programFrom, STAMPS, WINBACK_DAYS, type Cooldown } from './program';
 import { StampPreview } from './StampPreview';
+import { TreatToggle } from './TreatToggle';
 
 /** Form state and save for the program. Lives in the screen so its SaveBar can be pinned to the page. */
 export function useProgramEditor(venueId: string, program: LoyaltyProgram | undefined) {
@@ -98,11 +99,10 @@ export function ProgramForm({ editor }: { editor: ReturnType<typeof useProgramEd
             />
           </View>
         </SectionBody>
-        <InputRow
+        <TreatToggle
           label={t('ownerLoyalty.halfway')}
           value={f.halfway}
-          onChangeText={(v) => draft.set('halfway', v)}
-          placeholder={t('ownerLoyalty.optional')}
+          onChange={(v) => draft.set('halfway', v)}
         />
         <SectionBody>
           <StampPreview stamps={f.stamps} reward={f.reward} />
@@ -124,23 +124,20 @@ export function ProgramForm({ editor }: { editor: ReturnType<typeof useProgramEd
       </Section>
 
       <Section title={t('ownerLoyalty.treats')} note={t('ownerLoyalty.treatsNote')}>
-        <InputRow
+        <TreatToggle
           label={t('ownerLoyalty.welcome')}
           value={f.welcome}
-          onChangeText={(v) => draft.set('welcome', v)}
-          placeholder={t('ownerLoyalty.optional')}
+          onChange={(v) => draft.set('welcome', v)}
         />
-        <InputRow
+        <TreatToggle
           label={t('ownerLoyalty.birthday')}
           value={f.birthday}
-          onChangeText={(v) => draft.set('birthday', v)}
-          placeholder={t('ownerLoyalty.optional')}
+          onChange={(v) => draft.set('birthday', v)}
         />
-        <InputRow
+        <TreatToggle
           label={t('ownerLoyalty.winback')}
           value={f.winback}
-          onChangeText={(v) => draft.set('winback', v)}
-          placeholder={t('ownerLoyalty.optional')}
+          onChange={(v) => draft.set('winback', v)}
         />
         {f.winback.trim() ? (
           <SectionBody>

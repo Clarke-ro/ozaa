@@ -9,8 +9,6 @@ import { useTheme } from '@/ui/theme';
 
 // A phone held upright is about 9:16, so the frame matches what the camera sees.
 const RATIO = 9 / 16;
-// Leave room under the frame for the type-the-code field without scrolling on most phones.
-const MAX_SCREEN_SHARE = 0.62;
 // The target square is most of the frame's width, so a QR held at arm's length fills it.
 const TARGET_SHARE = 0.68;
 
@@ -27,10 +25,11 @@ export function ScanViewfinder({
 }) {
   const { t } = useTranslation();
   const theme = useTheme();
-  const { width, height } = useWindowDimensions();
+  const { width } = useWindowDimensions();
   const [permission, requestPermission] = useCameraPermissions();
-  const frameHeight = Math.min((width - gutter * 2) / RATIO, height * MAX_SCREEN_SHARE);
-  const frameWidth = frameHeight * RATIO;
+  // Nearly edge to edge: the page gutter is the only side margin; the code field sits below.
+  const frameWidth = width - gutter * 2;
+  const frameHeight = frameWidth / RATIO;
   const target = frameWidth * TARGET_SHARE;
   const web = Platform.OS === 'web';
   const live = !web && permission?.granted;
@@ -71,7 +70,7 @@ export function ScanViewfinder({
         </>
       ) : (
         <View style={styles.note}>
-          <View style={[styles.noteIcon, { backgroundColor: theme.tint }]}>
+          <View style={styles.noteIcon}>
             <Camera size={28} color={theme.ink} />
           </View>
           <Text variant="title" style={styles.center}>

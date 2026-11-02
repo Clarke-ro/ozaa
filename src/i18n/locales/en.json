@@ -1032,7 +1032,7 @@
       "1d": "1 day"
     },
     "treats": "Treats",
-    "treatsNote": "Leave empty to turn a treat off.",
+    "treatsNote": "Switch a treat on and say what the guest gets.",
     "welcome": "When they join",
     "birthday": "On their birthday",
     "winback": "When they come back",
@@ -1045,7 +1045,9 @@
     "previewA11y": "Stamp card preview: {{stamps}} stamps for {{reward}}",
     "stamps30": "Stamps",
     "rewards30": "Rewards",
-    "last30": "Last 30 days"
+    "last30": "Last 30 days",
+    "treatWhat": "What they get",
+    "treatHint": "For example: a free sobolo"
   },
   "ownerBusiness": {
     "business": "Business",

@@ -105,7 +105,7 @@ export function CallCard({
             <Button
               label={t('owner.onTheWay')}
               size="md"
-              tone="secondary"
+              tone="primary"
               style={styles.flex}
               loading={busy}
               onPress={onAcknowledge}
@@ -114,7 +114,7 @@ export function CallCard({
           <Button
             label={t('owner.doneCall')}
             size="md"
-            tone="secondary"
+            tone="primary"
             style={styles.flex}
             disabled={busy}
             onPress={onResolve}
