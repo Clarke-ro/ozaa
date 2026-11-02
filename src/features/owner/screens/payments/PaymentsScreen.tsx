@@ -2,35 +2,25 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Banknote, CreditCard, Smartphone, Wallet, type LucideIcon } from 'lucide-react-native';
+import { Wallet } from 'lucide-react-native';
 import { api } from '@/lib/api';
 import type { VenueTransaction } from '@/lib/api/types';
 import { pesewas } from '@/lib/brand';
-import { formatMoney } from '@/lib/money';
+import { DEFAULT_CURRENCY, formatMoney } from '@/lib/money';
 import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
+import { Text } from '@/ui/Text';
+import { useTheme } from '@/ui/theme';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { moneyTotals } from '../../desk/ops';
-import {
-  ChipRow,
-  EmptyCard,
-  InfoRow,
-  LinkRow,
-  Section,
-  StatTile,
-  StatusPill,
-  toast,
-} from '../../kit';
+import { ChipRow, EmptyCard, SectionLabel, StatusPill, toast } from '../../kit';
+import { SummaryStrip } from '../../kit/SummaryStrip';
+import { TransactionRow } from './TransactionRow';
 import { TransactionSheet } from './TransactionSheet';
 
 type Filter = 'all' | VenueTransaction['method'];
-const ICON: Record<VenueTransaction['method'], LucideIcon> = {
-  momo: Smartphone,
-  card: CreditCard,
-  cash: Banknote,
-};
 
-/** Where the money goes (payout account), what came in, and every payment. */
+/** What came in, where it goes (payout account), and every payment. */
 export function PaymentsScreen() {
   const { t, i18n } = useTranslation();
   const client = useQueryClient();
@@ -59,8 +49,9 @@ export function PaymentsScreen() {
     onError: () => toast.error(t('ownerKit.saveFailed')),
   });
 
+  const theme = useTheme();
   const all = [...(txs.data?.items ?? [])].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  const currency = all[0]?.currency ?? 'GHS';
+  const currency = all[0]?.currency ?? DEFAULT_CURRENCY;
   const money = (v: number) => formatMoney(pesewas(v), currency);
   const totals = moneyTotals(all);
   const shown = filter === 'all' ? all : all.filter((tx) => tx.method === filter);
@@ -69,87 +60,88 @@ export function PaymentsScreen() {
 
   return (
     <OwnerPage title={t('owner.payments')}>
-      {p ? (
-        <Section
-          title={t('ownerPayments.payoutTitle')}
-          note={t('ownerPayments.fee', { percent: p.ozaaFeePercent.toLocaleString(i18n.language) })}
-        >
-          <InfoRow
-            icon={Wallet}
-            label={p.businessName}
-            value={`${t(`ownerPayments.payoutType.${p.settlementType}`)} ${p.accountMasked}`}
-            trailing={
+      <DeskWait loading={txs.isLoading} error={txs.isError} onRetry={() => void txs.refetch()}>
+        {/* Money in: the total on its own line so it never gets cut off. */}
+        <View style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.line }]}>
+          <Text variant="caption" style={{ color: theme.muted }}>
+            {t('ownerPayments.collected')}
+          </Text>
+          <Text variant="display-m" numberOfLines={1} adjustsFontSizeToFit style={styles.num}>
+            {money(totals.collected)}
+          </Text>
+        </View>
+        <SummaryStrip
+          items={[
+            { label: t('ownerPayments.settled'), value: money(totals.settled) },
+            { label: t('ownerPayments.waiting'), value: money(totals.collected - totals.settled) },
+            { label: t('ownerPayments.refundedShort'), value: money(totals.refunded) },
+          ]}
+        />
+
+        {p ? (
+          <View style={styles.block}>
+            <SectionLabel title={t('ownerPayments.payoutTitle')} caps />
+            <View
+              style={[
+                styles.card,
+                styles.payout,
+                { backgroundColor: theme.surface, borderColor: theme.line },
+              ]}
+            >
+              <View style={[styles.icon, { backgroundColor: theme.tint }]}>
+                <Wallet size={20} color={theme.ink} />
+              </View>
+              <View style={styles.flex}>
+                <Text variant="body-strong" numberOfLines={1}>
+                  {p.businessName}
+                </Text>
+                <Text variant="caption" numberOfLines={1} style={{ color: theme.muted }}>
+                  {t(`ownerPayments.payoutType.${p.settlementType}`)} {p.accountMasked}
+                </Text>
+              </View>
               <StatusPill
                 label={p.verified ? t('owner.payoutReady') : t('owner.payoutWait')}
                 tone={p.verified ? 'success' : 'waiting'}
               />
-            }
-          />
-        </Section>
-      ) : null}
-      <DeskWait loading={txs.isLoading} error={txs.isError} onRetry={() => void txs.refetch()}>
-        <View style={styles.grid}>
-          <View style={styles.half}>
-            <StatTile label={t('ownerPayments.collected')} value={money(totals.collected)} />
+            </View>
+            <Text variant="caption" style={{ color: theme.meta }}>
+              {t('ownerPayments.fee', { percent: p.ozaaFeePercent.toLocaleString(i18n.language) })}
+            </Text>
           </View>
-          <View style={styles.half}>
-            <StatTile
-              label={t('ownerPayments.settled')}
-              value={money(totals.settled)}
-              note={
-                totals.refunded
-                  ? t('ownerPayments.refundedNote', { amount: money(totals.refunded) })
-                  : undefined
-              }
+        ) : null}
+
+        <View style={styles.block}>
+          <SectionLabel title={t('ownerPayments.list')} caps />
+          <ChipRow
+            value={filter}
+            onChange={setFilter}
+            items={(['all', 'momo', 'card', 'cash'] as const).map((id) => ({
+              id,
+              label: id === 'all' ? t('ownerReviews.all') : t(`ownerPayments.methods.${id}`),
+            }))}
+          />
+          {shown.length === 0 ? (
+            <EmptyCard
+              icon={Wallet}
+              title={t('ownerPayments.empty')}
+              description={t('ownerPayments.emptyBody')}
             />
-          </View>
+          ) : (
+            <View
+              style={[styles.list, { backgroundColor: theme.surface, borderColor: theme.line }]}
+            >
+              {shown.map((tx, index) => (
+                <TransactionRow
+                  key={tx.id}
+                  tx={tx}
+                  amount={money(tx.amountPesewas)}
+                  first={index === 0}
+                  onPress={() => setOpenId(tx.id)}
+                />
+              ))}
+            </View>
+          )}
         </View>
-        <ChipRow
-          value={filter}
-          onChange={setFilter}
-          items={(['all', 'momo', 'card', 'cash'] as const).map((id) => ({
-            id,
-            label: id === 'all' ? t('ownerReviews.all') : t(`ownerPayments.methods.${id}`),
-          }))}
-        />
-        {shown.length === 0 ? (
-          <EmptyCard
-            icon={Wallet}
-            title={t('ownerPayments.empty')}
-            description={t('ownerPayments.emptyBody')}
-          />
-        ) : (
-          <Section title={t('ownerPayments.list')}>
-            {shown.map((tx) => (
-              <LinkRow
-                key={tx.id}
-                icon={ICON[tx.method]}
-                label={t('ownerPayments.orderTitle', { number: tx.orderNumber })}
-                value={money(tx.amountPesewas)}
-                onPress={() => setOpenId(tx.id)}
-                trailing={
-                  <StatusPill
-                    label={
-                      tx.status === 'succeeded'
-                        ? t(`ownerPayments.settlement.${tx.settlement}`)
-                        : t(`ownerPayments.status.${tx.status}`)
-                    }
-                    tone={
-                      tx.status !== 'succeeded'
-                        ? 'error'
-                        : tx.settlement === 'settled'
-                          ? 'success'
-                          : tx.settlement === 'refunded'
-                            ? 'neutral'
-                            : 'waiting'
-                    }
-                    icon={false}
-                  />
-                }
-              />
-            ))}
-          </Section>
-        )}
       </DeskWait>
       {open ? (
         <TransactionSheet
@@ -164,6 +156,28 @@ export function PaymentsScreen() {
 }
 
 const styles = StyleSheet.create({
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.space[3] },
-  half: { flexBasis: '47%', flexGrow: 1 },
+  block: { gap: tokens.space[2] },
+  card: {
+    gap: tokens.space[1],
+    padding: tokens.space[4],
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: tokens.radius.lg,
+    borderCurve: 'continuous',
+  },
+  payout: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
+  icon: {
+    width: 40,
+    height: 40,
+    borderRadius: tokens.radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  flex: { flex: 1, gap: 2 },
+  num: { fontVariant: ['tabular-nums'] },
+  list: {
+    overflow: 'hidden',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: tokens.radius.lg,
+    borderCurve: 'continuous',
+  },
 });
