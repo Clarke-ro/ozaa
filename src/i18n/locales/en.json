@@ -103,6 +103,8 @@
     "food": "Food",
     "drinks": "Drinks",
     "search": "Search the menu",
+    "photoOf": "Photo {{index}} of {{count}}",
+    "photos": "Photos of {{name}}. Swipe for more.",
     "filters": "Dietary filters",
     "filtersOn": "Dietary filters, {{count}} on",
     "filterTitle": "Dietary",

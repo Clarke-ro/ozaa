@@ -17,8 +17,9 @@ import { VenueImage } from '@/ui/VenueImage';
 import { ErrorState, LoadingState } from '@/ui/states';
 import { useTheme } from '@/ui/theme';
 import { addOnTotal, missingChoice, pickOption } from './dishLogic';
+import { DishGallery } from './DishGallery';
 
-/** One dish: big photo, what is in it, the venue's add-on choices, and Add with the full price. */
+/** One dish: swipeable photos, what is in it, the venue's add-on choices, and Add with the full price. */
 export function ItemScreen({ slug, itemId }: { slug: string; itemId: string }) {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -71,13 +72,10 @@ export function ItemScreen({ slug, itemId }: { slug: string; itemId: string }) {
     <View style={[styles.fill, { backgroundColor: theme.white }]}>
       <ScrollView contentContainerStyle={{ paddingBottom: 120 + insets.bottom }}>
         <View style={[styles.hero, { backgroundColor: theme.wash, paddingTop: insets.top + 56 }]}>
-          {item.photo ? (
-            <VenueImage
-              url={item.photo.url}
-              alt={item.photo.alt ?? item.name.en}
-              style={styles.photo}
-            />
-          ) : null}
+          <DishGallery
+            photos={item.photo ? [item.photo, ...(item.gallery ?? [])] : []}
+            name={item.name.en}
+          />
         </View>
         <View style={styles.body}>
           <View style={styles.titleRow}>
@@ -293,7 +291,6 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
   },
-  photo: { width: 240, height: 240, borderRadius: 120 },
   body: { padding: 20, gap: 16 },
   titleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   flex: { flex: 1 },
