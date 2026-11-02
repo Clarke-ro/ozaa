@@ -30,7 +30,7 @@ export function StaffCard({
     .join('');
   const invited = member.status === 'invited';
   const seen = member.lastActiveAt
-    ? t('ownerStaff.seen', { when: timeAgo(member.lastActiveAt, now, i18n.language) })
+    ? t('ownerStaff.seen', { when: timeAgo(member.lastActiveAt, now, t) })
     : null;
   const today = member.today;
 

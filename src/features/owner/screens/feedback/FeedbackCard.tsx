@@ -64,7 +64,7 @@ export function FeedbackCard({
           </Text>
           <Text variant="caption" style={{ color: theme.muted }}>
             {t(`ownerFeedback.mood.${item.sentiment}`)} ·{' '}
-            {timeAgo(item.createdAt, now, i18n.language)}
+            {timeAgo(item.createdAt, now, t)}
           </Text>
         </View>
         <View

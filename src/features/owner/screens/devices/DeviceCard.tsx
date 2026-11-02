@@ -55,7 +55,7 @@ export function DeviceCard({
           <Text variant="caption" style={{ color: active ? theme.success : theme.muted }}>
             {active
               ? t('ownerDevices.activeNow')
-              : t('ownerDevices.lastSeen', { when: timeAgo(device.lastSeen, now, i18n.language) })}
+              : t('ownerDevices.lastSeen', { when: timeAgo(device.lastSeen, now, t) })}
           </Text>
         </View>
         <Pressable

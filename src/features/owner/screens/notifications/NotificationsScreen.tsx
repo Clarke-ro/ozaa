@@ -127,7 +127,7 @@ function NoteRow({ note, now }: { note: Note; now: number }) {
           {title}
         </Text>
         <Text variant="caption" style={{ color: theme.muted }}>
-          {note.at ? timeAgo(note.at, now, i18n.language) : t('ownerNotes.now')}
+          {note.at ? timeAgo(note.at, now, t) : t('ownerNotes.now')}
         </Text>
       </View>
       <ChevronRight size={18} color={theme.meta} />
