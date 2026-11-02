@@ -1,3 +1,4 @@
+import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -24,7 +25,11 @@ export function BusinessScreen() {
   const switchVenue = useOwnerSession((state) => state.switchVenue);
   const data = useQuery({ queryKey: ownerKeys.business(), queryFn: () => api.ownerGetBusiness() });
   const draft = useDraft({ name: data.data?.business.name ?? '' });
-  const [editing, setEditing] = useState<Location | null | undefined>(undefined);
+  // `?add=1` (from the Today location menu) opens a blank location straight away.
+  const params = useLocalSearchParams<{ add?: string }>();
+  const [editing, setEditing] = useState<Location | null | undefined>(
+    params.add === '1' ? null : undefined,
+  );
   const locations = data.data?.locations ?? [];
 
   const rename = useMutation({

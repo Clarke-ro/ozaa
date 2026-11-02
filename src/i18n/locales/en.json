@@ -613,6 +613,7 @@
     "chooseLocation": "Choose a location",
     "switchLocation": "Switch location",
     "manageLocations": "Manage locations",
+    "closeMenu": "Close menu",
     "blockedTitle": "This page is not part of your role",
     "blockedBody": "Ask the owner if you need it.",
     "goToday": "Go to Today",
