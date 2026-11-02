@@ -2,17 +2,17 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Check, Download, Printer, QrCode, Share2 } from 'lucide-react-native';
+import { Download, Printer, QrCode, Share2 } from 'lucide-react-native';
 import { api } from '@/lib/api';
 import { generateTableCardHtml, type TableCardTemplate } from '@/features/tables';
 import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
+import { fontFamily, useTheme } from '@/ui/theme';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
-import { CodeTile, EmptyCard, SectionLabel, toast } from '../../kit';
+import { EmptyCard, SectionLabel, toast } from '../../kit';
 import { AddTablesSheet } from './AddTablesSheet';
 import { CARD_ACCENTS, TableCardControls, TableCardPreview } from './TableCardPreview';
 import { canPrint, downloadQr, printHtml, shareLink } from './qrActions';
@@ -64,10 +64,13 @@ export function TablesScreen() {
   };
   const share = async () => {
     if (!open?.qrUrl) return;
-    const result = await shareLink(open.qrUrl, `${venueName} · ${open.label ?? open.code}`);
+    const result = await shareLink(open.qrUrl, `${venueName} · ${name(open)}`);
     if (result === 'copied') toast.success(t('ownerTables.copied'));
     if (result === 'failed') toast.error(t('ownerTables.shareFailed'));
   };
+
+  const name = (table: (typeof items)[number]) =>
+    table.label ?? t('ownerOrders.table', { code: table.code });
 
   const preview = open ? (
     <View style={[styles.card, { borderColor: theme.line, backgroundColor: theme.surface }]}>
@@ -87,7 +90,7 @@ export function TablesScreen() {
       <View style={styles.actions}>
         {canPrint ? (
           <Button
-            label={t('ownerTables.printOne', { name: open.label ?? open.code })}
+            label={t('ownerTables.printOne', { name: name(open) })}
             onPress={() => print(false)}
           />
         ) : null}
@@ -123,33 +126,27 @@ export function TablesScreen() {
   const list = (
     <View style={styles.listWrap}>
       <SectionLabel title={t('ownerTables.count', { count: items.length })} caps />
-      <View style={[styles.list, { borderColor: theme.line, backgroundColor: theme.surface }]}>
-        {items.map((table, index) => {
+      <View accessibilityRole="radiogroup" style={styles.grid}>
+        {items.map((table) => {
           const on = table.id === open?.id;
           return (
             <Pressable
               key={table.id}
               accessibilityRole="radio"
               accessibilityState={{ checked: on }}
-              accessibilityLabel={table.label ?? `Table ${table.code}`}
+              accessibilityLabel={name(table)}
               onPress={() => setOpenId(table.id)}
               style={({ pressed }) => [
-                styles.tableRow,
-                index > 0 && {
-                  borderTopWidth: StyleSheet.hairlineWidth,
-                  borderTopColor: theme.line,
+                styles.seat,
+                {
+                  backgroundColor: on ? theme.black : pressed ? theme.wash : theme.surface,
+                  borderColor: on ? theme.black : theme.line,
                 },
-                (pressed || on) && { backgroundColor: on ? theme.tint : theme.wash },
               ]}
             >
-              <CodeTile code={table.code} size={40} tone={on ? 'tint' : 'wash'} />
-              <View style={styles.flex}>
-                <Text variant="body-strong">{table.label ?? `Table ${table.code}`}</Text>
-                <Text variant="caption" numberOfLines={1} style={{ color: theme.muted }}>
-                  {table.qrUrl}
-                </Text>
-              </View>
-              {on ? <Check size={20} color={theme.ink} /> : null}
+              <Text variant="body-strong" style={{ color: on ? theme.white : theme.text }}>
+                {table.code}
+              </Text>
             </Pressable>
           );
         })}
@@ -191,8 +188,8 @@ export function TablesScreen() {
           </View>
         ) : (
           <>
-            {preview}
             {list}
+            {preview}
           </>
         )}
       </DeskWait>
@@ -228,7 +225,7 @@ function IconAction({
       ]}
     >
       <Icon size={18} color={theme.ink} />
-      <Text variant="body-strong" numberOfLines={1}>
+      <Text variant="caption" numberOfLines={1} style={{ fontFamily: fontFamily.strong }}>
         {label}
       </Text>
     </Pressable>
@@ -246,31 +243,28 @@ const styles = StyleSheet.create({
     borderCurve: 'continuous',
   },
   actions: { gap: tokens.space[3] },
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.space[2] },
+  row: { flexDirection: 'row', gap: tokens.space[2] },
   iconAction: {
-    flexGrow: 1,
-    flexDirection: 'row',
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: tokens.space[2],
-    minHeight: tokens.touchTarget,
-    paddingHorizontal: tokens.space[3],
-    borderWidth: 1,
+    gap: tokens.space[1],
+    minHeight: tokens.touchTarget + tokens.space[4],
+    paddingHorizontal: tokens.space[2],
+    borderWidth: StyleSheet.hairlineWidth,
     borderRadius: tokens.radius.md,
+    borderCurve: 'continuous',
   },
   listWrap: { gap: tokens.space[2] },
-  list: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: tokens.radius.lg,
-    borderCurve: 'continuous',
-    overflow: 'hidden',
-  },
-  tableRow: {
-    flexDirection: 'row',
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.space[2] },
+  seat: {
+    minWidth: 52,
+    height: 52,
+    paddingHorizontal: tokens.space[3],
     alignItems: 'center',
-    gap: tokens.space[3],
-    minHeight: 60,
-    paddingHorizontal: tokens.space[4],
-    paddingVertical: tokens.space[2],
+    justifyContent: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: tokens.radius.md,
+    borderCurve: 'continuous',
   },
 });
