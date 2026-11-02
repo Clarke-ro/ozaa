@@ -654,9 +654,26 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       }
       return { rank: body.score > 0 ? 1 : null, stampEarned };
     },
-    async sendFeedback() {
+    async sendFeedback(body) {
       await gate();
-      sessionOf(world, tokens);
+      const session = sessionOf(world, tokens);
+      const venue = venueBySlug(world, session.slug);
+      const created = now();
+      world.feedback.push({
+        id: nextId(world, 'fbk'),
+        venueId: venue.id,
+        // The real server scores the note's mood; the mock files every new note as neutral.
+        sentiment: 'neutral',
+        score: 3,
+        text: body.message,
+        photoUrl: null,
+        contactName: null,
+        contactPhone: body.contactPhone ?? null,
+        archived: false,
+        // Held back two hours so a guest is not identified by when they sat down.
+        visibleAfter: new Date(created + 2 * 3600_000).toISOString(),
+        createdAt: new Date(created).toISOString(),
+      });
     },
     async ownerGetVenue(venueId) {
       await gate();

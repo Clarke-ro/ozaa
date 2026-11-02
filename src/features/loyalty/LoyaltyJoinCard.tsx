@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { env } from '@/lib/env';
 import { Check } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/ui/Button';
@@ -151,12 +152,15 @@ export function LoyaltyJoinCard({
         <Button label={t('loyalty.sendCode')} loading={sending} onPress={onSendCode} />
       )}
 
-      <View style={styles.sampleRow}>
-        <Text variant="caption" style={{ color: theme.meta }}>
-          {t('loyalty.sampleHint')}
-        </Text>
-        <Button label={t('loyalty.openSample')} tone="secondary" onPress={onOpenSample} />
-      </View>
+      {/* Demo builds only: the sample member and code exist only in the mock. */}
+      {env.EXPO_PUBLIC_API_MODE === 'mock' ? (
+        <View style={styles.sampleRow}>
+          <Text variant="caption" style={{ color: theme.meta }}>
+            {t('loyalty.sampleHint')}
+          </Text>
+          <Button label={t('loyalty.openSample')} tone="secondary" onPress={onOpenSample} />
+        </View>
+      ) : null}
     </View>
   );
 }

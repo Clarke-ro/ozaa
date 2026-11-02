@@ -4,6 +4,7 @@ import * as Crypto from 'expo-crypto';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
+import { env } from '@/lib/env';
 import { asGhanaPhone, countryForVenue, parsePhone } from '@/lib/phone';
 import { DEFAULT_CURRENCY, formatMoney } from '@/lib/money';
 import { useVenue } from '@/features/venue';
@@ -36,10 +37,11 @@ export function PayScreen({ slug }: { slug: string }) {
     queryFn: () => api.getOrder(orderId ?? ''),
     enabled: Boolean(orderId),
   });
-  const [mode, setMode] = useState<'whole' | 'equal' | 'items'>('equal');
-  const [parts, setParts] = useState(3);
-  const [tip, setTip] = useState<(typeof TIPS)[number]>(10);
-  const [phone, setPhone] = useState('0240005512');
+  const [mode, setMode] = useState<'whole' | 'equal' | 'items'>('whole');
+  const [parts, setParts] = useState(2);
+  // No tip and an empty number to start: the guest chooses, nothing is decided for them.
+  const [tip, setTip] = useState<(typeof TIPS)[number]>(0);
+  const [phone, setPhone] = useState('');
   const [method, setMethod] = useState<'mtn' | 'vod' | 'atl' | 'card'>('mtn');
   const [payState, send] = useReducer(payTransition, payInitial);
   const [reference, setReference] = useState<string | null>(null);
@@ -199,11 +201,12 @@ export function PayScreen({ slug }: { slug: string }) {
               ))}
             </View>
             <Text variant="body-strong">{t('pay.with')}</Text>
-            <View style={styles.row}>
+            <View style={styles.wrapRow}>
               {(['mtn', 'vod', 'atl', 'card'] as const).map((item) => (
                 <Pressable
                   key={item}
-                  accessibilityRole="button"
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: method === item }}
                   onPress={() => setMethod(item)}
                   style={[
                     styles.chip,
@@ -231,13 +234,25 @@ export function PayScreen({ slug }: { slug: string }) {
               ))}
             </View>
             {method !== 'card' ? (
-              <TextInput
-                accessibilityLabel={t('pay.phone')}
-                value={phone}
-                onChangeText={setPhone}
-                keyboardType="phone-pad"
-                style={[styles.input, { borderColor: theme.line }]}
-              />
+              <>
+                <TextInput
+                  accessibilityLabel={t('pay.phone')}
+                  placeholder={t('pay.phone')}
+                  placeholderTextColor={theme.meta}
+                  value={phone}
+                  onChangeText={setPhone}
+                  keyboardType="phone-pad"
+                  textContentType="telephoneNumber"
+                  autoComplete="tel"
+                  style={[styles.input, { borderColor: theme.line, color: theme.text }]}
+                />
+                {/* Demo builds only: the mock accepts any valid number and charges nothing. */}
+                {env.EXPO_PUBLIC_API_MODE === 'mock' ? (
+                  <Text variant="caption" style={{ color: theme.meta }}>
+                    {t('pay.testNumber')}
+                  </Text>
+                ) : null}
+              </>
             ) : null}
             <Button
               label={`${t('pay.share')}  ${formatMoney(pesewas(due), currency)}`}
@@ -261,6 +276,7 @@ export function PayScreen({ slug }: { slug: string }) {
 const styles = StyleSheet.create({
   box: { borderWidth: 1, borderRadius: 16, padding: 14, gap: 8 },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
+  wrapRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   seg: {
     flex: 1,
     height: 40,

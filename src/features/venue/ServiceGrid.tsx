@@ -39,6 +39,9 @@ const ICONS: Record<string, LucideIcon> = {
 
 const SECTIONS = ['table', 'rewards', 'fun', 'more'] as const;
 
+/** Services the API knows about but the guest app has no screen for yet. Never shown as a dead end. */
+export const NOT_BUILT: readonly string[] = ['reserve', 'events'];
+
 export function ServiceGrid({
   services,
   onOpen,
@@ -51,7 +54,10 @@ export function ServiceGrid({
   return (
     <View>
       {SECTIONS.map((section) => {
-        const items = services.filter((service) => service.enabled && service.section === section);
+        const items = services.filter(
+          (service) =>
+            service.enabled && service.section === section && !NOT_BUILT.includes(service.id),
+        );
         if (items.length === 0) return null;
         return (
           <View key={section} style={styles.block}>

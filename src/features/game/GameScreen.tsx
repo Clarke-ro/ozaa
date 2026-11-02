@@ -10,7 +10,14 @@ import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { Button } from '@/ui/Button';
 import { useTheme } from '@/ui/theme';
-import { createStack, dropAligned, dropPlate, stepStack, topOfBoard, type StackState } from './plateStack';
+import {
+  createStack,
+  dropAligned,
+  dropPlate,
+  stepStack,
+  topOfBoard,
+  type StackState,
+} from './plateStack';
 
 export function GameScreen({ slug }: { slug: string }) {
   const { t } = useTranslation();
@@ -72,11 +79,20 @@ export function GameScreen({ slug }: { slug: string }) {
             <Text variant="display-l">{best}</Text>
           </View>
         </View>
-        <Pressable accessibilityRole="button" accessibilityLabel={t('game.start')} onPress={tap} style={[styles.board, { backgroundColor: theme.wash }]}>
+        <View style={[styles.board, { backgroundColor: theme.wash }]}>
+          {/* The tap layer sits behind the overlays, so their buttons are never inside another button. */}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('game.drop')}
+            onPress={tap}
+            style={StyleSheet.absoluteFill}
+          />
           {state.kind === 'ready' ? (
             <View style={styles.overlay}>
               <Text variant="display-m">{t('game.name')}</Text>
-              <Text variant="caption" style={{ textAlign: 'center' }}>{t('game.lead')}</Text>
+              <Text variant="caption" style={{ textAlign: 'center' }}>
+                {t('game.lead')}
+              </Text>
               <Button label={t('game.start')} onPress={tap} />
             </View>
           ) : null}
@@ -88,22 +104,55 @@ export function GameScreen({ slug }: { slug: string }) {
                   {t('game.earned')}
                 </Text>
               ) : null}
-              <TextInput accessibilityLabel={t('game.nick')} value={nick} maxLength={14} onChangeText={setNick} placeholder={t('game.nick')} style={styles.nick} />
-              <Button label={t('game.save')} onPress={() => nick.trim() && setSaved((rows) => [...rows, { nickname: nick.trim(), score: state.score, mine: true }])} />
-              <Button label={t('game.again')} tone="secondary" onPress={() => setState(createStack())} />
+              <TextInput
+                accessibilityLabel={t('game.nick')}
+                value={nick}
+                maxLength={14}
+                onChangeText={setNick}
+                placeholder={t('game.nick')}
+                style={styles.nick}
+              />
+              <Button
+                label={t('game.save')}
+                onPress={() =>
+                  nick.trim() &&
+                  setSaved((rows) => [
+                    ...rows,
+                    { nickname: nick.trim(), score: state.score, mine: true },
+                  ])
+                }
+              />
+              <Button
+                label={t('game.again')}
+                tone="secondary"
+                onPress={() => setState(createStack())}
+              />
             </View>
           ) : null}
-          <View style={{ position: 'absolute', bottom: 24, left: state.current?.x ?? 0 }}>
-            <View style={{ width: state.current?.w ?? 0, height: 18, borderRadius: 8, backgroundColor: theme.fill }} />
+          <View
+            pointerEvents="none"
+            style={{ position: 'absolute', bottom: 24, left: state.current?.x ?? 0 }}
+          >
+            <View
+              style={{
+                width: state.current?.w ?? 0,
+                height: 18,
+                borderRadius: 8,
+                backgroundColor: theme.fill,
+              }}
+            />
           </View>
-        </Pressable>
+        </View>
         <Text variant="body-strong">{t('game.board', { name: venue.data?.name ?? '' })}</Text>
         {topOfBoard(saved).map((row, index) => (
           <Text key={`${row.nickname}-${index}`}>
-            {index + 1} {row.nickname} {row.sample ? t('game.sample') : row.mine ? t('game.you') : ''} {row.score}
+            {index + 1} {row.nickname}{' '}
+            {row.sample ? t('game.sample') : row.mine ? t('game.you') : ''} {row.score}
           </Text>
         ))}
-        <Text variant="caption" style={{ color: theme.meta }}>{t('game.offline')}</Text>
+        <Text variant="caption" style={{ color: theme.meta }}>
+          {t('game.offline')}
+        </Text>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Align"
@@ -123,6 +172,20 @@ export function GameScreen({ slug }: { slug: string }) {
 const styles = StyleSheet.create({
   scores: { flexDirection: 'row', justifyContent: 'space-between' },
   board: { height: 380, borderRadius: 20, overflow: 'hidden' },
-  overlay: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', gap: 8, padding: 24, backgroundColor: 'rgba(255,255,255,0.92)' },
-  nick: { borderWidth: 1, borderColor: '#E4E4E7', borderRadius: 12, height: 48, paddingHorizontal: 12, width: '100%' },
+  overlay: {
+    ...StyleSheet.absoluteFill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    padding: 24,
+    backgroundColor: 'rgba(255,255,255,0.92)',
+  },
+  nick: {
+    borderWidth: 1,
+    borderColor: '#E4E4E7',
+    borderRadius: 12,
+    height: 48,
+    paddingHorizontal: 12,
+    width: '100%',
+  },
 });

@@ -10,7 +10,7 @@ import { useTheme } from '@/ui/theme';
 // Two lines is enough to set the scene; the rest is one tap away, so the services stay above the fold.
 const DESCRIPTION_LINES = 2;
 
-function mapsLink(location: VenuePublic['location']): string {
+export function mapsLink(location: VenuePublic['location']): string {
   if (location.mapsUrl) return location.mapsUrl;
   const query =
     location.lat != null && location.lng != null

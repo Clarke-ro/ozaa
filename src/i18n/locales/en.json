@@ -205,7 +205,8 @@
     "failed": "That didn't go through and nothing was taken. Try again?",
     "checking": "Still checking…",
     "offline": "You're offline. Connect to pay.",
-    "tryAgain": "Try again"
+    "tryAgain": "Try again",
+    "testNumber": "Test mode: any valid number works and nothing is charged."
   },
   "loyalty": {
     "title": "Loyalty card",
@@ -308,7 +309,8 @@
     "you": "you",
     "stamp": "Score {{score}}+ for a stamp",
     "earned": "You earned a loyalty stamp",
-    "offline": "No ads. Works offline. Only a nickname you choose is saved."
+    "offline": "No ads. Works offline. Only a nickname you choose is saved.",
+    "drop": "Drop the plate"
   },
   "simple": {
     "coming": "Coming soon",
@@ -316,7 +318,14 @@
     "feedback": "Tell the manager",
     "feedbackLead": "This goes to the manager only and is never posted.",
     "send": "Send",
-    "sent": "Sent to the manager."
+    "sent": "Sent to the manager.",
+    "feedbackHint": "What went well, or what we should fix",
+    "needMessage": "Write a few words first.",
+    "needPhone": "Enter a phone number, like 024 123 4567.",
+    "shareNumber": "Let the manager call me",
+    "shareNumberHint": "Only if you want a reply. Off by default.",
+    "sentTitle": "Thank you",
+    "sentCall": "The manager has your note and your number."
   },
   "owner": {
     "login": "Owner sign in",
@@ -1007,7 +1016,8 @@
     "hiddenHint": "Turn on if the name does not show in the phone list.",
     "gameStamp": "Stamp for a high score",
     "gameStampHint": "Guests who beat the target get a loyalty stamp.",
-    "targetScore": "Target score"
+    "targetScore": "Target score",
+    "later": "Coming later. Guests do not see it yet."
   },
   "ownerReviews": {
     "yourReply": "Your reply",
@@ -1270,6 +1280,25 @@
       "url": "Enter a web address, like mamas.kitchen/book.",
       "start": "Use the format YYYY-MM-DD, like 2026-12-01.",
       "end": "Use YYYY-MM-DD, on or after the From date."
+    }
+  },
+  "about": {
+    "hours": "Opening hours",
+    "today": "today",
+    "closed": "Closed",
+    "find": "Find us",
+    "directions": "Open directions",
+    "call": "Call",
+    "whatsapp": "WhatsApp",
+    "follow": "Follow",
+    "days": {
+      "mon": "Monday",
+      "tue": "Tuesday",
+      "wed": "Wednesday",
+      "thu": "Thursday",
+      "fri": "Friday",
+      "sat": "Saturday",
+      "sun": "Sunday"
     }
   }
 }

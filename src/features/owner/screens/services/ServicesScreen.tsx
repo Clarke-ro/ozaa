@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
 import type { ServiceSettings } from '@/lib/api/types';
-import type { WifiSecurity } from '@/features/venue';
+import { NOT_BUILT, type WifiSecurity } from '@/features/venue';
 import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
@@ -11,7 +11,7 @@ import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
 import { useDraft } from '../../data/useDraft';
 import { useSaveVenue } from '../../data/useSaveVenue';
-import { SaveBar, Section, SectionBody, Stepper, SwitchRow, toast } from '../../kit';
+import { InfoRow, SaveBar, Section, SectionBody, Stepper, SwitchRow, toast } from '../../kit';
 import { WifiSection } from './WifiSection';
 
 type Toggle = ServiceSettings['services'][number];
@@ -94,15 +94,23 @@ export function ServicesScreen() {
               if (!items.length && section !== 'fun') return null;
               return (
                 <Section key={section} title={t(`home.sections.${section}`)}>
-                  {items.map((item) => (
-                    <SwitchRow
-                      key={item.id}
-                      label={t(`services.${item.id}.title`)}
-                      hint={t(`services.${item.id}.body`)}
-                      value={item.enabled}
-                      onChange={(on) => toggle(item, on)}
-                    />
-                  ))}
+                  {items.map((item) =>
+                    NOT_BUILT.includes(item.id) ? (
+                      <InfoRow
+                        key={item.id}
+                        label={t(`services.${item.id}.title`)}
+                        value={t('ownerServices.later')}
+                      />
+                    ) : (
+                      <SwitchRow
+                        key={item.id}
+                        label={t(`services.${item.id}.title`)}
+                        hint={t(`services.${item.id}.body`)}
+                        value={item.enabled}
+                        onChange={(on) => toggle(item, on)}
+                      />
+                    ),
+                  )}
                   {section === 'fun' ? (
                     <SwitchRow
                       label={t('ownerServices.gameStamp')}
