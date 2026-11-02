@@ -125,6 +125,39 @@ export function LinkRow({
   );
 }
 
+/** A read-only row: icon, label, value and an optional badge. Not tappable, so it has no chevron. */
+export function InfoRow({
+  label,
+  value,
+  icon: Icon,
+  trailing,
+}: {
+  label: string;
+  value?: string;
+  icon?: LucideIcon;
+  trailing?: ReactNode;
+}) {
+  const theme = useTheme();
+  return (
+    <View
+      accessible
+      accessibilityLabel={value ? `${label}, ${value}` : label}
+      style={[styles.pad, styles.row]}
+    >
+      {Icon ? <Icon size={20} color={theme.ink} /> : null}
+      <View style={styles.copy}>
+        <Text variant="body">{label}</Text>
+        {value ? (
+          <Text variant="caption" style={{ color: theme.muted }}>
+            {value}
+          </Text>
+        ) : null}
+      </View>
+      {trailing}
+    </View>
+  );
+}
+
 /** Plain content inside a Section, padded like the other rows. */
 export function SectionBody({ children }: { children: ReactNode }) {
   return <View style={[styles.pad, styles.body]}>{children}</View>;

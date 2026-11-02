@@ -8,9 +8,9 @@ import { Button } from '@/ui/Button';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
 import { DeskTabs } from '../../kit';
-import { LoyaltyAnalyticsScreen } from '../LoyaltyAnalyticsScreen';
 import { LoyaltyCustomersScreen } from '../LoyaltyCustomersScreen';
 import { ProgramForm, useProgramEditor } from './ProgramForm';
+import { ResultsTab } from './ResultsTab';
 
 type Tab = 'program' | 'members' | 'results';
 
@@ -55,7 +55,7 @@ export function LoyaltyScreen() {
       >
         {tab === 'program' && loyalty.data ? <ProgramForm editor={editor} /> : null}
         {tab === 'members' ? <LoyaltyCustomersScreen venueId={venueId} /> : null}
-        {tab === 'results' ? <LoyaltyAnalyticsScreen venueId={venueId} /> : null}
+        {tab === 'results' ? <ResultsTab venueId={venueId} /> : null}
       </DeskWait>
     </OwnerPage>
   );

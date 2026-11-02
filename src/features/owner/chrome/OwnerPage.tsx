@@ -19,6 +19,9 @@ import { useTheme } from '@/ui/theme';
 import { useOwnerSession } from '@/features/session';
 import { isTabRoot } from './nav';
 
+// Matches OwnerChrome: from this width the sidebar replaces the tab bar.
+const WIDE = 840;
+
 // 16 pt margins on phones, 24 on tablets and up (HIG layout margins).
 function useGutter() {
   const { width } = useWindowDimensions();
@@ -111,7 +114,9 @@ function BackButton() {
   const router = useRouter();
   const path = usePathname();
   const role = useOwnerSession((state) => state.role) ?? 'waiter';
-  if (isTabRoot(role, path)) return null;
+  const { width } = useWindowDimensions();
+  // On wide screens every section sits in the sidebar, so each page is a root with nothing to go back to.
+  if (width >= WIDE || isTabRoot(role, path)) return null;
   return (
     <Pressable
       accessibilityRole="button"

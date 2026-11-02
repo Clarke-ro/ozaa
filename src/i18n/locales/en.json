@@ -633,7 +633,9 @@
       "90d": "90 days"
     },
     "ratingOf_one": "From 1 rating",
-    "ratingOf_other": "From {{count}} ratings"
+    "ratingOf_other": "From {{count}} ratings",
+    "week": "Last 7 days",
+    "allInsights": "All insights"
   },
   "ownerTables": {
     "lead": "Each table gets its own QR code. Guests scan it to see the menu, order and pay.",
@@ -1022,5 +1024,252 @@
     "allAnswered": "All replied to",
     "empty": "No reviews yet",
     "emptyBody": "When guests leave a review from the table, it shows here."
+  },
+  "ownerCharts": {
+    "showNumbers": "Numbers",
+    "showChart": "Chart"
+  },
+  "ownerInsights": {
+    "range": {
+      "today": "Today",
+      "7d": "7 days",
+      "30d": "30 days",
+      "90d": "90 days"
+    },
+    "sales": "Sales",
+    "topDishes": "Top dishes",
+    "sold_one": "1 sold",
+    "sold_other": "{{count}} sold",
+    "busy": "Busy hours",
+    "busiest": "Busiest hour",
+    "orders_one": "1 order",
+    "orders_other": "{{count}} orders",
+    "guests": "Returning guests",
+    "returning_one": "1 guest came back",
+    "returning_other": "{{count}} guests came back",
+    "returningShort": "Returning",
+    "firstVisit": "First visit",
+    "mood": "Feedback mood",
+    "notes": "notes in this period"
+  },
+  "ownerLoyaltyResults": {
+    "members": "Members",
+    "joined": "New members",
+    "stamps": "Stamps given",
+    "redeemed": "Rewards used",
+    "stampsTrend": "Stamps given",
+    "joinedTrend": "New members"
+  },
+  "ownerOrders": {
+    "tabs": {
+      "new": "New",
+      "cooking": "Cooking",
+      "ready": "Ready",
+      "done": "Done"
+    },
+    "table": "Table {{code}}",
+    "takeaway": "Takeaway",
+    "paid": {
+      "unpaid": "Not paid",
+      "part_paid": "Part paid",
+      "paid": "Paid",
+      "refunded": "Refunded"
+    },
+    "move": {
+      "start": "Start cooking",
+      "ready": "Mark ready",
+      "serve": "Mark served"
+    },
+    "empty": {
+      "new": "No new orders",
+      "cooking": "Nothing cooking",
+      "ready": "Nothing waiting to go out",
+      "done": "No finished orders yet"
+    },
+    "emptyBody": "Orders from the tables show here as soon as guests send them."
+  },
+  "ownerCalls": {
+    "status": {
+      "open": "Waiting",
+      "acknowledged": "On the way",
+      "resolved": "Done"
+    },
+    "active": "Active",
+    "history": "Done",
+    "noHistory": "No finished calls yet",
+    "emptyBody": "When a guest taps Call waiter, it shows here and on the Floor.",
+    "avg_one": "Average pick-up time: 1 minute",
+    "avg_other": "Average pick-up time: {{count}} minutes",
+    "avgA11y_one": "Average pick-up time 1 minute",
+    "avgA11y_other": "Average pick-up time {{count}} minutes"
+  },
+  "ownerPayments": {
+    "payoutTitle": "Payouts go to",
+    "fee": "Ozaa fee: {{percent}}% of each payment.",
+    "payoutType": {
+      "bank": "Bank",
+      "momo": "Mobile money"
+    },
+    "collected": "Collected",
+    "settled": "Paid out",
+    "refundedNote": "{{amount}} refunded",
+    "list": "Payments",
+    "empty": "No payments yet",
+    "emptyBody": "Payments from guests show here as they come in.",
+    "orderTitle": "Order #{{number}}",
+    "test": "Test payment",
+    "amount": "Amount",
+    "method": "Method",
+    "payment": "Payment",
+    "payout": "Payout",
+    "when": "When",
+    "reference": "Reference",
+    "methods": {
+      "momo": "Mobile money",
+      "card": "Card",
+      "cash": "Cash"
+    },
+    "providers": {
+      "mtn": "MTN MoMo",
+      "vod": "Telecel Cash",
+      "atl": "AT Money"
+    },
+    "status": {
+      "succeeded": "Paid",
+      "failed": "Failed",
+      "abandoned": "Not finished",
+      "pending": "Waiting"
+    },
+    "settlement": {
+      "pending": "To be paid out",
+      "settled": "Paid out",
+      "refunded": "Refunded"
+    },
+    "refund": "Refund {{amount}}",
+    "refundTitle": "Refund {{amount}}?",
+    "refundBody": "The guest gets the money back on the same method. This cannot be undone.",
+    "refundConfirm": "Refund",
+    "refunded": "Refund sent"
+  },
+  "ownerStaff": {
+    "invite": "Invite",
+    "sendInvite": "Send invite",
+    "team_one": "1 person",
+    "team_other": "{{count}} people",
+    "pending": "Invited",
+    "empty": "Just you so far",
+    "emptyBody": "Invite waiters and kitchen staff. They sign in with a code sent to their phone.",
+    "needName": "Add their first name.",
+    "needPhone": "Enter a phone number, like 024 123 4567.",
+    "invited": "Invite sent to {{name}}",
+    "removed": "Removed from the team",
+    "remove": "Remove {{name}}",
+    "removeTitle": "Remove {{name}}?",
+    "removeBody": "They will be signed out and cannot sign in to this venue again unless you invite them.",
+    "removeConfirm": "Remove",
+    "can": {
+      "owner": "Everything, including payouts and the team.",
+      "manager": "Everything except payouts and the team.",
+      "waiter": "Orders and waiter calls.",
+      "kitchen": "Order status only.",
+      "viewer": "Can look, cannot change anything.",
+      "staff_scanner": "Scans loyalty cards only."
+    }
+  },
+  "ownerDevices": {
+    "pair": "Pair a phone",
+    "pairShort": "Pair",
+    "getCode": "Get pairing code",
+    "done": "Done",
+    "name": "Phone name",
+    "nameHint": "Patio phone",
+    "needName": "Name the phone so you can tell it apart.",
+    "codeFor": "Code for {{name}}",
+    "codeHow": "Enter this code on the staff phone to pair it. It works once.",
+    "codeA11y": "Pairing code {{code}}",
+    "list_one": "1 phone",
+    "list_other": "{{count}} phones",
+    "listNote": "Tap a phone to remove it.",
+    "lastSeen": "Last used {{when}}",
+    "empty": "No scanner phones yet",
+    "emptyBody": "Pair a staff phone so it can scan loyalty cards without seeing payouts or settings.",
+    "removed": "Phone removed",
+    "removeTitle": "Remove {{name}}?",
+    "removeBody": "It will stop scanning straight away. You can pair it again later.",
+    "remove": "Remove"
+  },
+  "ownerSetup": {
+    "progress": "Step {{step}} of {{total}}",
+    "steps": {
+      "venue": "Venue",
+      "tables": "Tables",
+      "wifi": "Wi-Fi",
+      "payout": "Payout"
+    },
+    "title": {
+      "venue": "What is your venue called?",
+      "tables": "How many tables?",
+      "wifi": "Guest Wi-Fi",
+      "payout": "Where should money go?"
+    },
+    "venueName": "Venue name",
+    "place": "Where it is",
+    "placeHint": "Street and area",
+    "tablesExist": "Your tables are already set up. Tap Next.",
+    "business": "Name on the account",
+    "momo": "Mobile money number",
+    "network": "Network",
+    "skip": "Skip",
+    "doneTitle": "You are ready",
+    "printQr": "Print table QR codes",
+    "openFloor": "Open the floor",
+    "err": {
+      "name": "Add the venue name.",
+      "phone": "Enter a mobile money number, like 024 123 4567.",
+      "network": "Pick the network for this number."
+    }
+  },
+  "ownerLinks": {
+    "add": "Add a link",
+    "addShort": "Add",
+    "edit": "Edit link",
+    "added": "Link added",
+    "deleted": "Link deleted",
+    "title": "Button words",
+    "titleHint": "Book a table",
+    "url": "Link",
+    "where": "Where it shows",
+    "placement": {
+      "button": "Main buttons",
+      "banner": "Banner",
+      "menu": "On the menu"
+    },
+    "icon": "Icon",
+    "icons": {
+      "link": "Link",
+      "globe": "Web",
+      "calendar": "Booking",
+      "ticket": "Tickets",
+      "music": "Music",
+      "gift": "Offer",
+      "sparkles": "Special"
+    },
+    "dates": "Only between dates",
+    "datesHint": "For an event or a deal that ends. Leave a date empty to keep that side open.",
+    "delete": "Delete link",
+    "deleteTitle": "Delete {{title}}?",
+    "deleteBody": "It comes off your guest page. This cannot be undone.",
+    "clicks_one": "{{n}} tap",
+    "clicks_other": "{{n}} taps",
+    "editA11y": "Edit {{title}}",
+    "showA11y": "Show {{title}} to guests",
+    "empty": "No extra links yet",
+    "emptyBody": "Add a button for bookings, tickets, a playlist or a deal.",
+    "err": {
+      "title": "Add the words guests will see on the button.",
+      "url": "Enter a web address, like mamas.kitchen/book.",
+      "start": "Use the format YYYY-MM-DD, like 2026-12-01.",
+      "end": "Use YYYY-MM-DD, on or after the From date."
+    }
   }
 }
