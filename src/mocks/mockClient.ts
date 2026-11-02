@@ -800,6 +800,7 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
         photo: mockUploadedImage(body.photoMediaId) ?? null,
         available: body.available ?? true,
         dietary: body.dietary ?? [],
+        dietaryCustom: body.dietaryCustom ?? [],
         allergens: body.allergens ?? [],
         calories: body.calories,
         badges: body.badges ?? [],

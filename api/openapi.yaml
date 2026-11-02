@@ -2138,6 +2138,11 @@ components:
           items: { $ref: '#/components/schemas/Image' }
         available: { type: boolean, description: False shows "Sold out" and blocks adding. }
         dietary: { type: array, items: { $ref: '#/components/schemas/Dietary' } }
+        dietaryCustom:
+          type: array
+          maxItems: 6
+          description: Diet labels the owner typed in beyond the standard set (for example "Keto"). Shown as tags on the dish; the guest diet filters use `dietary` only.
+          items: { type: string, minLength: 1, maxLength: 24 }
         badges: { type: array, items: { type: string, enum: [popular, new, chef_pick] } }
         modifierGroups: { type: array, items: { $ref: '#/components/schemas/ModifierGroup' } }
         allergens: { type: array, items: { type: string } }
@@ -2153,6 +2158,11 @@ components:
         photoMediaId: { type: ['string', 'null'] }
         available: { type: boolean }
         dietary: { type: array, items: { $ref: '#/components/schemas/Dietary' } }
+        dietaryCustom:
+          type: array
+          maxItems: 6
+          description: Diet labels the owner typed in beyond the standard set (for example "Keto"). Shown as tags on the dish; the guest diet filters use `dietary` only.
+          items: { type: string, minLength: 1, maxLength: 24 }
         badges: { type: array, items: { type: string, enum: [popular, new, chef_pick] } }
         modifierGroups: { type: array, items: { $ref: '#/components/schemas/ModifierGroup' } }
         allergens: { type: array, items: { type: string } }

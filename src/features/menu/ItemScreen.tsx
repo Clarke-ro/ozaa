@@ -91,7 +91,7 @@ export function ItemScreen({ slug, itemId }: { slug: string; itemId: string }) {
               {item.description.en}
             </Text>
           ) : null}
-          {facts.length || item.dietary.length ? (
+          {facts.length || item.dietary.length || item.dietaryCustom?.length ? (
             <View style={styles.chips}>
               {facts.map((f) => (
                 <View key={f.text} style={[styles.chip, { borderColor: theme.line }]}>
@@ -104,11 +104,21 @@ export function ItemScreen({ slug, itemId }: { slug: string; itemId: string }) {
                   <Text variant="caption">{t(`dietary.${d}`)}</Text>
                 </View>
               ))}
+              {(item.dietaryCustom ?? []).map((d) => (
+                <View key={d} style={[styles.chip, { borderColor: theme.line }]}>
+                  <Text variant="caption">{d}</Text>
+                </View>
+              ))}
             </View>
           ) : null}
           {item.allergens?.length ? (
             <Text variant="caption" style={{ color: theme.muted }}>
-              {t('menu.contains', { list: item.allergens.join(', ') })}
+              {t('menu.contains', {
+                list: item.allergens
+                  // Standard allergens have names; ones the owner typed show as written.
+                  .map((a) => t(`ownerMenu.allergen.${a}`, { defaultValue: a }))
+                  .join(', '),
+              })}
             </Text>
           ) : null}
 

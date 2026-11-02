@@ -19,7 +19,7 @@ import {
 } from '../../kit';
 import { AddOnsEditor } from './AddOnsEditor';
 import { checkDish } from './forms';
-import { ALLERGENS, DIETS } from './options';
+import { DishTags } from './DishTags';
 
 /** Full-screen form for one dish or drink. Save is pinned at the bottom so it is always in reach. */
 export function DishEditor({
@@ -50,6 +50,7 @@ export function DishEditor({
   const [available, setAvailable] = useState(item?.available ?? true);
   const [calories, setCalories] = useState(item?.calories ? String(item.calories) : '');
   const [dietary, setDietary] = useState<MenuItem['dietary']>(item?.dietary ?? []);
+  const [dietaryCustom, setDietaryCustom] = useState<string[]>(item?.dietaryCustom ?? []);
   const [allergens, setAllergens] = useState<string[]>(item?.allergens ?? []);
   const [groups, setGroups] = useState<ModifierGroup[]>(item?.modifierGroups ?? []);
   // undefined keeps the current photo; null removes it; a string is a new upload.
@@ -71,6 +72,7 @@ export function DishEditor({
         categoryId: sectionId,
         available,
         dietary,
+        dietaryCustom,
         allergens,
         calories: calories.trim() ? Number.parseInt(calories, 10) || undefined : undefined,
         modifierGroups: groups,
@@ -158,27 +160,14 @@ export function DishEditor({
         />
       </Section>
 
-      <Section title={t('ownerMenu.dietTitle')}>
-        <SectionBody>
-          <Chips
-            label={t('ownerMenu.dietTitle')}
-            options={DIETS.map((d) => ({ id: d, label: t(`dietary.${d}`) }))}
-            selected={dietary}
-            onChange={(next) => setDietary(next as MenuItem['dietary'])}
-          />
-        </SectionBody>
-      </Section>
-
-      <Section title={t('ownerMenu.allergensTitle')} note={t('ownerMenu.allergensNote')}>
-        <SectionBody>
-          <Chips
-            label={t('ownerMenu.allergensTitle')}
-            options={ALLERGENS.map((a) => ({ id: a, label: t(`ownerMenu.allergen.${a}`) }))}
-            selected={allergens}
-            onChange={setAllergens}
-          />
-        </SectionBody>
-      </Section>
+      <DishTags
+        dietary={dietary}
+        dietaryCustom={dietaryCustom}
+        allergens={allergens}
+        onDietary={setDietary}
+        onDietaryCustom={setDietaryCustom}
+        onAllergens={setAllergens}
+      />
 
       <Section
         title={t('ownerMenu.addOnsTitle')}

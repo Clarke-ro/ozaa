@@ -1519,6 +1519,8 @@ export interface components {
             /** @description False shows "Sold out" and blocks adding. */
             available: boolean;
             dietary: components["schemas"]["Dietary"][];
+            /** @description Diet labels the owner typed in beyond the standard set (for example "Keto"). Shown as tags on the dish; the guest diet filters use `dietary` only. */
+            dietaryCustom?: string[];
             badges: ("popular" | "new" | "chef_pick")[];
             modifierGroups: components["schemas"]["ModifierGroup"][];
             allergens?: string[];
@@ -1533,6 +1535,8 @@ export interface components {
             photoMediaId?: string | null;
             available?: boolean;
             dietary?: components["schemas"]["Dietary"][];
+            /** @description Diet labels the owner typed in beyond the standard set (for example "Keto"). Shown as tags on the dish; the guest diet filters use `dietary` only. */
+            dietaryCustom?: string[];
             badges?: ("popular" | "new" | "chef_pick")[];
             modifierGroups?: components["schemas"]["ModifierGroup"][];
             allergens?: string[];

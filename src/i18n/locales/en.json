@@ -810,6 +810,18 @@
     "dietTitle": "Diet",
     "allergensTitle": "Allergens",
     "allergensNote": "Guests see these on the dish.",
+    "dietNote": "Pick from the list, or type your own.",
+    "dietAddLabel": "Add your own diet label",
+    "dietAddHint": "For example: Keto",
+    "allergenAddLabel": "Add your own allergen",
+    "allergenAddHint": "For example: Coconut",
+    "tagAdd": "Add",
+    "tagError": {
+      "empty": "Type something first.",
+      "duplicate": "That one is already on the list.",
+      "long": "Keep it to {{max}} characters.",
+      "full": "That's the most you can add. Remove one first."
+    },
     "addOnsTitle": "Add-ons",
     "addOnsNote": "For choices like spice level or extra meat.",
     "calories": "Calories (optional)",
