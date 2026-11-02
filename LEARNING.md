@@ -4,6 +4,33 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-02 · Making the guest page download less
+
+**What we built**
+The guest's first visit downloads about half as much JavaScript as before (1,034 KB down to about 560 KB), and the page no longer waits for fonts.
+
+**How it works**
+```
+before: entry + one big "__common" file (every page's shared code, owner screens included)
+after:  entry + small "__shared" files, each holding only what that page needs
+        + tree shaking: unused exports (1,500 unused icons) are dropped at build time
+fonts:  show text in the system font at once, swap to Inter when it arrives
+```
+
+**Files to look at**
+- `.env.production`: the two build flags that turn on tree shaking
+- `app.config.ts`: `experiments.chunking.mode: 'granular'`
+- `src/theme/fonts.ts`: `FontDisplay.SWAP` on the web
+- `src/ui/GestureRoot.web.tsx`: a `.web.tsx` file replaces its twin on the web only
+
+**New idea: tree shaking**
+`import { Bell } from 'lucide-react-native'` looks like it takes one icon, but by default the bundler packs the whole library. Tree shaking follows which exports are really used and shakes the rest off, like dead leaves.
+
+**Try it yourself**
+Run `npx expo export -p web`, then sort `dist/_expo/static/js/web` by size. Comment out the two lines in `.env.production`, export again, and compare.
+
+---
+
 ## 2026-11-02 · Slow networks: offline note, quiet polling, lighter menu
 
 **What we built**

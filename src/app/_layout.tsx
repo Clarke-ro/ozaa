@@ -6,7 +6,6 @@ import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { I18nextProvider, useTranslation } from 'react-i18next';
@@ -14,6 +13,7 @@ import i18n from '@/i18n';
 import { applyTextDirection, textDirection } from '@/i18n/direction';
 import { applySavedLanguage } from '@/features/venue';
 import { pausePollingInBackground } from '@/lib/queryLifecycle';
+import { GestureRoot } from '@/ui/GestureRoot';
 import { useAppFonts } from '@/theme/fonts';
 import { ThemeProvider, ozaaTheme } from '@/ui/theme';
 
@@ -50,7 +50,7 @@ export default function RootLayout() {
   }, [fontsReady]);
   if (!fontsReady) return null;
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureRoot>
       <I18nextProvider i18n={i18n}>
         <DirectionFrame>
           <PersistQueryClientProvider
@@ -67,6 +67,6 @@ export default function RootLayout() {
           </PersistQueryClientProvider>
         </DirectionFrame>
       </I18nextProvider>
-    </GestureHandlerRootView>
+    </GestureRoot>
   );
 }

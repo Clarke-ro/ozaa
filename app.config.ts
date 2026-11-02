@@ -42,7 +42,7 @@ const config: ExpoConfig = {
       },
     ],
   ],
-  experiments: { typedRoutes: true },
+  experiments: { typedRoutes: true, chunking: { mode: 'granular' } },
   extra: { router: { origin: false } },
 };
 

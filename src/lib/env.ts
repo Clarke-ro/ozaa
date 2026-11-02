@@ -1,12 +1,13 @@
-import { z } from 'zod';
+// zod/mini: the same checks as zod, in a form that tree-shakes to a few KB on the guest web bundle.
+import { z } from 'zod/mini';
 
 const schema = z.object({
-  EXPO_PUBLIC_API_MODE: z.enum(['mock', 'http']).default('mock'),
-  EXPO_PUBLIC_API_URL: z.string().default('http://localhost:4000/v1'),
-  EXPO_PUBLIC_API_LIVE: z.string().default(''),
-  EXPO_PUBLIC_MOCK_LATENCY_MS: z.coerce.number().default(400),
-  EXPO_PUBLIC_MOCK_FAIL_RATE: z.coerce.number().min(0).max(1).default(0),
-  EXPO_PUBLIC_MOCK_FAST: z.enum(['0', '1']).default('0'),
+  EXPO_PUBLIC_API_MODE: z._default(z.enum(['mock', 'http']), 'mock'),
+  EXPO_PUBLIC_API_URL: z._default(z.string(), 'http://localhost:4000/v1'),
+  EXPO_PUBLIC_API_LIVE: z._default(z.string(), ''),
+  EXPO_PUBLIC_MOCK_LATENCY_MS: z._default(z.coerce.number(), 400),
+  EXPO_PUBLIC_MOCK_FAIL_RATE: z._default(z.coerce.number().check(z.gte(0), z.lte(1)), 0),
+  EXPO_PUBLIC_MOCK_FAST: z._default(z.enum(['0', '1']), '0'),
 });
 
 export type Env = z.infer<typeof schema> & { live: string[] };
