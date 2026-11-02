@@ -1072,7 +1072,8 @@
     "email": "Email",
     "separate": "Separate business",
     "separateHint": "Its own name on receipts and its own payouts.",
-    "editA11y": "Edit {{name}}"
+    "editA11y": "Edit {{name}}",
+    "locationsLabel": "Locations"
   },
   "ownerServices": {
     "wifi": "Wi-Fi",

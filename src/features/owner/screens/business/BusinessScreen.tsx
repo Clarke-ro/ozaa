@@ -7,10 +7,11 @@ import { api } from '@/lib/api';
 import type { Location } from '@/lib/api/types';
 import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
+import { Text } from '@/ui/Text';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
 import { useDraft } from '../../data/useDraft';
-import { InputRow, SaveBar, Section, SectionLabel, toast } from '../../kit';
+import { Field, SaveBar, toast } from '../../kit';
 import { AddLocationCard, LocationCard } from './LocationCard';
 import { LocationEditor } from './LocationEditor';
 
@@ -57,16 +58,18 @@ export function BusinessScreen() {
       }
     >
       <DeskWait loading={data.isLoading} error={data.isError} onRetry={() => void data.refetch()}>
-        <Section title={t('ownerBusiness.business')} note={t('ownerBusiness.nameNote')}>
-          <InputRow
-            label={t('owner.businessName')}
-            value={draft.value.name}
-            onChangeText={(v) => draft.set('name', v)}
-          />
-        </Section>
+        {/* The label sits above and the input is the card, so nothing is said twice. */}
+        <Field
+          label={t('owner.businessName')}
+          hint={t('ownerBusiness.nameNote')}
+          value={draft.value.name}
+          onChangeText={(v) => draft.set('name', v)}
+        />
 
         <View style={styles.stack}>
-          <SectionLabel title={t('ownerBusiness.locations', { count: locations.length })} caps />
+          <Text variant="body-strong" style={styles.label}>
+            {t('ownerBusiness.locationsLabel')}
+          </Text>
           {locations.map((location) => (
             <LocationCard
               key={location.id}
@@ -93,4 +96,8 @@ export function BusinessScreen() {
   );
 }
 
-const styles = StyleSheet.create({ stack: { gap: tokens.space[3] } });
+const styles = StyleSheet.create({
+  stack: { gap: tokens.space[3] },
+  // Same as the Field label above, so both headings on the page read alike.
+  label: { fontSize: tokens.type.caption.size + 1 },
+});
