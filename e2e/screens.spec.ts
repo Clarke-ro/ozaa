@@ -18,6 +18,8 @@ const shots = [
 test('landing tells the guest to scan', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByText('Scan the code on your table')).toBeVisible();
+  await page.getByRole('button', { name: "I'm an owner" }).click();
+  await expect(page.getByText('Owner sign in')).toBeVisible();
 });
 
 for (const [path, name] of shots) {

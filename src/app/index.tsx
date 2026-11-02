@@ -12,16 +12,31 @@ export default function LandingScreen() {
   const router = useRouter();
   return (
     <SafeScreen>
-    <View style={styles.page}>
-      <Image source={require('../../assets/images/icon.png')} alt="Ozaa" style={styles.logo} accessibilityLabel="Ozaa" />
-      <Text variant="display-l" style={styles.title}>
-        {t('landing.title')}
-      </Text>
-      <Text variant="body" style={styles.body}>
-        {t('landing.body')}
-      </Text>
-      <Button label={t('landing.sample')} onPress={() => router.push('/mamas-kitchen/t/12')} style={styles.button} />
-    </View>
+      <View style={styles.page}>
+        <Image
+          source={require('../../assets/images/icon.png')}
+          alt="Ozaa"
+          style={styles.logo}
+          accessibilityLabel="Ozaa"
+        />
+        <Text variant="display-l" style={styles.title}>
+          {t('landing.title')}
+        </Text>
+        <Text variant="body" style={styles.body}>
+          {t('landing.body')}
+        </Text>
+        <Button
+          label={t('landing.sample')}
+          onPress={() => router.push('/mamas-kitchen/t/12')}
+          style={styles.button}
+        />
+        <Button
+          label={t('landing.owner')}
+          tone="secondary"
+          onPress={() => router.push('/owner/login')}
+          style={styles.owner}
+        />
+      </View>
     </SafeScreen>
   );
 }
@@ -39,4 +54,5 @@ const styles = StyleSheet.create({
   title: { textAlign: 'center' },
   body: { textAlign: 'center', color: '#52525B' },
   button: { alignSelf: 'stretch', marginTop: 12 },
+  owner: { alignSelf: 'stretch' },
 });
