@@ -16,6 +16,17 @@ export function orderTab(status: Order['status']): OrderTab {
   }
 }
 
+export type TicketAge = { minutes: number; tone: 'ok' | 'late' | 'very_late' };
+
+/**
+ * How long a ticket has waited. A kitchen ticket over 10 minutes needs a look and over 20 needs
+ * someone to act, so the card turns amber and then red. Clock drift never shows a negative age.
+ */
+export function ticketAge(createdAt: string, now: number): TicketAge {
+  const minutes = Math.max(0, Math.floor((now - Date.parse(createdAt)) / 60_000));
+  return { minutes, tone: minutes >= 20 ? 'very_late' : minutes >= 10 ? 'late' : 'ok' };
+}
+
 /** Average minutes from a guest calling to someone picking it up. Calls nobody picked up are left out. */
 export function averageResponseMinutes(
   calls: Pick<WaiterCall, 'createdAt' | 'acknowledgedAt'>[],

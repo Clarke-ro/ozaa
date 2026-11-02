@@ -38,6 +38,7 @@ import offersFile from './fixtures/offers.json';
 import ordersFile from './fixtures/orders.json';
 import venuesFile from './fixtures/venues.json';
 import wifiFile from './fixtures/wifi.json';
+import { kitchenQueue } from './kitchenQueue';
 
 export type StaffSeed = {
   phone: string;
@@ -315,8 +316,13 @@ export function createWorld(now: number): World {
   const offers: Record<string, Offer[]> = {};
   for (const [slug, list] of Object.entries(offerLists)) offers[slug] = list.items;
 
+  // The fixture dates are fixed, so stamp each sample order with the time the mock starts.
   const orders: LiveOrder[] = Object.values(orderFile).map((order) => ({
-    order,
+    order: {
+      ...order,
+      createdAt: new Date(now - 20_000).toISOString(),
+      updatedAt: new Date(now - 20_000).toISOString(),
+    },
     receivedAt: now - 20_000,
     manual: false,
   }));
@@ -361,6 +367,9 @@ export function createWorld(now: number): World {
       },
     });
   }
+
+  // Tickets after #24 (the guest's own sample order) so the numbers read as one lunch service.
+  orders.push(...kitchenQueue(now, 25));
 
   const loyalty: Record<string, VenueLoyalty> = {};
   const payouts: Record<string, PayoutAccount> = {};

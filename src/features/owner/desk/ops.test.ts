@@ -1,4 +1,4 @@
-import { averageResponseMinutes, canRefund, moneyTotals, orderTab } from './ops';
+import { averageResponseMinutes, canRefund, moneyTotals, orderTab, ticketAge } from './ops';
 
 test('orders sort into New, Cooking, Ready and Done', () => {
   expect(orderTab('received')).toBe('new');
@@ -45,5 +45,26 @@ test('collected counts every payment that went through; settled only those paid 
     collected: 150,
     settled: 100,
     refunded: 30,
+  });
+});
+
+describe('ticketAge', () => {
+  const sent = '2026-11-02T12:00:00Z';
+  const at = (minutes: number) => Date.parse(sent) + minutes * 60_000;
+
+  it('counts whole minutes since the order came in', () => {
+    expect(ticketAge(sent, at(0)).minutes).toBe(0);
+    expect(ticketAge(sent, at(7.9)).minutes).toBe(7);
+  });
+
+  it('is on time under 10 minutes, late from 10, very late from 20', () => {
+    expect(ticketAge(sent, at(9)).tone).toBe('ok');
+    expect(ticketAge(sent, at(10)).tone).toBe('late');
+    expect(ticketAge(sent, at(19)).tone).toBe('late');
+    expect(ticketAge(sent, at(20)).tone).toBe('very_late');
+  });
+
+  it('never goes below zero when the phone clock is behind the server', () => {
+    expect(ticketAge(sent, at(-3))).toEqual({ minutes: 0, tone: 'ok' });
   });
 });

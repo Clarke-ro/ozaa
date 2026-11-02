@@ -1127,7 +1127,14 @@
       "ready": "Nothing waiting to go out",
       "done": "No finished orders yet"
     },
-    "emptyBody": "Orders from the tables show here as soon as guests send them."
+    "emptyBody": "Orders from the tables show here as soon as guests send them.",
+    "waited": "{{count}} min",
+    "waitedHours": "{{count}} h",
+    "justNow": "Just now",
+    "waitedLabel": "Waiting {{count}} min",
+    "stage": "{{label}}, {{count}} orders",
+    "items_one": "{{count}} item",
+    "items_other": "{{count}} items"
   },
   "ownerCalls": {
     "status": {
