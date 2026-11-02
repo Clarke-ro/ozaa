@@ -1,6 +1,6 @@
 # Agent skills
 
-Cursor loads skills from this folder. The same `apple-design-rn` skill is mirrored at `.claude/skills/apple-design-rn/` for Claude Code.
+Cursor loads skills from this folder. Claude Code finds `apple-design-rn` through a short pointer at `.claude/skills/apple-design-rn/SKILL.md`. Edit only the copy in this folder.
 
 ## Installed
 

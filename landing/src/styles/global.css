@@ -1,0 +1,1247 @@
+:root {
+  /* Full Ozaa v5.1 Color System (design/tokens.json) */
+  --black: #111111;
+  --white: #ffffff;
+  --grey900: #18181b;
+  --grey800: #27272a;
+  --grey700: #3f3f46;
+  --grey600: #52525b;
+  --grey500: #71717a;
+  --grey200: #e4e4e7;
+  --grey100: #f4f4f5;
+
+  --brand: #fc5205;
+  --on-brand: #111111;
+  --primary: #d24000;
+  --hover: #ba3800;
+  --pressed: #a33000;
+  --tint: #fff1ea;
+  --text-on-tint: #ba3800;
+
+  --success: #15803d;
+  --success-tint: #ecfdf3;
+  --error: #b91c1c;
+  --error-tint: #fef2f2;
+
+  /* Typography & Layout Tokens */
+  --font-display: "Unbounded", "Noto Sans", system-ui, sans-serif;
+  --font-body: "Inter", "Noto Sans", system-ui, sans-serif;
+  --page: 1200px;
+  --measure: 62ch;
+  --header: 4.5rem;
+
+  /* Spacing & Radius Tokens */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-2xl: 28px;
+  --radius-full: 999px;
+
+  color-scheme: light;
+}
+
+@font-face {
+  font-family: Unbounded;
+  src: url("/fonts/Unbounded-700.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: Inter;
+  src: url("/fonts/Inter-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: Inter;
+  src: url("/fonts/Inter-600.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--white);
+  color: var(--black);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  text-wrap: pretty;
+  -webkit-font-smoothing: antialiased;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+h1,
+h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-wrap: balance;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+h1 {
+  font-size: clamp(2.1rem, 4.2vw, 3.25rem);
+  line-height: 1.12;
+}
+
+h2 {
+  font-size: clamp(1.55rem, 2.6vw, 2.2rem);
+  line-height: 1.18;
+}
+
+h3,
+h4 {
+  font-family: var(--font-body);
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+h3 {
+  font-size: 20px;
+  line-height: 26px;
+}
+
+h4 {
+  font-size: 17px;
+  line-height: 24px;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2.5px solid var(--brand);
+  outline-offset: 3px;
+}
+
+.skip {
+  position: absolute;
+  left: 16px;
+  top: 8px;
+  transform: translateY(-150%);
+  background: var(--black);
+  color: var(--white);
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  z-index: 100;
+}
+
+.skip:focus {
+  transform: none;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.wrap {
+  width: min(var(--page), calc(100% - 40px));
+  margin-inline: auto;
+}
+
+/* ==========================================================================
+   Header & Navigation
+   ========================================================================== */
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--grey200);
+  padding-top: env(safe-area-inset-top);
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  min-height: var(--header);
+  padding-block: 10px;
+}
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
+}
+
+.logo img {
+  height: 36px;
+  width: auto;
+}
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: var(--radius-full);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--grey600);
+  text-decoration: none;
+  transition: background-color 140ms ease, color 140ms ease;
+}
+
+.nav a:hover {
+  background: var(--tint);
+  color: var(--text-on-tint);
+}
+
+/* ==========================================================================
+   Buttons & Pills
+   ========================================================================== */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 0 24px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--primary);
+  color: var(--white);
+  font: 600 16px/20px var(--font-body);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 150ms ease-out, transform 100ms ease-out;
+}
+
+.button--sm {
+  min-height: 44px;
+  padding: 0 18px;
+  font-size: 14px;
+}
+
+.button:hover {
+  background: var(--hover);
+}
+
+.button:active {
+  background: var(--pressed);
+}
+
+.button-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 0 22px;
+  border: 1.5px solid var(--black);
+  border-radius: var(--radius-md);
+  background: var(--white);
+  color: var(--black);
+  font: 600 16px/20px var(--font-body);
+  text-decoration: none;
+  transition: background-color 150ms ease-out;
+}
+
+.button-secondary:hover {
+  background: var(--grey100);
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  background: var(--tint);
+  color: var(--text-on-tint);
+  border: 1px solid rgba(210, 64, 0, 0.2);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+  margin-bottom: 20px;
+}
+
+.eyebrow-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--brand);
+  flex-shrink: 0;
+}
+
+.section-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  background: var(--tint);
+  color: var(--text-on-tint);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.bento-pill {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  background: var(--tint);
+  color: var(--text-on-tint);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+}
+
+.bento-pill--muted {
+  background: var(--grey100);
+  color: var(--grey600);
+}
+
+.bento-pill--dark {
+  background: rgba(252, 82, 5, 0.18);
+  color: #ff854d;
+  border: 1px solid rgba(252, 82, 5, 0.35);
+}
+
+.icon-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--tint);
+  color: var(--primary);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.icon-badge--dark {
+  background: var(--brand);
+  color: var(--on-brand);
+}
+
+/* ==========================================================================
+   Bento Card System
+   ========================================================================== */
+
+.bento-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--white);
+  border: 1.5px solid var(--grey200);
+  border-radius: var(--radius-xl);
+  padding: 28px;
+  overflow: hidden;
+  transition: border-color 160ms ease;
+}
+
+.bento-card:hover {
+  border-color: #c8c8d0;
+}
+
+.bento-card--tone-tint {
+  background: var(--tint);
+  border-color: rgba(210, 64, 0, 0.22);
+}
+
+.bento-card--tone-tint:hover {
+  border-color: var(--primary);
+}
+
+.bento-card--tone-dark {
+  background: var(--black);
+  color: var(--white);
+  border-color: var(--black);
+}
+
+.bento-card--tone-dark p,
+.bento-card--tone-dark .close {
+  color: #d4d4d8;
+}
+
+.bento-card--tone-dark .bento-pill:not(.bento-pill--dark) {
+  background: var(--brand);
+  color: var(--on-brand);
+}
+
+/* ==========================================================================
+   Hero Bento Layout
+   ========================================================================== */
+
+.hero {
+  padding: 32px 0 24px;
+}
+
+.hero-bento {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: 1fr;
+}
+
+.bento-card--hero-copy {
+  justify-content: center;
+  padding: clamp(28px, 4vw, 48px);
+  background: var(--white);
+  border: 1.5px solid var(--black);
+}
+
+.hero-lead {
+  font-size: clamp(1.05rem, 1.4vw, 1.2rem);
+  color: var(--grey600);
+  max-width: 54ch;
+  margin-top: 16px;
+}
+
+.hero-pills {
+  list-style: none;
+  padding: 0;
+  margin: 24px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.hero-pills li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: var(--radius-full);
+  background: var(--grey100);
+  border: 1px solid var(--grey200);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--black);
+}
+
+.hero-pills svg {
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.hero-footnote {
+  margin-top: 20px;
+  font-size: 13px;
+}
+
+.support {
+  color: var(--grey600);
+}
+
+.bento-card--hero-showcase {
+  background: var(--grey100);
+  border: 1.5px solid var(--grey200);
+  padding: 24px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.showcase-badges {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.showcase-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--white);
+  border: 1px solid var(--grey200);
+  color: var(--black);
+}
+
+.showcase-badge--accent {
+  background: var(--tint);
+  color: var(--text-on-tint);
+  border-color: rgba(210, 64, 0, 0.2);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+}
+
+.hero-phones {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  width: 100%;
+  padding-block: 8px;
+}
+
+.hero-phone-secondary {
+  display: none;
+}
+
+/* ==========================================================================
+   iPhone 16 Pro Latest Hardware Mockup
+   ========================================================================== */
+
+.iphone-stage {
+  margin: 0;
+  width: auto;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.iphone-frame {
+  position: relative;
+  width: 236px;
+  max-width: 100%;
+  padding: 6px;
+  border-radius: 44px;
+  /* iPhone 16 Pro Titanium metallic outer rim */
+  background: linear-gradient(145deg, #4b4b52 0%, #18181b 35%, #27272a 70%, #52525b 100%);
+  box-shadow:
+    inset 0 0 0 1.25px rgba(255, 255, 255, 0.24),
+    0 20px 38px -14px rgba(17, 17, 17, 0.25),
+    0 4px 12px -2px rgba(17, 17, 17, 0.12);
+}
+
+.iphone-stage--hero .iphone-frame {
+  width: 284px;
+  max-width: 100%;
+  padding: 7px;
+  border-radius: 48px;
+}
+
+.iphone-stage--compact .iphone-frame {
+  width: 204px;
+  max-width: 100%;
+  padding: 5.5px;
+  border-radius: 38px;
+}
+
+/* iPhone 16 Pro Hardware Side Buttons */
+.iphone-btn {
+  position: absolute;
+  background: #27272a;
+  border-radius: 2px;
+}
+
+.iphone-btn--action {
+  left: -2.5px;
+  top: 72px;
+  width: 2.5px;
+  height: 20px;
+  background: var(--brand);
+}
+
+.iphone-btn--vol-up {
+  left: -2.5px;
+  top: 106px;
+  width: 2.5px;
+  height: 36px;
+}
+
+.iphone-btn--vol-down {
+  left: -2.5px;
+  top: 150px;
+  width: 2.5px;
+  height: 36px;
+}
+
+.iphone-btn--power {
+  right: -2.5px;
+  top: 122px;
+  width: 2.5px;
+  height: 52px;
+}
+
+.iphone-btn--camera {
+  right: -2px;
+  bottom: 118px;
+  width: 2px;
+  height: 30px;
+  background: #3f3f46;
+}
+
+.iphone-bezel {
+  position: relative;
+  background: #09090b;
+  padding: 6px;
+  border-radius: 38px;
+  overflow: hidden;
+}
+
+.iphone-stage--hero .iphone-bezel {
+  padding: 6.5px;
+  border-radius: 41px;
+}
+
+.iphone-stage--compact .iphone-bezel {
+  padding: 5px;
+  border-radius: 33px;
+}
+
+.iphone-speaker {
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 42px;
+  height: 3px;
+  border-radius: 999px;
+  background: #1f1f23;
+  z-index: 3;
+}
+
+.iphone-screen {
+  position: relative;
+  border-radius: 32px;
+  overflow: hidden;
+  background: var(--white);
+  aspect-ratio: 520 / 1125;
+}
+
+.iphone-stage--hero .iphone-screen {
+  border-radius: 35px;
+}
+
+.iphone-stage--compact .iphone-screen {
+  border-radius: 28px;
+}
+
+.iphone-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.caption {
+  margin-top: 12px;
+  color: var(--grey600);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+  text-align: center;
+}
+
+/* ==========================================================================
+   Section Scaffolding
+   ========================================================================== */
+
+.section {
+  padding: 56px 0;
+  scroll-margin-top: 6rem;
+}
+
+.section-head {
+  margin-bottom: 32px;
+  max-width: 68ch;
+}
+
+.section-sub {
+  margin-top: 12px;
+  color: var(--grey600);
+  font-size: 16px;
+}
+
+/* ==========================================================================
+   How It Works — 3-Column Bento Steps
+   ========================================================================== */
+
+.bento-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 20px;
+  grid-template-columns: 1fr;
+}
+
+.bento-card--step {
+  border-top: 4px solid var(--brand);
+  gap: 12px;
+}
+
+.step-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.step-num {
+  font-family: var(--font-display);
+  font-size: 28px;
+  line-height: 1;
+  color: var(--primary);
+}
+
+.bento-card--step p {
+  color: var(--grey600);
+}
+
+/* ==========================================================================
+   Guests & Owners — Responsive Bento Grids
+   ========================================================================== */
+
+.bento-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: 1fr;
+}
+
+.bento-card--feature,
+.bento-card--owner {
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.bento-copy {
+  flex: 1 1 0%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bento-copy p {
+  color: var(--grey600);
+  max-width: 44ch;
+}
+
+.bento-card--tone-dark .bento-copy p {
+  color: #d4d4d8;
+}
+
+.bento-mockup {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Owner Roadmap Bento */
+.owner-roadmap {
+  margin-top: 40px;
+  padding-top: 32px;
+  border-top: 1px solid var(--grey200);
+}
+
+.roadmap-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px 24px;
+  margin-bottom: 24px;
+}
+
+.roadmap-head p {
+  color: var(--grey600);
+}
+
+.bento-card--later {
+  gap: 10px;
+  padding: 24px;
+  background: var(--grey100);
+}
+
+.bento-card--later p {
+  color: var(--grey600);
+}
+
+.later-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+/* ==========================================================================
+   Payments Bento
+   ========================================================================== */
+
+.bento-card--pay,
+.bento-card--pay-direct {
+  gap: 12px;
+}
+
+.pay-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.bento-card--pay p {
+  color: var(--grey600);
+}
+
+/* ==========================================================================
+   Pricing Slot Bento
+   ========================================================================== */
+
+.bento-card--slot {
+  max-width: 44rem;
+  background: var(--tint);
+  border: 1.5px solid rgba(210, 64, 0, 0.28);
+  gap: 12px;
+}
+
+.slot-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.price {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--black);
+}
+
+/* ==========================================================================
+   Questions FAQ Bento
+   ========================================================================== */
+
+.faq-bento {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 1fr;
+}
+
+.bento-card--faq {
+  padding: 0;
+  border-radius: var(--radius-lg);
+}
+
+.bento-card--faq summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 56px;
+  padding: 18px 24px;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.bento-card--faq summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--tint);
+  color: var(--primary);
+  font-weight: 700;
+  flex-shrink: 0;
+  transition: transform 150ms ease;
+}
+
+.bento-card--faq[open] {
+  border-color: var(--black);
+}
+
+.bento-card--faq[open] .faq-icon {
+  background: var(--primary);
+  color: var(--white);
+  transform: rotate(45deg);
+}
+
+.bento-card--faq p {
+  padding: 0 24px 20px;
+  max-width: var(--measure);
+  color: var(--grey600);
+}
+
+/* ==========================================================================
+   Contact Two-Column Bento
+   ========================================================================== */
+
+.contact-bento {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: 1fr;
+}
+
+.bento-card--contact-info {
+  justify-content: space-between;
+  gap: 20px;
+  padding: clamp(28px, 3.5vw, 40px);
+}
+
+.contact-lead {
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+.contact-highlights {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  display: grid;
+  gap: 14px;
+}
+
+.contact-highlights li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--white);
+}
+
+.check-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--brand);
+  color: var(--on-brand);
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.bento-card--contact-form {
+  padding: clamp(24px, 3.5vw, 40px);
+}
+
+.notice {
+  padding: 14px 16px;
+  border: 1.5px solid var(--black);
+  border-radius: var(--radius-md);
+  background: var(--tint);
+  color: var(--black);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.form {
+  display: grid;
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.form-row-2 {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
+}
+
+.form label,
+.reach {
+  display: grid;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.reach {
+  border: 1px solid var(--grey200);
+  border-radius: var(--radius-md);
+  background: var(--grey100);
+  margin: 0;
+  padding: 16px;
+  min-inline-size: 0;
+}
+
+.reach legend {
+  padding: 0 6px;
+  font-weight: 600;
+}
+
+.reach-fields {
+  display: grid;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.optional {
+  color: var(--grey600);
+  font-weight: 400;
+}
+
+.form input,
+.form textarea {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 14px;
+  border: 1.5px solid var(--grey200);
+  border-radius: var(--radius-md);
+  background: var(--white);
+  color: var(--black);
+  font: 400 16px/22px var(--font-body);
+  transition: border-color 140ms ease;
+}
+
+.form input:focus,
+.form textarea:focus {
+  border-color: var(--black);
+}
+
+.form textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.error {
+  color: var(--error);
+  background: var(--error-tint);
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.status {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1.5px solid var(--black);
+  border-radius: var(--radius-md);
+  background: var(--tint);
+  font-weight: 600;
+}
+
+.channels {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.text-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 8px;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   Footer Bento
+   ========================================================================== */
+
+.footer {
+  padding: 24px 0 48px;
+}
+
+.footer-bento {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 32px;
+  border-radius: var(--radius-xl);
+  background: var(--grey100);
+  border: 1.5px solid var(--grey200);
+}
+
+.footer-brand {
+  display: grid;
+  gap: 12px;
+}
+
+.footer-brand p {
+  color: var(--grey600);
+  max-width: 48ch;
+}
+
+.footer-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+}
+
+.footer-nav a {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--black);
+  text-decoration: none;
+}
+
+.footer-nav a:hover {
+  color: var(--primary);
+}
+
+/* ==========================================================================
+   Responsive Breakpoints (Tablet & Desktop Bento Grids)
+   ========================================================================== */
+
+@media (min-width: 720px) {
+  .bento-steps {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .bento-grid--guests {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+
+  .bento-grid--guests > .bento-card--standard {
+    grid-column: span 6;
+  }
+
+  .bento-grid--guests > .bento-card--wide {
+    grid-column: span 12;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .bento-grid--guests > .bento-card--wide .bento-copy {
+    flex: 1;
+  }
+
+  .bento-grid--owners {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .bento-grid--later {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .bento-grid--payments {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .faq-bento {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .form-row-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .reach-fields {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .footer-bento {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-bento {
+    grid-template-columns: 7fr 5fr;
+    align-items: stretch;
+  }
+
+  .hero-phone-secondary {
+    display: block;
+    margin-top: 36px;
+  }
+
+  .bento-grid--guests > .bento-card--wide {
+    grid-column: span 6;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .bento-grid--guests > .bento-card--standard {
+    grid-column: span 3;
+  }
+
+  .bento-card--owner {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .bento-card--owner .bento-copy {
+    flex: 1;
+  }
+
+  .contact-bento {
+    grid-template-columns: 5fr 7fr;
+    align-items: start;
+  }
+}

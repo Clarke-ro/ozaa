@@ -74,16 +74,15 @@ Use this skill when you build, polish or review UI. **Work within the repo's exi
 List findings as **Critical / High / Medium / Low**. Each states what is wrong, with numbers (size, contrast, target), why, and the fix in RN/Expo or CSS terms. End with "What works". Don't flatten the brand and don't invent guidelines: check the HIG (https://developer.apple.com/design/human-interface-guidelines/) and cite it when in doubt.
 
 ## Attribution
-- **swiftui-pro** by Paul Hudson, https://github.com/twostraws/swiftui-agent-skill, **MIT License** © 2026 Paul Hudson. The principles in sections 1, 3, 4 and 9 (central design constants, 44×44 targets, flexible layouts that never drop features, standard empty states, labelled icon buttons, Reduce Motion, real buttons instead of tap gestures, no color-only meaning) are adapted from its `references/design.md` and `references/accessibility.md` and translated to React Native. The license is kept in `../swiftui-agent-skill/LICENSE`.
+- **swiftui-pro** by Paul Hudson, https://github.com/twostraws/swiftui-agent-skill, **MIT License** © 2026 Paul Hudson. The principles in sections 1, 3, 4 and 9 (central design constants, 44×44 targets, flexible layouts that never drop features, standard empty states, labelled icon buttons, Reduce Motion, real buttons instead of tap gestures, no color-only meaning) are adapted from its `references/design.md` and `references/accessibility.md` and translated to React Native. No text is copied; the ideas are restated in our own words. Its MIT license is in that repo's `LICENSE` file.
 - **apple-design-skill** by dickwu, https://github.com/dickwu/apple-design-skill. **There is no open-source license file.** Its HIG pages are Apple Inc.'s copyrighted text, which the repo reproduces with source links. **Nothing is copied from it here**; it is only referenced. General ideas (severity-ranked review lenses, the mapping of Apple terms to React Native) are restated in original wording. For full HIG detail, install that skill from its repo.
 - Neither project is affiliated with Apple.
 
 ## Notes for this repo
 
-Checked against the Expo app's `package.json` and `package-lock.json`. That dependency set is the same on every app branch. `main` has no `package.json` yet. Do not install packages to follow this skill.
+Checked against the Expo app's `package.json` and `package-lock.json`. Do not install packages to follow this skill.
 
 - **SDK:** Expo SDK 58 (`expo` 58.0.22), React Native 0.88.1, React 19.3.0.
 - **Navigation:** `expo-router` 58.0.29. Screens import `Stack` and `Tabs` from `expo-router`. The lockfile includes `standard-navigation` and `react-native-screens`. It does not include `@react-navigation/native` or `@react-navigation/native-stack`. `headerLargeTitle`, `headerBlurEffect` and `headerSearchBarOptions` are React Navigation native-stack names, so confirm them on the installed Expo Router before using them. Existing sheets use `presentation: 'modal'` and `presentation: 'transparentModal'`.
 - **Present:** `react-native-reanimated` 4.7.1, `react-native-gesture-handler` 3.3.0, `react-native-safe-area-context` 5.10.1, `expo-haptics` 58.0.7, `expo-symbols` 58.0.4, `expo-font` 58.0.11, `lucide-react-native` 1.66.0.
 - **Missing:** `expo-blur`, `react-native-keyboard-controller`, `@gorhom/bottom-sheet`, `@expo/vector-icons`. Use a solid surface token where the skill calls for `BlurView`. Use React Native `KeyboardAvoidingView` for the keyboard. Keep sheets on Expo Router `presentation` options. Use `expo-symbols` `SymbolView` and `lucide-react-native` for icons.
-- Attribution points at `../swiftui-agent-skill/LICENSE`. That copy is not in this repo. See `.cursor/skills/README.md`.
