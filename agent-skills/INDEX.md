@@ -13,7 +13,7 @@ Folder names carry a prefix for their source (`pstack-`, `expo-`, `vercel-` ...)
 | Order and payment flows | `pstack-statechart` (model the Order, Payment and Waiter-call state machines from BUILD.md section 9 and draw them in Mermaid), `pstack-principle-type-system-discipline` (make illegal states impossible to write) |
 | Logic with rules | `pstack-tdd` for bill totals and splits, tips, loyalty stamps, game stamp rule, theme contrast (deriveTheme), payment state, phone normalisation, opening hours. `pstack-principle-test-behavior-not-implementation` |
 | Building screens | `expo-router`, `expo-project-structure`, `expo-design-system`, `expo-native-ui`, `expo-data-fetching`, `vercel-react-native-skills`, `callstack-react-native-best-practices`, `vercel-composition-patterns`, `pstack-typescript-best-practices` |
-| Making it look designed, not generated | `no-slop-ui`, `taste-skill`, `anthropic-frontend-design`, `impeccable`, `emil-design-eng`, `ui-skills-baseline-ui`, `rauno-interfaces`, `userinterface-wiki`. Ozaa's own rules in `design/brand.md` always win over any of these. |
+| Making it look designed, not generated | `apple-design-rn` (type scale, spacing, touch targets, dark mode, a11y for this Expo app), `no-slop-ui`, `taste-skill`, `anthropic-frontend-design`, `impeccable`, `emil-design-eng`, `ui-skills-baseline-ui`, `rauno-interfaces`, `userinterface-wiki`. Ozaa's own rules in `design/brand.md` always win over any of these. |
 | Motion | `expo-animation` / `emil-animate-expo` (same text, two sources), `ui-skills-fixing-motion-performance` |
 | Web build (guest app runs in a browser) | `emil-mobile-native`, `vercel-web-interface-guidelines`, `vercel-web-design-guidelines`, `vercel-react-best-practices`, `expo-dom` (only if a web-only widget is needed) |
 | Accessibility | `ui-skills-fixing-accessibility` plus the a11y rules in BUILD.md |
@@ -119,6 +119,13 @@ Source: https://github.com/callstackincubator/agent-skills. **Copied** (images i
 | rauno-interfaces | https://github.com/raunofreiberg/interfaces, no license | **Summarized** (SUMMARY.md, our words, adapted to React Native) | Small details checklist for every screen. |
 
 Found on X while collecting: https://x.com/JustARedditNerd/status/2048607769776042312 (Impeccable, Taste, UI Wiki, frontend-design, web design guidelines), https://x.com/colderoshay/status/2066930925573898433 (taste.md, UI wiki, Emil's skill, ibelick), https://x.com/zentalksai/status/2059246648161685660 (frontend-design), https://x.com/lorden_eth/status/2107440745561178275 (taste-skill, no-slop-ui and more), https://x.com/DataChaz/status/2039637735523409977 (awesome-design-md).
+
+### Apple-grade design for this app
+Lives outside this folder, at `.cursor/skills/apple-design-rn/SKILL.md`, so Cursor and Claude Code load it on their own. Written for Ozaa in our own words. Ideas adapted from https://github.com/twostraws/swiftui-agent-skill (MIT © 2026 Paul Hudson); https://github.com/dickwu/apple-design-skill (no license) is linked, not copied.
+
+| Skill | When to apply |
+|---|---|
+| apple-design-rn | Every UI build, polish pass and design review of owner screens, guest screens and the landing page. Its last section lists which libraries it names are installed in this app. |
 
 ### Anti-slop writing and code
 | Folder | Source and license | Copied or summary | When to apply |
