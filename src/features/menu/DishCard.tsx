@@ -5,7 +5,8 @@ import type { MenuItem } from '@/lib/api/types';
 import { PriceText } from '@/ui/PriceText';
 import { Text } from '@/ui/Text';
 import { VenueImage } from '@/ui/VenueImage';
-import { useTheme } from '@/ui/theme';
+import { tokens } from '@/theme/tokens';
+import { fontFamily, useTheme } from '@/ui/theme';
 
 /**
  * One dish in the menu grid: photo, name, price and an add button. The description lives on
@@ -63,13 +64,12 @@ export function DishCard({
             </Text>
           ) : null}
         </View>
+        {/* Kept as small as it can be: one line of name, one of price, room for the + button. */}
         <View style={styles.body}>
-          <Text variant="body-strong" numberOfLines={1}>
+          <Text variant="caption" numberOfLines={1} style={styles.name}>
             {item.name.en}
           </Text>
-          <View style={styles.foot}>
-            <PriceText amount={item.pricePesewas} currency={currency} />
-          </View>
+          <PriceText amount={item.pricePesewas} currency={currency} />
         </View>
       </Pressable>
       {onAdd ? (
@@ -83,46 +83,52 @@ export function DishCard({
             { backgroundColor: pressed ? theme.pressed : theme.fill },
           ]}
         >
-          <Plus size={18} color={theme.onFill} strokeWidth={2.5} />
+          <Plus size={16} color={theme.onFill} strokeWidth={2.5} />
         </Pressable>
       ) : null}
     </View>
   );
 }
 
+// The + button and the space the text keeps clear for it.
+const ADD = 32;
+
 const styles = StyleSheet.create({
-  card: { flex: 1, borderWidth: 1, borderRadius: 18, overflow: 'hidden' },
+  card: {
+    flex: 1,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: tokens.radius.lg,
+    borderCurve: 'continuous',
+    overflow: 'hidden',
+  },
   open: { flex: 1 },
   pressed: { opacity: 0.85 },
   photo: { aspectRatio: 1.15, alignItems: 'center', justifyContent: 'center' },
   dim: { opacity: 0.45 },
   tag: {
     position: 'absolute',
-    top: 8,
-    left: 8,
+    top: tokens.space[2],
+    left: tokens.space[2],
     overflow: 'hidden',
-    borderRadius: 999,
-    paddingHorizontal: 8,
+    borderRadius: tokens.radius.full,
+    paddingHorizontal: tokens.space[2],
     paddingVertical: 2,
-    fontFamily: 'Inter_600',
+    fontFamily: fontFamily.strong,
   },
-  body: { padding: 12, gap: 4, flex: 1 },
-  foot: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    minHeight: 38,
-    marginTop: 'auto',
-    paddingTop: 4,
-    paddingRight: 44,
+  body: {
+    paddingVertical: tokens.space[2],
+    paddingStart: tokens.space[3],
+    paddingEnd: tokens.space[3] + ADD,
   },
+  name: { fontFamily: fontFamily.strong },
   // Sits over the card's bottom-right corner, level with the price.
   add: {
     position: 'absolute',
-    right: 10,
-    bottom: 10,
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    right: tokens.space[2],
+    bottom: tokens.space[2],
+    width: ADD,
+    height: ADD,
+    borderRadius: ADD / 2,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -4,14 +4,16 @@ import { useTranslation } from 'react-i18next';
 import type { components } from '@/lib/api/schema';
 import { hapticSelection } from '@/lib/haptics';
 import { VenueImage } from '@/ui/VenueImage';
+import { tokens } from '@/theme/tokens';
 import { useTheme } from '@/ui/theme';
 
 type Photo = components['schemas']['Image'];
 
-const PHOTO = 240;
+// Food reads best a little wider than tall; the photo spans the full screen width.
+const RATIO = 4 / 3;
 
 /**
- * The dish photos as swipeable pages: the main `photo` first, then the `gallery` extras.
+ * The dish photos as full-width, swipeable pages (no crop to a circle): the main `photo` first, then the `gallery` extras.
  * One photo shows on its own with no dots. Dots also jump to a page, for mouse users on web.
  */
 export function DishGallery({ photos, name }: { photos: Photo[]; name: string }) {
@@ -58,7 +60,7 @@ export function DishGallery({ photos, name }: { photos: Photo[]; name: string })
         }}
       >
         {photos.map((photo, index) => (
-          <View key={photo.url} style={[styles.page, { width: width || PHOTO }]}>
+          <View key={photo.url} style={[styles.page, width ? { width } : styles.full]}>
             <VenueImage
               url={photo.url}
               blurhash={photo.blurhash}
@@ -93,10 +95,11 @@ export function DishGallery({ photos, name }: { photos: Photo[]; name: string })
 }
 
 const styles = StyleSheet.create({
-  wrap: { alignSelf: 'stretch', gap: 16 },
-  page: { alignItems: 'center' },
-  photo: { width: PHOTO, height: PHOTO, borderRadius: PHOTO / 2 },
-  dots: { flexDirection: 'row', justifyContent: 'center', gap: 8 },
+  wrap: { alignSelf: 'stretch', gap: tokens.space[3], paddingBottom: tokens.space[3] },
+  page: { alignItems: 'stretch' },
+  full: { width: '100%' },
+  photo: { width: '100%', aspectRatio: RATIO },
+  dots: { flexDirection: 'row', justifyContent: 'center', gap: tokens.space[2] },
   dot: { width: 8, height: 8, borderRadius: 4 },
   dotOn: { width: 22 },
 });

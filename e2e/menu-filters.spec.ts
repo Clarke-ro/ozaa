@@ -33,7 +33,7 @@ test('dietary filters open in a sheet and can clear back to the menu', async ({ 
 
 test('search finds a dish, the card adds it, and the dish page adds more', async ({ page }) => {
   await page.goto('/mamas-kitchen/menu', { waitUntil: 'domcontentloaded' });
-  await page.getByRole('button', { name: 'Search the menu', exact: true }).click();
+  // The search box is always on screen in the menu's control bar.
   await page.getByRole('textbox', { name: 'Search the menu', exact: true }).fill('waakye');
   await expect(page.getByText('1 result')).toBeVisible();
   await page.getByRole('button', { name: 'Add Waakye special to your order' }).click();

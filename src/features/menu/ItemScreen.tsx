@@ -71,7 +71,7 @@ export function ItemScreen({ slug, itemId }: { slug: string; itemId: string }) {
   return (
     <View style={[styles.fill, { backgroundColor: theme.white }]}>
       <ScrollView contentContainerStyle={{ paddingBottom: 120 + insets.bottom }}>
-        <View style={[styles.hero, { backgroundColor: theme.wash, paddingTop: insets.top + 56 }]}>
+        <View style={[styles.hero, { backgroundColor: theme.wash }]}>
           <DishGallery
             photos={item.photo ? [item.photo, ...(item.gallery ?? [])] : []}
             name={item.name.en}
@@ -295,12 +295,8 @@ export function ItemScreen({ slug, itemId }: { slug: string; itemId: string }) {
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
-  hero: {
-    alignItems: 'center',
-    paddingBottom: 24,
-    borderBottomLeftRadius: 28,
-    borderBottomRightRadius: 28,
-  },
+  // The photo runs edge to edge, under the status bar; the back button floats over it.
+  hero: { alignSelf: 'stretch' },
   body: { padding: 20, gap: 16 },
   titleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   flex: { flex: 1 },
