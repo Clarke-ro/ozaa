@@ -144,7 +144,11 @@
     "less": "One less",
     "more": "One more",
     "alsoLike": "You might also like",
-    "choose": "Choose {{group}} first."
+    "choose": "Choose {{group}} first.",
+    "showGrid": "Show as photo cards",
+    "showList": "Show as a list",
+    "sectionsLabel": "Menu sections",
+    "allSections": "All"
   },
   "dietary": {
     "vegetarian": "Vegetarian",

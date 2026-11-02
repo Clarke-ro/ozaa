@@ -1,6 +1,8 @@
+import { DIETARY } from '@/lib/dietary';
 import type { MenuItem } from '@/lib/api/types';
 
-export const DIETS: MenuItem['dietary'] = ['vegetarian', 'vegan', 'gluten_free', 'halal', 'spicy'];
+// One list for guests and owners (src/lib/dietary.ts), checked against the contract.
+export const DIETS: MenuItem['dietary'] = [...DIETARY];
 
 // The 14 allergens on the EU and UK declaration list, the most widely used standard set.
 export const ALLERGENS = [

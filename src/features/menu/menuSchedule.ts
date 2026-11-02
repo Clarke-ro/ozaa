@@ -46,4 +46,3 @@ export function isCategoryAvailable(schedule?: ScheduleRule, now: Date = new Dat
 }
 
 export const isCategoryActiveNow = isCategoryAvailable;
-

@@ -26,6 +26,14 @@ const img = (p, w = 800, h = 600, alt = '') => ({ url: MEDIA + p, width: w, heig
 // Two close-up crops of each dish photo (img/<dish>-2.jpg, -3.jpg) stand in for extra photos.
 const closeUps = (p, alt) =>
   [2, 3].map(n => img(p.replace(/\.jpg$/, `-${n}.jpg`), 800, 800, `${alt}, close up`));
+// Sample diet tags by dish name, so the guest diet filter has something to offer.
+const DIET = {
+  'Jollof & chicken': ['halal'],
+  'Waakye special': ['halal'],
+  'Banku & tilapia': ['gluten_free', 'spicy'],
+  'Kɛlɛwɛlɛ': ['vegetarian', 'vegan', 'gluten_free', 'spicy'],
+  'Sobolo': ['vegetarian', 'vegan', 'gluten_free'],
+};
 const slugs = { mamas: 'mamas-kitchen', bean: 'bean-there', akos: 'auntie-akos' };
 const hoursUntil = { mamas: '22:00', bean: '20:00', akos: '21:00' };
 const LANG = { EN: 'en', TWI: 'tw' };
@@ -70,7 +78,7 @@ for (const [key, v] of Object.entries(W.VENUES)) {
   const items = v.items.map((it, i) => ({
     id: `itm_${key}${i}`, categoryId: categories[0].id,
     name: { en: it.n }, description: { en: it.d }, pricePesewas: Math.round(it.p * 100),
-    photo: img(it.img, 800, 800, it.n), gallery: closeUps(it.img, it.n), available: true, dietary: [], badges: it.pop ? ['popular'] : [],
+    photo: img(it.img, 800, 800, it.n), gallery: closeUps(it.img, it.n), available: true, dietary: DIET[it.n] ?? [], badges: it.pop ? ['popular'] : [],
     modifierGroups: [], prepMinutes: 12,
   }));
   out.menus[slug] = { venueId, updatedAt: now.toISOString(), categories, items };

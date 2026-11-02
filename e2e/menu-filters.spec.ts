@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 test('dietary filters open in a sheet and can clear back to the menu', async ({ page }) => {
   await page.goto('/mamas-kitchen/menu', { waitUntil: 'domcontentloaded' });
-  await expect(page.getByText('Food')).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'All', exact: true })).toBeVisible();
   await expect(page.getByRole('tab', { name: 'Mains' })).toBeVisible();
   await expect(page.getByText('Show only')).toHaveCount(0);
   await expect(page.getByText('Jollof & chicken')).toBeVisible();
@@ -16,14 +16,15 @@ test('dietary filters open in a sheet and can clear back to the menu', async ({ 
   await expect(page.getByRole('button', { name: 'Dietary filters' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Dietary filters' }).click();
-  await page.getByRole('checkbox', { name: 'Vegetarian' }).click();
+  // No sample dish is both halal and vegan.
+  await page.getByRole('checkbox', { name: 'Halal' }).click();
   await page.getByRole('checkbox', { name: 'Vegan' }).click();
   await page.getByRole('button', { name: 'Apply' }).click();
 
   await expect(page.getByRole('button', { name: 'Dietary filters, 2 on' })).toBeVisible();
   await expect(page.getByText('Nothing matches those filters.')).toBeVisible();
   await expect(page.getByText('Jollof & chicken')).toBeHidden();
-  await expect(page.getByText('Food')).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'All', exact: true })).toBeVisible();
 
   await page.getByRole('button', { name: 'Dietary filters, 2 on' }).click();
   await page.getByRole('button', { name: 'Clear' }).click();

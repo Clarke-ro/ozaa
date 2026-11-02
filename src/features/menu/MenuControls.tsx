@@ -1,24 +1,25 @@
-import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Search, SlidersHorizontal, X } from 'lucide-react-native';
+import { LayoutGrid, List, Search, SlidersHorizontal, X } from 'lucide-react-native';
 import type { MenuCategory } from '@/lib/api/types';
 import { tokens } from '@/theme/tokens';
+import { FilterChips } from '@/ui/FilterChips';
 import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
 
-export type Kind = 'food' | 'drinks';
+export type MenuView = 'list' | 'grid';
 
 /**
- * The menu's fixed control bar, two slim rows that stay put while dishes scroll:
- * search with the diet filter beside it, then Food / Drinks and the sections as small pills.
+ * The menu's fixed control bar, two slim rows that stay put while dishes scroll: search with the
+ * diet filter and the list/grid switch, then the sections as the app's filter chips.
  */
 export function MenuControls({
   query,
   onQuery,
   diets,
   onFilters,
-  kind,
-  onKind,
+  view,
+  onView,
   sections,
   active,
   onSection,
@@ -27,11 +28,13 @@ export function MenuControls({
   onQuery: (text: string) => void;
   /** How many diet filters are on; shown on the filter button. */
   diets: number;
-  onFilters: () => void;
-  kind: Kind;
-  onKind: (kind: Kind) => void;
+  /** Null when no dish on this menu has a diet tag, so there is nothing to filter by. */
+  onFilters: (() => void) | null;
+  view: MenuView;
+  onView: (view: MenuView) => void;
   sections: MenuCategory[];
-  active: string | undefined;
+  /** A section id, or 'all'. */
+  active: string;
   onSection: (id: string) => void;
 }) {
   const { t } = useTranslation();
@@ -63,102 +66,66 @@ export function MenuControls({
             </Pressable>
           ) : null}
         </View>
+        {onFilters ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={
+              diets > 0 ? t('menu.filtersOn', { count: diets }) : t('menu.filters')
+            }
+            onPress={onFilters}
+            style={({ pressed }) => [
+              styles.icon,
+              { backgroundColor: diets > 0 || pressed ? theme.tint : theme.wash },
+            ]}
+          >
+            <SlidersHorizontal size={20} color={diets > 0 ? theme.ink : theme.text} />
+            {diets > 0 ? (
+              <View pointerEvents="none" style={[styles.count, { backgroundColor: theme.fill }]}>
+                <Text variant="caption" style={[styles.countText, { color: theme.onFill }]}>
+                  {diets}
+                </Text>
+              </View>
+            ) : null}
+          </Pressable>
+        ) : null}
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={diets > 0 ? t('menu.filtersOn', { count: diets }) : t('menu.filters')}
-          onPress={onFilters}
+          accessibilityLabel={view === 'list' ? t('menu.showGrid') : t('menu.showList')}
+          onPress={() => onView(view === 'list' ? 'grid' : 'list')}
           style={({ pressed }) => [
-            styles.filter,
-            { backgroundColor: diets > 0 || pressed ? theme.tint : theme.wash },
+            styles.icon,
+            { backgroundColor: pressed ? theme.tint : theme.wash },
           ]}
         >
-          <SlidersHorizontal size={20} color={diets > 0 ? theme.ink : theme.text} />
-          {diets > 0 ? (
-            <View pointerEvents="none" style={[styles.count, { backgroundColor: theme.fill }]}>
-              <Text variant="caption" style={[styles.countText, { color: theme.onFill }]}>
-                {diets}
-              </Text>
-            </View>
-          ) : null}
+          {view === 'list' ? (
+            <LayoutGrid size={20} color={theme.text} />
+          ) : (
+            <List size={20} color={theme.text} />
+          )}
         </Pressable>
       </View>
 
-      {/* While searching, results come from every section, so the section pills step aside. */}
+      {/* While searching, results come from every section, so the section chips step aside. */}
       {searching ? null : (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.pills}
-        >
-          <View accessibilityRole="tablist" style={[styles.kinds, { backgroundColor: theme.wash }]}>
-            {(['food', 'drinks'] as const).map((tab) => {
-              const on = kind === tab;
-              return (
-                <Pressable
-                  key={tab}
-                  accessibilityRole="tab"
-                  accessibilityState={{ selected: on }}
-                  aria-selected={on}
-                  onPress={() => onKind(tab)}
-                  style={[styles.kind, on && { backgroundColor: theme.black }]}
-                >
-                  <Text
-                    variant="caption"
-                    style={{ color: on ? theme.white : theme.muted, fontFamily: fontFamily.strong }}
-                  >
-                    {t(`menu.${tab}`)}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-          <View style={[styles.divider, { backgroundColor: theme.line }]} />
-          <View accessibilityRole="tablist" style={styles.sections}>
-            {sections.map((section) => {
-              const on = section.id === active;
-              return (
-                <Pressable
-                  key={section.id}
-                  accessibilityRole="tab"
-                  accessibilityState={{ selected: on }}
-                  aria-selected={on}
-                  accessibilityLabel={section.name.en}
-                  onPress={() => onSection(section.id)}
-                  style={[
-                    styles.chip,
-                    {
-                      backgroundColor: on ? theme.tint : theme.white,
-                      borderColor: on ? theme.ink : theme.line,
-                    },
-                  ]}
-                >
-                  <Text
-                    variant="caption"
-                    numberOfLines={1}
-                    style={{
-                      color: on ? theme.badgeInk : theme.text,
-                      fontFamily: on ? fontFamily.strong : fontFamily.regular,
-                    }}
-                  >
-                    {section.name.en}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </ScrollView>
+        <FilterChips
+          label={t('menu.sectionsLabel')}
+          gutter={tokens.grid.mobile.margin}
+          value={active}
+          onChange={onSection}
+          items={[
+            { id: 'all', label: t('menu.allSections') },
+            ...sections.map((s) => ({ id: s.id, label: s.name.en })),
+          ]}
+        />
       )}
     </View>
   );
 }
 
-const PILL = 32;
-
 const styles = StyleSheet.create({
   bar: {
     gap: tokens.space[2],
-    paddingTop: tokens.space[2],
-    paddingBottom: tokens.space[2],
+    paddingVertical: tokens.space[2],
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   searchRow: {
@@ -181,7 +148,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.regular,
     fontSize: tokens.type.body.size,
   },
-  filter: {
+  icon: {
     width: tokens.touchTarget,
     height: tokens.touchTarget,
     borderRadius: tokens.radius.md,
@@ -200,27 +167,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   countText: { fontSize: tokens.type.caption.size - 2, lineHeight: 13 },
-  pills: {
-    alignItems: 'center',
-    gap: tokens.space[2],
-    paddingHorizontal: tokens.grid.mobile.margin,
-  },
-  kinds: { flexDirection: 'row', padding: 2, borderRadius: tokens.radius.full },
-  kind: {
-    height: PILL - 4,
-    paddingHorizontal: tokens.space[3],
-    borderRadius: tokens.radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  divider: { width: StyleSheet.hairlineWidth, height: PILL - 12 },
-  sections: { flexDirection: 'row', gap: tokens.space[2] },
-  chip: {
-    height: PILL,
-    paddingHorizontal: tokens.space[3],
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: tokens.radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
 });

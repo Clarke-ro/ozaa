@@ -2,7 +2,7 @@ import type { ModifierGroup } from '@/lib/api/types';
 
 export function validateModifiers(
   group: ModifierGroup,
-  selectedOptionIds: string[]
+  selectedOptionIds: string[],
 ): { valid: boolean; error?: string } {
   const count = selectedOptionIds.length;
   if (count < group.min) {

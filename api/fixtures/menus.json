@@ -68,7 +68,9 @@
           }
         ],
         "available": true,
-        "dietary": [],
+        "dietary": [
+          "halal"
+        ],
         "badges": [
           "popular"
         ],
@@ -106,7 +108,9 @@
           }
         ],
         "available": true,
-        "dietary": [],
+        "dietary": [
+          "halal"
+        ],
         "badges": [],
         "modifierGroups": [],
         "prepMinutes": 12
@@ -142,7 +146,10 @@
           }
         ],
         "available": true,
-        "dietary": [],
+        "dietary": [
+          "gluten_free",
+          "spicy"
+        ],
         "badges": [
           "popular"
         ],
@@ -180,7 +187,12 @@
           }
         ],
         "available": true,
-        "dietary": [],
+        "dietary": [
+          "vegetarian",
+          "vegan",
+          "gluten_free",
+          "spicy"
+        ],
         "badges": [],
         "modifierGroups": [],
         "prepMinutes": 12
@@ -216,7 +228,11 @@
           }
         ],
         "available": true,
-        "dietary": [],
+        "dietary": [
+          "vegetarian",
+          "vegan",
+          "gluten_free"
+        ],
         "badges": [],
         "modifierGroups": [],
         "prepMinutes": 12
@@ -518,7 +534,10 @@
           }
         ],
         "available": true,
-        "dietary": [],
+        "dietary": [
+          "gluten_free",
+          "spicy"
+        ],
         "badges": [
           "popular"
         ],

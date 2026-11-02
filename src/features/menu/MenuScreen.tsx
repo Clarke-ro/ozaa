@@ -20,11 +20,17 @@ import { useTheme } from '@/ui/theme';
 import { DietFilterSheet } from './DietFilterSheet';
 import { DishCard } from './DishCard';
 import { canQuickAdd, searchItems } from './dishLogic';
-import { filterMenuItems, type DietTag } from './filterMenu';
+import { dietOptions } from '@/lib/dietary';
+import { filterMenuItems } from './filterMenu';
 import { MenuCartBar } from './MenuCartBar';
-import { MenuControls, type Kind } from './MenuControls';
+import { DishRow } from './DishRow';
+import { MenuControls, type MenuView } from './MenuControls';
+import { menuRows, type MenuRow } from './menuRows';
 
-/** The guest menu: a fixed bar to search, filter and pick food, drinks or a section, then the dishes. */
+/**
+ * The guest menu: a fixed bar to search, filter and pick a section, then the dishes as a list
+ * (the default) or a grid of photo cards. With every section shown, each gets a heading.
+ */
 export function MenuScreen({ slug }: { slug: string }) {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -33,33 +39,34 @@ export function MenuScreen({ slug }: { slug: string }) {
   const menu = useQuery({ queryKey: ['menu', slug], queryFn: () => api.getMenu(slug) });
   const venue = useVenue(slug);
   const add = useCart((state) => state.add);
-  const [kind, setKind] = useState<Kind>('food');
-  const [sectionId, setSectionId] = useState<string | null>(null);
-  const [diets, setDiets] = useState<DietTag[]>([]);
+  const [section, setSection] = useState('all');
+  const [diets, setDiets] = useState<string[]>([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [query, setQuery] = useState('');
+  const [view, setView] = useState<MenuView>('list');
 
   if (menu.isLoading) return <LoadingState />;
   if (menu.isError || !menu.data) return <ErrorState onRetry={() => void menu.refetch()} />;
 
   const currency = venue.data?.currency ?? DEFAULT_CURRENCY;
+  // Food sections first, then drinks, each in the venue's order.
   const sections = menu.data.categories
-    .filter((c) => c.kind === kind && !c.hidden)
-    .sort((a, b) => a.position - b.position);
-  const active =
-    sectionId && sections.some((c) => c.id === sectionId) ? sectionId : sections[0]?.id;
-  const inKind = menu.data.items.filter((i) => sections.some((c) => c.id === i.categoryId));
-  // While searching, look across every section of this kind; otherwise show the picked section.
-  const shown = query.trim()
-    ? searchItems(
-        inKind.filter((i) => diets.every((tag) => i.dietary.includes(tag))),
-        query,
-      )
-    : filterMenuItems(menu.data.items, active, diets);
+    .filter((c) => !c.hidden)
+    .sort((a, b) => (a.kind === b.kind ? a.position - b.position : a.kind === 'food' ? -1 : 1));
+  const active = section === 'all' || sections.some((c) => c.id === section) ? section : 'all';
+  const visible = menu.data.items.filter((i) => sections.some((c) => c.id === i.categoryId));
+  const searching = query.trim().length > 0;
+  // Searching looks across every section; otherwise show the picked one (or all of them).
+  const shown = searching
+    ? searchItems(filterMenuItems(visible, 'all', diets), query)
+    : filterMenuItems(visible, active, diets);
+  const options = dietOptions(visible);
   const columns = width >= 700 ? 3 : 2;
-  const rows = Array.from({ length: Math.ceil(shown.length / columns) }, (_, r) =>
-    shown.slice(r * columns, r * columns + columns),
-  );
+  const rows = menuRows(shown, sections, {
+    grouped: active === 'all' && !searching,
+    view,
+    columns,
+  });
 
   const quickAdd = (item: (typeof shown)[number]) => {
     void hapticImpactLight();
@@ -72,6 +79,46 @@ export function MenuScreen({ slug }: { slug: string }) {
       modifierOptionIds: [],
     });
   };
+  const open = (id: string) => router.push(`/${slug}/menu/${id}`);
+
+  const renderRow = (row: MenuRow<(typeof shown)[number]>) => {
+    if (row.type === 'heading') {
+      return (
+        <Text variant="title" accessibilityRole="header" style={styles.heading}>
+          {row.title}
+        </Text>
+      );
+    }
+    if (row.type === 'dish') {
+      return (
+        <View style={styles.pad}>
+          <DishRow
+            item={row.item}
+            currency={currency}
+            onOpen={() => open(row.item.id)}
+            onAdd={canQuickAdd(row.item) ? () => quickAdd(row.item) : null}
+          />
+        </View>
+      );
+    }
+    return (
+      <View style={[styles.pad, styles.gridRow]}>
+        {row.items.map((item) => (
+          <DishCard
+            key={item.id}
+            item={item}
+            currency={currency}
+            onOpen={() => open(item.id)}
+            onAdd={canQuickAdd(item) ? () => quickAdd(item) : null}
+          />
+        ))}
+        {/* Keep the last row's cards the same width as the rows above. */}
+        {Array.from({ length: columns - row.items.length }, (_, i) => (
+          <View key={`gap-${i}`} style={styles.filler} />
+        ))}
+      </View>
+    );
+  };
 
   return (
     <SafeScreen>
@@ -80,59 +127,42 @@ export function MenuScreen({ slug }: { slug: string }) {
         query={query}
         onQuery={setQuery}
         diets={diets.length}
-        onFilters={() => setFiltersOpen(true)}
-        kind={kind}
-        onKind={(next) => {
-          setKind(next);
-          setSectionId(null);
-        }}
+        onFilters={options.length > 0 ? () => setFiltersOpen(true) : null}
+        view={view}
+        onView={setView}
         sections={sections}
         active={active}
-        onSection={setSectionId}
+        onSection={setSection}
       />
-      {/* FlashList keeps long sections cheap on 2–3 GB phones. */}
+      {/* FlashList keeps long menus cheap on 2–3 GB phones. */}
       <FlashList
-        data={shown.length === 0 ? [] : rows}
-        keyExtractor={(row) => row.map((item) => item.id).join('|')}
+        data={rows}
+        keyExtractor={(row) => row.key}
+        getItemType={(row) => row.type}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.scroll}
         ItemSeparatorComponent={RowGap}
         ListHeaderComponent={
           <View style={styles.header}>
             <OfflineNote savedAt={menu.dataUpdatedAt} />
-            <Text variant="title" style={styles.heading}>
-              {query.trim()
-                ? t('menu.results', { count: shown.length })
-                : sections.find((c) => c.id === active)?.name.en}
-            </Text>
+            {searching ? (
+              <Text variant="title" style={styles.heading}>
+                {t('menu.results', { count: shown.length })}
+              </Text>
+            ) : null}
           </View>
         }
         ListEmptyComponent={
           <Text variant="body" style={[styles.empty, { color: theme.muted }]}>
-            {query.trim() || diets.length > 0 ? t('menu.noMatch') : t('menu.empty')}
+            {searching || diets.length > 0 ? t('menu.noMatch') : t('menu.empty')}
           </Text>
         }
-        renderItem={({ item: row }) => (
-          <View style={styles.gridRow}>
-            {row.map((item) => (
-              <DishCard
-                key={item.id}
-                item={item}
-                currency={currency}
-                onOpen={() => router.push(`/${slug}/menu/${item.id}`)}
-                onAdd={canQuickAdd(item) ? () => quickAdd(item) : null}
-              />
-            ))}
-            {/* Keep the last row's cards the same width as the rows above. */}
-            {Array.from({ length: columns - row.length }, (_, i) => (
-              <View key={`gap-${i}`} style={styles.filler} />
-            ))}
-          </View>
-        )}
+        renderItem={({ item: row }) => renderRow(row)}
       />
       <MenuCartBar slug={slug} currency={currency} />
       {filtersOpen ? (
         <DietFilterSheet
+          options={options}
           selected={diets}
           onApply={(tags) => {
             setDiets(tags);
@@ -151,15 +181,16 @@ export function MenuScreen({ slug }: { slug: string }) {
 
 const styles = StyleSheet.create({
   scroll: { paddingBottom: 120, paddingTop: tokens.space[3] },
-  header: { gap: tokens.space[3], paddingBottom: tokens.space[3] },
+  header: { gap: tokens.space[3] },
   rowGap: { height: tokens.space[3] },
-  heading: { paddingHorizontal: tokens.grid.mobile.margin },
+  pad: { paddingHorizontal: tokens.space[4] },
+  heading: { paddingHorizontal: tokens.grid.mobile.margin, paddingTop: tokens.space[2] },
   empty: {
     paddingHorizontal: tokens.grid.mobile.margin,
     paddingTop: tokens.space[3],
     textAlign: 'center',
   },
-  gridRow: { flexDirection: 'row', gap: tokens.space[3], paddingHorizontal: tokens.space[4] },
+  gridRow: { flexDirection: 'row', gap: tokens.space[3] },
   filler: { flex: 1 },
 });
 

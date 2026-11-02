@@ -5,22 +5,24 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
-import { DIET_TAGS, type DietTag } from './filterMenu';
 
 export function DietFilterSheet({
+  options,
   selected,
   onApply,
   onClear,
   onClose,
 }: {
-  selected: readonly DietTag[];
-  onApply: (tags: DietTag[]) => void;
+  /** Tags dishes on this menu carry (see dietOptions), standard ones first. */
+  options: readonly string[];
+  selected: readonly string[];
+  onApply: (tags: string[]) => void;
   onClear: () => void;
   onClose: () => void;
 }) {
   const { t } = useTranslation();
   const theme = useTheme();
-  const [draft, setDraft] = useState<DietTag[]>([...selected]);
+  const [draft, setDraft] = useState<string[]>([...selected]);
 
   return (
     <View style={styles.backdrop}>
@@ -32,13 +34,13 @@ export function DietFilterSheet({
       />
       <View style={[styles.sheet, { backgroundColor: theme.white }]}>
         <Text variant="title">{t('menu.filterTitle')}</Text>
-        {DIET_TAGS.map((tag) => {
+        {options.map((tag) => {
           const on = draft.includes(tag);
           return (
             <Pressable
               key={tag}
               accessibilityRole="checkbox"
-              accessibilityLabel={t(`dietary.${tag}`)}
+              accessibilityLabel={t(`dietary.${tag}`, { defaultValue: tag })}
               accessibilityState={{ checked: on }}
               onPress={() =>
                 setDraft((current) =>
@@ -50,7 +52,7 @@ export function DietFilterSheet({
                 { borderColor: theme.line, backgroundColor: on ? theme.tint : theme.white },
               ]}
             >
-              <Text variant="body-strong">{t(`dietary.${tag}`)}</Text>
+              <Text variant="body-strong">{t(`dietary.${tag}`, { defaultValue: tag })}</Text>
               {on ? <Check color={theme.ink} size={18} strokeWidth={2} /> : null}
             </Pressable>
           );
