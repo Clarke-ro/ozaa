@@ -927,6 +927,12 @@
       "wifi": "Wi-Fi",
       "socials": "Follow us",
       "links": "More links"
+    },
+    "tabs": {
+      "look": "Look",
+      "words": "Words",
+      "buttons": "Buttons",
+      "preview": "Preview"
     }
   },
   "ownerPages": {

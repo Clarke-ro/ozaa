@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
@@ -7,15 +8,27 @@ import { useOwnerSession } from '@/features/session';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
 import { useDraft } from '../../data/useDraft';
-import { InputRow, PhotoField, SaveBar, Section, SectionBody, toast } from '../../kit';
+import { tokens } from '@/theme/tokens';
+import { InputRow, PhotoField, SaveBar, Section, SectionBody, Segmented, toast } from '../../kit';
 import { BUTTON_KEYS, ButtonsSection } from './ButtonsSection';
 import { GuestPreview } from './GuestPreview';
 import { buttonLook, isHex, type Tint } from './look';
 import { LookSection, type FontPair } from './LookSection';
 
-/** How the guest page looks: preview on top, then colour, words, buttons and photos. */
+type Tab = 'look' | 'words' | 'buttons' | 'preview';
+
+// From this width the guest preview sits beside the editor, so it needs no tab of its own.
+const SIDE_BY_SIDE = 1000;
+
+/**
+ * How the guest page looks, one topic at a time: Look (photos, colour, font), Words, Buttons,
+ * and a full Preview. On wide screens the preview stays beside whichever topic is open.
+ */
 export function BrandingScreen() {
   const { t } = useTranslation();
+  const { width } = useWindowDimensions();
+  const wide = width >= SIDE_BY_SIDE;
+  const [tab, setTab] = useState<Tab>('look');
   const client = useQueryClient();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const venue = useQuery({
@@ -25,7 +38,7 @@ export function BrandingScreen() {
   });
   const v = venue.data;
   const draft = useDraft({
-    accent: v?.theme.accent ?? '#D24000',
+    accent: v?.theme.accent ?? tokens.color.primary.hex,
     font: (v?.theme.fontPair ?? 'ozaa') as FontPair,
     name: v?.name ?? '',
     tagline: v?.tagline ?? '',
@@ -87,70 +100,123 @@ export function BrandingScreen() {
         error={venue.isError}
         onRetry={() => void venue.refetch()}
       >
-        <GuestPreview
-          accent={isHex(f.accent) ? f.accent : null}
-          name={f.name}
-          tagline={f.tagline}
-          description={f.description}
-          hoursText={v ? describeHours(v.hours, new Date()).text : undefined}
-          locationLabel={v?.location.label}
-          bannerUrl={banner?.url ?? v?.banner?.url}
-          buttons={f.order.map((key) => ({ key, label: t(`ownerBranding.button.${key}`) }))}
-          buttonInk={look.ink}
+        <Segmented<Tab>
+          label={t('owner.branding')}
+          value={tab === 'preview' && wide ? 'look' : tab}
+          onChange={setTab}
+          options={[
+            { id: 'look', label: t('ownerBranding.tabs.look') },
+            { id: 'words', label: t('ownerBranding.tabs.words') },
+            { id: 'buttons', label: t('ownerBranding.tabs.buttons') },
+            ...(wide ? [] : [{ id: 'preview' as const, label: t('ownerBranding.tabs.preview') }]),
+          ]}
         />
-        <LookSection
-          accent={f.accent}
-          onAccent={(hex) => draft.set('accent', hex)}
-          font={f.font}
-          onFont={(font) => draft.set('font', font)}
-        />
-        <Section title={t('ownerBranding.words')}>
-          <InputRow
-            label={t('ownerBranding.name')}
-            value={f.name}
-            onChangeText={(text) => draft.set('name', text)}
-            maxLength={60}
-          />
-          <InputRow
-            label={t('ownerBranding.tagline')}
-            value={f.tagline}
-            onChangeText={(text) => draft.set('tagline', text)}
-            placeholder={t('ownerLoyalty.optional')}
-            maxLength={100}
-          />
-          <InputRow
-            label={t('ownerBranding.description')}
-            value={f.description}
-            onChangeText={(text) => draft.set('description', text)}
-            multiline
-          />
-        </Section>
-        <ButtonsSection
-          order={f.order}
-          onOrder={(order) => draft.set('order', order)}
-          tint={f.tint}
-          onTint={(tint) => draft.set('tint', tint)}
-          readable={look.readable}
-        />
-        <Section title={t('ownerBranding.photos')}>
-          <SectionBody>
-            <PhotoField
-              venueId={venueId}
-              kind="banner"
-              label={t('owner.bannerPhoto')}
-              url={banner?.url ?? v?.banner?.url ?? null}
-              onChange={(id, url) => setBanner(id ? { id, url } : undefined)}
-            />
-            <PhotoField
-              venueId={venueId}
-              kind="logo"
-              label={t('owner.logoPhoto')}
-              url={logo ? logo.url : (v?.logo?.url ?? null)}
-              onChange={(id, url) => setLogo({ id, url })}
-            />
-          </SectionBody>
-        </Section>
+        <View style={wide ? styles.split : styles.stack}>
+          <View style={styles.editor}>
+            {tab === 'look' || (wide && tab === 'preview') ? (
+              <>
+                <Section title={t('ownerBranding.photos')}>
+                  <SectionBody>
+                    <PhotoField
+                      venueId={venueId}
+                      kind="banner"
+                      label={t('owner.bannerPhoto')}
+                      url={banner?.url ?? v?.banner?.url ?? null}
+                      onChange={(id, url) => setBanner(id ? { id, url } : undefined)}
+                    />
+                    <PhotoField
+                      venueId={venueId}
+                      kind="logo"
+                      label={t('owner.logoPhoto')}
+                      url={logo ? logo.url : (v?.logo?.url ?? null)}
+                      onChange={(id, url) => setLogo({ id, url })}
+                    />
+                  </SectionBody>
+                </Section>
+                <LookSection
+                  accent={f.accent}
+                  onAccent={(hex) => draft.set('accent', hex)}
+                  font={f.font}
+                  onFont={(font) => draft.set('font', font)}
+                />
+              </>
+            ) : null}
+            {tab === 'words' ? (
+              <>
+                <Section title={t('ownerBranding.words')}>
+                  <InputRow
+                    label={t('ownerBranding.name')}
+                    value={f.name}
+                    onChangeText={(text) => draft.set('name', text)}
+                    maxLength={60}
+                  />
+                  <InputRow
+                    label={t('ownerBranding.tagline')}
+                    value={f.tagline}
+                    onChangeText={(text) => draft.set('tagline', text)}
+                    placeholder={t('ownerLoyalty.optional')}
+                    maxLength={100}
+                  />
+                  <InputRow
+                    label={t('ownerBranding.description')}
+                    value={f.description}
+                    onChangeText={(text) => draft.set('description', text)}
+                    multiline
+                  />
+                </Section>
+              </>
+            ) : null}
+            {tab === 'buttons' ? (
+              <>
+                <ButtonsSection
+                  order={f.order}
+                  onOrder={(order) => draft.set('order', order)}
+                  tint={f.tint}
+                  onTint={(tint) => draft.set('tint', tint)}
+                  readable={look.readable}
+                />
+              </>
+            ) : null}
+            {tab === 'preview' && !wide ? (
+              <>
+                <GuestPreview
+                  accent={isHex(f.accent) ? f.accent : null}
+                  name={f.name}
+                  tagline={f.tagline}
+                  description={f.description}
+                  hoursText={v ? describeHours(v.hours, new Date()).text : undefined}
+                  locationLabel={v?.location.label}
+                  bannerUrl={banner?.url ?? v?.banner?.url}
+                  buttons={f.order.map((key) => ({ key, label: t(`ownerBranding.button.${key}`) }))}
+                  buttonInk={look.ink}
+                />
+              </>
+            ) : null}
+          </View>
+          {wide ? (
+            <View style={styles.side}>
+              <GuestPreview
+                accent={isHex(f.accent) ? f.accent : null}
+                name={f.name}
+                tagline={f.tagline}
+                description={f.description}
+                hoursText={v ? describeHours(v.hours, new Date()).text : undefined}
+                locationLabel={v?.location.label}
+                bannerUrl={banner?.url ?? v?.banner?.url}
+                buttons={f.order.map((key) => ({ key, label: t(`ownerBranding.button.${key}`) }))}
+                buttonInk={look.ink}
+              />
+            </View>
+          ) : null}
+        </View>
       </DeskWait>
     </OwnerPage>
   );
 }
+
+const styles = StyleSheet.create({
+  stack: { gap: tokens.space[5] },
+  split: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.space[6] },
+  editor: { flex: 1, gap: tokens.space[5] },
+  side: { width: 380 },
+});
