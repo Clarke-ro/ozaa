@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Smartphone } from 'lucide-react-native';
@@ -7,12 +8,14 @@ import type { ScannerDevice } from '@/lib/api/types';
 import { useOwnerSession } from '@/features/session';
 import { Button } from '@/ui/Button';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
-import { ConfirmDialog, EmptyCard, LinkRow, Section, toast } from '../../kit';
+import { tokens } from '@/theme/tokens';
+import { ConfirmDialog, EmptyCard, SectionLabel, toast } from '../../kit';
+import { DeviceCard } from './DeviceCard';
 import { PairSheet } from './PairSheet';
 
-/** Phones that can scan loyalty cards. Tap one to remove it. */
+/** Phones and tablets that can scan loyalty cards, each with when it was last used. */
 export function DevicesScreen() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const client = useQueryClient();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const key = ['owner-devices', venueId];
@@ -22,6 +25,12 @@ export function DevicesScreen() {
     enabled: Boolean(venueId),
   });
   const [pairing, setPairing] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    // "Active now" and "seen 5 minutes ago" only need to move once a minute.
+    const id = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(id);
+  }, []);
   const [removing, setRemoving] = useState<ScannerDevice | null>(null);
 
   const revoke = useMutation({
@@ -35,8 +44,6 @@ export function DevicesScreen() {
   });
 
   const items = devices.data?.items ?? [];
-  const seen = (iso: string) =>
-    new Date(iso).toLocaleString(i18n.language, { dateStyle: 'medium', timeStyle: 'short' });
 
   return (
     <OwnerPage
@@ -64,20 +71,12 @@ export function DevicesScreen() {
             onAction={() => setPairing(true)}
           />
         ) : (
-          <Section
-            title={t('ownerDevices.list', { count: items.length })}
-            note={t('ownerDevices.listNote')}
-          >
+          <View style={styles.stack}>
+            <SectionLabel title={t('ownerDevices.list', { count: items.length })} caps />
             {items.map((d) => (
-              <LinkRow
-                key={d.id}
-                icon={Smartphone}
-                label={d.name}
-                value={t('ownerDevices.lastSeen', { when: seen(d.lastSeen) })}
-                onPress={() => setRemoving(d)}
-              />
+              <DeviceCard key={d.id} device={d} now={now} onRemove={() => setRemoving(d)} />
             ))}
-          </Section>
+          </View>
         )}
       </DeskWait>
       {pairing ? <PairSheet venueId={venueId} onClose={() => setPairing(false)} /> : null}
@@ -94,3 +93,5 @@ export function DevicesScreen() {
     </OwnerPage>
   );
 }
+
+const styles = StyleSheet.create({ stack: { gap: tokens.space[3] } });

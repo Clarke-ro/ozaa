@@ -1295,7 +1295,9 @@
     "removed": "Phone removed",
     "removeTitle": "Remove {{name}}?",
     "removeBody": "It will stop scanning straight away. You can pair it again later.",
-    "remove": "Remove"
+    "remove": "Remove",
+    "paired": "Paired {{date}}",
+    "activeNow": "Active now"
   },
   "ownerSetup": {
     "progress": "Step {{step}} of {{total}}",
