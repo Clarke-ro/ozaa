@@ -17,6 +17,7 @@ import { ServiceGrid } from './ServiceGrid';
 import { VenueIntro } from './VenueIntro';
 import { useVenue } from './useVenue';
 import { ErrorState, LoadingState } from '@/ui/states';
+import { OfflineNote } from '@/ui/OfflineNote';
 import { useGuestSession } from '@/features/session';
 
 export function HomeScreen({ slug }: { slug: string }) {
@@ -106,6 +107,7 @@ export function HomeScreen({ slug }: { slug: string }) {
           ) : null}
           <VenueIntro venue={place} />
         </View>
+        <OfflineNote savedAt={venue.dataUpdatedAt} />
         <ServiceGrid
           slug={slug}
           services={place.services}

@@ -591,6 +591,8 @@
   "errors": {
     "generic": "Something went wrong. Try again.",
     "offline": "You're offline. Showing what we saved.",
+    "offlineAgo_one": "You're offline. Showing what we saved 1 minute ago.",
+    "offlineAgo_other": "You're offline. Showing what we saved {{count}} minutes ago.",
     "venueNotFound": "We can't find that restaurant. Scan the code again.",
     "tryAgain": "Try again",
     "loading": "Loading"

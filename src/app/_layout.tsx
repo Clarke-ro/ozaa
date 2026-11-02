@@ -13,6 +13,7 @@ import { I18nextProvider, useTranslation } from 'react-i18next';
 import i18n from '@/i18n';
 import { applyTextDirection, textDirection } from '@/i18n/direction';
 import { applySavedLanguage } from '@/features/venue';
+import { pausePollingInBackground } from '@/lib/queryLifecycle';
 import { useAppFonts } from '@/theme/fonts';
 import { ThemeProvider, ozaaTheme } from '@/ui/theme';
 
@@ -23,6 +24,7 @@ const queryClient = new QueryClient({
 });
 
 const persister = createAsyncStoragePersister({ storage: AsyncStorage });
+pausePollingInBackground();
 
 function DirectionFrame({ children }: { children: ReactNode }) {
   const { i18n: current } = useTranslation();

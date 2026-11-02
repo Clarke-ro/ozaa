@@ -39,6 +39,7 @@ export function DishCard({
             <VenueImage
               url={item.photo.url}
               alt={item.photo.alt ?? item.name.en}
+              blurhash={item.photo.blurhash}
               style={[StyleSheet.absoluteFill, off && styles.dim]}
             />
           ) : (

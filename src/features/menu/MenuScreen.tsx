@@ -1,31 +1,27 @@
 import { useState } from 'react';
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  View,
-  useWindowDimensions,
-} from 'react-native';
+import { Pressable, StyleSheet, TextInput, View, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
+import { FlashList } from '@shopify/flash-list';
 import { Search, SlidersHorizontal, X } from 'lucide-react-native';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
 import { pesewas } from '@/lib/brand';
 import { hapticImpactLight } from '@/lib/haptics';
-import { DEFAULT_CURRENCY, formatMoney } from '@/lib/money';
-import { cartCount, cartEstimate, useCart } from '@/features/cart';
+import { DEFAULT_CURRENCY } from '@/lib/money';
+import { useCart } from '@/features/cart';
 import { useVenue } from '@/features/venue';
 import { PageHeader } from '@/ui/PageHeader';
 import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { ErrorState, LoadingState } from '@/ui/states';
+import { OfflineNote } from '@/ui/OfflineNote';
 import { useTheme } from '@/ui/theme';
 import { DietFilterSheet } from './DietFilterSheet';
 import { DishCard } from './DishCard';
 import { canQuickAdd, searchItems } from './dishLogic';
 import { filterMenuItems, type DietTag } from './filterMenu';
+import { MenuCartBar } from './MenuCartBar';
 import { SectionRail } from './SectionRail';
 
 type Kind = 'food' | 'drinks';
@@ -38,7 +34,6 @@ export function MenuScreen({ slug }: { slug: string }) {
   const { width } = useWindowDimensions();
   const menu = useQuery({ queryKey: ['menu', slug], queryFn: () => api.getMenu(slug) });
   const venue = useVenue(slug);
-  const lines = useCart((state) => state.lines);
   const add = useCart((state) => state.add);
   const [kind, setKind] = useState<Kind>('food');
   const [sectionId, setSectionId] = useState<string | null>(null);
@@ -123,100 +118,97 @@ export function MenuScreen({ slug }: { slug: string }) {
           </View>
         }
       />
-      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        {searching ? (
-          <View style={[styles.search, { borderColor: theme.line, backgroundColor: theme.wash }]}>
-            <Search size={18} color={theme.muted} />
-            <TextInput
-              autoFocus
-              value={query}
-              onChangeText={setQuery}
-              placeholder={t('menu.searchHint')}
-              placeholderTextColor={theme.meta}
-              accessibilityLabel={t('menu.search')}
-              returnKeyType="search"
-              style={[styles.searchInput, { color: theme.text }]}
-            />
-          </View>
-        ) : null}
-        <View style={[styles.kinds, { backgroundColor: theme.wash }]} accessibilityRole="tablist">
-          {(['food', 'drinks'] as const).map((tab) => {
-            const on = kind === tab;
-            return (
-              <Pressable
-                key={tab}
-                accessibilityRole="tab"
-                accessibilityState={{ selected: on }}
-                aria-selected={on}
-                onPress={() => {
-                  setKind(tab);
-                  setSectionId(null);
-                }}
-                style={[styles.kind, on && { backgroundColor: theme.white }]}
+      {/* FlashList keeps long sections cheap on 2–3 GB phones; the controls ride along as its header. */}
+      <FlashList
+        data={shown.length === 0 ? [] : rows}
+        keyExtractor={(row) => row.map((item) => item.id).join('|')}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={styles.scroll}
+        ItemSeparatorComponent={RowGap}
+        ListHeaderComponent={
+          <View style={styles.header}>
+            <OfflineNote savedAt={menu.dataUpdatedAt} />
+            {searching ? (
+              <View
+                style={[styles.search, { borderColor: theme.line, backgroundColor: theme.wash }]}
               >
-                <Text variant="body-strong" style={{ color: on ? theme.text : theme.muted }}>
-                  {t(`menu.${tab}`)}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-        {query.trim() ? null : (
-          <SectionRail
-            sections={sections}
-            items={menu.data.items}
-            active={active}
-            onPick={setSectionId}
-          />
-        )}
-        <Text variant="title" style={styles.heading}>
-          {query.trim()
-            ? t('menu.results', { count: shown.length })
-            : sections.find((c) => c.id === active)?.name.en}
-        </Text>
-        {shown.length === 0 ? (
+                <Search size={18} color={theme.muted} />
+                <TextInput
+                  autoFocus
+                  value={query}
+                  onChangeText={setQuery}
+                  placeholder={t('menu.searchHint')}
+                  placeholderTextColor={theme.meta}
+                  accessibilityLabel={t('menu.search')}
+                  returnKeyType="search"
+                  style={[styles.searchInput, { color: theme.text }]}
+                />
+              </View>
+            ) : null}
+            <View
+              style={[styles.kinds, { backgroundColor: theme.wash }]}
+              accessibilityRole="tablist"
+            >
+              {(['food', 'drinks'] as const).map((tab) => {
+                const on = kind === tab;
+                return (
+                  <Pressable
+                    key={tab}
+                    accessibilityRole="tab"
+                    accessibilityState={{ selected: on }}
+                    aria-selected={on}
+                    onPress={() => {
+                      setKind(tab);
+                      setSectionId(null);
+                    }}
+                    style={[styles.kind, on && { backgroundColor: theme.white }]}
+                  >
+                    <Text variant="body-strong" style={{ color: on ? theme.text : theme.muted }}>
+                      {t(`menu.${tab}`)}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            {query.trim() ? null : (
+              <SectionRail
+                sections={sections}
+                items={menu.data.items}
+                active={active}
+                onPick={setSectionId}
+              />
+            )}
+            <Text variant="title" style={styles.heading}>
+              {query.trim()
+                ? t('menu.results', { count: shown.length })
+                : sections.find((c) => c.id === active)?.name.en}
+            </Text>
+          </View>
+        }
+        ListEmptyComponent={
           <Text variant="body" style={[styles.empty, { color: theme.muted }]}>
             {query.trim() || diets.length > 0 ? t('menu.noMatch') : t('menu.empty')}
           </Text>
-        ) : (
-          <View style={styles.grid}>
-            {rows.map((row, r) => (
-              <View key={r} style={styles.gridRow}>
-                {row.map((item) => (
-                  <DishCard
-                    key={item.id}
-                    item={item}
-                    currency={currency}
-                    onOpen={() => router.push(`/${slug}/menu/${item.id}`)}
-                    onAdd={canQuickAdd(item) ? () => quickAdd(item) : null}
-                  />
-                ))}
-                {/* Keep the last row's cards the same width as the rows above. */}
-                {Array.from({ length: columns - row.length }, (_, i) => (
-                  <View key={`gap-${i}`} style={styles.filler} />
-                ))}
-              </View>
+        }
+        renderItem={({ item: row }) => (
+          <View style={styles.gridRow}>
+            {row.map((item) => (
+              <DishCard
+                key={item.id}
+                item={item}
+                currency={currency}
+                onOpen={() => router.push(`/${slug}/menu/${item.id}`)}
+                onAdd={canQuickAdd(item) ? () => quickAdd(item) : null}
+              />
+            ))}
+            {/* Keep the last row's cards the same width as the rows above. */}
+            {Array.from({ length: columns - row.length }, (_, i) => (
+              <View key={`gap-${i}`} style={styles.filler} />
             ))}
           </View>
         )}
-      </ScrollView>
-      {cartCount(lines) > 0 ? (
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => router.push(`/${slug}/order`)}
-          style={({ pressed }) => [
-            styles.bar,
-            { backgroundColor: pressed ? theme.pressed : theme.fill },
-          ]}
-        >
-          <Text variant="button" style={{ color: theme.onFill }}>
-            {cartCount(lines)} {t('menu.viewOrder')}
-          </Text>
-          <Text variant="button" style={{ color: theme.onFill, fontVariant: ['tabular-nums'] }}>
-            {formatMoney(cartEstimate(lines), currency)}
-          </Text>
-        </Pressable>
-      ) : null}
+      />
+      <MenuCartBar slug={slug} currency={currency} />
       {filtersOpen ? (
         <DietFilterSheet
           selected={diets}
@@ -250,7 +242,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   countText: { fontSize: 11, lineHeight: 13 },
-  scroll: { paddingBottom: 120, gap: 16, paddingTop: 12 },
+  scroll: { paddingBottom: 120, paddingTop: 12 },
+  header: { gap: 16, paddingBottom: 16 },
+  rowGap: { height: 12 },
   search: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -272,19 +266,10 @@ const styles = StyleSheet.create({
   },
   heading: { paddingHorizontal: 20 },
   empty: { paddingHorizontal: 20, paddingTop: 12, textAlign: 'center' },
-  grid: { paddingHorizontal: 16, gap: 12 },
-  gridRow: { flexDirection: 'row', gap: 12 },
+  gridRow: { flexDirection: 'row', gap: 12, paddingHorizontal: 16 },
   filler: { flex: 1 },
-  bar: {
-    position: 'absolute',
-    left: 20,
-    right: 20,
-    bottom: 16,
-    height: 52,
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
 });
+
+function RowGap() {
+  return <View style={styles.rowGap} />;
+}

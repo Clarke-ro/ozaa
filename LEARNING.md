@@ -4,6 +4,32 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-02 · Slow networks: offline note, quiet polling, lighter menu
+
+**What we built**
+When a guest loses signal, the home and menu screens keep showing the saved menu with a quiet line: "You're offline. Showing what we saved 3 minutes ago." On a phone, the app stops checking the server while it sits in a pocket. The menu list got cheaper to redraw.
+
+**How it works**
+```
+signal drops → React Query's onlineManager flips to offline → <OfflineNote> appears
+app to background → AppState "background" → focusManager pauses polling
+tap "+" on a dish → only <MenuCartBar> re-renders (it reads the cart), not every dish card
+```
+
+**Files to look at**
+- `src/ui/OfflineNote.tsx`: the offline line and the `useOnline()` hook
+- `src/lib/queryLifecycle.ts`: pausing polling in the background
+- `src/features/menu/MenuCartBar.tsx`: the bar that owns the cart subscription
+- `src/features/menu/MenuScreen.tsx`: the menu on FlashList
+
+**New idea: who subscribes decides who re-renders**
+A component re-renders when data it *reads* changes. The menu screen used to read the cart, so adding one dish redrew every card. Moving that read into the small bar means only the bar redraws. On a cheap phone that is the difference between smooth and stuttery.
+
+**Try it yourself**
+Open the menu in Chrome, open DevTools → Network, and switch "No throttling" to "Offline". Watch the note appear while the dishes stay. Switch back and it disappears.
+
+---
+
 ## 2026-11-02 · Owner app: dark mode, real navigation and honest numbers
 
 **What we built**
