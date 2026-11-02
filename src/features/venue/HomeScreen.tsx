@@ -15,6 +15,7 @@ import { useVenue } from './useVenue';
 import { ErrorState, LoadingState } from '@/ui/states';
 import { OfflineNote } from '@/ui/OfflineNote';
 import { useGuestSession } from '@/features/session';
+import { useGuestNotes } from '@/features/notices';
 
 export function HomeScreen({ slug }: { slug: string }) {
   const { t, i18n } = useTranslation();
@@ -25,6 +26,7 @@ export function HomeScreen({ slug }: { slug: string }) {
   const language = languageByCode(i18n.language);
   const router = useRouter();
   const venue = useVenue(slug);
+  const notices = useGuestNotes(slug);
   const tableCode = useGuestSession((state) => (state.slug === slug ? state.tableCode : null));
 
   if (venue.isLoading) return <LoadingState />;
@@ -48,6 +50,8 @@ export function HomeScreen({ slug }: { slug: string }) {
             });
           }}
           onLanguage={() => setLanguageOpen(true)}
+          onNotices={() => router.push(`/${slug}/notifications`)}
+          notices={notices.unseen}
           onOpen={(id) => router.push(serviceHref(slug, id))}
           bannerNote={
             copied ? (

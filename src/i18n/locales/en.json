@@ -85,12 +85,6 @@
       "body": "Hours, map, phone and WhatsApp"
     }
   },
-  "orderToast": {
-    "ready": "Order #{{number}} is ready",
-    "readyDetail": "On its way to table {{table}}",
-    "openHint": "Opens your order status",
-    "close": "Close"
-  },
   "orderBar": {
     "title": "Order #{{number}} · {{status}}",
     "meta": "About {{minutes}} min · {{count}} items",
@@ -1478,5 +1472,20 @@
     "hoursAgo_other": "{{count}} hours ago",
     "daysAgo_one": "yesterday",
     "daysAgo_other": "{{count}} days ago"
+  },
+  "notices": {
+    "title": "Notifications",
+    "empty": "Nothing yet",
+    "emptyBody": "Updates about your order and waiter calls show here.",
+    "bellA11y_one": "Notifications, 1 new",
+    "bellA11y_other": "Notifications, {{count}} new",
+    "kind": {
+      "order_sent": "Order #{{number}} went to the kitchen",
+      "order_cooking": "Order #{{number}} is being prepared",
+      "order_ready": "Order #{{number}} is ready",
+      "order_served": "Order #{{number}} was served. Enjoy!",
+      "call_sent": "You asked for: {{reason}}",
+      "call_coming": "{{name}} is on the way with: {{reason}}"
+    }
   }
 }

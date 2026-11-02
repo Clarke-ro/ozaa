@@ -13,9 +13,8 @@ import { PageHeader } from '@/ui/PageHeader';
 import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
-import { useGuestSession } from '@/features/session';
+import { useGuestSession, useMyCalls } from '@/features/session';
 import { useVenue } from '@/features/venue';
-import { useMyCalls } from './callStore';
 import { CallStatusCard } from './CallStatusCard';
 import { REASON_ICON, REASONS } from './reasonIcon';
 

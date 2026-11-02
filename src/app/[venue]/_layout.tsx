@@ -2,7 +2,6 @@ import { Stack, useLocalSearchParams } from 'expo-router';
 import { z } from 'zod/mini';
 import { themeFromAccent, ThemeProvider } from '@/ui/theme';
 import { useVenue } from '@/features/venue';
-import { OrderToast } from '@/features/orders';
 import type { FontPair } from '@/ui/theme';
 
 const slugSchema = z.string().check(z.regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/));
@@ -20,7 +19,6 @@ export default function VenueLayout() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="order" options={{ presentation: 'transparentModal' }} />
       </Stack>
-      {slug ? <OrderToast slug={slug} /> : null}
     </ThemeProvider>
   );
 }

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { Globe, Share2, Utensils } from 'lucide-react-native';
+import { Bell, Globe, Share2, Utensils } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import type { VenuePublic } from '@/lib/api/types';
 import { tokens } from '@/theme/tokens';
@@ -26,6 +26,8 @@ export function VenueHomeBody({
   languageLabel,
   onShare,
   onLanguage,
+  onNotices,
+  notices = 0,
   onOpen,
   bannerNote,
   children,
@@ -36,6 +38,9 @@ export function VenueHomeBody({
   languageLabel: string;
   onShare?: () => void;
   onLanguage?: () => void;
+  /** Opens the guest's notifications; the bell shows `notices` new ones. */
+  onNotices?: () => void;
+  notices?: number;
   onOpen: (serviceId: string) => void;
   /** A small note over the banner, such as "Link copied". */
   bannerNote?: ReactNode;
@@ -61,6 +66,25 @@ export function VenueHomeBody({
         >
           <Share2 color={theme.black} size={18} strokeWidth={2} />
         </Pressable>
+        {onNotices ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('notices.bellA11y', { count: notices })}
+            onPress={onNotices}
+            style={[fab, styles.bell]}
+          >
+            <Bell color={theme.black} size={18} strokeWidth={2} />
+            {notices > 0 ? (
+              <View
+                style={[styles.badge, { backgroundColor: theme.fill, borderColor: theme.surface }]}
+              >
+                <Text variant="caption" style={[styles.badgeText, { color: theme.onFill }]}>
+                  {notices > 9 ? '9+' : notices}
+                </Text>
+              </View>
+            ) : null}
+          </Pressable>
+        ) : null}
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={t('home.chooseLanguage')}
@@ -120,6 +144,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   share: { start: tokens.space[4], width: 40 },
+  // Next to Share: 40 wide plus a small gap.
+  bell: { start: tokens.space[4] + 40 + tokens.space[2], width: 40 },
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    minWidth: 18,
+    height: 18,
+    paddingHorizontal: tokens.space[1],
+    borderRadius: tokens.radius.full,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeText: {
+    fontSize: tokens.type.caption.size - 3,
+    lineHeight: 12,
+    fontFamily: fontFamily.strong,
+  },
   lang: {
     end: tokens.space[4],
     flexDirection: 'row',
