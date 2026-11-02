@@ -1,6 +1,7 @@
-import { StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { MessageSquareText } from 'lucide-react-native';
+import { ChevronDown, ChevronUp, MessageSquareText } from 'lucide-react-native';
 import type { Order } from '@/lib/api/types';
 import { pesewas } from '@/lib/brand';
 import { formatMoney } from '@/lib/money';
@@ -29,8 +30,8 @@ const PAID_TONE: Record<Order['paymentStatus'], PillTone> = {
 };
 
 /**
- * One kitchen ticket. Read top to bottom the way the pass does: where it goes and how long it
- * has waited, what to cook (with add-ons and notes), then the money and the one next step.
+ * One kitchen ticket. Collapsed it is one row: where it goes, how much, how long it has waited.
+ * Tap to open what to cook (add-ons and notes), the payment and the one next step.
  */
 export function OrderCard({
   order,
@@ -50,6 +51,8 @@ export function OrderCard({
 }) {
   const theme = useTheme();
   const { t, i18n } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const hasNote = order.lines.some((line) => Boolean(line.note));
   const live = order.status !== 'served' && order.status !== 'cancelled';
   const age = ticketAge(order.createdAt, now);
   const time = new Date(order.createdAt).toLocaleTimeString(i18n.language, {
@@ -69,83 +72,106 @@ export function OrderCard({
 
   return (
     <View style={[styles.card, { backgroundColor: theme.surface, borderColor: edge }]}>
-      <View style={styles.head}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ expanded: open }}
+        accessibilityHint={t(open ? 'ownerOrders.hideDetails' : 'ownerOrders.showDetails')}
+        onPress={() => setOpen((v) => !v)}
+        style={styles.head}
+      >
         <CodeTile
-          code={order.tableCode ?? 'TA'}
-          size={52}
+          code={order.tableCode ?? t('ownerOrders.takeawayCode')}
+          size={44}
           tone={order.status === 'received' ? 'tint' : 'wash'}
         />
         <View style={styles.flex}>
-          <Text variant="title" numberOfLines={1}>
-            {where}
-          </Text>
-          <Text variant="caption" style={{ color: theme.muted }}>
+          <View style={styles.titleRow}>
+            <Text variant="body-strong" numberOfLines={1} style={styles.shrink}>
+              {where}
+            </Text>
+            {hasNote ? <MessageSquareText size={14} color={theme.muted} /> : null}
+          </View>
+          <Text variant="caption" numberOfLines={1} style={{ color: theme.muted }}>
             #{order.number} · {time} · {t('ownerOrders.items', { count: items })}
           </Text>
         </View>
-        {live ? (
-          <View accessibilityLabel={t('ownerOrders.waitedLabel', { count: age.minutes })}>
+        <View style={styles.side}>
+          {live ? (
+            <View accessibilityLabel={t('ownerOrders.waitedLabel', { count: age.minutes })}>
+              <StatusPill
+                label={
+                  age.minutes === 0
+                    ? t('ownerOrders.justNow')
+                    : age.minutes < 60
+                      ? t('ownerOrders.waited', { count: age.minutes })
+                      : t('ownerOrders.waitedHours', { count: Math.floor(age.minutes / 60) })
+                }
+                tone={AGE_TONE[age.tone]}
+                boxed
+              />
+            </View>
+          ) : (
             <StatusPill
-              label={
-                age.minutes === 0
-                  ? t('ownerOrders.justNow')
-                  : age.minutes < 60
-                    ? t('ownerOrders.waited', { count: age.minutes })
-                    : t('ownerOrders.waitedHours', { count: Math.floor(age.minutes / 60) })
-              }
-              tone={AGE_TONE[age.tone]}
+              label={t(`statusLabel.${order.status}`)}
+              tone={STATUS_TONE[order.status]}
               boxed
             />
-          </View>
+          )}
+          <Text variant="body-strong" style={styles.num}>
+            {formatMoney(pesewas(order.totalPesewas), currency)}
+          </Text>
+        </View>
+        {open ? (
+          <ChevronUp size={20} color={theme.meta} />
         ) : (
-          <StatusPill
-            label={t(`statusLabel.${order.status}`)}
-            tone={STATUS_TONE[order.status]}
-            boxed
-          />
+          <ChevronDown size={20} color={theme.meta} />
         )}
-      </View>
+      </Pressable>
 
-      <View style={[styles.lines, { borderColor: theme.line }]}>
-        {order.lines.map((line) => (
-          <View key={line.id} style={styles.line}>
-            <View style={[styles.qty, { backgroundColor: theme.wash }]}>
-              <Text variant="body-strong" style={styles.num}>
-                {line.quantity}
-              </Text>
-            </View>
-            <View style={styles.flex}>
-              <Text variant="body-strong">{line.name}</Text>
-              {line.modifiers?.length ? (
-                <Text variant="caption" style={{ color: theme.muted }}>
-                  + {line.modifiers.map((m) => m.name).join(', ')}
-                </Text>
-              ) : null}
-              {line.note ? (
-                <View style={[styles.note, { backgroundColor: theme.warningTint }]}>
-                  <MessageSquareText size={14} color={theme.text} />
-                  <Text variant="caption" style={styles.flex}>
-                    {line.note}
+      {open ? (
+        <>
+          <View style={[styles.lines, { borderColor: theme.line }]}>
+            {order.lines.map((line) => (
+              <View key={line.id} style={styles.line}>
+                <View style={[styles.qty, { backgroundColor: theme.wash }]}>
+                  <Text variant="body-strong" style={styles.num}>
+                    {line.quantity}
                   </Text>
                 </View>
-              ) : null}
-            </View>
+                <View style={styles.flex}>
+                  <Text variant="body-strong">{line.name}</Text>
+                  {line.modifiers?.length ? (
+                    <Text variant="caption" style={{ color: theme.muted }}>
+                      + {line.modifiers.map((m) => m.name).join(', ')}
+                    </Text>
+                  ) : null}
+                  {line.note ? (
+                    <View style={[styles.note, { backgroundColor: theme.warningTint }]}>
+                      <MessageSquareText size={14} color={theme.text} />
+                      <Text variant="caption" style={styles.flex}>
+                        {line.note}
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
+              </View>
+            ))}
           </View>
-        ))}
-      </View>
 
-      <View style={styles.foot}>
-        <Text variant="title" style={styles.num}>
-          {formatMoney(pesewas(order.totalPesewas), currency)}
-        </Text>
-        <StatusPill
-          label={t(`ownerOrders.paid.${order.paymentStatus}`)}
-          tone={PAID_TONE[order.paymentStatus]}
-          icon={false}
-        />
-      </View>
-      {next ? (
-        <Button label={next} size="md" tone="secondary" loading={busy} onPress={onNext} />
+          <View style={styles.foot}>
+            <Text variant="title" style={styles.num}>
+              {formatMoney(pesewas(order.totalPesewas), currency)}
+            </Text>
+            <StatusPill
+              label={t(`ownerOrders.paid.${order.paymentStatus}`)}
+              tone={PAID_TONE[order.paymentStatus]}
+              icon={false}
+            />
+          </View>
+          {next ? (
+            <Button label={next} size="md" tone="secondary" loading={busy} onPress={onNext} />
+          ) : null}
+        </>
       ) : null}
     </View>
   );
@@ -154,12 +180,15 @@ export function OrderCard({
 const styles = StyleSheet.create({
   card: {
     gap: tokens.space[4],
-    padding: tokens.space[4],
-    borderWidth: 1.5,
+    padding: tokens.space[3],
+    borderWidth: 1,
     borderRadius: tokens.radius.xl - 4,
     borderCurve: 'continuous',
   },
-  head: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
+  head: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3], minHeight: 48 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[1] },
+  shrink: { flexShrink: 1 },
+  side: { alignItems: 'flex-end', gap: tokens.space[1] },
   flex: { flex: 1 },
   lines: {
     gap: tokens.space[3],

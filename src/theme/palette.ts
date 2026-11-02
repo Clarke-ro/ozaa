@@ -4,6 +4,8 @@ export type Scheme = 'light' | 'dark';
 
 type Neutrals = {
   bg: string;
+  /** Owner page background: one step off the card surface so cards stand out. */
+  canvas: string;
   surface: string;
   wash: string;
   line: string;
@@ -32,6 +34,7 @@ const c = tokens.color;
 export const NEUTRALS: Record<Scheme, Neutrals> = {
   light: {
     bg: c.white.hex,
+    canvas: c.canvas.hex,
     surface: c.white.hex,
     wash: c.grey100.hex,
     line: c.grey200.hex,
@@ -52,6 +55,7 @@ export const NEUTRALS: Record<Scheme, Neutrals> = {
   dark: {
     // Not pure black, so cards can sit one step above the page.
     bg: '#0E0E10',
+    canvas: '#0E0E10',
     surface: '#1A1A1D',
     wash: '#26262A',
     line: '#3A3A3F',

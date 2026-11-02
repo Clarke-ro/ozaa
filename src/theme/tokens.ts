@@ -40,6 +40,12 @@ export const tokens = {
       "contrastOnWhite": 1.1,
       "contrastOnBlack": 19.11
     },
+    "canvas": {
+      "hex": "#F1F1F3",
+      "use": "Owner app page background in light mode, so white cards stand out. Guest pages stay white.",
+      "contrastOnWhite": 1.13,
+      "contrastOnBlack": 18.67
+    },
     "brand": {
       "hex": "#FC5205",
       "use": "Logo circle, app icon, large orange surfaces, focus rings. Not behind white text smaller than 24 px.",

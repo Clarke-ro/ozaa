@@ -64,7 +64,7 @@ export function OwnerPage({
               paddingTop: insets.top + tokens.space[2],
               paddingHorizontal: gutter,
               borderBottomColor: theme.line,
-              backgroundColor: theme.bg,
+              backgroundColor: theme.surface,
             },
           ]}
         >

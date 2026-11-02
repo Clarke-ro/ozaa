@@ -88,6 +88,13 @@ export function themeFromAccent(
 export const ozaaTheme = themeFromAccent(null, 'ozaa');
 export const ozaaDarkTheme = themeFromAccent(null, 'ozaa', 'dark');
 
+/**
+ * The owner app: same Ozaa colours, but pages sit on the canvas grey so white cards stand out.
+ * Guest pages keep a white background (brand.md section 2).
+ */
+export const ozaaOwnerTheme: Theme = { ...ozaaTheme, bg: NEUTRALS.light.canvas };
+export const ozaaOwnerDarkTheme: Theme = { ...ozaaDarkTheme, bg: NEUTRALS.dark.canvas };
+
 const ThemeContext = createContext<Theme>(ozaaTheme);
 
 export function ThemeProvider({ theme, children }: { theme: Theme; children: ReactNode }) {

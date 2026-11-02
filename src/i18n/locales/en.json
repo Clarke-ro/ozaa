@@ -1114,6 +1114,9 @@
     },
     "table": "Table {{code}}",
     "takeaway": "Takeaway",
+    "takeawayCode": "TA",
+    "showDetails": "Shows the dishes, payment and next step",
+    "hideDetails": "Hides the ticket details",
     "paid": {
       "unpaid": "Not paid",
       "part_paid": "Part paid",

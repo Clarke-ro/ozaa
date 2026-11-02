@@ -55,7 +55,7 @@ function TabBar() {
         styles.bar,
         {
           borderTopColor: theme.line,
-          backgroundColor: theme.bg,
+          backgroundColor: theme.surface,
           paddingBottom: Math.max(insets.bottom, tokens.space[2]),
         },
       ]}
@@ -91,7 +91,7 @@ function Sidebar() {
   const groups = [{ group: null, items: tabsFor(role) }, ...moreGroups(role)];
   return (
     <ScrollView
-      style={[styles.side, { borderRightColor: theme.line, backgroundColor: theme.bg }]}
+      style={[styles.side, { borderRightColor: theme.line, backgroundColor: theme.surface }]}
       contentContainerStyle={{
         paddingTop: insets.top + tokens.space[4],
         paddingBottom: tokens.space[8],
