@@ -1052,7 +1052,7 @@
     "addLocation": "Add location",
     "editLocation": "Edit location",
     "active": "In use",
-    "use": "Use",
+    "use": "Switch to this",
     "switched": "Now showing {{name}}",
     "added": "Location added",
     "locationName": "Name",
@@ -1066,7 +1066,8 @@
     "phone": "Phone",
     "email": "Email",
     "separate": "Separate business",
-    "separateHint": "Its own name on receipts and its own payouts."
+    "separateHint": "Its own name on receipts and its own payouts.",
+    "editA11y": "Edit {{name}}"
   },
   "ownerServices": {
     "wifi": "Wi-Fi",

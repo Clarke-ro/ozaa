@@ -3,22 +3,18 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Building2, CircleCheck, MapPin } from 'lucide-react-native';
 import { api } from '@/lib/api';
 import type { Location } from '@/lib/api/types';
 import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
-import { Button } from '@/ui/Button';
-import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
 import { useDraft } from '../../data/useDraft';
-import { InputRow, LinkRow, SaveBar, Section, toast } from '../../kit';
+import { InputRow, SaveBar, Section, SectionLabel, toast } from '../../kit';
+import { AddLocationCard, LocationCard } from './LocationCard';
 import { LocationEditor } from './LocationEditor';
 
 export function BusinessScreen() {
-  const theme = useTheme();
   const { t } = useTranslation();
   const client = useQueryClient();
   const venueId = useOwnerSession((state) => state.venueId);
@@ -69,51 +65,22 @@ export function BusinessScreen() {
           />
         </Section>
 
-        <Section
-          title={t('ownerBusiness.locations', { count: locations.length })}
-          action={
-            <Button
-              label={t('ownerBusiness.addLocation')}
-              tone="ghost"
-              size="md"
-              onPress={() => setEditing(null)}
+        <View style={styles.stack}>
+          <SectionLabel title={t('ownerBusiness.locations', { count: locations.length })} caps />
+          {locations.map((location) => (
+            <LocationCard
+              key={location.id}
+              location={location}
+              active={location.id === venueId}
+              onEdit={() => setEditing(location)}
+              onSwitch={() => {
+                switchVenue(location.id);
+                toast.success(t('ownerBusiness.switched', { name: location.name }));
+              }}
             />
-          }
-        >
-          {locations.map((location) => {
-            const active = location.id === venueId;
-            const place = [location.city, location.country].filter(Boolean).join(', ');
-            return (
-              <View key={location.id}>
-                <LinkRow
-                  icon={active ? CircleCheck : Building2}
-                  label={location.name}
-                  value={active ? t('ownerBusiness.active') : undefined}
-                  onPress={() => setEditing(location)}
-                />
-                <View style={styles.meta}>
-                  <View style={styles.place}>
-                    {place ? <MapPin size={14} color={theme.muted} /> : null}
-                    <Text variant="caption" style={{ color: theme.muted }}>
-                      {place}
-                    </Text>
-                  </View>
-                  {active ? null : (
-                    <Button
-                      label={t('ownerBusiness.use')}
-                      tone="secondary"
-                      size="md"
-                      onPress={() => {
-                        switchVenue(location.id);
-                        toast.success(t('ownerBusiness.switched', { name: location.name }));
-                      }}
-                    />
-                  )}
-                </View>
-              </View>
-            );
-          })}
-        </Section>
+          ))}
+          <AddLocationCard onPress={() => setEditing(null)} />
+        </View>
       </DeskWait>
       {editing !== undefined ? (
         <LocationEditor
@@ -126,15 +93,4 @@ export function BusinessScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  meta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: tokens.space[3],
-    paddingLeft: 52,
-    paddingRight: tokens.space[4],
-    paddingBottom: tokens.space[3],
-  },
-  place: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[1], flex: 1 },
-});
+const styles = StyleSheet.create({ stack: { gap: tokens.space[3] } });
