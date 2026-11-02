@@ -248,7 +248,17 @@
     "checking": "Still checking…",
     "offline": "You're offline. Connect to pay.",
     "tryAgain": "Try again",
-    "testNumber": "Test mode: any valid number works and nothing is charged."
+    "testNumber": "Test mode: any valid number works and nothing is charged.",
+    "noOrder": "Nothing to pay yet",
+    "noOrderBody": "Once you order from the menu, you can pay and split the bill here.",
+    "fewer": "Fewer people",
+    "more": "More people",
+    "pickItems": "Tick the dishes you're paying for.",
+    "linePaid": "Paid",
+    "yourShare": "Your share",
+    "tipLine": "Tip",
+    "due": "To pay",
+    "payNow": "Pay {{amount}}"
   },
   "loyalty": {
     "title": "Loyalty card",
