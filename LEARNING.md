@@ -4,6 +4,34 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-02 · Owner app: dark mode, real navigation and honest numbers
+
+**What we built**
+The owner app now follows the phone's light or dark setting, has a proper back button on every inner screen, and only shows numbers the server actually sent. The menu builder can reorder sections and add dish photos, and the Tables screen can share and download QR codes.
+
+**How it works**
+```
+phone setting (light/dark) → owner layout picks a theme → every screen reads colours by role
+                                                         (bg, surface, text, ink, error…)
+tab tap → clear the stack → open that tab's root      (no back button)
+row tap → push a screen on top                       (back button + swipe back)
+```
+
+**Files to look at**
+- `src/theme/palette.ts`: the light and dark colours, with contrast checked in `palette.test.ts`
+- `src/ui/makeStyles.ts`: styles that change with the theme
+- `src/features/owner/chrome/nav.ts`: which tabs each role gets, and what goes in More
+- `src/features/owner/desk/dashboardModel.ts`: turns server numbers into the dashboard, never inventing any
+- `src/features/owner/screens/menu/reorder.ts`: moving a menu section up or down
+
+**New idea: colours by role, not by value**
+Before, screens said "make this `#FFFFFF`". In dark mode that stays white and glares. Now screens say "make this the *surface*" and the theme decides what surface means: white in light mode, near-black in dark mode. One file changes; every screen follows.
+
+**Try it yourself**
+Open `src/theme/palette.ts` and change dark `surface` to `'#2A2A2E'`. Run `npm test`: the contrast test tells you if any text got too hard to read. Then switch your phone to dark mode and open Today.
+
+---
+
 ## 2026-11-01 · Completing the full owner suite and 13-section web landing page
 
 **What we built**
