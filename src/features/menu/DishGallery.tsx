@@ -98,7 +98,8 @@ const styles = StyleSheet.create({
   wrap: { alignSelf: 'stretch', gap: tokens.space[3], paddingBottom: tokens.space[3] },
   page: { alignItems: 'stretch' },
   full: { width: '100%' },
-  photo: { width: '100%', aspectRatio: RATIO },
+  // Rounded inside the soft panel on the dish page.
+  photo: { width: '100%', aspectRatio: RATIO, borderRadius: tokens.radius.lg },
   dots: { flexDirection: 'row', justifyContent: 'center', gap: tokens.space[2] },
   dot: { width: 8, height: 8, borderRadius: 4 },
   dotOn: { width: 22 },

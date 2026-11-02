@@ -15,6 +15,7 @@ import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
 import { VenueImage } from '@/ui/VenueImage';
 import { ErrorState, LoadingState } from '@/ui/states';
+import { tokens } from '@/theme/tokens';
 import { useTheme } from '@/ui/theme';
 import { addOnTotal, missingChoice, pickOption } from './dishLogic';
 import { DishGallery } from './DishGallery';
@@ -71,7 +72,9 @@ export function ItemScreen({ slug, itemId }: { slug: string; itemId: string }) {
   return (
     <View style={[styles.fill, { backgroundColor: theme.white }]}>
       <ScrollView contentContainerStyle={{ paddingBottom: 120 + insets.bottom }}>
-        <View style={[styles.hero, { backgroundColor: theme.wash }]}>
+        <View
+          style={[styles.hero, { backgroundColor: theme.wash, paddingTop: insets.top + HERO_TOP }]}
+        >
           <DishGallery
             photos={item.photo ? [item.photo, ...(item.gallery ?? [])] : []}
             name={item.name.en}
@@ -293,10 +296,20 @@ export function ItemScreen({ slug, itemId }: { slug: string; itemId: string }) {
   );
 }
 
+// Space for the back button above the photo.
+const HERO_TOP = 56;
+const MINI = 132;
+
 const styles = StyleSheet.create({
   fill: { flex: 1 },
-  // The photo runs edge to edge, under the status bar; the back button floats over it.
-  hero: { alignSelf: 'stretch' },
+  // The soft panel behind the photo, with rounded bottom corners (the original look).
+  hero: {
+    alignSelf: 'stretch',
+    paddingHorizontal: tokens.space[5],
+    paddingBottom: tokens.space[4],
+    borderBottomLeftRadius: tokens.radius.xl + 4,
+    borderBottomRightRadius: tokens.radius.xl + 4,
+  },
   body: { padding: 20, gap: 16 },
   titleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   flex: { flex: 1 },
@@ -350,8 +363,15 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter_400',
   },
   related: { gap: 12 },
-  mini: { width: 132, borderWidth: 1, borderRadius: 14, overflow: 'hidden', paddingBottom: 8 },
-  miniPhoto: { height: 96 },
+  mini: {
+    width: MINI,
+    borderWidth: 1,
+    borderRadius: tokens.radius.md + 2,
+    overflow: 'hidden',
+    paddingBottom: tokens.space[2],
+  },
+  // Square, like the dish photos themselves, so nothing is cut off.
+  miniPhoto: { width: MINI, aspectRatio: 1 },
   miniText: { paddingHorizontal: 8, paddingTop: 4 },
   back: {
     position: 'absolute',
