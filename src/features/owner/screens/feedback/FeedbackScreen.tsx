@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -23,6 +23,12 @@ export function FeedbackScreen() {
   const client = useQueryClient();
   const [tab, setTab] = useState<Tab>('new');
   const [search, setSearch] = useState('');
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    // "2 hours ago" only needs to move once a minute.
+    const id = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(id);
+  }, []);
   const query = search.trim();
 
   const list = useQuery({
@@ -120,6 +126,7 @@ export function FeedbackScreen() {
               <View style={styles.list}>
                 {items.map((item) => (
                   <FeedbackCard
+                    now={now}
                     key={item.id}
                     item={item}
                     busy={archive.isPending && archive.variables?.id === item.id}

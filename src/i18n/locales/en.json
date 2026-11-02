@@ -747,7 +747,7 @@
     "photo": "Photo from the guest",
     "call": "Call guest",
     "callName": "Call {{name}}",
-    "anonymous": "The guest did not leave a number.",
+    "anonymous": "No number left",
     "archive": "Archive",
     "restore": "Move to New",
     "archived": "Moved to Archived",
@@ -756,7 +756,8 @@
     "noMatchBody": "Try another word, or clear the search.",
     "noArchived": "Nothing archived",
     "empty": "No new notes",
-    "emptyBody": "When a guest leaves a private note from the table, it shows here."
+    "emptyBody": "When a guest leaves a private note from the table, it shows here.",
+    "anonymousName": "Anonymous guest"
   },
   "ownerMenu": {
     "lead": "What guests see when they scan. Changes show on the guest menu straight away.",

@@ -11,6 +11,7 @@ import {
   type LucideIcon,
 } from 'lucide-react-native';
 import type { FeedbackItem, FeedbackSentiment } from '@/lib/api/types';
+import { timeAgo } from '@/lib/time';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme, type Theme } from '@/ui/theme';
@@ -26,12 +27,18 @@ function moodLook(
   };
 }
 
+/**
+ * One private note from a guest: who and when, their stars, what they wrote, then quiet actions.
+ * The mood shows as an icon and a word (never colour alone), so the card itself stays calm.
+ */
 export function FeedbackCard({
   item,
+  now,
   onArchive,
   busy,
 }: {
   item: FeedbackItem;
+  now: number;
   onArchive: (archived: boolean) => void;
   busy: boolean;
 }) {
@@ -39,44 +46,41 @@ export function FeedbackCard({
   const { t, i18n } = useTranslation();
   const mood = moodLook(theme)[item.sentiment];
   const MoodIcon = mood.icon;
-  const when = new Date(item.createdAt).toLocaleString(i18n.language, {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  const who = item.contactName || t('ownerFeedback.anonymousName');
 
   return (
-    <View
-      style={[
-        styles.card,
-        {
-          borderColor: item.sentiment === 'negative' ? theme.error : theme.line,
-          backgroundColor: theme.surface,
-        },
-      ]}
-    >
+    <View style={[styles.card, { borderColor: theme.line, backgroundColor: theme.surface }]}>
       <View style={styles.head}>
-        <View style={[styles.mood, { backgroundColor: mood.bg }]}>
-          <MoodIcon size={16} color={mood.ink} />
-          <Text variant="caption" style={{ color: mood.ink, fontFamily: 'Inter_600' }}>
-            {t(`ownerFeedback.mood.${item.sentiment}`)}
+        <View
+          style={[styles.avatar, { backgroundColor: mood.bg }]}
+          accessible
+          accessibilityLabel={t(`ownerFeedback.mood.${item.sentiment}`)}
+        >
+          <MoodIcon size={20} color={mood.ink} />
+        </View>
+        <View style={styles.flex}>
+          <Text variant="body-strong" numberOfLines={1}>
+            {who}
+          </Text>
+          <Text variant="caption" style={{ color: theme.muted }}>
+            {t(`ownerFeedback.mood.${item.sentiment}`)} ·{' '}
+            {timeAgo(item.createdAt, now, i18n.language)}
           </Text>
         </View>
         <View
-          style={styles.score}
+          style={styles.stars}
           accessible
           accessibilityLabel={t('ownerFeedback.scoreA11y', { score: item.score })}
         >
-          <Star size={14} color={theme.muted} />
-          <Text variant="caption" style={{ color: theme.muted }}>
-            {item.score}/5
-          </Text>
+          {STARS.map((n) => (
+            <Star
+              key={n}
+              size={14}
+              color={n <= item.score ? theme.text : theme.line}
+              fill={n <= item.score ? theme.text : 'transparent'}
+            />
+          ))}
         </View>
-        <Text variant="caption" style={[styles.when, { color: theme.muted }]}>
-          {when}
-        </Text>
       </View>
 
       <Text variant="body">{item.text}</Text>
@@ -89,20 +93,16 @@ export function FeedbackCard({
         />
       ) : null}
 
-      <View style={styles.actions}>
+      <View style={[styles.actions, { borderColor: theme.line }]}>
         {item.contactPhone ? (
           <Action
             icon={Phone}
-            label={
-              item.contactName
-                ? t('ownerFeedback.callName', { name: item.contactName })
-                : t('ownerFeedback.call')
-            }
+            label={t('ownerFeedback.call')}
             onPress={() => void Linking.openURL(`tel:${item.contactPhone}`)}
             accent
           />
         ) : (
-          <Text variant="caption" style={[styles.flex, { color: theme.muted }]}>
+          <Text variant="caption" style={[styles.flex, { color: theme.meta }]}>
             {t('ownerFeedback.anonymous')}
           </Text>
         )}
@@ -116,6 +116,8 @@ export function FeedbackCard({
     </View>
   );
 }
+
+const STARS = [1, 2, 3, 4, 5] as const;
 
 function Action({
   icon: Icon,
@@ -141,8 +143,7 @@ function Action({
       onPress={onPress}
       style={({ pressed }) => [
         styles.action,
-        { borderColor: theme.line, opacity: disabled ? 0.5 : 1 },
-        pressed && { backgroundColor: theme.wash },
+        { opacity: disabled ? 0.5 : 1, backgroundColor: pressed ? theme.wash : undefined },
       ]}
     >
       <Icon size={16} color={ink} />
@@ -156,29 +157,30 @@ function Action({
 const styles = StyleSheet.create({
   card: {
     gap: tokens.space[3],
-    padding: tokens.space[4],
+    paddingTop: tokens.space[4],
+    paddingHorizontal: tokens.space[4],
+    paddingBottom: tokens.space[1],
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: tokens.radius.lg,
     borderCurve: 'continuous',
   },
-  head: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2], flexWrap: 'wrap' },
-  mood: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[1],
-    paddingHorizontal: tokens.space[2],
-    paddingVertical: 2,
+  head: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
+  avatar: {
+    width: 40,
+    height: 40,
     borderRadius: tokens.radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  score: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  when: { marginLeft: 'auto' },
+  stars: { flexDirection: 'row', gap: 2 },
   photo: { width: '100%', aspectRatio: 4 / 3, maxHeight: 240, borderRadius: tokens.radius.md },
   actions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: tokens.space[2],
-    flexWrap: 'wrap',
+    gap: tokens.space[1],
     justifyContent: 'flex-end',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: tokens.space[1],
   },
   action: {
     flexDirection: 'row',
@@ -186,7 +188,6 @@ const styles = StyleSheet.create({
     gap: tokens.space[2],
     minHeight: tokens.touchTarget,
     paddingHorizontal: tokens.space[3],
-    borderWidth: 1,
     borderRadius: tokens.radius.md,
   },
   flex: { flex: 1 },
