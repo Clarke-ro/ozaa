@@ -1438,8 +1438,12 @@
       "payment_failed": "A payment for order #{{number}} didn't go through",
       "feedback": "A guest left a {{score}}-star note",
       "staff_joined": "{{name}} joined the team",
-      "staff_invited": "{{name}} hasn't accepted the invite yet"
-    }
+      "staff_invited": "{{name}} hasn't accepted the invite yet",
+      "bills_one": "1 table is waiting to pay",
+      "bills_other": "{{count}} tables are waiting to pay",
+      "order_late": "Order #{{number}} for table {{table}} has waited over 20 minutes"
+    },
+    "allClear": "Nothing needs you right now."
   },
   "time": {
     "now": "just now",

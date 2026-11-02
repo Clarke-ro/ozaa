@@ -1,19 +1,21 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { ClipboardList } from 'lucide-react-native';
 import { api } from '@/lib/api';
-import { nextOrderMove, type OrderStatus } from '@/features/orders';
 import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
 import { orderTab, type OrderTab } from '../../desk/ops';
-import { EmptyCard, toast } from '../../kit';
+import { FilterChips } from '@/ui/FilterChips';
+import { DEFAULT_CURRENCY } from '@/lib/money';
+import { EmptyCard } from '../../kit';
 import { OrderCard } from './OrderCard';
-import { StageBar } from './StageBar';
+import { useOrderMove } from './useOrderMove';
 
+const TABS: OrderTab[] = ['new', 'cooking', 'ready', 'done'];
 const LIVE: OrderTab[] = ['new', 'cooking', 'ready'];
 // Ticket ages only need to move once every half minute.
 const TICK_MS = 30_000;
@@ -21,7 +23,6 @@ const TICK_MS = 30_000;
 /** Kitchen tickets by stage. Each ticket shows only the next step this person is allowed to take. */
 export function OrdersScreen() {
   const { t } = useTranslation();
-  const client = useQueryClient();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const role = useOwnerSession((state) => state.role) ?? 'waiter';
   const { width } = useWindowDimensions();
@@ -45,17 +46,7 @@ export function OrdersScreen() {
     enabled: Boolean(venueId),
   });
 
-  const move = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: OrderStatus }) =>
-      api.ownerSetOrderStatus(id, { status }),
-    onSuccess: (_o, { status }) => {
-      toast.success(t(`statusLabel.${status}`));
-      void client.invalidateQueries({ queryKey: key });
-      void client.invalidateQueries({ queryKey: ownerKeys.floor(venueId) });
-      void client.invalidateQueries({ queryKey: ownerKeys.dashboard(venueId) });
-    },
-    onError: () => toast.error(t('ownerKit.saveFailed')),
-  });
+  const move = useOrderMove(venueId, role);
 
   const all = orders.data?.items ?? [];
   const count = (id: OrderTab) => all.filter((o) => orderTab(o.status) === id).length;
@@ -72,15 +63,15 @@ export function OrdersScreen() {
 
   return (
     <OwnerPage title={t('owner.orders')}>
-      <StageBar
+      <FilterChips<OrderTab>
+        label={t('owner.orders')}
         value={tab}
         onChange={setPicked}
-        counts={{
-          new: count('new'),
-          cooking: count('cooking'),
-          ready: count('ready'),
-          done: count('done'),
-        }}
+        items={TABS.map((id) => ({
+          id,
+          label: t(`ownerOrders.tabs.${id}`),
+          count: id === 'done' ? undefined : count(id),
+        }))}
       />
       <DeskWait
         loading={orders.isLoading}
@@ -95,21 +86,18 @@ export function OrdersScreen() {
           />
         ) : (
           <View style={[styles.list, twoUp && styles.grid]}>
-            {shown.map((order) => {
-              const next = nextOrderMove(order.status, role);
-              return (
-                <View key={order.id} style={twoUp ? styles.half : null}>
-                  <OrderCard
-                    order={order}
-                    now={now}
-                    currency={venue.data?.currency ?? 'GHS'}
-                    next={next ? t(`ownerOrders.move.${next.move}`) : null}
-                    busy={move.isPending && move.variables?.id === order.id}
-                    onNext={() => next && move.mutate({ id: order.id, status: next.status })}
-                  />
-                </View>
-              );
-            })}
+            {shown.map((order) => (
+              <View key={order.id} style={twoUp ? styles.half : null}>
+                <OrderCard
+                  order={order}
+                  now={now}
+                  currency={venue.data?.currency ?? DEFAULT_CURRENCY}
+                  next={move.label(order)}
+                  busy={move.busy(order)}
+                  onNext={() => move.run(order)}
+                />
+              </View>
+            ))}
           </View>
         )}
       </DeskWait>

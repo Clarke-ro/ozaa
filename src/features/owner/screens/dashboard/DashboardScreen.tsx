@@ -21,7 +21,7 @@ import { useTheme } from '@/ui/theme';
 import { DeskWait, SkeletonBlock } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
 import { StatTile } from '../../kit';
-import { AlertsCard } from './AlertsCard';
+import { NeedsYou } from './NeedsYou';
 import { LiveOrders } from './LiveOrders';
 import { OverviewPanel } from './OverviewPanel';
 
@@ -89,7 +89,7 @@ export function DashboardScreen() {
                   </Pressable>
                 ))}
               </View>
-              <AlertsCard alerts={d.alerts} />
+              <NeedsYou />
               <View style={styles.grid}>
                 <View style={{ flexBasis: basis, flexGrow: 1 }}>
                   <StatTile

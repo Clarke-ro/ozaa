@@ -1,4 +1,4 @@
-import { buildNotifications, unseenCount, type NoteSources } from './notifications';
+import { buildNotifications, needsYou, unseenCount, type NoteSources } from './notifications';
 
 const now = Date.parse('2026-11-02T12:00:00Z');
 const at = (minutesAgo: number) => new Date(now - minutesAgo * 60_000).toISOString();
@@ -137,5 +137,48 @@ describe('unseenCount', () => {
     );
     expect(unseenCount(notes, now - 10 * 60_000)).toBe(2);
     expect(unseenCount(notes, null)).toBe(3);
+  });
+});
+
+describe('urgent items (the Needs you section)', () => {
+  it('flags orders waiting 20 minutes or more as late, and keeps fresh ones as plain news', () => {
+    const notes = buildNotifications(
+      {
+        ...empty,
+        orders: [
+          { id: 'o1', number: 30, tableCode: '2', status: 'received', createdAt: at(25), readyAt: null },
+          { id: 'o2', number: 31, tableCode: '6', status: 'preparing', createdAt: at(21), readyAt: null },
+          { id: 'o3', number: 32, tableCode: '7', status: 'received', createdAt: at(3), readyAt: null },
+        ],
+      },
+      now,
+    );
+    expect(notes.map((n) => [n.kind, n.tone])).toEqual([
+      ['order', 'info'],
+      ['order_late', 'alert'],
+      ['order_late', 'alert'],
+    ]);
+  });
+
+  it('pins tables waiting to pay with their count', () => {
+    const notes = buildNotifications({ ...empty, alerts: [{ code: 'bills', count: 2 }] }, now);
+    expect(notes).toEqual([
+      expect.objectContaining({ kind: 'bills', at: null, tone: 'alert', href: '/owner/floor', vars: { count: 2 } }),
+    ]);
+  });
+
+  it('needsYou keeps only the urgent ones, pinned first', () => {
+    const notes = buildNotifications(
+      {
+        ...empty,
+        alerts: [{ code: 'payout' }],
+        calls: [{ id: 'c1', tableCode: '4', reason: 'water', status: 'open', createdAt: at(1) }],
+        transactions: [
+          { id: 't1', orderNumber: 13, amountPesewas: 100, currency: 'GHS', status: 'succeeded', createdAt: at(2) },
+        ],
+      },
+      now,
+    );
+    expect(needsYou(notes).map((n) => n.kind)).toEqual(['payout', 'call']);
   });
 });

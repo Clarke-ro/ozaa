@@ -43,7 +43,7 @@ export function FeedbackCard({
   busy: boolean;
 }) {
   const theme = useTheme();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const mood = moodLook(theme)[item.sentiment];
   const MoodIcon = mood.icon;
   const who = item.contactName || t('ownerFeedback.anonymousName');

@@ -22,7 +22,7 @@ export function StaffCard({
   onPress: () => void;
 }) {
   const theme = useTheme();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const name = [member.firstName, member.lastName].filter(Boolean).join(' ');
   const initials = [member.firstName, member.lastName]
     .filter(Boolean)

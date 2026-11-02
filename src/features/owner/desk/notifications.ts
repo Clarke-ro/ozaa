@@ -8,6 +8,8 @@ import type {
 } from '@/lib/api/types';
 
 // A new team member is news for a week; after that they are just on the Staff page.
+// Same line as the Orders screen: a ticket waiting 20 minutes needs someone to act.
+const LATE_MS = 20 * 60_000;
 const JOIN_NEWS_MS = 7 * 86_400_000;
 
 export type NoteSources = {
@@ -28,6 +30,8 @@ export type NoteSources = {
 export type NoteKind =
   | 'sold_out'
   | 'payout'
+  | 'bills'
+  | 'order_late'
   | 'call'
   | 'order'
   | 'order_ready'
@@ -67,6 +71,16 @@ export function buildNotifications(src: NoteSources, now: number): Note[] {
         vars: { dish: alert.detail ?? '' },
       });
     }
+    if (alert.code === 'bills') {
+      pinned.push({
+        id: 'alert-bills',
+        kind: 'bills',
+        at: null,
+        tone: 'alert',
+        href: '/owner/floor',
+        vars: { count: alert.count ?? 1 },
+      });
+    }
     if (alert.code === 'payout') {
       pinned.push({
         id: 'alert-payout',
@@ -92,7 +106,19 @@ export function buildNotifications(src: NoteSources, now: number): Note[] {
     });
   }
   for (const o of src.orders) {
-    if (o.status === 'received') {
+    const late =
+      (o.status === 'received' || o.status === 'preparing') &&
+      now - Date.parse(o.createdAt) >= LATE_MS;
+    if (late) {
+      timed.push({
+        id: `late-${o.id}`,
+        kind: 'order_late',
+        at: o.createdAt,
+        tone: 'alert',
+        href: '/owner/orders',
+        vars: { number: o.number, table: o.tableCode ?? '' },
+      });
+    } else if (o.status === 'received') {
       timed.push({
         id: `order-${o.id}`,
         kind: 'order',
@@ -160,6 +186,14 @@ export function buildNotifications(src: NoteSources, now: number): Note[] {
 
   timed.sort((a, b) => b.at.localeCompare(a.at));
   return [...pinned, ...timed];
+}
+
+/**
+ * The Needs you list on Today: anything urgent, whatever its source. A new urgent kind added to
+ * buildNotifications shows up here with no other change.
+ */
+export function needsYou(notes: readonly Note[]): Note[] {
+  return notes.filter((n) => n.tone === 'alert');
 }
 
 /** How many to show on the bell: every pinned alert, plus anything newer than the last visit. */

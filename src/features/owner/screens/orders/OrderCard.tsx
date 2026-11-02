@@ -72,6 +72,11 @@ export function OrderCard({
 
   return (
     <View style={[styles.card, { backgroundColor: theme.surface, borderColor: edge }]}>
+      {/* A new ticket gets the venue colour down its left edge: it reads as incoming at a glance,
+          without a badge. */}
+      {order.status === 'received' ? (
+        <View style={[styles.incoming, { backgroundColor: theme.fill }]} />
+      ) : null}
       <Pressable
         accessibilityRole="button"
         accessibilityState={{ expanded: open }}
@@ -178,9 +183,12 @@ export function OrderCard({
 }
 
 const styles = StyleSheet.create({
+  incoming: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 4 },
   card: {
+    overflow: 'hidden',
     gap: tokens.space[4],
     padding: tokens.space[3],
+    paddingStart: tokens.space[3] + 4,
     borderWidth: 1,
     borderRadius: tokens.radius.xl - 4,
     borderCurve: 'continuous',
