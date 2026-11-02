@@ -5,3 +5,4 @@ export { formatWifiQrString, type WifiSecurity } from './wifiQr';
 export { chooseLanguage, LANGUAGES, languageByCode, type LanguageCode } from './languages';
 export { mapsLink } from './VenueIntro';
 export { NOT_BUILT } from './ServiceGrid';
+export { VenueHomeBody } from './VenueHomeBody';

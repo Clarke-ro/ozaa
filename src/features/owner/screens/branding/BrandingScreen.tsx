@@ -3,7 +3,6 @@ import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
-import { describeHours } from '@/lib/time';
 import { useOwnerSession } from '@/features/session';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
@@ -53,6 +52,17 @@ export function BrandingScreen() {
   );
   const f = draft.value;
   const look = buttonLook(f.accent, f.tint);
+  // The guest page as it will look after Save: the saved venue with the draft laid over it.
+  const previewVenue = v
+    ? {
+        ...v,
+        name: f.name || v.name,
+        tagline: f.tagline || undefined,
+        description: { ...v.description, en: f.description },
+        banner: banner?.url ? { ...v.banner, url: banner.url } : v.banner,
+        logo: logo ? (logo.url ? { url: logo.url, width: 1, height: 1 } : null) : v.logo,
+      }
+    : null;
   const dirty = draft.dirty || banner !== undefined || logo !== undefined;
 
   const reset = () => {
@@ -179,33 +189,25 @@ export function BrandingScreen() {
             ) : null}
             {tab === 'preview' && !wide ? (
               <>
-                <GuestPreview
-                  accent={isHex(f.accent) ? f.accent : null}
-                  name={f.name}
-                  tagline={f.tagline}
-                  description={f.description}
-                  hoursText={v ? describeHours(v.hours, new Date()).text : undefined}
-                  locationLabel={v?.location.label}
-                  bannerUrl={banner?.url ?? v?.banner?.url}
-                  buttons={f.order.map((key) => ({ key, label: t(`ownerBranding.button.${key}`) }))}
-                  buttonInk={look.ink}
-                />
+                {previewVenue ? (
+                  <GuestPreview
+                    venue={previewVenue}
+                    accent={isHex(f.accent) ? f.accent : null}
+                    font={f.font}
+                  />
+                ) : null}
               </>
             ) : null}
           </View>
           {wide ? (
             <View style={styles.side}>
-              <GuestPreview
-                accent={isHex(f.accent) ? f.accent : null}
-                name={f.name}
-                tagline={f.tagline}
-                description={f.description}
-                hoursText={v ? describeHours(v.hours, new Date()).text : undefined}
-                locationLabel={v?.location.label}
-                bannerUrl={banner?.url ?? v?.banner?.url}
-                buttons={f.order.map((key) => ({ key, label: t(`ownerBranding.button.${key}`) }))}
-                buttonInk={look.ink}
-              />
+              {previewVenue ? (
+                <GuestPreview
+                  venue={previewVenue}
+                  accent={isHex(f.accent) ? f.accent : null}
+                  font={f.font}
+                />
+              ) : null}
             </View>
           ) : null}
         </View>

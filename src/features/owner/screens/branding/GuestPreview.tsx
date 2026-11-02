@@ -1,146 +1,58 @@
-import { StyleSheet, View } from 'react-native';
-import { ImageIcon } from 'lucide-react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import type { VenuePublic } from '@/lib/api/types';
+import { languageByCode, VenueHomeBody } from '@/features/venue';
 import { tokens } from '@/theme/tokens';
-import { makeStyles } from '@/ui/makeStyles';
-import { Text } from '@/ui/Text';
-import { themeFromAccent, ThemeProvider, useTheme } from '@/ui/theme';
-import { VenueImage } from '@/ui/VenueImage';
+import { ThemeProvider, themeFromAccent, type FontPair } from '@/ui/theme';
 
-export type GuestPreviewProps = {
-  accent: string | null;
-  name: string;
-  tagline: string;
-  description: string;
-  hoursText?: string;
-  locationLabel?: string;
-  bannerUrl?: string | null;
-  buttons: { key: string; label: string }[];
-  /** Text colour on the first (filled) button, from the owner's light/dark/auto choice. */
-  buttonInk: string;
-};
+// A phone-shaped window, so the owner sees the page at the size guests do.
+const PHONE_HEIGHT = 640;
 
 /**
- * The guest home page as guests will see it. Guest pages are always light and use the venue
- * colour, so the preview gets its own light theme even when the owner app is in dark mode.
+ * The real guest home (VenueHomeBody), drawn with the owner's unsaved changes: name, words,
+ * colour, heading font and banner. Taps do nothing here; it is a picture of the guest page.
  */
-export function GuestPreview(props: GuestPreviewProps) {
-  return (
-    <ThemeProvider theme={themeFromAccent(props.accent, 'ozaa', 'light')}>
-      <Frame {...props} />
-    </ThemeProvider>
-  );
-}
-
-function Frame({
-  name,
-  tagline,
-  description,
-  hoursText,
-  locationLabel,
-  bannerUrl,
-  buttons,
-  buttonInk,
-}: GuestPreviewProps) {
-  const theme = useTheme();
-  const styles = useStyles();
+export function GuestPreview({
+  venue,
+  accent,
+  font,
+}: {
+  /** The venue with the draft changes already applied. */
+  venue: VenuePublic;
+  accent: string | null;
+  font: FontPair;
+}) {
+  const { i18n } = useTranslation();
+  // Guest pages are always light, on their own white background (not the owner's grey).
+  const guest = themeFromAccent(accent, font, 'light');
   return (
     <View
-      style={styles.frame}
-      accessible
-      accessibilityLabel={`Preview of the guest page for ${name}`}
+      style={[styles.phone, { backgroundColor: guest.bg }]}
+      pointerEvents="none"
+      accessibilityElementsHidden
     >
-      {bannerUrl ? (
-        <VenueImage url={bannerUrl} alt={name} style={styles.banner} />
-      ) : (
-        <View style={styles.bannerEmpty}>
-          <ImageIcon size={24} color={theme.meta} />
-          <Text variant="caption" style={{ color: theme.muted }}>
-            No cover photo yet
-          </Text>
-        </View>
-      )}
-      <View style={styles.content}>
-        <Text variant="display-m">{name || 'Your venue name'}</Text>
-        {tagline ? (
-          <Text variant="body-strong" style={{ color: theme.ink }}>
-            {tagline}
-          </Text>
-        ) : null}
-        {description ? (
-          <Text variant="body" style={{ color: theme.muted }}>
-            {description}
-          </Text>
-        ) : null}
-        <View style={styles.chips}>
-          {hoursText ? (
-            <Text variant="caption" style={styles.chip}>
-              {hoursText}
-            </Text>
-          ) : null}
-          {locationLabel ? (
-            <Text variant="caption" style={[styles.chip, { color: theme.muted }]}>
-              {locationLabel}
-            </Text>
-          ) : null}
-        </View>
-        <View style={styles.buttons}>
-          {buttons.map((button, index) => (
-            <View
-              key={button.key}
-              style={[
-                styles.button,
-                index === 0 ? { backgroundColor: theme.fill } : styles.outline,
-              ]}
-            >
-              <Text variant="button" style={{ color: index === 0 ? buttonInk : theme.text }}>
-                {button.label}
-              </Text>
-            </View>
-          ))}
-        </View>
-      </View>
+      <ThemeProvider theme={guest}>
+        <ScrollView style={styles.screen} scrollEnabled={false}>
+          <VenueHomeBody
+            venue={venue}
+            tableCode={null}
+            topInset={tokens.space[2]}
+            languageLabel={languageByCode(i18n.language).label}
+            onOpen={() => undefined}
+          />
+        </ScrollView>
+      </ThemeProvider>
     </View>
   );
 }
 
-const useStyles = makeStyles((theme) => ({
-  frame: {
-    backgroundColor: theme.surface,
-    borderRadius: tokens.radius.lg,
-    borderWidth: 1,
-    borderColor: theme.line,
+const styles = StyleSheet.create({
+  phone: {
+    height: PHONE_HEIGHT,
     overflow: 'hidden',
+    borderRadius: tokens.radius.xl,
+    borderCurve: 'continuous',
+    boxShadow: tokens.shadow.card,
   },
-  banner: { height: 140, width: '100%' },
-  bannerEmpty: {
-    height: 120,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: tokens.space[1],
-    backgroundColor: theme.wash,
-  },
-  content: { padding: tokens.space[4], gap: tokens.space[2] },
-  chips: { flexDirection: 'row', gap: tokens.space[2], flexWrap: 'wrap' },
-  chip: {
-    backgroundColor: theme.wash,
-    paddingHorizontal: tokens.space[3],
-    paddingVertical: tokens.space[1],
-    borderRadius: tokens.radius.full,
-    overflow: 'hidden',
-  },
-  buttons: {
-    gap: tokens.space[2],
-    marginTop: tokens.space[2],
-    paddingTop: tokens.space[3],
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: theme.line,
-  },
-  button: {
-    minHeight: 44,
-    borderRadius: tokens.radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: tokens.space[3],
-  },
-  outline: { borderWidth: 1, borderColor: theme.line, backgroundColor: theme.surface },
-}));
+  screen: { flex: 1 },
+});
