@@ -1363,5 +1363,27 @@
       "sat": "Saturday",
       "sun": "Sunday"
     }
+  },
+  "ownerScan": {
+    "title": "Scan & stamp",
+    "aim": "Fit the guest's QR code inside the corners",
+    "webTitle": "Scan with the Ozaa app",
+    "webBody": "Camera scanning works in the app on a phone. On a computer, type the code under the guest's QR card below.",
+    "permissionTitle": "Camera access needed",
+    "permissionBody": "Allow the camera to scan guest loyalty cards.",
+    "allow": "Allow camera",
+    "typeCode": "OR TYPE THE CODE",
+    "codeLabel": "Guest phone number or card code",
+    "codeHint": "Phone or card code",
+    "addStamp": "Add stamp",
+    "member": "Loyalty member",
+    "stampsSoFar": "Stamps so far",
+    "rewardReady": "Reward unlocked. Ready to claim.",
+    "moreToGo_one": "1 more for the next reward",
+    "moreToGo_other": "{{count}} more for the next reward",
+    "redeem": "Redeem reward",
+    "closeResult": "Close",
+    "problemTitle": "Couldn't add a stamp",
+    "problemBody": "The card may be on cooldown or not recognised. Try again."
   }
 }

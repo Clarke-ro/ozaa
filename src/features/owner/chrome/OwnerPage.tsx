@@ -23,7 +23,7 @@ import { isTabRoot } from './nav';
 const WIDE = 840;
 
 // 16 pt margins on phones, 24 on tablets and up (HIG layout margins).
-function useGutter() {
+export function useGutter() {
   const { width } = useWindowDimensions();
   return width >= 768 ? tokens.space[6] : tokens.space[4];
 }
