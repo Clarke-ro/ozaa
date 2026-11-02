@@ -35,7 +35,7 @@ const SHORTCUTS: { key: string; icon: LucideIcon; href: string }[] = [
   { key: 'feedback', icon: Inbox, href: '/owner/feedback' },
 ];
 
-/** Today: the overview panel, what needs you, four live numbers, shortcuts, and the open tickets. */
+/** Today: the overview panel, shortcuts, what needs you, four live numbers, and the open tickets. */
 export function DashboardScreen() {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -65,6 +65,30 @@ export function DashboardScreen() {
           <>
             <OverviewPanel dashboard={d} />
             <View style={[styles.body, { paddingHorizontal: gutter }]}>
+              <View style={styles.shortcuts}>
+                {SHORTCUTS.map(({ key, icon: Icon, href }) => (
+                  <Pressable
+                    key={key}
+                    accessibilityRole="button"
+                    accessibilityLabel={t(`ownerDash.quick.${key}`)}
+                    onPress={() => router.push(href as Href)}
+                    style={({ pressed }) => [
+                      styles.shortcut,
+                      {
+                        borderColor: theme.line,
+                        backgroundColor: pressed ? theme.wash : theme.surface,
+                      },
+                    ]}
+                  >
+                    <View style={[styles.shortcutIcon, { backgroundColor: theme.tint }]}>
+                      <Icon size={20} color={theme.ink} />
+                    </View>
+                    <Text variant="caption" numberOfLines={1} style={styles.center}>
+                      {t(`ownerDash.quick.${key}`)}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
               <AlertsCard alerts={d.alerts} />
               <View style={styles.grid}>
                 <View style={{ flexBasis: basis, flexGrow: 1 }}>
@@ -112,30 +136,6 @@ export function DashboardScreen() {
                     onPress={() => router.push('/owner/reviews')}
                   />
                 </View>
-              </View>
-              <View style={styles.shortcuts}>
-                {SHORTCUTS.map(({ key, icon: Icon, href }) => (
-                  <Pressable
-                    key={key}
-                    accessibilityRole="button"
-                    accessibilityLabel={t(`ownerDash.quick.${key}`)}
-                    onPress={() => router.push(href as Href)}
-                    style={({ pressed }) => [
-                      styles.shortcut,
-                      {
-                        borderColor: theme.line,
-                        backgroundColor: pressed ? theme.wash : theme.surface,
-                      },
-                    ]}
-                  >
-                    <View style={[styles.shortcutIcon, { backgroundColor: theme.tint }]}>
-                      <Icon size={20} color={theme.ink} />
-                    </View>
-                    <Text variant="caption" numberOfLines={1} style={styles.center}>
-                      {t(`ownerDash.quick.${key}`)}
-                    </Text>
-                  </Pressable>
-                ))}
               </View>
               <LiveOrders venueId={venueId} />
             </View>
