@@ -32,7 +32,7 @@ const daysAgo = s => {
   return new Date(now.getTime() - n * 864e5).toISOString();
 };
 
-const out = { venues: {}, menus: {}, stories: {}, leaderboards: {}, loyaltyCards: {}, wifi: {}, offers: {}, orders: {} };
+const out = { venues: {}, menus: {}, leaderboards: {}, loyaltyCards: {}, wifi: {}, offers: {}, orders: {} };
 
 for (const [key, v] of Object.entries(W.VENUES)) {
   const slug = slugs[key];
@@ -72,14 +72,6 @@ for (const [key, v] of Object.entries(W.VENUES)) {
   }));
   out.menus[slug] = { venueId, updatedAt: now.toISOString(), categories, items };
 
-  out.stories[slug] = {
-    items: v.stories.map(s => ({
-      id: `vrv_${key}${s.id}`, firstName: s.name, stars: s.stars, quote: s.quote, postedAt: daysAgo(s.ago),
-      avatar: img(s.av, 160, 160, s.name), poster: img(s.poster, 720, 1280),
-      video: { mp4Url: MEDIA + (s.video || 'media/review-ama.mp4'), durationSeconds: 18 },
-      menuItemId: items[s.dish % items.length].id, sample: true,
-    })),
-  };
   out.leaderboards[slug] = {
     period: 'week',
     entries: [['Ama', 41], ['Kojo', 37], ['Efua', 29], ['Yaw', 24], ['Akua', 19]].map(([nickname, score], i) => ({ rank: i + 1, nickname, score, sample: true })),

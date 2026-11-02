@@ -225,22 +225,6 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Wifi' }
         '404': { $ref: '#/components/responses/NotFound' }
-  /venues/{venueSlug}/stories:
-    get:
-      tags: [reviews]
-      operationId: listStories
-      summary: Featured video reviews shown as story circles on the guest home.
-      parameters: [{ $ref: '#/components/parameters/VenueSlug' }]
-      responses:
-        '200':
-          description: Newest first, at most 12.
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [items]
-                properties:
-                  items: { type: array, items: { $ref: '#/components/schemas/Story' } }
   /venues/{venueSlug}/offers:
     get:
       tags: [venues]
@@ -537,7 +521,7 @@ paths:
       tags: [reviews]
       operationId: createReview
       security: [{ guestAuth: [] }]
-      summary: Written review. 4-5 stars then offer the Google review link; 1-3 stars suggest private feedback.
+      summary: Written review. Every guest gets the same thank-you; the reply never depends on the star rating.
       parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
       requestBody:
         required: true
@@ -561,85 +545,7 @@ paths:
                 required: [id, googleReviewUrl]
                 properties:
                   id: { type: string }
-                  googleReviewUrl: { type: ['string', 'null'], format: uri, description: Null when the venue has not linked Google. }
-  /video-reviews/uploads:
-    post:
-      tags: [reviews]
-      operationId: createVideoUpload
-      security: [{ guestAuth: [] }]
-      summary: Get a one-time upload URL for a 15-30 s video (mp4, webm or mov, max 25 MB).
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [contentType, durationSeconds, sizeBytes]
-              properties:
-                contentType: { type: string, enum: [video/mp4, video/webm, video/quicktime] }
-                durationSeconds: { type: number, minimum: 15, maximum: 30 }
-                sizeBytes: { type: integer, maximum: 26214400 }
-      responses:
-        '201':
-          description: PUT the file to `uploadUrl` within 15 minutes.
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [uploadId, uploadUrl, expiresAt]
-                properties:
-                  uploadId: { type: string }
-                  uploadUrl: { type: string, format: uri }
-                  expiresAt: { type: string, format: date-time }
-  /video-reviews:
-    post:
-      tags: [reviews]
-      operationId: createVideoReview
-      summary: Create video review.
-      security: [{ guestAuth: [] }]
-      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [uploadId, stars, featureConsent]
-              properties:
-                uploadId: { type: string }
-                stars: { type: integer, minimum: 1, maximum: 5 }
-                firstName: { type: string, maxLength: 40 }
-                quote: { type: string, maxLength: 120 }
-                menuItemId: { $ref: '#/components/schemas/MenuItemId' }
-                featureConsent:
-                  type: boolean
-                  description: True lets the venue feature it as a story (first name and stars only). False keeps it a private review.
-      responses:
-        '201':
-          description: Saved with moderation state `pending`. A delete token is returned so the guest can remove it later.
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [id, deleteToken]
-                properties:
-                  id: { $ref: '#/components/schemas/VideoReviewId' }
-                  deleteToken: { type: string }
-  /video-reviews/{videoReviewId}:
-    delete:
-      tags: [reviews]
-      operationId: deleteMyVideoReview
-      summary: The guest removes their video at any time (needs the delete token).
-      parameters:
-        - { $ref: '#/components/parameters/VideoReviewId' }
-        - in: header
-          name: X-Delete-Token
-          required: true
-          schema: { type: string }
-      responses:
-        '204': { description: 'Deleted everywhere, including stories.' }
-        '404': { $ref: '#/components/responses/NotFound' }
-
+                  googleReviewUrl: { type: ['string', 'null'], format: uri, description: 'Always null. Kept so older clients still parse; reviews are not routed by stars.' }
   # ---------------------------------------------------------------- game: Play while you wait
   /venues/{venueSlug}/game/leaderboard:
     get:
@@ -1129,53 +1035,6 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/WaiterCall' }
-
-  /owner/venues/{venueId}/video-reviews:
-    get:
-      tags: [owner-reviews]
-      operationId: ownerListVideoReviews
-      summary: List video reviews (owner app).
-      security: [{ ownerAuth: [] }]
-      parameters:
-        - { $ref: '#/components/parameters/VenueId' }
-        - in: query
-          name: state
-          schema: { $ref: '#/components/schemas/ModerationState' }
-        - { $ref: '#/components/parameters/Cursor' }
-      responses:
-        '200':
-          description: The To check, Featured and Hidden tabs.
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [items]
-                properties:
-                  items: { type: array, items: { $ref: '#/components/schemas/VideoReview' } }
-                  nextCursor: { type: ['string', 'null'] }
-  /owner/video-reviews/{videoReviewId}:
-    patch:
-      tags: [owner-reviews]
-      operationId: ownerModerateVideoReview
-      security: [{ ownerAuth: [] }]
-      summary: Feature (needs the guest's featureConsent) or hide a video review.
-      parameters: [{ $ref: '#/components/parameters/VideoReviewId' }]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [state]
-              properties:
-                state: { type: string, enum: [featured, hidden] }
-      responses:
-        '200':
-          description: Saved.
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/VideoReview' }
-        '409': { description: Cannot feature a video without the guest's consent. }
 
   /owner/venues/{venueId}/loyalty:
     get:
@@ -1886,11 +1745,6 @@ components:
       name: waiterCallId
       required: true
       schema: { type: string, pattern: '^wcl_[A-Za-z0-9]+$' }
-    VideoReviewId:
-      in: path
-      name: videoReviewId
-      required: true
-      schema: { $ref: '#/components/schemas/VideoReviewId' }
     CategoryId:
       in: path
       name: categoryId
@@ -2001,10 +1855,6 @@ components:
     MenuItemId:
       type: string
       pattern: '^itm_[A-Za-z0-9]+$'
-    VideoReviewId:
-      type: string
-      pattern: '^vrv_[A-Za-z0-9]+$'
-
     AuthTokens:
       type: object
       required: [accessToken, refreshToken, expiresAt]
@@ -2624,39 +2474,6 @@ components:
         programme: { $ref: '#/components/schemas/LoyaltyProgram' }
         member: { $ref: '#/components/schemas/LoyaltyMember' }
 
-    ModerationState:
-      type: string
-      enum: [pending, featured, hidden]
-    Story:
-      type: object
-      required: [id, firstName, stars, postedAt, poster, video, sample]
-      properties:
-        id: { $ref: '#/components/schemas/VideoReviewId' }
-        firstName: { type: string }
-        stars: { type: integer, minimum: 1, maximum: 5 }
-        quote: { type: string }
-        postedAt: { type: string, format: date-time }
-        avatar: { $ref: '#/components/schemas/Image' }
-        poster: { $ref: '#/components/schemas/Image' }
-        video:
-          type: object
-          required: [mp4Url, durationSeconds]
-          properties:
-            hlsUrl: { type: string, format: uri }
-            mp4Url: { type: string, format: uri, description: '480p, used on data saver.' }
-            durationSeconds: { type: number }
-        menuItemId: { $ref: '#/components/schemas/MenuItemId' }
-        sample: { type: boolean, description: True for demo content. Show the Sample label. }
-    VideoReview:
-      allOf:
-        - { $ref: '#/components/schemas/Story' }
-        - type: object
-          required: [state, featureConsent]
-          properties:
-            state: { $ref: '#/components/schemas/ModerationState' }
-            featureConsent: { type: boolean }
-            orderNumber: { type: ['integer', 'null'] }
-
     LeaderboardEntry:
       type: object
       required: [rank, nickname, score]
@@ -2869,7 +2686,6 @@ components:
       type: object
       properties:
         googleReviewUrl: { type: ['string', 'null'], format: uri }
-        googleReviewMinStars: { type: integer, minimum: 1, maximum: 5 }
         instagram: { type: ['string', 'null'] }
         facebook: { type: ['string', 'null'] }
         tiktok: { type: ['string', 'null'] }

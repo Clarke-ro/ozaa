@@ -160,23 +160,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/venues/{venueSlug}/stories": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Featured video reviews shown as story circles on the guest home. */
-        get: operations["listStories"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/venues/{venueSlug}/offers": {
         parameters: {
             query?: never;
@@ -422,60 +405,9 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Written review. 4-5 stars then offer the Google review link; 1-3 stars suggest private feedback. */
+        /** Written review. Every guest gets the same thank-you; the reply never depends on the star rating. */
         post: operations["createReview"];
         delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/video-reviews/uploads": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Get a one-time upload URL for a 15-30 s video (mp4, webm or mov, max 25 MB). */
-        post: operations["createVideoUpload"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/video-reviews": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Create video review. */
-        post: operations["createVideoReview"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/video-reviews/{videoReviewId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** The guest removes their video at any time (needs the delete token). */
-        delete: operations["deleteMyVideoReview"];
         options?: never;
         head?: never;
         patch?: never;
@@ -809,40 +741,6 @@ export interface paths {
         head?: never;
         /** Update waiter call (owner app). */
         patch: operations["ownerUpdateWaiterCall"];
-        trace?: never;
-    };
-    "/owner/venues/{venueId}/video-reviews": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List video reviews (owner app). */
-        get: operations["ownerListVideoReviews"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/owner/video-reviews/{videoReviewId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Feature (needs the guest's featureConsent) or hide a video review. */
-        patch: operations["ownerModerateVideoReview"];
         trace?: never;
     };
     "/owner/venues/{venueId}/loyalty": {
@@ -1368,7 +1266,6 @@ export interface components {
         };
         OrderId: string;
         MenuItemId: string;
-        VideoReviewId: string;
         AuthTokens: {
             accessToken: string;
             refreshToken: string;
@@ -1949,36 +1846,6 @@ export interface components {
             programme: components["schemas"]["LoyaltyProgram"];
             member: components["schemas"]["LoyaltyMember"];
         };
-        /** @enum {string} */
-        ModerationState: "pending" | "featured" | "hidden";
-        Story: {
-            id: components["schemas"]["VideoReviewId"];
-            firstName: string;
-            stars: number;
-            quote?: string;
-            /** Format: date-time */
-            postedAt: string;
-            avatar?: components["schemas"]["Image"];
-            poster: components["schemas"]["Image"];
-            video: {
-                /** Format: uri */
-                hlsUrl?: string;
-                /**
-                 * Format: uri
-                 * @description 480p, used on data saver.
-                 */
-                mp4Url: string;
-                durationSeconds: number;
-            };
-            menuItemId?: components["schemas"]["MenuItemId"];
-            /** @description True for demo content. Show the Sample label. */
-            sample: boolean;
-        };
-        VideoReview: components["schemas"]["Story"] & {
-            state: components["schemas"]["ModerationState"];
-            featureConsent: boolean;
-            orderNumber?: number | null;
-        };
         LeaderboardEntry: {
             rank: number;
             nickname: string;
@@ -2152,7 +2019,6 @@ export interface components {
         SocialLinks: {
             /** Format: uri */
             googleReviewUrl?: string | null;
-            googleReviewMinStars?: number;
             instagram?: string | null;
             facebook?: string | null;
             tiktok?: string | null;
@@ -2365,7 +2231,6 @@ export interface components {
         OrderId: components["schemas"]["OrderId"];
         PaymentReference: string;
         WaiterCallId: string;
-        VideoReviewId: components["schemas"]["VideoReviewId"];
         CategoryId: string;
         MenuItemIdParam: components["schemas"]["MenuItemId"];
         TableId: string;
@@ -2643,30 +2508,6 @@ export interface operations {
                 };
             };
             404: components["responses"]["NotFound"];
-        };
-    };
-    listStories: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                venueSlug: components["parameters"]["VenueSlug"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Newest first, at most 12. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        items: components["schemas"]["Story"][];
-                    };
-                };
-            };
         };
     };
     listOffers: {
@@ -3115,108 +2956,12 @@ export interface operations {
                         id: string;
                         /**
                          * Format: uri
-                         * @description Null when the venue has not linked Google.
+                         * @description Always null. Kept so older clients still parse; reviews are not routed by stars.
                          */
                         googleReviewUrl: string | null;
                     };
                 };
             };
-        };
-    };
-    createVideoUpload: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @enum {string} */
-                    contentType: "video/mp4" | "video/webm" | "video/quicktime";
-                    durationSeconds: number;
-                    sizeBytes: number;
-                };
-            };
-        };
-        responses: {
-            /** @description PUT the file to `uploadUrl` within 15 minutes. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        uploadId: string;
-                        /** Format: uri */
-                        uploadUrl: string;
-                        /** Format: date-time */
-                        expiresAt: string;
-                    };
-                };
-            };
-        };
-    };
-    createVideoReview: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description A new UUID per user action. Reuse it when retrying the same action. */
-                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    uploadId: string;
-                    stars: number;
-                    firstName?: string;
-                    quote?: string;
-                    menuItemId?: components["schemas"]["MenuItemId"];
-                    /** @description True lets the venue feature it as a story (first name and stars only). False keeps it a private review. */
-                    featureConsent: boolean;
-                };
-            };
-        };
-        responses: {
-            /** @description Saved with moderation state `pending`. A delete token is returned so the guest can remove it later. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        id: components["schemas"]["VideoReviewId"];
-                        deleteToken: string;
-                    };
-                };
-            };
-        };
-    };
-    deleteMyVideoReview: {
-        parameters: {
-            query?: never;
-            header: {
-                "X-Delete-Token": string;
-            };
-            path: {
-                videoReviewId: components["parameters"]["VideoReviewId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Deleted everywhere, including stories. */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: components["responses"]["NotFound"];
         };
     };
     getLeaderboard: {
@@ -3925,70 +3670,6 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["WaiterCall"];
                 };
-            };
-        };
-    };
-    ownerListVideoReviews: {
-        parameters: {
-            query?: {
-                state?: components["schemas"]["ModerationState"];
-                cursor?: components["parameters"]["Cursor"];
-            };
-            header?: never;
-            path: {
-                venueId: components["parameters"]["VenueId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description The To check, Featured and Hidden tabs. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        items: components["schemas"]["VideoReview"][];
-                        nextCursor?: string | null;
-                    };
-                };
-            };
-        };
-    };
-    ownerModerateVideoReview: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                videoReviewId: components["parameters"]["VideoReviewId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @enum {string} */
-                    state: "featured" | "hidden";
-                };
-            };
-        };
-        responses: {
-            /** @description Saved. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["VideoReview"];
-                };
-            };
-            /** @description Cannot feature a video without the guest's consent. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
         };
     };

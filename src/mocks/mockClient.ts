@@ -353,15 +353,6 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       if (!wifi) throw new ApiError(404, 'venue_not_found', 'No Wi-Fi saved');
       return wifi;
     },
-    async listStories(slug) {
-      await gate();
-      const venue = venueBySlug(world, slug);
-      const featured = world.videos.filter(
-        (video) => video.venueId === venue.id && video.state === 'featured',
-      );
-      if (featured.length > 0) return { items: featured };
-      return { items: world.stories[slug] ?? [] };
-    },
     async listOffers(slug) {
       await gate();
       venueBySlug(world, slug);
@@ -613,54 +604,20 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       await gate();
       const session = sessionOf(world, tokens);
       const venue = venueBySlug(world, session.slug);
-      return {
-        id: nextId(world, 'rev'),
-        googleReviewUrl: body.stars >= 4 ? (venue.googleReviewUrl ?? null) : null,
-      };
-    },
-    async createVideoUpload(body) {
-      await gate();
-      if (body.durationSeconds < 15 || body.durationSeconds > 30 || body.sizeBytes > 25_000_000) {
-        throw new ApiError(400, 'bad_video', 'Keep the video between 15 and 30 seconds');
-      }
-      const uploadId = nextId(world, 'upl');
-      world.uploads.add(uploadId);
-      return {
-        uploadId,
-        uploadUrl: `https://mock.ozaa.app/upload/${uploadId}`,
-        expiresAt: new Date(now() + 15 * 60_000).toISOString(),
-      };
-    },
-    async createVideoReview(body) {
-      await gate();
-      if (!world.uploads.has(body.uploadId))
-        throw new ApiError(400, 'bad_video', 'Upload the video first');
-      const session = sessionOf(world, tokens);
-      const venue = venueBySlug(world, session.slug);
-      const id = nextId(world, 'vrv');
-      const review = {
+      const id = nextId(world, 'rev');
+      // Stored so it shows on the owner's Reviews page. Guest sessions carry no name (Act 843).
+      world.written.push({
         id,
-        firstName: body.firstName ?? 'Guest',
-        stars: body.stars,
-        quote: body.quote,
-        postedAt: new Date(now()).toISOString(),
-        poster: venue.banner,
-        video: { mp4Url: `https://mock.ozaa.app/media/media/review-ama.mp4`, durationSeconds: 18 },
-        menuItemId: body.menuItemId,
-        sample: true,
-        state: 'pending' as const,
-        featureConsent: body.featureConsent,
         venueId: venue.id,
-      };
-      world.videos.push(review);
-      return { id, deleteToken: `del_${id}` };
-    },
-    async deleteMyVideoReview(id, call) {
-      await gate();
-      const index = world.videos.findIndex((video) => video.id === id);
-      if (index < 0 || call.deleteToken !== `del_${id}`)
-        throw new ApiError(404, 'order_not_found', 'Video not found');
-      world.videos.splice(index, 1);
+        stars: body.stars,
+        firstName: 'Guest',
+        text: body.text,
+        highlights: body.highlights,
+        createdAt: new Date(now()).toISOString(),
+        reply: null,
+      });
+      // Reviews are not routed by stars: every guest gets the same reply.
+      return { id, googleReviewUrl: null };
     },
     async getLeaderboard(slug) {
       await gate();
@@ -948,23 +905,6 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
         callRow.acknowledgedAt = new Date(now()).toISOString();
       }
       return callRow;
-    },
-    async ownerListVideoReviews(venueId, state) {
-      await gate();
-      return {
-        items: world.videos
-          .filter((video) => video.venueId === venueId && (!state || video.state === state))
-          .map(({ venueId: _id, ...video }) => video),
-      };
-    },
-    async ownerModerateVideoReview(id, body) {
-      await gate();
-      const video = world.videos.find((item) => item.id === id);
-      if (!video) throw new ApiError(404, 'order_not_found', 'Video not found');
-      if (body.state === 'featured' && !video.featureConsent)
-        throw new ApiError(409, 'no_consent', 'The guest did not allow featuring');
-      video.state = body.state;
-      return video;
     },
     async ownerGetLoyalty(venueId) {
       await gate();

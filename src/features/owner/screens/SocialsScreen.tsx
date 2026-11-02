@@ -44,7 +44,7 @@ export function SocialsScreen() {
     // Reviews are asked for the same way from every guest, so no Google link or star filter is kept here.
     save.mutate({
       googleReviewUrl: null,
-      socials: { ...socials, ...links, googleReviewUrl: null, googleReviewMinStars: undefined },
+      socials: { ...socials, ...links, googleReviewUrl: null },
     });
   };
 

@@ -10,7 +10,6 @@ The app talks to one interface, `ApiClient`. In Phases 0–4 that interface is b
   |---|---|
   | `venues.json` | `VenuePublic`: theme, services, hours, loyalty summary |
   | `menus.json` | `Menu` |
-  | `stories.json` | featured video reviews |
   | `offers.json` | offers |
   | `wifi.json` | Wi-Fi details |
   | `leaderboards.json` | game sample scores |

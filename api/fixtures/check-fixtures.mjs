@@ -6,7 +6,7 @@ const ajv=new Ajv2020({strict:false,allErrors:true}); addFormats(ajv);
 ajv.addSchema({$id:'oas',components:spec.components});
 const ref=n=>({$ref:'oas#/components/schemas/'+n});
 const listOf=n=>({type:'object',required:['items'],properties:{items:{type:'array',items:ref(n)}}});
-const map={venues:ref('VenuePublic'),menus:ref('Menu'),stories:listOf('Story'),loyaltyCards:ref('LoyaltyCard'),wifi:ref('Wifi'),offers:listOf('Offer'),orders:ref('Order'),
+const map={venues:ref('VenuePublic'),menus:ref('Menu'),loyaltyCards:ref('LoyaltyCard'),wifi:ref('Wifi'),offers:listOf('Offer'),orders:ref('Order'),
  leaderboards:{$id:'lb',...JSON.parse(JSON.stringify(spec.paths['/venues/{venueSlug}/game/leaderboard'].get.responses['200'].content['application/json'].schema).replaceAll('"#/components','"oas#/components'))}};
 let bad=0;
 for(const [f,s] of Object.entries(map)){const data=JSON.parse(fs.readFileSync(new URL('api/fixtures/'+f+'.json', k),'utf8'));const v=ajv.compile(s);

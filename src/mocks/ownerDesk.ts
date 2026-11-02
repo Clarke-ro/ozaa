@@ -1,5 +1,11 @@
 import { pesewas } from '@/lib/brand';
-import type { InsightsReport, Order, OwnerDashboard, VenueTransaction, WrittenReview } from '@/lib/api/types';
+import type {
+  InsightsReport,
+  Order,
+  OwnerDashboard,
+  VenueTransaction,
+  WrittenReview,
+} from '@/lib/api/types';
 import { ApiError } from '@/lib/api/errors';
 import { summarizeDay } from '../features/owner/desk/daySummary';
 import { deriveFloor, type FloorOrder } from '../features/owner/floor/floorStatus';
@@ -44,12 +50,15 @@ export function dashboardFor(world: World, venueId: string, now: number): OwnerD
   const venue = venueById(world, venueId);
   const orders = ordersOf(world, venueId);
   const floor = floorFor(world, venueId).items;
-  const openCalls = world.calls.filter((call) => call.venueId === venueId && call.status !== 'resolved');
-  const ratings = [
-    ...world.videos.filter((video) => video.venueId === venueId).map((video) => video.stars),
-    ...world.written.filter((review) => review.venueId === venueId).map((review) => review.stars),
-  ];
-  const soldOut = (world.menus[venue.slug]?.items ?? []).filter((item) => !item.available).map((item) => text(item.name));
+  const openCalls = world.calls.filter(
+    (call) => call.venueId === venueId && call.status !== 'resolved',
+  );
+  const ratings = world.written
+    .filter((review) => review.venueId === venueId)
+    .map((review) => review.stars);
+  const soldOut = (world.menus[venue.slug]?.items ?? [])
+    .filter((item) => !item.available)
+    .map((item) => text(item.name));
   const summary = summarizeDay({
     orders,
     openCalls: openCalls.length,
@@ -60,7 +69,10 @@ export function dashboardFor(world: World, venueId: string, now: number): OwnerD
     payoutVerified: world.payouts[venueId]?.verified ?? false,
     soldOut,
   });
-  const liveOrders = orders.filter((order) => order.status === 'received' || order.status === 'preparing' || order.status === 'ready').length;
+  const liveOrders = orders.filter(
+    (order) =>
+      order.status === 'received' || order.status === 'preparing' || order.status === 'ready',
+  ).length;
   return {
     salesTodayPesewas: summary.salesTodayPesewas,
     currency: venue.currency,
@@ -86,7 +98,12 @@ export function refundFor(world: World, transactionId: string): VenueTransaction
   const row = world.transactions.find((item) => item.id === transactionId);
   if (!row) throw new ApiError(404, 'payment_not_found', 'Payment not found');
   const result = refundCharge(
-    { id: row.id, amountPesewas: row.amountPesewas, status: row.status, settlement: row.settlement },
+    {
+      id: row.id,
+      amountPesewas: row.amountPesewas,
+      status: row.status,
+      settlement: row.settlement,
+    },
     row.amountPesewas,
   );
   if (!result.ok) throw new ApiError(409, 'illegal_move', 'That payment cannot be refunded');
@@ -106,7 +123,9 @@ export function refundFor(world: World, transactionId: string): VenueTransaction
 
 export function writtenFor(world: World, venueId: string): { items: WrittenReview[] } {
   return {
-    items: world.written.filter((item) => item.venueId === venueId).map(({ venueId: _venue, ...review }) => review),
+    items: world.written
+      .filter((item) => item.venueId === venueId)
+      .map(({ venueId: _venue, ...review }) => review),
   };
 }
 
@@ -118,7 +137,11 @@ export function replyFor(world: World, reviewId: string, textBody: string): Writ
   return saved;
 }
 
-export function insightsFor(world: World, venueId: string, range: InsightsReport['range']): InsightsReport {
+export function insightsFor(
+  world: World,
+  venueId: string,
+  range: InsightsReport['range'],
+): InsightsReport {
   const venue = venueById(world, venueId);
   const scale = range === 'today' ? 1 : range === '30d' ? 4 : 2;
   const items = world.menus[venue.slug]?.items ?? [];
@@ -128,13 +151,21 @@ export function insightsFor(world: World, venueId: string, range: InsightsReport
     pesewas: pesewas(item.pricePesewas * (8 - index) * scale),
   }));
   const sales = top.reduce((sum, item) => sum + item.pesewas, 0);
-  const labels = range === 'today' ? ['9', '12', '15', '18', '21'] : range === '30d' ? ['W1', 'W2', 'W3', 'W4'] : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const labels =
+    range === 'today'
+      ? ['9', '12', '15', '18', '21']
+      : range === '30d'
+        ? ['W1', 'W2', 'W3', 'W4']
+        : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   return {
     range,
     currency: venue.currency,
     salesPesewas: pesewas(sales),
     sample: true,
-    series: labels.map((label, index) => ({ label, pesewas: pesewas(Math.round(sales / labels.length) + index * 1000) })),
+    series: labels.map((label, index) => ({
+      label,
+      pesewas: pesewas(Math.round(sales / labels.length) + index * 1000),
+    })),
     topItems: top,
     peakHours: [
       { hour: 12, orders: 6 * scale },
