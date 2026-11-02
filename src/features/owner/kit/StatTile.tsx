@@ -40,8 +40,8 @@ export function StatTile({
           {label}
         </Text>
         {Icon ? (
-          <View style={[styles.icon, { backgroundColor: alert ? theme.errorTint : theme.wash }]}>
-            <Icon size={16} color={alert ? theme.error : theme.text} />
+          <View style={styles.icon}>
+            <Icon size={18} color={alert ? theme.error : theme.ink} />
           </View>
         ) : null}
       </View>
@@ -61,9 +61,11 @@ export function StatTile({
   const look = [
     styles.tile,
     {
-      borderColor: alert ? theme.error : theme.line,
-      borderWidth: alert ? 1.5 : StyleSheet.hairlineWidth,
+      // Clean card like the guest list; an alert keeps a red edge so it still stands out.
+      borderColor: theme.error,
+      borderWidth: alert ? 1.5 : 0,
       backgroundColor: theme.surface,
+      boxShadow: tokens.shadow.card,
     },
   ];
   if (!onPress) return <View style={look}>{body}</View>;

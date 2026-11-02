@@ -60,7 +60,7 @@ export function LanguageSheet({ visible, onClose }: { visible: boolean; onClose:
 
 const styles = StyleSheet.create({
   list: {
-    borderWidth: StyleSheet.hairlineWidth,
+    boxShadow: tokens.shadow.card,
     borderRadius: tokens.radius.md,
     overflow: 'hidden',
   },

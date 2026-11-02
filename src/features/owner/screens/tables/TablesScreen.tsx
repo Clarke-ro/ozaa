@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
   card: {
     gap: tokens.space[4],
     padding: tokens.space[4],
-    borderWidth: StyleSheet.hairlineWidth,
+    boxShadow: tokens.shadow.card,
     borderRadius: tokens.radius.lg,
     borderCurve: 'continuous',
   },

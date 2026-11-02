@@ -81,7 +81,7 @@ function Group({ items, preview }: { items: OwnerNavItem[]; preview: boolean }) 
 const styles = StyleSheet.create({
   group: { gap: tokens.space[2] },
   card: {
-    borderWidth: StyleSheet.hairlineWidth,
+    boxShadow: tokens.shadow.card,
     borderRadius: tokens.radius.md,
     borderCurve: 'continuous',
     overflow: 'hidden',

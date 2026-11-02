@@ -80,7 +80,7 @@ export function DashboardScreen() {
                       },
                     ]}
                   >
-                    <View style={[styles.shortcutIcon, { backgroundColor: theme.tint }]}>
+                    <View style={styles.shortcutIcon}>
                       <Icon size={20} color={theme.ink} />
                     </View>
                     <Text variant="caption" numberOfLines={1} style={styles.center}>
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: tokens.space[2],
     paddingVertical: tokens.space[3],
-    borderWidth: StyleSheet.hairlineWidth,
+    boxShadow: tokens.shadow.card,
     borderRadius: tokens.radius.lg,
     borderCurve: 'continuous',
   },

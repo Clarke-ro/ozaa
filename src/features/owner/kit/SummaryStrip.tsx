@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
     gap: 2,
     paddingVertical: tokens.space[3],
     paddingHorizontal: tokens.space[3],
-    borderWidth: StyleSheet.hairlineWidth,
+    boxShadow: tokens.shadow.card,
     borderRadius: tokens.radius.lg,
     borderCurve: 'continuous',
   },

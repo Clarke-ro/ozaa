@@ -24,7 +24,9 @@ export function BarChart({
 }) {
   const theme = useTheme();
   const c = {
-    bar: theme.line,
+    // White bars with a fine edge: clear on the grey Today panel and on white cards alike.
+    bar: theme.surface,
+    edge: theme.line,
     active: theme.fill,
     text: theme.text,
     muted: theme.muted,
@@ -67,7 +69,17 @@ export function BarChart({
               importantForAccessibility="no"
               style={styles.col}
             >
-              <View style={[styles.bar, { height: h, backgroundColor: on ? c.active : c.bar }]} />
+              <View
+                style={[
+                  styles.bar,
+                  {
+                    height: h,
+                    backgroundColor: on ? c.active : c.bar,
+                    borderColor: on ? c.active : c.edge,
+                    borderWidth: StyleSheet.hairlineWidth,
+                  },
+                ]}
+              />
             </Pressable>
           );
         })}

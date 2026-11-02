@@ -88,7 +88,7 @@ export function PaymentsScreen() {
                 { backgroundColor: theme.surface, borderColor: theme.line },
               ]}
             >
-              <View style={[styles.icon, { backgroundColor: theme.tint }]}>
+              <View style={styles.icon}>
                 <Wallet size={20} color={theme.ink} />
               </View>
               <View style={styles.flex}>
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
   card: {
     gap: tokens.space[1],
     padding: tokens.space[4],
-    borderWidth: StyleSheet.hairlineWidth,
+    boxShadow: tokens.shadow.card,
     borderRadius: tokens.radius.lg,
     borderCurve: 'continuous',
   },
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
   num: { fontVariant: ['tabular-nums'] },
   list: {
     overflow: 'hidden',
-    borderWidth: StyleSheet.hairlineWidth,
+    boxShadow: tokens.shadow.card,
     borderRadius: tokens.radius.lg,
     borderCurve: 'continuous',
   },

@@ -53,7 +53,7 @@ export function TransactionRow({
       onPress={onPress}
       style={({ pressed }) => [styles.row, { backgroundColor: pressed ? theme.wash : undefined }]}
     >
-      <View style={[styles.icon, { backgroundColor: theme.wash }]}>
+      <View style={styles.icon}>
         <Icon size={20} color={theme.text} />
       </View>
       <View

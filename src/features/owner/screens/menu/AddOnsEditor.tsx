@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
   card: {
     gap: tokens.space[3],
     padding: tokens.space[3],
-    borderWidth: StyleSheet.hairlineWidth,
+    boxShadow: tokens.shadow.card,
     borderRadius: tokens.radius.md,
   },
   row: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },

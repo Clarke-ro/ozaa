@@ -71,7 +71,17 @@ export function OrderCard({
         : theme.line;
 
   return (
-    <View style={[styles.card, { backgroundColor: theme.surface, borderColor: edge }]}>
+    <View
+      style={[
+        styles.card,
+        // Clean card by default; only a very late or ready ticket gets a coloured edge.
+        {
+          backgroundColor: theme.surface,
+          borderColor: edge,
+          borderWidth: edge === theme.line ? 0 : 1.5,
+        },
+      ]}
+    >
       {/* A new ticket gets the venue colour down its left edge: it reads as incoming at a glance,
           without a badge. */}
       {order.status === 'received' ? (
@@ -189,7 +199,7 @@ const styles = StyleSheet.create({
     gap: tokens.space[4],
     padding: tokens.space[3],
     paddingStart: tokens.space[3] + 4,
-    borderWidth: 1,
+    boxShadow: tokens.shadow.card,
     borderRadius: tokens.radius.xl - 4,
     borderCurve: 'continuous',
   },

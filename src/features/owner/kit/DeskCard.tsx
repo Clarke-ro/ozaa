@@ -19,9 +19,10 @@ export function DeskCard({
 }) {
   const theme = useTheme();
   const look: ViewStyle = {
-    borderColor: tone === 'selected' ? theme.fill : tone === 'alert' ? theme.error : theme.line,
-    borderWidth: tone === 'selected' || tone === 'alert' ? 1.5 : 1,
+    borderColor: tone === 'selected' ? theme.fill : theme.error,
+    borderWidth: tone === 'selected' || tone === 'alert' ? 1.5 : 0,
     backgroundColor: tone === 'wash' ? theme.wash : theme.surface,
+    boxShadow: tone === 'wash' ? undefined : tokens.shadow.card,
   };
   if (!onPress) return <View style={[styles.card, look, style]}>{children}</View>;
   return (

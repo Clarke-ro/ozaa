@@ -67,7 +67,9 @@ export function CallCard({
         styles.card,
         {
           backgroundColor: theme.surface,
-          borderColor: live && age.tone === 'very_late' ? theme.error : theme.line,
+          borderColor: theme.error,
+          // Clean card by default; a guest waiting too long gets a red edge.
+          borderWidth: live && age.tone === 'very_late' ? 1.5 : 0,
         },
       ]}
     >
@@ -127,7 +129,7 @@ const styles = StyleSheet.create({
   card: {
     gap: tokens.space[3],
     padding: tokens.space[4],
-    borderWidth: StyleSheet.hairlineWidth,
+    boxShadow: tokens.shadow.card,
     borderRadius: tokens.radius.lg,
     borderCurve: 'continuous',
   },

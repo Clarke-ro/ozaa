@@ -31,7 +31,7 @@ export function LocationCard({
       ]}
     >
       <View style={styles.head}>
-        <View style={[styles.icon, { backgroundColor: active ? theme.tint : theme.wash }]}>
+        <View style={styles.icon}>
           <Building2 size={20} color={active ? theme.ink : theme.text} />
         </View>
         <View style={styles.flex}>
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
   card: {
     gap: tokens.space[3],
     padding: tokens.space[4],
-    borderWidth: 1,
+    boxShadow: tokens.shadow.card,
     borderRadius: tokens.radius.lg,
     borderCurve: 'continuous',
   },

@@ -56,10 +56,8 @@ export function NoteCard({ note, now }: { note: Note; now: number }) {
   const reason =
     typeof note.vars.reason === 'string' ? t(`waiter.reasons.${note.vars.reason}`) : '';
   const title = t(`ownerNotes.kind.${note.kind}`, { ...vars, reason });
-  const ink =
-    note.tone === 'alert' ? theme.error : note.tone === 'good' ? theme.success : theme.text;
-  const bg =
-    note.tone === 'alert' ? theme.errorTint : note.tone === 'good' ? theme.successTint : theme.wash;
+  // Plain line icon like the guest list: venue colour, or red / green when the tone says so.
+  const ink = note.tone === 'alert' ? theme.error : note.tone === 'good' ? theme.success : theme.ink;
   return (
     <Pressable
       accessibilityRole="button"
@@ -70,7 +68,7 @@ export function NoteCard({ note, now }: { note: Note; now: number }) {
         { backgroundColor: pressed ? theme.wash : theme.surface, borderColor: theme.line },
       ]}
     >
-      <View style={[styles.icon, { backgroundColor: bg }]}>
+      <View style={styles.icon}>
         <Icon size={18} color={ink} />
       </View>
       <View style={styles.flex}>
@@ -94,7 +92,7 @@ const styles = StyleSheet.create({
     minHeight: 64,
     paddingHorizontal: tokens.space[4],
     paddingVertical: tokens.space[3],
-    borderWidth: StyleSheet.hairlineWidth,
+    boxShadow: tokens.shadow.card,
     borderRadius: tokens.radius.lg,
     borderCurve: 'continuous',
   },

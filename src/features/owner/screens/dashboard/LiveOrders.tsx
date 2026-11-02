@@ -65,17 +65,19 @@ export function LiveOrders({ venueId }: { venueId: string }) {
           </Text>
         </View>
       ) : (
-        open.slice(0, SHOWN).map((order) => (
-          <OrderCard
-            key={order.id}
-            order={order}
-            now={now}
-            currency={venue.data?.currency ?? DEFAULT_CURRENCY}
-            next={move.label(order)}
-            busy={move.busy(order)}
-            onNext={() => move.run(order)}
-          />
-        ))
+        open
+          .slice(0, SHOWN)
+          .map((order) => (
+            <OrderCard
+              key={order.id}
+              order={order}
+              now={now}
+              currency={venue.data?.currency ?? DEFAULT_CURRENCY}
+              next={move.label(order)}
+              busy={move.busy(order)}
+              onNext={() => move.run(order)}
+            />
+          ))
       )}
     </View>
   );
@@ -86,7 +88,7 @@ const styles = StyleSheet.create({
   empty: {
     paddingVertical: tokens.space[4],
     paddingHorizontal: tokens.space[4],
-    borderWidth: StyleSheet.hairlineWidth,
+    boxShadow: tokens.shadow.card,
     borderRadius: tokens.radius.lg,
     borderCurve: 'continuous',
   },

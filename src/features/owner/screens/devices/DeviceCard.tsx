@@ -35,7 +35,7 @@ export function DeviceCard({
   return (
     <View style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.line }]}>
       <View style={styles.head}>
-        <View style={[styles.icon, { backgroundColor: theme.tint }]}>
+        <View style={styles.icon}>
           <Icon size={22} color={theme.ink} />
         </View>
         <View style={styles.flex}>
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
     paddingTop: tokens.space[4],
     paddingHorizontal: tokens.space[4],
     paddingBottom: tokens.space[1],
-    borderWidth: StyleSheet.hairlineWidth,
+    boxShadow: tokens.shadow.card,
     borderRadius: tokens.radius.lg,
     borderCurve: 'continuous',
   },

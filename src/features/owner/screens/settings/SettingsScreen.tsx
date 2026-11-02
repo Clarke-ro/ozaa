@@ -62,7 +62,9 @@ export function SettingsScreen() {
           )}
         </View>
         <Text variant="title">{firstName}</Text>
-        <StatusPill label={t(`ownerSettings.roles.${role}`)} tone="neutral" icon={false} />
+        <View style={styles.center}>
+          <StatusPill label={t(`ownerSettings.roles.${role}`)} tone="neutral" icon={false} />
+        </View>
         {location ? (
           <Text variant="caption" style={{ color: theme.muted }}>
             {location.name}
@@ -147,12 +149,13 @@ export function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
+  center: { alignItems: 'center' },
   profile: {
     alignItems: 'center',
     gap: tokens.space[2],
     paddingVertical: tokens.space[6],
     paddingHorizontal: tokens.space[4],
-    borderWidth: StyleSheet.hairlineWidth,
+    boxShadow: tokens.shadow.card,
     borderRadius: tokens.radius.lg,
     borderCurve: 'continuous',
   },
