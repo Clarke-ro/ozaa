@@ -1,0 +1,21 @@
+---
+import { sections } from "../content/page";
+---
+
+<header class="header">
+  <div class="wrap bar">
+    <a class="logo" href="#top">
+      <img src="/logo/ozaa-lockup.svg" alt="Ozaa" width="451" height="140" />
+    </a>
+    <nav class="nav" aria-label="On this page">
+      {
+        sections.map((section) => (
+          <a href={`#${section.id}`}>{section.nav}</a>
+        ))
+      }
+    </nav>
+    <a class="button button--sm" href="#contact">
+      Get Ozaa<span class="visually-hidden"> for your restaurant</span>
+    </a>
+  </div>
+</header>
