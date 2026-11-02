@@ -11,7 +11,7 @@ import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
-import { EmptyCard, Section, Toggle, toast } from '../../kit';
+import { EmptyCard, Toggle, toast, SectionLabel } from '../../kit';
 import { linkIcon } from './icons';
 import { LinkEditor } from './LinkEditor';
 
@@ -86,11 +86,12 @@ export function LinksScreen() {
             const group = items.filter((l) => l.placement === placement);
             if (!group.length) return null;
             return (
-              <Section key={placement} title={t(`ownerLinks.placement.${placement}`)}>
+              <View key={placement} style={styles.group}>
+                <SectionLabel title={t(`ownerLinks.placement.${placement}`)} caps />
                 {group.map((link) => {
                   const Icon = linkIcon(link.icon);
                   return (
-                    <View key={link.id} style={styles.row}>
+                    <View key={link.id} style={[styles.row, { backgroundColor: theme.surface }]}>
                       <Pressable
                         accessibilityRole="button"
                         accessibilityLabel={t('ownerLinks.editA11y', { title: link.title })}
@@ -123,7 +124,7 @@ export function LinksScreen() {
                     </View>
                   );
                 })}
-              </Section>
+              </View>
             );
           })
         )}
@@ -141,20 +142,19 @@ export function LinksScreen() {
 }
 
 const styles = StyleSheet.create({
+  group: { gap: tokens.space[2] },
+  // Each link is its own card, so turning one off or editing it never feels tied to the others.
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: tokens.space[3],
-    paddingRight: tokens.space[4],
+    minHeight: 64,
+    paddingHorizontal: tokens.space[4],
+    paddingVertical: tokens.space[3],
+    borderRadius: tokens.radius.lg,
+    borderCurve: 'continuous',
+    boxShadow: tokens.shadow.card,
   },
-  main: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[3],
-    minHeight: 60,
-    paddingLeft: tokens.space[4],
-    paddingVertical: tokens.space[2],
-  },
-  flex: { flex: 1 },
+  main: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
+  flex: { flex: 1, gap: 2 },
 });

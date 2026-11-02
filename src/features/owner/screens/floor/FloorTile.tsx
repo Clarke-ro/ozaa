@@ -6,8 +6,7 @@ import { formatMoney } from '@/lib/money';
 import { FLOOR_TONES, type FloorTone } from '@/theme/palette';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
-import { Grain } from '../../kit';
+import { fontFamily, useTheme } from '@/ui/theme';
 
 export type FloorStatus = 'free' | 'seated' | 'ordered' | 'waiting_to_pay' | 'needs_waiter';
 
@@ -70,30 +69,30 @@ export function FloorTile({
       style={({ pressed }) => [
         styles.tile,
         {
-          backgroundColor: look.bg,
+          backgroundColor: theme.surface,
+          // Clean white card; tables that need someone (calling, paying) keep a coloured edge.
           borderColor: selected ? theme.text : look.edge,
-          borderWidth: selected ? 2.5 : 1,
+          borderWidth: selected ? 2 : tone === 'calling' || tone === 'paying' ? 1.5 : 0,
         },
         pressed && styles.pressed,
       ]}
     >
-      <Grain />
-      <View style={styles.top}>
-        <Text variant="display-m" style={{ color: look.ink }}>
-          {code}
-        </Text>
-        <View style={[styles.badge, { backgroundColor: look.edge }]}>
-          <Icon size={16} color={look.ink} strokeWidth={2.4} />
-        </View>
-      </View>
+      {/* The status colour is a strip, not the whole tile: calm to scan, still quick to read. */}
+      <View style={[styles.strip, { backgroundColor: look.edge }]} />
+      <Text variant="display-m" style={{ color: theme.text }}>
+        {code}
+      </Text>
       <View>
-        <Text variant="body-strong" numberOfLines={1} style={{ color: look.ink }}>
-          {word}
-        </Text>
+        <View style={styles.state}>
+          <Icon size={14} color={look.ink} strokeWidth={2.4} />
+          <Text variant="caption" numberOfLines={1} style={[styles.word, { color: look.ink }]}>
+            {word}
+          </Text>
+        </View>
         <Text
           variant="caption"
           numberOfLines={1}
-          style={{ color: look.ink, opacity: bill ? 1 : 0 }}
+          style={{ color: theme.muted, opacity: bill ? 1 : 0 }}
         >
           {bill ?? ' '}
         </Text>
@@ -104,20 +103,17 @@ export function FloorTile({
 
 const styles = StyleSheet.create({
   tile: {
-    minHeight: 112,
+    minHeight: 104,
     padding: tokens.space[3],
+    paddingTop: tokens.space[3] + 4,
     borderRadius: tokens.radius.lg,
     borderCurve: 'continuous',
     justifyContent: 'space-between',
     overflow: 'hidden',
+    boxShadow: tokens.shadow.card,
   },
+  strip: { position: 'absolute', top: 0, left: 0, right: 0, height: 4 },
   pressed: { transform: [{ scale: 0.97 }] },
-  top: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
-  badge: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  state: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[1] },
+  word: { fontFamily: fontFamily.strong, flexShrink: 1 },
 });

@@ -15,7 +15,6 @@ import { useTheme } from '@/ui/theme';
 import { useOwnerSession } from '@/features/session';
 import { nextOrderMove, type OrderStatus, type StaffRole } from '@/features/orders';
 import { DeskWait, OwnerPage } from '../chrome/OwnerPage';
-import { FloorLegend } from './floor/FloorLegend';
 import { FloorTile } from './floor/FloorTile';
 import { ChipRow, DeskCard } from '../kit';
 
@@ -143,8 +142,6 @@ export function FloorScreen() {
               {t('owner.emptyFloor')}
             </Text>
           ) : null}
-
-          <FloorLegend />
           <View style={styles.grid}>
             {filteredTables.map((item) => (
               <View key={item.id} style={{ width: `${100 / columns - 2.5}%` as DimensionValue }}>
