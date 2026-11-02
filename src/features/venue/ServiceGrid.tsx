@@ -4,7 +4,6 @@ import type { VenuePublic } from '@/lib/api/types';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { ServiceList } from './ServiceList';
-import { MenuRow } from './MenuRow';
 
 const SECTIONS = ['table', 'rewards', 'fun', 'more'] as const;
 
@@ -12,8 +11,8 @@ const SECTIONS = ['table', 'rewards', 'fun', 'more'] as const;
 export const NOT_BUILT: readonly string[] = ['reserve', 'events'];
 
 /**
- * The four service sections from brand.md section 6. Every service is a full-width row in a
- * grouped list. Menu is what a seated guest taps most, so it gets its own larger row on top.
+ * The four service sections from brand.md section 6. Every service, Menu included, is the same
+ * full-width card; the API's order puts Menu first in "At your table".
  */
 export function ServiceGrid({
   services,
@@ -37,18 +36,7 @@ export function ServiceGrid({
             <Text variant="title" accessibilityRole="header" style={styles.heading}>
               {t(`home.sections.${section}`)}
             </Text>
-            {items.some((s) => s.id === 'menu') ? (
-              <View style={styles.feature}>
-                <MenuRow
-                  id="menu"
-                  subtitle={items.find((s) => s.id === 'menu')?.subtitle}
-                  onPress={() => onOpen('menu')}
-                />
-              </View>
-            ) : null}
-            {items.some((s) => s.id !== 'menu') ? (
-              <ServiceList items={items.filter((s) => s.id !== 'menu')} onOpen={onOpen} />
-            ) : null}
+            <ServiceList items={items} onOpen={onOpen} />
           </View>
         );
       })}
@@ -59,5 +47,4 @@ export function ServiceGrid({
 const styles = StyleSheet.create({
   block: { marginTop: tokens.space[8] },
   heading: { paddingHorizontal: tokens.grid.mobile.margin, marginBottom: tokens.space[3] },
-  feature: { paddingHorizontal: tokens.grid.mobile.margin, marginBottom: tokens.space[4] },
 });

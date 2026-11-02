@@ -8,7 +8,8 @@ import { VenueImage } from '@/ui/VenueImage';
 import { useTheme } from '@/ui/theme';
 
 /**
- * One dish in the menu grid: photo, name, a two-line description, price and an add button.
+ * One dish in the menu grid: photo, name, price and an add button. The description lives on
+ * the dish page, so the grid stays compact.
  * The button adds straight away when nothing has to be chosen; otherwise it opens the dish.
  */
 export function DishCard({
@@ -66,9 +67,6 @@ export function DishCard({
           <Text variant="body-strong" numberOfLines={1}>
             {item.name.en}
           </Text>
-          <Text variant="caption" numberOfLines={2} style={[styles.desc, { color: theme.muted }]}>
-            {item.description.en}
-          </Text>
           <View style={styles.foot}>
             <PriceText amount={item.pricePesewas} currency={currency} />
           </View>
@@ -109,7 +107,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter_600',
   },
   body: { padding: 12, gap: 4, flex: 1 },
-  desc: { minHeight: 36 },
   foot: {
     flexDirection: 'row',
     alignItems: 'center',

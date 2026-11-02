@@ -1,6 +1,5 @@
 import {
   Bell,
-  BookOpen,
   Calendar,
   Clock,
   CreditCard,
@@ -10,12 +9,13 @@ import {
   Info,
   Star,
   Tag,
+  UtensilsCrossed,
   Wifi,
   type LucideIcon,
 } from 'lucide-react-native';
 
 const ICONS: Record<string, LucideIcon> = {
-  menu: BookOpen,
+  menu: UtensilsCrossed,
   waiter: Bell,
   status: Clock,
   pay: CreditCard,
