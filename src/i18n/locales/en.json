@@ -1031,7 +1031,10 @@
     "saved": "Loyalty saved",
     "previewLine_one": "1 more stamp for {{reward}}",
     "previewLine_other": "{{count}} more stamps for {{reward}}",
-    "previewA11y": "Stamp card preview: {{stamps}} stamps for {{reward}}"
+    "previewA11y": "Stamp card preview: {{stamps}} stamps for {{reward}}",
+    "stamps30": "Stamps",
+    "rewards30": "Rewards",
+    "last30": "Last 30 days"
   },
   "ownerBusiness": {
     "business": "Business",

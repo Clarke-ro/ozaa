@@ -7,13 +7,15 @@ import { useOwnerSession } from '@/features/session';
 import { Button } from '@/ui/Button';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
-import { DeskTabs } from '../../kit';
+import { Segmented } from '../../kit';
 import { LoyaltyCustomersScreen } from '../LoyaltyCustomersScreen';
 import { ProgramForm, useProgramEditor } from './ProgramForm';
+import { LoyaltyOverview } from './LoyaltyOverview';
 import { ResultsTab } from './ResultsTab';
 
 type Tab = 'program' | 'members' | 'results';
 
+/** Loyalty: how it's doing at the top, then the programme, its members and results. */
 export function LoyaltyScreen() {
   const { t } = useTranslation();
   const router = useRouter();
@@ -39,10 +41,12 @@ export function LoyaltyScreen() {
       }
       footer={tab === 'program' ? editor.saveBar : null}
     >
-      <DeskTabs
+      <LoyaltyOverview venueId={venueId} />
+      <Segmented<Tab>
+        label={t('owner.loyalty')}
         value={tab}
         onChange={setTab}
-        tabs={[
+        options={[
           { id: 'program', label: t('ownerLoyalty.tabs.program') },
           { id: 'members', label: t('ownerLoyalty.tabs.members') },
           { id: 'results', label: t('ownerLoyalty.tabs.results') },
