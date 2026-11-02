@@ -18,7 +18,6 @@ export default function VenueLayout() {
   return (
     <ThemeProvider theme={theme}>
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="story/[id]" options={{ presentation: 'modal' }} />
         <Stack.Screen name="menu/[item]" options={{ presentation: 'transparentModal' }} />
         <Stack.Screen name="order" options={{ presentation: 'transparentModal' }} />
       </Stack>

@@ -55,7 +55,7 @@ export function ServiceGrid({
         if (items.length === 0) return null;
         return (
           <View key={section} style={styles.block}>
-            <Text variant="display-m" style={styles.heading}>
+            <Text variant="title" accessibilityRole="header" style={styles.heading}>
               {t(`home.sections.${section}`)}
             </Text>
             {items.map((service) => (

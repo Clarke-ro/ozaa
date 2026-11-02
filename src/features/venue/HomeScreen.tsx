@@ -4,9 +4,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { Globe, MapPin, Share2, Utensils } from 'lucide-react-native';
+import { Globe, Share2, Utensils } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { describeHours } from '@/lib/time';
 import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { VenueImage } from '@/ui/VenueImage';
@@ -15,8 +14,8 @@ import { LanguagePicker } from './LanguagePicker';
 import { languageByCode, chooseLanguage, type LanguageCode } from './languages';
 import { shareVenueLink } from './shareVenue';
 import { ServiceGrid } from './ServiceGrid';
-import { StoryRow } from './StoryRow';
-import { useStories, useVenue } from './useVenue';
+import { VenueIntro } from './VenueIntro';
+import { useVenue } from './useVenue';
 import { ErrorState, LoadingState } from '@/ui/states';
 import { useGuestSession } from '@/features/session';
 
@@ -29,7 +28,6 @@ export function HomeScreen({ slug }: { slug: string }) {
   const language = languageByCode(i18n.language);
   const router = useRouter();
   const venue = useVenue(slug);
-  const stories = useStories(slug);
   const tableCode = useGuestSession((state) => (state.slug === slug ? state.tableCode : null));
   const orderId = useGuestSession((state) => (state.slug === slug ? state.orderId : null));
   const order = useQuery({
@@ -42,14 +40,12 @@ export function HomeScreen({ slug }: { slug: string }) {
   if (venue.isLoading) return <LoadingState />;
   if (venue.isError || !venue.data) return <ErrorState onRetry={() => void venue.refetch()} />;
   const place = venue.data;
-  const hours = describeHours(place.hours, new Date());
-  const longName = place.name.length > 16;
   const pageLink = venuePageLink(slug, tableCode);
 
   return (
     <SafeScreen includeTop={false}>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 96 }}>
-        <View style={[styles.banner, { height: 170 + insets.top }]}>
+        <View style={[styles.banner, { height: 140 + insets.top }]}>
           <VenueImage
             url={place.banner.url}
             alt={place.banner.alt ?? place.name}
@@ -86,9 +82,17 @@ export function HomeScreen({ slug }: { slug: string }) {
             </View>
           ) : null}
           <View style={[styles.logo, { borderColor: theme.white, backgroundColor: theme.fill }]}>
-            <Text variant="display-m" style={{ color: theme.onFill }}>
-              {place.initials ?? place.name.slice(0, 2).toUpperCase()}
-            </Text>
+            {place.logo ? (
+              <VenueImage
+                url={place.logo.url}
+                alt={place.logo.alt ?? place.name}
+                style={styles.logoImage}
+              />
+            ) : (
+              <Text variant="title" style={{ color: theme.onFill }}>
+                {place.initials ?? place.name.slice(0, 2).toUpperCase()}
+              </Text>
+            )}
           </View>
         </View>
         <View style={styles.identity}>
@@ -100,36 +104,8 @@ export function HomeScreen({ slug }: { slug: string }) {
               </Text>
             </View>
           ) : null}
-          <Text variant={longName ? 'display-m' : 'display-l'}>{place.name}</Text>
-          <Text variant="body" style={{ color: theme.muted, marginTop: 8 }}>
-            {place.description.en}
-          </Text>
-          <View style={styles.fact}>
-            <MapPin color={theme.meta} size={16} strokeWidth={2} />
-            <Text variant="body">{place.location.label}</Text>
-          </View>
-          <View style={styles.fact}>
-            <View
-              style={[styles.dot, { backgroundColor: hours.open ? theme.success : theme.meta }]}
-            />
-            <Text variant="body">
-              <Text
-                variant="body-strong"
-                style={{ color: hours.open ? theme.success : theme.meta }}
-              >
-                {hours.text.split(' · ')[0]}
-              </Text>
-              {hours.text.includes(' · ')
-                ? ` · ${hours.text.split(' · ').slice(1).join(' · ')}`
-                : ''}
-            </Text>
-          </View>
+          <VenueIntro venue={place} />
         </View>
-        <StoryRow
-          slug={slug}
-          stories={stories.data?.items ?? []}
-          onOpen={(id) => router.push(`/${slug}/story/${id}`)}
-        />
         <ServiceGrid
           slug={slug}
           services={place.services}
@@ -145,7 +121,10 @@ export function HomeScreen({ slug }: { slug: string }) {
         <Pressable
           accessibilityRole="button"
           onPress={() => router.push(`/${slug}/status`)}
-          style={[styles.orderBar, { borderColor: theme.line }]}
+          style={[
+            styles.orderBar,
+            { borderColor: theme.line, bottom: Math.max(insets.bottom, 16) },
+          ]}
         >
           <View style={[styles.dot, { backgroundColor: theme.success }]} />
           <View style={{ flex: 1 }}>
@@ -156,10 +135,13 @@ export function HomeScreen({ slug }: { slug: string }) {
               })}
             </Text>
             <Text variant="caption" style={{ color: theme.muted }}>
-              {t('orderBar.meta', {
-                minutes: order.data.etaMinutes ?? 12,
-                count: order.data.lines.length,
-              })}
+              {/* No estimate from the kitchen means no time shown, never a guessed one. */}
+              {order.data.etaMinutes != null
+                ? t('orderBar.meta', {
+                    minutes: order.data.etaMinutes,
+                    count: order.data.lines.length,
+                  })
+                : t('orderBar.items', { count: order.data.lines.length })}
             </Text>
           </View>
         </Pressable>
@@ -224,19 +206,21 @@ const styles = StyleSheet.create({
   logo: {
     position: 'absolute',
     start: 20,
-    bottom: -42,
-    width: 84,
-    height: 84,
-    borderRadius: 42,
-    borderWidth: 4,
+    bottom: -30,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    borderWidth: 3,
+    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  identity: { paddingHorizontal: 20, paddingTop: 52 },
+  logoImage: { width: '100%', height: '100%' },
+  identity: { paddingHorizontal: 20, paddingTop: 40, paddingBottom: 8 },
   pill: {
     position: 'absolute',
     end: 20,
-    top: 12,
+    top: 10,
     height: 30,
     borderRadius: 999,
     borderWidth: 1,
