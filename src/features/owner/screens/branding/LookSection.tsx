@@ -4,8 +4,7 @@ import { Check } from 'lucide-react-native';
 import { hapticSelection } from '@/lib/haptics';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
-import { Section, SectionBody, Segmented } from '../../kit';
+import { DISPLAY, fontFamily, useTheme } from '@/ui/theme';
 import { isHex, normaliseHex } from './look';
 
 // Starting colours. Any hex works; these just save typing.
@@ -35,11 +34,14 @@ export function LookSection({
   const theme = useTheme();
   const { t } = useTranslation();
   const bad = !isHex(accent);
+  const card = [styles.card, { backgroundColor: theme.surface }];
   return (
-    <Section title={t('ownerBranding.look')}>
-      <SectionBody>
+    <View style={styles.stack}>
+      {/* Each part is its own card with its name above it, so nothing is crammed together. */}
+      <View style={styles.block}>
+        <Label>{t('ownerBranding.colour')}</Label>
         <View
-          style={styles.swatches}
+          style={[card, styles.swatches]}
           accessibilityRole="radiogroup"
           accessibilityLabel={t('ownerBranding.colour')}
         >
@@ -55,22 +57,28 @@ export function LookSection({
                   void hapticSelection();
                   onAccent(s.hex);
                 }}
-                style={[styles.hit, on && { borderColor: theme.text }]}
+                style={[styles.hit, { borderColor: on ? theme.text : theme.surface }]}
               >
                 <View style={[styles.swatch, { backgroundColor: s.hex }]}>
-                  {on ? <Check size={18} color="#FFFFFF" strokeWidth={3} /> : null}
+                  {on ? <Check size={18} color={theme.white} strokeWidth={3} /> : null}
                 </View>
               </Pressable>
             );
           })}
         </View>
-        <View style={styles.hexRow}>
-          <Text variant="body" style={styles.flex}>
-            {t('ownerBranding.hex')}
-          </Text>
+      </View>
+
+      <View style={styles.block}>
+        <Label>{t('ownerBranding.hex')}</Label>
+        <View
+          style={[
+            styles.field,
+            { backgroundColor: theme.surface, borderColor: bad ? theme.error : theme.line },
+          ]}
+        >
           <View
             style={[
-              styles.preview,
+              styles.dot,
               { backgroundColor: bad ? theme.wash : accent, borderColor: theme.line },
             ]}
           />
@@ -81,10 +89,7 @@ export function LookSection({
             autoCapitalize="characters"
             autoCorrect={false}
             maxLength={7}
-            style={[
-              styles.hexInput,
-              { color: theme.text, borderColor: bad ? theme.error : theme.line },
-            ]}
+            style={[styles.input, { color: theme.text }]}
           />
         </View>
         {bad ? (
@@ -92,33 +97,63 @@ export function LookSection({
             {t('ownerBranding.hexError')}
           </Text>
         ) : null}
-      </SectionBody>
-      <SectionBody>
-        <Text variant="body">{t('ownerBranding.font')}</Text>
-        <Segmented<FontPair>
-          label={t('ownerBranding.font')}
-          value={font}
-          onChange={onFont}
-          options={[
-            { id: 'ozaa', label: t('ownerBranding.fonts.ozaa') },
-            { id: 'serif', label: t('ownerBranding.fonts.serif') },
-            { id: 'bold', label: t('ownerBranding.fonts.bold') },
-          ]}
-        />
-      </SectionBody>
-    </Section>
+      </View>
+
+      <View style={styles.block}>
+        <Label>{t('ownerBranding.font')}</Label>
+        <View style={styles.fonts} accessibilityRole="radiogroup">
+          {FONTS.map((id) => {
+            const on = id === font;
+            return (
+              <Pressable
+                key={id}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: on }}
+                accessibilityLabel={t(`ownerBranding.fonts.${id}`)}
+                onPress={() => onFont(id)}
+                style={[card, styles.font, { borderColor: on ? theme.ink : theme.surface }]}
+              >
+                <Text variant="display-m" style={{ fontFamily: DISPLAY[id] }}>
+                  {t('ownerBranding.fontSample')}
+                </Text>
+                <Text variant="caption" style={{ color: on ? theme.ink : theme.muted }}>
+                  {t(`ownerBranding.fonts.${id}`)}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+    </View>
+  );
+}
+
+const FONTS: FontPair[] = ['ozaa', 'serif', 'bold'];
+
+function Label({ children }: { children: string }) {
+  return (
+    <Text variant="body-strong" style={styles.label}>
+      {children}
+    </Text>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
+  stack: { gap: tokens.space[5] },
+  block: { gap: tokens.space[2] },
+  label: { fontSize: tokens.type.caption.size + 1 },
+  card: {
+    padding: tokens.space[3],
+    borderRadius: tokens.radius.lg,
+    borderCurve: 'continuous',
+    boxShadow: tokens.shadow.card,
+  },
   swatches: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.space[1] },
   hit: {
     width: 48,
     height: 48,
     borderRadius: 24,
     borderWidth: 2,
-    borderColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -129,15 +164,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  hexRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
-  preview: { width: 28, height: 28, borderRadius: 14, borderWidth: 1 },
-  hexInput: {
-    width: 104,
-    minHeight: 44,
+  field: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[3],
+    minHeight: 48,
+    paddingHorizontal: tokens.space[3],
     borderWidth: 1,
-    borderRadius: tokens.radius.sm,
-    paddingHorizontal: tokens.space[2],
-    fontFamily: 'Inter_400',
-    fontSize: 16,
+    borderRadius: tokens.radius.md,
   },
+  dot: { width: 24, height: 24, borderRadius: 12, borderWidth: StyleSheet.hairlineWidth },
+  input: {
+    flex: 1,
+    minHeight: 46,
+    fontFamily: fontFamily.regular,
+    fontSize: tokens.type.body.size,
+  },
+  fonts: { flexDirection: 'row', gap: tokens.space[2] },
+  font: { flex: 1, alignItems: 'center', gap: tokens.space[1], borderWidth: 1.5 },
 });

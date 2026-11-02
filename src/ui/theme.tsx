@@ -41,7 +41,8 @@ export type Theme = {
   derived: DerivedTheme;
 };
 
-const DISPLAY: Record<FontPair, string> = {
+/** The heading font each font pair loads. Branding shows these as the choices. */
+export const DISPLAY: Record<FontPair, string> = {
   ozaa: 'Unbounded_700',
   serif: 'NotoSerif_700',
   bold: 'Montserrat_800',

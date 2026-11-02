@@ -923,7 +923,7 @@
     "tagline": "Tagline",
     "description": "Description",
     "buttons": "Buttons",
-    "buttonsNote": "The first button is the filled one guests see first.",
+    "buttonsNote": "Hold the grip and drag to reorder. The first button is the filled one.",
     "tint": "Button text",
     "tints": {
       "auto": "Auto",
@@ -943,7 +943,9 @@
       "words": "Words",
       "buttons": "Buttons",
       "preview": "Preview"
-    }
+    },
+    "fontSample": "Aa",
+    "orderLabel": "Order on the guest page"
   },
   "ownerPages": {
     "businessLead": "Your business name and every location you run on Ozaa.",
