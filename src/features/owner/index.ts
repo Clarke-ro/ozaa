@@ -21,5 +21,6 @@ export { DevicesScreen } from './screens/devices/DevicesScreen';
 export { FeedbackScreen } from './screens/feedback/FeedbackScreen';
 export { LinksScreen as CustomLinksScreen } from './screens/links/LinksScreen';
 export { ScanStampScreen } from './screens/ScanStampScreen';
+export { NotificationsScreen } from './screens/notifications/NotificationsScreen';
 export { SettingsScreen } from './screens/settings/SettingsScreen';
 export { SocialsScreen } from './screens/SocialsScreen';

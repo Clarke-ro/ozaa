@@ -591,7 +591,8 @@
     "alertCalls_other": "{{count}} waiter calls are waiting.",
     "alertBills_one": "1 table is waiting to pay.",
     "alertBills_other": "{{count}} tables are waiting to pay.",
-    "businessName": "Business name"
+    "businessName": "Business name",
+    "notifications": "Notifications"
   },
   "errors": {
     "generic": "Something went wrong. Try again.",
@@ -1410,5 +1411,28 @@
     "closeResult": "Close",
     "problemTitle": "Couldn't add a stamp",
     "problemBody": "The card may be on cooldown or not recognised. Try again."
+  },
+  "ownerNotes": {
+    "title": "Notifications",
+    "pinned": "Needs you",
+    "new": "New",
+    "earlier": "Earlier",
+    "now": "Right now",
+    "empty": "All quiet",
+    "emptyBody": "New orders, waiter calls, guest notes and payments show here.",
+    "bellA11y_one": "Notifications, 1 new",
+    "bellA11y_other": "Notifications, {{count}} new",
+    "kind": {
+      "sold_out": "{{dish}} is sold out",
+      "payout": "Check your payout account so money can reach you",
+      "call": "Table {{table}}: {{reason}}",
+      "order": "New order #{{number}} from table {{table}}",
+      "order_ready": "Order #{{number}} is ready for table {{table}}",
+      "payment": "{{amount}} paid for order #{{number}}",
+      "payment_failed": "A payment for order #{{number}} didn't go through",
+      "feedback": "A guest left a {{score}}-star note",
+      "staff_joined": "{{name}} joined the team",
+      "staff_invited": "{{name}} hasn't accepted the invite yet"
+    }
   }
 }

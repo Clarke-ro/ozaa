@@ -3,6 +3,7 @@ import { Pressable, StyleSheet } from 'react-native';
 import { usePathname, useRouter, type Href } from 'expo-router';
 import {
   Bell,
+  BellDot,
   Building2,
   ChartColumn,
   ClipboardList,
@@ -62,6 +63,7 @@ export const NAV_ICONS: Record<OwnerNavId | 'more', LucideIcon> = {
   devices: Smartphone,
   business: Building2,
   settings: Settings,
+  notifications: BellDot,
   more: Menu,
 };
 

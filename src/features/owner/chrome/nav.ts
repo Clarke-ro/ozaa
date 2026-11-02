@@ -2,6 +2,7 @@ import type { StaffRole } from '@/features/orders';
 
 export type OwnerNavId =
   | 'dashboard'
+  | 'notifications'
   | 'floor'
   | 'orders'
   | 'calls'
@@ -45,6 +46,12 @@ export const OWNER_NAV: readonly OwnerNavItem[] = [
     id: 'dashboard',
     href: '/owner',
     roles: ['owner', 'manager', 'waiter', 'viewer'],
+    group: 'service',
+  },
+  {
+    id: 'notifications',
+    href: '/owner/notifications',
+    roles: ['owner', 'manager', 'waiter', 'kitchen', 'viewer'],
     group: 'service',
   },
   { id: 'floor', href: '/owner/floor', roles: FRONT, group: 'service' },

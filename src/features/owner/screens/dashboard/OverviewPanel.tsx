@@ -14,6 +14,7 @@ import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { useOwnerSession } from '@/features/session';
 import { LocationSwitcher } from '../../chrome/LocationSwitcher';
+import { useNotifications } from '../../data/useNotifications';
 import { ownerKeys } from '../../data/keys';
 import { salesLine } from '../../desk/dashboardModel';
 import { BarChart, Segmented } from '../../kit';
@@ -26,6 +27,7 @@ export function OverviewPanel({ dashboard }: { dashboard: OwnerDashboard }) {
   const theme = useTheme();
   const { t, i18n } = useTranslation();
   const router = useRouter();
+  const { unseen } = useNotifications();
   const insets = useSafeAreaInsets();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const firstName = useOwnerSession((state) => state.firstName);
@@ -71,18 +73,18 @@ export function OverviewPanel({ dashboard }: { dashboard: OwnerDashboard }) {
         <LocationSwitcher variant="chip" />
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={t('ownerDash.callsA11y', { count: dashboard.openCalls })}
-          onPress={() => router.push('/owner/calls')}
+          accessibilityLabel={t('ownerNotes.bellA11y', { count: unseen })}
+          onPress={() => router.push('/owner/notifications')}
           style={({ pressed }) => [
             styles.bell,
             { backgroundColor: pressed ? theme.line : theme.surface },
           ]}
         >
           <Bell size={20} color={theme.text} />
-          {dashboard.openCalls > 0 ? (
+          {unseen > 0 ? (
             <View style={[styles.badge, { backgroundColor: theme.fill }]}>
               <Text variant="caption" style={[styles.badgeText, { color: theme.onFill }]}>
-                {dashboard.openCalls}
+                {unseen > 99 ? '99+' : unseen}
               </Text>
             </View>
           ) : null}
