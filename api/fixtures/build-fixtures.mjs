@@ -23,6 +23,9 @@ const { deriveTheme } = W.OzaaTheme;
 // Mock media lives under this fake host. The mock layer maps it to bundled files.
 const MEDIA = 'https://mock.ozaa.app/media/';
 const img = (p, w = 800, h = 600, alt = '') => ({ url: MEDIA + p, width: w, height: h, alt });
+// Two close-up crops of each dish photo (img/<dish>-2.jpg, -3.jpg) stand in for extra photos.
+const closeUps = (p, alt) =>
+  [2, 3].map(n => img(p.replace(/\.jpg$/, `-${n}.jpg`), 800, 800, `${alt}, close up`));
 const slugs = { mamas: 'mamas-kitchen', bean: 'bean-there', akos: 'auntie-akos' };
 const hoursUntil = { mamas: '22:00', bean: '20:00', akos: '21:00' };
 const LANG = { EN: 'en', TWI: 'tw' };
@@ -67,7 +70,7 @@ for (const [key, v] of Object.entries(W.VENUES)) {
   const items = v.items.map((it, i) => ({
     id: `itm_${key}${i}`, categoryId: categories[0].id,
     name: { en: it.n }, description: { en: it.d }, pricePesewas: Math.round(it.p * 100),
-    photo: img(it.img, 800, 800, it.n), available: true, dietary: [], badges: it.pop ? ['popular'] : [],
+    photo: img(it.img, 800, 800, it.n), gallery: closeUps(it.img, it.n), available: true, dietary: [], badges: it.pop ? ['popular'] : [],
     modifierGroups: [], prepMinutes: 12,
   }));
   out.menus[slug] = { venueId, updatedAt: now.toISOString(), categories, items };

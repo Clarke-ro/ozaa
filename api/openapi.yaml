@@ -2131,6 +2131,11 @@ components:
         pricePesewas: { $ref: '#/components/schemas/Pesewas' }
         photo:
           oneOf: [{ $ref: '#/components/schemas/Image' }, { type: 'null' }]
+        gallery:
+          type: array
+          maxItems: 5
+          description: Extra photos of the same dish, shown after `photo` on the dish page as swipeable pages. Empty or missing means only `photo` is shown.
+          items: { $ref: '#/components/schemas/Image' }
         available: { type: boolean, description: False shows "Sold out" and blocks adding. }
         dietary: { type: array, items: { $ref: '#/components/schemas/Dietary' } }
         badges: { type: array, items: { type: string, enum: [popular, new, chef_pick] } }

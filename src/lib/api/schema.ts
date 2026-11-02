@@ -1514,6 +1514,8 @@ export interface components {
             description: components["schemas"]["LocalizedText"];
             pricePesewas: components["schemas"]["Pesewas"];
             photo?: components["schemas"]["Image"] | null;
+            /** @description Extra photos of the same dish, shown after `photo` on the dish page as swipeable pages. Empty or missing means only `photo` is shown. */
+            gallery?: components["schemas"]["Image"][];
             /** @description False shows "Sold out" and blocks adding. */
             available: boolean;
             dietary: components["schemas"]["Dietary"][];
