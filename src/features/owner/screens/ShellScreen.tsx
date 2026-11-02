@@ -1,5 +1,6 @@
+import { makeStyles } from '@/ui/makeStyles';
 import type { ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { CheckCircle2, type LucideIcon } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
@@ -23,6 +24,7 @@ export function ShellScreen({
   icon?: LucideIcon;
   badge?: string;
 }) {
+  const styles = useStyles();
   const { t } = useTranslation();
   const theme = useTheme();
 
@@ -72,8 +74,8 @@ export function ShellScreen({
         </View>
 
         <View style={styles.releaseNotice}>
-          <CheckCircle2 size={16} color="#16A34A" />
-          <Text variant="caption" style={{ color: '#16A34A', fontWeight: '600' }}>
+          <CheckCircle2 size={16} color={theme.success} />
+          <Text variant="caption" style={{ color: theme.success, fontWeight: '600' }}>
             Aligned with Ozaa Phase 3 roadmap specifications and restaurant feedback.
           </Text>
         </View>
@@ -82,7 +84,7 @@ export function ShellScreen({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   previewContainer: {
     gap: tokens.space[3],
     marginBottom: tokens.space[3],
@@ -98,13 +100,13 @@ const styles = StyleSheet.create({
     gap: tokens.space[2],
   },
   phaseBadge: {
-    backgroundColor: '#FFF1EA',
+    backgroundColor: theme.tint,
     paddingHorizontal: tokens.space[2],
     paddingVertical: 3,
     borderRadius: tokens.radius.full,
   },
   phaseText: {
-    color: '#D24000',
+    color: theme.ink,
     fontWeight: '700',
     fontSize: 10,
     letterSpacing: 0.5,
@@ -127,7 +129,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.wash,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 2,
@@ -135,7 +137,7 @@ const styles = StyleSheet.create({
   stepNumberText: {
     fontWeight: '700',
     fontSize: 11,
-    color: '#111111',
+    color: theme.text,
   },
   stepTextWrapper: {
     flex: 1,
@@ -145,8 +147,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     padding: tokens.space[2],
-    backgroundColor: '#F0FDF4',
+    backgroundColor: theme.successTint,
     borderRadius: tokens.radius.sm,
     marginTop: tokens.space[1],
   },
-});
+}));

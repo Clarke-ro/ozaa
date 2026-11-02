@@ -1,31 +1,8 @@
+import { makeStyles } from '@/ui/makeStyles';
 import { useState } from 'react';
-import {
-  Alert,
-  Platform,
-  Pressable,
-  ScrollView,
-  Share,
-  StyleSheet,
-  TextInput,
-  View,
-} from 'react-native';
+import { Platform, Pressable, Share, TextInput, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
-import {
-  Award,
-  CheckCircle2,
-  ChevronRight,
-  Download,
-  Filter,
-  History,
-  Phone,
-  Plus,
-  Search,
-  Share2,
-  Sparkles,
-  Users,
-  X,
-} from 'lucide-react-native';
+import { Award, ChevronRight, Search, Sparkles, Users, X } from 'lucide-react-native';
 import { api } from '@/lib/api';
 import type { LoyaltyCustomerSummary } from '@/lib/api/types';
 import { tokens } from '@/theme/tokens';
@@ -33,18 +10,10 @@ import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { DeskWait } from '../chrome/OwnerPage';
-import {
-  DeskCard,
-  EmptyCard,
-  IconTile,
-  ModalSheet,
-  SectionLabel,
-  StatusPill,
-  Toggle,
-} from '../kit';
+import { EmptyCard, ModalSheet, SectionLabel, Toggle } from '../kit';
 
 export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
-  const { t } = useTranslation();
+  const styles = useStyles();
   const theme = useTheme();
   const client = useQueryClient();
 
@@ -107,7 +76,7 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
     const rows = items
       .map(
         (c) =>
-          `"${c.phoneMasked}","${c.name ?? ''}",${c.stamps},${c.rewardsAvailable},${c.wantsOffers ? 'YES' : 'NO'},"${c.lastStampAt}"`
+          `"${c.phoneMasked}","${c.name ?? ''}",${c.stamps},${c.rewardsAvailable},${c.wantsOffers ? 'YES' : 'NO'},"${c.lastStampAt}"`,
       )
       .join('\n');
     const csvContent = header + rows;
@@ -148,7 +117,12 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
               style={[styles.searchInput, { color: theme.text }]}
             />
             {search ? (
-              <Pressable onPress={() => setSearch('')} hitSlop={8}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Clear search"
+                onPress={() => setSearch('')}
+                hitSlop={14}
+              >
                 <X size={16} color={theme.meta} />
               </Pressable>
             ) : null}
@@ -163,7 +137,9 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
         </View>
 
         {/* Marketing Filter Toggle Strip */}
-        <View style={[styles.filterStrip, { backgroundColor: theme.wash, borderColor: theme.line }]}>
+        <View
+          style={[styles.filterStrip, { backgroundColor: theme.wash, borderColor: theme.line }]}
+        >
           <View style={styles.filterTextCol}>
             <Text variant="body-strong">Act 843 Compliant Marketing Opt-In</Text>
             <Text variant="caption" style={{ color: theme.meta }}>
@@ -179,10 +155,7 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
         </View>
 
         {/* Customer Count Header */}
-        <SectionLabel
-          title={`ENROLLED DINERS (${totalCount})`}
-          caps
-        />
+        <SectionLabel title={`ENROLLED DINERS (${totalCount})`} caps />
 
         {items.length === 0 ? (
           <EmptyCard
@@ -219,31 +192,36 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
                           {displayName}
                         </Text>
                         {cust.rewardsAvailable > 0 ? (
-                          <View style={[styles.readyPill, { backgroundColor: '#FEF3C7' }]}>
-                            <Sparkles size={12} color="#92400E" />
-                            <Text variant="caption" style={{ color: '#92400E', fontWeight: '700' }}>
-                              {cust.rewardsAvailable} Reward{cust.rewardsAvailable > 1 ? 's' : ''} Ready!
+                          <View style={[styles.readyPill, { backgroundColor: theme.warningTint }]}>
+                            <Sparkles size={12} color={theme.warning} />
+                            <Text
+                              variant="caption"
+                              style={{ color: theme.warning, fontWeight: '700' }}
+                            >
+                              {cust.rewardsAvailable} Reward{cust.rewardsAvailable > 1 ? 's' : ''}{' '}
+                              Ready!
                             </Text>
                           </View>
                         ) : null}
                       </View>
 
                       <Text variant="caption" style={{ color: theme.meta }}>
-                        {cust.phoneMasked} • Last visit {new Date(cust.lastStampAt).toLocaleDateString()}
+                        {cust.phoneMasked} • Last visit{' '}
+                        {new Date(cust.lastStampAt).toLocaleDateString()}
                       </Text>
                     </View>
 
                     {/* Stamp counter badge */}
                     <View style={styles.stampBadgeCol}>
                       <View style={[styles.stampPill, { backgroundColor: theme.fill }]}>
-                        <Award size={14} color="#FFFFFF" />
-                        <Text variant="caption" style={{ color: '#FFFFFF', fontWeight: '800' }}>
+                        <Award size={14} color={theme.onFill} />
+                        <Text variant="caption" style={{ color: theme.onFill, fontWeight: '800' }}>
                           {cust.stamps} Stamps
                         </Text>
                       </View>
                     </View>
 
-                    <ChevronRight size={18} color="#9CA3AF" />
+                    <ChevronRight size={18} color={theme.meta} />
                   </View>
                 </Pressable>
               );
@@ -271,7 +249,12 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
                 </View>
 
                 <View style={styles.kpiCol}>
-                  <Text variant="display-m" style={{ color: selectedCustomer.rewardsAvailable > 0 ? '#16A34A' : theme.meta }}>
+                  <Text
+                    variant="display-m"
+                    style={{
+                      color: selectedCustomer.rewardsAvailable > 0 ? theme.success : theme.meta,
+                    }}
+                  >
                     {selectedCustomer.rewardsAvailable}
                   </Text>
                   <Text variant="caption" style={{ color: theme.meta }}>
@@ -283,7 +266,10 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
               {/* Marketing Opt-In Status */}
               <View style={[styles.optInNotice, { borderColor: theme.line }]}>
                 <Text variant="body-strong">Act 843 Marketing Status</Text>
-                <Text variant="caption" style={{ color: selectedCustomer.wantsOffers ? theme.success : theme.meta }}>
+                <Text
+                  variant="caption"
+                  style={{ color: selectedCustomer.wantsOffers ? theme.success : theme.meta }}
+                >
                   {selectedCustomer.wantsOffers
                     ? '✓ Consented to promotional WhatsApp & SMS updates'
                     : '✕ Opted out of marketing promotions'}
@@ -315,7 +301,7 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   stack: { gap: tokens.space[4] },
   controlsBar: {
     flexDirection: 'row',
@@ -328,9 +314,9 @@ const styles = StyleSheet.create({
     minWidth: 240,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.surface,
     borderWidth: 1,
-    borderColor: '#E4E4E7',
+    borderColor: theme.line,
     borderRadius: tokens.radius.full,
     paddingHorizontal: tokens.space[3],
     height: 44,
@@ -360,7 +346,7 @@ const styles = StyleSheet.create({
     padding: tokens.space[3],
     borderRadius: tokens.radius.md,
     borderWidth: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.surface,
   },
   customerMainRow: {
     flexDirection: 'row',
@@ -371,7 +357,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: tokens.radius.full,
-    backgroundColor: '#FFF1EA',
+    backgroundColor: theme.tint,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -433,4 +419,4 @@ const styles = StyleSheet.create({
     gap: tokens.space[2],
     paddingTop: tokens.space[2],
   },
-});
+}));

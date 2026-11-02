@@ -1,3 +1,4 @@
+import { makeStyles } from '@/ui/makeStyles';
 import { useState } from 'react';
 import {
   Keyboard,
@@ -18,7 +19,7 @@ import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
 import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
-import { ozaaTheme, ThemeProvider } from '@/ui/theme';
+import { ozaaTheme, ThemeProvider, useTheme } from '@/ui/theme';
 import { DeskCard, OzaaMark } from './kit';
 
 const SAMPLES = [
@@ -28,6 +29,8 @@ const SAMPLES = [
 ];
 
 export function OwnerLogin() {
+  const theme = useTheme();
+  const styles = useStyles();
   const { t } = useTranslation();
   const router = useRouter();
   const saveOwner = useOwnerSession((state) => state.saveOwner);
@@ -134,7 +137,7 @@ export function OwnerLogin() {
                       value={phone}
                       onChangeText={setPhone}
                       placeholder="024 123 4567"
-                      placeholderTextColor="#9CA3AF"
+                      placeholderTextColor={theme.meta}
                       keyboardType="phone-pad"
                       inputMode="tel"
                       returnKeyType={sent ? 'done' : 'next'}
@@ -160,7 +163,7 @@ export function OwnerLogin() {
                         accessibilityLabel="Change phone"
                         onPress={() => setSent(false)}
                       >
-                        <Text variant="caption" style={{ color: '#D24000', fontWeight: '600' }}>
+                        <Text variant="caption" style={{ color: theme.ink, fontWeight: '600' }}>
                           Change number
                         </Text>
                       </Pressable>
@@ -170,7 +173,7 @@ export function OwnerLogin() {
                       value={code}
                       onChangeText={setCode}
                       placeholder="123456"
-                      placeholderTextColor="#9CA3AF"
+                      placeholderTextColor={theme.meta}
                       keyboardType="number-pad"
                       inputMode="numeric"
                       maxLength={6}
@@ -184,7 +187,7 @@ export function OwnerLogin() {
 
                 {error ? (
                   <View style={styles.errorBox}>
-                    <Text variant="caption" style={{ color: '#DC2626', fontWeight: '600' }}>
+                    <Text variant="caption" style={{ color: theme.error, fontWeight: '600' }}>
                       {t('errors.generic')}
                     </Text>
                   </View>
@@ -201,7 +204,7 @@ export function OwnerLogin() {
                 {/* Sample login helpers */}
                 {!sent ? (
                   <View style={styles.sampleSection}>
-                    <Text variant="caption" style={{ color: '#6B7280', textAlign: 'center' }}>
+                    <Text variant="caption" style={{ color: theme.meta, textAlign: 'center' }}>
                       {t('owner.sample')}
                     </Text>
                     <View style={styles.sampleChips}>
@@ -217,12 +220,12 @@ export function OwnerLogin() {
                           style={[
                             styles.sampleChip,
                             {
-                              borderColor: phone === s.phone ? '#111111' : '#E5E7EB',
-                              backgroundColor: phone === s.phone ? '#F3F4F6' : '#FFFFFF',
+                              borderColor: phone === s.phone ? theme.black : theme.line,
+                              backgroundColor: phone === s.phone ? theme.wash : theme.surface,
                             },
                           ]}
                         >
-                          <Text variant="caption" style={{ fontWeight: '600', color: '#374151' }}>
+                          <Text variant="caption" style={{ fontWeight: '600', color: theme.muted }}>
                             {s.label}
                           </Text>
                         </Pressable>
@@ -239,10 +242,10 @@ export function OwnerLogin() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   keyboardAvoid: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: theme.surface,
   },
   scrollContent: {
     flexGrow: 1,
@@ -263,7 +266,7 @@ const styles = StyleSheet.create({
     paddingVertical: tokens.space[5],
     paddingHorizontal: tokens.space[4],
     borderWidth: 1,
-    borderColor: '#E4E4E7',
+    borderColor: theme.line,
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 16,
@@ -278,7 +281,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 1.5,
-    color: '#888888',
+    color: theme.meta,
     marginTop: 4,
   },
   title: {
@@ -287,7 +290,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   subtitle: {
-    color: '#4B5563',
+    color: theme.muted,
     textAlign: 'center',
     lineHeight: 20,
     maxWidth: 320,
@@ -297,23 +300,23 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontWeight: '600',
-    color: '#374151',
+    color: theme.muted,
   },
   phoneInputWrapper: {
     flexDirection: 'row',
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: theme.line,
     borderRadius: tokens.radius.md,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.surface,
     overflow: 'hidden',
     height: 48,
   },
   phonePrefixBadge: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.wash,
     paddingHorizontal: tokens.space[3],
     justifyContent: 'center',
     borderRightWidth: 1,
-    borderRightColor: '#E5E7EB',
+    borderRightColor: theme.line,
   },
   prefixText: {
     fontSize: 13,
@@ -322,7 +325,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: tokens.space[3],
     fontSize: 15,
-    color: '#111111',
+    color: theme.text,
   },
   codeHeaderRow: {
     flexDirection: 'row',
@@ -331,9 +334,9 @@ const styles = StyleSheet.create({
   },
   codeInput: {
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: theme.line,
     borderRadius: tokens.radius.md,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.surface,
     height: 48,
     paddingHorizontal: tokens.space[3],
     fontSize: 20,
@@ -342,17 +345,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   errorBox: {
-    backgroundColor: '#FEF2F2',
+    backgroundColor: theme.errorTint,
     padding: tokens.space[2],
     borderRadius: tokens.radius.sm,
     borderWidth: 1,
-    borderColor: '#FCA5A5',
+    borderColor: theme.errorTint,
   },
   sampleSection: {
     gap: tokens.space[2],
     paddingTop: tokens.space[2],
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: '#E5E7EB',
+    borderTopColor: theme.line,
   },
   sampleChips: {
     gap: 6,
@@ -364,4 +367,4 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center',
   },
-});
+}));

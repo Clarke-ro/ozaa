@@ -1,32 +1,76 @@
-import { StyleSheet, View } from 'react-native';
+import type { LucideIcon } from 'lucide-react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
-import { DeskCard } from './DeskCard';
 
-/** Bordered number tile ("Orders 46", "Avg order GH₵54") from the dashboard render. */
-export function StatTile({ label, value, note, tone }: { label: string; value: string; note?: string; tone?: 'up' | 'down' }) {
+/** Bordered number tile ("Live orders 4"). Tapping opens the screen behind the number. */
+export function StatTile({
+  label,
+  value,
+  note,
+  icon: Icon,
+  tone,
+  onPress,
+}: {
+  label: string;
+  value: string;
+  note?: string;
+  icon?: LucideIcon;
+  /** `alert` draws attention to a number that needs action, with a red border as well as the icon. */
+  tone?: 'alert';
+  onPress?: () => void;
+}) {
   const theme = useTheme();
-  return (
-    <DeskCard style={styles.tile}>
-      <Text variant="body" style={{ color: theme.muted }} numberOfLines={1}>
-        {label}
-      </Text>
-      <Text variant="title" style={[styles.value, { fontVariant: ['tabular-nums'] }]} numberOfLines={1} adjustsFontSizeToFit>
+  const alert = tone === 'alert';
+  const body = (
+    <>
+      <View style={styles.head}>
+        {Icon ? <Icon size={18} color={alert ? theme.error : theme.ink} /> : null}
+        <Text variant="body" style={[styles.label, { color: theme.muted }]} numberOfLines={2}>
+          {label}
+        </Text>
+      </View>
+      <Text variant="display-m" style={styles.value} numberOfLines={1} adjustsFontSizeToFit>
         {value}
       </Text>
       {note ? (
-        <View>
-          <Text variant="caption" style={{ color: tone === 'up' ? theme.success : tone === 'down' ? theme.error : theme.meta }}>
-            {note}
-          </Text>
-        </View>
+        <Text variant="caption" style={{ color: theme.muted }}>
+          {note}
+        </Text>
       ) : null}
-    </DeskCard>
+    </>
+  );
+  const look = [
+    styles.tile,
+    {
+      borderColor: alert ? theme.error : theme.line,
+      borderWidth: alert ? 1.5 : StyleSheet.hairlineWidth,
+      backgroundColor: theme.surface,
+    },
+  ];
+  if (!onPress) return <View style={look}>{body}</View>;
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${label}: ${value}${note ? `, ${note}` : ''}`}
+      onPress={onPress}
+      style={({ pressed }) => [look, pressed && { backgroundColor: theme.wash }]}
+    >
+      {body}
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  tile: { flex: 1, minWidth: 100, gap: tokens.space[2], paddingVertical: tokens.space[4] },
-  value: { fontSize: 22, lineHeight: 28 },
+  tile: {
+    gap: tokens.space[2],
+    padding: tokens.space[4],
+    borderRadius: tokens.radius.lg,
+    borderCurve: 'continuous',
+    minHeight: 104,
+  },
+  head: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
+  label: { flex: 1 },
+  value: { fontVariant: ['tabular-nums'] },
 });

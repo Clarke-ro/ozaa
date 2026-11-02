@@ -1,5 +1,4 @@
-import { FeedbackInboxScreen } from '@/features/owner/screens/FeedbackInboxScreen';
-
+import { FeedbackScreen } from '@/features/owner';
 export default function Route() {
-  return <FeedbackInboxScreen />;
+  return <FeedbackScreen />;
 }

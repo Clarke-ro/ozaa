@@ -1,3 +1,4 @@
+import { makeStyles } from '@/ui/makeStyles';
 import { useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -17,6 +18,7 @@ import { DeskCard, IconTile } from '../kit';
 const STEPS = ['name', 'tables', 'wifi', 'payout', 'done'] as const;
 
 export function SetupScreen() {
+  const styles = useStyles();
   const { t } = useTranslation();
   const theme = useTheme();
   const router = useRouter();
@@ -83,11 +85,12 @@ export function SetupScreen() {
   };
 
   return (
-    <OwnerPage
-      title={titles[current]}
-      subtitle={current === 'done' ? t('owner.setupDone') : t('owner.setupLead')}
-    >
-      <DeskWait loading={venue.isLoading} error={venue.isError} onRetry={() => void venue.refetch()}>
+    <OwnerPage title={titles[current]}>
+      <DeskWait
+        loading={venue.isLoading}
+        error={venue.isError}
+        onRetry={() => void venue.refetch()}
+      >
         {/* Step Progress Tracker */}
         <View style={styles.trackerRow}>
           {['Venue', 'Tables', 'Wi-Fi', 'Payout'].map((label, idx) => {
@@ -99,17 +102,21 @@ export function SetupScreen() {
                   style={[
                     styles.trackerDot,
                     {
-                      backgroundColor: isCompleted ? '#16A34A' : isCurrent ? '#D24000' : '#E5E7EB',
+                      backgroundColor: isCompleted
+                        ? theme.success
+                        : isCurrent
+                          ? theme.fill
+                          : theme.line,
                     },
                   ]}
                 >
                   {isCompleted ? (
-                    <Check size={12} color="#FFFFFF" />
+                    <Check size={12} color={theme.onFill} />
                   ) : (
                     <Text
                       variant="caption"
                       style={{
-                        color: isCurrent ? '#FFFFFF' : '#6B7280',
+                        color: isCurrent ? theme.onFill : theme.meta,
                         fontSize: 10,
                         fontWeight: '700',
                       }}
@@ -121,7 +128,7 @@ export function SetupScreen() {
                 <Text
                   variant="caption"
                   style={{
-                    color: isCurrent ? '#111111' : '#6B7280',
+                    color: isCurrent ? theme.text : theme.meta,
                     fontWeight: isCurrent ? '700' : '500',
                     fontSize: 11,
                   }}
@@ -267,10 +274,10 @@ export function SetupScreen() {
 
             <View style={styles.fieldBlock}>
               <Text variant="caption" style={styles.fieldLabel}>
-                {t('owner.business')}
+                {t('owner.businessName')}
               </Text>
               <TextInput
-                accessibilityLabel={t('owner.business')}
+                accessibilityLabel={t('owner.businessName')}
                 value={business}
                 onChangeText={setBusiness}
                 placeholder={venue.data?.name ?? 'Registered Business Name'}
@@ -300,7 +307,7 @@ export function SetupScreen() {
         {current === 'done' ? (
           <DeskCard style={styles.doneCard}>
             <View style={styles.doneIconCircle}>
-              <CheckCircle2 size={40} color="#16A34A" />
+              <CheckCircle2 size={40} color={theme.success} />
             </View>
             <Text variant="display-m" style={styles.doneTitle}>
               You are ready to open!
@@ -313,7 +320,7 @@ export function SetupScreen() {
 
         {save.isError ? (
           <View style={styles.errorBox}>
-            <Text variant="caption" style={{ color: '#DC2626', fontWeight: '600' }}>
+            <Text variant="caption" style={{ color: theme.error, fontWeight: '600' }}>
               {t('errors.generic')}
             </Text>
           </View>
@@ -336,13 +343,13 @@ export function SetupScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   trackerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: tokens.space[2],
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: theme.line,
     marginBottom: tokens.space[2],
   },
   trackerItem: {
@@ -370,14 +377,14 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     fontWeight: '600',
-    color: '#374151',
+    color: theme.muted,
   },
   input: {
     borderWidth: 1,
     borderRadius: tokens.radius.md,
     minHeight: 48,
     paddingHorizontal: tokens.space[3],
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.surface,
   },
   doneCard: {
     alignItems: 'center',
@@ -389,7 +396,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#DCFCE7',
+    backgroundColor: theme.successTint,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: tokens.space[1],
@@ -401,18 +408,18 @@ const styles = StyleSheet.create({
   },
   doneSubtitle: {
     textAlign: 'center',
-    color: '#4B5563',
+    color: theme.muted,
     maxWidth: 300,
     lineHeight: 20,
   },
   errorBox: {
-    backgroundColor: '#FEF2F2',
+    backgroundColor: theme.errorTint,
     padding: tokens.space[2],
     borderRadius: tokens.radius.sm,
     borderWidth: 1,
-    borderColor: '#FCA5A5',
+    borderColor: theme.errorTint,
   },
   actionContainer: {
     paddingTop: tokens.space[2],
   },
-});
+}));

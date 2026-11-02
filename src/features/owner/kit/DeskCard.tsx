@@ -21,7 +21,7 @@ export function DeskCard({
   const look: ViewStyle = {
     borderColor: tone === 'selected' ? theme.fill : tone === 'alert' ? theme.error : theme.line,
     borderWidth: tone === 'selected' || tone === 'alert' ? 1.5 : 1,
-    backgroundColor: tone === 'wash' ? theme.wash : theme.white,
+    backgroundColor: tone === 'wash' ? theme.wash : theme.surface,
   };
   if (!onPress) return <View style={[styles.card, look, style]}>{children}</View>;
   return (
@@ -29,7 +29,12 @@ export function DeskCard({
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
-      style={({ pressed }) => [styles.card, look, pressed && { backgroundColor: theme.wash }, style]}
+      style={({ pressed }) => [
+        styles.card,
+        look,
+        pressed && { backgroundColor: theme.wash },
+        style,
+      ]}
     >
       {children}
     </Pressable>

@@ -1,3 +1,4 @@
+import { makeStyles } from '@/ui/makeStyles';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
@@ -12,11 +13,12 @@ import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { useOwnerSession } from '@/features/session';
 import { DeskWait, OwnerPage } from '../chrome/OwnerPage';
-import { BigStat, DeskCard, IconTile } from '../kit';
+import { BarChart, BigStat, DeskCard, IconTile } from '../kit';
 
 const RANGES: InsightsReport['range'][] = ['today', '7d', '30d', '90d'];
 
 export function InsightsScreen() {
+  const styles = useStyles();
   const { t } = useTranslation();
   const theme = useTheme();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
@@ -29,7 +31,6 @@ export function InsightsScreen() {
   });
 
   const data = report.data;
-  const maxPesewas = Math.max(1, ...(data?.series.map((point) => point.pesewas) ?? [1]));
   const maxPeakOrders = Math.max(1, ...(data?.peakHours.map((h) => h.orders) ?? [1]));
   const totalTopItemPesewas = data?.topItems.reduce((acc, item) => acc + item.pesewas, 0) ?? 1;
 
@@ -41,10 +42,7 @@ export function InsightsScreen() {
   };
 
   return (
-    <OwnerPage
-      title={t('owner.insights')}
-      subtitle="Sales analytics, busiest table ordering hours, and top revenue dishes."
-    >
+    <OwnerPage title={t('owner.insights')}>
       {/* Range switch filter */}
       <View style={styles.rangesBar}>
         {RANGES.map((value) => {
@@ -59,14 +57,14 @@ export function InsightsScreen() {
                 styles.rangePill,
                 {
                   borderColor: isSelected ? theme.black : theme.line,
-                  backgroundColor: isSelected ? '#111111' : '#FFFFFF',
+                  backgroundColor: isSelected ? theme.black : theme.surface,
                 },
               ]}
             >
               <Text
                 variant="caption"
                 style={{
-                  color: isSelected ? '#FFFFFF' : theme.text,
+                  color: isSelected ? theme.white : theme.text,
                   fontWeight: '700',
                 }}
               >
@@ -77,7 +75,11 @@ export function InsightsScreen() {
         })}
       </View>
 
-      <DeskWait loading={report.isLoading} error={report.isError} onRetry={() => void report.refetch()}>
+      <DeskWait
+        loading={report.isLoading}
+        error={report.isError}
+        onRetry={() => void report.refetch()}
+      >
         {data ? (
           <View style={styles.contentStack}>
             {/* Headline Revenue Card */}
@@ -94,7 +96,7 @@ export function InsightsScreen() {
                 </View>
                 {data.sample ? (
                   <View style={styles.sampleBadge}>
-                    <Text variant="caption" style={{ color: '#888888', fontWeight: '700' }}>
+                    <Text variant="caption" style={{ color: theme.meta, fontWeight: '700' }}>
                       {t('owner.sampleMark')}
                     </Text>
                   </View>
@@ -102,37 +104,20 @@ export function InsightsScreen() {
               </View>
 
               <BigStat
-                label="Net Sales"
+                label="Sales"
                 value={formatMoney(pesewas(data.salesPesewas), data.currency)}
-                note={`Revenue generated from guest table orders and cash markups in ${labels[range].toLowerCase()}`}
+                note={`From table orders and cash payments, ${labels[range].toLowerCase()}.`}
               />
 
-              {/* Bar Chart Visualization */}
-              <View style={styles.chartWrapper}>
-                <View style={styles.chartBars}>
-                  {data.series.map((point) => {
-                    const heightPercent = Math.max(10, (point.pesewas / maxPesewas) * 100);
-                    return (
-                      <View key={point.label} style={styles.barCol}>
-                        <View style={styles.barTrack}>
-                          <View
-                            style={[
-                              styles.barFill,
-                              {
-                                height: `${heightPercent}%`,
-                                backgroundColor: heightPercent > 80 ? '#D24000' : '#111111',
-                              },
-                            ]}
-                          />
-                        </View>
-                        <Text variant="caption" style={styles.barLabel}>
-                          {point.label}
-                        </Text>
-                      </View>
-                    );
-                  })}
-                </View>
-              </View>
+              <BarChart
+                bars={data.series.map((point) => ({ label: point.label, value: point.pesewas }))}
+                format={(v) =>
+                  v >= 100_000 ? `${Math.round(v / 100_000)}k` : String(Math.round(v / 100))
+                }
+                summary={`Sales per period, in ${data.currency}`}
+                height={140}
+                highlightMax
+              />
             </DeskCard>
 
             {/* Repeat Customers & Retention Card */}
@@ -207,7 +192,7 @@ export function InsightsScreen() {
                                 styles.itemShareFill,
                                 {
                                   width: `${Math.min(100, Math.max(12, share))}%`,
-                                  backgroundColor: index === 0 ? '#D24000' : '#111111',
+                                  backgroundColor: index === 0 ? theme.fill : theme.black,
                                 },
                               ]}
                             />
@@ -244,12 +229,15 @@ export function InsightsScreen() {
                             styles.peakSlotBarFill,
                             {
                               width: `${densityPercent}%`,
-                              backgroundColor: densityPercent > 70 ? '#D24000' : '#4B5563',
+                              backgroundColor: densityPercent > 70 ? theme.fill : theme.muted,
                             },
                           ]}
                         />
                       </View>
-                      <Text variant="caption" style={{ color: theme.meta, fontVariant: ['tabular-nums'] }}>
+                      <Text
+                        variant="caption"
+                        style={{ color: theme.meta, fontVariant: ['tabular-nums'] }}
+                      >
                         {hour.orders} orders
                       </Text>
                     </View>
@@ -264,7 +252,7 @@ export function InsightsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   rangesBar: {
     flexDirection: 'row',
     gap: tokens.space[2],
@@ -295,7 +283,7 @@ const styles = StyleSheet.create({
     gap: tokens.space[2],
   },
   sampleBadge: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.wash,
     paddingHorizontal: tokens.space[2],
     paddingVertical: 3,
     borderRadius: tokens.radius.sm,
@@ -303,7 +291,7 @@ const styles = StyleSheet.create({
   chartWrapper: {
     paddingTop: tokens.space[3],
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: '#E5E7EB',
+    borderTopColor: theme.line,
   },
   chartBars: {
     flexDirection: 'row',
@@ -322,7 +310,7 @@ const styles = StyleSheet.create({
   barTrack: {
     flex: 1,
     width: 20,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.wash,
     borderRadius: tokens.radius.sm,
     justifyContent: 'flex-end',
     overflow: 'hidden',
@@ -333,7 +321,7 @@ const styles = StyleSheet.create({
   },
   barLabel: {
     fontSize: 11,
-    color: '#6B7280',
+    color: theme.meta,
     fontWeight: '600',
   },
   retentionCard: {
@@ -354,13 +342,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRightWidth: 1,
-    borderRightColor: '#E5E7EB',
+    borderRightColor: theme.line,
     paddingRight: tokens.space[4],
   },
   retentionNumber: {
     fontSize: 28,
     fontWeight: '800',
-    color: '#D24000',
+    color: theme.ink,
   },
   retentionTextCol: {
     flex: 1,
@@ -381,13 +369,13 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.wash,
     alignItems: 'center',
     justifyContent: 'center',
   },
   rankText: {
     fontWeight: '700',
-    color: '#374151',
+    color: theme.muted,
     fontSize: 11,
   },
   topItemMeta: {
@@ -408,7 +396,7 @@ const styles = StyleSheet.create({
   itemShareBar: {
     width: 80,
     height: 6,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.wash,
     borderRadius: 3,
     overflow: 'hidden',
   },
@@ -427,7 +415,7 @@ const styles = StyleSheet.create({
   peakSlotBarTrack: {
     flex: 1,
     height: 10,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.wash,
     borderRadius: tokens.radius.full,
     overflow: 'hidden',
   },
@@ -435,4 +423,4 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: tokens.radius.full,
   },
-});
+}));

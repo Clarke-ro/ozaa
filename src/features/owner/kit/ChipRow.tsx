@@ -15,7 +15,11 @@ export function ChipRow<T extends string>({
 }) {
   const theme = useTheme();
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.row}
+    >
       {items.map((item) => {
         const on = item.id === value;
         return (
@@ -27,10 +31,16 @@ export function ChipRow<T extends string>({
             onPress={() => onChange(item.id)}
             style={[
               styles.chip,
-              { borderColor: on ? theme.black : theme.line, backgroundColor: on ? theme.black : theme.white },
+              {
+                borderColor: on ? theme.black : theme.line,
+                backgroundColor: on ? theme.black : theme.surface,
+              },
             ]}
           >
-            <Text variant="body-strong" style={{ color: on ? theme.white : theme.text, fontSize: 14 }}>
+            <Text
+              variant="body-strong"
+              style={{ color: on ? theme.white : theme.text, fontSize: 14 }}
+            >
               {item.label}
             </Text>
           </Pressable>
@@ -42,5 +52,11 @@ export function ChipRow<T extends string>({
 
 const styles = StyleSheet.create({
   row: { gap: tokens.space[2], paddingVertical: 2 },
-  chip: { minHeight: 40, paddingHorizontal: tokens.space[4], borderRadius: tokens.radius.full, borderWidth: 1, justifyContent: 'center' },
+  chip: {
+    minHeight: 40,
+    paddingHorizontal: tokens.space[4],
+    borderRadius: tokens.radius.full,
+    borderWidth: 1,
+    justifyContent: 'center',
+  },
 });

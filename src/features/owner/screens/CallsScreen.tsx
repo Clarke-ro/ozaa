@@ -1,5 +1,6 @@
+import { makeStyles } from '@/ui/makeStyles';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { UserCheck } from 'lucide-react-native';
@@ -15,6 +16,7 @@ import { CodeTile, DeskCard, DeskTabs, StatTile, StatusPill } from '../kit';
 type CallsTab = 'active' | 'all';
 
 export function CallsScreen() {
+  const styles = useStyles();
   const { t } = useTranslation();
   const theme = useTheme();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
@@ -51,11 +53,12 @@ export function CallsScreen() {
   ];
 
   return (
-    <OwnerPage
-      title={t('owner.calls')}
-      subtitle="Guest assistance requests from table QR codes."
-    >
-      <DeskWait loading={calls.isLoading} error={calls.isError} onRetry={() => void calls.refetch()}>
+    <OwnerPage title={t('owner.calls')}>
+      <DeskWait
+        loading={calls.isLoading}
+        error={calls.isError}
+        onRetry={() => void calls.refetch()}
+      >
         <View style={styles.stack}>
           {/* Top Response Time Metrics */}
           <View style={styles.metricsRow}>
@@ -91,9 +94,7 @@ export function CallsScreen() {
                   />
 
                   <View style={styles.callDetails}>
-                    <Text variant="title">
-                      {t('home.table', { code: call.tableCode })}
-                    </Text>
+                    <Text variant="title">{t('home.table', { code: call.tableCode })}</Text>
                     <Text variant="body-strong" style={{ color: theme.text }}>
                       {t(`waiter.reasons.${call.reason}`)}
                     </Text>
@@ -105,13 +106,7 @@ export function CallsScreen() {
                   </View>
 
                   <StatusPill
-                    label={
-                      isOpen
-                        ? 'Waiting'
-                        : isAck
-                          ? 'Staff on way'
-                          : 'Resolved'
-                    }
+                    label={isOpen ? 'Waiting' : isAck ? 'Staff on way' : 'Resolved'}
                     tone={isOpen ? 'error' : isAck ? 'accent' : 'success'}
                     boxed
                     icon={true}
@@ -158,7 +153,7 @@ export function CallsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   stack: { gap: tokens.space[4] },
   metricsRow: {
     flexDirection: 'row',
@@ -190,6 +185,6 @@ const styles = StyleSheet.create({
     gap: tokens.space[2],
     paddingTop: tokens.space[2],
     borderTopWidth: 1,
-    borderTopColor: '#E4E4E7',
+    borderTopColor: theme.line,
   },
-});
+}));

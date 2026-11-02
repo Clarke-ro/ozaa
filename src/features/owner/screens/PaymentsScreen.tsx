@@ -72,10 +72,7 @@ export function PaymentsScreen() {
   ];
 
   return (
-    <OwnerPage
-      title={t('owner.payments')}
-      subtitle="Direct Paystack settlement to your venue subaccount. Ozaa never holds guest funds."
-    >
+    <OwnerPage title={t('owner.payments')}>
       <DeskWait loading={rows.isLoading} error={rows.isError} onRetry={() => void rows.refetch()}>
         <View style={styles.stack}>
           {/* Payout Account Card */}
@@ -142,11 +139,7 @@ export function PaymentsScreen() {
                     !isLast && { borderBottomWidth: 1, borderBottomColor: theme.line },
                   ]}
                 >
-                  <IconTile
-                    icon={MethodIcon}
-                    size={44}
-                    tone={isRefunded ? 'wash' : 'tint'}
-                  />
+                  <IconTile icon={MethodIcon} size={44} tone={isRefunded ? 'wash' : 'tint'} />
 
                   <View style={styles.txInfo}>
                     <Text variant="body-strong">Order #{item.orderNumber}</Text>

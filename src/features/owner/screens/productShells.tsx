@@ -1,3 +1,4 @@
+import { makeStyles } from '@/ui/makeStyles';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -18,6 +19,7 @@ import { StatusPill } from '../kit';
 import { ShellScreen } from './ShellScreen';
 
 export function PosShell() {
+  const styles = useStyles();
   const { t } = useTranslation();
   const theme = useTheme();
   const [selectedItems, setSelectedItems] = useState<string[]>(['jollof']);
@@ -60,13 +62,16 @@ export function PosShell() {
               style={[
                 styles.dishTile,
                 {
-                  borderColor: isSelected ? '#D24000' : theme.line,
-                  backgroundColor: isSelected ? '#FFF8F5' : '#FFFFFF',
+                  borderColor: isSelected ? theme.fill : theme.line,
+                  backgroundColor: isSelected ? theme.tint : theme.surface,
                 },
               ]}
             >
               <Text variant="body-strong">{dish.name}</Text>
-              <Text variant="caption" style={{ color: isSelected ? '#D24000' : theme.meta, fontWeight: '700' }}>
+              <Text
+                variant="caption"
+                style={{ color: isSelected ? theme.ink : theme.meta, fontWeight: '700' }}
+              >
                 GH₵{dish.price}
               </Text>
             </Pressable>
@@ -85,9 +90,10 @@ export function PosShell() {
 
         {paid ? (
           <View style={styles.paidBadge}>
-            <CheckCircle2 size={16} color="#16A34A" />
-            <Text variant="caption" style={{ color: '#16A34A', fontWeight: '700' }}>
-              Order marked paid in {tenderMethod === 'cash' ? 'Cash' : 'MoMo'}. Sent to kitchen tickets.
+            <CheckCircle2 size={16} color={theme.success} />
+            <Text variant="caption" style={{ color: theme.success, fontWeight: '700' }}>
+              Order marked paid in {tenderMethod === 'cash' ? 'Cash' : 'MoMo'}. Sent to kitchen
+              tickets.
             </Text>
           </View>
         ) : (
@@ -99,10 +105,10 @@ export function PosShell() {
                 setTenderMethod('cash');
                 setPaid(true);
               }}
-              style={[styles.tenderBtn, { backgroundColor: '#111111' }]}
+              style={[styles.tenderBtn, { backgroundColor: theme.black }]}
             >
-              <Wallet size={16} color="#FFFFFF" />
-              <Text variant="caption" style={{ color: '#FFFFFF', fontWeight: '700' }}>
+              <Wallet size={16} color={theme.white} />
+              <Text variant="caption" style={{ color: theme.white, fontWeight: '700' }}>
                 Take Cash
               </Text>
             </Pressable>
@@ -114,10 +120,10 @@ export function PosShell() {
                 setTenderMethod('momo');
                 setPaid(true);
               }}
-              style={[styles.tenderBtn, { backgroundColor: '#D24000' }]}
+              style={[styles.tenderBtn, { backgroundColor: theme.fill }]}
             >
-              <Smartphone size={16} color="#FFFFFF" />
-              <Text variant="caption" style={{ color: '#FFFFFF', fontWeight: '700' }}>
+              <Smartphone size={16} color={theme.onFill} />
+              <Text variant="caption" style={{ color: theme.onFill, fontWeight: '700' }}>
                 Prompt MoMo
               </Text>
             </Pressable>
@@ -140,14 +146,30 @@ export function PosShell() {
 }
 
 export function StockShell() {
+  const styles = useStyles();
   const { t } = useTranslation();
   const theme = useTheme();
 
   const inventory = [
-    { name: 'Perfumed Rice (50kg bag)', quantity: '18.5 kg', status: 'In Stock', tone: 'success' as const },
-    { name: 'Fresh Lake Tilapia', quantity: '4 pcs', status: 'Low Stock', tone: 'waiting' as const },
+    {
+      name: 'Perfumed Rice (50kg bag)',
+      quantity: '18.5 kg',
+      status: 'In Stock',
+      tone: 'success' as const,
+    },
+    {
+      name: 'Fresh Lake Tilapia',
+      quantity: '4 pcs',
+      status: 'Low Stock',
+      tone: 'waiting' as const,
+    },
     { name: 'Ripe Plantain', quantity: '0 pcs', status: 'Sold Out (86)', tone: 'error' as const },
-    { name: 'Ginger & Hibiscus (Sobolo)', quantity: '12 litres', status: 'In Stock', tone: 'success' as const },
+    {
+      name: 'Ginger & Hibiscus (Sobolo)',
+      quantity: '12 litres',
+      status: 'In Stock',
+      tone: 'success' as const,
+    },
   ];
 
   const preview = (
@@ -170,9 +192,10 @@ export function StockShell() {
       </View>
 
       <View style={styles.auto86Note}>
-        <AlertTriangle size={16} color="#D97706" />
-        <Text variant="caption" style={{ color: '#B45309', flex: 1 }}>
-          Auto-86 Rule: When Ripe Plantain hit 0 pcs, Kelewele was instantly hidden from guest table menus.
+        <AlertTriangle size={16} color={theme.warning} />
+        <Text variant="caption" style={{ color: theme.warning, flex: 1 }}>
+          Auto-86 Rule: When Ripe Plantain hit 0 pcs, Kelewele was instantly hidden from guest table
+          menus.
         </Text>
       </View>
     </View>
@@ -191,6 +214,7 @@ export function StockShell() {
 }
 
 export function AiShell() {
+  const styles = useStyles();
   const { t } = useTranslation();
   const theme = useTheme();
   const [lang, setLang] = useState<'en' | 'twi' | 'ga'>('en');
@@ -204,7 +228,7 @@ export function AiShell() {
     twi: {
       query: 'Aduane bɛn na ɛyɛ dɛ sen biara?',
       reply:
-        "Mama Waakye a ɛwɔ shito ne aponkye nam no na nnipa ani gye ho paa. Wopɛ sɛ yɛde kelewele ka ho ma wo?",
+        'Mama Waakye a ɛwɔ shito ne aponkye nam no na nnipa ani gye ho paa. Wopɛ sɛ yɛde kelewele ka ho ma wo?',
     },
     ga: {
       query: 'Mɛni niyenii ŋɔɔ fe fɛɛ?',
@@ -230,14 +254,14 @@ export function AiShell() {
               style={[
                 styles.langPill,
                 {
-                  backgroundColor: lang === l ? '#111111' : '#F3F4F6',
+                  backgroundColor: lang === l ? theme.black : theme.wash,
                 },
               ]}
             >
               <Text
                 variant="caption"
                 style={{
-                  color: lang === l ? '#FFFFFF' : '#374151',
+                  color: lang === l ? theme.white : theme.muted,
                   fontWeight: '700',
                 }}
               >
@@ -261,8 +285,8 @@ export function AiShell() {
 
         <View style={styles.chatAiBubble}>
           <View style={styles.aiHeaderRow}>
-            <Bot size={14} color="#D24000" />
-            <Text variant="caption" style={{ color: '#D24000', fontWeight: '700' }}>
+            <Bot size={14} color={theme.ink} />
+            <Text variant="caption" style={{ color: theme.ink, fontWeight: '700' }}>
               Ozaa AI Waiter
             </Text>
           </View>
@@ -287,13 +311,14 @@ export function AiShell() {
 }
 
 export function MarketingShell() {
+  const styles = useStyles();
   const { t } = useTranslation();
   const theme = useTheme();
 
   const preview = (
     <View style={styles.protoContainer}>
       <View style={styles.audienceNotice}>
-        <Megaphone size={16} color="#D24000" />
+        <Megaphone size={16} color={theme.ink} />
         <View style={{ flex: 1 }}>
           <Text variant="body-strong">Active Opt-In Audience: 42 Guests</Text>
           <Text variant="caption" style={{ color: theme.meta }}>
@@ -308,7 +333,9 @@ export function MarketingShell() {
         </Text>
         <View style={styles.smsCard}>
           <Text variant="body">
-            {"Weekend Treat at Mama's Kitchen! Show this text to your waiter at Table QR to enjoy a complimentary chilled Sobolo with any main dish. Reply STOP to opt out."}
+            {
+              "Weekend Treat at Mama's Kitchen! Show this text to your waiter at Table QR to enjoy a complimentary chilled Sobolo with any main dish. Reply STOP to opt out."
+            }
           </Text>
         </View>
       </View>
@@ -327,7 +354,7 @@ export function MarketingShell() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   protoContainer: {
     gap: tokens.space[3],
   },
@@ -345,12 +372,12 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   ticketSummaryBox: {
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.wash,
     borderRadius: tokens.radius.md,
     padding: tokens.space[3],
     gap: tokens.space[2],
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.line,
   },
   ticketRow: {
     flexDirection: 'row',
@@ -360,7 +387,7 @@ const styles = StyleSheet.create({
   ticketTotalText: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#D24000',
+    color: theme.ink,
   },
   tenderActions: {
     flexDirection: 'row',
@@ -381,7 +408,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     padding: tokens.space[2],
-    backgroundColor: '#DCFCE7',
+    backgroundColor: theme.successTint,
     borderRadius: tokens.radius.sm,
   },
   stockList: {
@@ -393,7 +420,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: tokens.space[1],
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: theme.wash,
   },
   stockItemInfo: {
     flex: 1,
@@ -404,7 +431,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     padding: tokens.space[2],
-    backgroundColor: '#FEF3C7',
+    backgroundColor: theme.warningTint,
     borderRadius: tokens.radius.sm,
   },
   langBar: {
@@ -422,37 +449,37 @@ const styles = StyleSheet.create({
     borderRadius: tokens.radius.full,
   },
   chatFrame: {
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.wash,
     borderRadius: tokens.radius.md,
     padding: tokens.space[3],
     gap: tokens.space[2],
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.line,
   },
   chatGuestBubble: {
     alignSelf: 'flex-end',
-    backgroundColor: '#111111',
+    backgroundColor: theme.black,
     borderRadius: tokens.radius.md,
     padding: tokens.space[3],
     maxWidth: '85%',
   },
   chatGuestText: {
-    color: '#FFFFFF',
+    color: theme.white,
   },
   chatTimestamp: {
-    color: '#9CA3AF',
+    color: theme.meta,
     fontSize: 10,
     marginTop: 4,
     textAlign: 'right',
   },
   chatAiBubble: {
     alignSelf: 'flex-start',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.surface,
     borderRadius: tokens.radius.md,
     padding: tokens.space[3],
     maxWidth: '85%',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.line,
     gap: 4,
   },
   aiHeaderRow: {
@@ -461,27 +488,27 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   chatAiText: {
-    color: '#111111',
+    color: theme.text,
     lineHeight: 20,
   },
   audienceNotice: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: tokens.space[3],
-    backgroundColor: '#FFF1EA',
+    backgroundColor: theme.tint,
     padding: tokens.space[3],
     borderRadius: tokens.radius.md,
     borderWidth: 1,
-    borderColor: '#FFD7C2',
+    borderColor: theme.tint,
   },
   broadcastMessagePreview: {
     gap: tokens.space[1],
   },
   smsCard: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.wash,
     padding: tokens.space[3],
     borderRadius: tokens.radius.md,
     borderLeftWidth: 4,
-    borderLeftColor: '#D24000',
+    borderLeftColor: theme.fill,
   },
-});
+}));

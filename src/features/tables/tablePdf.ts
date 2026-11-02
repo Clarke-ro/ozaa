@@ -9,15 +9,26 @@ export type TableCardSettings = {
   ctaText: string;
 };
 
+// Names come from the owner and are printed as HTML, so escape them before they go in.
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 export function generateTableCardHtml(
   tables: Table[],
-  settings: TableCardSettings,
-  venueName: string
+  rawSettings: TableCardSettings,
+  rawVenueName: string,
 ): string {
+  const venueName = escapeHtml(rawVenueName);
+  const settings = { ...rawSettings, ctaText: escapeHtml(rawSettings.ctaText) };
   const cardsHtml = tables
     .map((table) => {
       const qr = table.qrUrl ? qrSvg(table.qrUrl, 200) : '';
-      const label = table.label || `Table ${table.code}`;
+      const label = escapeHtml(table.label || `Table ${table.code}`);
 
       if (settings.template === 'sticker') {
         return `

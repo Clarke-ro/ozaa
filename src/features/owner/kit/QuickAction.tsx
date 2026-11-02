@@ -5,14 +5,25 @@ import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 
 /** Outlined shortcut with an orange icon ("Table QR", "Edit menu"). Not a filled button. */
-export function QuickAction({ label, icon: Icon, onPress }: { label: string; icon: LucideIcon; onPress: () => void }) {
+export function QuickAction({
+  label,
+  icon: Icon,
+  onPress,
+}: {
+  label: string;
+  icon: LucideIcon;
+  onPress: () => void;
+}) {
   const theme = useTheme();
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
-      style={({ pressed }) => [styles.box, { borderColor: theme.line, backgroundColor: pressed ? theme.wash : theme.white }]}
+      style={({ pressed }) => [
+        styles.box,
+        { borderColor: theme.line, backgroundColor: pressed ? theme.wash : theme.surface },
+      ]}
     >
       <Icon size={22} color={theme.ink} strokeWidth={2} />
       <Text variant="body-strong" numberOfLines={1} style={styles.label}>

@@ -1,5 +1,6 @@
+import { makeStyles } from '@/ui/makeStyles';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
@@ -23,6 +24,7 @@ const MOVE = {
 type OrderTab = 'all' | 'received' | 'preparing' | 'ready' | 'served';
 
 export function OrdersScreen() {
+  const styles = useStyles();
   const { t } = useTranslation();
   const theme = useTheme();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
@@ -54,7 +56,7 @@ export function OrdersScreen() {
   const currency = venue.data?.currency ?? 'GHS';
 
   const liveOrders = allItems.filter(
-    (order) => order.status !== 'served' && order.status !== 'cancelled'
+    (order) => order.status !== 'served' && order.status !== 'cancelled',
   );
 
   const filteredOrders = allItems.filter((order) => {
@@ -87,13 +89,14 @@ export function OrdersScreen() {
   ];
 
   return (
-    <OwnerPage
-      title={t('owner.orders')}
-      subtitle="Kitchen display system and real-time ticket progression."
-    >
+    <OwnerPage title={t('owner.orders')}>
       <DeskTabs tabs={tabs} value={tab} onChange={setTab} />
 
-      <DeskWait loading={orders.isLoading} error={orders.isError} onRetry={() => void orders.refetch()}>
+      <DeskWait
+        loading={orders.isLoading}
+        error={orders.isError}
+        onRetry={() => void orders.refetch()}
+      >
         <View style={styles.stack}>
           {filteredOrders.length === 0 ? (
             <Text variant="body" style={{ color: theme.muted, paddingVertical: tokens.space[4] }}>
@@ -149,7 +152,10 @@ export function OrdersScreen() {
                       <Text variant="body-strong" style={{ flex: 1 }}>
                         {line.name}
                       </Text>
-                      <Text variant="caption" style={{ fontVariant: ['tabular-nums'], color: theme.meta }}>
+                      <Text
+                        variant="caption"
+                        style={{ fontVariant: ['tabular-nums'], color: theme.meta }}
+                      >
                         {formatMoney(pesewas(line.totalPesewas), currency)}
                       </Text>
                     </View>
@@ -177,7 +183,7 @@ export function OrdersScreen() {
                           ? MOVE.start
                           : next.move === 'ready'
                             ? MOVE.ready
-                            : MOVE.serve
+                            : MOVE.serve,
                       )}
                       tone={next.move === 'ready' ? 'primary' : 'secondary'}
                       loading={save.isPending}
@@ -195,7 +201,7 @@ export function OrdersScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   stack: { gap: tokens.space[4], marginTop: tokens.space[2] },
   ticketCard: {
     padding: tokens.space[4],
@@ -207,7 +213,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingBottom: tokens.space[2],
     borderBottomWidth: 1,
-    borderBottomColor: '#E4E4E7',
+    borderBottomColor: theme.line,
   },
   ticketNumber: {
     fontSize: 22,
@@ -223,7 +229,7 @@ const styles = StyleSheet.create({
     gap: tokens.space[2],
   },
   qtyBadge: {
-    backgroundColor: '#F4F4F5',
+    backgroundColor: theme.wash,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 4,
@@ -238,7 +244,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingTop: tokens.space[3],
     borderTopWidth: 1,
-    borderTopColor: '#E4E4E7',
+    borderTopColor: theme.line,
   },
   ticketTotal: {
     fontSize: 18,
@@ -247,4 +253,4 @@ const styles = StyleSheet.create({
     minHeight: 44,
     paddingHorizontal: 20,
   },
-});
+}));

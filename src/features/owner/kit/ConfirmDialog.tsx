@@ -33,13 +33,8 @@ export function ConfirmDialog({
   if (!visible) return null;
 
   return (
-    <Modal
-      transparent
-      visible={visible}
-      animationType="fade"
-      onRequestClose={onCancel}
-    >
-      <View style={styles.backdrop}>
+    <Modal transparent visible={visible} animationType="fade" onRequestClose={onCancel}>
+      <View style={[styles.backdrop, { backgroundColor: theme.scrim }]}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Dismiss dialog"
@@ -47,11 +42,14 @@ export function ConfirmDialog({
           onPress={onCancel}
         />
 
-        <View style={[styles.dialogCard, { backgroundColor: theme.white, borderColor: theme.line }]}>
+        <View
+          accessibilityViewIsModal
+          style={[styles.dialogCard, { backgroundColor: theme.surface, borderColor: theme.line }]}
+        >
           <View style={styles.content}>
             {destructive ? (
-              <View style={[styles.iconWrap, { backgroundColor: '#FEE2E2' }]}>
-                <AlertTriangle size={24} color="#DC2626" />
+              <View style={[styles.iconWrap, { backgroundColor: theme.errorTint }]}>
+                <AlertTriangle size={24} color={theme.error} />
               </View>
             ) : null}
 
@@ -67,17 +65,12 @@ export function ConfirmDialog({
 
           <View style={styles.actions}>
             <View style={styles.btnWrap}>
-              <Button
-                label={cancelLabel}
-                tone="secondary"
-                onPress={onCancel}
-                disabled={loading}
-              />
+              <Button label={cancelLabel} tone="secondary" onPress={onCancel} disabled={loading} />
             </View>
             <View style={styles.btnWrap}>
               <Button
                 label={confirmLabel}
-                tone={destructive ? 'primary' : 'primary'}
+                tone={destructive ? 'destructive' : 'primary'}
                 onPress={onConfirm}
                 loading={loading}
               />
@@ -92,7 +85,6 @@ export function ConfirmDialog({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.45)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: tokens.space[4],

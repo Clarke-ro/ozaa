@@ -1,5 +1,6 @@
+import { makeStyles } from '@/ui/makeStyles';
 import { useState } from 'react';
-import { StyleSheet, View, useWindowDimensions, type DimensionValue } from 'react-native';
+import { View, useWindowDimensions, type DimensionValue } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import * as Crypto from 'expo-crypto';
@@ -14,7 +15,9 @@ import { useTheme } from '@/ui/theme';
 import { useOwnerSession } from '@/features/session';
 import { nextOrderMove, type OrderStatus, type StaffRole } from '@/features/orders';
 import { DeskWait, OwnerPage } from '../chrome/OwnerPage';
-import { ChipRow, DeskCard, StatusPill } from '../kit';
+import { FloorLegend } from './floor/FloorLegend';
+import { FloorTile } from './floor/FloorTile';
+import { ChipRow, DeskCard } from '../kit';
 
 const LABEL = {
   free: 'owner.free',
@@ -33,6 +36,7 @@ const MOVE_LABEL = {
 type FilterType = 'all' | 'needs_waiter' | 'waiting_to_pay' | 'active' | 'free';
 
 export function FloorScreen() {
+  const styles = useStyles();
   const { t } = useTranslation();
   const theme = useTheme();
   const { width } = useWindowDimensions();
@@ -79,7 +83,7 @@ export function FloorScreen() {
       api.ownerRecordCashPayment(
         input.id,
         { amountPesewas: input.amount },
-        { idempotencyKey: Crypto.randomUUID() }
+        { idempotencyKey: Crypto.randomUUID() },
       ),
     onSuccess: refresh,
   });
@@ -123,11 +127,12 @@ export function FloorScreen() {
   ];
 
   return (
-    <OwnerPage
-      title={t('owner.floor')}
-      subtitle="Floor layout, live table status, order tickets, and waiter calls."
-    >
-      <DeskWait loading={floor.isLoading} error={floor.isError} onRetry={() => void floor.refetch()}>
+    <OwnerPage title={t('owner.floor')}>
+      <DeskWait
+        loading={floor.isLoading}
+        error={floor.isError}
+        onRetry={() => void floor.refetch()}
+      >
         <View style={styles.stack}>
           {/* Status Filter Chips */}
           <ChipRow items={filterChips} value={filter} onChange={setFilter} />
@@ -139,68 +144,21 @@ export function FloorScreen() {
             </Text>
           ) : null}
 
+          <FloorLegend />
           <View style={styles.grid}>
-            {filteredTables.map((item) => {
-              const isPicked = picked === item.id;
-              const isCalling = item.status === 'needs_waiter';
-              const isPaying = item.status === 'waiting_to_pay';
-              const isOrdered = item.status === 'ordered';
-
-              const tone = isCalling
-                ? 'alert'
-                : isPicked
-                  ? 'selected'
-                  : isPaying || isOrdered
-                    ? 'wash'
-                    : 'plain';
-
-              return (
-                <DeskCard
-                  key={item.id}
-                  tone={tone}
+            {filteredTables.map((item) => (
+              <View key={item.id} style={{ width: `${100 / columns - 2.5}%` as DimensionValue }}>
+                <FloorTile
+                  code={item.code}
+                  label={item.label}
+                  status={item.status}
+                  billPesewas={item.billPesewas}
+                  currency={currency}
+                  selected={picked === item.id}
                   onPress={() => setPicked(item.id)}
-                  label={`Table ${item.label ?? item.code}, ${t(LABEL[item.status])}`}
-                  style={{
-                    ...styles.tile,
-                    width: `${100 / columns - 2.5}%` as DimensionValue,
-                  }}
-                >
-                  <View style={styles.tileHeader}>
-                    <Text variant="display-m" style={styles.tableCode}>
-                      {item.code}
-                    </Text>
-                    {isCalling ? (
-                      <View style={[styles.alertDot, { backgroundColor: theme.fill }]} />
-                    ) : null}
-                  </View>
-
-                  <View style={styles.tileFooter}>
-                    <StatusPill
-                      label={t(LABEL[item.status])}
-                      tone={
-                        isCalling
-                          ? 'error'
-                          : isPaying
-                            ? 'waiting'
-                            : isOrdered
-                              ? 'accent'
-                              : 'neutral'
-                      }
-                      icon={isCalling || isPaying}
-                    />
-
-                    {item.billPesewas ? (
-                      <Text
-                        variant="caption"
-                        style={[styles.tileBill, { fontVariant: ['tabular-nums'] }]}
-                      >
-                        {formatMoney(pesewas(item.billPesewas), currency)}
-                      </Text>
-                    ) : null}
-                  </View>
-                </DeskCard>
-              );
-            })}
+                />
+              </View>
+            ))}
           </View>
 
           {/* Selected Table Detail Bill Sheet */}
@@ -223,7 +181,7 @@ export function FloorScreen() {
                   >
                     {formatMoney(
                       pesewas(Math.max(0, bill ? bill.totalPesewas - bill.paidPesewas : 0)),
-                      currency
+                      currency,
                     )}
                   </Text>
                 ) : null}
@@ -285,9 +243,7 @@ export function FloorScreen() {
                     <Button
                       label={t('owner.doneCall')}
                       tone="secondary"
-                      onPress={() =>
-                        call.mutate({ id: table.waiterCallId!, status: 'resolved' })
-                      }
+                      onPress={() => call.mutate({ id: table.waiterCallId!, status: 'resolved' })}
                       loading={call.isPending}
                     />
                   </View>
@@ -317,7 +273,7 @@ export function FloorScreen() {
                         ? MOVE_LABEL.start
                         : nextOrderMove(table.orderStatus as OrderStatus, role)!.move === 'ready'
                           ? MOVE_LABEL.ready
-                          : MOVE_LABEL.serve
+                          : MOVE_LABEL.serve,
                     )}
                     tone="secondary"
                     onPress={() => {
@@ -338,7 +294,7 @@ export function FloorScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   stack: { gap: tokens.space[4] },
   grid: {
     flexDirection: 'row',
@@ -382,7 +338,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingBottom: tokens.space[2],
     borderBottomWidth: 1,
-    borderBottomColor: '#E4E4E7',
+    borderBottomColor: theme.line,
   },
   totalPrice: {
     fontSize: 20,
@@ -404,7 +360,7 @@ const styles = StyleSheet.create({
     gap: tokens.space[2],
   },
   qtyBadge: {
-    backgroundColor: '#F4F4F5',
+    backgroundColor: theme.wash,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
@@ -417,10 +373,10 @@ const styles = StyleSheet.create({
     gap: tokens.space[2],
     paddingTop: tokens.space[2],
     borderTopWidth: 1,
-    borderTopColor: '#E4E4E7',
+    borderTopColor: theme.line,
   },
   buttonRow: {
     flexDirection: 'row',
     gap: tokens.space[2],
   },
-});
+}));

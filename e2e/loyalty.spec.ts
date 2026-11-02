@@ -40,14 +40,16 @@ test('guest loyalty wallet card, earn history, claim code QR, and owner confirma
   await page.getByRole('button', { name: 'Send code' }).click();
   await page.getByRole('textbox', { name: 'Code', exact: true }).fill('123456');
   await page.getByRole('button', { name: 'Enter' }).click();
-  await page.getByRole('button', { name: 'More' }).click();
-  await page.getByRole('button', { name: 'Loyalty' }).click();
-  await expect(page.getByText('Confirm a guest reward')).toBeVisible();
-  await expect(page.getByText('Programme setup')).toBeVisible();
+  // Owners have Loyalty as a tab.
+  await page.getByRole('tab', { name: 'Loyalty', exact: true }).click();
+  await expect(page.getByText('STAMP CARD')).toBeVisible();
   await page.waitForTimeout(800);
   await page.screenshot({ path: 'test-results/owner-loyalty-setup.png', fullPage: false });
 
-  await page.getByText('Confirmed redemptions', { exact: true }).scrollIntoViewIfNeeded();
-  await page.waitForTimeout(400);
-  await page.screenshot({ path: 'test-results/owner-loyalty-confirm-members.png', fullPage: false });
+  await page.getByRole('tab', { name: 'Members', exact: true }).click();
+  await page.waitForTimeout(800);
+  await page.screenshot({
+    path: 'test-results/owner-loyalty-confirm-members.png',
+    fullPage: false,
+  });
 });

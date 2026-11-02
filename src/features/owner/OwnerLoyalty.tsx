@@ -1,5 +1,5 @@
-import { LoyaltyHubScreen } from './screens/LoyaltyHubScreen';
+import { LoyaltyScreen } from './screens/loyalty/LoyaltyScreen';
 
 export function OwnerLoyalty() {
-  return <LoyaltyHubScreen />;
+  return <LoyaltyScreen />;
 }

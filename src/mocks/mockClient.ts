@@ -1,4 +1,12 @@
-import { blankVenue, currencyCode, LOYALTY_PROBLEMS, minor, samplePhone, toWire } from '../features/loyalty/facts';
+import {
+  blankVenue,
+  currencyCode,
+  LOYALTY_PROBLEMS,
+  minor,
+  samplePhone,
+  toWire,
+} from '../features/loyalty/facts';
+import { mockUploadedImage } from './mediaRegistry';
 import { orderTransition } from '../features/orders/orderMachine';
 import { quoteBill } from '../features/pay/quoteBill';
 import { deriveTheme } from '../features/theming/deriveTheme';
@@ -7,7 +15,15 @@ import type { ApiClient, TokenSource } from '@/lib/api/client';
 import { ApiError, OfflineError } from '@/lib/api/errors';
 import type { LoyaltyCard, LoyaltyProgram, Order, Payment, VenueTheme } from '@/lib/api/types';
 import { qrSvg } from '@/lib/qrSvg';
-import { dashboardFor, floorFor, insightsFor, refundFor, replyFor, transactionsFor, writtenFor } from './ownerDesk';
+import {
+  dashboardFor,
+  floorFor,
+  insightsFor,
+  refundFor,
+  replyFor,
+  transactionsFor,
+  writtenFor,
+} from './ownerDesk';
 import { decideMockCard, readMockCard } from './cardBox';
 import { rememberOpenOrder } from './openOrder';
 import {
@@ -52,7 +68,10 @@ function fresh(world: World, live: LiveOrder, now: number, fast: boolean): Order
       live.order = {
         ...live.order,
         status,
-        readyAt: status === 'ready' || status === 'served' ? new Date(now).toISOString() : live.order.readyAt,
+        readyAt:
+          status === 'ready' || status === 'served'
+            ? new Date(now).toISOString()
+            : live.order.readyAt,
         updatedAt: new Date(now).toISOString(),
       };
     }
@@ -146,11 +165,25 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       const digit = row.phone.slice(-1);
       const elapsed = clock - Date.parse(row.payment.createdAt);
       const approveBy = row.payment.approveBy ? Date.parse(row.payment.approveBy) : clock;
-      if (digit === '9' && clock >= approveBy) row.payment = { ...row.payment, status: 'abandoned' };
+      if (digit === '9' && clock >= approveBy)
+        row.payment = { ...row.payment, status: 'abandoned' };
       else if (digit === '0' && elapsed >= 5_000) {
-        row.payment = { ...row.payment, status: 'failed', failureReason: 'Not enough money in the wallet.' };
-      } else if (digit !== '9' && digit !== '0' && elapsed >= 5_000 && row.payment.method === 'momo') {
-        row.payment = { ...row.payment, status: 'succeeded', paidAt: new Date(clock).toISOString() };
+        row.payment = {
+          ...row.payment,
+          status: 'failed',
+          failureReason: 'Not enough money in the wallet.',
+        };
+      } else if (
+        digit !== '9' &&
+        digit !== '0' &&
+        elapsed >= 5_000 &&
+        row.payment.method === 'momo'
+      ) {
+        row.payment = {
+          ...row.payment,
+          status: 'succeeded',
+          paidAt: new Date(clock).toISOString(),
+        };
       }
     }
     if (row.payment.status === 'succeeded' && !row.applied) {
@@ -160,7 +193,9 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       const share = row.payment.amountPesewas - (row.payment.tipPesewas ?? 0);
       const paid = live.order.paidPesewas + share;
       const lineIds = quote && quote.orderId === live.order.id ? quote.lineIds : [];
-      const lines = live.order.lines.map((line) => (lineIds.includes(line.id) ? { ...line, paid: true } : line));
+      const lines = live.order.lines.map((line) =>
+        lineIds.includes(line.id) ? { ...line, paid: true } : line,
+      );
       live.order = {
         ...live.order,
         lines,
@@ -170,7 +205,10 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       };
       const loyaltyToken = tokens.loyalty?.() ?? tokens.access();
       const loyalty = loyaltyToken ? world.access.get(loyaltyToken) : undefined;
-      const loyaltyPhone = loyalty?.purpose === 'guest_loyalty' && isGhanaPhone(loyalty.phone) ? ghanaPhone(loyalty.phone) : null;
+      const loyaltyPhone =
+        loyalty?.purpose === 'guest_loyalty' && isGhanaPhone(loyalty.phone)
+          ? ghanaPhone(loyalty.phone)
+          : null;
       const momoPhone = isGhanaPhone(row.phone) ? ghanaPhone(row.phone) : null;
       const venue = venueById(world, live.order.venueId);
       keepLoyalty(
@@ -258,16 +296,40 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       await gate();
       const venue = venueBySlug(world, body.venueSlug);
       const tableCode = body.tableCode ?? null;
-      if (tableCode && !/^([1-9]|[1-3]\d|40)$/.test(tableCode) && !world.tables[venue.id]?.some((table) => table.code === tableCode)) {
+      if (
+        tableCode &&
+        !/^([1-9]|[1-3]\d|40)$/.test(tableCode) &&
+        !world.tables[venue.id]?.some((table) => table.code === tableCode)
+      ) {
         throw new ApiError(404, 'venue_not_found', 'That table code is not in this venue');
       }
       const token = `gst_${venue.slug}_${tableCode ?? 'walkin'}_${nextId(world, 's')}`;
-      const open = world.orders.find((item) => item.order.venueId === venue.id && item.order.tableCode === tableCode && item.order.status !== 'served' && item.order.status !== 'cancelled');
+      const open = world.orders.find(
+        (item) =>
+          item.order.venueId === venue.id &&
+          item.order.tableCode === tableCode &&
+          item.order.status !== 'served' &&
+          item.order.status !== 'cancelled',
+      );
       const orderId = open?.order.id ?? null;
       world.sessions.set(token, { slug: venue.slug, tableCode, orderId });
       rememberOpenOrder(token, orderId);
-      const table = world.tables[venue.id]?.find((item) => item.code === tableCode) ?? (tableCode ? { id: `tbl_${tableCode}`, code: tableCode, label: `Table ${tableCode}`, qrUrl: `https://ozaa.app/${venue.slug}/t/${tableCode}` } : undefined);
-      return { guestToken: token, expiresAt: new Date(now() + 12 * 3600_000).toISOString(), venue: publicVenue(venue), table };
+      const table =
+        world.tables[venue.id]?.find((item) => item.code === tableCode) ??
+        (tableCode
+          ? {
+              id: `tbl_${tableCode}`,
+              code: tableCode,
+              label: `Table ${tableCode}`,
+              qrUrl: `https://ozaa.app/${venue.slug}/t/${tableCode}`,
+            }
+          : undefined);
+      return {
+        guestToken: token,
+        expiresAt: new Date(now() + 12 * 3600_000).toISOString(),
+        venue: publicVenue(venue),
+        table,
+      };
     },
     async getVenue(slug, call) {
       await gate();
@@ -294,7 +356,9 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
     async listStories(slug) {
       await gate();
       const venue = venueBySlug(world, slug);
-      const featured = world.videos.filter((video) => video.venueId === venue.id && video.state === 'featured');
+      const featured = world.videos.filter(
+        (video) => video.venueId === venue.id && video.state === 'featured',
+      );
       if (featured.length > 0) return { items: featured };
       return { items: world.stories[slug] ?? [] };
     },
@@ -316,7 +380,9 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
           if (!item.available) throw new ApiError(422, 'item_sold_out', 'Sold out');
           const chosen = line.modifierOptionIds ?? [];
           const modifiers = item.modifierGroups.flatMap((group) =>
-            group.options.filter((option) => chosen.includes(option.id)).map((option) => ({ name: option.name.en, pricePesewas: option.pricePesewas })),
+            group.options
+              .filter((option) => chosen.includes(option.id))
+              .map((option) => ({ name: option.name.en, pricePesewas: option.pricePesewas })),
           );
           const extra = modifiers.reduce((sum, option) => sum + option.pricePesewas, 0);
           const total = (item.pricePesewas + extra) * line.quantity;
@@ -359,25 +425,50 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       await gate();
       const live = findOrder(world, orderId);
       const order = fresh(world, live, now(), fast);
-      if (call?.ifNoneMatch === etag(order)) throw new ApiError(304, 'not_modified', 'Not modified');
+      if (call?.ifNoneMatch === etag(order))
+        throw new ApiError(304, 'not_modified', 'Not modified');
       return order;
     },
     async quoteBill(orderId, body) {
       await gate();
       const live = findOrder(world, orderId);
       const quote = quoteBill(
-        live.order.lines.map((line) => ({ id: line.id, totalPesewas: pesewas(line.totalPesewas), paid: line.paid })),
-        { mode: body.mode, parts: body.parts, lineIds: body.lineIds, tip: body.tip ? { percent: body.tip.percent, customPesewas: body.tip.customPesewas !== undefined ? pesewas(body.tip.customPesewas) : undefined } : undefined },
+        live.order.lines.map((line) => ({
+          id: line.id,
+          totalPesewas: pesewas(line.totalPesewas),
+          paid: line.paid,
+        })),
+        {
+          mode: body.mode,
+          parts: body.parts,
+          lineIds: body.lineIds,
+          tip: body.tip
+            ? {
+                percent: body.tip.percent,
+                customPesewas:
+                  body.tip.customPesewas !== undefined
+                    ? pesewas(body.tip.customPesewas)
+                    : undefined,
+              }
+            : undefined,
+        },
       );
       const quoteId = nextId(world, 'quo');
-      world.quotes.set(quoteId, { orderId, share: quote.sharePesewas, tip: quote.tipPesewas, lineIds: body.lineIds ?? [], expiresAt: now() + 10 * 60_000 });
+      world.quotes.set(quoteId, {
+        orderId,
+        share: quote.sharePesewas,
+        tip: quote.tipPesewas,
+        lineIds: body.lineIds ?? [],
+        expiresAt: now() + 10 * 60_000,
+      });
       return { quoteId, orderId, ...quote, expiresAt: new Date(now() + 10 * 60_000).toISOString() };
     },
     async initializePayment(body, call) {
       await gate();
       return remember(call.idempotencyKey, () => {
         const quote = world.quotes.get(body.quoteId);
-        if (!quote || quote.expiresAt < now()) throw new ApiError(409, 'quote_expired', 'That bill changed. Ask for a new total.');
+        if (!quote || quote.expiresAt < now())
+          throw new ApiError(409, 'quote_expired', 'That bill changed. Ask for a new total.');
         const reference = nextId(world, 'pay');
         const createdAt = new Date(now()).toISOString();
         const payment: Payment = {
@@ -390,8 +481,10 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
           tipPesewas: quote.tip,
           currency: 'GHS',
           status: body.method === 'momo' ? 'pay_offline' : 'open_url',
-          displayText: body.method === 'momo' ? 'Check your phone and enter your PIN to approve.' : undefined,
-          authorizationUrl: body.method === 'card' ? `https://mock.ozaa.app/checkout/${reference}` : undefined,
+          displayText:
+            body.method === 'momo' ? 'Check your phone and enter your PIN to approve.' : undefined,
+          authorizationUrl:
+            body.method === 'card' ? `https://mock.ozaa.app/checkout/${reference}` : undefined,
           approveBy: body.method === 'momo' ? new Date(now() + 180_000).toISOString() : null,
           createdAt,
           paidAt: null,
@@ -416,8 +509,11 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       await gate();
       return remember(call.idempotencyKey, () => {
         const session = sessionOf(world, tokens);
-        if (!session.tableCode) throw new ApiError(400, 'bad_request', 'Scan the code on your table first');
-        const open = world.calls.find((item) => item.tableCode === session.tableCode && item.status !== 'resolved');
+        if (!session.tableCode)
+          throw new ApiError(400, 'bad_request', 'Scan the code on your table first');
+        const open = world.calls.find(
+          (item) => item.tableCode === session.tableCode && item.status !== 'resolved',
+        );
         if (open) {
           open.reason = body.reason;
           open.note = body.note;
@@ -491,7 +587,12 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       await gate();
       const row = loyaltyOf(world, tokens);
       const venue = venueBySlug(world, slug);
-      keepLoyalty(world, venue.id, { type: 'leave', phone: samplePhone(row.phone) }, new Date(now()).toISOString());
+      keepLoyalty(
+        world,
+        venue.id,
+        { type: 'leave', phone: samplePhone(row.phone) },
+        new Date(now()).toISOString(),
+      );
     },
     async redeemReward(slug, body, call) {
       await gate();
@@ -512,7 +613,10 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       await gate();
       const session = sessionOf(world, tokens);
       const venue = venueBySlug(world, session.slug);
-      return { id: nextId(world, 'rev'), googleReviewUrl: body.stars >= 4 ? (venue.googleReviewUrl ?? null) : null };
+      return {
+        id: nextId(world, 'rev'),
+        googleReviewUrl: body.stars >= 4 ? (venue.googleReviewUrl ?? null) : null,
+      };
     },
     async createVideoUpload(body) {
       await gate();
@@ -521,11 +625,16 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       }
       const uploadId = nextId(world, 'upl');
       world.uploads.add(uploadId);
-      return { uploadId, uploadUrl: `https://mock.ozaa.app/upload/${uploadId}`, expiresAt: new Date(now() + 15 * 60_000).toISOString() };
+      return {
+        uploadId,
+        uploadUrl: `https://mock.ozaa.app/upload/${uploadId}`,
+        expiresAt: new Date(now() + 15 * 60_000).toISOString(),
+      };
     },
     async createVideoReview(body) {
       await gate();
-      if (!world.uploads.has(body.uploadId)) throw new ApiError(400, 'bad_video', 'Upload the video first');
+      if (!world.uploads.has(body.uploadId))
+        throw new ApiError(400, 'bad_video', 'Upload the video first');
       const session = sessionOf(world, tokens);
       const venue = venueBySlug(world, session.slug);
       const id = nextId(world, 'vrv');
@@ -549,14 +658,19 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
     async deleteMyVideoReview(id, call) {
       await gate();
       const index = world.videos.findIndex((video) => video.id === id);
-      if (index < 0 || call.deleteToken !== `del_${id}`) throw new ApiError(404, 'order_not_found', 'Video not found');
+      if (index < 0 || call.deleteToken !== `del_${id}`)
+        throw new ApiError(404, 'order_not_found', 'Video not found');
       world.videos.splice(index, 1);
     },
     async getLeaderboard(slug) {
       await gate();
       venueBySlug(world, slug);
       const venue = venueBySlug(world, slug);
-      return { period: 'week', entries: [], stampRule: venue.game ?? { enabled: false, minScore: 15 } };
+      return {
+        period: 'week',
+        entries: [],
+        stampRule: venue.game ?? { enabled: false, minScore: 15 },
+      };
     },
     async submitScore(slug, body) {
       await gate();
@@ -597,7 +711,16 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       await gate();
       accessOf(world, tokens);
       const venue = venueById(world, venueId);
-      const next = { ...venue, ...body, location: body.location ? { ...venue.location, ...body.location } : venue.location };
+      const { bannerMediaId, logoMediaId, ...fields } = body;
+      const banner = mockUploadedImage(bannerMediaId) ?? venue.banner;
+      const logo = logoMediaId === null ? null : (mockUploadedImage(logoMediaId) ?? venue.logo);
+      const next = {
+        ...venue,
+        ...fields,
+        banner,
+        logo,
+        location: body.location ? { ...venue.location, ...body.location } : venue.location,
+      };
       world.venues[venue.slug] = next;
       if (body.wifi) world.wifi[venue.slug] = body.wifi;
       return { ...next, wifi: world.wifi[venue.slug] };
@@ -613,7 +736,11 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
     async ownerCreateMediaUpload() {
       await gate();
       const mediaId = nextId(world, 'med');
-      return { mediaId, uploadUrl: `https://mock.ozaa.app/upload/${mediaId}`, expiresAt: new Date(now() + 15 * 60_000).toISOString() };
+      return {
+        mediaId,
+        uploadUrl: `https://mock.ozaa.app/upload/${mediaId}`,
+        expiresAt: new Date(now() + 15 * 60_000).toISOString(),
+      };
     },
     async ownerGetServices(venueId) {
       await gate();
@@ -696,7 +823,7 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
         name: body.name,
         description: body.description ?? { en: '' },
         pricePesewas: body.pricePesewas,
-        photo: null,
+        photo: mockUploadedImage(body.photoMediaId) ?? null,
         available: body.available ?? true,
         dietary: body.dietary ?? [],
         allergens: body.allergens ?? [],
@@ -716,7 +843,15 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       if (!menu || index < 0) throw new ApiError(404, 'order_not_found', 'Dish not found');
       const current = menu.items[index];
       if (!current) throw new ApiError(404, 'order_not_found', 'Dish not found');
-      const next = { ...current, ...body, photo: current.photo };
+      // photoMediaId: undefined keeps the photo, null removes it, an id swaps in the uploaded one.
+      const photo =
+        body.photoMediaId === undefined
+          ? current.photo
+          : body.photoMediaId === null
+            ? null
+            : (mockUploadedImage(body.photoMediaId) ?? current.photo);
+      const { photoMediaId: _photoMediaId, ...fields } = body;
+      const next = { ...current, ...fields, photo };
       menu.items[index] = next;
       return next;
     },
@@ -734,7 +869,12 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
     async ownerCreateTables(venueId, body) {
       await gate();
       const venue = venueById(world, venueId);
-      const created = body.codes.map((code) => ({ id: `tbl_${venue.slug}_${code}`, code, label: `Table ${code}`, qrUrl: `https://ozaa.app/${venue.slug}/t/${code}` }));
+      const created = body.codes.map((code) => ({
+        id: `tbl_${venue.slug}_${code}`,
+        code,
+        label: `Table ${code}`,
+        qrUrl: `https://ozaa.app/${venue.slug}/t/${code}`,
+      }));
       world.tables[venueId] = [...(world.tables[venueId] ?? []), ...created];
       return { items: created };
     },
@@ -746,7 +886,9 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
     },
     async ownerListOrders(venueId) {
       await gate();
-      const items = world.orders.filter((item) => item.order.venueId === venueId).map((item) => fresh(world, item, now(), fast));
+      const items = world.orders
+        .filter((item) => item.order.venueId === venueId)
+        .map((item) => fresh(world, item, now(), fast));
       return { items, nextCursor: null as string | null };
     },
     async ownerSetOrderStatus(orderId, body) {
@@ -754,23 +896,46 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       const row = accessOf(world, tokens);
       const staff = STAFF.find((person) => person.phone === row.phone);
       const live = findOrder(world, orderId);
-      const move = body.status === 'preparing' ? 'start' : body.status === 'ready' ? 'ready' : body.status === 'served' ? 'serve' : body.status === 'cancelled' ? 'cancel' : null;
+      const move =
+        body.status === 'preparing'
+          ? 'start'
+          : body.status === 'ready'
+            ? 'ready'
+            : body.status === 'served'
+              ? 'serve'
+              : body.status === 'cancelled'
+                ? 'cancel'
+                : null;
       const next = move && staff ? orderTransition(live.order.status, move, staff.role) : null;
-      if (!next || next !== body.status) throw new ApiError(409, 'illegal_move', 'That status change is not allowed');
+      if (!next || next !== body.status)
+        throw new ApiError(409, 'illegal_move', 'That status change is not allowed');
       live.manual = true;
-      live.order = { ...live.order, status: next, updatedAt: new Date(now()).toISOString(), readyAt: next === 'ready' ? new Date(now()).toISOString() : live.order.readyAt };
+      live.order = {
+        ...live.order,
+        status: next,
+        updatedAt: new Date(now()).toISOString(),
+        readyAt: next === 'ready' ? new Date(now()).toISOString() : live.order.readyAt,
+      };
       return live.order;
     },
     async ownerRecordCashPayment(orderId, body) {
       await gate();
       const live = findOrder(world, orderId);
       const paid = live.order.paidPesewas + body.amountPesewas;
-      live.order = { ...live.order, paidPesewas: paid, paymentStatus: paid >= live.order.totalPesewas ? 'paid' : 'part_paid' };
+      live.order = {
+        ...live.order,
+        paidPesewas: paid,
+        paymentStatus: paid >= live.order.totalPesewas ? 'paid' : 'part_paid',
+      };
       return live.order;
     },
     async ownerListWaiterCalls(venueId) {
       await gate();
-      return { items: world.calls.filter((call) => call.venueId === venueId).map(({ venueId: _id, ...call }) => call) };
+      return {
+        items: world.calls
+          .filter((call) => call.venueId === venueId)
+          .map(({ venueId: _id, ...call }) => call),
+      };
     },
     async ownerUpdateWaiterCall(id, body) {
       await gate();
@@ -796,7 +961,8 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       await gate();
       const video = world.videos.find((item) => item.id === id);
       if (!video) throw new ApiError(404, 'order_not_found', 'Video not found');
-      if (body.state === 'featured' && !video.featureConsent) throw new ApiError(409, 'no_consent', 'The guest did not allow featuring');
+      if (body.state === 'featured' && !video.featureConsent)
+        throw new ApiError(409, 'no_consent', 'The guest did not allow featuring');
       video.state = body.state;
       return video;
     },
@@ -846,8 +1012,17 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
     },
     async ownerSetPayoutAccount(venueId, body) {
       await gate();
-      const masked = body.settlement.type === 'bank' ? `**** ${body.settlement.accountNumber.slice(-4)}` : `**** ${body.settlement.phone.slice(-4)}`;
-      const account = { businessName: body.businessName, settlementType: body.settlement.type, accountMasked: masked, verified: false, ozaaFeePercent: world.payouts[venueId]?.ozaaFeePercent ?? 0 };
+      const masked =
+        body.settlement.type === 'bank'
+          ? `**** ${body.settlement.accountNumber.slice(-4)}`
+          : `**** ${body.settlement.phone.slice(-4)}`;
+      const account = {
+        businessName: body.businessName,
+        settlementType: body.settlement.type,
+        accountMasked: masked,
+        verified: false,
+        ozaaFeePercent: world.payouts[venueId]?.ozaaFeePercent ?? 0,
+      };
       world.payouts[venueId] = account;
       return account;
     },
@@ -900,7 +1075,12 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       else if (query?.state === 'archived') items = items.filter((fb) => fb.archived);
       if (query?.search) {
         const q = query.search.toLowerCase();
-        items = items.filter((fb) => fb.text.toLowerCase().includes(q) || (fb.contactName?.toLowerCase().includes(q) ?? false) || (fb.contactPhone?.includes(q) ?? false));
+        items = items.filter(
+          (fb) =>
+            fb.text.toLowerCase().includes(q) ||
+            (fb.contactName?.toLowerCase().includes(q) ?? false) ||
+            (fb.contactPhone?.includes(q) ?? false),
+        );
       }
       return { items };
     },
@@ -914,34 +1094,59 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
     async ownerAskFeedbackAi(venueId, body) {
       await gate();
       const nowTime = now();
-      const items = (world.feedback ?? []).filter((fb) => fb.venueId === venueId && new Date(fb.visibleAfter).getTime() <= nowTime);
+      const items = (world.feedback ?? []).filter(
+        (fb) => fb.venueId === venueId && new Date(fb.visibleAfter).getTime() <= nowTime,
+      );
       if (items.length === 0) {
         return {
-          reply: "I haven't found any feedback yet for this location. Once diners leave feedback via the suggestion box, I will summarise trends and complaints here.",
-          suggestions: ['Summarise my recent feedback', 'What are my biggest complaints?', 'What are customers loving?', 'How has feedback changed this month?'],
+          reply:
+            "I haven't found any feedback yet for this location. Once diners leave feedback via the suggestion box, I will summarise trends and complaints here.",
+          suggestions: [
+            'Summarise my recent feedback',
+            'What are my biggest complaints?',
+            'What are customers loving?',
+            'How has feedback changed this month?',
+          ],
         };
       }
       const q = body.question.toLowerCase();
       if (q.includes('complaint') || q.includes('biggest')) {
         return {
-          reply: "Based on recent feedback, 1 customer noted that kelewele was too salty and requested faster bill settlement, while another mentioned a 25-minute wait during Friday peak dinner. Overall complaints are low at under 15% of submissions.",
-          suggestions: ['How can we speed up Friday wait times?', 'Summarise positive comments', 'View unhappy customer contact notes'],
+          reply:
+            'Based on recent feedback, 1 customer noted that kelewele was too salty and requested faster bill settlement, while another mentioned a 25-minute wait during Friday peak dinner. Overall complaints are low at under 15% of submissions.',
+          suggestions: [
+            'How can we speed up Friday wait times?',
+            'Summarise positive comments',
+            'View unhappy customer contact notes',
+          ],
         };
       }
       if (q.includes('loving') || q.includes('love') || q.includes('positive')) {
         return {
-          reply: "Guests consistently praise the grilled lake tilapia with spicy shito and the smoky firewood jollof rice. Several guests specifically mentioned warm hospitality from floor staff.",
+          reply:
+            'Guests consistently praise the grilled lake tilapia with spicy shito and the smoky firewood jollof rice. Several guests specifically mentioned warm hospitality from floor staff.',
           suggestions: ['What are our top dishes by rating?', 'Show recent 5-star comments'],
         };
       }
       return {
-        reply: 'Analyzed ' + items.length + ' feedback submissions: 75% positive, 15% neutral, and 10% negative. Top praise focuses on food seasoning and vibe. Suggestions center on peak-hour billing speed.',
-        suggestions: ['What are my biggest complaints?', 'What are customers loving?', 'Summarise my recent feedback'],
+        reply:
+          'Analyzed ' +
+          items.length +
+          ' feedback submissions: 75% positive, 15% neutral, and 10% negative. Top praise focuses on food seasoning and vibe. Suggestions center on peak-hour billing speed.',
+        suggestions: [
+          'What are my biggest complaints?',
+          'What are customers loving?',
+          'Summarise my recent feedback',
+        ],
       };
     },
     async ownerListCustomLinks(venueId) {
       await gate();
-      return { items: (world.customLinks ?? []).filter((l) => l.venueId === venueId).sort((a, b) => a.sortOrder - b.sortOrder) };
+      return {
+        items: (world.customLinks ?? [])
+          .filter((l) => l.venueId === venueId)
+          .sort((a, b) => a.sortOrder - b.sortOrder),
+      };
     },
     async ownerCreateCustomLink(venueId, body) {
       await gate();
@@ -1046,7 +1251,12 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       if (query?.wantsOffers) customers = customers.filter((c) => c.wantsOffers);
       if (query?.search) {
         const q = query.search.toLowerCase();
-        customers = customers.filter((c) => c.name.toLowerCase().includes(q) || c.phoneMasked.includes(q) || (c.email?.toLowerCase().includes(q) ?? false));
+        customers = customers.filter(
+          (c) =>
+            c.name.toLowerCase().includes(q) ||
+            c.phoneMasked.includes(q) ||
+            (c.email?.toLowerCase().includes(q) ?? false),
+        );
       }
       return { items: customers, totalCount: customers.length };
     },
@@ -1054,11 +1264,15 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       await gate();
       const venue = venueById(world, venueId);
       const current = world.loyalty[venueId] ?? blankVenue(venueId, venue.currency);
-      const card = toWire(current, { kind: 'member', memberId: 'mem_sample' }) as LoyaltyCard | null;
+      const card = toWire(current, {
+        kind: 'member',
+        memberId: 'mem_sample',
+      }) as LoyaltyCard | null;
+      if (!card) throw new ApiError(404, 'card_not_found', 'No loyalty card found for that code');
       if (body.action === 'stamp') {
         return {
           success: true,
-          card: card ?? ({} as any),
+          card,
           customerName: 'Kofi Mensah',
           stamps: 8,
           cooldownViolated: false,
@@ -1069,7 +1283,7 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       }
       return {
         success: true,
-        card: card ?? ({} as any),
+        card,
         customerName: 'Kofi Mensah',
         stamps: 0,
         cooldownViolated: false,
@@ -1151,4 +1365,3 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
 }
 
 export { decideMockCard };
-

@@ -1,29 +1,19 @@
 import { useState } from 'react';
-import {
-  Linking,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  View,
-} from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
   Calendar,
   Clock,
   Edit2,
-  ExternalLink,
   Gift,
   Globe,
   Link as LinkIcon,
   MousePointerClick,
   Music,
-  Plus,
   Sparkles,
   Ticket,
   Trash2,
-  X,
   type LucideIcon,
 } from 'lucide-react-native';
 import { api } from '@/lib/api';
@@ -42,9 +32,17 @@ import {
   IconTile,
   ModalSheet,
   SectionLabel,
-  StatusPill,
   Toggle,
+  toast,
 } from '../kit';
+import { checkLink } from '../desk/linkForm';
+
+const LINK_ERRORS = {
+  title: 'Add the words guests will see on the button.',
+  url: 'Enter a web address, for example mamas.kitchen/book.',
+  start: 'Use the format YYYY-MM-DD, for example 2026-12-01.',
+  end: 'Use YYYY-MM-DD, on or after the From date.',
+} as const;
 
 const ICON_MAP: Record<string, LucideIcon> = {
   globe: Globe,
@@ -105,11 +103,12 @@ export function CustomLinksScreen() {
   const menuItems = items.filter((i) => i.placement === 'menu');
 
   return (
-    <OwnerPage
-      title="Custom Action Links"
-      subtitle="Promote reservations, event tickets, DJ sets, Spotify playlists, and special deals on your table page."
-    >
-      <DeskWait loading={links.isLoading} error={links.isError} onRetry={() => void links.refetch()}>
+    <OwnerPage title={t('owner.links')}>
+      <DeskWait
+        loading={links.isLoading}
+        error={links.isError}
+        onRetry={() => void links.refetch()}
+      >
         <View style={styles.stack}>
           {/* Top Actions Bar */}
           <View style={styles.topActionsRow}>
@@ -263,9 +262,9 @@ function LinkRowCard({
               {item.title}
             </Text>
             {item.clicks !== undefined ? (
-              <View style={[styles.clickPill, { backgroundColor: '#F0FDF4' }]}>
-                <MousePointerClick size={12} color="#16A34A" />
-                <Text variant="caption" style={{ color: '#16A34A', fontWeight: '700' }}>
+              <View style={[styles.clickPill, { backgroundColor: theme.successTint }]}>
+                <MousePointerClick size={12} color={theme.success} />
+                <Text variant="caption" style={{ color: theme.success, fontWeight: '700' }}>
                   {item.clicks} click{item.clicks === 1 ? '' : 's'}
                 </Text>
               </View>
@@ -280,8 +279,8 @@ function LinkRowCard({
             <View style={styles.scheduleRow}>
               <Clock size={12} color={theme.meta} />
               <Text variant="caption" style={{ color: theme.meta }}>
-                Scheduled: {item.startDate ? new Date(item.startDate).toLocaleDateString() : 'Now'} -{' '}
-                {item.endDate ? new Date(item.endDate).toLocaleDateString() : 'Indefinite'}
+                Scheduled: {item.startDate ? new Date(item.startDate).toLocaleDateString() : 'Now'}{' '}
+                - {item.endDate ? new Date(item.endDate).toLocaleDateString() : 'Indefinite'}
               </Text>
             </View>
           ) : null}
@@ -310,9 +309,9 @@ function LinkRowCard({
               accessibilityRole="button"
               accessibilityLabel={`Delete ${item.title}`}
               onPress={onDelete}
-              style={[styles.smallBtn, { backgroundColor: '#FEE2E2' }]}
+              style={[styles.smallBtn, { backgroundColor: theme.errorTint }]}
             >
-              <Trash2 size={16} color="#DC2626" />
+              <Trash2 size={16} color={theme.error} />
             </Pressable>
           </View>
         </View>
@@ -339,23 +338,29 @@ function CustomLinkModal({
   const [url, setUrl] = useState(link?.url ?? '');
   const [icon, setIcon] = useState<string>(link?.icon ?? 'globe');
   const [placement, setPlacement] = useState<'button' | 'banner' | 'menu'>(
-    link?.placement ?? 'button'
+    link?.placement ?? 'button',
   );
-  const [enabled, setEnabled] = useState(link?.enabled ?? true);
+  const enabled = link?.enabled ?? true;
   const [hasSchedule, setHasSchedule] = useState(Boolean(link?.startDate || link?.endDate));
-  const [startDate, setStartDate] = useState(link?.startDate ?? '');
-  const [endDate, setEndDate] = useState(link?.endDate ?? '');
+  // Edited as YYYY-MM-DD; saved as the start and end of those days.
+  const [startDate, setStartDate] = useState(link?.startDate?.slice(0, 10) ?? '');
+  const [endDate, setEndDate] = useState(link?.endDate?.slice(0, 10) ?? '');
+  const [showErrors, setShowErrors] = useState(false);
+  const check = checkLink({ title, url, hasSchedule, start: startDate, end: endDate });
+  const errorFor = (field: 'title' | 'url' | 'start' | 'end') =>
+    showErrors && !check.ok && check.field === field ? LINK_ERRORS[field] : undefined;
 
   const saveMutation = useMutation({
     mutationFn: async () => {
+      if (!check.ok) throw new Error('invalid');
       const payload = {
         title: title.trim(),
-        url: url.trim(),
+        url: check.url,
         icon,
         placement,
         enabled,
-        startDate: hasSchedule && startDate ? startDate : undefined,
-        endDate: hasSchedule && endDate ? endDate : undefined,
+        startDate: check.startDate,
+        endDate: check.endDate,
       };
 
       if (link) {
@@ -364,7 +369,11 @@ function CustomLinkModal({
         return api.ownerCreateCustomLink(venueId, payload);
       }
     },
-    onSuccess: onSaved,
+    onSuccess: () => {
+      toast.success(link ? 'Link saved' : 'Link added');
+      onSaved();
+    },
+    onError: () => toast.error('That did not save. Check the connection and try again.'),
   });
 
   return (
@@ -372,23 +381,58 @@ function CustomLinkModal({
       visible={visible}
       onClose={onClose}
       title={link ? 'Edit Action Link' : 'Add Action Link'}
-      subtitle="Configure button text, destination URL and placement."
     >
       <View style={modalStyles.stack}>
         <Field
-          label="Button Title"
+          label="Button text"
+          error={errorFor('title')}
           value={title}
           onChangeText={setTitle}
           placeholder="e.g. Reserve a VIP Booth, Friday DJ Set, Buy Tickets"
         />
 
         <Field
-          label="Destination URL"
+          label="Link"
+          error={errorFor('url')}
           value={url}
           onChangeText={setUrl}
-          placeholder="https://..."
+          placeholder="mamas.kitchen/book"
           keyboardType="url"
+          autoCapitalize="none"
+          autoCorrect={false}
         />
+
+        <View style={modalStyles.scheduleRow}>
+          <View style={{ flex: 1 }}>
+            <Text variant="body-strong">Show only between dates</Text>
+            <Text variant="caption" style={{ color: theme.muted }}>
+              For an event or a deal that ends. Leave a date empty to keep that side open.
+            </Text>
+          </View>
+          <Toggle value={hasSchedule} onChange={setHasSchedule} label="Show only between dates" />
+        </View>
+        {hasSchedule ? (
+          <View style={modalStyles.dates}>
+            <Field
+              label="From"
+              hint="YYYY-MM-DD"
+              error={errorFor('start')}
+              value={startDate}
+              onChangeText={setStartDate}
+              placeholder="2026-12-01"
+              keyboardType="numbers-and-punctuation"
+            />
+            <Field
+              label="Until"
+              hint="YYYY-MM-DD"
+              error={errorFor('end')}
+              value={endDate}
+              onChangeText={setEndDate}
+              placeholder="2026-12-24"
+              keyboardType="numbers-and-punctuation"
+            />
+          </View>
+        ) : null}
 
         {/* Icon Picker */}
         <View style={modalStyles.group}>
@@ -409,7 +453,7 @@ function CustomLinkModal({
                     modalStyles.iconChoice,
                     {
                       borderColor: selected ? theme.fill : theme.line,
-                      backgroundColor: selected ? theme.wash : theme.white,
+                      backgroundColor: selected ? theme.wash : theme.surface,
                     },
                   ]}
                 >
@@ -442,14 +486,14 @@ function CustomLinkModal({
                     modalStyles.placementBtn,
                     {
                       borderColor: active ? theme.fill : theme.line,
-                      backgroundColor: active ? theme.fill : theme.white,
+                      backgroundColor: active ? theme.fill : theme.surface,
                     },
                   ]}
                 >
                   <Text
                     variant="caption"
                     style={{
-                      color: active ? theme.white : theme.text,
+                      color: active ? theme.onFill : theme.text,
                       fontWeight: active ? '700' : '500',
                     }}
                   >
@@ -464,9 +508,14 @@ function CustomLinkModal({
         <Button
           label={link ? 'Save link' : 'Create link'}
           tone="primary"
-          onPress={() => saveMutation.mutate()}
+          onPress={() => {
+            if (!check.ok) {
+              setShowErrors(true);
+              return;
+            }
+            saveMutation.mutate();
+          }}
           loading={saveMutation.isPending}
-          disabled={!title.trim() || !url.trim()}
         />
       </View>
     </ModalSheet>
@@ -542,6 +591,8 @@ const styles = StyleSheet.create({
 });
 
 const modalStyles = StyleSheet.create({
+  scheduleRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
+  dates: { flexDirection: 'row', gap: tokens.space[3] },
   stack: {
     gap: tokens.space[4],
   },

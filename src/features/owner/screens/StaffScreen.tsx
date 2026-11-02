@@ -1,5 +1,6 @@
+import { makeStyles } from '@/ui/makeStyles';
 import { useState } from 'react';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Pressable, TextInput, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
@@ -22,7 +23,15 @@ import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { useOwnerSession } from '@/features/session';
 import { DeskWait, OwnerPage } from '../chrome/OwnerPage';
-import { ConfirmDialog, DeskCard, EmptyCard, IconTile, SectionLabel, StatTile, StatusPill } from '../kit';
+import {
+  ConfirmDialog,
+  DeskCard,
+  EmptyCard,
+  IconTile,
+  SectionLabel,
+  StatTile,
+  StatusPill,
+} from '../kit';
 
 const ALL_ROLES: StaffRole[] = ['manager', 'waiter', 'kitchen', 'viewer', 'staff_scanner', 'owner'];
 
@@ -60,6 +69,7 @@ const ROLE_INFO: Record<StaffRole, { label: string; desc: string; icon: typeof U
 };
 
 export function StaffScreen() {
+  const styles = useStyles();
   const { t } = useTranslation();
   const theme = useTheme();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
@@ -115,11 +125,12 @@ export function StaffScreen() {
   const kitchenCount = staffList.filter((s) => s.role === 'kitchen').length;
 
   return (
-    <OwnerPage
-      title={t('owner.staff')}
-      subtitle="Invite and manage team members, role assignments, and floor access permissions."
-    >
-      <DeskWait loading={staff.isLoading} error={staff.isError} onRetry={() => void staff.refetch()}>
+    <OwnerPage title={t('owner.staff')}>
+      <DeskWait
+        loading={staff.isLoading}
+        error={staff.isError}
+        onRetry={() => void staff.refetch()}
+      >
         {/* Top metrics summary */}
         <View style={styles.statsRow}>
           <View style={styles.statCol}>
@@ -134,10 +145,7 @@ export function StaffScreen() {
         </View>
 
         {/* Staff list */}
-        <SectionLabel
-          title={`TEAM MEMBERS (${staffList.length})`}
-          caps
-        />
+        <SectionLabel title={`TEAM MEMBERS (${staffList.length})`} caps />
 
         {staffList.length === 0 ? (
           <EmptyCard
@@ -168,10 +176,10 @@ export function StaffScreen() {
                             person.role === 'manager'
                               ? 'accent'
                               : person.role === 'kitchen'
-                              ? 'waiting'
-                              : person.role === 'owner'
-                              ? 'success'
-                              : 'neutral'
+                                ? 'waiting'
+                                : person.role === 'owner'
+                                  ? 'success'
+                                  : 'neutral'
                           }
                           label={roleDetails.label}
                           boxed
@@ -189,13 +197,13 @@ export function StaffScreen() {
                         onPress={() => setStaffToRevoke(person)}
                         style={[styles.revokeBtn, { borderColor: theme.line }]}
                       >
-                        <Trash2 size={16} color="#DC2626" />
+                        <Trash2 size={16} color={theme.error} />
                       </Pressable>
                     ) : null}
                   </View>
 
                   <View style={styles.roleDescBox}>
-                    <Text variant="caption" style={{ color: '#4B5563' }}>
+                    <Text variant="caption" style={{ color: theme.muted }}>
                       {roleDetails.desc}
                     </Text>
                   </View>
@@ -272,14 +280,14 @@ export function StaffScreen() {
                       styles.roleTile,
                       {
                         borderColor: isSelected ? theme.black : theme.line,
-                        backgroundColor: isSelected ? '#111111' : '#FFFFFF',
+                        backgroundColor: isSelected ? theme.black : theme.surface,
                       },
                     ]}
                   >
                     <Text
                       variant="caption"
                       style={{
-                        color: isSelected ? '#FFFFFF' : theme.text,
+                        color: isSelected ? theme.white : theme.text,
                         fontWeight: '700',
                       }}
                     >
@@ -296,8 +304,8 @@ export function StaffScreen() {
 
           {error ? (
             <View style={styles.errorBanner}>
-              <ShieldAlert size={16} color="#DC2626" />
-              <Text variant="caption" style={{ color: '#DC2626', fontWeight: '600' }}>
+              <ShieldAlert size={16} color={theme.error} />
+              <Text variant="caption" style={{ color: theme.error, fontWeight: '600' }}>
                 Please check the contact details. A valid Ghana number or email is required.
               </Text>
             </View>
@@ -332,7 +340,7 @@ export function StaffScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   statsRow: {
     flexDirection: 'row',
     gap: tokens.space[2],
@@ -357,14 +365,14 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.wash,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.line,
   },
   avatarText: {
-    color: '#111111',
+    color: theme.text,
     fontWeight: '800',
     fontSize: 16,
   },
@@ -384,14 +392,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FEF2F2',
+    backgroundColor: theme.errorTint,
   },
   roleDescBox: {
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.wash,
     padding: tokens.space[2],
     borderRadius: tokens.radius.sm,
     borderLeftWidth: 3,
-    borderLeftColor: '#D24000',
+    borderLeftColor: theme.fill,
   },
   inviteCard: {
     gap: tokens.space[3],
@@ -407,14 +415,14 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     fontWeight: '600',
-    color: '#374151',
+    color: theme.muted,
   },
   input: {
     borderWidth: 1,
     borderRadius: tokens.radius.md,
     minHeight: 48,
     paddingHorizontal: tokens.space[3],
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.surface,
   },
   rolesRow: {
     flexDirection: 'row',
@@ -434,9 +442,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     padding: tokens.space[2],
-    backgroundColor: '#FEF2F2',
+    backgroundColor: theme.errorTint,
     borderRadius: tokens.radius.sm,
     borderWidth: 1,
-    borderColor: '#FCA5A5',
+    borderColor: theme.errorTint,
   },
-});
+}));

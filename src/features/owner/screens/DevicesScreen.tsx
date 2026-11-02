@@ -1,25 +1,9 @@
+import { makeStyles } from '@/ui/makeStyles';
 import { useState } from 'react';
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  View,
-} from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
-import {
-  CheckCircle2,
-  Lock,
-  Plus,
-  QrCode,
-  ScanLine,
-  ShieldCheck,
-  Smartphone,
-  Trash2,
-  X,
-} from 'lucide-react-native';
+import { ScanLine, Smartphone, Trash2 } from 'lucide-react-native';
 import { api } from '@/lib/api';
 import type { ScannerDevice } from '@/lib/api/types';
 import { tokens } from '@/theme/tokens';
@@ -28,20 +12,10 @@ import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { useOwnerSession } from '@/features/session';
 import { DeskWait, OwnerPage } from '../chrome/OwnerPage';
-import {
-  ConfirmDialog,
-  DeskCard,
-  EmptyCard,
-  Field,
-  IconTile,
-  ModalSheet,
-  SectionLabel,
-  StatusPill,
-  Toggle,
-} from '../kit';
+import { ConfirmDialog, DeskCard, EmptyCard, Field, IconTile, ModalSheet, Toggle } from '../kit';
 
 export function DevicesScreen() {
-  const { t } = useTranslation();
+  const styles = useStyles();
   const theme = useTheme();
   const router = useRouter();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
@@ -70,10 +44,7 @@ export function DevicesScreen() {
   const items = devicesQuery.data?.items ?? [];
 
   return (
-    <OwnerPage
-      title="Scanner Devices"
-      subtitle="Pair staff handhelds, floor tablets, and counter devices with short-lived 6-digit PIN codes."
-    >
+    <OwnerPage title="Scanner Devices">
       <DeskWait
         loading={devicesQuery.isLoading}
         error={devicesQuery.isError}
@@ -87,7 +58,8 @@ export function DevicesScreen() {
               <View style={{ flex: 1, gap: 2 }}>
                 <Text variant="title">Staff Scanner Mode</Text>
                 <Text variant="caption" style={{ color: theme.meta }}>
-                  Locks the device interface exclusively to the camera scanner for floor staff to stamp cards without accessing financial or admin settings.
+                  Locks the device interface exclusively to the camera scanner for floor staff to
+                  stamp cards without accessing financial or admin settings.
                 </Text>
               </View>
 
@@ -96,7 +68,7 @@ export function DevicesScreen() {
                 onChange={(val) => {
                   setScannerModeActive(val);
                   if (val) {
-                    router.push('/owner/scan' as any);
+                    router.push('/owner/scan');
                   }
                 }}
                 label="Scanner mode"
@@ -113,11 +85,7 @@ export function DevicesScreen() {
               </Text>
             </View>
 
-            <Button
-              label="Pair new device"
-              tone="primary"
-              onPress={() => setPairModalOpen(true)}
-            />
+            <Button label="Pair new device" tone="primary" onPress={() => setPairModalOpen(true)} />
           </View>
 
           {items.length === 0 ? (
@@ -140,9 +108,12 @@ export function DevicesScreen() {
                         <Text variant="title" style={styles.deviceName}>
                           {dev.name}
                         </Text>
-                        <View style={[styles.activePill, { backgroundColor: '#F0FDF4' }]}>
+                        <View style={[styles.activePill, { backgroundColor: theme.successTint }]}>
                           <View style={styles.greenDot} />
-                          <Text variant="caption" style={{ color: '#16A34A', fontWeight: '700' }}>
+                          <Text
+                            variant="caption"
+                            style={{ color: theme.success, fontWeight: '700' }}
+                          >
                             Paired
                           </Text>
                         </View>
@@ -150,7 +121,10 @@ export function DevicesScreen() {
 
                       <Text variant="caption" style={{ color: theme.meta }}>
                         Paired on {new Date(dev.pairedAt).toLocaleDateString()} • Last active{' '}
-                        {new Date(dev.lastSeen).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(dev.lastSeen).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
                       </Text>
                     </View>
 
@@ -158,9 +132,9 @@ export function DevicesScreen() {
                       accessibilityRole="button"
                       accessibilityLabel={`Revoke ${dev.name}`}
                       onPress={() => setRevokeConfirm(dev)}
-                      style={[styles.revokeBtn, { backgroundColor: '#FEE2E2' }]}
+                      style={[styles.revokeBtn, { backgroundColor: theme.errorTint }]}
                     >
-                      <Trash2 size={16} color="#DC2626" />
+                      <Trash2 size={16} color={theme.error} />
                     </Pressable>
                   </View>
                 </DeskCard>
@@ -211,7 +185,7 @@ function PairDeviceModal({
 }) {
   const theme = useTheme();
   const [deviceName, setDeviceName] = useState('');
-  const [pin, setPin] = useState(() => Math.floor(100000 + Math.random() * 900000).toString());
+  const [pin] = useState(() => Math.floor(100000 + Math.random() * 900000).toString());
 
   const pairMutation = useMutation({
     mutationFn: () =>
@@ -230,15 +204,23 @@ function PairDeviceModal({
       subtitle="Connect a floor handheld or staff smartphone using this one-time pairing PIN."
     >
       <View style={modalStyles.stack}>
-        <View style={[modalStyles.pinDisplayCard, { backgroundColor: theme.wash, borderColor: theme.line }]}>
-          <Text variant="caption" style={{ color: theme.meta, fontWeight: '700', letterSpacing: 1 }}>
+        <View
+          style={[
+            modalStyles.pinDisplayCard,
+            { backgroundColor: theme.wash, borderColor: theme.line },
+          ]}
+        >
+          <Text
+            variant="caption"
+            style={{ color: theme.meta, fontWeight: '700', letterSpacing: 1 }}
+          >
             ONE-TIME 6-DIGIT PAIRING PIN
           </Text>
           <Text variant="display-m" style={[modalStyles.pinText, { color: theme.fill }]}>
             {pin.slice(0, 3)} {pin.slice(3)}
           </Text>
           <Text variant="caption" style={{ color: theme.meta, textAlign: 'center' }}>
-            Open Ozaa on the staff device, select "Staff Scanner Mode", and enter this 6-digit code.
+            Open Ozaa on the staff device, select “Staff Scanner Mode”, and enter this 6-digit code.
           </Text>
         </View>
 
@@ -260,7 +242,7 @@ function PairDeviceModal({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   stack: { gap: tokens.space[4] },
   scannerModeCard: {
     padding: tokens.space[4],
@@ -314,7 +296,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#16A34A',
+    backgroundColor: theme.success,
   },
   revokeBtn: {
     width: 36,
@@ -323,7 +305,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-});
+}));
 
 const modalStyles = StyleSheet.create({
   stack: {

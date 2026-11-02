@@ -14,17 +14,11 @@ export interface EmptyCardProps {
   onAction?: () => void;
 }
 
-export function EmptyCard({
-  icon,
-  title,
-  description,
-  actionLabel,
-  onAction,
-}: EmptyCardProps) {
+export function EmptyCard({ icon, title, description, actionLabel, onAction }: EmptyCardProps) {
   const theme = useTheme();
 
   return (
-    <View style={[styles.card, { backgroundColor: theme.white, borderColor: theme.line }]}>
+    <View style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.line }]}>
       <IconTile icon={icon} tone="wash" size={48} />
       <View style={styles.textWrap}>
         <Text variant="title" style={styles.title}>

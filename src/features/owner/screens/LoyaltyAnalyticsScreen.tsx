@@ -1,24 +1,17 @@
+import { makeStyles } from '@/ui/makeStyles';
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
-import {
-  Award,
-  CheckCircle2,
-  Gift,
-  Sparkles,
-  TrendingUp,
-  Users,
-} from 'lucide-react-native';
+import { TrendingUp } from 'lucide-react-native';
 import { api } from '@/lib/api';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { DeskWait } from '../chrome/OwnerPage';
-import { DeskCard, IconTile, SectionLabel, StatTile } from '../kit';
+import { DeskCard, IconTile, StatTile } from '../kit';
 
 export function LoyaltyAnalyticsScreen({ venueId }: { venueId: string }) {
-  const { t } = useTranslation();
+  const styles = useStyles();
   const theme = useTheme();
   const [range, setRange] = useState<'7d' | '30d' | '90d'>('30d');
 
@@ -63,14 +56,14 @@ export function LoyaltyAnalyticsScreen({ venueId }: { venueId: string }) {
                     styles.rangeChip,
                     {
                       borderColor: selected ? theme.fill : theme.line,
-                      backgroundColor: selected ? theme.fill : theme.white,
+                      backgroundColor: selected ? theme.fill : theme.surface,
                     },
                   ]}
                 >
                   <Text
                     variant="caption"
                     style={{
-                      color: selected ? theme.white : theme.text,
+                      color: selected ? theme.onFill : theme.text,
                       fontWeight: selected ? '700' : '500',
                     }}
                   >
@@ -179,7 +172,7 @@ export function LoyaltyAnalyticsScreen({ venueId }: { venueId: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   stack: { gap: tokens.space[4] },
   rangeRow: {
     flexDirection: 'row',
@@ -228,7 +221,7 @@ const styles = StyleSheet.create({
     paddingTop: tokens.space[4],
     paddingBottom: tokens.space[2],
     borderBottomWidth: 1,
-    borderBottomColor: '#E4E4E7',
+    borderBottomColor: theme.line,
   },
   barCol: {
     flex: 1,
@@ -240,7 +233,7 @@ const styles = StyleSheet.create({
   barTrack: {
     width: 14,
     height: 110,
-    backgroundColor: '#F4F4F5',
+    backgroundColor: theme.wash,
     borderRadius: 6,
     justifyContent: 'flex-end',
     overflow: 'hidden',
@@ -251,11 +244,11 @@ const styles = StyleSheet.create({
   },
   barValueText: {
     fontSize: 10,
-    color: '#71717A',
+    color: theme.meta,
   },
   dayLabel: {
     fontSize: 11,
-    color: '#71717A',
+    color: theme.meta,
     fontWeight: '600',
   },
   legendRow: {
@@ -273,4 +266,4 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
   },
-});
+}));

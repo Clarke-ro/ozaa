@@ -27,56 +27,117 @@ export type OwnerNavId =
   | 'business'
   | 'settings';
 
+export type NavGroup = 'service' | 'guestPage' | 'growth' | 'business' | 'previews';
+
 export type OwnerNavItem = {
   id: OwnerNavId;
   href: string;
   roles: readonly StaffRole[];
-  phone?: boolean;
+  group: NavGroup;
 };
 
-const ALL: readonly StaffRole[] = ['owner', 'manager', 'waiter', 'kitchen'];
 const FRONT: readonly StaffRole[] = ['owner', 'manager', 'waiter'];
 const DESK: readonly StaffRole[] = ['owner', 'manager'];
 
+// Order here is the order in the sidebar and inside each More group.
 export const OWNER_NAV: readonly OwnerNavItem[] = [
-  { id: 'dashboard', href: '/owner', roles: ['owner', 'manager', 'waiter', 'viewer'], phone: true },
-  { id: 'floor', href: '/owner/floor', roles: FRONT, phone: true },
-  { id: 'orders', href: '/owner/orders', roles: ['owner', 'manager', 'waiter', 'kitchen'], phone: true },
-  { id: 'calls', href: '/owner/calls', roles: FRONT, phone: true },
-  { id: 'menu', href: '/owner/menu', roles: DESK },
-  { id: 'loyalty', href: '/owner/loyalty', roles: FRONT },
-  { id: 'feedback', href: '/owner/feedback', roles: DESK },
-  { id: 'services', href: '/owner/services', roles: DESK },
-  { id: 'payments', href: '/owner/payments', roles: ['owner'] },
-  { id: 'reviews', href: '/owner/reviews', roles: DESK },
-  { id: 'socials', href: '/owner/socials', roles: DESK },
-  { id: 'links', href: '/owner/links', roles: DESK },
-  { id: 'tables', href: '/owner/tables', roles: DESK },
-  { id: 'branding', href: '/owner/branding', roles: DESK },
-  { id: 'staff', href: '/owner/staff', roles: ['owner'] },
-  { id: 'insights', href: '/owner/insights', roles: DESK },
-  { id: 'setup', href: '/owner/setup', roles: ['owner'] },
-  { id: 'stock', href: '/owner/stock', roles: DESK },
-  { id: 'pos', href: '/owner/pos', roles: FRONT },
-  { id: 'ai', href: '/owner/ai', roles: DESK },
-  { id: 'marketing', href: '/owner/marketing', roles: DESK },
-  { id: 'scan', href: '/owner/scan', roles: ['owner', 'manager', 'waiter', 'staff_scanner'] },
-  { id: 'devices', href: '/owner/devices', roles: ['owner', 'manager'] },
-  { id: 'business', href: '/owner/business', roles: ['owner'] },
-  { id: 'settings', href: '/owner/settings', roles: ['owner', 'manager'] },
+  {
+    id: 'dashboard',
+    href: '/owner',
+    roles: ['owner', 'manager', 'waiter', 'viewer'],
+    group: 'service',
+  },
+  { id: 'floor', href: '/owner/floor', roles: FRONT, group: 'service' },
+  {
+    id: 'orders',
+    href: '/owner/orders',
+    roles: ['owner', 'manager', 'waiter', 'kitchen'],
+    group: 'service',
+  },
+  { id: 'calls', href: '/owner/calls', roles: FRONT, group: 'service' },
+  {
+    id: 'scan',
+    href: '/owner/scan',
+    roles: ['owner', 'manager', 'waiter', 'staff_scanner'],
+    group: 'service',
+  },
+  { id: 'menu', href: '/owner/menu', roles: DESK, group: 'guestPage' },
+  { id: 'tables', href: '/owner/tables', roles: DESK, group: 'guestPage' },
+  { id: 'branding', href: '/owner/branding', roles: DESK, group: 'guestPage' },
+  { id: 'services', href: '/owner/services', roles: DESK, group: 'guestPage' },
+  { id: 'socials', href: '/owner/socials', roles: DESK, group: 'guestPage' },
+  { id: 'links', href: '/owner/links', roles: DESK, group: 'guestPage' },
+  { id: 'loyalty', href: '/owner/loyalty', roles: FRONT, group: 'growth' },
+  { id: 'feedback', href: '/owner/feedback', roles: DESK, group: 'growth' },
+  { id: 'reviews', href: '/owner/reviews', roles: DESK, group: 'growth' },
+  { id: 'insights', href: '/owner/insights', roles: DESK, group: 'growth' },
+  { id: 'payments', href: '/owner/payments', roles: ['owner'], group: 'business' },
+  { id: 'staff', href: '/owner/staff', roles: ['owner'], group: 'business' },
+  { id: 'devices', href: '/owner/devices', roles: DESK, group: 'business' },
+  { id: 'business', href: '/owner/business', roles: ['owner'], group: 'business' },
+  { id: 'setup', href: '/owner/setup', roles: ['owner'], group: 'business' },
+  { id: 'settings', href: '/owner/settings', roles: DESK, group: 'business' },
+  { id: 'stock', href: '/owner/stock', roles: DESK, group: 'previews' },
+  { id: 'pos', href: '/owner/pos', roles: FRONT, group: 'previews' },
+  { id: 'ai', href: '/owner/ai', roles: DESK, group: 'previews' },
+  { id: 'marketing', href: '/owner/marketing', roles: DESK, group: 'previews' },
 ];
+
+export const NAV_GROUPS: readonly NavGroup[] = [
+  'service',
+  'guestPage',
+  'growth',
+  'business',
+  'previews',
+];
+
+// Four tabs at most, so "More" always fits as the fifth (HIG: 3 to 5 tabs).
+// Owners and managers run the venue (menu, loyalty); waiters work the floor.
+const TABS: Record<StaffRole, readonly OwnerNavId[]> = {
+  owner: ['dashboard', 'orders', 'menu', 'loyalty'],
+  manager: ['dashboard', 'orders', 'menu', 'loyalty'],
+  waiter: ['dashboard', 'floor', 'orders', 'calls'],
+  kitchen: ['orders'],
+  viewer: ['dashboard'],
+  staff_scanner: ['scan'],
+};
 
 export function navFor(role: StaffRole): OwnerNavItem[] {
   return OWNER_NAV.filter((item) => item.roles.includes(role));
 }
 
-export function phoneNav(role: StaffRole): OwnerNavItem[] {
-  return navFor(role).filter((item) => item.phone);
+export function tabsFor(role: StaffRole): OwnerNavItem[] {
+  const allowed = navFor(role);
+  return TABS[role].flatMap((id) => allowed.filter((item) => item.id === id));
+}
+
+export function moreGroups(role: StaffRole): { group: NavGroup; items: OwnerNavItem[] }[] {
+  const tabs = new Set(TABS[role]);
+  const rest = navFor(role).filter((item) => !tabs.has(item.id));
+  return NAV_GROUPS.map((group) => ({
+    group,
+    items: rest.filter((item) => item.group === group),
+  })).filter((entry) => entry.items.length > 0);
+}
+
+function matches(pathname: string, href: string): boolean {
+  if (href === '/owner') return pathname === '/owner';
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+/** Tabs and More sit at the root of the stack, so they get no back button. */
+export function isTabRoot(role: StaffRole, pathname: string): boolean {
+  if (pathname === '/owner/more') return true;
+  return tabsFor(role).some((item) => matches(pathname, item.href));
+}
+
+export function isCurrent(pathname: string, href: string): boolean {
+  return matches(pathname, href);
 }
 
 export function canOpen(role: StaffRole, pathname: string): boolean {
   if (pathname === '/owner/more') return true;
-  const item = OWNER_NAV.find((entry) => (entry.href === '/owner' ? pathname === '/owner' : pathname === entry.href || pathname.startsWith(`${entry.href}/`)));
+  const item = OWNER_NAV.find((entry) => matches(pathname, entry.href));
   if (!item) return true;
   return item.roles.includes(role);
 }

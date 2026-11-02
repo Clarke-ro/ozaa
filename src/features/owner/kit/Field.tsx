@@ -1,10 +1,18 @@
-import { StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
+import { makeStyles } from '@/ui/makeStyles';
+import { TextInput, View, type TextInputProps } from 'react-native';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 
 /** Labelled text field used by every owner form. The label is also the accessibility name. */
-export function Field({ label, hint, error, style, ...rest }: TextInputProps & { label: string; hint?: string; error?: string }) {
+export function Field({
+  label,
+  hint,
+  error,
+  style,
+  ...rest
+}: TextInputProps & { label: string; hint?: string; error?: string }) {
+  const styles = useStyles();
   const theme = useTheme();
   return (
     <View style={styles.wrap}>
@@ -35,8 +43,9 @@ export function Field({ label, hint, error, style, ...rest }: TextInputProps & {
   );
 }
 
-const styles = StyleSheet.create({
-  wrap: { gap: tokens.space[2], flex: 1, minWidth: 120 },
+const useStyles = makeStyles((theme) => ({
+  // Grows to share a row with another field, but keeps its own height in a column.
+  wrap: { gap: tokens.space[2], flexGrow: 1, flexShrink: 1, flexBasis: 'auto', minWidth: 120 },
   input: {
     minHeight: 48,
     borderWidth: 1,
@@ -44,7 +53,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: tokens.space[3],
     fontFamily: 'Inter_400',
     fontSize: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.surface,
   },
   multi: { minHeight: 96, paddingTop: tokens.space[3], textAlignVertical: 'top' },
-});
+}));

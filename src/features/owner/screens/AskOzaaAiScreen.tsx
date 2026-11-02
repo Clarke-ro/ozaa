@@ -1,21 +1,8 @@
+import { makeStyles } from '@/ui/makeStyles';
 import { useState } from 'react';
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  View,
-} from 'react-native';
+import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useMutation } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
-import {
-  Bot,
-  HelpCircle,
-  MessageSquare,
-  Send,
-  Sparkles,
-  User,
-} from 'lucide-react-native';
+import { Sparkles } from 'lucide-react-native';
 import { api } from '@/lib/api';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
@@ -38,6 +25,7 @@ interface ChatMessage {
 }
 
 export function AskOzaaAiScreen({ venueId }: { venueId: string }) {
+  const styles = useStyles();
   const theme = useTheme();
   const [question, setQuestion] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -84,7 +72,7 @@ export function AskOzaaAiScreen({ venueId }: { venueId: string }) {
           <View style={{ flex: 1 }}>
             <Text variant="title">Ozaa Feedback AI Assistant</Text>
             <Text variant="caption" style={{ color: theme.meta }}>
-              Real-time intelligence synthesized strictly from this venue's guest notes
+              Real-time intelligence synthesized strictly from this venue’s guest notes
             </Text>
           </View>
         </View>
@@ -94,25 +82,19 @@ export function AskOzaaAiScreen({ venueId }: { venueId: string }) {
           {messages.map((msg) => {
             const isAi = msg.sender === 'assistant';
             return (
-              <View
-                key={msg.id}
-                style={[
-                  styles.msgRow,
-                  isAi ? styles.msgLeft : styles.msgRight,
-                ]}
-              >
+              <View key={msg.id} style={[styles.msgRow, isAi ? styles.msgLeft : styles.msgRight]}>
                 <View
                   style={[
                     styles.bubble,
                     isAi
-                      ? [styles.bubbleAi, { backgroundColor: '#F8FAFC', borderColor: theme.line }]
+                      ? [styles.bubbleAi, { backgroundColor: theme.wash, borderColor: theme.line }]
                       : [styles.bubbleUser, { backgroundColor: theme.fill }],
                   ]}
                 >
                   <Text
                     variant="body"
                     style={{
-                      color: isAi ? theme.text : '#FFFFFF',
+                      color: isAi ? theme.text : theme.onFill,
                       lineHeight: 22,
                     }}
                   >
@@ -129,7 +111,10 @@ export function AskOzaaAiScreen({ venueId }: { venueId: string }) {
                         accessibilityRole="button"
                         accessibilityLabel={s}
                         onPress={() => handleSend(s)}
-                        style={[styles.suggestChip, { borderColor: theme.line, backgroundColor: theme.white }]}
+                        style={[
+                          styles.suggestChip,
+                          { borderColor: theme.line, backgroundColor: theme.surface },
+                        ]}
                       >
                         <Sparkles size={12} color={theme.fill} />
                         <Text variant="caption" style={{ color: theme.fill, fontWeight: '600' }}>
@@ -167,7 +152,7 @@ export function AskOzaaAiScreen({ venueId }: { venueId: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   container: {
     gap: tokens.space[4],
   },
@@ -182,7 +167,7 @@ const styles = StyleSheet.create({
     gap: tokens.space[3],
     paddingBottom: tokens.space[2],
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E4E4E7',
+    borderBottomColor: theme.line,
   },
   chatScroll: {
     flex: 1,
@@ -234,7 +219,7 @@ const styles = StyleSheet.create({
     gap: tokens.space[2],
     paddingTop: tokens.space[2],
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: '#E4E4E7',
+    borderTopColor: theme.line,
   },
   input: {
     flex: 1,
@@ -242,7 +227,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: tokens.radius.md,
     paddingHorizontal: tokens.space[3],
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.surface,
     fontSize: 14,
   },
-});
+}));

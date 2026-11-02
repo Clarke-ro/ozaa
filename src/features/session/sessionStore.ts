@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
+import { ownerSessionStorage } from './ownerStorage';
 import { setAccessToken, setGuestToken, setLoyaltyToken as setApiLoyaltyToken } from '@/lib/api';
 import type { StaffRole } from '@/lib/api/types';
 
@@ -8,7 +10,12 @@ type GuestSessionState = {
   tableCode: string | null;
   orderId: string | null;
   loyaltyToken: string | null;
-  saveGuest: (input: { token: string; slug: string; tableCode: string | null; orderId?: string | null }) => void;
+  saveGuest: (input: {
+    token: string;
+    slug: string;
+    tableCode: string | null;
+    orderId?: string | null;
+  }) => void;
   setOrderId: (orderId: string) => void;
   setLoyaltyToken: (token: string | null) => void;
 };
@@ -19,6 +26,9 @@ type OwnerSessionState = {
   venueId: string | null;
   role: StaffRole | null;
   firstName: string | null;
+  /** False until the saved session has been read back, so the layout does not bounce to sign-in. */
+  hydrated: boolean;
+  markHydrated: () => void;
   saveOwner: (input: {
     accessToken: string;
     refreshToken: string;
@@ -47,19 +57,42 @@ export const useGuestSession = create<GuestSessionState>((set) => ({
   },
 }));
 
-export const useOwnerSession = create<OwnerSessionState>((set) => ({
-  accessToken: null,
-  refreshToken: null,
-  venueId: null,
-  role: null,
-  firstName: null,
-  saveOwner: ({ accessToken, refreshToken, venueId, role, firstName }) => {
-    setAccessToken(accessToken);
-    set({ accessToken, refreshToken, venueId, role, firstName });
-  },
-  switchVenue: (venueId) => set({ venueId }),
-  clearOwner: () => {
-    setAccessToken(null);
-    set({ accessToken: null, refreshToken: null, venueId: null, role: null, firstName: null });
-  },
-}));
+export const useOwnerSession = create<OwnerSessionState>()(
+  persist(
+    (set) => ({
+      accessToken: null,
+      refreshToken: null,
+      venueId: null,
+      role: null,
+      firstName: null,
+      hydrated: false,
+      markHydrated: () => set({ hydrated: true }),
+      saveOwner: ({ accessToken, refreshToken, venueId, role, firstName }) => {
+        setAccessToken(accessToken);
+        set({ accessToken, refreshToken, venueId, role, firstName });
+      },
+      switchVenue: (venueId) => set({ venueId }),
+      clearOwner: () => {
+        setAccessToken(null);
+        set({ accessToken: null, refreshToken: null, venueId: null, role: null, firstName: null });
+      },
+    }),
+    {
+      name: 'ozaa-owner-session',
+      storage: createJSONStorage(() => ownerSessionStorage),
+      partialize: ({ accessToken, refreshToken, venueId, role, firstName }) => ({
+        accessToken,
+        refreshToken,
+        venueId,
+        role,
+        firstName,
+      }),
+      onRehydrateStorage: (initial) => (state) => {
+        // The API client keeps its own copy of the token; hand it the saved one.
+        if (state?.accessToken) setAccessToken(state.accessToken);
+        // If storage failed there is no state; mark the initial one so sign-in still shows.
+        (state ?? initial).markHydrated();
+      },
+    },
+  ),
+);

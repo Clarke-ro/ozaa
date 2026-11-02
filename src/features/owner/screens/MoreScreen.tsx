@@ -1,169 +1,112 @@
 import { Pressable, StyleSheet, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import {
-  Bell,
-  Building2,
-  Camera,
-  ChartColumn,
-  ChevronRight,
-  ClipboardList,
-  Gift,
-  Globe,
-  Grid2x2,
-  Inbox,
-  LayoutDashboard,
-  Link,
-  ListChecks,
-  Megaphone,
-  MessageSquare,
-  Palette,
-  QrCode,
-  Receipt,
-  ScanLine,
-  Settings,
-  Settings2,
-  Smartphone,
-  Star,
-  Store,
-  Users,
-  UtensilsCrossed,
-  Wallet,
-  type LucideIcon,
-} from 'lucide-react-native';
+import { ChevronRight } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { useOwnerSession } from '@/features/session';
-import { navFor, type OwnerNavId } from '../chrome/nav';
 import { OwnerPage } from '../chrome/OwnerPage';
-import type { StaffRole } from '@/features/orders';
-import { IconTile } from '../kit';
-
-const NAV_ICONS: Record<OwnerNavId, LucideIcon> = {
-  dashboard: LayoutDashboard,
-  floor: Grid2x2,
-  orders: ClipboardList,
-  calls: Bell,
-  menu: UtensilsCrossed,
-  loyalty: Gift,
-  feedback: Inbox,
-  services: Settings2,
-  payments: Wallet,
-  reviews: Star,
-  socials: Globe,
-  links: Link,
-  tables: QrCode,
-  branding: Palette,
-  staff: Users,
-  insights: ChartColumn,
-  setup: ListChecks,
-  stock: Store,
-  pos: Receipt,
-  ai: MessageSquare,
-  marketing: Megaphone,
-  scan: ScanLine,
-  devices: Smartphone,
-  business: Building2,
-  settings: Settings,
-};
-
-const NAV_SUBTITLES: Partial<Record<OwnerNavId, string>> = {
-  menu: 'Edit categories, dishes, prices, modifier rules & 86 items',
-  loyalty: 'Reward pass, stamp cards, customer roster & analytics',
-  feedback: 'Private guest inbox with sentiment gating & AI assistant',
-  services: 'Enable table features, guest Wi-Fi and waiter call reasons',
-  payments: 'MoMo & card transactions, daily settlement payouts',
-  reviews: 'Moderate video reviews, ratings and private replies',
-  socials: 'Google review link with star gating & social channels',
-  links: 'Custom action buttons, reservations, tickets & playlists',
-  tables: 'Generate QR codes and print acrylic table cards',
-  branding: 'Design presets, accent color, button tint & order',
-  staff: 'Team accounts, roles, waiter & kitchen permissions',
-  insights: 'Sales volume, peak hours, menu views and loyalty KPIs',
-  setup: '4-step onboarding wizard for fast floor deployment',
-  stock: 'Inventory tracking, recipes and auto-86 ingredient rules',
-  pos: 'Counter register ordering, cash tender and printed receipts',
-  ai: 'Multilingual conversational ordering assistant',
-  marketing: 'Broadcast SMS & WhatsApp promotions to opted-in guests',
-  scan: 'Camera scanner to stamp cards and redeem guest rewards',
-  devices: 'Pair staff handhelds and scanner devices with 6-digit PIN',
-  business: 'Multi-location management and business profile',
-  settings: 'Profile, language, scanner mode and account security',
-};
+import { NAV_ICONS } from '../chrome/NavRow';
+import { moreGroups, type OwnerNavItem } from '../chrome/nav';
+import { IconTile, SectionLabel } from '../kit';
 
 export function MoreScreen() {
   const { t } = useTranslation();
-  const theme = useTheme();
-  const router = useRouter();
-  const role = (useOwnerSession((state) => state.role) ?? 'waiter') as StaffRole;
-  const items = navFor(role).filter((item) => !item.phone);
-
+  const role = useOwnerSession((state) => state.role) ?? 'waiter';
   return (
-    <OwnerPage
-      title={t('owner.more')}
-      subtitle="All restaurant operations, configuration tools, marketing and manager controls."
-    >
-      <View style={styles.grid}>
-        {items.map((item) => {
-          const Icon = NAV_ICONS[item.id] ?? Settings2;
-          const label = t(`owner.${item.id}`);
-          const subtitle = NAV_SUBTITLES[item.id] ?? '';
-
-          return (
-            <Pressable
-              key={item.id}
-              accessibilityRole="button"
-              accessibilityLabel={label}
-              onPress={() => router.push(item.href as '/owner')}
-              style={({ pressed }) => [
-                styles.itemCard,
-                {
-                  borderColor: theme.line,
-                  backgroundColor: pressed ? '#F9FAFB' : '#FFFFFF',
-                },
-              ]}
-            >
-              <View style={styles.itemMainRow}>
-                <IconTile icon={Icon} tone="wash" size={36} />
-                <View style={styles.itemMeta}>
-                  <Text variant="body-strong">{label}</Text>
-                  {subtitle ? (
-                    <Text variant="caption" style={{ color: theme.meta }} numberOfLines={1}>
-                      {subtitle}
-                    </Text>
-                  ) : null}
-                </View>
-                <ChevronRight size={18} color="#9CA3AF" />
-              </View>
-            </Pressable>
-          );
-        })}
-      </View>
+    <OwnerPage title={t('owner.more')}>
+      {moreGroups(role).map(({ group, items }) => (
+        <View key={group} style={styles.group}>
+          <SectionLabel title={t(`owner.navGroups.${group}`)} caps />
+          <Group items={items} preview={group === 'previews'} />
+        </View>
+      ))}
     </OwnerPage>
   );
 }
 
+/** One inset grouped card: rows split by hairlines, like iOS Settings. */
+function Group({ items, preview }: { items: OwnerNavItem[]; preview: boolean }) {
+  const theme = useTheme();
+  const { t } = useTranslation();
+  const router = useRouter();
+  return (
+    <View style={[styles.card, { borderColor: theme.line, backgroundColor: theme.surface }]}>
+      {items.map((item, index) => {
+        const label = t(`owner.${item.id}`);
+        const hint = t(`owner.navHints.${item.id}`);
+        return (
+          <Pressable
+            key={item.id}
+            accessibilityRole="button"
+            accessibilityLabel={preview ? `${label}, ${t('owner.preview')}` : label}
+            accessibilityHint={hint}
+            onPress={() => router.push(item.href as Href)}
+            style={({ pressed }) => [styles.row, pressed && { backgroundColor: theme.wash }]}
+          >
+            <IconTile icon={NAV_ICONS[item.id]} size={36} />
+            <View
+              style={[
+                styles.rowBody,
+                index < items.length - 1 && {
+                  borderBottomWidth: StyleSheet.hairlineWidth,
+                  borderBottomColor: theme.line,
+                },
+              ]}
+            >
+              <View style={styles.copy}>
+                <Text variant="body-strong">{label}</Text>
+                <Text variant="caption" style={{ color: theme.muted }}>
+                  {hint}
+                </Text>
+              </View>
+              {preview ? (
+                <Text
+                  variant="caption"
+                  style={[styles.tag, { color: theme.muted, backgroundColor: theme.wash }]}
+                >
+                  {t('owner.preview')}
+                </Text>
+              ) : null}
+              <ChevronRight size={20} color={theme.meta} />
+            </View>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  grid: {
-    gap: tokens.space[2],
-  },
-  itemCard: {
-    borderWidth: 1,
+  group: { gap: tokens.space[2] },
+  card: {
+    borderWidth: StyleSheet.hairlineWidth,
     borderRadius: tokens.radius.md,
-    padding: tokens.space[3],
-    shadowColor: '#000',
-    shadowOpacity: 0.02,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 1 },
+    borderCurve: 'continuous',
+    overflow: 'hidden',
   },
-  itemMainRow: {
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: tokens.space[3],
+    paddingLeft: tokens.space[4],
   },
-  itemMeta: {
+  rowBody: {
     flex: 1,
-    gap: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[2],
+    minHeight: 60,
+    paddingVertical: tokens.space[3],
+    paddingRight: tokens.space[3],
+  },
+  copy: { flex: 1, gap: 2 },
+  tag: {
+    fontFamily: 'Inter_600',
+    paddingHorizontal: tokens.space[2],
+    paddingVertical: 2,
+    borderRadius: tokens.radius.full,
+    overflow: 'hidden',
   },
 });
