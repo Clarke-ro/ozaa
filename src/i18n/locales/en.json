@@ -1174,7 +1174,13 @@
     "avg_one": "Average pick-up time: 1 minute",
     "avg_other": "Average pick-up time: {{count}} minutes",
     "avgA11y_one": "Average pick-up time 1 minute",
-    "avgA11y_other": "Average pick-up time {{count}} minutes"
+    "avgA11y_other": "Average pick-up time {{count}} minutes",
+    "avgShort": "Avg pick-up",
+    "minutes_one": "1 min",
+    "minutes_other": "{{count}} min",
+    "waited_one": "waiting 1 min",
+    "waited_other": "waiting {{count}} min",
+    "by": "{{name}} is on it"
   },
   "ownerPayments": {
     "payoutTitle": "Payouts go to",

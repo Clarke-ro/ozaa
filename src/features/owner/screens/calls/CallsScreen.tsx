@@ -1,29 +1,34 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { BellOff, Timer } from 'lucide-react-native';
+import { BellOff } from 'lucide-react-native';
 import { api } from '@/lib/api';
-import type { WaiterCall } from '@/lib/api/types';
 import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
-import { Button } from '@/ui/Button';
-import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
 import { averageResponseMinutes } from '../../desk/ops';
-import { CodeTile, DeskTabs, EmptyCard, StatusPill, toast } from '../../kit';
+import { DeskTabs, EmptyCard, toast } from '../../kit';
+import { SummaryStrip } from '../../kit/SummaryStrip';
+import { CallCard } from './CallCard';
 
 type Tab = 'active' | 'history';
 
+// Waits only need to move once every half minute.
+const TICK_MS = 30_000;
+
 /** Guests asking for a waiter. "On my way" tells the guest someone is coming; "Done" closes the call. */
 export function CallsScreen() {
-  const theme = useTheme();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const client = useQueryClient();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const [tab, setTab] = useState<Tab>('active');
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), TICK_MS);
+    return () => clearInterval(id);
+  }, []);
   const key = ownerKeys.calls(venueId);
   const calls = useQuery({
     queryKey: key,
@@ -44,91 +49,28 @@ export function CallsScreen() {
   });
 
   const all = [...(calls.data?.items ?? [])].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  // Oldest waiting call first: that guest has waited longest.
   const active = all.filter((c) => c.status !== 'resolved').reverse();
   const shown = tab === 'active' ? active : all.filter((c) => c.status === 'resolved');
+  const waiting = active.filter((c) => c.status === 'open').length;
   const avg = averageResponseMinutes(all);
-  const time = (iso: string) =>
-    new Date(iso).toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' });
-
-  const card = (call: WaiterCall) => {
-    const busy = update.isPending && update.variables?.id === call.id;
-    return (
-      <View
-        key={call.id}
-        style={[
-          styles.card,
-          {
-            backgroundColor: theme.surface,
-            borderColor: call.status === 'open' ? theme.error : theme.line,
-          },
-        ]}
-      >
-        <View style={styles.head}>
-          <CodeTile
-            code={`T${call.tableCode}`}
-            size={44}
-            tone={call.status === 'open' ? 'alert' : 'wash'}
-          />
-          <View style={styles.flex}>
-            <Text variant="title">{t(`waiter.reasons.${call.reason}`)}</Text>
-            <Text variant="caption" style={{ color: theme.muted }}>
-              {t('ownerOrders.table', { code: call.tableCode })} · {time(call.createdAt)}
-              {call.staffFirstName ? ` · ${call.staffFirstName}` : ''}
-            </Text>
-          </View>
-          <StatusPill
-            label={t(`ownerCalls.status.${call.status}`)}
-            tone={
-              call.status === 'open'
-                ? 'error'
-                : call.status === 'acknowledged'
-                  ? 'waiting'
-                  : 'success'
-            }
-            boxed
-          />
-        </View>
-        {call.note ? <Text variant="body">{call.note}</Text> : null}
-        {call.status === 'resolved' ? null : (
-          <View style={styles.actions}>
-            {call.status === 'open' ? (
-              <Button
-                label={t('owner.onTheWay')}
-                size="md"
-                tone="secondary"
-                style={styles.flex}
-                loading={busy}
-                onPress={() => update.mutate({ id: call.id, status: 'acknowledged' })}
-              />
-            ) : null}
-            <Button
-              label={t('owner.doneCall')}
-              size="md"
-              tone="ghost"
-              style={styles.flex}
-              disabled={busy}
-              onPress={() => update.mutate({ id: call.id, status: 'resolved' })}
-            />
-          </View>
-        )}
-      </View>
-    );
-  };
 
   return (
     <OwnerPage title={t('owner.calls')}>
-      {avg != null ? (
-        <View
-          style={styles.avg}
-          accessible
-          accessibilityLabel={t('ownerCalls.avgA11y', { count: avg })}
-        >
-          <Timer size={18} color={theme.muted} />
-          <Text variant="body" style={{ color: theme.muted }}>
-            {t('ownerCalls.avg', { count: avg })}
-          </Text>
-        </View>
-      ) : null}
+      <SummaryStrip
+        items={[
+          {
+            label: t('ownerCalls.status.open'),
+            value: String(waiting),
+            tone: waiting > 0 ? 'alert' : undefined,
+          },
+          { label: t('ownerCalls.status.acknowledged'), value: String(active.length - waiting) },
+          {
+            label: t('ownerCalls.avgShort'),
+            value: avg == null ? '–' : t('ownerCalls.minutes', { count: avg }),
+          },
+        ]}
+      />
       <DeskTabs
         value={tab}
         onChange={setTab}
@@ -149,24 +91,22 @@ export function CallsScreen() {
             description={t('ownerCalls.emptyBody')}
           />
         ) : (
-          <View style={styles.list}>{shown.map(card)}</View>
+          <View style={styles.list}>
+            {shown.map((call) => (
+              <CallCard
+                key={call.id}
+                call={call}
+                now={now}
+                busy={update.isPending && update.variables?.id === call.id}
+                onAcknowledge={() => update.mutate({ id: call.id, status: 'acknowledged' })}
+                onResolve={() => update.mutate({ id: call.id, status: 'resolved' })}
+              />
+            ))}
+          </View>
         )}
       </DeskWait>
     </OwnerPage>
   );
 }
 
-const styles = StyleSheet.create({
-  avg: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
-  list: { gap: tokens.space[3] },
-  card: {
-    gap: tokens.space[3],
-    padding: tokens.space[4],
-    borderWidth: 1,
-    borderRadius: tokens.radius.lg,
-    borderCurve: 'continuous',
-  },
-  head: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
-  flex: { flex: 1 },
-  actions: { flexDirection: 'row', gap: tokens.space[2] },
-});
+const styles = StyleSheet.create({ list: { gap: tokens.space[3] } });
