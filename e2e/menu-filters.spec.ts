@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 test('dietary filters open in a sheet and can clear back to the menu', async ({ page }) => {
   await page.goto('/mamas-kitchen/menu', { waitUntil: 'domcontentloaded' });
   await expect(page.getByText('Food')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Mains' })).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'Mains' })).toBeVisible();
   await expect(page.getByText('Show only')).toHaveCount(0);
   await expect(page.getByText('Jollof & chicken')).toBeVisible();
 
@@ -29,4 +29,19 @@ test('dietary filters open in a sheet and can clear back to the menu', async ({ 
   await page.getByRole('button', { name: 'Clear' }).click();
   await expect(page.getByText('Jollof & chicken')).toBeVisible();
   await expect(page.getByText('Nothing matches those filters.')).toHaveCount(0);
+});
+
+test('search finds a dish, the card adds it, and the dish page adds more', async ({ page }) => {
+  await page.goto('/mamas-kitchen/menu', { waitUntil: 'domcontentloaded' });
+  await page.getByRole('button', { name: 'Search the menu', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Search the menu', exact: true }).fill('waakye');
+  await expect(page.getByText('1 result')).toBeVisible();
+  await page.getByRole('button', { name: 'Add Waakye special to your order' }).click();
+  await expect(page.getByText('1 View order')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Waakye special', exact: true }).click();
+  await page.getByRole('button', { name: 'One more' }).click();
+  await expect(page.getByRole('button', { name: /Add to order · GH₵90/ })).toBeVisible();
+  await page.getByRole('button', { name: /Add to order/ }).click();
+  await expect(page.getByText('3 View order')).toBeVisible();
 });

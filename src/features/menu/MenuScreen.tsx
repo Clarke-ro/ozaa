@@ -1,49 +1,85 @@
-import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import { useRouter } from 'expo-router';
-import { Plus, Search, SlidersHorizontal } from 'lucide-react-native';
+import { Search, SlidersHorizontal, X } from 'lucide-react-native';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
+import { pesewas } from '@/lib/brand';
+import { hapticImpactLight } from '@/lib/haptics';
+import { DEFAULT_CURRENCY, formatMoney } from '@/lib/money';
 import { cartCount, cartEstimate, useCart } from '@/features/cart';
 import { useVenue } from '@/features/venue';
-import { DEFAULT_CURRENCY, formatMoney } from '@/lib/money';
-import { tokens } from '@/theme/tokens';
 import { PageHeader } from '@/ui/PageHeader';
 import { SafeScreen } from '@/ui/Screen';
-import { PriceText } from '@/ui/PriceText';
 import { Text } from '@/ui/Text';
-import { VenueImage } from '@/ui/VenueImage';
 import { ErrorState, LoadingState } from '@/ui/states';
 import { useTheme } from '@/ui/theme';
 import { DietFilterSheet } from './DietFilterSheet';
+import { DishCard } from './DishCard';
+import { canQuickAdd, searchItems } from './dishLogic';
 import { filterMenuItems, type DietTag } from './filterMenu';
+import { SectionRail } from './SectionRail';
 
+type Kind = 'food' | 'drinks';
+
+/** The guest menu: food or drinks, sections as pictures, and the dishes as a grid of cards. */
 export function MenuScreen({ slug }: { slug: string }) {
   const { t } = useTranslation();
   const theme = useTheme();
   const router = useRouter();
+  const { width } = useWindowDimensions();
   const menu = useQuery({ queryKey: ['menu', slug], queryFn: () => api.getMenu(slug) });
   const venue = useVenue(slug);
   const lines = useCart((state) => state.lines);
-  const [kind, setKind] = useState<'food' | 'drinks'>('food');
-  const [categoryId, setCategoryId] = useState<string | null>(null);
+  const add = useCart((state) => state.add);
+  const [kind, setKind] = useState<Kind>('food');
+  const [sectionId, setSectionId] = useState<string | null>(null);
   const [diets, setDiets] = useState<DietTag[]>([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [search, setSearch] = useState(false);
-
-  const categories = useMemo(
-    () => (menu.data?.categories ?? []).filter((category) => category.kind === kind),
-    [menu.data, kind],
-  );
-  const active =
-    categoryId && categories.some((category) => category.id === categoryId)
-      ? categoryId
-      : categories[0]?.id;
-  const items = filterMenuItems(menu.data?.items ?? [], active, diets);
+  const [searching, setSearching] = useState(false);
+  const [query, setQuery] = useState('');
 
   if (menu.isLoading) return <LoadingState />;
   if (menu.isError || !menu.data) return <ErrorState onRetry={() => void menu.refetch()} />;
+
+  const currency = venue.data?.currency ?? DEFAULT_CURRENCY;
+  const sections = menu.data.categories
+    .filter((c) => c.kind === kind && !c.hidden)
+    .sort((a, b) => a.position - b.position);
+  const active =
+    sectionId && sections.some((c) => c.id === sectionId) ? sectionId : sections[0]?.id;
+  const inKind = menu.data.items.filter((i) => sections.some((c) => c.id === i.categoryId));
+  // While searching, look across every section of this kind; otherwise show the picked section.
+  const shown = query.trim()
+    ? searchItems(
+        inKind.filter((i) => diets.every((tag) => i.dietary.includes(tag))),
+        query,
+      )
+    : filterMenuItems(menu.data.items, active, diets);
+  const columns = width >= 700 ? 3 : 2;
+  const rows = Array.from({ length: Math.ceil(shown.length / columns) }, (_, r) =>
+    shown.slice(r * columns, r * columns + columns),
+  );
+
+  const quickAdd = (item: (typeof shown)[number]) => {
+    void hapticImpactLight();
+    add(slug, {
+      menuItemId: item.id,
+      name: item.name.en,
+      quantity: 1,
+      unitPricePesewas: pesewas(item.pricePesewas),
+      modifierPesewas: pesewas(0),
+      modifierOptionIds: [],
+    });
+  };
 
   return (
     <SafeScreen>
@@ -52,161 +88,132 @@ export function MenuScreen({ slug }: { slug: string }) {
         subtitle={venue.data?.name ?? ''}
         right={
           <View style={styles.headerActions}>
-            <View>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={
-                  diets.length > 0
-                    ? t('menu.filtersOn', { count: diets.length })
-                    : t('menu.filters')
-                }
-                onPress={() => setFiltersOpen(true)}
-                style={styles.headerIcon}
-              >
-                <SlidersHorizontal color={theme.black} size={22} strokeWidth={2} />
-              </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={
+                diets.length > 0 ? t('menu.filtersOn', { count: diets.length }) : t('menu.filters')
+              }
+              onPress={() => setFiltersOpen(true)}
+              style={styles.headerIcon}
+            >
+              <SlidersHorizontal color={theme.black} size={22} strokeWidth={2} />
               {diets.length > 0 ? (
-                <View
-                  pointerEvents="none"
-                  style={[styles.count, { backgroundColor: tokens.color.primary.hex }]}
-                >
-                  <Text variant="caption" style={styles.countText}>
+                <View pointerEvents="none" style={[styles.count, { backgroundColor: theme.fill }]}>
+                  <Text variant="caption" style={[styles.countText, { color: theme.onFill }]}>
                     {diets.length}
                   </Text>
                 </View>
               ) : null}
-            </View>
+            </Pressable>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={t('menu.search')}
-              onPress={() => setSearch((value) => !value)}
+              accessibilityLabel={searching ? t('menu.closeSearch') : t('menu.search')}
+              onPress={() => {
+                setSearching((on) => !on);
+                setQuery('');
+              }}
               style={styles.headerIcon}
             >
-              <Search color={theme.black} size={22} strokeWidth={2} />
+              {searching ? (
+                <X color={theme.black} size={22} />
+              ) : (
+                <Search color={theme.black} size={22} strokeWidth={2} />
+              )}
             </Pressable>
           </View>
         }
       />
-      <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
-        <View style={styles.tabs}>
-          {(['food', 'drinks'] as const).map((tab) => (
-            <Pressable key={tab} accessibilityRole="tab" onPress={() => setKind(tab)}>
-              <Text
-                variant="body-strong"
-                style={{ color: kind === tab ? theme.black : theme.meta }}
-              >
-                {t(`menu.${tab}`)}
-              </Text>
-              {kind === tab ? (
-                <View style={[styles.underline, { backgroundColor: theme.black }]} />
-              ) : null}
-            </Pressable>
-          ))}
-        </View>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chips}
-        >
-          {categories.map((category) => {
-            const on = category.id === active;
+      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+        {searching ? (
+          <View style={[styles.search, { borderColor: theme.line, backgroundColor: theme.wash }]}>
+            <Search size={18} color={theme.muted} />
+            <TextInput
+              autoFocus
+              value={query}
+              onChangeText={setQuery}
+              placeholder={t('menu.searchHint')}
+              placeholderTextColor={theme.meta}
+              accessibilityLabel={t('menu.search')}
+              returnKeyType="search"
+              style={[styles.searchInput, { color: theme.text }]}
+            />
+          </View>
+        ) : null}
+        <View style={[styles.kinds, { backgroundColor: theme.wash }]} accessibilityRole="tablist">
+          {(['food', 'drinks'] as const).map((tab) => {
+            const on = kind === tab;
             return (
               <Pressable
-                key={category.id}
-                accessibilityRole="button"
-                onPress={() => setCategoryId(category.id)}
-                style={[
-                  styles.chip,
-                  {
-                    backgroundColor: on ? theme.fill : theme.white,
-                    borderColor: on ? theme.fill : theme.line,
-                  },
-                ]}
+                key={tab}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: on }}
+                aria-selected={on}
+                onPress={() => {
+                  setKind(tab);
+                  setSectionId(null);
+                }}
+                style={[styles.kind, on && { backgroundColor: theme.white }]}
               >
-                <Text
-                  variant="caption"
-                  style={{ color: on ? theme.onFill : theme.text, fontFamily: 'Inter_600' }}
-                >
-                  {category.name.en}
+                <Text variant="body-strong" style={{ color: on ? theme.text : theme.muted }}>
+                  {t(`menu.${tab}`)}
                 </Text>
               </Pressable>
             );
           })}
-        </ScrollView>
-        <Text variant="display-m" style={styles.section}>
-          {categories.find((category) => category.id === active)?.name.en}
+        </View>
+        {query.trim() ? null : (
+          <SectionRail
+            sections={sections}
+            items={menu.data.items}
+            active={active}
+            onPick={setSectionId}
+          />
+        )}
+        <Text variant="title" style={styles.heading}>
+          {query.trim()
+            ? t('menu.results', { count: shown.length })
+            : sections.find((c) => c.id === active)?.name.en}
         </Text>
-        {items.length === 0 ? (
+        {shown.length === 0 ? (
           <Text variant="body" style={[styles.empty, { color: theme.muted }]}>
-            {diets.length > 0 ? t('menu.noMatch') : t('menu.empty')}
+            {query.trim() || diets.length > 0 ? t('menu.noMatch') : t('menu.empty')}
           </Text>
-        ) : null}
-        {search ? (
-          <Text variant="caption" style={styles.section}>
-            {t('menu.search')}
-          </Text>
-        ) : null}
-        {items.map((item) => (
-          <Pressable
-            key={item.id}
-            accessibilityRole="button"
-            accessibilityLabel={item.name.en}
-            onPress={() => router.push(`/${slug}/menu/${item.id}`)}
-            style={styles.item}
-          >
-            <View style={{ flex: 1, paddingRight: 12 }}>
-              <View style={styles.nameRow}>
-                <Text variant="body-strong">{item.name.en}</Text>
-                {item.badges.includes('popular') ? (
-                  <Text
-                    variant="caption"
-                    style={[styles.badge, { color: theme.badgeInk, backgroundColor: theme.tint }]}
-                  >
-                    {t('menu.popular')}
-                  </Text>
-                ) : null}
+        ) : (
+          <View style={styles.grid}>
+            {rows.map((row, r) => (
+              <View key={r} style={styles.gridRow}>
+                {row.map((item) => (
+                  <DishCard
+                    key={item.id}
+                    item={item}
+                    currency={currency}
+                    onOpen={() => router.push(`/${slug}/menu/${item.id}`)}
+                    onAdd={canQuickAdd(item) ? () => quickAdd(item) : null}
+                  />
+                ))}
+                {/* Keep the last row's cards the same width as the rows above. */}
+                {Array.from({ length: columns - row.length }, (_, i) => (
+                  <View key={`gap-${i}`} style={styles.filler} />
+                ))}
               </View>
-              <Text variant="caption" style={{ color: theme.muted, marginTop: 4 }}>
-                {item.description.en}
-              </Text>
-              <View style={{ marginTop: 8 }}>
-                {item.available ? (
-                  <PriceText amount={item.pricePesewas} currency={venue.data?.currency} />
-                ) : (
-                  <Text style={{ color: theme.error }}>{t('menu.soldOut')}</Text>
-                )}
-              </View>
-            </View>
-            <View>
-              {item.photo ? (
-                <VenueImage
-                  url={item.photo.url}
-                  alt={item.photo.alt ?? item.name.en}
-                  style={styles.photo}
-                />
-              ) : (
-                <View style={[styles.photo, { backgroundColor: theme.wash }]} />
-              )}
-              {item.available ? (
-                <View style={[styles.plus, { backgroundColor: theme.fill }]}>
-                  <Plus color={theme.onFill} size={16} strokeWidth={2.5} />
-                </View>
-              ) : null}
-            </View>
-          </Pressable>
-        ))}
+            ))}
+          </View>
+        )}
       </ScrollView>
       {cartCount(lines) > 0 ? (
         <Pressable
           accessibilityRole="button"
           onPress={() => router.push(`/${slug}/order`)}
-          style={[styles.bar, { backgroundColor: theme.fill }]}
+          style={({ pressed }) => [
+            styles.bar,
+            { backgroundColor: pressed ? theme.pressed : theme.fill },
+          ]}
         >
           <Text variant="button" style={{ color: theme.onFill }}>
             {cartCount(lines)} {t('menu.viewOrder')}
           </Text>
           <Text variant="button" style={{ color: theme.onFill, fontVariant: ['tabular-nums'] }}>
-            {formatMoney(cartEstimate(lines), venue.data?.currency ?? DEFAULT_CURRENCY)}
+            {formatMoney(cartEstimate(lines), currency)}
           </Text>
         </Pressable>
       ) : null}
@@ -242,41 +249,39 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  countText: { color: tokens.color.white.hex, fontSize: 11, lineHeight: 13 },
-  tabs: { flexDirection: 'row', gap: 20, paddingHorizontal: 20, paddingTop: 16 },
-  underline: { height: 2, marginTop: 6 },
-  chips: { paddingHorizontal: 20, gap: 8, paddingTop: 14 },
-  chip: {
+  countText: { fontSize: 11, lineHeight: 13 },
+  scroll: { paddingBottom: 120, gap: 16, paddingTop: 12 },
+  search: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginHorizontal: 20,
+    paddingLeft: 12,
+    minHeight: 48,
     borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    height: 36,
+    borderRadius: 14,
+  },
+  searchInput: { flex: 1, minHeight: 46, fontSize: 16, fontFamily: 'Inter_400' },
+  kinds: { flexDirection: 'row', marginHorizontal: 20, padding: 3, borderRadius: 14 },
+  kind: {
+    flex: 1,
+    minHeight: 40,
+    borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  section: { paddingHorizontal: 20, marginTop: 18, marginBottom: 8 },
-  empty: { paddingHorizontal: 20, paddingTop: 28, textAlign: 'center' },
-  item: { flexDirection: 'row', paddingHorizontal: 20, paddingVertical: 14, gap: 8 },
-  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
-  badge: { overflow: 'hidden', borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 },
-  photo: { width: 92, height: 92, borderRadius: 12 },
-  plus: {
-    position: 'absolute',
-    right: -6,
-    bottom: -6,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  heading: { paddingHorizontal: 20 },
+  empty: { paddingHorizontal: 20, paddingTop: 12, textAlign: 'center' },
+  grid: { paddingHorizontal: 16, gap: 12 },
+  gridRow: { flexDirection: 'row', gap: 12 },
+  filler: { flex: 1 },
   bar: {
     position: 'absolute',
     left: 20,
     right: 20,
     bottom: 16,
     height: 52,
-    borderRadius: 12,
+    borderRadius: 14,
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
