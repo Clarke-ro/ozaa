@@ -1296,6 +1296,27 @@ export interface components {
             phoneMasked: string;
             /** @enum {string} */
             status: "invited" | "active" | "removed";
+            lastName?: string;
+            /**
+             * Format: date-time
+             * @description When they accepted the invite.
+             */
+            joinedAt?: string;
+            /**
+             * Format: date-time
+             * @description Last time they used the owner app. Null if never.
+             */
+            lastActiveAt?: string | null;
+            /** @description True while they are signed in on a device right now. */
+            onShift?: boolean;
+            /** @description What they did since the venue opened today. */
+            today?: {
+                /** @description Orders they moved to a new status. */
+                ordersHandled: number;
+                callsAnswered: number;
+                /** @description Average time to answer a waiter call. */
+                avgPickupMinutes?: number | null;
+            };
         };
         /**
          * @description Video menu is roadmap only and is not in this list.

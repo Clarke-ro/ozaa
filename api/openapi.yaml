@@ -1892,6 +1892,21 @@ components:
         role: { $ref: '#/components/schemas/StaffRole' }
         phoneMasked: { type: string, example: '024 *** 4567' }
         status: { type: string, enum: [invited, active, removed] }
+        lastName: { type: string }
+        joinedAt: { type: string, format: date-time, description: When they accepted the invite. }
+        lastActiveAt:
+          type: ['string', 'null']
+          format: date-time
+          description: Last time they used the owner app. Null if never.
+        onShift: { type: boolean, description: True while they are signed in on a device right now. }
+        today:
+          type: object
+          description: What they did since the venue opened today.
+          required: [ordersHandled, callsAnswered]
+          properties:
+            ordersHandled: { type: integer, description: Orders they moved to a new status. }
+            callsAnswered: { type: integer }
+            avgPickupMinutes: { type: ['integer', 'null'], description: Average time to answer a waiter call. }
 
     ServiceId:
       type: string

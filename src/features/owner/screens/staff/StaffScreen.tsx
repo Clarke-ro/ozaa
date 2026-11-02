@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { ChevronRight, Users } from 'lucide-react-native';
+import { Users } from 'lucide-react-native';
 import { api } from '@/lib/api';
 import type { StaffMember } from '@/lib/api/types';
 import { useOwnerSession } from '@/features/session';
@@ -11,13 +11,21 @@ import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
-import { ConfirmDialog, EmptyCard, ModalSheet, Section, StatusPill, toast } from '../../kit';
+import { ConfirmDialog, EmptyCard, InfoRow, ModalSheet, SectionLabel, toast } from '../../kit';
+import { SummaryStrip } from '../../kit/SummaryStrip';
+import { StaffCard } from './StaffCard';
 import { InviteSheet } from './InviteSheet';
 
 /** Who can sign in to this venue and what each person can do. */
 export function StaffScreen() {
   const theme = useTheme();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    // "Seen 5 minutes ago" only needs to move once a minute.
+    const id = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(id);
+  }, []);
   const client = useQueryClient();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const key = ['owner-staff', venueId];
@@ -42,6 +50,13 @@ export function StaffScreen() {
   });
 
   const members = (staff.data?.items ?? []).filter((m) => m.status !== 'removed');
+  // On shift first, then the rest by name, invites last.
+  const sorted = [...members].sort(
+    (a, b) =>
+      Number(b.onShift ?? false) - Number(a.onShift ?? false) ||
+      Number(a.status === 'invited') - Number(b.status === 'invited') ||
+      a.firstName.localeCompare(b.firstName),
+  );
 
   return (
     <OwnerPage
@@ -69,33 +84,25 @@ export function StaffScreen() {
             onAction={() => setInviting(true)}
           />
         ) : (
-          <Section title={t('ownerStaff.team', { count: members.length })}>
-            {members.map((m) => (
-              <Pressable
-                key={m.id}
-                accessibilityRole="button"
-                accessibilityLabel={`${m.firstName}, ${t(`ownerSettings.roles.${m.role}`)}${m.status === 'invited' ? `, ${t('ownerStaff.pending')}` : ''}`}
-                onPress={() => setOpen(m)}
-                style={({ pressed }) => [styles.row, pressed && { backgroundColor: theme.wash }]}
-              >
-                <View style={[styles.avatar, { backgroundColor: theme.tint }]}>
-                  <Text variant="body-strong" style={{ color: theme.badgeInk }}>
-                    {m.firstName.slice(0, 1).toUpperCase()}
-                  </Text>
-                </View>
-                <View style={styles.flex}>
-                  <Text variant="body-strong">{m.firstName}</Text>
-                  <Text variant="caption" style={{ color: theme.muted }}>
-                    {t(`ownerSettings.roles.${m.role}`)} · {m.phoneMasked}
-                  </Text>
-                </View>
-                {m.status === 'invited' ? (
-                  <StatusPill label={t('ownerStaff.pending')} tone="waiting" boxed icon={false} />
-                ) : null}
-                <ChevronRight size={18} color={theme.meta} />
-              </Pressable>
+          <View style={styles.stack}>
+            <SummaryStrip
+              items={[
+                {
+                  label: t('ownerStaff.onShift'),
+                  value: String(members.filter((m) => m.onShift).length),
+                },
+                { label: t('ownerStaff.teamShort'), value: String(members.length) },
+                {
+                  label: t('ownerStaff.pending'),
+                  value: String(members.filter((m) => m.status === 'invited').length),
+                },
+              ]}
+            />
+            <SectionLabel title={t('ownerStaff.team', { count: members.length })} caps />
+            {sorted.map((m) => (
+              <StaffCard key={m.id} member={m} now={now} onPress={() => setOpen(m)} />
             ))}
-          </Section>
+          </View>
         )}
       </DeskWait>
 
@@ -104,9 +111,19 @@ export function StaffScreen() {
         <ModalSheet
           visible
           onClose={() => setOpen(null)}
-          title={open.firstName}
+          title={[open.firstName, open.lastName].filter(Boolean).join(' ')}
           subtitle={`${t(`ownerSettings.roles.${open.role}`)} · ${open.phoneMasked}`}
         >
+          {open.joinedAt ? (
+            <InfoRow
+              label={t('ownerStaff.joined')}
+              value={new Date(open.joinedAt).toLocaleDateString(i18n.language, {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric',
+              })}
+            />
+          ) : null}
           <Text variant="body" style={{ color: theme.muted }}>
             {t(`ownerStaff.can.${open.role}`)}
           </Text>
@@ -133,21 +150,4 @@ export function StaffScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[3],
-    minHeight: 60,
-    paddingHorizontal: tokens.space[4],
-    paddingVertical: tokens.space[2],
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  flex: { flex: 1 },
-});
+const styles = StyleSheet.create({ stack: { gap: tokens.space[3] } });

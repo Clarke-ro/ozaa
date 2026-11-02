@@ -1256,7 +1256,14 @@
       "kitchen": "Order status only.",
       "viewer": "Can look, cannot change anything.",
       "staff_scanner": "Scans loyalty cards only."
-    }
+    },
+    "seen": "Seen {{when}}",
+    "onShift": "On shift",
+    "teamShort": "Team",
+    "orders": "Orders today",
+    "calls": "Calls today",
+    "pickup": "Avg pick-up",
+    "joined": "Joined"
   },
   "ownerDevices": {
     "pair": "Pair a phone",

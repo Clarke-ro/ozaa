@@ -55,6 +55,41 @@ export const STAFF: StaffSeed[] = [
   { phone: '+233240000005', role: 'owner', firstName: 'Akosua', slug: 'auntie-akos' },
 ];
 
+// Sample shift data for the Staff screen: surname, how long ago they joined and were last seen,
+// whether they are on shift, and today's work. Keyed by the last four digits of the phone.
+const STAFF_DETAIL: Record<
+  string,
+  {
+    lastName: string;
+    joinedDaysAgo: number;
+    lastSeenMinutesAgo: number | null;
+    onShift: boolean;
+    today: { ordersHandled: number; callsAnswered: number; avgPickupMinutes: number | null };
+  }
+> = {
+  '0001': {
+    lastName: 'Owusu',
+    joinedDaysAgo: 420,
+    lastSeenMinutesAgo: 2,
+    onShift: true,
+    today: { ordersHandled: 6, callsAnswered: 2, avgPickupMinutes: 3 },
+  },
+  '0002': {
+    lastName: 'Asante',
+    joinedDaysAgo: 210,
+    lastSeenMinutesAgo: 1,
+    onShift: true,
+    today: { ordersHandled: 18, callsAnswered: 11, avgPickupMinutes: 2 },
+  },
+  '0003': {
+    lastName: 'Boateng',
+    joinedDaysAgo: 95,
+    lastSeenMinutesAgo: 140,
+    onShift: false,
+    today: { ordersHandled: 23, callsAnswered: 0, avgPickupMinutes: null },
+  },
+};
+
 type RecordFile = Record<string, unknown>;
 
 function isRecord(value: unknown): value is RecordFile {
@@ -306,6 +341,21 @@ function seedOwnerDesk(world: World, now: number): void {
   );
 }
 
+function staffDetail(key: string, now: number) {
+  const d = STAFF_DETAIL[key];
+  if (!d) return {};
+  return {
+    lastName: d.lastName,
+    joinedAt: new Date(now - d.joinedDaysAgo * 86_400_000).toISOString(),
+    lastActiveAt:
+      d.lastSeenMinutesAgo == null
+        ? null
+        : new Date(now - d.lastSeenMinutesAgo * 60_000).toISOString(),
+    onShift: d.onShift,
+    today: d.today,
+  };
+}
+
 export function createWorld(now: number): World {
   const venues = load<VenuePublic>(venuesFile, 'venues');
   const menus = load<Menu>(menusFile, 'menus');
@@ -412,6 +462,7 @@ export function createWorld(now: number): World {
       status: 'active',
       venueId: venue.id,
       phone: person.phone,
+      ...staffDetail(person.phone.slice(-4), now),
     });
   }
 

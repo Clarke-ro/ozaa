@@ -66,3 +66,18 @@ export function describeHours(hours: OpeningHours, now: Date): HoursLabel {
   const opens = nextOpen(hours, weekday, minute);
   return { open: false, text: opens ? `Closed · opens ${opens}` : 'Closed' };
 }
+
+/**
+ * "5 minutes ago", "3 hours ago", "2 days ago" in the app language, using the platform's
+ * Intl so every language gets correct grammar without extra strings.
+ */
+export function timeAgo(iso: string, now: number, locale: string): string {
+  const seconds = Math.max(0, Math.round((now - Date.parse(iso)) / 1000));
+  const words = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
+  if (seconds < 60) return words.format(0, 'second');
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return words.format(-minutes, 'minute');
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return words.format(-hours, 'hour');
+  return words.format(-Math.floor(hours / 24), 'day');
+}
