@@ -180,7 +180,7 @@
   "status": {
     "title": "Order #{{number}}",
     "now": "Right now",
-    "eta": "About {{minutes}} minutes. We'll show a banner when it's ready, even if you're on another screen.",
+    "eta": "About {{minutes}} minutes. Your bell lights up when it's ready.",
     "received": "Order received",
     "preparing": "Being prepared",
     "ready": "Ready",
@@ -190,8 +190,19 @@
     "view": "View",
     "yourOrder": "Your order",
     "total": "Total",
-    "pay": "Pay bill",
-    "call": "Call waiter"
+    "pay": "Pay & split bill",
+    "call": "Call waiter",
+    "noOrderTitle": "Order status",
+    "noOrder": "No order yet",
+    "noOrderBody": "When you send an order from the menu, you can follow it here.",
+    "seeMenu": "See the menu",
+    "orderMore": "Order more",
+    "paid": {
+      "unpaid": "Not paid yet",
+      "part_paid": "Part paid",
+      "paid": "Paid. Thank you!",
+      "refunded": "Refunded"
+    }
   },
   "ready": {
     "title": "Your food is ready!",
