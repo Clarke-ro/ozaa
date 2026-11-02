@@ -177,95 +177,104 @@ export function SetupScreen() {
         error={venue.isError}
         onRetry={() => void venue.refetch()}
       >
-        <Text variant="title">{t(`ownerSetup.title.${current}`)}</Text>
-        {current === 'venue' ? (
-          <>
-            <Field
-              label={t('ownerSetup.venueName')}
-              value={venueName}
-              onChangeText={setName}
-              error={err ?? undefined}
-            />
-            <Field
-              label={t('ownerSetup.place')}
-              value={venuePlace}
-              onChangeText={setPlace}
-              placeholder={t('ownerSetup.placeHint')}
-            />
-          </>
-        ) : null}
-        {current === 'tables' ? (
-          <>
-            <View style={styles.row}>
+        <View style={[styles.form, { backgroundColor: theme.surface, borderColor: theme.line }]}>
+          <Text variant="title">{t(`ownerSetup.title.${current}`)}</Text>
+          {current === 'venue' ? (
+            <>
               <Field
-                label={t('ownerTables.from')}
-                value={from}
-                onChangeText={setFrom}
-                keyboardType="number-pad"
+                label={t('ownerSetup.venueName')}
+                value={venueName}
+                onChangeText={setName}
+                error={err ?? undefined}
               />
               <Field
-                label={t('ownerTables.to')}
-                value={to}
-                onChangeText={setTo}
-                keyboardType="number-pad"
+                label={t('ownerSetup.place')}
+                value={venuePlace}
+                onChangeText={setPlace}
+                placeholder={t('ownerSetup.placeHint')}
               />
-            </View>
-            <Text variant="caption" style={{ color: err ? theme.error : theme.muted }}>
-              {err ??
-                (plan.codes.length
-                  ? t('ownerTables.willCreate', {
-                      count: plan.codes.length,
-                      first: plan.codes[0],
-                      last: plan.codes.at(-1),
-                    })
-                  : t('ownerSetup.tablesExist'))}
-            </Text>
-          </>
-        ) : null}
-        {current === 'wifi' ? (
-          <WifiSection value={wifi} onChange={(k, val) => setWifi((w) => ({ ...w, [k]: val }))} />
-        ) : null}
-        {current === 'payout' ? (
-          <>
-            <Field
-              label={t('ownerSetup.business')}
-              value={business}
-              onChangeText={setBusiness}
-              placeholder={venueName}
-            />
-            <Field
-              label={t('ownerSetup.momo')}
-              value={phone}
-              onChangeText={setPhone}
-              keyboardType="phone-pad"
-              placeholder="024 123 4567"
-              error={err === t('ownerSetup.err.phone') ? err : undefined}
-            />
-            <Section
-              title={t('ownerSetup.network')}
-              note={err === t('ownerSetup.err.network') ? err : undefined}
-            >
-              <SectionBody>
-                <Chips
-                  single
-                  label={t('ownerSetup.network')}
-                  options={PROVIDERS.map((id) => ({
-                    id,
-                    label: t(`ownerPayments.providers.${id}`),
-                  }))}
-                  selected={network ? [network] : []}
-                  onChange={(ids) => setProvider(ids[0] ?? null)}
+            </>
+          ) : null}
+          {current === 'tables' ? (
+            <>
+              <View style={styles.row}>
+                <Field
+                  label={t('ownerTables.from')}
+                  value={from}
+                  onChangeText={setFrom}
+                  keyboardType="number-pad"
                 />
-              </SectionBody>
-            </Section>
-          </>
-        ) : null}
+                <Field
+                  label={t('ownerTables.to')}
+                  value={to}
+                  onChangeText={setTo}
+                  keyboardType="number-pad"
+                />
+              </View>
+              <Text variant="caption" style={{ color: err ? theme.error : theme.muted }}>
+                {err ??
+                  (plan.codes.length
+                    ? t('ownerTables.willCreate', {
+                        count: plan.codes.length,
+                        first: plan.codes[0],
+                        last: plan.codes.at(-1),
+                      })
+                    : t('ownerSetup.tablesExist'))}
+              </Text>
+            </>
+          ) : null}
+          {current === 'wifi' ? (
+            <WifiSection value={wifi} onChange={(k, val) => setWifi((w) => ({ ...w, [k]: val }))} />
+          ) : null}
+          {current === 'payout' ? (
+            <>
+              <Field
+                label={t('ownerSetup.business')}
+                value={business}
+                onChangeText={setBusiness}
+                placeholder={venueName}
+              />
+              <Field
+                label={t('ownerSetup.momo')}
+                value={phone}
+                onChangeText={setPhone}
+                keyboardType="phone-pad"
+                placeholder="024 123 4567"
+                error={err === t('ownerSetup.err.phone') ? err : undefined}
+              />
+              <Section
+                title={t('ownerSetup.network')}
+                note={err === t('ownerSetup.err.network') ? err : undefined}
+              >
+                <SectionBody>
+                  <Chips
+                    single
+                    label={t('ownerSetup.network')}
+                    options={PROVIDERS.map((id) => ({
+                      id,
+                      label: t(`ownerPayments.providers.${id}`),
+                    }))}
+                    selected={network ? [network] : []}
+                    onChange={(ids) => setProvider(ids[0] ?? null)}
+                  />
+                </SectionBody>
+              </Section>
+            </>
+          ) : null}
+        </View>
       </DeskWait>
     </OwnerPage>
   );
 }
 
 const styles = StyleSheet.create({
+  form: {
+    gap: tokens.space[4],
+    padding: tokens.space[4],
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: tokens.radius.lg,
+    borderCurve: 'continuous',
+  },
   flex: { flex: 1 },
   row: { flexDirection: 'row', gap: tokens.space[3] },
   bar: {
