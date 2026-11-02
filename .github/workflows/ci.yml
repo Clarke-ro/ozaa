@@ -1,0 +1,41 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      EXPO_PUBLIC_API_MODE: mock
+      EXPO_PUBLIC_MOCK_LATENCY_MS: '0'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - run: npx @redocly/cli lint api/openapi.yaml
+      - run: node api/fixtures/check-fixtures.mjs
+      - run: npm run gen:api && npm run gen:tokens && npm run copy:fixtures && npm run gen:media && git diff --exit-code src/lib/api/schema.ts src/theme/tokens.ts src/mocks/fixtures src/mocks/media.ts
+
+      - run: npx tsc --noEmit
+      - run: npx expo lint
+      - run: npm test -- --ci
+
+      - run: '! git grep -nI -i -e takeorder -e scanchop -- src app.config.ts'
+
+      - run: npx expo export -p web
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/

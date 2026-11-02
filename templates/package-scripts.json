@@ -1,0 +1,20 @@
+{
+  "//": "Merge these into package.json \"scripts\". Each script is small on purpose.",
+  "scripts": {
+    "start": "expo start",
+    "web": "expo start --web",
+    "gen:api": "openapi-typescript api/openapi.yaml -o src/lib/api/schema.ts",
+    "gen:tokens": "node scripts/gen-tokens.mjs",
+    "copy:fixtures": "node scripts/copy-fixtures.mjs",
+    "check:fixtures": "node api/fixtures/check-fixtures.mjs",
+    "lint": "expo lint",
+    "typecheck": "tsc --noEmit",
+    "test": "jest",
+    "e2e": "expo export -p web && playwright test",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": ["eslint --fix", "prettier --write"],
+    "*.{json,md,yaml,yml}": ["prettier --write"]
+  }
+}

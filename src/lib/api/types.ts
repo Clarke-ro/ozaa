@@ -1,0 +1,48 @@
+import type { components } from './schema';
+
+export type Schemas = components['schemas'];
+export type VenuePublic = Schemas['VenuePublic'];
+export type VenueSettings = Schemas['VenueSettings'];
+export type VenueSettingsPatch = Schemas['VenueSettingsPatch'];
+export type Menu = Schemas['Menu'];
+export type MenuItem = Schemas['MenuItem'];
+export type MenuItemInput = Schemas['MenuItemInput'];
+export type MenuCategory = Schemas['MenuCategory'];
+export type MenuCategoryInput = Schemas['MenuCategoryInput'];
+export type Order = Schemas['Order'];
+export type CreateOrderRequest = Schemas['CreateOrderRequest'];
+export type BillQuote = Schemas['BillQuote'];
+export type BillQuoteRequest = Schemas['BillQuoteRequest'];
+export type Payment = Schemas['Payment'];
+export type InitializePaymentRequest = Schemas['InitializePaymentRequest'];
+export type WaiterCall = Schemas['WaiterCall'];
+export type WaiterReason = Schemas['WaiterReason'];
+export type LoyaltyCard = Schemas['LoyaltyCard'];
+export type LoyaltyProgram = Schemas['LoyaltyProgram'];
+export type LoyaltyMember = Schemas['LoyaltyMember'];
+export type ConsentInput = Schemas['ConsentInput'];
+export type Story = Schemas['Story'];
+export type VideoReview = Schemas['VideoReview'];
+export type Offer = Schemas['Offer'];
+export type Wifi = Schemas['Wifi'];
+export type Table = Schemas['Table'];
+export type StaffUser = Schemas['StaffUser'];
+export type StaffMember = Schemas['StaffMember'];
+export type StaffRole = Schemas['StaffRole'];
+export type AuthTokens = Schemas['AuthTokens'];
+export type ServiceSettings = Schemas['ServiceSettings'];
+export type ThemeInput = Schemas['ThemeInput'];
+export type VenueTheme = Schemas['VenueTheme'];
+export type PayoutAccount = Schemas['PayoutAccount'];
+export type PayoutAccountInput = Schemas['PayoutAccountInput'];
+export type LeaderboardEntry = Schemas['LeaderboardEntry'];
+export type OtpPurpose = 'owner_login' | 'guest_loyalty';
+
+export type GuestSession = {
+  guestToken: string;
+  expiresAt: string;
+  venue: VenuePublic;
+  table?: Table;
+};
+
+export type Call = { idempotencyKey?: string; ifNoneMatch?: string; deleteToken?: string };

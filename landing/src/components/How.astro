@@ -1,0 +1,38 @@
+---
+interface Props {
+  id: string;
+  heading: string;
+}
+
+const { id, heading } = Astro.props;
+import { steps } from "../content/page";
+
+const stepTags = [
+  "Table setup",
+  "Instant guest browser",
+  "Owner control",
+] as const;
+---
+
+<section class="section" id={id} aria-labelledby={`${id}-title`}>
+  <div class="wrap">
+    <div class="section-head">
+      <span class="section-tag">3-step flow</span>
+      <h2 id={`${id}-title`}>{heading}</h2>
+    </div>
+    <ol class="bento-steps">
+      {
+        steps.map((step, index) => (
+          <li class="bento-card bento-card--step">
+            <div class="step-top">
+              <div class="step-num">0{index + 1}</div>
+              <span class="bento-pill">{stepTags[index] ?? "Step"}</span>
+            </div>
+            <h3>{step.title}</h3>
+            <p>{step.body}</p>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>

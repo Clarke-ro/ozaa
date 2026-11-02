@@ -1,0 +1,116 @@
+{
+  "mamas-kitchen": {
+    "id": "ord_mamas24",
+    "number": 24,
+    "venueId": "ven_mamas",
+    "tableCode": "12",
+    "status": "preparing",
+    "paymentStatus": "unpaid",
+    "lines": [
+      {
+        "id": "oln_mamas0",
+        "menuItemId": "itm_mamas0",
+        "name": "Jollof & chicken",
+        "quantity": 1,
+        "modifiers": [],
+        "unitPricePesewas": 6500,
+        "totalPesewas": 6500,
+        "paid": false
+      },
+      {
+        "id": "oln_mamas1",
+        "menuItemId": "itm_mamas4",
+        "name": "Sobolo",
+        "quantity": 2,
+        "modifiers": [],
+        "unitPricePesewas": 1500,
+        "totalPesewas": 3000,
+        "paid": false
+      }
+    ],
+    "subtotalPesewas": 9500,
+    "taxes": [],
+    "totalPesewas": 9500,
+    "paidPesewas": 0,
+    "etaMinutes": 12,
+    "createdAt": "2026-10-31T12:41:00Z",
+    "updatedAt": "2026-10-31T12:44:00Z",
+    "readyAt": null
+  },
+  "bean-there": {
+    "id": "ord_bean24",
+    "number": 24,
+    "venueId": "ven_bean",
+    "tableCode": "4",
+    "status": "preparing",
+    "paymentStatus": "unpaid",
+    "lines": [
+      {
+        "id": "oln_bean0",
+        "menuItemId": "itm_bean0",
+        "name": "Flat white",
+        "quantity": 1,
+        "modifiers": [],
+        "unitPricePesewas": 3800,
+        "totalPesewas": 3800,
+        "paid": false
+      },
+      {
+        "id": "oln_bean1",
+        "menuItemId": "itm_bean0",
+        "name": "Flat white",
+        "quantity": 2,
+        "modifiers": [],
+        "unitPricePesewas": 3800,
+        "totalPesewas": 7600,
+        "paid": false
+      }
+    ],
+    "subtotalPesewas": 11400,
+    "taxes": [],
+    "totalPesewas": 11400,
+    "paidPesewas": 0,
+    "etaMinutes": 12,
+    "createdAt": "2026-10-31T12:41:00Z",
+    "updatedAt": "2026-10-31T12:44:00Z",
+    "readyAt": null
+  },
+  "auntie-akos": {
+    "id": "ord_akos24",
+    "number": 24,
+    "venueId": "ven_akos",
+    "tableCode": "7",
+    "status": "preparing",
+    "paymentStatus": "unpaid",
+    "lines": [
+      {
+        "id": "oln_akos0",
+        "menuItemId": "itm_akos0",
+        "name": "Fufu & light soup",
+        "quantity": 1,
+        "modifiers": [],
+        "unitPricePesewas": 5500,
+        "totalPesewas": 5500,
+        "paid": false
+      },
+      {
+        "id": "oln_akos1",
+        "menuItemId": "itm_akos0",
+        "name": "Fufu & light soup",
+        "quantity": 2,
+        "modifiers": [],
+        "unitPricePesewas": 5500,
+        "totalPesewas": 11000,
+        "paid": false
+      }
+    ],
+    "subtotalPesewas": 16500,
+    "taxes": [],
+    "totalPesewas": 16500,
+    "paidPesewas": 0,
+    "etaMinutes": 12,
+    "createdAt": "2026-10-31T12:41:00Z",
+    "updatedAt": "2026-10-31T12:44:00Z",
+    "readyAt": null
+  }
+}

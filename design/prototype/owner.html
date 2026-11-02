@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Ozaa for restaurants: video reviews</title>
+<link rel="stylesheet" href="base.css"><link rel="stylesheet" href="app.css">
+<style>
+/* Ozaa chrome: always Ozaa orange, never the venue colour */
+:root{--accent:#D24000;--on-accent:#fff;--accent-ink:#D24000;--accent-tint:#FFF1EA;--badge-ink:#BA3800;--accent-pressed:#A33000;--display:Unbounded}
+.otop{position:absolute;top:0;left:0;right:0;height:112px;padding:54px 16px 0;background:#fff;display:flex;align-items:center;gap:10px;z-index:40}
+.otop b{font-size:17px;line-height:22px}.otop .meta{line-height:16px}
+.otabs{position:absolute;top:112px;left:0;right:0;display:flex;gap:22px;padding:0 20px;border-bottom:1px solid var(--g200);height:44px;align-items:flex-end;background:#fff;z-index:40}
+.otabs span{padding-bottom:10px;font-weight:600;color:var(--g500)}.otabs .on{color:#111;box-shadow:inset 0 -2px 0 #111}
+.otabs i{font-style:normal;display:inline-flex;min-width:20px;height:20px;border-radius:10px;background:#D24000;color:#fff;font-size:11px;align-items:center;justify-content:center;margin-left:6px;padding:0 6px}
+.rv{display:flex;gap:12px;padding:14px;border:1px solid var(--g200);border-radius:16px;margin-top:12px}
+.rv .vid{position:relative;width:92px;height:150px;border-radius:12px;overflow:hidden;flex:none;background:#000}
+.rv .vid img{width:100%;height:100%;object-fit:cover;display:block}
+.rv .vid .pl{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.rv .vid .pl span{width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center}
+.rv .vid .du{position:absolute;right:6px;bottom:6px;font-size:11px;font-weight:600;color:#fff;background:rgba(0,0,0,.55);border-radius:6px;padding:0 5px;line-height:18px}
+.rv .tx{flex:1;min-width:0;display:flex;flex-direction:column}
+.rv .st2{display:flex;gap:1px;margin-top:2px}
+.rv .q{font-size:13px;line-height:18px;color:var(--g600);margin-top:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ok{font-size:12px;line-height:16px;color:var(--success);display:flex;gap:4px;align-items:center;margin-top:6px;font-weight:600}
+.acts{display:flex;gap:8px;margin-top:auto;padding-top:10px}
+.acts button{height:40px;border-radius:12px;font-weight:600;font-size:14px;flex:1;display:flex;align-items:center;justify-content:center;gap:6px}
+.acts .f{background:#D24000;color:#fff}.acts .h{border:1px solid var(--g200)}
+.nav{position:absolute;left:0;right:0;bottom:0;height:84px;border-top:1px solid var(--g200);background:#fff;display:flex;padding:8px 6px 0;z-index:45}
+.nav div{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:600;color:var(--g500)}
+.nav .on{color:#D24000}
+.sw{width:46px;height:28px;border-radius:14px;background:var(--g200);position:relative;flex:none}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.sw.on{background:#D24000}.sw.on::after{left:21px}
+.sw.dis{opacity:.4}
+.srow{display:flex;align-items:center;gap:12px;padding:11px 0}.srow+.srow{border-top:1px solid var(--g200)}
+.srow .ic{width:36px;height:36px;border-radius:10px;background:var(--g100);display:flex;align-items:center;justify-content:center;color:#D24000;flex:none}
+.srow .tx{flex:1}.srow b{display:block;font-size:15px;line-height:20px}.srow span{display:block;font-size:12px;line-height:16px;color:var(--g600)}
+.grp{font-size:13px;font-weight:600;color:var(--g500);margin:18px 0 2px;text-transform:uppercase;letter-spacing:.4px}
+.sub{margin:0 0 4px 48px;padding:10px 12px;background:var(--g100);border-radius:12px;display:flex;align-items:center;gap:10px;font-size:13px;line-height:18px}
+</style></head><body>
+<div class="island"></div><div id="sb"></div><div id="app"></div><div class="toast" id="toast"></div><div class="homeind"></div>
+<script src="icons.js"></script><script src="theme.js"></script><script src="venues.js"></script><script src="data.js"></script>
+<script>
+const v = VENUES.mamas, app = document.getElementById('app');
+document.getElementById('sb').innerHTML = statusBar(true);
+const head = (title, sub) => `<div class="otop"><img src="img/ozaa-icon-small.svg" width="32" height="32" alt="Ozaa"><div style="flex:1"><b>${title}</b><div class="meta">${sub}</div></div><span class="iconbtn" style="border:1px solid var(--g200)">${icon('settings', 20)}</span></div>`;
+const nav = on => `<div class="nav">${[['home','Today'],['receipt','Orders'],['video','Reviews'],['book','Menu'],['settings','Settings']].map(([i,l]) => `<div class="${l === on ? 'on' : ''}">${icon(i, 22)}${l}</div>`).join('')}</div>`;
+const stars = n => `<span class="st2">${[0,1,2,3,4].map(i => icon('star', 13, 1.5, i < n ? '#111' : '#D4D4D8').replace('fill="none"', `fill="${i < n ? '#111' : '#D4D4D8'}"`)).join('')}</span>`;
+const PENDING = [
+  { s: v.stories[0], d: '0:22', when: 'Today, 12:30', dish: 'Jollof & chicken', video: true },
+  { s: { name: 'Nana', stars: 5, poster: 'img/story-kofi.jpg', quote: 'Banku and tilapia, proper Accra style. Will come back.' }, d: '0:18', when: 'Today, 11:05', dish: 'Banku & tilapia' },
+  { s: { name: 'Abena', stars: 3, poster: 'img/story-akua.jpg', quote: 'Food was good but we waited 40 minutes.' }, d: '0:27', when: 'Yesterday', dish: 'Waakye special', note: 'Mentions a long wait. Reply in private?' },
+];
+function reviews() {
+  return head('Video reviews', `${v.name} · Ozaa for restaurants`) +
+  `<div class="otabs"><span class="on">To check<i>3</i></span><span>Featured · 5</span><span>Hidden · 1</span></div>
+  <div class="screen" style="padding:160px 16px 100px">
+  <p class="cap">Guests only appear here if they agreed to be featured. Featured videos show as story circles on your guest page.</p>
+  ${PENDING.map((p, i) => `<div class="rv"><div class="vid"><img src="${p.s.poster}" alt=""><div class="pl"><span>${icon('chevron', 18, 2.5, '#fff')}</span></div><span class="du">${p.d}</span></div>
+    <div class="tx"><div class="row" style="justify-content:space-between"><b>${p.s.name}</b><span class="meta">${p.when}</span></div>${stars(p.s.stars)}
+    <div class="meta" style="margin-top:4px">Ordered ${p.dish}</div><div class="q">“${p.s.quote}”</div>
+    ${p.note ? `<div class="ok" style="color:#B45309">${icon('alert', 13)}${p.note}</div>` : `<div class="ok">${icon('check', 13, 3)}Agreed to be featured</div>`}
+    <div class="acts"><button class="h">${icon('eye', 16)}Hide</button><button class="f">${icon('star', 16, 2, '#fff')}Feature</button></div></div></div>`).join('')}
+  <p class="meta" style="margin-top:14px">Sample reviews. The first video is an AI-generated sample, the others are stills.</p>
+  </div>` + nav('Reviews');
+}
+function services() {
+  const grp = { table: 'At your table', rewards: 'Rewards', fun: 'Fun while you wait', more: 'More' };
+  const offIds = ['events'];
+  let h = head('Guest page services', `${v.name} · choose what guests see`) + `<div class="screen" style="padding:120px 20px 100px"><p class="cap">Switch services on or off. Guests see them in this order, grouped like this.</p>`;
+  for (const g in grp) {
+    h += `<div class="grp">${grp[g]}</div>`;
+    for (const id in SERVICES) { const S = SERVICES[id]; if (S.sec !== g) continue;
+      h += `<div class="srow"><span class="ic">${icon(S.icon, 20)}</span><span class="tx"><b>${S.t}</b><span>${S.s}</span></span><span class="sw ${offIds.includes(id) ? '' : 'on'}"></span></div>`;
+      if (id === 'play') h += `<div class="sub"><span style="flex:1"><b style="display:block">Give a loyalty stamp for a high score</b>Score ${v.game.stampScore}+ · once per visit</span><span class="sw on"></span></div>`;
+    }
+  }
+  return h + `</div>` + nav('Settings');
+}
+app.innerHTML = location.hash === '#services' ? services() : reviews();
+addEventListener('hashchange', () => location.reload());
+app.addEventListener('click', e => { const b = e.target.closest('.acts button'); if (b) { const t = document.getElementById('toast'); t.innerHTML = icon('check', 16) + (b.classList.contains('f') ? 'Featured on your guest page' : 'Hidden'); t.classList.add('show'); b.closest('.rv').style.opacity = .4; setTimeout(() => t.classList.remove('show'), 1600); }
+  const s = e.target.closest('.sw:not(.dis)'); if (s) s.classList.toggle('on'); });
+</script></body></html>

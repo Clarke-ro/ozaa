@@ -1,0 +1,66 @@
+---
+import { hero, screens, site } from "../content/page";
+import "../styles/global.css";
+
+const image = site.url === "" ? "/og.png" : `${site.url}/og.png`;
+const canonical = site.url === "" ? undefined : `${site.url}/`;
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: site.name,
+  applicationCategory: "BusinessApplication",
+  operatingSystem: "Web",
+  description: site.description,
+};
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{site.title}</title>
+    <meta name="description" content={site.description} />
+    <meta name="theme-color" content="#ffffff" />
+    {canonical ? <link rel="canonical" href={canonical} /> : null}
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={site.title} />
+    <meta property="og:description" content={site.description} />
+    <meta property="og:image" content={image} />
+    <meta property="og:locale" content="en" />
+    {canonical ? <meta property="og:url" content={canonical} /> : null}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={site.title} />
+    <meta name="twitter:description" content={site.description} />
+    <meta name="twitter:image" content={image} />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link
+      rel="preload"
+      href="/fonts/Unbounded-700.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="/fonts/Inter-400.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href={screens[hero.screen].src}
+      as="image"
+      fetchpriority="high"
+    />
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  </head>
+  <body>
+    <a class="skip" href="#content">Skip to content</a>
+    <slot />
+  </body>
+</html>

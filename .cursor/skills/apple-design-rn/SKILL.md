@@ -80,7 +80,7 @@ List findings as **Critical / High / Medium / Low**. Each states what is wrong, 
 
 ## Notes for this repo
 
-Checked against the Expo app's `package.json` and `package-lock.json`. That dependency set is the same on every app branch. `main` has no `package.json` yet. Do not install packages to follow this skill.
+Checked against the Expo app's `package.json` and `package-lock.json`. Do not install packages to follow this skill.
 
 - **SDK:** Expo SDK 58 (`expo` 58.0.22), React Native 0.88.1, React 19.3.0.
 - **Navigation:** `expo-router` 58.0.29. Screens import `Stack` and `Tabs` from `expo-router`. The lockfile includes `standard-navigation` and `react-native-screens`. It does not include `@react-navigation/native` or `@react-navigation/native-stack`. `headerLargeTitle`, `headerBlurEffect` and `headerSearchBarOptions` are React Navigation native-stack names, so confirm them on the installed Expo Router before using them. Existing sheets use `presentation: 'modal'` and `presentation: 'transparentModal'`.
