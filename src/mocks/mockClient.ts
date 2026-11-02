@@ -1,17 +1,19 @@
-import { isRewardReady, stampsAfterPaidOrder, stampsAfterRedeem } from '../features/loyalty/loyaltyRules';
+import { blankVenue, currencyCode, LOYALTY_PROBLEMS, minor, samplePhone, toWire } from '../features/loyalty/facts';
 import { orderTransition } from '../features/orders/orderMachine';
 import { quoteBill } from '../features/pay/quoteBill';
 import { deriveTheme } from '../features/theming/deriveTheme';
-import { pesewas } from '@/lib/brand';
+import { ghanaPhone, isGhanaPhone, pesewas } from '@/lib/brand';
 import type { ApiClient, TokenSource } from '@/lib/api/client';
 import { ApiError, OfflineError } from '@/lib/api/errors';
-import type { Order, Payment, VenueTheme } from '@/lib/api/types';
+import type { LoyaltyCard, LoyaltyProgram, Order, Payment, VenueTheme } from '@/lib/api/types';
 import { qrSvg } from '@/lib/qrSvg';
+import { dashboardFor, floorFor, insightsFor, refundFor, replyFor, transactionsFor, writtenFor } from './ownerDesk';
 import { decideMockCard, readMockCard } from './cardBox';
 import { rememberOpenOrder } from './openOrder';
 import {
   createWorld,
   findOrder,
+  keepLoyalty,
   nextId,
   publicVenue,
   serviceSettings,
@@ -68,6 +70,14 @@ function sessionOf(world: World, tokens: TokenSource) {
 
 function accessOf(world: World, tokens: TokenSource) {
   const token = tokens.access();
+  if (!token) throw new ApiError(401, 'unauthorized', 'Sign in again');
+  const row = world.access.get(token);
+  if (!row) throw new ApiError(401, 'unauthorized', 'Sign in again');
+  return row;
+}
+
+function loyaltyOf(world: World, tokens: TokenSource) {
+  const token = tokens.loyalty?.() ?? tokens.access();
   if (!token) throw new ApiError(401, 'unauthorized', 'Sign in again');
   const row = world.access.get(token);
   if (!row) throw new ApiError(401, 'unauthorized', 'Sign in again');
@@ -158,17 +168,25 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
         paymentStatus: paid >= live.order.totalPesewas ? 'paid' : 'part_paid',
         updatedAt: new Date(clock).toISOString(),
       };
-      const access = tokens.access();
-      const loyalty = access ? world.access.get(access) : undefined;
-      if (loyalty?.purpose === 'guest_loyalty' && live.order.paymentStatus === 'paid') {
-        const venue = venueById(world, live.order.venueId);
-        const key = `${venue.slug}:${loyalty.phone}`;
-        const card = world.cards[key];
-        if (card) {
-          const stamps = stampsAfterPaidOrder(card.stamps);
-          world.cards[key] = { ...card, stamps, rewardReady: isRewardReady(stamps, card.stampsNeeded) };
-        }
-      }
+      const loyaltyToken = tokens.loyalty?.() ?? tokens.access();
+      const loyalty = loyaltyToken ? world.access.get(loyaltyToken) : undefined;
+      const loyaltyPhone = loyalty?.purpose === 'guest_loyalty' && isGhanaPhone(loyalty.phone) ? ghanaPhone(loyalty.phone) : null;
+      const momoPhone = isGhanaPhone(row.phone) ? ghanaPhone(row.phone) : null;
+      const venue = venueById(world, live.order.venueId);
+      keepLoyalty(
+        world,
+        venue.id,
+        {
+          type: 'paid_visit',
+          orderId: live.order.id,
+          amountMinor: minor(live.order.totalPesewas),
+          currency: currencyCode(venue.currency),
+          paid: live.order.paymentStatus === 'paid',
+          loyaltyPhone,
+          momoPhone,
+        },
+        new Date(clock).toISOString(),
+      );
     }
     return row.payment;
   }
@@ -275,9 +293,10 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
     },
     async listStories(slug) {
       await gate();
-      venueBySlug(world, slug);
-      const featured = world.videos.filter((video) => video.state === 'featured').map((video) => video);
-      return { items: [...(world.stories[slug] ?? []), ...featured] };
+      const venue = venueBySlug(world, slug);
+      const featured = world.videos.filter((video) => video.venueId === venue.id && video.state === 'featured');
+      if (featured.length > 0) return { items: featured };
+      return { items: world.stories[slug] ?? [] };
     },
     async listOffers(slug) {
       await gate();
@@ -404,12 +423,13 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
           open.note = body.note;
           return open;
         }
-        const callRow: import('@/lib/api/types').WaiterCall = {
+        const callRow = {
           id: nextId(world, 'wcl'),
+          venueId: venueBySlug(world, session.slug).id,
           tableCode: session.tableCode,
           reason: body.reason,
           note: body.note,
-          status: 'open',
+          status: 'open' as const,
           staffFirstName: null,
           createdAt: new Date(now()).toISOString(),
           acknowledgedAt: null,
@@ -429,50 +449,64 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       }
       return callRow;
     },
+    async getVenueLoyaltyProgram(slug) {
+      await gate();
+      const venue = venueBySlug(world, slug);
+      const current = world.loyalty[venue.id] ?? blankVenue(venue.id, venue.currency);
+      return toWire(current, { kind: 'programme' }) as LoyaltyProgram;
+    },
     async getMyLoyaltyCard(slug) {
       await gate();
-      const row = accessOf(world, tokens);
-      const card = world.cards[`${slug}:${row.phone}`];
-      if (!card) throw new ApiError(404, 'not_a_member', 'Not a member yet');
-      return card;
+      const row = loyaltyOf(world, tokens);
+      const venue = venueBySlug(world, slug);
+      const current = world.loyalty[venue.id] ?? blankVenue(venue.id, venue.currency);
+      const wire = toWire(current, { kind: 'card', phone: samplePhone(row.phone) });
+      if (!wire) {
+        const problem = LOYALTY_PROBLEMS.not_a_member;
+        throw new ApiError(problem.status, 'not_a_member', problem.title);
+      }
+      return wire as LoyaltyCard;
     },
     async joinLoyalty(slug, body) {
       await gate();
-      if (!body.consent.loyalty) throw new ApiError(400, 'consent_required', 'Tick the loyalty box to join');
-      const row = accessOf(world, tokens);
+      const row = loyaltyOf(world, tokens);
       const venue = venueBySlug(world, slug);
-      const program = world.programs[venue.id];
-      const existing = world.cards[`${slug}:${row.phone}`];
-      const card = existing ?? {
-        venueId: venue.id,
-        stamps: 0,
-        stampsNeeded: program?.stampsNeeded ?? 8,
-        reward: program?.reward ?? { id: `rwd_${slug}`, title: 'A free plate', stampsNeeded: 8 },
-        rewardReady: false,
-        memberSince: new Date(now()).toISOString().slice(0, 10),
-        history: [],
-        consent: { marketing: body.consent.marketing, at: new Date(now()).toISOString() },
-      };
-      card.consent = { marketing: body.consent.marketing, at: new Date(now()).toISOString() };
-      world.cards[`${slug}:${row.phone}`] = card;
-      return card;
+      const phone = samplePhone(row.phone);
+      const { venue: next } = keepLoyalty(
+        world,
+        venue.id,
+        {
+          type: 'join',
+          phone,
+          firstName: body.firstName,
+          birthdayMonthDay: body.birthdayMonthDay,
+          consent: body.consent,
+          random,
+        },
+        new Date(now()).toISOString(),
+      );
+      return toWire(next, { kind: 'card', phone }) as LoyaltyCard;
     },
     async leaveLoyalty(slug) {
       await gate();
-      const row = accessOf(world, tokens);
-      delete world.cards[`${slug}:${row.phone}`];
+      const row = loyaltyOf(world, tokens);
+      const venue = venueBySlug(world, slug);
+      keepLoyalty(world, venue.id, { type: 'leave', phone: samplePhone(row.phone) }, new Date(now()).toISOString());
     },
-    async redeemReward(slug, body) {
+    async redeemReward(slug, body, call) {
       await gate();
-      const row = accessOf(world, tokens);
-      const key = `${slug}:${row.phone}`;
-      const card = world.cards[key];
-      if (!card || !isRewardReady(card.stamps, card.stampsNeeded) || card.reward.id !== body.rewardId) {
-        throw new ApiError(409, 'reward_not_ready', 'That reward is not ready');
-      }
-      const stamps = stampsAfterRedeem(card.stamps, card.stampsNeeded);
-      world.cards[key] = { ...card, stamps, rewardReady: isRewardReady(stamps, card.stampsNeeded) };
-      return world.cards[key];
+      return remember(call.idempotencyKey, () => {
+        const row = loyaltyOf(world, tokens);
+        const venue = venueBySlug(world, slug);
+        const phone = samplePhone(row.phone);
+        const { venue: next } = keepLoyalty(
+          world,
+          venue.id,
+          { type: 'open_claim', phone, rewardId: body.rewardId, random },
+          new Date(now()).toISOString(),
+        );
+        return toWire(next, { kind: 'card', phone }) as LoyaltyCard;
+      });
     },
     async createReview(body) {
       await gate();
@@ -507,6 +541,7 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
         sample: true,
         state: 'pending' as const,
         featureConsent: body.featureConsent,
+        venueId: venue.id,
       };
       world.videos.push(review);
       return { id, deleteToken: `del_${id}` };
@@ -527,7 +562,26 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       await gate();
       const venue = venueBySlug(world, slug);
       const target = venue.game?.minScore ?? 15;
-      return { rank: body.score > 0 ? 1 : null, stampEarned: Boolean(venue.game?.enabled) && body.score >= target };
+      const loyaltyToken = tokens.loyalty?.() ?? tokens.access();
+      const loyalty = loyaltyToken ? world.access.get(loyaltyToken) : undefined;
+      let stampEarned = Boolean(venue.game?.enabled) && body.score >= target;
+      if (loyalty?.purpose === 'guest_loyalty' && isGhanaPhone(loyalty.phone)) {
+        const step = keepLoyalty(
+          world,
+          venue.id,
+          {
+            type: 'game_win',
+            phone: ghanaPhone(loyalty.phone),
+            runId: body.runId,
+            score: body.score,
+            minScore: target,
+            enabled: Boolean(venue.game?.enabled),
+          },
+          new Date(now()).toISOString(),
+        );
+        stampEarned = step.effect === 'posted';
+      }
+      return { rank: body.score > 0 ? 1 : null, stampEarned };
     },
     async sendFeedback() {
       await gate();
@@ -703,9 +757,9 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       live.order = { ...live.order, paidPesewas: paid, paymentStatus: paid >= live.order.totalPesewas ? 'paid' : 'part_paid' };
       return live.order;
     },
-    async ownerListWaiterCalls() {
+    async ownerListWaiterCalls(venueId) {
       await gate();
-      return { items: world.calls };
+      return { items: world.calls.filter((call) => call.venueId === venueId).map(({ venueId: _id, ...call }) => call) };
     },
     async ownerUpdateWaiterCall(id, body) {
       await gate();
@@ -719,9 +773,13 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       }
       return callRow;
     },
-    async ownerListVideoReviews(_venueId, state) {
+    async ownerListVideoReviews(venueId, state) {
       await gate();
-      return { items: world.videos.filter((video) => !state || video.state === state) };
+      return {
+        items: world.videos
+          .filter((video) => video.venueId === venueId && (!state || video.state === state))
+          .map(({ venueId: _id, ...video }) => video),
+      };
     },
     async ownerModerateVideoReview(id, body) {
       await gate();
@@ -733,18 +791,41 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
     },
     async ownerGetLoyalty(venueId) {
       await gate();
-      const program = world.programs[venueId];
-      if (!program) throw new ApiError(404, 'venue_not_found', 'Venue not found');
-      return program;
+      const venue = venueById(world, venueId);
+      const current = world.loyalty[venueId] ?? blankVenue(venueId, venue.currency);
+      return toWire(current, { kind: 'programme' }) as LoyaltyProgram;
     },
     async ownerSetLoyalty(venueId, body) {
       await gate();
-      world.programs[venueId] = body;
-      return body;
+      const venue = venueById(world, venueId);
+      const { venue: next } = keepLoyalty(
+        world,
+        venueId,
+        { type: 'save_programme', input: body, venueCurrency: venue.currency, random },
+        new Date(now()).toISOString(),
+      );
+      return toWire(next, { kind: 'programme' }) as LoyaltyProgram;
     },
-    async ownerListLoyaltyMembers() {
+    async ownerListLoyaltyMembers(venueId) {
       await gate();
-      return { items: world.members };
+      const venue = venueById(world, venueId);
+      const current = world.loyalty[venueId] ?? blankVenue(venueId, venue.currency);
+      return { items: toWire(current, { kind: 'roster' }) as LoyaltyCard[], nextCursor: null };
+    },
+    async ownerConfirmRedemption(venueId, body, call) {
+      await gate();
+      return remember(call?.idempotencyKey, () => {
+        venueById(world, venueId);
+        const { venue: next, memberId } = keepLoyalty(
+          world,
+          venueId,
+          { type: 'confirm', code: body.code },
+          new Date(now()).toISOString(),
+        );
+        const card = memberId ? toWire(next, { kind: 'member', memberId }) : null;
+        if (!card) throw new ApiError(404, 'claim_unknown', LOYALTY_PROBLEMS.claim_unknown.title);
+        return card as LoyaltyCard;
+      });
     },
     async ownerGetPayoutAccount(venueId) {
       await gate();
@@ -758,6 +839,41 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       const account = { businessName: body.businessName, settlementType: body.settlement.type, accountMasked: masked, verified: false, ozaaFeePercent: world.payouts[venueId]?.ozaaFeePercent ?? 0 };
       world.payouts[venueId] = account;
       return account;
+    },
+    async ownerGetDashboard(venueId) {
+      await gate();
+      accessOf(world, tokens);
+      return dashboardFor(world, venueId, now());
+    },
+    async ownerGetFloor(venueId) {
+      await gate();
+      accessOf(world, tokens);
+      return floorFor(world, venueId);
+    },
+    async ownerListTransactions(venueId) {
+      await gate();
+      accessOf(world, tokens);
+      return transactionsFor(world, venueId);
+    },
+    async ownerRefundTransaction(transactionId, call) {
+      await gate();
+      accessOf(world, tokens);
+      return remember(call?.idempotencyKey, () => refundFor(world, transactionId));
+    },
+    async ownerListWrittenReviews(venueId) {
+      await gate();
+      accessOf(world, tokens);
+      return writtenFor(world, venueId);
+    },
+    async ownerReplyToReview(reviewId, body, call) {
+      await gate();
+      accessOf(world, tokens);
+      return remember(call?.idempotencyKey, () => replyFor(world, reviewId, body.text));
+    },
+    async ownerGetInsights(venueId, range = '7d') {
+      await gate();
+      accessOf(world, tokens);
+      return insightsFor(world, venueId, range);
     },
   };
 

@@ -1,8 +1,16 @@
+import {
+  apply,
+  blankVenue,
+  featured,
+  LOYALTY_PROBLEMS,
+  samplePhone,
+  seedVenueLoyalty,
+  type Command,
+  type VenueLoyalty,
+} from '../features/loyalty/facts';
 import { ApiError } from '@/lib/api/errors';
 import type {
   LoyaltyCard,
-  LoyaltyMember,
-  LoyaltyProgram,
   Menu,
   MenuCategory,
   MenuItem,
@@ -15,9 +23,11 @@ import type {
   Story,
   Table,
   VenuePublic,
+  VenueTransaction,
   VideoReview,
   WaiterCall,
   Wifi,
+  WrittenReview,
 } from '@/lib/api/types';
 import loyaltyFile from './fixtures/loyaltyCards.json';
 import menusFile from './fixtures/menus.json';
@@ -65,13 +75,15 @@ export type World = {
   stories: Record<string, Story[]>;
   offers: Record<string, Offer[]>;
   orders: LiveOrder[];
-  calls: WaiterCall[];
-  cards: Record<string, LoyaltyCard>;
-  members: LoyaltyMember[];
-  programs: Record<string, LoyaltyProgram>;
+  calls: (WaiterCall & { venueId: string })[];
+  seatedCodes: Record<string, string[]>;
+  yesterdayPesewas: Record<string, number>;
+  written: (WrittenReview & { venueId: string })[];
+  transactions: (VenueTransaction & { venueId: string })[];
+  loyalty: Record<string, VenueLoyalty>;
   payouts: Record<string, PayoutAccount>;
   staff: (StaffMember & { venueId: string; phone: string })[];
-  videos: VideoReview[];
+  videos: (VideoReview & { venueId: string })[];
   tables: Record<string, Table[]>;
   quotes: Map<string, { orderId: string; share: number; tip: number; lineIds: string[]; expiresAt: number }>;
   payments: Map<string, { payment: import('@/lib/api/types').Payment; phone: string; applied: boolean }>;
@@ -95,16 +107,123 @@ function tablesFor(slug: string, code: string): Table[] {
   }));
 }
 
-function programFor(venue: VenuePublic, memberCount: number): LoyaltyProgram {
-  const needed = venue.loyaltySummary?.stampsNeeded ?? 8;
-  const title = venue.loyaltySummary?.rewardTitle ?? 'A free plate';
-  return {
-    enabled: true,
-    stampsNeeded: needed,
-    reward: { id: `rwd_${venue.slug}`, title, stampsNeeded: needed },
-    stampRule: 'one_per_paid_order',
-    memberCount,
-  };
+function seedOwnerDesk(world: World, now: number): void {
+  for (const [slug, stories] of Object.entries(world.stories)) {
+    const venue = world.venues[slug];
+    if (!venue) continue;
+    stories.forEach((story) => {
+      world.videos.push({
+        ...story,
+        state: 'featured',
+        featureConsent: true,
+        orderNumber: null,
+        venueId: venue.id,
+      });
+    });
+  }
+
+  const mama = world.venues['mamas-kitchen'];
+  if (!mama) return;
+  const poster = mama.banner;
+  world.videos.push({
+    id: 'vrv_mamaspending',
+    venueId: mama.id,
+    firstName: 'Abena',
+    stars: 4,
+    quote: 'The jollof was smoky and the chicken was hot.',
+    postedAt: new Date(now).toISOString(),
+    poster,
+    video: { mp4Url: 'https://mock.ozaa.app/media/media/review-ama.mp4', durationSeconds: 16 },
+    sample: true,
+    state: 'pending',
+    featureConsent: true,
+    orderNumber: 24,
+  });
+  world.seatedCodes[mama.id] = ['7'];
+  world.yesterdayPesewas[mama.id] = 221429;
+  world.calls.push({
+    id: 'wcl_mamas4',
+    venueId: mama.id,
+    tableCode: '4',
+    reason: 'water',
+    status: 'open',
+    staffFirstName: null,
+    createdAt: new Date(now - 4 * 60_000).toISOString(),
+  });
+  world.orders.push({
+    manual: true,
+    receivedAt: now,
+    order: {
+      id: 'ord_mamasbill',
+      number: 18,
+      venueId: mama.id,
+      tableCode: '3',
+      status: 'served',
+      paymentStatus: 'unpaid',
+      lines: [
+        {
+          id: 'oln_bill',
+          menuItemId: 'itm_mamas0',
+          name: 'Jollof & chicken',
+          quantity: 1,
+          modifiers: [],
+          unitPricePesewas: 4500,
+          totalPesewas: 4500,
+          paid: false,
+        },
+      ],
+      subtotalPesewas: 4500,
+      taxes: [],
+      totalPesewas: 4500,
+      paidPesewas: 0,
+      etaMinutes: null,
+      createdAt: new Date(now - 40 * 60_000).toISOString(),
+      updatedAt: new Date(now - 15 * 60_000).toISOString(),
+      readyAt: new Date(now - 20 * 60_000).toISOString(),
+    },
+  });
+  const paid = world.orders.filter((item) => item.order.venueId === mama.id && item.order.paymentStatus === 'paid');
+  const methods = ['momo', 'card', 'cash'] as const;
+  paid.forEach((item, index) => {
+    const method = methods[index % methods.length] ?? 'momo';
+    world.transactions.push({
+      id: `txn_mama${index}`,
+      venueId: mama.id,
+      reference: `ref_mama${index}`,
+      orderId: item.order.id,
+      orderNumber: item.order.number,
+      method,
+      provider: method === 'momo' ? 'mtn' : undefined,
+      amountPesewas: item.order.paidPesewas,
+      currency: 'GHS',
+      status: 'succeeded',
+      settlement: index === 0 ? 'pending' : 'settled',
+      createdAt: item.order.createdAt,
+      testMode: true,
+    });
+  });
+  world.written.push(
+    {
+      id: 'rev_mamas1',
+      venueId: mama.id,
+      stars: 5,
+      firstName: 'Efua',
+      text: 'The waakye was hot and the shito was perfect.',
+      highlights: ['food'],
+      createdAt: new Date(now - 2 * 60 * 60_000).toISOString(),
+      reply: null,
+    },
+    {
+      id: 'rev_mamas2',
+      venueId: mama.id,
+      stars: 2,
+      firstName: 'Kojo',
+      text: 'We waited a long time for the bill.',
+      highlights: ['speed'],
+      createdAt: new Date(now - 5 * 60 * 60_000).toISOString(),
+      reply: null,
+    },
+  );
 }
 
 export function createWorld(now: number): World {
@@ -167,28 +286,22 @@ export function createWorld(now: number): World {
     });
   }
 
-  const cards: Record<string, LoyaltyCard> = {};
-  const members: LoyaltyMember[] = [];
-  for (const [slug, card] of Object.entries(cardFile)) {
-    const phone = slug === 'mamas-kitchen' ? '+233244000099' : slug === 'bean-there' ? '+233204000099' : '+233274000099';
-    cards[`${slug}:${phone}`] = card;
-    members.push({
-      id: `mem_${slug}`,
-      firstName: 'Ama',
-      phoneMasked: '024 *** 0099',
-      stamps: card.stamps,
-      visits: card.stamps,
-      marketingConsent: card.consent.marketing,
-      joinedAt: `${card.memberSince}T00:00:00Z`,
-    });
-  }
-
-  const programs: Record<string, LoyaltyProgram> = {};
+  const loyalty: Record<string, VenueLoyalty> = {};
   const payouts: Record<string, PayoutAccount> = {};
   const tables: Record<string, Table[]> = {};
   const staff: World['staff'] = [];
+  const access = new Map<string, { phone: string; purpose: 'owner_login' | 'guest_loyalty' }>();
   for (const venue of Object.values(venues)) {
-    programs[venue.id] = programFor(venue, members.filter((member) => member.id.endsWith(venue.slug)).length);
+    const phone = samplePhone(
+      venue.slug === 'mamas-kitchen'
+        ? '+233244000099'
+        : venue.slug === 'bean-there'
+          ? '+233204000099'
+          : '+233274000099',
+    );
+    access.set(`acc_guest_loyalty_${phone}`, { phone, purpose: 'guest_loyalty' });
+    const seeded = cardFile[venue.slug];
+    loyalty[venue.id] = seeded ? seedVenueLoyalty(venue.id, seeded, phone) : blankVenue(venue.id, venue.currency);
     payouts[venue.id] = {
       businessName: venue.name,
       settlementType: 'momo',
@@ -203,6 +316,7 @@ export function createWorld(now: number): World {
   for (const person of STAFF) {
     const venue = venues[person.slug];
     if (!venue) continue;
+    access.set(`acc_owner_login_${person.phone}`, { phone: person.phone, purpose: 'owner_login' });
     staff.push({
       id: `stf_${person.phone.slice(-4)}`,
       firstName: person.firstName,
@@ -214,7 +328,7 @@ export function createWorld(now: number): World {
     });
   }
 
-  return {
+  const world: World = {
     venues,
     menus,
     wifi,
@@ -222,9 +336,11 @@ export function createWorld(now: number): World {
     offers,
     orders,
     calls: [],
-    cards,
-    members,
-    programs,
+    seatedCodes: {},
+    yesterdayPesewas: {},
+    written: [],
+    transactions: [],
+    loyalty,
     payouts,
     staff,
     videos: [],
@@ -235,10 +351,38 @@ export function createWorld(now: number): World {
     otpFails: new Map(),
     uploads: new Set(),
     sessions: new Map(),
-    access: new Map(),
+    access,
     refresh: new Map(),
     seq: 100,
   };
+  seedOwnerDesk(world, now);
+  return world;
+}
+
+export function keepLoyalty(
+  world: World,
+  venueId: string,
+  command: Command,
+  nowIso: string,
+): { venue: VenueLoyalty; effect: 'posted' | 'duplicate' | 'skipped'; memberId: string | null } {
+  const place = venueById(world, venueId);
+  const current = world.loyalty[venueId] ?? blankVenue(venueId, place.currency);
+  const step = apply(current, command, nowIso);
+  if (!step.ok) {
+    const problem = LOYALTY_PROBLEMS[step.error.code];
+    throw new ApiError(problem.status, step.error.code, problem.title);
+  }
+  world.loyalty[venueId] = step.next;
+  if (command.type === 'save_programme') {
+    const best = featured(step.next.programme);
+    world.venues[place.slug] = {
+      ...place,
+      loyaltySummary: step.next.programme.enabled && best
+        ? { stampsNeeded: best.cost, rewardTitle: best.title }
+        : null,
+    };
+  }
+  return { venue: step.next, effect: step.effect, memberId: step.memberId };
 }
 
 export function venueBySlug(world: World, slug: string): VenuePublic {
