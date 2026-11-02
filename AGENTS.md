@@ -10,6 +10,7 @@ Clarke is building Ozaa, a QR table app for restaurants in Ghana. He is a **begi
 2. `design/brand.md` and `design/tokens.json`: how it must look and sound.
 3. `api/openapi.yaml` and `api/MOCKS.md`: the fixed contract and the mock.
 4. `agent-skills/INDEX.md`: which skill to use when. Open the skill's `SKILL.md` before doing that kind of work.
+5. For any UI work, follow `.cursor/skills/apple-design-rn/SKILL.md` (mirrored at `.claude/skills/apple-design-rn/`).
 
 **Order of precedence when sources disagree:** Clarke's decisions (BUILD.md section 4) and `design/brand.md` > `api/openapi.yaml` > Expo docs for the installed SDK > pstack skills > the other skills.
 
