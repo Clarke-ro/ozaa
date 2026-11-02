@@ -8,7 +8,7 @@ const config: ExpoConfig = {
   version: '1.0.0',
   orientation: 'portrait',
   icon: './assets/images/icon.png',
-  userInterfaceStyle: 'light',
+  userInterfaceStyle: 'automatic',
   ios: { supportsTablet: false, bundleIdentifier: 'app.ozaa.owner' },
   android: {
     package: 'app.ozaa.owner',

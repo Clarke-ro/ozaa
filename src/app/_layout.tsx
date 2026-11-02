@@ -8,6 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
 import { I18nextProvider, useTranslation } from 'react-i18next';
 import i18n from '@/i18n';
 import { applyTextDirection, textDirection } from '@/i18n/direction';
@@ -56,6 +57,8 @@ export default function RootLayout() {
           >
             <SafeAreaProvider>
               <ThemeProvider theme={ozaaTheme}>
+                {/* Guest pages are always light; the owner chrome sets its own style. */}
+                <StatusBar style="dark" />
                 <Stack screenOptions={{ headerShown: false }} />
               </ThemeProvider>
             </SafeAreaProvider>

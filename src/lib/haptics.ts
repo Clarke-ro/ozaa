@@ -1,38 +1,34 @@
 import { Platform } from 'react-native';
 import * as Haptics from 'expo-haptics';
 
-export async function hapticSelection(): Promise<void> {
+// Every helper is a no-op on the web and on phones without a haptic engine.
+async function run(play: () => Promise<void>): Promise<void> {
   if (Platform.OS === 'web') return;
   try {
-    await Haptics.selectionAsync();
+    await play();
   } catch {
-    // Graceful no-op on unsupported hardware
+    // No haptic engine: nothing to do.
   }
 }
 
-export async function hapticSuccess(): Promise<void> {
-  if (Platform.OS === 'web') return;
-  try {
-    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-  } catch {
-    // Graceful no-op
-  }
-}
+/** Picker, segment and tab changes. */
+export const hapticSelection = () => run(() => Haptics.selectionAsync());
 
-export async function hapticWarning(): Promise<void> {
-  if (Platform.OS === 'web') return;
-  try {
-    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-  } catch {
-    // Graceful no-op
-  }
-}
+/** Toggles, drops and the main button on a screen. */
+export const hapticImpactLight = () =>
+  run(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light));
 
-export async function hapticImpact(): Promise<void> {
-  if (Platform.OS === 'web') return;
-  try {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-  } catch {
-    // Graceful no-op
-  }
-}
+export const hapticImpact = () =>
+  run(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium));
+
+/** A save or scan went through. */
+export const hapticSuccess = () =>
+  run(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success));
+
+/** Something needs the user's attention before it can go on. */
+export const hapticWarning = () =>
+  run(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning));
+
+/** A save or scan failed. */
+export const hapticError = () =>
+  run(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error));
