@@ -7,16 +7,17 @@ import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
+import { fontFamily, useTheme } from '@/ui/theme';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
-import { ChipRow, ConfirmDialog, DeskTabs, EmptyCard } from '../../kit';
+import { FilterChips } from '@/ui/FilterChips';
+import { ConfirmDialog, EmptyCard } from '../../kit';
+import { DISH_FILTERS, filterCounts, filterDishes, type DishFilter } from './deskFilter';
 import { MenuItemRow } from './MenuItemRow';
 import { DishEditor } from './DishEditor';
 import { SectionEditor } from './SectionEditor';
 import { SectionsSheet } from './SectionsSheet';
 import { useMenuDesk } from './useMenuDesk';
 
-type Kind = 'food' | 'drinks';
 type Pending =
   | { kind: 'item'; item: MenuItem }
   | { kind: 'section'; section: MenuCategory }
@@ -27,7 +28,7 @@ export function MenuScreen() {
   const { t } = useTranslation();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const desk = useMenuDesk(venueId);
-  const [kind, setKind] = useState<Kind>('food');
+  const [status, setStatus] = useState<DishFilter>('all');
   const [section, setSection] = useState('all');
   const [query, setQuery] = useState('');
   const [editingItem, setEditingItem] = useState<MenuItem | null | undefined>(undefined);
@@ -36,31 +37,16 @@ export function MenuScreen() {
   const [pending, setPending] = useState<Pending | null>(null);
 
   const all = desk.menu.data?.items ?? [];
-  const sections = desk.sectionsOf(kind);
+  // Food sections first, then drinks, each in the order guests see them.
+  const sections = [...desk.sectionsOf('food'), ...desk.sectionsOf('drinks')];
   const sectionName = (id: string) => sections.find((s) => s.id === id)?.name.en;
-  const inKind = (item: MenuItem) =>
-    (desk.menu.data?.categories ?? []).some((c) => c.id === item.categoryId && c.kind === kind);
-
-  // Dishes in guest order: by section position, then as listed.
-  const q = query.trim().toLowerCase();
-  const order = new Map(sections.map((s, i) => [s.id, i]));
-  const shown = all
-    .filter((item) => inKind(item) && (section === 'all' || item.categoryId === section))
-    .filter(
-      (item) =>
-        !q ||
-        item.name.en.toLowerCase().includes(q) ||
-        item.description?.en?.toLowerCase().includes(q),
-    )
-    .sort((a, b) => (order.get(a.categoryId) ?? 0) - (order.get(b.categoryId) ?? 0));
-
-  const counts = Object.fromEntries(
-    sections.map((s) => [s.id, all.filter((i) => i.categoryId === s.id).length]),
+  const shown = filterDishes(
+    all,
+    sections.map((s) => s.id),
+    { status, section, query },
   );
-  const count = (k: Kind) =>
-    all.filter((i) =>
-      (desk.menu.data?.categories ?? []).some((c) => c.id === i.categoryId && c.kind === k),
-    ).length;
+  const typeCounts = filterCounts(all);
+  const sectionCount = (id: string) => all.filter((i) => i.categoryId === id).length;
 
   const confirm = () => {
     if (!pending) return;
@@ -90,65 +76,66 @@ export function MenuScreen() {
         error={desk.menu.isError || desk.venue.isError}
         onRetry={() => void desk.menu.refetch()}
       >
-        <DeskTabs
-          value={kind}
-          onChange={(k) => {
-            setKind(k);
-            setSection('all');
-          }}
-          tabs={[
-            { id: 'food', label: t('ownerMenu.food'), count: count('food') },
-            { id: 'drinks', label: t('ownerMenu.drinks'), count: count('drinks') },
-          ]}
-        />
-        <View style={[styles.search, { borderColor: theme.line, backgroundColor: theme.surface }]}>
-          <Search size={18} color={theme.muted} />
-          <TextInput
-            value={query}
-            onChangeText={setQuery}
-            placeholder={t('ownerMenu.search')}
-            placeholderTextColor={theme.meta}
-            accessibilityLabel={t('ownerMenu.search')}
-            returnKeyType="search"
-            style={[styles.input, { color: theme.text }]}
-          />
-          {query ? (
+        {/* Three slim rows: search, what kind of dishes, which section. */}
+        <View style={styles.controls}>
+          <View style={styles.searchRow}>
+            <View style={[styles.search, { backgroundColor: theme.surface }]}>
+              <Search size={18} color={theme.muted} />
+              <TextInput
+                value={query}
+                onChangeText={setQuery}
+                placeholder={t('ownerMenu.search')}
+                placeholderTextColor={theme.meta}
+                accessibilityLabel={t('ownerMenu.search')}
+                returnKeyType="search"
+                style={[styles.input, { color: theme.text }]}
+              />
+              {query ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={t('ownerFeedback.clear')}
+                  onPress={() => setQuery('')}
+                  hitSlop={tokens.space[2]}
+                >
+                  <X size={18} color={theme.muted} />
+                </Pressable>
+              ) : null}
+            </View>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={t('ownerFeedback.clear')}
-              onPress={() => setQuery('')}
-              style={styles.clear}
-            >
-              <X size={18} color={theme.muted} />
-            </Pressable>
-          ) : null}
-        </View>
-        <View style={styles.toolbar}>
-          <View style={styles.flex}>
-            <ChipRow
-              value={section}
-              onChange={setSection}
-              items={[
-                { id: 'all', label: t('ownerMenu.allSections') },
-                ...sections.map((s) => ({
-                  id: s.id,
-                  label: s.hidden ? `${s.name.en} (${t('ownerMenu.hidden')})` : s.name.en,
-                })),
+              accessibilityLabel={t('ownerMenu.sections')}
+              onPress={() => setSectionsOpen(true)}
+              style={({ pressed }) => [
+                styles.iconBtn,
+                { backgroundColor: pressed ? theme.wash : theme.surface },
               ]}
-            />
+            >
+              <ListOrdered size={20} color={theme.ink} />
+            </Pressable>
           </View>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t('ownerMenu.sections')}
-            onPress={() => setSectionsOpen(true)}
-            style={({ pressed }) => [
-              styles.sectionsBtn,
-              { borderColor: theme.line, backgroundColor: pressed ? theme.wash : theme.surface },
+          <FilterChips<DishFilter>
+            label={t('ownerMenu.filterLabel')}
+            value={status}
+            onChange={setStatus}
+            items={DISH_FILTERS.map((id) => ({
+              id,
+              label: t(`ownerMenu.filter.${id}`),
+              count: typeCounts[id],
+            }))}
+          />
+          <FilterChips
+            label={t('ownerMenu.sections')}
+            value={section}
+            onChange={setSection}
+            items={[
+              { id: 'all', label: t('ownerMenu.allSections') },
+              ...sections.map((s) => ({
+                id: s.id,
+                label: s.hidden ? `${s.name.en} (${t('ownerMenu.hidden')})` : s.name.en,
+                count: sectionCount(s.id),
+              })),
             ]}
-          >
-            <ListOrdered size={18} color={theme.ink} />
-            <Text variant="body-strong">{t('ownerMenu.sections')}</Text>
-          </Pressable>
+          />
         </View>
 
         {sections.length === 0 ? (
@@ -199,7 +186,6 @@ export function MenuScreen() {
                   section={section === 'all' ? sectionName(item.categoryId) : undefined}
                   onToggle={() => desk.toggle.mutate(item)}
                   onEdit={() => setEditingItem(item)}
-                  onDelete={() => setPending({ kind: 'item', item })}
                 />
               ))}
             </View>
@@ -211,9 +197,15 @@ export function MenuScreen() {
         visible={sectionsOpen}
         onClose={() => setSectionsOpen(false)}
         sections={sections}
-        counts={counts}
+        counts={Object.fromEntries(sections.map((x) => [x.id, sectionCount(x.id)]))}
         busy={desk.move.isPending}
-        onMove={(id, direction) => desk.move.mutate({ id, direction, kind })}
+        onMove={(id, direction) =>
+          desk.move.mutate({
+            id,
+            direction,
+            kind: sections.find((x) => x.id === id)?.kind ?? 'food',
+          })
+        }
         onEdit={(s) => setEditingSection(s)}
         onDelete={(s) => setPending({ kind: 'section', section: s })}
         onAdd={() => setEditingSection(null)}
@@ -223,7 +215,8 @@ export function MenuScreen() {
         <SectionEditor
           key={editingSection?.id ?? 'new-section'}
           section={editingSection}
-          kind={kind}
+          // A new section starts as food; an existing one keeps its own kind.
+          kind={editingSection?.kind ?? 'food'}
           venueId={venueId}
           onClose={() => setEditingSection(undefined)}
           onSaved={() => {
@@ -241,6 +234,14 @@ export function MenuScreen() {
           venueId={venueId}
           currency={desk.currency}
           onClose={() => setEditingItem(undefined)}
+          onDelete={
+            editingItem
+              ? () => {
+                  setPending({ kind: 'item', item: editingItem });
+                  setEditingItem(undefined);
+                }
+              : undefined
+          }
           onSaved={() => {
             setEditingItem(undefined);
             void desk.refresh();
@@ -261,7 +262,7 @@ export function MenuScreen() {
             : pending?.kind === 'section'
               ? t('ownerMenu.confirmDeleteSection', {
                   name: pending.section.name.en,
-                  count: counts[pending.section.id] ?? 0,
+                  count: sectionCount(pending.section.id),
                 })
               : t('ownerMenu.confirmSoldOutBody')
         }
@@ -275,31 +276,31 @@ export function MenuScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  controls: { gap: tokens.space[2] },
+  searchRow: { flexDirection: 'row', gap: tokens.space[2] },
   search: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[2],
-    minHeight: 48,
-    paddingLeft: tokens.space[3],
-    borderWidth: 1,
-    borderRadius: tokens.radius.md,
-  },
-  input: { flex: 1, minHeight: 46, fontFamily: 'Inter_400', fontSize: 16 },
-  clear: {
-    width: tokens.touchTarget,
-    height: tokens.touchTarget,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  toolbar: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
-  sectionsBtn: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: tokens.space[2],
     minHeight: tokens.touchTarget,
     paddingHorizontal: tokens.space[3],
-    borderWidth: 1,
     borderRadius: tokens.radius.md,
+    boxShadow: tokens.shadow.card,
+  },
+  input: {
+    flex: 1,
+    minHeight: tokens.touchTarget,
+    fontFamily: fontFamily.regular,
+    fontSize: tokens.type.body.size,
+  },
+  iconBtn: {
+    width: tokens.touchTarget,
+    height: tokens.touchTarget,
+    borderRadius: tokens.radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: tokens.shadow.card,
   },
   bulk: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: tokens.space[1] },
   bulkBtn: { paddingHorizontal: tokens.space[2] },

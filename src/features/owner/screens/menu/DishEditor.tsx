@@ -30,6 +30,7 @@ export function DishEditor({
   currency,
   onClose,
   onSaved,
+  onDelete,
 }: {
   item: MenuItem | null;
   sections: MenuCategory[];
@@ -38,6 +39,8 @@ export function DishEditor({
   currency: string;
   onClose: () => void;
   onSaved: () => void;
+  /** Shown for an existing dish; the screen asks to confirm. */
+  onDelete?: () => void;
 }) {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -185,6 +188,10 @@ export function DishEditor({
         placeholder="520"
         keyboardType="number-pad"
       />
+
+      {item && onDelete ? (
+        <Button label={t('ownerMenu.deleteDish')} tone="destructive" onPress={onDelete} />
+      ) : null}
     </ModalSheet>
   );
 }

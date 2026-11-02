@@ -889,7 +889,16 @@
       "sesame": "Sesame",
       "soya": "Soya",
       "sulphites": "Sulphites"
-    }
+    },
+    "filterLabel": "Show dishes",
+    "filter": {
+      "all": "All",
+      "on": "On the menu",
+      "off": "Sold out",
+      "popular": "Popular",
+      "no_photo": "No photo"
+    },
+    "deleteDish": "Delete dish"
   },
   "ownerBranding": {
     "lead": "How your page looks to guests: colour, words, photos and the order of the buttons.",
