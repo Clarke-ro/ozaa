@@ -580,7 +580,7 @@ Work top to bottom. Each box is one small PR that ends in a verifiable state (ps
 ### Phase 4: Reviews (product 4)
 
 - [x] 4.1 Written review: stars, "what stood out" chips and text. 4–5 stars offer "Share on Google" (the venue's Google review link). 1–3 stars go privately to the owner. Render: `review.png`.
-- [ ] 4.2 Video review: consent text first, front camera, 15–30 s (Done unlocks at 15 s), retake, upload with progress through a pre-signed URL, and keep the delete token. Render: `review-record.png`. Check web recording (section 5, Camera).
+- [x] 4.2 ~~Video review~~ **Dropped.** Video reviews were removed from the contract (`c02efe4`), so there is nothing to build.
 - [x] 4.3 Owner moderation: To check, Featured and Hidden tabs, with Hide and Feature buttons and the private-reply hint for low ratings. Featured videos become guest stories. Render: `owner-reviews.png`.
 - [ ] 4.4 Full polish pass:
   - `cursor-team-kit-deslop`, `impeccable`, `ui-skills-improve-ui`
