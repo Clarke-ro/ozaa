@@ -50,14 +50,13 @@ export function OwnerPage({
   const theme = useTheme();
   const gutter = useGutter();
   const insets = useSafeAreaInsets();
-  const home = usePathname() === '/owner';
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={[styles.fill, { backgroundColor: theme.bg }]}
     >
-      {/* Today has the brand bar above it; every other page puts its own title in the header row instead. */}
-      {home ? null : (
+      {/* Every page puts Back, its title and its one action in the header row. Today has its own panel. */}
+      {
         <View
           style={[
             styles.bar,
@@ -82,20 +81,12 @@ export function OwnerPage({
             {action ? <View style={styles.action}>{action}</View> : null}
           </View>
         </View>
-      )}
+      }
       <ScrollView
         contentContainerStyle={[styles.page, { paddingHorizontal: gutter }]}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
       >
-        {home ? (
-          <View style={styles.headRow}>
-            <Text variant="display-m" accessibilityRole="header" style={styles.title}>
-              {title}
-            </Text>
-            {action ? <View style={styles.action}>{action}</View> : null}
-          </View>
-        ) : null}
         {subtitle ? (
           <Text variant="body" style={{ color: theme.muted }}>
             {subtitle}

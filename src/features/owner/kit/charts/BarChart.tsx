@@ -23,6 +23,13 @@ export function BarChart({
   height?: number;
 }) {
   const theme = useTheme();
+  const c = {
+    bar: theme.line,
+    active: theme.fill,
+    text: theme.text,
+    muted: theme.muted,
+    guide: theme.line,
+  };
   const max = Math.max(0, ...bars.map((b) => b.value));
   const peak = bars.findIndex((b) => b.value === max);
   const [picked, setPicked] = useState<number | null>(null);
@@ -35,17 +42,17 @@ export function BarChart({
   return (
     <View accessible accessibilityRole="image" accessibilityLabel={spoken} style={styles.wrap}>
       <View style={styles.readout}>
-        <Text variant="caption" style={{ color: theme.muted }}>
+        <Text variant="caption" style={{ color: c.muted }}>
           {current?.label ?? ''}
         </Text>
-        <Text variant="title" style={styles.num}>
+        <Text variant="title" style={[styles.num, { color: c.text }]}>
           {current ? format(current.value) : ''}
         </Text>
       </View>
       <View style={[styles.plot, { height }]}>
         {/* Recessive guides at half and full height. */}
-        <View style={[styles.guide, { top: 0, backgroundColor: theme.line }]} />
-        <View style={[styles.guide, { top: height / 2, backgroundColor: theme.line }]} />
+        <View style={[styles.guide, { top: 0, backgroundColor: c.guide }]} />
+        <View style={[styles.guide, { top: height / 2, backgroundColor: c.guide }]} />
         {bars.map((bar, index) => {
           const h =
             max === 0 || bar.value === 0
@@ -60,20 +67,18 @@ export function BarChart({
               importantForAccessibility="no"
               style={styles.col}
             >
-              <View
-                style={[styles.bar, { height: h, backgroundColor: on ? theme.fill : theme.line }]}
-              />
+              <View style={[styles.bar, { height: h, backgroundColor: on ? c.active : c.bar }]} />
             </Pressable>
           );
         })}
       </View>
-      <View style={[styles.axis, { borderTopColor: theme.text }]}>
+      <View style={[styles.axis, { borderTopColor: c.guide }]}>
         {bars.map((bar, index) => (
           <Text
             key={`${bar.label}-${index}`}
             variant="caption"
             numberOfLines={1}
-            style={[styles.tick, { color: index === active ? theme.text : theme.muted }]}
+            style={[styles.tick, { color: index === active ? c.text : c.muted }]}
           >
             {index % every === 0 ? bar.label : ''}
           </Text>

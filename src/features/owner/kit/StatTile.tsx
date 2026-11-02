@@ -1,43 +1,60 @@
 import type { LucideIcon } from 'lucide-react-native';
+import { TrendingDown, TrendingUp } from 'lucide-react-native';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 
-/** Bordered number tile ("Live orders 4"). Tapping opens the screen behind the number. */
+/**
+ * A metric card: label top left, icon in a circle top right, the number, and one short line under it.
+ * `trend` colours that line and adds an arrow, so up and down never rest on colour alone.
+ * Tapping opens the screen behind the number.
+ */
 export function StatTile({
   label,
   value,
   note,
   icon: Icon,
   tone,
+  trend,
   onPress,
 }: {
   label: string;
   value: string;
   note?: string;
   icon?: LucideIcon;
-  /** `alert` draws attention to a number that needs action, with a red border as well as the icon. */
+  /** `alert` marks a number that needs action now, with a red edge and icon as well as colour. */
   tone?: 'alert';
+  trend?: 'up' | 'down';
   onPress?: () => void;
 }) {
   const theme = useTheme();
   const alert = tone === 'alert';
+  const noteInk =
+    trend === 'up' ? theme.success : trend === 'down' || alert ? theme.error : theme.muted;
+  const Arrow = trend === 'up' ? TrendingUp : trend === 'down' ? TrendingDown : null;
   const body = (
     <>
       <View style={styles.head}>
-        {Icon ? <Icon size={18} color={alert ? theme.error : theme.ink} /> : null}
         <Text variant="body" style={[styles.label, { color: theme.muted }]} numberOfLines={2}>
           {label}
         </Text>
+        {Icon ? (
+          <View style={[styles.icon, { backgroundColor: alert ? theme.errorTint : theme.wash }]}>
+            <Icon size={16} color={alert ? theme.error : theme.text} />
+          </View>
+        ) : null}
       </View>
       <Text variant="display-m" style={styles.value} numberOfLines={1} adjustsFontSizeToFit>
         {value}
       </Text>
       {note ? (
-        <Text variant="caption" style={{ color: theme.muted }}>
-          {note}
-        </Text>
+        <View style={styles.note}>
+          <Text variant="caption" style={{ color: noteInk }} numberOfLines={1}>
+            {note}
+          </Text>
+          {Arrow ? <Arrow size={14} color={noteInk} /> : null}
+        </View>
       ) : null}
     </>
   );
@@ -55,7 +72,10 @@ export function StatTile({
       accessibilityRole="button"
       accessibilityLabel={`${label}: ${value}${note ? `, ${note}` : ''}`}
       onPress={onPress}
-      style={({ pressed }) => [look, pressed && { backgroundColor: theme.wash }]}
+      style={({ pressed }) => [
+        look,
+        pressed && { backgroundColor: theme.wash, transform: [{ scale: 0.98 }] },
+      ]}
     >
       {body}
     </Pressable>
@@ -64,13 +84,22 @@ export function StatTile({
 
 const styles = StyleSheet.create({
   tile: {
-    gap: tokens.space[2],
+    gap: tokens.space[3],
     padding: tokens.space[4],
     borderRadius: tokens.radius.lg,
     borderCurve: 'continuous',
-    minHeight: 104,
+    minHeight: 120,
+    justifyContent: 'space-between',
   },
-  head: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
+  head: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.space[2] },
   label: { flex: 1 },
+  icon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   value: { fontVariant: ['tabular-nums'] },
+  note: { flexDirection: 'row', alignItems: 'center', gap: 4 },
 });

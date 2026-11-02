@@ -14,6 +14,7 @@ import { ModalSheet } from '../kit';
 import { ownerKeys } from '../data/keys';
 
 /** Shows the active location and lets owners with more than one switch between them. */
+/** `chip` sits in the Today panel; `block` heads the sidebar on wide screens. */
 export function LocationSwitcher({ variant }: { variant: 'chip' | 'block' }) {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -41,7 +42,11 @@ export function LocationSwitcher({ variant }: { variant: 'chip' | 'block' }) {
         onPress={() => setOpen(true)}
         style={({ pressed }) => [
           block ? styles.block : styles.chip,
-          { borderColor: theme.line, backgroundColor: pressed ? theme.line : theme.wash },
+          // The chip sits on the grey Today panel, so it is the white surface; the sidebar block is grey.
+          {
+            borderColor: theme.line,
+            backgroundColor: pressed ? theme.line : block ? theme.wash : theme.surface,
+          },
         ]}
       >
         <Building2 size={16} color={theme.text} />

@@ -644,7 +644,19 @@
     "ratingOf_one": "From 1 rating",
     "ratingOf_other": "From {{count}} ratings",
     "week": "Last 7 days",
-    "allInsights": "All insights"
+    "allInsights": "All insights",
+    "rangeCaption": {
+      "7d": "Sales in the last 7 days",
+      "30d": "Sales in the last 30 days"
+    },
+    "callsA11y_one": "1 waiter call waiting",
+    "callsA11y_other": "{{count}} waiter calls waiting",
+    "notes": {
+      "orders": "In the kitchen now",
+      "tables": "Seated now",
+      "callsWaiting": "Needs someone now",
+      "callsQuiet": "All quiet"
+    }
   },
   "ownerTables": {
     "lead": "Each table gets its own QR code. Guests scan it to see the menu, order and pay.",

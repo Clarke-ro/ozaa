@@ -1,5 +1,5 @@
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
-import { useRouter } from 'expo-router';
+import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { useRouter, type Href } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
@@ -11,147 +11,167 @@ import {
   ScanLine,
   Star,
   UtensilsCrossed,
+  type LucideIcon,
 } from 'lucide-react-native';
 import { api } from '@/lib/api';
-import { pesewas } from '@/lib/brand';
-import { formatMoney } from '@/lib/money';
-import { tokens } from '@/theme/tokens';
 import { useOwnerSession } from '@/features/session';
-import { DeskWait, OwnerPage, SkeletonBlock } from '../../chrome/OwnerPage';
+import { tokens } from '@/theme/tokens';
+import { Text } from '@/ui/Text';
+import { useTheme } from '@/ui/theme';
+import { DeskWait, SkeletonBlock } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
-import { BigStat, QuickAction, StatTile } from '../../kit';
-import { salesLine } from '../../desk/dashboardModel';
+import { StatTile } from '../../kit';
 import { AlertsCard } from './AlertsCard';
 import { LiveOrders } from './LiveOrders';
-import { TrendsSection } from './TrendsSection';
+import { OverviewPanel } from './OverviewPanel';
 
 // Live data refreshes every few seconds while the screen is open; the kitchen moves fast.
 const LIVE_MS = 5000;
 
+const SHORTCUTS: { key: string; icon: LucideIcon; href: string }[] = [
+  { key: 'scan', icon: ScanLine, href: '/owner/scan' },
+  { key: 'tables', icon: QrCode, href: '/owner/tables' },
+  { key: 'menu', icon: UtensilsCrossed, href: '/owner/menu' },
+  { key: 'feedback', icon: Inbox, href: '/owner/feedback' },
+];
+
+/** Today: the overview panel, what needs you, four live numbers, shortcuts, and the open tickets. */
 export function DashboardScreen() {
+  const theme = useTheme();
   const { t } = useTranslation();
   const router = useRouter();
   const { width, fontScale } = useWindowDimensions();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
-  const firstName = useOwnerSession((state) => state.firstName);
-
   const desk = useQuery({
     queryKey: ownerKeys.dashboard(venueId),
     queryFn: () => api.ownerGetDashboard(venueId),
     enabled: Boolean(venueId),
     refetchInterval: LIVE_MS,
   });
-
   const d = desk.data;
-  const line = d ? salesLine(d) : null;
-  const sales = d ? formatMoney(pesewas(d.salesTodayPesewas), d.currency) : '';
-  // Two stat columns on phones, four when there is room; one column at the largest text sizes.
-  const statBasis = fontScale > 1.5 ? '100%' : width >= 700 ? '23%' : '47%';
+  // Two columns on phones, four on wide screens, one at the largest text sizes.
+  const basis = fontScale > 1.5 ? '100%' : width >= 700 ? '23%' : '47%';
+  const gutter = width >= 768 ? tokens.space[6] : tokens.space[4];
 
   return (
-    <OwnerPage
-      title={firstName ? t('ownerDash.greeting', { name: firstName }) : t('owner.dashboard')}
-    >
+    <ScrollView style={{ backgroundColor: theme.bg }} contentContainerStyle={styles.scroll}>
       <DeskWait
         loading={desk.isLoading}
         error={desk.isError}
         onRetry={() => void desk.refetch()}
-        skeleton={
-          <>
-            <SkeletonBlock height={88} />
-            <SkeletonBlock height={120} />
-            <SkeletonBlock height={160} />
-          </>
-        }
+        skeleton={<SkeletonBlock height={360} />}
       >
-        {d && line ? (
-          <View style={styles.stack}>
-            <BigStat
-              label={t('ownerDash.salesToday')}
-              value={sales}
-              note={t(line.key, { amount: sales, percent: line.percent ?? 0 })}
-              deltaTone={line.tone}
-            />
-
-            <AlertsCard alerts={d.alerts} />
-
-            <View style={styles.grid}>
-              <View style={{ flexBasis: statBasis, flexGrow: 1 }}>
-                <StatTile
-                  label={t('owner.liveOrders')}
-                  value={String(d.liveOrders)}
-                  icon={ClipboardList}
-                  onPress={() => router.push('/owner/orders')}
-                />
+        {d ? (
+          <>
+            <OverviewPanel dashboard={d} />
+            <View style={[styles.body, { paddingHorizontal: gutter }]}>
+              <AlertsCard alerts={d.alerts} />
+              <View style={styles.grid}>
+                <View style={{ flexBasis: basis, flexGrow: 1 }}>
+                  <StatTile
+                    label={t('owner.liveOrders')}
+                    value={String(d.liveOrders)}
+                    note={t('ownerDash.notes.orders')}
+                    icon={ClipboardList}
+                    onPress={() => router.push('/owner/orders')}
+                  />
+                </View>
+                <View style={{ flexBasis: basis, flexGrow: 1 }}>
+                  <StatTile
+                    label={t('owner.openTables')}
+                    value={String(d.openTables)}
+                    note={t('ownerDash.notes.tables')}
+                    icon={Grid2x2}
+                    onPress={() => router.push('/owner/floor')}
+                  />
+                </View>
+                <View style={{ flexBasis: basis, flexGrow: 1 }}>
+                  <StatTile
+                    label={t('owner.waiterCalls')}
+                    value={String(d.openCalls)}
+                    note={
+                      d.openCalls > 0
+                        ? t('ownerDash.notes.callsWaiting')
+                        : t('ownerDash.notes.callsQuiet')
+                    }
+                    icon={Bell}
+                    tone={d.openCalls > 0 ? 'alert' : undefined}
+                    onPress={() => router.push('/owner/calls')}
+                  />
+                </View>
+                <View style={{ flexBasis: basis, flexGrow: 1 }}>
+                  <StatTile
+                    label={t('owner.rating')}
+                    value={d.ratingAverage == null ? '–' : d.ratingAverage.toFixed(1)}
+                    note={
+                      d.ratingAverage == null
+                        ? t('owner.noRating')
+                        : t('ownerDash.ratingOf', { count: d.ratingCount })
+                    }
+                    icon={Star}
+                    onPress={() => router.push('/owner/reviews')}
+                  />
+                </View>
               </View>
-              <View style={{ flexBasis: statBasis, flexGrow: 1 }}>
-                <StatTile
-                  label={t('owner.openTables')}
-                  value={String(d.openTables)}
-                  icon={Grid2x2}
-                  onPress={() => router.push('/owner/floor')}
-                />
+              <View style={styles.shortcuts}>
+                {SHORTCUTS.map(({ key, icon: Icon, href }) => (
+                  <Pressable
+                    key={key}
+                    accessibilityRole="button"
+                    accessibilityLabel={t(`ownerDash.quick.${key}`)}
+                    onPress={() => router.push(href as Href)}
+                    style={({ pressed }) => [
+                      styles.shortcut,
+                      {
+                        borderColor: theme.line,
+                        backgroundColor: pressed ? theme.wash : theme.surface,
+                      },
+                    ]}
+                  >
+                    <View style={[styles.shortcutIcon, { backgroundColor: theme.tint }]}>
+                      <Icon size={20} color={theme.ink} />
+                    </View>
+                    <Text variant="caption" numberOfLines={1} style={styles.center}>
+                      {t(`ownerDash.quick.${key}`)}
+                    </Text>
+                  </Pressable>
+                ))}
               </View>
-              <View style={{ flexBasis: statBasis, flexGrow: 1 }}>
-                <StatTile
-                  label={t('owner.waiterCalls')}
-                  value={String(d.openCalls)}
-                  icon={Bell}
-                  tone={d.openCalls > 0 ? 'alert' : undefined}
-                  onPress={() => router.push('/owner/calls')}
-                />
-              </View>
-              <View style={{ flexBasis: statBasis, flexGrow: 1 }}>
-                <StatTile
-                  label={t('owner.rating')}
-                  value={d.ratingAverage == null ? '–' : d.ratingAverage.toFixed(1)}
-                  note={
-                    d.ratingAverage == null
-                      ? t('owner.noRating')
-                      : t('ownerDash.ratingOf', {
-                          avg: d.ratingAverage.toFixed(1),
-                          count: d.ratingCount,
-                        })
-                  }
-                  icon={Star}
-                  onPress={() => router.push('/owner/reviews')}
-                />
-              </View>
+              <LiveOrders venueId={venueId} />
             </View>
-
-            <View style={styles.grid}>
-              <QuickAction
-                label={t('ownerDash.quick.scan')}
-                icon={ScanLine}
-                onPress={() => router.push('/owner/scan')}
-              />
-              <QuickAction
-                label={t('ownerDash.quick.tables')}
-                icon={QrCode}
-                onPress={() => router.push('/owner/tables')}
-              />
-              <QuickAction
-                label={t('ownerDash.quick.menu')}
-                icon={UtensilsCrossed}
-                onPress={() => router.push('/owner/menu')}
-              />
-              <QuickAction
-                label={t('ownerDash.quick.feedback')}
-                icon={Inbox}
-                onPress={() => router.push('/owner/feedback')}
-              />
-            </View>
-
-            <LiveOrders venueId={venueId} />
-            <TrendsSection venueId={venueId} currency={d.currency} />
-          </View>
+          </>
         ) : null}
       </DeskWait>
-    </OwnerPage>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  stack: { gap: tokens.space[6] },
+  scroll: { paddingBottom: tokens.space[16] + tokens.space[8] },
+  body: {
+    gap: tokens.space[6],
+    paddingTop: tokens.space[5],
+    width: '100%',
+    maxWidth: 880,
+    alignSelf: 'center',
+  },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.space[3] },
+  shortcuts: { flexDirection: 'row', gap: tokens.space[2] },
+  shortcut: {
+    flex: 1,
+    alignItems: 'center',
+    gap: tokens.space[2],
+    paddingVertical: tokens.space[3],
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: tokens.radius.lg,
+    borderCurve: 'continuous',
+  },
+  shortcutIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  center: { textAlign: 'center' },
 });

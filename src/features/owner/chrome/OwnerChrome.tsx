@@ -34,32 +34,10 @@ export function OwnerChrome({ children }: { children: ReactNode }) {
       style={[styles.shell, { backgroundColor: theme.bg, flexDirection: wide ? 'row' : 'column' }]}
     >
       <StatusBar style={theme.scheme === 'dark' ? 'light' : 'dark'} />
-      {wide ? <Sidebar /> : path === '/owner' ? <TopBar /> : null}
+      {wide ? <Sidebar /> : null}
       <View style={styles.main}>{canOpen(role, path) ? children : <Blocked />}</View>
       {wide ? null : <TabBar />}
       <ToastHost bottom={tabBarSpace} />
-    </View>
-  );
-}
-
-function TopBar() {
-  const theme = useTheme();
-  const insets = useSafeAreaInsets();
-  return (
-    <View
-      style={[
-        styles.top,
-        {
-          paddingTop: insets.top + tokens.space[1],
-          borderBottomColor: theme.line,
-          backgroundColor: theme.bg,
-        },
-      ]}
-    >
-      <Text variant="display-m" accessibilityRole="header" style={styles.word}>
-        Ozaa
-      </Text>
-      <LocationSwitcher variant="chip" />
     </View>
   );
 }

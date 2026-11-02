@@ -1,17 +1,13 @@
-export { BigStat } from './BigStat';
 export { ChipRow } from './ChipRow';
 export { CodeTile } from './CodeTile';
 export { ConfirmDialog } from './ConfirmDialog';
 export { DeskCard } from './DeskCard';
-export { DeskGrid } from './DeskGrid';
 export { DeskTabs, type DeskTab } from './DeskTabs';
 export { EmptyCard } from './EmptyCard';
 export { Field } from './Field';
 export { IconTile } from './IconTile';
-export { ListRow } from './ListRow';
 export { ModalSheet } from './ModalSheet';
 export { OzaaMark } from './OzaaMark';
-export { QuickAction } from './QuickAction';
 export { SectionLabel } from './SectionLabel';
 export { StatTile } from './StatTile';
 export { StatusPill, type PillTone } from './StatusPill';
