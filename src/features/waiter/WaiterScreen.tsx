@@ -1,75 +1,182 @@
-import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import * as Crypto from 'expo-crypto';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { Check } from 'lucide-react-native';
 import { api } from '@/lib/api';
 import type { WaiterReason } from '@/lib/api/types';
+import { hapticSuccess } from '@/lib/haptics';
+import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
 import { PageHeader } from '@/ui/PageHeader';
 import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
+import { fontFamily, useTheme } from '@/ui/theme';
 import { useGuestSession } from '@/features/session';
+import { useVenue } from '@/features/venue';
+import { useMyCalls } from './callStore';
+import { CallStatusCard } from './CallStatusCard';
+import { REASON_ICON, REASONS } from './reasonIcon';
 
-const REASONS: WaiterReason[] = ['water', 'bill', 'cutlery', 'order_more', 'clean_table', 'other'];
+// The note travels with the call to the waiter's phone; keep it to a line or two.
+const NOTE_MAX = 140;
+// "Waiting 2 minutes" only needs to move every half minute.
+const TICK_MS = 30_000;
 
+/**
+ * Call a waiter: pick what you need (one or more), add a note if you like, send. The request
+ * shows its live status here: waiting, who is on the way, then done.
+ */
 export function WaiterScreen({ slug }: { slug: string }) {
   const { t } = useTranslation();
   const theme = useTheme();
+  const venue = useVenue(slug);
   const table = useGuestSession((state) => state.tableCode);
-  const [picked, setPicked] = useState<WaiterReason[]>(['water']);
-  const [callId, setCallId] = useState<string | null>(null);
-  const call = useQuery({
-    queryKey: ['waiter', callId],
-    queryFn: () => api.getWaiterCall(callId ?? ''),
-    enabled: Boolean(callId),
-    refetchInterval: 3000,
-  });
+  const myCalls = useMyCalls((s) => s.ids);
+  const remember = useMyCalls((s) => s.add);
+  const [picked, setPicked] = useState<WaiterReason[]>([]);
+  const [note, setNote] = useState('');
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), TICK_MS);
+    return () => clearInterval(id);
+  }, []);
+
+  // One open call per table (BUILD.md 1.10): the first reason is the call, the others ride in
+  // its note so the waiter sees everything the table asked for in one place.
   const send = useMutation({
-    mutationFn: (reason: WaiterReason) => api.callWaiter({ reason }, { idempotencyKey: Crypto.randomUUID() }),
-    onSuccess: (row) => setCallId(row.id),
+    mutationFn: (reasons: WaiterReason[]) => {
+      const [first, ...more] = reasons;
+      const parts = [
+        more.length
+          ? t('waiter.also', { list: more.map((r) => t(`waiter.reasons.${r}`)).join(', ') })
+          : null,
+        note.trim() || null,
+      ].filter(Boolean);
+      return api.callWaiter(
+        { reason: first ?? 'other', note: parts.length ? parts.join(' · ') : undefined },
+        { idempotencyKey: Crypto.randomUUID() },
+      );
+    },
+    onSuccess: (row) => {
+      void hapticSuccess();
+      remember([row.id]);
+      setPicked([]);
+      setNote('');
+    },
   });
+
+  const toggle = (reason: WaiterReason) =>
+    setPicked((current) =>
+      current.includes(reason) ? current.filter((r) => r !== reason) : [...current, reason],
+    );
 
   return (
     <SafeScreen>
-      <PageHeader title={t('waiter.title')} subtitle={table ? t('home.table', { code: table }) : slug} />
-      <View style={{ padding: 20, gap: 12 }}>
-        {call.data?.status === 'acknowledged' ? (
-          <>
-            <Text variant="display-m">{t('waiter.onTheWay', { name: call.data.staffFirstName ?? 'Kwesi' })}</Text>
-            <Text variant="body">{t('waiter.usually')}</Text>
-          </>
-        ) : (
-          <>
-            <Text variant="display-m">{t('waiter.prompt')}</Text>
-            <Text variant="body" style={{ color: theme.muted }}>
-              {t('waiter.lead')}
+      <PageHeader
+        title={t('waiter.title')}
+        subtitle={table ? t('home.table', { code: table }) : (venue.data?.name ?? '')}
+      />
+      <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
+        {myCalls.length > 0 ? (
+          <View style={styles.block}>
+            <Text variant="title">{t('waiter.yourRequests')}</Text>
+            {myCalls.map((id) => (
+              <CallStatusCard key={id} id={id} now={now} />
+            ))}
+          </View>
+        ) : null}
+
+        <View style={styles.block}>
+          <Text variant="title">
+            {myCalls.length > 0 ? t('waiter.somethingElse') : t('waiter.prompt')}
+          </Text>
+          <Text variant="body" style={{ color: theme.muted }}>
+            {t('waiter.lead')}
+          </Text>
+          {REASONS.map((reason) => {
+            const on = picked.includes(reason);
+            const Icon = REASON_ICON[reason];
+            return (
+              <Pressable
+                key={reason}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: on }}
+                accessibilityLabel={t(`waiter.reasons.${reason}`)}
+                onPress={() => toggle(reason)}
+                style={({ pressed }) => [
+                  styles.reason,
+                  {
+                    backgroundColor: on ? theme.tint : pressed ? theme.wash : theme.surface,
+                    borderColor: on ? theme.ink : theme.surface,
+                  },
+                ]}
+              >
+                <Icon size={24} color={theme.ink} strokeWidth={2} />
+                <Text variant="body-strong" style={styles.flex}>
+                  {t(`waiter.reasons.${reason}`)}
+                </Text>
+                {on ? <Check size={20} color={theme.ink} strokeWidth={2.5} /> : null}
+              </Pressable>
+            );
+          })}
+          <TextInput
+            value={note}
+            onChangeText={setNote}
+            maxLength={NOTE_MAX}
+            placeholder={t('waiter.note')}
+            placeholderTextColor={theme.meta}
+            accessibilityLabel={t('waiter.note')}
+            multiline
+            style={[
+              styles.note,
+              { color: theme.text, borderColor: theme.line, backgroundColor: theme.surface },
+            ]}
+          />
+          <Button
+            label={t('waiter.send')}
+            disabled={picked.length === 0}
+            loading={send.isPending}
+            onPress={() => send.mutate(picked)}
+          />
+          {send.isError ? (
+            <Text variant="caption" style={{ color: theme.error }}>
+              {t('waiter.failed')}
             </Text>
-            <View style={styles.grid}>
-              {REASONS.map((reason) => {
-                const on = picked.includes(reason);
-                return (
-                  <Pressable
-                    key={reason}
-                    accessibilityRole="button"
-                    onPress={() => setPicked((current) => (current.includes(reason) ? current.filter((item) => item !== reason) : [...current, reason]))}
-                    style={[styles.reason, { borderColor: on ? theme.fill : theme.line, backgroundColor: on ? theme.tint : theme.white }]}
-                  >
-                    <Text variant="body-strong">{t(`waiter.reasons.${reason}`)}</Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-            <Button label={t('waiter.send')} disabled={picked.length === 0} loading={send.isPending} onPress={() => picked[0] && send.mutate(picked[0])} />
-          </>
-        )}
-      </View>
+          ) : null}
+        </View>
+      </ScrollView>
     </SafeScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  reason: { width: '47%', minHeight: 72, borderWidth: 1, borderRadius: 16, padding: 12, justifyContent: 'center' },
+  page: {
+    padding: tokens.grid.mobile.margin,
+    gap: tokens.space[8],
+    paddingBottom: tokens.space[16],
+  },
+  block: { gap: tokens.space[3] },
+  reason: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[4],
+    minHeight: 60,
+    paddingHorizontal: tokens.space[5],
+    borderWidth: 1.5,
+    borderRadius: tokens.radius.lg,
+    borderCurve: 'continuous',
+    boxShadow: tokens.shadow.card,
+  },
+  flex: { flex: 1 },
+  note: {
+    minHeight: 72,
+    padding: tokens.space[3],
+    borderWidth: 1,
+    borderRadius: tokens.radius.md,
+    fontFamily: fontFamily.regular,
+    fontSize: tokens.type.body.size,
+    textAlignVertical: 'top',
+  },
 });

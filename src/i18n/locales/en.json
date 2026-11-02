@@ -160,8 +160,8 @@
   "waiter": {
     "title": "Call waiter",
     "prompt": "What do you need?",
-    "lead": "Pick one or more. Your waiter gets it on their phone.",
-    "note": "Add a note (optional)",
+    "lead": "Pick one or more. It goes straight to your waiter's phone.",
+    "note": "Anything else? (optional)",
     "send": "Call waiter",
     "onTheWay": "{{name}} is on the way",
     "usually": "Usually under 3 minutes.",
@@ -174,7 +174,14 @@
       "order_more": "Order more",
       "clean_table": "Clean the table",
       "other": "Something else"
-    }
+    },
+    "yourRequests": "Your requests",
+    "somethingElse": "Need something else?",
+    "waiting": "Waiting, sent {{when}}",
+    "someoneComing": "Someone is on the way",
+    "done": "Done",
+    "failed": "That didn't send. Check your connection and try again.",
+    "also": "Also: {{list}}"
   },
   "status": {
     "title": "Order #{{number}}",

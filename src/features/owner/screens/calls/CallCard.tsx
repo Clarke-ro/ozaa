@@ -1,14 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import {
-  CircleHelp,
-  GlassWater,
-  HandPlatter,
-  Receipt,
-  Sparkles,
-  UtensilsCrossed,
-  type LucideIcon,
-} from 'lucide-react-native';
+import { REASON_ICON } from '@/features/waiter';
 import type { WaiterCall } from '@/lib/api/types';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
@@ -17,14 +9,6 @@ import { useTheme } from '@/ui/theme';
 import { ticketAge } from '../../desk/ops';
 import { StatusPill, type PillTone } from '../../kit';
 
-const REASON_ICON: Record<WaiterCall['reason'], LucideIcon> = {
-  water: GlassWater,
-  bill: Receipt,
-  cutlery: UtensilsCrossed,
-  order_more: HandPlatter,
-  clean_table: Sparkles,
-  other: CircleHelp,
-};
 
 const STATUS_TONE: Record<WaiterCall['status'], PillTone> = {
   open: 'error',
