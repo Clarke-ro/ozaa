@@ -915,6 +915,125 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/owner/venues/{venueId}/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Today's sales, open tables, live orders, waiter calls, rating and alerts. */
+        get: operations["ownerGetDashboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/floor": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tables with a derived status. */
+        get: operations["ownerGetFloor"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/transactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Paystack sandbox charges and cash taken at the table. */
+        get: operations["ownerListTransactions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/transactions/{transactionId}/refund": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Refund a succeeded charge in full. Paystack sandbox, mocked. */
+        post: operations["ownerRefundTransaction"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/written-reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Star ratings and the replies the owner has sent. */
+        get: operations["ownerListWrittenReviews"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/written-reviews/{writtenReviewId}/reply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Save a private reply on a written review. */
+        post: operations["ownerReplyToReview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/insights": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sales, top dishes, peak hours and repeat guests. */
+        get: operations["ownerGetInsights"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1109,8 +1228,7 @@ export interface components {
                 stampsNeeded?: number;
                 rewardTitle?: string;
             } | null;
-            /** @constant */
-            currency: "GHS";
+            currency: components["schemas"]["Currency"];
             languages: components["schemas"]["Language"][];
             /** Format: uri */
             googleReviewUrl?: string | null;
@@ -1569,6 +1687,100 @@ export interface components {
             /** @description Ozaa's share taken by the Paystack split. Set by Ozaa, read-only here. */
             ozaaFeePercent: number;
         };
+        /**
+         * @description Sample venues use GHS. Amount fields are minor units (pesewas, kobo, cents) except XOF, which is the whole franc.
+         * @enum {string}
+         */
+        Currency: "GHS" | "NGN" | "KES" | "ZAR" | "XOF" | "USD";
+        OwnerDashboard: {
+            salesTodayPesewas: components["schemas"]["Pesewas"];
+            currency: components["schemas"]["Currency"];
+            /** @description Versus the same venue yesterday. Null when yesterday was zero. */
+            changePercent: number | null;
+            /** @enum {string} */
+            direction: "up" | "down" | "flat" | "none";
+            openTables: number;
+            liveOrders: number;
+            openCalls: number;
+            ratingAverage: number | null;
+            ratingCount: number;
+            alerts: {
+                /** @enum {string} */
+                code: "calls" | "bills" | "payout" | "sold_out";
+                count?: number;
+                detail?: string;
+            }[];
+        };
+        /** @enum {string} */
+        FloorStatus: "free" | "seated" | "ordered" | "waiting_to_pay" | "needs_waiter";
+        FloorTable: {
+            id: string;
+            code: string;
+            label?: string;
+            /** Format: uri */
+            qrUrl?: string;
+            status: components["schemas"]["FloorStatus"];
+            orderId?: string | null;
+            orderNumber?: number | null;
+            orderStatus?: components["schemas"]["OrderStatus"] | null;
+            paymentStatus?: components["schemas"]["PaymentStatusSummary"] | null;
+            billPesewas?: components["schemas"]["Pesewas"] | null;
+            waiterCallId?: string | null;
+            waiterReason?: components["schemas"]["WaiterReason"] | null;
+        };
+        VenueTransaction: {
+            id: string;
+            reference: string;
+            orderId: components["schemas"]["OrderId"];
+            orderNumber: number;
+            /** @enum {string} */
+            method: "momo" | "card" | "cash";
+            provider?: components["schemas"]["MomoProvider"];
+            amountPesewas: components["schemas"]["Pesewas"];
+            currency: components["schemas"]["Currency"];
+            /** @enum {string} */
+            status: "succeeded" | "failed" | "abandoned" | "pending";
+            /** @enum {string} */
+            settlement: "pending" | "settled" | "refunded";
+            /** Format: date-time */
+            createdAt: string;
+            testMode: boolean;
+        };
+        WrittenReview: {
+            id: string;
+            stars: number;
+            firstName: string;
+            text?: string;
+            highlights?: ("food" | "service" | "speed" | "value" | "vibe" | "cleanliness")[];
+            /** Format: date-time */
+            createdAt: string;
+            reply?: string | null;
+        };
+        InsightsReport: {
+            /** @enum {string} */
+            range: "today" | "7d" | "30d";
+            currency: components["schemas"]["Currency"];
+            salesPesewas: components["schemas"]["Pesewas"];
+            /** @description True until the ledger is real. Show the Sample label. */
+            sample: boolean;
+            series: {
+                label: string;
+                pesewas: components["schemas"]["Pesewas"];
+            }[];
+            topItems: {
+                name: string;
+                count: number;
+                pesewas: components["schemas"]["Pesewas"];
+            }[];
+            peakHours: {
+                hour: number;
+                orders: number;
+            }[];
+            repeatGuests: {
+                count: number;
+                sharePercent: number;
+            };
+        };
     };
     responses: {
         /** @description The request was malformed or failed validation. */
@@ -1651,6 +1863,8 @@ export interface components {
         AcceptLanguage: string;
         VenueSlug: components["schemas"]["Slug"];
         VenueId: string;
+        TransactionId: string;
+        WrittenReviewId: string;
         OrderId: components["schemas"]["OrderId"];
         PaymentReference: string;
         WaiterCallId: string;
@@ -3445,6 +3659,187 @@ export interface operations {
                 };
             };
             422: components["responses"]["Unprocessable"];
+        };
+    };
+    ownerGetDashboard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Figures for the owner home. Sales count only money already taken. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OwnerDashboard"];
+                };
+            };
+        };
+    };
+    ownerGetFloor: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Status comes from orders and waiter calls. It is not stored on the table. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["FloorTable"][];
+                    };
+                };
+            };
+        };
+    };
+    ownerListTransactions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Owner role only. Settlement is mocked until the live Paystack account exists. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["VenueTransaction"][];
+                    };
+                };
+            };
+        };
+    };
+    ownerRefundTransaction: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description A new UUID per user action. Reuse it when retrying the same action. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                transactionId: components["parameters"]["TransactionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The charge is marked refunded. Only a succeeded payment can be refunded, and only once. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VenueTransaction"];
+                };
+            };
+            /** @description The charge cannot be refunded. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ownerListWrittenReviews: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Written reviews. 1 to 3 stars stay private. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["WrittenReview"][];
+                    };
+                };
+            };
+        };
+    };
+    ownerReplyToReview: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description A new UUID per user action. Reuse it when retrying the same action. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                writtenReviewId: components["parameters"]["WrittenReviewId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    text: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Saved. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WrittenReview"];
+                };
+            };
+        };
+    };
+    ownerGetInsights: {
+        parameters: {
+            query?: {
+                range?: "today" | "7d" | "30d";
+            };
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sample figures until the real ledger exists. The response says sample true. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InsightsReport"];
+                };
+            };
         };
     };
 }

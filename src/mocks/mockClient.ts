@@ -7,6 +7,7 @@ import type { ApiClient, TokenSource } from '@/lib/api/client';
 import { ApiError, OfflineError } from '@/lib/api/errors';
 import type { LoyaltyCard, LoyaltyProgram, Order, Payment, VenueTheme } from '@/lib/api/types';
 import { qrSvg } from '@/lib/qrSvg';
+import { dashboardFor, floorFor, insightsFor, refundFor, replyFor, transactionsFor, writtenFor } from './ownerDesk';
 import { decideMockCard, readMockCard } from './cardBox';
 import { rememberOpenOrder } from './openOrder';
 import {
@@ -292,9 +293,10 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
     },
     async listStories(slug) {
       await gate();
-      venueBySlug(world, slug);
-      const featured = world.videos.filter((video) => video.state === 'featured').map((video) => video);
-      return { items: [...(world.stories[slug] ?? []), ...featured] };
+      const venue = venueBySlug(world, slug);
+      const featured = world.videos.filter((video) => video.venueId === venue.id && video.state === 'featured');
+      if (featured.length > 0) return { items: featured };
+      return { items: world.stories[slug] ?? [] };
     },
     async listOffers(slug) {
       await gate();
@@ -421,12 +423,13 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
           open.note = body.note;
           return open;
         }
-        const callRow: import('@/lib/api/types').WaiterCall = {
+        const callRow = {
           id: nextId(world, 'wcl'),
+          venueId: venueBySlug(world, session.slug).id,
           tableCode: session.tableCode,
           reason: body.reason,
           note: body.note,
-          status: 'open',
+          status: 'open' as const,
           staffFirstName: null,
           createdAt: new Date(now()).toISOString(),
           acknowledgedAt: null,
@@ -538,6 +541,7 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
         sample: true,
         state: 'pending' as const,
         featureConsent: body.featureConsent,
+        venueId: venue.id,
       };
       world.videos.push(review);
       return { id, deleteToken: `del_${id}` };
@@ -753,9 +757,9 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       live.order = { ...live.order, paidPesewas: paid, paymentStatus: paid >= live.order.totalPesewas ? 'paid' : 'part_paid' };
       return live.order;
     },
-    async ownerListWaiterCalls() {
+    async ownerListWaiterCalls(venueId) {
       await gate();
-      return { items: world.calls };
+      return { items: world.calls.filter((call) => call.venueId === venueId).map(({ venueId: _id, ...call }) => call) };
     },
     async ownerUpdateWaiterCall(id, body) {
       await gate();
@@ -769,9 +773,13 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       }
       return callRow;
     },
-    async ownerListVideoReviews(_venueId, state) {
+    async ownerListVideoReviews(venueId, state) {
       await gate();
-      return { items: world.videos.filter((video) => !state || video.state === state) };
+      return {
+        items: world.videos
+          .filter((video) => video.venueId === venueId && (!state || video.state === state))
+          .map(({ venueId: _id, ...video }) => video),
+      };
     },
     async ownerModerateVideoReview(id, body) {
       await gate();
@@ -831,6 +839,41 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       const account = { businessName: body.businessName, settlementType: body.settlement.type, accountMasked: masked, verified: false, ozaaFeePercent: world.payouts[venueId]?.ozaaFeePercent ?? 0 };
       world.payouts[venueId] = account;
       return account;
+    },
+    async ownerGetDashboard(venueId) {
+      await gate();
+      accessOf(world, tokens);
+      return dashboardFor(world, venueId, now());
+    },
+    async ownerGetFloor(venueId) {
+      await gate();
+      accessOf(world, tokens);
+      return floorFor(world, venueId);
+    },
+    async ownerListTransactions(venueId) {
+      await gate();
+      accessOf(world, tokens);
+      return transactionsFor(world, venueId);
+    },
+    async ownerRefundTransaction(transactionId, call) {
+      await gate();
+      accessOf(world, tokens);
+      return remember(call?.idempotencyKey, () => refundFor(world, transactionId));
+    },
+    async ownerListWrittenReviews(venueId) {
+      await gate();
+      accessOf(world, tokens);
+      return writtenFor(world, venueId);
+    },
+    async ownerReplyToReview(reviewId, body, call) {
+      await gate();
+      accessOf(world, tokens);
+      return remember(call?.idempotencyKey, () => replyFor(world, reviewId, body.text));
+    },
+    async ownerGetInsights(venueId, range = '7d') {
+      await gate();
+      accessOf(world, tokens);
+      return insightsFor(world, venueId, range);
     },
   };
 

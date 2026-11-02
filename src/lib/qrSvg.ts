@@ -1,7 +1,7 @@
 import QRCode from 'qrcode';
 
 /** Quiet zone of 2 modules, black on white. Used for Wi-Fi join and table stickers. */
-export function qrSvg(text: string, size = 176): string {
+export function qrModules(text: string, size = 176): { path: string; size: number } {
   const code = QRCode.create(text, { errorCorrectionLevel: 'M' });
   const count = code.modules.size;
   const quiet = 2;
@@ -15,5 +15,10 @@ export function qrSvg(text: string, size = 176): string {
       path += `M${x} ${y}h${moduleSize.toFixed(2)}v${moduleSize.toFixed(2)}h-${moduleSize.toFixed(2)}z`;
     }
   }
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><rect width="100%" height="100%" fill="#fff"/><path d="${path}" fill="#111"/></svg>`;
+  return { path, size };
+}
+
+export function qrSvg(text: string, size = 176): string {
+  const drawn = qrModules(text, size);
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${drawn.size}" height="${drawn.size}" viewBox="0 0 ${drawn.size} ${drawn.size}"><rect width="100%" height="100%" fill="#fff"/><path d="${drawn.path}" fill="#111"/></svg>`;
 }

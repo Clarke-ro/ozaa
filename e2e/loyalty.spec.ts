@@ -36,7 +36,12 @@ test('guest loyalty wallet card, earn history, claim code QR, and owner confirma
   await page.waitForTimeout(600);
   await page.screenshot({ path: 'test-results/loyalty-wallet-akos.png', fullPage: false });
 
-  await page.goto('/owner/loyalty', { waitUntil: 'domcontentloaded' });
+  await page.goto('/owner/login', { waitUntil: 'domcontentloaded' });
+  await page.getByRole('button', { name: 'Send code' }).click();
+  await page.getByRole('textbox', { name: 'Code', exact: true }).fill('123456');
+  await page.getByRole('button', { name: 'Enter' }).click();
+  await page.getByRole('button', { name: 'More' }).click();
+  await page.getByRole('button', { name: 'Loyalty' }).click();
   await expect(page.getByText('Confirm a guest reward')).toBeVisible();
   await expect(page.getByText('Programme setup')).toBeVisible();
   await page.waitForTimeout(800);

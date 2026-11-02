@@ -2,6 +2,7 @@ import { Stack, useLocalSearchParams } from 'expo-router';
 import { z } from 'zod';
 import { themeFromAccent, ThemeProvider } from '@/ui/theme';
 import { useVenue } from '@/features/venue';
+import { FoodReadyBanner } from '@/features/orders';
 import type { FontPair } from '@/ui/theme';
 
 const slugSchema = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
@@ -21,6 +22,7 @@ export default function VenueLayout() {
         <Stack.Screen name="menu/[item]" options={{ presentation: 'transparentModal' }} />
         <Stack.Screen name="order" options={{ presentation: 'transparentModal' }} />
       </Stack>
+      {slug ? <FoodReadyBanner slug={slug} /> : null}
     </ThemeProvider>
   );
 }

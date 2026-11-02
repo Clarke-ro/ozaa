@@ -534,7 +534,7 @@ Work top to bottom. Each box is one small PR that ends in a verifiable state (ps
 - [x] 1.6 Item sheet: options, quantity, note, "Add to order · GH₵70". Render: `v4-reference/02-item-detail.png`, restyled to v5.
 - [x] 1.7 Cart store and totals (tdd), the bottom bar "View order · 3 · GH₵143", the Your order sheet, and Send to kitchen (`createOrder` with `clientOrderId`).
 - [x] 1.8 Order status: four steps, ETA, polling. Render: `status.png`.
-- [ ] 1.9 Food-ready banner over any screen, the game included, triggered when the order becomes `ready`.
+- [x] 1.9 Food-ready banner over any screen, the game included, triggered when the order becomes `ready`.
 - [x] 1.10 Call waiter: reasons, one open call per table, sent state with the staff name. Renders: `waiter.png`, `waiter-sent.png`.
 - [x] 1.11 Wi-Fi: network name, copy password, join QR (guestAuth). Render: `wifi.png`.
 - [x] 1.12 Offers, About & contact, Feedback, Reserve and Events: simple list screens. Reserve and Events can show "Coming soon" if the venue hasn't set them up.
@@ -545,11 +545,11 @@ Work top to bottom. Each box is one small PR that ends in a verifiable state (ps
 ### Phase 1b: Table (product 1), owner side, on mocks
 
 - [x] 1b.1 Owner login (phone + OTP, mock code `123456`), token storage, role guard, and the Ozaa-orange chrome and tabs.
-- [ ] 1b.2 Orders dashboard: live orders by status, move status (role-aware), waiter calls list, and "You made GH₵2,480 today…" header. Render: `v4-reference/04-owner-dashboard.png`, content only.
-- [ ] 1b.3 Services: toggles and the game stamp switch with its target score. Render: `owner-services.png`.
-- [ ] 1b.4 Customise: banner, logo, colour presets and hex with a live contrast note and ΔE warning, heading font, name, description, location, hours, preview, and Save and publish. Renders: `v4-reference/customise*.png`.
-- [ ] 1b.5 Staff and tables: invite by phone with a role, list tables, download QR (svg/png/pdf).
-- [ ] 1b.6 Menu editor: categories and items CRUD, photo upload, sold-out toggle.
+- [x] 1b.2 Orders dashboard: live orders by status, move status (role-aware), waiter calls list, and "You made GH₵2,480 today…" header. Render: `v4-reference/04-owner-dashboard.png`, content only.
+- [x] 1b.3 Services: toggles and the game stamp switch with its target score. Render: `owner-services.png`.
+- [x] 1b.4 Customise: banner, logo, colour presets and hex with a live contrast note and ΔE warning, heading font, name, description, location, hours, preview, and Save and publish. Renders: `v4-reference/customise*.png`.
+- [x] 1b.5 Staff and tables: invite by phone with a role, list tables, download QR (svg/png/pdf).
+- [x] 1b.6 Menu editor: categories and items CRUD, photo upload, sold-out toggle.
 - [ ] **Review:** Clarke tries the owner app in a dev build and on the web.
 
 ### Phase 2: Pay (product 2)
@@ -560,8 +560,8 @@ Work top to bottom. Each box is one small PR that ends in a verifiable state (ps
 - [ ] 2.4 MoMo wait screen: countdown from `approveBy`, "Check your phone and enter your PIN to approve.", then paid, failed or timed-out states. Render: `v4-reference/03-momo-checkout.png`, restyled to v5.
 - [ ] 2.5 Card: open `authorizationUrl` (expo-web-browser on native, same tab on web with a return URL), then verify on return.
 - [ ] 2.6 Receipt view: lines, tip, empty-ready tax lines, and "Test payment" label in sandbox.
-- [ ] 2.7 Owner payout account screen: bank or MoMo, shows the masked account and status.
-- [ ] 2.8 Owner "Mark paid in cash" (`/owner/orders/{id}/cash-payment`).
+- [x] 2.7 Owner payout account screen: bank or MoMo, shows the masked account and status.
+- [x] 2.8 Owner "Mark paid in cash" (`/owner/orders/{id}/cash-payment`).
 - [ ] **2b Paystack sandbox slice** (the only early server code, in `server/`):
   - Implement only `POST /payments`, `GET /payments/{ref}`, `POST /payments/{ref}/verify` and `POST /webhooks/paystack`, with **test** keys from the server env.
   - The app uses `EXPO_PUBLIC_API_LIVE=payments` to send just these calls to the server and keep everything else on mocks.
@@ -581,7 +581,7 @@ Work top to bottom. Each box is one small PR that ends in a verifiable state (ps
 
 - [x] 4.1 Written review: stars, "what stood out" chips and text. 4–5 stars offer "Share on Google" (the venue's Google review link). 1–3 stars go privately to the owner. Render: `review.png`.
 - [ ] 4.2 Video review: consent text first, front camera, 15–30 s (Done unlocks at 15 s), retake, upload with progress through a pre-signed URL, and keep the delete token. Render: `review-record.png`. Check web recording (section 5, Camera).
-- [ ] 4.3 Owner moderation: To check, Featured and Hidden tabs, with Hide and Feature buttons and the private-reply hint for low ratings. Featured videos become guest stories. Render: `owner-reviews.png`.
+- [x] 4.3 Owner moderation: To check, Featured and Hidden tabs, with Hide and Feature buttons and the private-reply hint for low ratings. Featured videos become guest stories. Render: `owner-reviews.png`.
 - [ ] 4.4 Full polish pass:
   - `cursor-team-kit-deslop`, `impeccable`, `ui-skills-improve-ui`
   - accessibility (`ui-skills-fixing-accessibility`)
@@ -702,4 +702,45 @@ The agent must ask these, not guess. Until he answers, build behind a setting or
 7. Trademark search for "ozaa" (Ghana RGD, OAPI, WIPO) and the native-speaker meaning check, and which domains to buy (`ozaa.app` is the assumed one).
 8. Native speakers for French, Portuguese, Spanish, Arabic and Swahili. English stays the only selectable language until those files are filled by people, not by machine translation.
 9. The real first venue(s), to replace the AI-generated sample photos and videos.
-10. Should Setup (product 13) move before launch? A real venue needs onboarding, but it is last in the current order. _Default: the team sets up early venues by hand in the owner app._
+10. Should Setup (product 13) move before launch? A real venue needs onboarding, but it is last in the current order. *Default: the team sets up early venues by hand in the owner app.*
+
+## 18. Owner app
+
+The owner app is the same Ozaa system as the guest page. White background, black text, Unbounded for the big numbers, Inter for everything else. Orange `#D24000` is only on buttons, active icons and small status words. A phone uses a bottom bar. At 840 px and wider the same routes sit next to a sidebar, for a tablet at the counter.
+
+Money on these screens goes through `formatMoney`. Sample venues stay GHS, so the figures still read `GH₵`. The venue `currency` can also be NGN, KES, ZAR, XOF or USD. Paystack charges in this build stay GHS. Phones are stored as E.164 (+[1-9] and 6–14 digits), with Ghana as the default local profile and multi-country display grouping.
+
+Floor status is not saved on the table. `deriveFloor` reads orders and waiter calls. A call beats every other status. A served unpaid bill is waiting to pay. A ticket still in the kitchen is ordered. A guest with no order is seated. Anything else is free. Kitchen moves still use `orderTransition`. Only `ready` shows the guest food-ready banner, including over the game.
+
+| # | Product | Owner screen | State |
+|---|---|---|---|
+| 1 | Table | Today, floor, orders, calls, menu, services, tables and QR, branding, staff | Built on the mock |
+| 2 | Pay | Payments list, MoMo or card or cash, full refund, settlement, payout line. Cash mark on the floor | Built on the mock. Paystack sandbox, `testMode` |
+| 3 | Loyalty | Staff code confirmation, programme setup (stamps or points, rewards, tiers, expiry, birthday), members and redemptions | Built on the mock |
+| 4 | Reviews | To check, Featured, Hidden, and written ratings with a private reply | Built on the mock |
+| 5 | POS | Register shell | Not built. Next is a counter order, cash, and a receipt |
+| 6 | Stock | Stock shell | Not built. Next is recipes and sold out when a recipe hits zero |
+| 7 | Orders | Kitchen tickets and the food-ready banner | Built on the mock. Live push is still later |
+| 8 | AI Waiter | AI waiter shell | Not built. English first, then Twi, Ga and Ewe after a native-speaker check |
+| 9 | Marketing | Marketing shell | Not built. Only members who ticked marketing, and that box stays separate |
+| 10 | Insights | Sales, top dishes, busy hours, repeat guests | Built on the mock. Figures are marked Sample |
+| 13 | Setup | Four steps. Name, tables, Wi-Fi, MoMo payout | Built on the mock for the venue you are already signed into |
+
+New contract paths, all owner auth: `GET /owner/venues/{id}/dashboard`, `GET .../floor`, `GET .../transactions`, `POST /owner/transactions/{id}/refund`, `GET .../written-reviews`, `POST /owner/written-reviews/{id}/reply`, `GET .../insights`.
+
+```mermaid
+stateDiagram-v2
+  [*] --> free
+  free --> seated: guest sits, no order
+  seated --> ordered: kitchen ticket opens
+  free --> ordered: kitchen ticket opens
+  ordered --> waiting_to_pay: served and not paid
+  waiting_to_pay --> free: paid or refunded
+  ordered --> needs_waiter: call opens
+  seated --> needs_waiter: call opens
+  waiting_to_pay --> needs_waiter: call opens
+  needs_waiter --> ordered: call resolved, ticket still open
+  needs_waiter --> free: call resolved, nothing else open
+```
+
+Roles. Owner sees every screen, including payouts and staff. Manager does not see payouts or staff. Waiter sees today, the floor, orders, calls and the register shell. Kitchen sees orders only. The guard is for the layout. The server still has to enforce it.

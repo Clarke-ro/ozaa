@@ -122,5 +122,14 @@ export function createHttpClient(baseUrl: string, tokens: TokenSource): ApiClien
     ownerConfirmRedemption: (venueId, body, call) => ok(client.POST('/owner/venues/{venueId}/loyalty/confirm', { body, params: { path: { venueId }, header: { 'Idempotency-Key': call?.idempotencyKey ?? '' } }, headers: headers('access', call) })),
     ownerGetPayoutAccount: (venueId) => ok(client.GET('/owner/venues/{venueId}/payout-account', { params: { path: { venueId } }, headers: headers('access') })),
     ownerSetPayoutAccount: (venueId, body) => ok(client.PUT('/owner/venues/{venueId}/payout-account', { body, params: { path: { venueId } }, headers: headers('access') })),
+    ownerGetDashboard: (venueId) => ok(client.GET('/owner/venues/{venueId}/dashboard', { params: { path: { venueId } }, headers: headers('access') })),
+    ownerGetFloor: (venueId) => ok(client.GET('/owner/venues/{venueId}/floor', { params: { path: { venueId } }, headers: headers('access') })),
+    ownerListTransactions: (venueId) => ok(client.GET('/owner/venues/{venueId}/transactions', { params: { path: { venueId } }, headers: headers('access') })),
+    ownerRefundTransaction: (transactionId, call) =>
+      ok(client.POST('/owner/transactions/{transactionId}/refund', { params: { path: { transactionId }, header: { 'Idempotency-Key': call?.idempotencyKey ?? '' } }, headers: headers('access', call) })),
+    ownerListWrittenReviews: (venueId) => ok(client.GET('/owner/venues/{venueId}/written-reviews', { params: { path: { venueId } }, headers: headers('access') })),
+    ownerReplyToReview: (reviewId, body, call) =>
+      ok(client.POST('/owner/written-reviews/{writtenReviewId}/reply', { body, params: { path: { writtenReviewId: reviewId }, header: { 'Idempotency-Key': call?.idempotencyKey ?? '' } }, headers: headers('access', call) })),
+    ownerGetInsights: (venueId, range) => ok(client.GET('/owner/venues/{venueId}/insights', { params: { path: { venueId }, query: range ? { range } : {} }, headers: headers('access') })),
   };
 }

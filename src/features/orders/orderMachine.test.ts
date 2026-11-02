@@ -1,4 +1,4 @@
-import { orderTransition } from './orderMachine';
+import { orderTransition, showsFoodReady } from './orderMachine';
 
 test('kitchen can move a ticket forward and cannot cancel it', () => {
   expect(orderTransition('received', 'start', 'kitchen')).toBe('preparing');
@@ -10,4 +10,11 @@ test('kitchen can move a ticket forward and cannot cancel it', () => {
 test('a served order stays served', () => {
   expect(orderTransition('served', 'cancel', 'owner')).toBeNull();
   expect(orderTransition('received', 'serve', 'owner')).toBeNull();
+});
+
+test('the guest food-ready banner shows only while the kitchen has marked the order ready', () => {
+  expect(showsFoodReady('ready')).toBe(true);
+  expect(showsFoodReady('preparing')).toBe(false);
+  expect(showsFoodReady('served')).toBe(false);
+  expect(showsFoodReady('received')).toBe(false);
 });

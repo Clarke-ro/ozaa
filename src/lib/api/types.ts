@@ -39,6 +39,12 @@ export type ThemeInput = Schemas['ThemeInput'];
 export type VenueTheme = Schemas['VenueTheme'];
 export type PayoutAccount = Schemas['PayoutAccount'];
 export type PayoutAccountInput = Schemas['PayoutAccountInput'];
+export type OwnerDashboard = Schemas['OwnerDashboard'];
+export type FloorTable = Schemas['FloorTable'];
+export type VenueTransaction = Schemas['VenueTransaction'];
+export type WrittenReview = Schemas['WrittenReview'];
+export type InsightsReport = Schemas['InsightsReport'];
+export type Currency = Schemas['Currency'];
 export type LeaderboardEntry = Schemas['LeaderboardEntry'];
 export type OtpPurpose = 'owner_login' | 'guest_loyalty';
 

@@ -17,6 +17,21 @@ const ALLOWED: Record<StaffRole, OrderMove[]> = {
   kitchen: ['start', 'ready'],
 };
 
+/** The guest banner, including over the game, keys off this and nothing else. */
+export function showsFoodReady(status: OrderStatus): boolean {
+  return status === 'ready';
+}
+
+const FORWARD: OrderMove[] = ['start', 'ready', 'serve'];
+
+export function nextOrderMove(status: OrderStatus, role: StaffRole): { move: OrderMove; status: OrderStatus } | null {
+  for (const move of FORWARD) {
+    const next = orderTransition(status, move, role);
+    if (next) return { move, status: next };
+  }
+  return null;
+}
+
 export function orderTransition(status: OrderStatus, move: OrderMove, role: StaffRole): OrderStatus | null {
   if (!ALLOWED[role].includes(move)) return null;
   return NEXT[status][move] ?? null;

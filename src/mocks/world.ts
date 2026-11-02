@@ -23,9 +23,11 @@ import type {
   Story,
   Table,
   VenuePublic,
+  VenueTransaction,
   VideoReview,
   WaiterCall,
   Wifi,
+  WrittenReview,
 } from '@/lib/api/types';
 import loyaltyFile from './fixtures/loyaltyCards.json';
 import menusFile from './fixtures/menus.json';
@@ -73,11 +75,15 @@ export type World = {
   stories: Record<string, Story[]>;
   offers: Record<string, Offer[]>;
   orders: LiveOrder[];
-  calls: WaiterCall[];
+  calls: (WaiterCall & { venueId: string })[];
+  seatedCodes: Record<string, string[]>;
+  yesterdayPesewas: Record<string, number>;
+  written: (WrittenReview & { venueId: string })[];
+  transactions: (VenueTransaction & { venueId: string })[];
   loyalty: Record<string, VenueLoyalty>;
   payouts: Record<string, PayoutAccount>;
   staff: (StaffMember & { venueId: string; phone: string })[];
-  videos: VideoReview[];
+  videos: (VideoReview & { venueId: string })[];
   tables: Record<string, Table[]>;
   quotes: Map<string, { orderId: string; share: number; tip: number; lineIds: string[]; expiresAt: number }>;
   payments: Map<string, { payment: import('@/lib/api/types').Payment; phone: string; applied: boolean }>;
@@ -99,6 +105,125 @@ function tablesFor(slug: string, code: string): Table[] {
     label: `Table ${item}`,
     qrUrl: `https://ozaa.app/${slug}/t/${item}`,
   }));
+}
+
+function seedOwnerDesk(world: World, now: number): void {
+  for (const [slug, stories] of Object.entries(world.stories)) {
+    const venue = world.venues[slug];
+    if (!venue) continue;
+    stories.forEach((story) => {
+      world.videos.push({
+        ...story,
+        state: 'featured',
+        featureConsent: true,
+        orderNumber: null,
+        venueId: venue.id,
+      });
+    });
+  }
+
+  const mama = world.venues['mamas-kitchen'];
+  if (!mama) return;
+  const poster = mama.banner;
+  world.videos.push({
+    id: 'vrv_mamaspending',
+    venueId: mama.id,
+    firstName: 'Abena',
+    stars: 4,
+    quote: 'The jollof was smoky and the chicken was hot.',
+    postedAt: new Date(now).toISOString(),
+    poster,
+    video: { mp4Url: 'https://mock.ozaa.app/media/media/review-ama.mp4', durationSeconds: 16 },
+    sample: true,
+    state: 'pending',
+    featureConsent: true,
+    orderNumber: 24,
+  });
+  world.seatedCodes[mama.id] = ['7'];
+  world.yesterdayPesewas[mama.id] = 221429;
+  world.calls.push({
+    id: 'wcl_mamas4',
+    venueId: mama.id,
+    tableCode: '4',
+    reason: 'water',
+    status: 'open',
+    staffFirstName: null,
+    createdAt: new Date(now - 4 * 60_000).toISOString(),
+  });
+  world.orders.push({
+    manual: true,
+    receivedAt: now,
+    order: {
+      id: 'ord_mamasbill',
+      number: 18,
+      venueId: mama.id,
+      tableCode: '3',
+      status: 'served',
+      paymentStatus: 'unpaid',
+      lines: [
+        {
+          id: 'oln_bill',
+          menuItemId: 'itm_mamas0',
+          name: 'Jollof & chicken',
+          quantity: 1,
+          modifiers: [],
+          unitPricePesewas: 4500,
+          totalPesewas: 4500,
+          paid: false,
+        },
+      ],
+      subtotalPesewas: 4500,
+      taxes: [],
+      totalPesewas: 4500,
+      paidPesewas: 0,
+      etaMinutes: null,
+      createdAt: new Date(now - 40 * 60_000).toISOString(),
+      updatedAt: new Date(now - 15 * 60_000).toISOString(),
+      readyAt: new Date(now - 20 * 60_000).toISOString(),
+    },
+  });
+  const paid = world.orders.filter((item) => item.order.venueId === mama.id && item.order.paymentStatus === 'paid');
+  const methods = ['momo', 'card', 'cash'] as const;
+  paid.forEach((item, index) => {
+    const method = methods[index % methods.length] ?? 'momo';
+    world.transactions.push({
+      id: `txn_mama${index}`,
+      venueId: mama.id,
+      reference: `ref_mama${index}`,
+      orderId: item.order.id,
+      orderNumber: item.order.number,
+      method,
+      provider: method === 'momo' ? 'mtn' : undefined,
+      amountPesewas: item.order.paidPesewas,
+      currency: 'GHS',
+      status: 'succeeded',
+      settlement: index === 0 ? 'pending' : 'settled',
+      createdAt: item.order.createdAt,
+      testMode: true,
+    });
+  });
+  world.written.push(
+    {
+      id: 'rev_mamas1',
+      venueId: mama.id,
+      stars: 5,
+      firstName: 'Efua',
+      text: 'The waakye was hot and the shito was perfect.',
+      highlights: ['food'],
+      createdAt: new Date(now - 2 * 60 * 60_000).toISOString(),
+      reply: null,
+    },
+    {
+      id: 'rev_mamas2',
+      venueId: mama.id,
+      stars: 2,
+      firstName: 'Kojo',
+      text: 'We waited a long time for the bill.',
+      highlights: ['speed'],
+      createdAt: new Date(now - 5 * 60 * 60_000).toISOString(),
+      reply: null,
+    },
+  );
 }
 
 export function createWorld(now: number): World {
@@ -203,7 +328,7 @@ export function createWorld(now: number): World {
     });
   }
 
-  return {
+  const world: World = {
     venues,
     menus,
     wifi,
@@ -211,6 +336,10 @@ export function createWorld(now: number): World {
     offers,
     orders,
     calls: [],
+    seatedCodes: {},
+    yesterdayPesewas: {},
+    written: [],
+    transactions: [],
     loyalty,
     payouts,
     staff,
@@ -226,6 +355,8 @@ export function createWorld(now: number): World {
     refresh: new Map(),
     seq: 100,
   };
+  seedOwnerDesk(world, now);
+  return world;
 }
 
 export function keepLoyalty(
