@@ -51,7 +51,8 @@ export const OWNER_NAV: readonly OwnerNavItem[] = [
   {
     id: 'notifications',
     href: '/owner/notifications',
-    roles: ['owner', 'manager', 'waiter', 'kitchen', 'viewer'],
+    // Kitchen staff see only their tickets (see nav.test.ts), so no feed for them.
+    roles: ['owner', 'manager', 'waiter', 'viewer'],
     group: 'service',
   },
   { id: 'floor', href: '/owner/floor', roles: FRONT, group: 'service' },
