@@ -20,32 +20,43 @@ export function LanguagePicker({
   if (!open) return null;
   return (
     <View style={styles.backdrop}>
-      <Pressable accessibilityRole="button" accessibilityLabel={t('common.close')} style={StyleSheet.absoluteFill} onPress={onClose} />
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t('common.close')}
+        style={StyleSheet.absoluteFill}
+        onPress={onClose}
+      />
       <View style={[styles.sheet, { backgroundColor: theme.white }]}>
         <Text variant="title">{t('home.chooseLanguage')}</Text>
-          {LANGUAGES.map((language) => {
-            const on = language.code === selected;
-            return (
-              <Pressable
-                key={language.code}
-                accessibilityRole="button"
-                accessibilityState={{ disabled: !language.ready, selected: on }}
-                onPress={() => {
-                  if (!language.ready) return;
-                  onChoose(language.code);
-                  onClose();
-                }}
-                style={[styles.row, { borderColor: theme.line, backgroundColor: on ? theme.tint : theme.white }]}
-              >
-                <Text variant="body-strong">{language.label}</Text>
-                {language.ready ? null : (
-                  <Text variant="caption" style={{ color: theme.meta }}>
-                    {t('home.comingSoon')}
-                  </Text>
-                )}
-              </Pressable>
-            );
-          })}
+        {LANGUAGES.map((language) => {
+          const on = language.code === selected;
+          return (
+            <Pressable
+              key={language.code}
+              accessibilityRole="button"
+              accessibilityLabel={language.label}
+              accessibilityState={{ disabled: !language.ready, selected: on }}
+              onPress={() => {
+                if (!language.ready) return;
+                onChoose(language.code);
+                onClose();
+              }}
+              style={[
+                styles.row,
+                { borderColor: theme.line, backgroundColor: on ? theme.tint : theme.white },
+              ]}
+            >
+              <Text variant="body-strong" style={{ writingDirection: language.dir }}>
+                {language.label}
+              </Text>
+              {language.ready ? null : (
+                <Text variant="caption" style={{ color: theme.meta }}>
+                  {t('home.comingSoon')}
+                </Text>
+              )}
+            </Pressable>
+          );
+        })}
       </View>
     </View>
   );
