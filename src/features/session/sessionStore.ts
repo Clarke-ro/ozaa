@@ -10,6 +10,9 @@ type GuestSessionState = {
   tableCode: string | null;
   orderId: string | null;
   loyaltyToken: string | null;
+  /** False until the saved visit has been read back (instant on web, a moment on phones). */
+  hydrated: boolean;
+  markHydrated: () => void;
   saveGuest: (input: {
     token: string;
     slug: string;
@@ -40,22 +43,50 @@ type OwnerSessionState = {
   clearOwner: () => void;
 };
 
-export const useGuestSession = create<GuestSessionState>((set) => ({
-  token: null,
-  slug: null,
-  tableCode: null,
-  orderId: null,
-  loyaltyToken: null,
-  saveGuest: ({ token, slug, tableCode, orderId = null }) => {
-    setGuestToken(token);
-    set({ token, slug, tableCode, orderId });
-  },
-  setOrderId: (orderId) => set({ orderId }),
-  setLoyaltyToken: (loyaltyToken) => {
-    setApiLoyaltyToken(loyaltyToken);
-    set({ loyaltyToken });
-  },
-}));
+/**
+ * The guest's visit: table, order and loyalty sign-in. Saved like the owner's sign-in (web:
+ * sessionStorage, so a refresh keeps the order and closing the tab ends the visit; phones: the
+ * secure keychain). Only ids and tokens, never a phone number or name (Act 843).
+ */
+export const useGuestSession = create<GuestSessionState>()(
+  persist(
+    (set) => ({
+      token: null,
+      slug: null,
+      tableCode: null,
+      orderId: null,
+      loyaltyToken: null,
+      hydrated: false,
+      markHydrated: () => set({ hydrated: true }),
+      saveGuest: ({ token, slug, tableCode, orderId = null }) => {
+        setGuestToken(token);
+        set({ token, slug, tableCode, orderId });
+      },
+      setOrderId: (orderId) => set({ orderId }),
+      setLoyaltyToken: (loyaltyToken) => {
+        setApiLoyaltyToken(loyaltyToken);
+        set({ loyaltyToken });
+      },
+    }),
+    {
+      name: 'ozaa-guest-visit',
+      storage: createJSONStorage(() => ownerSessionStorage),
+      partialize: ({ token, slug, tableCode, orderId, loyaltyToken }) => ({
+        token,
+        slug,
+        tableCode,
+        orderId,
+        loyaltyToken,
+      }),
+      onRehydrateStorage: (initial) => (state) => {
+        // The API client keeps its own copies of the tokens; hand it the saved ones.
+        if (state?.token) setGuestToken(state.token);
+        if (state?.loyaltyToken) setApiLoyaltyToken(state.loyaltyToken);
+        (state ?? initial).markHydrated();
+      },
+    },
+  ),
+);
 
 export const useOwnerSession = create<OwnerSessionState>()(
   persist(

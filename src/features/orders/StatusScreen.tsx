@@ -28,6 +28,7 @@ export function StatusScreen({ slug }: { slug: string }) {
   const venue = useVenue(slug);
   const currency = venue.data?.currency ?? DEFAULT_CURRENCY;
   const orderId = useGuestSession((state) => (state.slug === slug ? state.orderId : null));
+  const hydrated = useGuestSession((state) => state.hydrated);
   const order = useQuery({
     queryKey: ['order', orderId],
     queryFn: () => api.getOrder(orderId ?? ''),
@@ -35,6 +36,8 @@ export function StatusScreen({ slug }: { slug: string }) {
     refetchInterval: LIVE_MS,
   });
 
+  // On phones the saved visit takes a moment to load; don't flash "no order" meanwhile.
+  if (!hydrated) return <LoadingState />;
   if (!orderId) {
     return (
       <SafeScreen>

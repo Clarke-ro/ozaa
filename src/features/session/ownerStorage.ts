@@ -3,7 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 import type { StateStorage } from 'zustand/middleware';
 
 /**
- * Where the owner's sign-in is kept between launches.
+ * Where sign-ins are kept: the owner's, and the guest's visit (table, order, calls).
  * Phones: the Keychain / Keystore via expo-secure-store, never AsyncStorage.
  * Web: sessionStorage, so the tokens go when the tab closes and never sit in long-lived storage.
  */

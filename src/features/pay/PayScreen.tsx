@@ -37,6 +37,7 @@ export function PayScreen({ slug }: { slug: string }) {
     currency: venue.data?.currency,
   });
   const orderId = useGuestSession((state) => (state.slug === slug ? state.orderId : null));
+  const hydrated = useGuestSession((state) => state.hydrated);
   const order = useQuery({
     queryKey: ['order', orderId],
     queryFn: () => api.getOrder(orderId ?? ''),
@@ -71,6 +72,8 @@ export function PayScreen({ slug }: { slug: string }) {
     if (payment.data.status === 'abandoned') send({ type: 'verify_still_open' });
   }, [client, payment.data, t]);
 
+  // On phones the saved visit takes a moment to load; don't flash "nothing to pay" meanwhile.
+  if (!hydrated) return <LoadingState />;
   if (!orderId) {
     return (
       <SafeScreen>
