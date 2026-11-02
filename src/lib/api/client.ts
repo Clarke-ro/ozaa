@@ -1,0 +1,108 @@
+import type {
+  AuthTokens,
+  BillQuote,
+  BillQuoteRequest,
+  Call,
+  ConsentInput,
+  CreateOrderRequest,
+  GuestSession,
+  InitializePaymentRequest,
+  LoyaltyCard,
+  LoyaltyMember,
+  LoyaltyProgram,
+  Menu,
+  MenuCategory,
+  MenuCategoryInput,
+  MenuItem,
+  MenuItemInput,
+  Offer,
+  Order,
+  OtpPurpose,
+  Payment,
+  PayoutAccount,
+  PayoutAccountInput,
+  ServiceSettings,
+  StaffMember,
+  StaffRole,
+  StaffUser,
+  Story,
+  Table,
+  ThemeInput,
+  VenuePublic,
+  VenueSettings,
+  VenueSettingsPatch,
+  VenueTheme,
+  VideoReview,
+  WaiterCall,
+  WaiterReason,
+  Wifi,
+} from './types';
+
+export type TokenSource = {
+  guest: () => string | null;
+  access: () => string | null;
+};
+
+export type ApiClient = {
+  requestOtp(body: { phone: string; purpose: OtpPurpose }, call?: Call): Promise<{ expiresInSeconds: number; resendInSeconds: number }>;
+  verifyOtp(body: { phone: string; code: string; purpose: OtpPurpose }): Promise<AuthTokens>;
+  refreshTokens(body: { refreshToken: string }): Promise<AuthTokens>;
+  logout(): Promise<void>;
+  getMe(): Promise<StaffUser>;
+  createGuestSession(body: { venueSlug: string; tableCode?: string; language?: 'en' | 'tw' | 'ga' | 'ee' | 'fr' }): Promise<GuestSession>;
+  getVenue(slug: string, call?: Call): Promise<VenuePublic>;
+  getMenu(slug: string, call?: Call): Promise<Menu>;
+  getWifi(slug: string): Promise<Wifi>;
+  listStories(slug: string): Promise<{ items: Story[] }>;
+  listOffers(slug: string): Promise<{ items: Offer[] }>;
+  createOrder(body: CreateOrderRequest, call: Call): Promise<Order>;
+  getOrder(orderId: string, call?: Call): Promise<Order>;
+  quoteBill(orderId: string, body: BillQuoteRequest): Promise<BillQuote>;
+  initializePayment(body: InitializePaymentRequest, call: Call): Promise<Payment>;
+  getPayment(reference: string): Promise<Payment>;
+  verifyPayment(reference: string): Promise<Payment>;
+  paystackWebhook(rawBody: string, signature: string | null): Promise<void>;
+  callWaiter(body: { reason: WaiterReason; note?: string }, call: Call): Promise<WaiterCall>;
+  getWaiterCall(id: string): Promise<WaiterCall>;
+  getMyLoyaltyCard(slug: string): Promise<LoyaltyCard>;
+  joinLoyalty(slug: string, body: { firstName?: string; birthdayMonthDay?: string; consent: ConsentInput }): Promise<LoyaltyCard>;
+  leaveLoyalty(slug: string): Promise<void>;
+  redeemReward(slug: string, body: { rewardId: string; orderId?: string }, call: Call): Promise<LoyaltyCard>;
+  createReview(body: { stars: number; highlights?: ('food' | 'service' | 'speed' | 'value' | 'vibe' | 'cleanliness')[]; text?: string; orderId?: string }, call: Call): Promise<{ id: string; googleReviewUrl: string | null }>;
+  createVideoUpload(body: { contentType: string; durationSeconds: number; sizeBytes: number }): Promise<{ uploadId: string; uploadUrl: string; expiresAt: string }>;
+  createVideoReview(body: { uploadId: string; stars: number; firstName?: string; quote?: string; menuItemId?: string; featureConsent: boolean }, call: Call): Promise<{ id: string; deleteToken: string }>;
+  deleteMyVideoReview(id: string, call: Call): Promise<void>;
+  getLeaderboard(slug: string): Promise<{ period: string; entries: { rank: number; nickname: string; score: number; sample?: boolean }[]; stampRule: { enabled: boolean; minScore: number } }>;
+  submitScore(slug: string, body: { score: number; runId: string; durationMs: number; nickname?: string }, call?: Call): Promise<{ rank: number | null; stampEarned: boolean }>;
+  sendFeedback(body: { message: string; contactPhone?: string }): Promise<void>;
+  ownerGetVenue(venueId: string): Promise<VenueSettings>;
+  ownerUpdateVenue(venueId: string, body: VenueSettingsPatch): Promise<VenueSettings>;
+  ownerSetTheme(venueId: string, body: ThemeInput): Promise<VenueTheme>;
+  ownerCreateMediaUpload(venueId: string, body: { kind: 'banner' | 'logo' | 'dish_photo'; contentType: string; sizeBytes: number }): Promise<{ mediaId: string; uploadUrl: string; expiresAt: string }>;
+  ownerGetServices(venueId: string): Promise<ServiceSettings>;
+  ownerSetServices(venueId: string, body: ServiceSettings): Promise<ServiceSettings>;
+  ownerListStaff(venueId: string): Promise<{ items: StaffMember[] }>;
+  ownerInviteStaff(venueId: string, body: { phone: string; role: StaffRole; firstName: string }): Promise<StaffMember>;
+  ownerListCategories(venueId: string): Promise<{ items: MenuCategory[] }>;
+  ownerCreateCategory(venueId: string, body: MenuCategoryInput): Promise<MenuCategory>;
+  ownerUpdateCategory(venueId: string, categoryId: string, body: MenuCategoryInput): Promise<MenuCategory>;
+  ownerDeleteCategory(venueId: string, categoryId: string): Promise<void>;
+  ownerCreateItem(venueId: string, body: MenuItemInput): Promise<MenuItem>;
+  ownerUpdateItem(venueId: string, itemId: string, body: MenuItemInput): Promise<MenuItem>;
+  ownerDeleteItem(venueId: string, itemId: string): Promise<void>;
+  ownerListTables(venueId: string): Promise<{ items: Table[] }>;
+  ownerCreateTables(venueId: string, body: { codes: string[] }): Promise<{ items: Table[] }>;
+  ownerGetTableQr(venueId: string, tableId: string, format?: 'svg' | 'png' | 'pdf'): Promise<string>;
+  ownerListOrders(venueId: string): Promise<{ items: Order[]; nextCursor?: string | null }>;
+  ownerSetOrderStatus(orderId: string, body: { status: Order['status'] }): Promise<Order>;
+  ownerRecordCashPayment(orderId: string, body: { amountPesewas: number }, call?: Call): Promise<Order>;
+  ownerListWaiterCalls(venueId: string): Promise<{ items: WaiterCall[] }>;
+  ownerUpdateWaiterCall(id: string, body: { status: 'acknowledged' | 'resolved' }): Promise<WaiterCall>;
+  ownerListVideoReviews(venueId: string, state?: VideoReview['state']): Promise<{ items: VideoReview[] }>;
+  ownerModerateVideoReview(id: string, body: { state: 'featured' | 'hidden' }): Promise<VideoReview>;
+  ownerGetLoyalty(venueId: string): Promise<LoyaltyProgram>;
+  ownerSetLoyalty(venueId: string, body: LoyaltyProgram): Promise<LoyaltyProgram>;
+  ownerListLoyaltyMembers(venueId: string): Promise<{ items: LoyaltyMember[] }>;
+  ownerGetPayoutAccount(venueId: string): Promise<PayoutAccount>;
+  ownerSetPayoutAccount(venueId: string, body: PayoutAccountInput): Promise<PayoutAccount>;
+};

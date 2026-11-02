@@ -1,0 +1,53 @@
+{
+  "mamas-kitchen": {
+    "venueId": "ven_mamas",
+    "stamps": 5,
+    "stampsNeeded": 8,
+    "reward": {
+      "id": "rwd_mamas",
+      "title": "Free jollof & chicken",
+      "stampsNeeded": 8
+    },
+    "rewardReady": false,
+    "memberSince": "2026-03-14",
+    "history": [],
+    "consent": {
+      "marketing": false,
+      "at": "2026-03-14T18:02:00Z"
+    }
+  },
+  "bean-there": {
+    "venueId": "ven_bean",
+    "stamps": 3,
+    "stampsNeeded": 10,
+    "reward": {
+      "id": "rwd_bean",
+      "title": "Free flat white",
+      "stampsNeeded": 10
+    },
+    "rewardReady": false,
+    "memberSince": "2026-03-14",
+    "history": [],
+    "consent": {
+      "marketing": false,
+      "at": "2026-03-14T18:02:00Z"
+    }
+  },
+  "auntie-akos": {
+    "venueId": "ven_akos",
+    "stamps": 2,
+    "stampsNeeded": 6,
+    "reward": {
+      "id": "rwd_akos",
+      "title": "Free fufu & light soup",
+      "stampsNeeded": 6
+    },
+    "rewardReady": false,
+    "memberSince": "2026-03-14",
+    "history": [],
+    "consent": {
+      "marketing": false,
+      "at": "2026-03-14T18:02:00Z"
+    }
+  }
+}

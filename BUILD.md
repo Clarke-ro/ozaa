@@ -1,0 +1,660 @@
+# Ozaa: what we are building, how, and in what order
+
+This is the master document for the coding agent. Read it all once, then follow the checklist in section 13. If something here conflicts with a render in `design/renders/`, the render wins for layout and this file wins for rules. Section 17 lists what to ask Clarke.
+
+Contents:
+1. What Ozaa is
+2. Who uses it
+3. The product map
+4. Decisions already made
+5. Stack and why
+6. Repo layout
+7. Code rules (hygiene)
+8. Design system
+9. State machines
+10. API contract and mock layer
+11. Slow networks and cheap Android phones
+12. Ghana specifics, money and the law
+13. Phases and the ordered checklist
+14. Testing and verification
+15. Definition of done
+16. CI, environments and release
+17. Open questions for Clarke
+
+---
+
+## 1. What Ozaa is
+
+Ozaa is a QR-code table app for restaurants, chop bars, cafés and bars in Ghana, and later the rest of West Africa. A guest scans the code on their table and lands on that venue's own page in the phone's browser. No app to install, and no account. From there they can:
+- read the menu and order
+- call the waiter
+- see where their food is
+- pay with MoMo or card and split the bill
+- connect to the Wi-Fi
+- collect loyalty stamps
+- leave a written or video review
+- play a short game while they wait
+
+The venue owner has an Ozaa app (phone and web). In it they switch services on and off, customise their page, watch orders come in, and moderate video reviews.
+
+The money goes straight to the venue through Paystack split payments, with Ozaa's fee taken by the split. **Ozaa never holds anyone's money.**
+
+The name on everything is **Ozaa**. Never mention TakeOrder anywhere: code, comments, copy, commits or docs.
+
+## 2. Who uses it
+
+| User | Where | What they need |
+|---|---|---|
+| **Guest** | Phone browser (Android mostly, many low-end, often on mobile data) | Fast first load, big tap targets, clear money words, works on a weak signal, their language |
+| **Owner** | Owner app on Android/iOS, or the same app on the web | See orders and money, switch services, customise the page, moderate reviews, set up payouts |
+| **Staff** (manager, waiter, kitchen) | Owner app with a smaller role | Waiters: orders and waiter calls. Kitchen: move orders to Being prepared and Ready. Managers: everything except payouts and staff. |
+
+## 3. The product map
+
+Clarke's order. Each product is a group of features. We build them in this order, frontend first.
+
+| # | Product | What it is | Phase |
+|---|---|---|---|
+| 1 | **Table** | Guest page from the QR code, with the home screen, stories, menu, order, order status, call waiter, Wi-Fi, offers, about, the game, and the food-ready banner. Owner side: services, customise, orders dashboard and staff. | 1 |
+| 2 | **Pay** | Whole bill, equal split or "my items", with tips. MoMo (MTN, Telecel, AT) and card through Paystack, Paystack sandbox first. Split payments to the venue's subaccount; Ozaa never holds funds. | 2 |
+| 3 | **Loyalty** | Stamp card per venue, joined with a phone code and recorded consent. Stamps for paid orders and, optionally, a game high score. | 3 |
+| 4 | **Reviews** | Written reviews (4–5 stars point to Google, 1–3 to private feedback). 15–30 s video reviews become story circles once the owner features them. Owner moderation. | 4 |
+| 5 | POS | Staff take orders and cash at the counter, print or share receipts. | 7 |
+| 6 | Stock | Track ingredients and items, with automatic "sold out". | 8 |
+| 7 | Orders | Kitchen display, order history, takeaway and pickup, live push in place of polling. | 9 |
+| 8 | AI Waiter | Answers questions and takes orders by text or voice in English, Twi, Ga and Ewe. | 10 |
+| 9 | Marketing | WhatsApp/SMS campaigns to members who agreed to marketing, plus offers and events. | 11 |
+| 10 | Insights | Sales, best sellers, busy hours, review trends. | 12 |
+| 13 | Setup | Self-serve onboarding: sign up, menu import, tables, QR sticker print, payout account. | 13 |
+
+Products 11 and 12 are not in Clarke's list; do not invent them. **Video menu** (short dish videos on the menu) is roadmap only: do not build it, and do not add it to the services list.
+
+## 4. Decisions already made
+
+These are settled. Do not reopen them.
+- **Logo:** the SCAN FRAME mark. It is an orange #FC5205 circle with a white rounded square, QR corner marks, and a fork and knife cut out. The files are in `design/logo/` and the rules are in `design/brand.md` section 1.
+- **Colours:** black and white base. #FC5205 is for the logo only. Buttons are #D24000, hover #BA3800, pressed #A33000, tint #FFF1EA.
+- **Fonts:** Inter for text and Unbounded for display.
+- **Venue theming:** each venue sets one colour and a heading font. Contrast fallbacks follow `deriveTheme` (`design/prototype/theme.js`). Ozaa-owned screens (the owner app, Customise, and "Powered by Ozaa") always use Ozaa orange.
+- **Guest home:** an edge-to-edge banner with a round logo at bottom-left, then name, description, location and hours. Below that come the video-review story circles, then services in four sections (At your table, Rewards, Fun while you wait, More). Each service opens its own screen.
+- **Game:** "Play while you wait" is for every guest. It has a weekly leaderboard, an optional loyalty stamp at the owner's target score, and the food-ready banner can appear over it.
+- **Owner side:** review moderation, service toggles, the Customise page, and an orders dashboard.
+- **Payments:** Paystack, sandbox first. MoMo on MTN, Telecel and AT, plus card. Split payments. Never hold funds.
+- **Build order:** frontend first against a fixed API contract and a mock. The backend comes only after Clarke approves the UI.
+- **Code style:** Clarke is learning, so code must be simple, readable, and commented where it is not obvious. Every feature gets a LEARNING.md entry.
+
+## 5. Stack and why
+
+Checked on npm on 31 Oct 2026. **Do not pin these by hand.** Create the app with `npx create-expo-app@latest`, then add every Expo-related package with `npx expo install <pkg>` so the versions match the SDK. Before writing SDK code, read the docs for the installed version, as `agent-skills/expo-agents-md/AGENTS.md` says.
+
+| Need | Choice | Version seen | Why |
+|---|---|---|---|
+| Framework | Expo SDK (latest stable) | expo 58.0.22, react-native 0.88.1 | One codebase for the guest web app and the owner phone app. CNG means we never touch `ios/` or `android/`. |
+| Routing | Expo Router | 58.0.29 | File-based routes give real URLs on the web, which the QR codes need (`/mamas-kitchen/t/12`). |
+| Language | TypeScript, `strict: true`, plus `noUncheckedIndexedAccess` | — | Catches mistakes before Clarke sees them. |
+| Web | react-native-web (bundled with Expo) | 0.21.4 | Guests use the browser. |
+| Server data | TanStack Query | 5.105.0 | Caching, retries, polling and offline persistence in one place. |
+| Local state | Zustand | 5.0.16 | Cart, guest session and UI flags. Small and easy to read. |
+| Persistence | `@react-native-async-storage/async-storage` + `@tanstack/query-async-storage-persister` | 3.1.1 / 5.105.0 | Works on web (localStorage) and native. Keeps the menu for offline use. |
+| Secure tokens | expo-secure-store (native only) | 58.0.2 | Owner tokens on the phone. On web, keep tokens in memory and sessionStorage (section 12.6). |
+| API types | openapi-typescript + openapi-fetch | 7.13.0 / 0.17.0 | Types come straight from `api/openapi.yaml`, so the app cannot drift from the contract. |
+| Runtime checks | zod | 4.6.7 | Parse untrusted input at the edges: route params, storage, payment responses (pstack-principle-boundary-discipline). |
+| Mock API | Our own in-memory mock client (section 10) | — | The same interface as the real client, so swapping is one env var. Optional MSW (3.0.3) for web tests. |
+| Styling | `StyleSheet` + typed tokens from `design/tokens.json` | — | Nothing extra to learn or configure, and it works on web and native. NativeWind (4.2.7) was considered and rejected: it adds another build layer and a second way to style for a beginner. |
+| Icons | lucide-react-native + react-native-svg | 1.66.0 / 15.16.0 | Matches the brand (Lucide, 2 px stroke). |
+| Images | expo-image | 58.0.18 | Caching, blurhash placeholders, WebP. |
+| Video | expo-video | 58.0.13 | Story viewer and review playback. |
+| Camera | expo-camera | 58.0.14 | Front-camera video reviews. **Check whether video recording works on web in this SDK.** If it doesn't, use a web-only `<input type="file" accept="video/*" capture="user">` fallback in `RecordVideo.web.tsx`. |
+| Lists | @shopify/flash-list | 2.3.3 | Smooth long menus on cheap phones. |
+| Animation | react-native-reanimated | 4.7.1 | Sheets, banner slide, the game. Interaction motion stays at 200 ms or less. |
+| Fonts | expo-font | 58.0.11 | Loads the WOFF2 subsets from `design/prototype/fonts/` (convert to TTF/OTF for native if needed). |
+| i18n | i18next + react-i18next + expo-localization | 26.5.12 / 17.1.9 / 58.0.5 | English first. Twi, Ga and Ewe files exist from day one, but only native speakers fill them (never machine-translate without review). |
+| Haptics | expo-haptics | 58.0.7 | A light tick on add-to-order and in the game (native only). |
+| Unit and component tests | jest-expo + @testing-library/react-native | 58.0.13 / 14.1.0 | Standard for Expo (callstack-react-native-testing). |
+| Web end-to-end and screenshots | @playwright/test | 1.64.1 | Drives the guest web build at 390×844 and compares it with `design/renders/`. |
+| Native end-to-end | Maestro (later, owner app) | — | Simple YAML flows on an Android emulator. |
+| Lint and format | `npx expo lint` (eslint-config-expo 58.0.4) + Prettier | — | Expo's own config. Add rules from section 7. |
+| Git hooks | Husky 9 + lint-staged 17 + commitlint 21 | — | Lint and type-check before commit, plus conventional commit titles. |
+| CI | GitHub Actions (+ EAS Workflows for builds) | — | See section 16. |
+| Backend (Phase 5) | Node + TypeScript, Hono, Postgres with Drizzle, in `server/` in the same repo | — | The same language as the app. Hono is small. Postgres for money. The final host is Clarke's call (section 17). |
+
+**Expo Go note:** Expo Go on phones can lag behind the newest SDK. Use a development build (`agent-skills/expo-dev-client`) for the owner app and test the guest app in the browser.
+
+## 6. Repo layout
+
+Group code by **feature**, not by file type. Each feature folder owns its screens' parts, hooks, pure logic and tests. Route files in `src/app/` stay thin: they read params, call one feature hook, and render one feature screen component.
+
+```
+ozaa/
+├─ AGENTS.md                 # copied from this kit (kit root AGENTS.md), then kept up to date
+├─ BUILD.md                  # this file
+├─ LEARNING.md               # plain-language notes for Clarke, one entry per feature
+├─ api/openapi.yaml          # the contract (source of truth for all endpoints)
+├─ design/                   # renders, tokens, brand.md, logo (copied from the kit)
+├─ assets/                   # app icon, splash, fonts (from design/logo/expo, design/prototype/fonts)
+├─ src/
+│  ├─ app/                   # Expo Router routes ONLY (see table below)
+│  ├─ features/
+│  │  ├─ venue/              # useVenue, VenueHeader, StoryRow, ServiceGrid, hours logic
+│  │  ├─ menu/               # MenuScreen, ItemCard, ItemSheet, categories, dietary tags
+│  │  ├─ cart/               # cartStore (zustand), totals (pure), CartBar
+│  │  ├─ orders/             # placeOrder, useOrder (polling), OrderSteps, foodReady banner
+│  │  ├─ waiter/             # reasons, useCallWaiter, WaiterSent
+│  │  ├─ pay/                # bill split (pure), tips, PayScreen, MomoWait, paymentMachine
+│  │  ├─ loyalty/            # StampCard, join flow (OTP + consent), stamp rules
+│  │  ├─ reviews/            # ReviewForm, RecordVideo(.web).tsx, StoryViewer, upload
+│  │  ├─ game/               # plateStack engine (pure), GameCanvas, leaderboard (local)
+│  │  ├─ wifi/ offers/ feedback/ about/ reserve/ events/
+│  │  ├─ theming/            # deriveTheme.ts (pure), VenueThemeProvider, contrast utils
+│  │  └─ owner/
+│  │     ├─ auth/            # OTP login, token storage, role guard
+│  │     ├─ dashboard/       # live orders, waiter calls, today's takings
+│  │     ├─ services/        # toggles + game stamp target
+│  │     ├─ customise/       # branding form, live preview, contrast note
+│  │     ├─ reviews/         # video moderation queue
+│  │     └─ staff/ tables/ menu-editor/ payouts/
+│  ├─ ui/                    # design-system parts used by many features: Button, Text, Card,
+│  │                         # Sheet, Chip, Badge, IconButton, ListRow, Screen, Skeleton, Toast
+│  ├─ lib/
+│  │  ├─ api/                # schema.ts (generated), client.ts (interface), http.ts, index.ts
+│  │  ├─ money.ts            # pesewas <-> "GH₵65.50"
+│  │  ├─ phone.ts            # Ghana numbers -> E.164 (+233...), network guess
+│  │  ├─ time.ts             # opening hours, "Open now · until 10 PM"
+│  │  ├─ storage.ts          # one wrapper over AsyncStorage / SecureStore
+│  │  └─ env.ts              # reads EXPO_PUBLIC_* once, parsed with zod
+│  ├─ mocks/                 # mockClient.ts, fixtures/*.json (copied from api/fixtures), media map
+│  ├─ i18n/                  # index.ts, locales/en.json tw.json ga.json ee.json
+│  └─ theme/                 # tokens.ts (generated from design/tokens.json), fonts.ts
+├─ e2e/                      # Playwright tests + screenshot baselines
+├─ scripts/                  # gen-api-types, gen-tokens, copy-fixtures, check-fixtures
+├─ server/                   # empty until Phase 5
+└─ .github/workflows/ci.yml
+```
+
+Rules for the layout:
+- A feature may import from `ui/`, `lib/`, `theme/`, `i18n/` and **another feature's `index.ts` only**. It never reaches into another feature's files. Each feature folder exports its public pieces from `index.ts`.
+- `ui/` never imports from `features/`.
+- Pure logic (totals, split, loyalty, deriveTheme, the game engine, hours, payment machine) lives in plain `.ts` files with no React, next to a `.test.ts`.
+- One component per file. A file over about 200 lines is a sign to split it.
+- Platform-specific code goes in `.web.tsx` / `.native.tsx` files, never in `Platform.OS` branches spread through a component.
+
+### Routes (`src/app/`)
+
+Expo Router groups in brackets do not appear in URLs. The QR code opens `https://ozaa.app/{venueSlug}/t/{table}`.
+
+| Route file | URL | Screen | Render to match |
+|---|---|---|---|
+| `_layout.tsx` | — | Providers: fonts, QueryClient (+persister), i18n, safe area, error boundary | — |
+| `index.tsx` | `/` | Simple Ozaa landing for now ("Scan the code on your table") | — |
+| `+not-found.tsx` | any | Friendly not-found with a "Scan again" hint | — |
+| `[venue]/_layout.tsx` | — | Loads the venue, applies `VenueThemeProvider`, mounts the food-ready banner and the bottom bar | — |
+| `[venue]/t/[table].tsx` | `/mamas-kitchen/t/12` | Creates a guest session (`POST /guest-sessions`), stores it, redirects to the venue home | — |
+| `[venue]/index.tsx` | `/mamas-kitchen` | Guest home | `home-mamas.png`, `home-mamas-scrolled.png`, `home-default*.png`, `v4-reference/guest-akos.png`, `guest-bean.png` |
+| `[venue]/story/[id].tsx` | modal | Story viewer | `story.png` |
+| `[venue]/menu/index.tsx` | `/…/menu` | Menu (Food/Drinks tabs, category chips, search) | `menu.png` |
+| `[venue]/menu/[item].tsx` | sheet | Item detail with options and notes | `v4-reference/02-item-detail.png` (restyle to v5) |
+| `[venue]/order.tsx` | sheet | Your order (cart) and Send to kitchen | follows `menu.png` bottom bar |
+| `[venue]/status.tsx` | | Order status | `status.png` |
+| `[venue]/waiter.tsx` | | Call waiter, then sent state | `waiter.png`, `waiter-sent.png` |
+| `[venue]/wifi.tsx` | | Wi-Fi (password, copy, QR join) | `wifi.png` |
+| `[venue]/pay.tsx` | | Pay and split | `pay.png`, MoMo wait: `v4-reference/03-momo-checkout.png` |
+| `[venue]/loyalty.tsx` | | Stamp card and join | `loyalty.png` |
+| `[venue]/review/index.tsx` | | Leave a review | `review.png` |
+| `[venue]/review/record.tsx` | | Record a video review | `review-record.png` |
+| `[venue]/play.tsx` | | Plate Stack game | `game-start.png`, `game.png`, `game-over.png` |
+| `[venue]/offers.tsx`, `about.tsx`, `feedback.tsx`, `reserve.tsx`, `events.tsx` | | List screens | none: reuse `ListRow`/`Card` patterns from the renders |
+| `owner/_layout.tsx` | `/owner` | Auth guard and Ozaa chrome (never venue colours) | — |
+| `owner/login.tsx` | `/owner/login` | Phone + OTP | — |
+| `owner/(tabs)/_layout.tsx` | | Tabs: Orders, Reviews, Services, Customise | — |
+| `owner/(tabs)/index.tsx` | `/owner` | Orders dashboard | `v4-reference/04-owner-dashboard.png` (content; v5 chrome) |
+| `owner/(tabs)/reviews.tsx` | | Video review moderation | `owner-reviews.png` |
+| `owner/(tabs)/services.tsx` | | Service toggles + stamp target | `owner-services.png` |
+| `owner/(tabs)/customise.tsx` | | Customise page | `v4-reference/customise*.png` |
+
+`owner` is a reserved slug: the server must refuse venue slugs that clash with top-level routes (`owner`, `api`, `t`, `legal`, `help`).
+
+The prototype in `design/prototype/` runs these screens in a browser. Run `npx serve design/prototype`, open `index.html` (guest) and `owner.html` (owner), and copy how they behave.
+
+## 7. Code rules (hygiene)
+
+Simple and readable beats clever. Clarke reads this code to learn.
+- **TypeScript strict.** No `any`, no `@ts-ignore` and no non-null `!` without a comment saying why. Model states as unions (pstack-principle-type-system-discipline). For example, `type PayState = { kind: 'idle' } | { kind: 'awaiting_approval'; reference: string; expiresAt: number } | …`
+- **Money is always integer pesewas** (`number` that is a whole number, branded `Pesewas`). Format only at the edge with `formatCedis()`. Never use floats for money, and never trust a price the client computed: the server's total wins.
+- **Names say what things are.** `placeOrder`, `useOrderStatus`, `splitEqually`. No `utils.ts` junk drawers and no `data2`.
+- **Comments explain why, not what.** Add a short comment wherever a rule comes from outside the code: Paystack behaviour, Ghana law, contrast maths, game tuning. Remove comments that repeat the code (pstack-no-comments).
+- **Small functions, early returns, no deep nesting.** Prefer deleting code to adding layers (pstack-principle-laziness-protocol).
+- **No magic numbers** in components: spacing, colours and sizes come from `theme/tokens.ts`. Game tuning numbers live at the top of the engine file with comments.
+- **All user-facing text goes through i18n** (`t('menu.title')`). Run copy through `pstack-unslop` and match `design/brand.md` section 10.
+- **Accessibility:** every touchable has a role and a label, targets are at least 44 px, text contrast reaches 4.5:1, focus is visible on web, and reduced motion is respected (`ui-skills-fixing-accessibility`).
+- **Errors:** every network call shows one of three states: loading (skeleton), error (plain sentence + Try again), or empty (helpful sentence). Never a blank screen or a raw error code.
+- **No new dependency** without a line in the PR saying why and what it costs in bundle size.
+- **Lint rules to add** on top of eslint-config-expo: `@typescript-eslint/no-explicit-any: error`, `no-console: warn` (allow `warn`/`error`), `import/no-cycle: error`, `react-hooks/exhaustive-deps: error`, and a `no-restricted-imports` pattern that blocks deep imports into other features.
+- **Commits:** a conventional-commit title (`feat(menu): add category chips`). The body is in plain words: what changed, why, and how it was checked. One change per commit. No "WIP" on main.
+- **Branches and PRs:** one feature per PR, with the PR template in `templates/`. Run `pstack-blast-radius` before merging and paste its summary in the PR.
+
+## 8. Design system
+
+Everything visual comes from `design/tokens.json` and `design/brand.md`. Build the system **before** any feature screen (Phase 0).
+- `scripts/gen-tokens.mjs` reads `design/tokens.json` and writes `src/theme/tokens.ts` (`as const`). Never hand-edit the output.
+- `src/ui/` holds one file per component:
+  - `Text` (variants display-l, display-m, title, body, caption, button)
+  - `Button` (primary, secondary, ghost, disabled, loading)
+  - `IconButton`, `Card`, `ListRow`, `Chip`, `Badge`, `Sheet` (bottom sheet), `Screen` (safe area + scroll + header), `Skeleton`, `Toast`, `Switch`, `TextField`, `PhoneField`, `PriceText`, `Stepper` (quantity), `EmptyState`, `ErrorState`
+- Every `ui/` component takes colours from the **current theme** (Ozaa or venue), never from hard-coded hex values. `VenueThemeProvider` wraps guest routes with the output of `deriveTheme(venue.theme)`. Owner routes always get the Ozaa theme.
+- Add a dev-only route `src/app/_dev/ui.tsx` (excluded from production builds) that shows every component in every state, for all three sample venues. Screenshots of this page are the design-system review for Clarke.
+- Taste rules, from `anthropic-frontend-design`, `impeccable`, `taste-skill`, `no-slop-ui`, `stop-slop`, `ui-skills-baseline-ui`, `emil-design-eng` and `rauno-interfaces`. Apply them, then re-check with `cursor-team-kit-deslop`:
+  - One filled button per screen. White space instead of boxes inside boxes.
+  - No gradients, glows, emoji icons, random shadows, or "✨ AI" decorations.
+  - No purple. Orange stays small.
+  - Real copy from `brand.md` section 10, never lorem ipsum, and no exclamation marks except "Your food is ready!".
+  - Numbers line up (tabular figures). Prices are never cut off.
+  - Motion is short and purposeful (200 ms or less for taps, under 300 ms for sheets) and turns off with reduced motion.
+
+### Theming (port first, test first)
+Port `design/prototype/theme.js` to `src/features/theming/deriveTheme.ts` using pstack-tdd. Write these tests before the code:
+
+| Venue colour | Button text | Expected ratio | Notes |
+|---|---|---|---|
+| #B5432A (Mama's Kitchen) | white | 5.52 | passes as is |
+| #1F5C3F (Bean There) | white | 7.89 | passes as is |
+| #FFC21A (Auntie Akos) | #111111 | 11.67 | white would be 1.62; ink on white becomes #94710F (4.54); badge text #8E6C0E (4.53) |
+| #D24000 (Ozaa) | white | ≥ 4.5 | default |
+| any colour within ΔE 20 of #D24000 | — | — | `tooCloseToOzaa: true`, so Customise warns |
+
+Also test that every returned pair reaches 4.5:1. Use a property-style loop over 500 random colours.
+
+## 9. State machines
+
+Write each as a pure reducer in its feature folder (`orderMachine.ts`, `paymentMachine.ts`, `waiterCallMachine.ts`), with tests for every legal and illegal move. The UI reads the state and never invents one. `pstack-statechart` can check these with TLA+ if a flow gets tricky.
+
+### Order (server-owned, the guest app only displays it)
+```mermaid
+stateDiagram-v2
+  [*] --> received: guest sends order
+  received --> preparing: kitchen starts
+  preparing --> ready: kitchen done (food-ready banner)
+  ready --> served: waiter delivers
+  received --> cancelled: staff cancels
+  preparing --> cancelled: staff cancels
+  served --> [*]
+  cancelled --> [*]
+```
+The payment summary on an order is separate: `unpaid → part_paid → paid` (and `paid → refunded`, owner only, later). An order can be paid before or after it is served.
+
+### Payment (one attempt to pay one bill quote)
+```mermaid
+stateDiagram-v2
+  [*] --> pending: POST /payments
+  pending --> pay_offline: MoMo, prompt sent to phone
+  pending --> open_url: card, open Paystack checkout
+  pending --> failed: rejected at start
+  pay_offline --> succeeded: charge.success webhook / verify
+  pay_offline --> failed: declined, wrong PIN, no funds
+  pay_offline --> abandoned: not approved within 180 s
+  open_url --> succeeded
+  open_url --> failed
+  open_url --> abandoned
+  succeeded --> [*]
+  failed --> [*]
+  abandoned --> [*]
+```
+- **Only `succeeded` puts money on the order**, and the server checks that the amount and currency (GHS) match. The app never marks anything paid by itself.
+- On the guest side, `paymentMachine.ts` wraps these with UI steps:
+
+  `choosing → quoting → confirming → starting → awaiting_approval (countdown from approveBy) → checking → paid | failed | timed_out`
+
+  - In `awaiting_approval`, poll `GET /payments/{reference}` every 3 s, backing off to 10 s.
+  - When the countdown ends, call `POST /payments/{reference}/verify` once.
+  - Then show "That didn't go through and nothing was taken. Try again?" with a new quote.
+  - Never show "failed" while Paystack might still succeed. Show "Still checking…" until verify answers.
+- Starting a payment uses an `Idempotency-Key` (a uuid made once per Pay tap), so a double tap or a retry on a bad network never charges twice.
+
+### Waiter call
+```mermaid
+stateDiagram-v2
+  [*] --> open: guest taps a reason
+  open --> acknowledged: staff taps "On my way" (name shown to guest)
+  acknowledged --> resolved: staff done
+  open --> resolved: staff done without ack
+  resolved --> [*]
+```
+A guest can have only one open call per table. Calling again while one is open updates its reason. The guest sees "Kwesi is on the way. Usually under 3 minutes." once the call is acknowledged.
+
+### Game round (local only)
+`ready → playing → over → (ready)`. The engine is a pure `step(state, input, dt)` function in `features/game/plateStack.ts`. The rendering part only draws the state.
+
+Rules, from `design/prototype/game.js`:
+- The play area is 358×380, with plates 22 tall and a base width of 210.
+- Overhang is cut off and falls away.
+- A drop within 4 px of the plate below snaps into place and keeps its width. Every 3rd perfect drop in a row adds 10 px of width, up to 210.
+- Speed is `min(150 + score × 11, 420)` px/s.
+- One point per plate. The best score is saved on the phone.
+- The board shows the top 5 for this week, mixing saved scores with sample names labelled "sample". The nickname is optional, up to 14 characters.
+- The stamp is given when the score reaches the venue's target, once per day per phone in v1. The server enforces "once per visit" later.
+- The prototype test in `design/renders/game-test.txt` must pass the same way: 16 aligned taps give a score of 16 and the stamp, a miss ends the game, the banner can show over it, and there are 0 network requests.
+
+## 10. API contract and mock layer
+
+`api/openapi.yaml` (OpenAPI 3.1) is **fixed**. The frontend is built against it, and the backend in Phase 5 must implement it exactly. If a screen needs something the contract doesn't have:
+1. Change `openapi.yaml` in its own small PR first, with a fixture.
+2. Run `npx @redocly/cli lint api/openapi.yaml`, then regenerate types.
+3. Then use it.
+
+Never call an endpoint that isn't in the contract.
+
+Conventions already in the contract:
+- Base URL `/v1`.
+- JSON, camelCase.
+- Money in integer **pesewas** with `currency: GHS`.
+- Phones in E.164 `+233…`.
+- Times in ISO 8601 UTC. Show them in Africa/Accra (UTC+0).
+- Errors are RFC 9457 Problem Details (`type`, `title`, `status`, `detail`, `code`). The app maps `code` to a friendly sentence in i18n. It never shows `detail` raw.
+- `Idempotency-Key` header on every POST that creates money or orders: `/orders`, `/payments`, `/waiter-calls`, `/reviews`.
+- `ETag` / `If-None-Match` → `304` on venue and menu.
+- 429 responses carry `Retry-After`.
+- Auth:
+  - **guestAuth** is a bearer token from `POST /guest-sessions` after the QR scan. No personal data.
+  - **loyaltyAuth** is a bearer token after a phone OTP with purpose `guest_loyalty`.
+  - **ownerAuth** is a bearer token after a phone OTP with purpose `owner_login`, refreshed through `/auth/refresh`. Roles are owner, manager, waiter and kitchen.
+- Venue theme, services list and section order all come from the API (`VenuePublic`), so turning a service off in the owner app hides it for guests.
+
+How the app talks to it (details in `api/MOCKS.md`):
+- `scripts/gen-api-types` runs `openapi-typescript api/openapi.yaml -o src/lib/api/schema.ts`. CI fails if the file is out of date.
+- `src/lib/api/client.ts` defines **one interface**, `ApiClient`, with one method per operationId (`getVenue`, `getMenu`, `createOrder`, `initializePayment`…). The types come from `schema.ts`.
+- Two implementations:
+  - `http.ts` (openapi-fetch, adds auth and idempotency headers, maps Problem Details to typed errors)
+  - `src/mocks/mockClient.ts` (in-memory, seeded from fixtures, fake latency and failures)
+- `src/lib/api/index.ts` picks one with `EXPO_PUBLIC_API_MODE` (`mock` | `http`). Feature code imports only `api` from `lib/api` and never knows which one it got.
+- TanStack Query hooks live in each feature (`useMenu`, `useOrder`). Query keys come from one `queryKeys.ts` per feature.
+
+## 11. Slow networks and cheap Android phones
+
+Most guests are on mobile data with a 2–3 GB phone. Treat these as requirements:
+- **Budget:**
+  - Guest home usable in under 3 s on Playwright "Slow 4G" with 4× CPU throttle.
+  - JS for the first route under about 350 KB gzipped; measure with `npx expo export -p web` and source-map-explorer.
+  - Lighthouse mobile performance 85 or higher for `/mamas-kitchen`.
+- **Images:**
+  - expo-image with `cachePolicy="memory-disk"` and a blurhash or a grey placeholder.
+  - Ask for sizes no wider than 2× the slot.
+  - Banner at most 1200 px wide, WebP.
+- **Video:** never autoplay over cellular for more than the current story. Poster first, `preload="none"` on web, 480p files. Unmount players off-screen.
+- **Caching:**
+  - Persist the venue, menu and stories query cache, with ETag revalidation.
+  - When offline, show cached data with a quiet "You're offline. Showing the menu from 2 minutes ago."
+- **Mutations:**
+  - Placing an order makes a `clientOrderId` once. Retries reuse it and the same idempotency key, so a flaky network never makes two orders.
+  - Payments are never queued offline. Say "You're offline. Connect to pay."
+- **Polling:**
+  - Order status every 10 s while visible.
+  - Payment every 3 s backing off to 10 s.
+  - Stop when the tab or app is hidden, and resume on focus.
+- **Lists:** FlashList for menus. Don't re-render the whole list when one item's quantity changes.
+- **Fonts:** five WOFF2 subsets only. `font-display: swap` on web.
+- **Game:** 60 fps target, but it must stay playable at 30. No allocations inside the frame loop.
+
+## 12. Ghana specifics, money and the law
+
+### 12.1 Payments (Paystack)
+- **Methods:**
+  - MoMo with provider codes `mtn` (MTN MoMo), `vod` (Telecel Cash) and `atl` (AT Money).
+  - Card through Paystack checkout (`open_url`).
+- **MoMo flow:**
+  - The server charges.
+  - Paystack answers `pay_offline` with `display_text`.
+  - The guest approves on their phone within about 180 s.
+  - The server learns the result from the `charge.success` webhook. The signature is HMAC-SHA512 of the raw body with the secret key, in `x-paystack-signature`.
+  - The server falls back to Verify Transaction if the webhook is late.
+- **Split payments:**
+  - Each venue gets a Paystack **subaccount** (bank or MoMo payout, `PUT /owner/venues/{id}/payout-account`).
+  - Every transaction names the subaccount, so Paystack settles the venue directly.
+  - Ozaa's cut is the split share.
+  - **Ozaa never holds funds.** This keeps Ozaa out of the Bank of Ghana PSP licence rules under Act 987, but Clarke must confirm this with a lawyer before launch.
+- **Fees:** Paystack Ghana local fee is about 1.95% per transaction. Who carries it (venue, guest, or shared) is Clarke's decision (`bearer` on the split). The UI must show the final amount before the guest approves.
+- **Sandbox first:** test keys only until Clarke says otherwise. `Payment.testMode` is true in sandbox, and the app shows a small "Test payment" label.
+- **The Paystack secret key lives only on the server** (env var, never in the app, never in `EXPO_PUBLIC_*`, never in git). The app doesn't need the public key either, because the server starts every transaction.
+
+### 12.2 Tax (E-VAT)
+- Since 1 Jan 2026, GRA E-VAT applies: VAT 15%, NHIL 2.5% and GETFund 2.5%, shown as separate lines, with the GRA QR code on the receipt.
+- The `taxes` array in `Order` is **empty for now**. Build the receipt UI so it shows tax lines when they arrive.
+- The tax maths and the GRA connection come in a later phase, after Clarke checks with an accountant whether venues are VAT-registered.
+
+### 12.3 Data protection (Act 843)
+- The guest session holds no personal data.
+- A phone number is collected only to join loyalty or for an owner or staff login.
+- **Consent:**
+  - Joining loyalty needs a ticked consent box for loyalty itself.
+  - **Marketing consent is a separate box, unticked by default.**
+  - Send `textVersion` so the server records exactly which text was shown.
+- Members can see, download (later) and delete their data: `DELETE /venues/{slug}/loyalty/me` removes the card and phone number.
+- **Video reviews:**
+  - The guest sees the consent text before recording.
+  - The "can feature" box is ticked by default and the guest can untick it.
+  - They get a delete token (`X-Delete-Token`) to remove the video later.
+  - Only the first name and rating are shown.
+- Clarke must **register Ozaa with the Data Protection Commission** (GH¢120, renew every 2 years) before real phone numbers are stored. The app needs a Privacy page (`/legal/privacy`) before launch.
+
+### 12.4 Phones
+- Accept `024…`, `24…`, `+233 24…` and `233…`. Store `+23324…`. Guess the network from the prefix to preselect the MoMo provider, but always let the guest change it.
+- Prefixes change over time, so keep the table in one file with a comment.
+
+### 12.5 Languages
+- English is the default. Twi (`tw`), Ga (`ga`), Ewe (`ee`) and French (`fr`, for later regional use) are in the contract.
+- UI strings are only added to those files by native speakers. Until then, fall back to English and hide that language in the picker.
+- Product 8 (AI Waiter) uses Khaya AI for Twi, Ewe and Ga speech recognition (later phase).
+
+### 12.6 Security checklist (app side)
+- No secrets in the app, ever. Anything in `EXPO_PUBLIC_*` is public.
+- Owner tokens:
+  - On native, store them in SecureStore.
+  - On web, keep the access token in memory and the refresh token in sessionStorage for now. Phase 5 may move this to httpOnly cookies (note it in the backend PR).
+- Guest token in memory and sessionStorage only. It is short-lived.
+- Validate route params (`venue` slug pattern, `table` code) with zod before use.
+- Never put phone numbers, tokens or payment references in logs, analytics or URLs.
+- The owner role guard checks the role from `/me`. The server also enforces roles, so the guard is UX only.
+- Uploads (video reviews, banners) use pre-signed URLs from the contract, with type and size limits checked before upload (video at most 30 s and 25 MB).
+- Render user text as text only. No HTML injection on web (no `dangerouslySetInnerHTML`).
+
+## 13. Phases and the ordered checklist
+
+Work top to bottom. Each box is one small PR that ends in a verifiable state (pstack-principle-sequence-verifiable-units). Before each feature, run `pstack-architect`: sketch the types, function signatures and files, and post them in the PR description. Then build. Tick the box in this file in the same PR.
+
+**The UI approval gate:** the backend starts only after Clarke has seen the screenshots for Phases 0–4 and said yes. Until then, `EXPO_PUBLIC_API_MODE=mock`. The one exception is the Paystack sandbox slice in Phase 2b.
+
+### Phase 0: Setup and design system
+- [x] 0.1 `npx create-expo-app@latest ozaa` (TypeScript template). Move routes to `src/app/`. Copy `AGENTS.md`, `BUILD.md`, `api/` and `design/` from the kit. Create `LEARNING.md` from `templates/LEARNING.template.md`.
+- [x] 0.2 Tooling:
+  - strict tsconfig (`templates/tsconfig.json`)
+  - `npx expo lint` plus the extra rules (section 7)
+  - Prettier, Husky, lint-staged and commitlint
+  - `.env.example`
+  - CI workflow (`templates/ci.yml`)
+- [x] 0.3 App config:
+  - name "Ozaa", slug `ozaa`, scheme `ozaa`
+  - icons and splash from `design/logo/expo/` (`templates/app.config.snippet.ts`)
+  - web favicon
+  - `experiments.typedRoutes: true`
+- [x] 0.4 Fonts: Inter 400/600, Unbounded 700, Noto Serif 700 and Montserrat 800, loaded with expo-font. Keep the splash up until they load.
+- [x] 0.5 `scripts/gen-tokens.mjs` → `src/theme/tokens.ts`.
+- [x] 0.6 `ui/` components (section 8) and the `_dev/ui` gallery page.
+- [x] 0.7 `deriveTheme.ts` with tests first (section 8 table) and `VenueThemeProvider`.
+- [x] 0.8 API layer:
+  - `gen-api-types`
+  - `ApiClient` interface
+  - `mockClient` with fixtures (`api/MOCKS.md`)
+  - `http.ts` stub
+  - `index.ts` switch
+  - a CI check that the generated types are up to date
+- [x] 0.9 `lib/money.ts`, `lib/phone.ts` and `lib/time.ts`, with tests first.
+- [x] 0.10 i18n setup with `en.json`, plus empty `tw/ga/ee` files that fall back to English.
+- [x] 0.11 Playwright set-up: a 390×844 viewport at DPR 2, against `npx expo export -p web` served locally. One smoke test.
+- [ ] **Review:** gallery screenshots for all 3 venues go to Clarke, with a LEARNING.md entry on "how the app is put together".
+
+### Phase 1: Table (product 1), guest side, on mocks
+- [x] 1.1 `/[venue]/t/[table]`: guest session, then redirect. Bad slug goes to the not-found screen.
+- [x] 1.2 Guest home: banner, logo, info, live hours, table pill, compact header on scroll, and the "Powered by Ozaa" footer. Renders: `home-mamas.png`, `home-mamas-scrolled.png`, `home-default.png`, `home-default-scrolled.png`, `v4-reference/guest-akos.png`, `v4-reference/guest-bean.png`.
+- [x] 1.3 Story row and story viewer: rings, progress, tap and swipe, "Add to order". Render: `story.png`.
+- [x] 1.4 Services in 4 sections, driven by the `services` list from the API. Hidden services and empty sections disappear.
+- [x] 1.5 Menu: Food/Drinks tabs, category chips, search, dietary tags, Popular badges, sold-out state. Render: `menu.png`.
+- [x] 1.6 Item sheet: options, quantity, note, "Add to order · GH₵70". Render: `v4-reference/02-item-detail.png`, restyled to v5.
+- [x] 1.7 Cart store and totals (tdd), the bottom bar "View order · 3 · GH₵143", the Your order sheet, and Send to kitchen (`createOrder` with `clientOrderId`).
+- [x] 1.8 Order status: four steps, ETA, polling. Render: `status.png`.
+- [ ] 1.9 Food-ready banner over any screen, the game included, triggered when the order becomes `ready`.
+- [x] 1.10 Call waiter: reasons, one open call per table, sent state with the staff name. Renders: `waiter.png`, `waiter-sent.png`.
+- [x] 1.11 Wi-Fi: network name, copy password, join QR (guestAuth). Render: `wifi.png`.
+- [x] 1.12 Offers, About & contact, Feedback, Reserve and Events: simple list screens. Reserve and Events can show "Coming soon" if the venue hasn't set them up.
+- [x] 1.13 Play while you wait (Plate Stack): engine tdd, then the canvas and the local leaderboard. Renders: `game-start.png`, `game.png`, `game-over.png`, plus the test in `game-test.txt`. The stamp hook is only wired in Phase 3.
+- [ ] 1.14 Offline and slow-network pass (section 11) over Phase 1 screens.
+- [ ] **Review:** screenshots of every Phase 1 screen, side by side with the render, for all 3 venues.
+
+### Phase 1b: Table (product 1), owner side, on mocks
+- [x] 1b.1 Owner login (phone + OTP, mock code `123456`), token storage, role guard, and the Ozaa-orange chrome and tabs.
+- [ ] 1b.2 Orders dashboard: live orders by status, move status (role-aware), waiter calls list, and "You made GH₵2,480 today…" header. Render: `v4-reference/04-owner-dashboard.png`, content only.
+- [ ] 1b.3 Services: toggles and the game stamp switch with its target score. Render: `owner-services.png`.
+- [ ] 1b.4 Customise: banner, logo, colour presets and hex with a live contrast note and ΔE warning, heading font, name, description, location, hours, preview, and Save and publish. Renders: `v4-reference/customise*.png`.
+- [ ] 1b.5 Staff and tables: invite by phone with a role, list tables, download QR (svg/png/pdf).
+- [ ] 1b.6 Menu editor: categories and items CRUD, photo upload, sold-out toggle.
+- [ ] **Review:** Clarke tries the owner app in a dev build and on the web.
+
+### Phase 2: Pay (product 2)
+- [x] 2.1 Bill split logic, tdd. Covers whole bill, equal split with remainder pesewas going to the first payers, my items, tips (0/5/10/15% rounded half-up to the pesewa, or a custom amount), and "remaining after".
+- [x] 2.2 `paymentMachine.ts`, tdd (section 9).
+- [x] 2.3 Pay screen: split choice, tip, method (MTN MoMo / Telecel Cash / AT Money / card), phone field with network guess, and "Pay GH₵143 with MoMo. You approve it on your phone." Render: `pay.png`.
+- [ ] 2.4 MoMo wait screen: countdown from `approveBy`, "Check your phone and enter your PIN to approve.", then paid, failed or timed-out states. Render: `v4-reference/03-momo-checkout.png`, restyled to v5.
+- [ ] 2.5 Card: open `authorizationUrl` (expo-web-browser on native, same tab on web with a return URL), then verify on return.
+- [ ] 2.6 Receipt view: lines, tip, empty-ready tax lines, and "Test payment" label in sandbox.
+- [ ] 2.7 Owner payout account screen: bank or MoMo, shows the masked account and status.
+- [ ] 2.8 Owner "Mark paid in cash" (`/owner/orders/{id}/cash-payment`).
+- [ ] **2b Paystack sandbox slice** (the only early server code, in `server/`):
+  - Implement only `POST /payments`, `GET /payments/{ref}`, `POST /payments/{ref}/verify` and `POST /webhooks/paystack`, with **test** keys from the server env.
+  - The app uses `EXPO_PUBLIC_API_LIVE=payments` to send just these calls to the server and keep everything else on mocks.
+  - Test with the Paystack test MoMo numbers and test cards from the Paystack docs.
+  - Verify the webhook signature. Prove amount and currency match.
+- [ ] **Review:** Clarke pays a test bill with MoMo and card in sandbox, on his own phone.
+
+### Phase 3: Loyalty (product 3)
+- [x] 3.1 Stamp logic, tdd. One stamp per paid order (from the server). The game stamp once per day per phone. A reward is redeemable when stamps reach the venue's target.
+- [x] 3.2 Stamp card: "6 of 10. Four more and the next one is on us." Render: `loyalty.png`.
+- [x] 3.3 Join flow: phone, then OTP (`guest_loyalty`), then two consent boxes (loyalty is required; marketing is separate and unticked), sending `textVersion`.
+- [ ] 3.4 Redeem flow: a code the staff confirm. Then leave loyalty (delete my card).
+- [ ] 3.5 Wire the game stamp. Owner loyalty settings (stamps needed, reward title) and the members list (masked phones).
+
+### Phase 4: Reviews (product 4)
+- [x] 4.1 Written review: stars, "what stood out" chips and text. 4–5 stars offer "Share on Google" (the venue's Google review link). 1–3 stars go privately to the owner. Render: `review.png`.
+- [ ] 4.2 Video review: consent text first, front camera, 15–30 s (Done unlocks at 15 s), retake, upload with progress through a pre-signed URL, and keep the delete token. Render: `review-record.png`. Check web recording (section 5, Camera).
+- [ ] 4.3 Owner moderation: To check, Featured and Hidden tabs, with Hide and Feature buttons and the private-reply hint for low ratings. Featured videos become guest stories. Render: `owner-reviews.png`.
+- [ ] 4.4 Full polish pass:
+  - `cursor-team-kit-deslop`, `impeccable`, `ui-skills-improve-ui`
+  - accessibility (`ui-skills-fixing-accessibility`)
+  - motion (`ui-skills-fixing-motion-performance`)
+  - copy (`pstack-unslop`)
+  - Lighthouse
+- [ ] **UI APPROVAL GATE:** Clarke gets screenshots of every screen side by side with the renders, for all 3 venues, plus a short screen recording of the guest flow (scan → order → pay → stamp → review) and the owner flow. **Wait for his written yes.**
+
+### Phase 5: Backend for products 1–4
+- [ ] 5.1 `server/`: Hono + TypeScript, Postgres with Drizzle migrations, config parsed with zod, structured logs without personal data.
+- [ ] 5.2 Implement the contract exactly. Run contract tests that call every operation and validate responses against `openapi.yaml`, and reuse the fixtures as seed data.
+- [ ] 5.3 Auth (OTP via an SMS provider Clarke chooses), roles, rate limits, idempotency store.
+- [ ] 5.4 Money: Paystack live-ready (still test keys), subaccounts, webhooks, reconciliation job (verify pending payments older than 5 min).
+- [ ] 5.5 Media: object storage with pre-signed uploads, image resizing, video transcoding to 480p and a poster.
+- [ ] 5.6 Switch the app to `EXPO_PUBLIC_API_MODE=http` in staging. The Playwright suite must pass against staging.
+- [ ] 5.7 Privacy page, consent records, data deletion, backups.
+
+### Phases 6–13: the rest, in Clarke's order
+Do each product the same way:
+1. Add its paths to `openapi.yaml` (one PR).
+2. Add fixtures and mocks.
+3. Build the UI.
+4. Get Clarke's approval.
+5. Build the backend.
+
+| Phase | Product |
+|---|---|
+| 7 | 5 POS |
+| 8 | 6 Stock |
+| 9 | 7 Orders: kitchen display, history, takeaway, push |
+| 10 | 8 AI Waiter (English, Twi, Ga, Ewe, with Khaya AI speech) |
+| 11 | 9 Marketing (only to members with marketing consent) |
+| 12 | 10 Insights |
+| 13 | 13 Setup (self-serve onboarding) |
+
+Phase 6 is kept for launch hardening: E-VAT receipts, error monitoring, app store builds with EAS, and `expo-eas-update` for fixes.
+
+**Roadmap only (do not build yet):**
+- video menu
+- shared game leaderboard (the endpoints already exist in the contract; v1 stays local)
+- live kitchen feed for guests
+- real payments (live keys) after the legal checks
+
+## 14. Testing and verification
+
+- **Unit tests (jest-expo)** cover every pure module, written test-first with `pstack-tdd`:
+  - money, phone, hours
+  - totals, bill split, tips
+  - loyalty rules
+  - deriveTheme and contrast
+  - the payment, order and waiter-call machines
+  - the game engine
+- **Component tests (RNTL)** test behaviour, not internals (`pstack-principle-test-behavior-not-implementation`). Example: "tapping Add twice shows 2 in the bar".
+- **Contract checks:**
+  - `redocly lint`
+  - `api/fixtures/check-fixtures.mjs` in CI
+  - the mock client's responses validated against the schema in a test
+- **Web end-to-end (Playwright):** the guest flow on each sample venue. Then compare a screenshot with each render in `design/renders/`. The renders came from the HTML prototype, so expect small font-rendering differences. Use `maxDiffPixelRatio` of about 0.03 and look at the diff images yourself.
+- **Prove it works** (`pstack-principle-prove-it-works`, `cursor-team-kit-verify-this`): before you say a screen is done, open it in the browser and take a screenshot. Compare it with the render, and attach both to the PR.
+- **Native:** in Phase 1b and later, a Maestro smoke flow on an Android emulator for owner login → orders → services.
+- **Before merging:** run `pstack-blast-radius` on the diff, plus lint, typecheck, tests and the Playwright run.
+
+## 15. Definition of done (every PR)
+- [ ] It does what the checklist item says, and nothing more.
+- [ ] `npx tsc --noEmit`, `npx expo lint` and `npm test` pass. Playwright passes for touched screens.
+- [ ] Screenshots from the real build sit next to the matching render, for all 3 sample venues where it applies. For owner screens, Ozaa chrome only.
+- [ ] Every state is covered: loading, empty, error, offline and success. Works at 320 px wide and with 200% text size.
+- [ ] Copy is in i18n, matches `brand.md` section 10, and has been through `pstack-unslop`.
+- [ ] Accessibility labels, 44 px targets and 4.5:1 contrast. No new contrast failures from venue colours.
+- [ ] No secrets, no console logs of personal data, no TakeOrder anywhere.
+- [ ] The contract is unchanged, or was changed in its own PR first.
+- [ ] A LEARNING.md entry, written with `pstack-teach`: what was built, how it works in plain words, one thing to try.
+- [ ] A plain-language commit and PR description with the `pstack-blast-radius` summary.
+
+## 16. CI, environments and release
+
+- **GitHub Actions `ci.yml`** (template in `templates/`) runs on every PR:
+  - `npm ci`
+  - check that the generated types are up to date
+  - `tsc`
+  - `expo lint`
+  - `jest`
+  - `redocly lint`
+  - check fixtures
+  - `expo export -p web`
+  - Playwright, uploading screenshots and diffs as artifacts
+- **Environments:**
+  - `EXPO_PUBLIC_API_MODE` = `mock` | `http`
+  - `EXPO_PUBLIC_API_URL`
+  - `EXPO_PUBLIC_API_LIVE` (comma list of features sent to the server while the rest are mocked; Phase 2b only)
+  - `EXPO_PUBLIC_MOCK_LATENCY_MS`
+  - `EXPO_PUBLIC_MOCK_FAIL_RATE`
+  - Server-only, never with the EXPO_PUBLIC prefix: `PAYSTACK_SECRET_KEY`, `DATABASE_URL`, `OTP_PROVIDER_KEY`.
+- **Guest web hosting:**
+  - `npx expo export -p web`, deployed to EAS Hosting (`agent-skills/expo-eas-hosting`) or any static host with SPA fallback to `index.html`.
+  - The domain is `ozaa.app` if Clarke buys it. Nothing has been bought.
+- **Owner app:**
+  - dev builds first (`expo-dev-client`)
+  - then EAS Build and Submit (`expo-eas-app-stores`) when Clarke has store accounts
+  - OTA fixes through EAS Update
+- **Never** edit `ios/` or `android/` by hand (CNG). Native settings go in `app.config.ts` and config plugins.
+
+## 17. Open questions for Clarke
+
+The agent must ask these, not guess. Until he answers, build behind a setting or use the stated default.
+1. Who pays the Paystack fee (about 1.95%): the venue, the guest, or shared? *Default: the venue.*
+2. Ozaa's own fee per transaction or per month? *Default: none in the UI yet.*
+3. Lawyer sign-off that subaccount split settlement keeps Ozaa outside PSP licensing under Act 987.
+4. DPC registration done before real phone numbers are stored?
+5. The SMS/OTP provider for Phase 5 (and WhatsApp for marketing later).
+6. Server hosting and database provider for Phase 5.
+7. Trademark search for "ozaa" (Ghana RGD, OAPI, WIPO) and the native-speaker meaning check, and which domains to buy (`ozaa.app` is the assumed one).
+8. Native speakers for the Twi, Ga and Ewe strings.
+9. The real first venue(s), to replace the AI-generated sample photos and videos.
+10. Should Setup (product 13) move before launch? A real venue needs onboarding, but it is last in the current order. *Default: the team sets up early venues by hand in the owner app.*

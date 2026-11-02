@@ -1,0 +1,17 @@
+{
+  "mamas-kitchen": {
+    "ssid": "MamasKitchen-Guest",
+    "password": "jollof2026",
+    "security": "WPA"
+  },
+  "bean-there": {
+    "ssid": "BeanThere-Work",
+    "password": "flatwhite88",
+    "security": "WPA"
+  },
+  "auntie-akos": {
+    "ssid": "AuntieAkos",
+    "password": "fufu1234",
+    "security": "WPA"
+  }
+}
