@@ -993,7 +993,10 @@
       "kitchen": "Kitchen",
       "viewer": "Viewer",
       "staff_scanner": "Scanner"
-    }
+    },
+    "venue": "Your venue",
+    "appearance": "Appearance",
+    "appearanceValue": "Follows your phone"
   },
   "ownerFloor": {
     "table": "Table",

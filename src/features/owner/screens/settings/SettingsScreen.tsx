@@ -3,7 +3,17 @@ import { StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Building2, Globe, LogOut, Trash2 } from 'lucide-react-native';
+import {
+  BellDot,
+  Building2,
+  Globe,
+  LogOut,
+  Smartphone,
+  SunMoon,
+  Trash2,
+  UserRound,
+  Users,
+} from 'lucide-react-native';
 import { api } from '@/lib/api';
 import { languageByCode } from '@/features/venue';
 import { useOwnerSession } from '@/features/session';
@@ -12,10 +22,11 @@ import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
-import { ConfirmDialog, LinkRow, Section, SectionBody } from '../../kit';
+import { ConfirmDialog, InfoRow, LinkRow, Section, StatusPill } from '../../kit';
 import { DeleteAccountSheet } from './DeleteAccountSheet';
 import { LanguageSheet } from './LanguageSheet';
 
+/** Who is signed in, the venue's people and devices, preferences, and the account. */
 export function SettingsScreen() {
   const theme = useTheme();
   const { t, i18n } = useTranslation();
@@ -39,36 +50,65 @@ export function SettingsScreen() {
 
   return (
     <OwnerPage title={t('owner.settings')}>
-      <Section title={t('ownerSettings.profile')}>
-        <SectionBody>
-          <View style={styles.profile}>
-            <View style={[styles.avatar, { backgroundColor: theme.tint }]}>
-              <Text variant="title" style={{ color: theme.badgeInk }}>
-                {firstName.slice(0, 1).toUpperCase() || '?'}
-              </Text>
-            </View>
-            <View style={styles.flex}>
-              <Text variant="body-strong">{firstName}</Text>
-              <Text variant="caption" style={{ color: theme.muted }}>
-                {t(`ownerSettings.roles.${role}`)}
-              </Text>
-            </View>
-          </View>
-        </SectionBody>
+      {/* Who is signed in, and where. */}
+      <View style={[styles.profile, { backgroundColor: theme.surface, borderColor: theme.line }]}>
+        <View style={[styles.avatar, { backgroundColor: theme.tint }]}>
+          {firstName ? (
+            <Text variant="display-m" style={{ color: theme.badgeInk }}>
+              {firstName.slice(0, 1).toUpperCase()}
+            </Text>
+          ) : (
+            <UserRound size={28} color={theme.badgeInk} />
+          )}
+        </View>
+        <Text variant="title">{firstName}</Text>
+        <StatusPill label={t(`ownerSettings.roles.${role}`)} tone="neutral" icon={false} />
+        {location ? (
+          <Text variant="caption" style={{ color: theme.muted }}>
+            {location.name}
+          </Text>
+        ) : null}
+      </View>
+
+      <Section title={t('ownerSettings.venue')}>
         <LinkRow
           icon={Building2}
           label={t('ownerSettings.location')}
           value={location?.name}
           onPress={() => router.push('/owner/business')}
         />
+        {role === 'owner' || role === 'manager' ? (
+          <>
+            <LinkRow
+              icon={Users}
+              label={t('owner.staff')}
+              onPress={() => router.push('/owner/staff')}
+            />
+            <LinkRow
+              icon={Smartphone}
+              label={t('owner.devices')}
+              onPress={() => router.push('/owner/devices')}
+            />
+          </>
+        ) : null}
       </Section>
 
-      <Section title={t('ownerSettings.preferences')} note={t('ownerSettings.appearanceNote')}>
+      <Section title={t('ownerSettings.preferences')}>
         <LinkRow
           icon={Globe}
           label={t('ownerSettings.language')}
           value={languageByCode(i18n.language).label}
           onPress={() => setSheet('language')}
+        />
+        <InfoRow
+          icon={SunMoon}
+          label={t('ownerSettings.appearance')}
+          value={t('ownerSettings.appearanceValue')}
+        />
+        <LinkRow
+          icon={BellDot}
+          label={t('owner.notifications')}
+          onPress={() => router.push('/owner/notifications')}
         />
       </Section>
 
@@ -78,6 +118,8 @@ export function SettingsScreen() {
           label={t('ownerSettings.signOut')}
           onPress={() => setSheet('signOut')}
         />
+      </Section>
+      <Section>
         <LinkRow
           icon={Trash2}
           label={t('ownerSettings.delete')}
@@ -105,13 +147,20 @@ export function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  profile: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
+  profile: {
+    alignItems: 'center',
+    gap: tokens.space[2],
+    paddingVertical: tokens.space[6],
+    paddingHorizontal: tokens.space[4],
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: tokens.radius.lg,
+    borderCurve: 'continuous',
+  },
   avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 72,
+    height: 72,
+    borderRadius: tokens.radius.full,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  flex: { flex: 1 },
 });
