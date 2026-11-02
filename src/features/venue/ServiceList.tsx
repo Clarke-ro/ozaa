@@ -9,7 +9,10 @@ import { ServiceIcon } from './ServiceIcon';
 
 type Service = VenuePublic['services'][number];
 
-/** A stack of services, each its own full-width card with a gap between them. */
+/**
+ * A stack of services, each its own white card with a soft shadow: a line icon, the name, and a
+ * second line only when the API sends live news for it ("2 deals today").
+ */
 export function ServiceList({ items, onOpen }: { items: Service[]; onOpen: (id: string) => void }) {
   return (
     <View style={styles.stack}>
@@ -45,50 +48,39 @@ function ServiceCard({
       style={({ pressed }) => [
         styles.card,
         {
-          borderColor: theme.line,
           backgroundColor: pressed ? theme.wash : theme.surface,
           transform: [{ scale: pressed ? 0.98 : 1 }],
         },
       ]}
     >
-      <View style={[styles.icon, { backgroundColor: theme.tint }]}>
-        <ServiceIcon id={id} color={theme.ink} size={22} />
-      </View>
+      <ServiceIcon id={id} color={theme.ink} size={24} />
       <View style={styles.copy}>
         <Text variant="body-strong" numberOfLines={1}>
           {title}
         </Text>
-        {id === 'play' ? null : (
+        {subtitle ? (
           <Text variant="caption" numberOfLines={1} style={{ color: theme.muted }}>
-            {subtitle ?? t(`services.${id}.body`)}
+            {subtitle}
           </Text>
-        )}
+        ) : null}
       </View>
-      <ChevronRight color={theme.meta} size={20} />
+      <ChevronRight color={theme.ink} size={20} />
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  stack: { gap: tokens.space[3], paddingHorizontal: tokens.grid.mobile.margin },
+  stack: { gap: tokens.space[4], paddingHorizontal: tokens.grid.mobile.margin },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: tokens.space[3],
-    minHeight: 76,
-    paddingVertical: tokens.space[3],
-    paddingHorizontal: tokens.space[4],
-    borderWidth: 1,
-    borderRadius: tokens.radius.xl - 4,
+    gap: tokens.space[4],
+    minHeight: 64,
+    paddingVertical: tokens.space[4],
+    paddingHorizontal: tokens.space[5],
+    borderRadius: tokens.radius.lg,
     borderCurve: 'continuous',
-  },
-  icon: {
-    width: 48,
-    height: 48,
-    borderRadius: tokens.radius.md,
-    borderCurve: 'continuous',
-    alignItems: 'center',
-    justifyContent: 'center',
+    boxShadow: tokens.shadow.card,
   },
   copy: { flex: 1, gap: 2 },
 });

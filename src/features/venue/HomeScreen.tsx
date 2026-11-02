@@ -2,8 +2,6 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
 import { Globe, Share2, Utensils } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { SafeScreen } from '@/ui/Screen';
@@ -30,13 +28,6 @@ export function HomeScreen({ slug }: { slug: string }) {
   const router = useRouter();
   const venue = useVenue(slug);
   const tableCode = useGuestSession((state) => (state.slug === slug ? state.tableCode : null));
-  const orderId = useGuestSession((state) => (state.slug === slug ? state.orderId : null));
-  const order = useQuery({
-    queryKey: ['order', orderId],
-    queryFn: () => api.getOrder(orderId ?? ''),
-    enabled: Boolean(orderId),
-    refetchInterval: 10_000,
-  });
 
   if (venue.isLoading) return <LoadingState />;
   if (venue.isError || !venue.data) return <ErrorState onRetry={() => void venue.refetch()} />;
@@ -119,35 +110,6 @@ export function HomeScreen({ slug }: { slug: string }) {
           </Text>
         </View>
       </ScrollView>
-      {order.data && order.data.status !== 'served' && order.data.status !== 'cancelled' ? (
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => router.push(`/${slug}/status`)}
-          style={[
-            styles.orderBar,
-            { borderColor: theme.line, bottom: Math.max(insets.bottom, 16) },
-          ]}
-        >
-          <View style={[styles.dot, { backgroundColor: theme.success }]} />
-          <View style={{ flex: 1 }}>
-            <Text variant="body-strong">
-              {t('orderBar.title', {
-                number: order.data.number,
-                status: t(`statusLabel.${order.data.status}`),
-              })}
-            </Text>
-            <Text variant="caption" style={{ color: theme.muted }}>
-              {/* No estimate from the kitchen means no time shown, never a guessed one. */}
-              {order.data.etaMinutes != null
-                ? t('orderBar.meta', {
-                    minutes: order.data.etaMinutes,
-                    count: order.data.lines.length,
-                  })
-                : t('orderBar.items', { count: order.data.lines.length })}
-            </Text>
-          </View>
-        </Pressable>
-      ) : null}
       <LanguagePicker
         open={languageOpen}
         selected={language.code}
@@ -236,17 +198,4 @@ const styles = StyleSheet.create({
   fact: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 },
   dot: { width: 8, height: 8, borderRadius: 4 },
   powered: { alignItems: 'center', marginTop: 28 },
-  orderBar: {
-    position: 'absolute',
-    start: 16,
-    end: 16,
-    bottom: 16,
-    borderWidth: 1,
-    borderRadius: 16,
-    backgroundColor: '#fff',
-    padding: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
 });

@@ -85,6 +85,12 @@
       "body": "Hours, map, phone and WhatsApp"
     }
   },
+  "orderToast": {
+    "ready": "Order #{{number}} is ready",
+    "readyDetail": "On its way to table {{table}}",
+    "openHint": "Opens your order status",
+    "close": "Close"
+  },
   "orderBar": {
     "title": "Order #{{number}} · {{status}}",
     "meta": "About {{minutes}} min · {{count}} items",
@@ -176,7 +182,6 @@
     "served": "Served",
     "readyHint": "We bring it to your table",
     "servedHint": "Enjoy your meal",
-    "banner": "Your food is ready! {{dish}} is on its way to table {{table}}.",
     "view": "View",
     "yourOrder": "Your order",
     "total": "Total",

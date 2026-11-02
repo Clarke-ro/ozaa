@@ -59,5 +59,5 @@ export function ServiceGrid({
 const styles = StyleSheet.create({
   block: { marginTop: tokens.space[8] },
   heading: { paddingHorizontal: tokens.grid.mobile.margin, marginBottom: tokens.space[3] },
-  feature: { paddingHorizontal: tokens.grid.mobile.margin, marginBottom: tokens.space[3] },
+  feature: { paddingHorizontal: tokens.grid.mobile.margin, marginBottom: tokens.space[4] },
 });

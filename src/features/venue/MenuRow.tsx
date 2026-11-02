@@ -30,7 +30,6 @@ export function MenuRow({
       style={({ pressed }) => [
         styles.card,
         {
-          borderColor: theme.line,
           backgroundColor: pressed ? theme.wash : theme.surface,
           transform: [{ scale: pressed ? 0.98 : 1 }],
         },
@@ -60,8 +59,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: tokens.space[4],
     minHeight: 92,
-    borderWidth: 1,
-    borderRadius: tokens.radius.xl - 4,
+    borderRadius: tokens.radius.lg,
+    boxShadow: tokens.shadow.card,
     borderCurve: 'continuous',
     padding: tokens.space[4],
   },

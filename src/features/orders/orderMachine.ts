@@ -26,6 +26,16 @@ export function showsFoodReady(status: OrderStatus): boolean {
   return status === 'ready';
 }
 
+/**
+ * Which order toast a guest sees, if any. One toast at a time: "working" while the kitchen has it,
+ * "ready" when it's done, nothing after it's served or cancelled.
+ */
+export function orderToast(status: OrderStatus): 'working' | 'ready' | null {
+  if (status === 'received' || status === 'preparing') return 'working';
+  if (status === 'ready') return 'ready';
+  return null;
+}
+
 const FORWARD: OrderMove[] = ['start', 'ready', 'serve'];
 
 export function nextOrderMove(status: OrderStatus, role: StaffRole): { move: OrderMove; status: OrderStatus } | null {

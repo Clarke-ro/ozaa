@@ -207,7 +207,8 @@ export const tokens = {
   },
   "shadow": {
     "none": "none",
-    "sheet": "0 -8px 24px rgba(0,0,0,.06)"
+    "sheet": "0 -8px 24px rgba(0,0,0,.06)",
+    "card": "0 4px 16px rgba(17,17,17,.07)"
   },
   "button": {
     "height": {

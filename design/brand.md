@@ -28,7 +28,7 @@ A summary of the brand Page for the coding agent. The numbers are in `tokens.jso
 | success / error           | #15803D / #B91C1C                     | Status only                                                               |
 | white                     | #FFFFFF                               | Every background                                                          |
 
-- Backgrounds are white. No gradients, no coloured headers, no shadows. The one exception is the bottom-sheet shadow `0 -8px 24px rgba(0,0,0,.06)`.
+- Backgrounds are white. No gradients, no coloured headers, no shadows. Two exceptions: the bottom-sheet shadow `0 -8px 24px rgba(0,0,0,.06)`, and the soft card shadow `0 4px 16px rgba(17,17,17,.07)` on the guest home service cards (Clarke, 2 Nov 2026).
 - Orange goes only on buttons, icons, radio dots and focus rings, never on large areas.
 
 ## 3. Type

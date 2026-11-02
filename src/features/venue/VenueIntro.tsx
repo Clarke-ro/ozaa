@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Linking, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { ChevronRight, Clock, MapPin } from 'lucide-react-native';
+import { ChevronRight, MapPin } from 'lucide-react-native';
 import type { VenuePublic } from '@/lib/api/types';
 import { describeHours } from '@/lib/time';
 import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
+import { tokens } from '@/theme/tokens';
+import { fontFamily, useTheme } from '@/ui/theme';
 
 // Two lines is enough to set the scene; the rest is one tap away, so the services stay above the fold.
 const DESCRIPTION_LINES = 2;
@@ -21,7 +22,7 @@ export function mapsLink(location: VenuePublic['location']): string {
     : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
 }
 
-/** Venue name, a short description, and opening hours and location as two small chips. */
+/** Venue name, a short description, then opening hours and location on one line. */
 export function VenueIntro({ venue }: { venue: VenuePublic }) {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -65,36 +66,40 @@ export function VenueIntro({ venue }: { venue: VenuePublic }) {
           ) : null}
         </Pressable>
       ) : null}
-      <View style={styles.chips}>
-        <View
-          style={[styles.chip, { backgroundColor: hours.open ? theme.successTint : theme.wash }]}
-          accessible
-          accessibilityLabel={hours.text}
-        >
-          <Clock size={14} color={hours.open ? theme.success : theme.muted} />
-          <Text variant="caption" numberOfLines={1} style={styles.chipText}>
+      {/* Hours and place share one line so the services stay above the fold. */}
+      <View style={styles.meta}>
+        <View style={styles.hours} accessible accessibilityLabel={hours.text}>
+          <View
+            style={[styles.dot, { backgroundColor: hours.open ? theme.success : theme.meta }]}
+          />
+          <Text variant="caption" numberOfLines={1}>
             <Text
               variant="caption"
-              style={{ color: hours.open ? theme.success : theme.muted, fontFamily: 'Inter_600' }}
+              style={{
+                color: hours.open ? theme.success : theme.muted,
+                fontFamily: fontFamily.strong,
+              }}
             >
               {state}
             </Text>
-            {rest.length ? ` · ${rest.join(' · ')}` : ''}
+            <Text variant="caption" style={{ color: theme.muted }}>
+              {rest.length ? ` · ${rest.join(' · ')}` : ''}
+            </Text>
           </Text>
         </View>
         <Pressable
           accessibilityRole="link"
           accessibilityLabel={t('home.directions', { place: venue.location.label })}
           onPress={() => void Linking.openURL(mapsLink(venue.location))}
-          hitSlop={6}
-          style={({ pressed }) => [
-            styles.chip,
-            styles.place,
-            { backgroundColor: pressed ? theme.line : theme.wash },
-          ]}
+          hitSlop={tokens.space[2]}
+          style={({ pressed }) => [styles.place, { opacity: pressed ? 0.6 : 1 }]}
         >
           <MapPin size={14} color={theme.muted} />
-          <Text variant="caption" numberOfLines={1} style={[styles.chipText, styles.placeText]}>
+          <Text
+            variant="caption"
+            numberOfLines={1}
+            style={[styles.placeText, { color: theme.muted }]}
+          >
             {venue.location.label}
           </Text>
           <ChevronRight size={14} color={theme.meta} />
@@ -105,20 +110,27 @@ export function VenueIntro({ venue }: { venue: VenuePublic }) {
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 6 },
-  small: { fontSize: 14, lineHeight: 20 },
-  description: { fontSize: 14, lineHeight: 20 },
-  more: { fontFamily: 'Inter_600', marginTop: 2 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 6 },
-  chip: {
+  wrap: { gap: tokens.space[1] },
+  small: { fontSize: tokens.type.caption.size + 1, lineHeight: tokens.type.caption.line + 2 },
+  description: {
+    fontSize: tokens.type.caption.size + 1,
+    lineHeight: tokens.type.caption.line + 2,
+  },
+  more: { fontFamily: fontFamily.strong, marginTop: 2 },
+  meta: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    minHeight: 32,
-    paddingHorizontal: 10,
-    borderRadius: 999,
+    gap: tokens.space[3],
+    marginTop: tokens.space[1],
   },
-  chipText: { flexShrink: 1 },
-  place: { flexShrink: 1, maxWidth: '100%' },
-  placeText: { maxWidth: 220 },
+  hours: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[1] + 2, flexShrink: 0 },
+  dot: { width: 8, height: 8, borderRadius: 4 },
+  place: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[1],
+    flexShrink: 1,
+    minHeight: 32,
+  },
+  placeText: { flexShrink: 1 },
 });
