@@ -9,6 +9,7 @@ import { asGhanaPhone, countryForVenue, parsePhone } from '@/lib/phone';
 import { useVenue } from '@/features/venue';
 import { useGuestSession } from '@/features/session';
 import { Phone, Trash2 } from 'lucide-react-native';
+import { ConfirmDialog } from '@/ui/ConfirmDialog';
 import { PageHeader } from '@/ui/PageHeader';
 import { SafeScreen } from '@/ui/Screen';
 import { tokens } from '@/theme/tokens';
@@ -54,6 +55,8 @@ export function LoyaltyScreen({ slug }: { slug: string }) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   // The join form waits until the guest asks for it, so the page leads with what they get.
   const [joining, setJoining] = useState(false);
+  // Deleting a card can't be undone, so it asks first.
+  const [confirmLeave, setConfirmLeave] = useState(false);
 
   const programQuery = useQuery({
     queryKey: guestKeys.loyaltyProgram(slug),
@@ -124,6 +127,11 @@ export function LoyaltyScreen({ slug }: { slug: string }) {
       setCode('');
       void queryClient.removeQueries({ queryKey: guestKeys.loyaltyVenue(slug) });
     },
+    onSuccess: () => {
+      setConfirmLeave(false);
+      // Back to the start: the card is gone, so the page offers Join again.
+      setJoining(false);
+    },
   });
 
   const openSample = async () => {
@@ -185,8 +193,10 @@ export function LoyaltyScreen({ slug }: { slug: string }) {
                 icon={Trash2}
                 tone="danger"
                 label={t('loyalty.leave')}
-                busy={leave.isPending}
-                onPress={() => leave.mutate()}
+                onPress={() => {
+                  leave.reset();
+                  setConfirmLeave(true);
+                }}
               />
             </View>
           </>
@@ -223,6 +233,18 @@ export function LoyaltyScreen({ slug }: { slug: string }) {
           </>
         )}
       </ScrollView>
+      <ConfirmDialog
+        visible={confirmLeave}
+        destructive
+        title={t('loyalty.leaveTitle')}
+        message={
+          leave.isError ? t('loyalty.leaveFailed') : t('loyalty.leaveBody', { venue: placeName })
+        }
+        confirmLabel={t('loyalty.leaveConfirm')}
+        loading={leave.isPending}
+        onConfirm={() => leave.mutate()}
+        onCancel={() => setConfirmLeave(false)}
+      />
     </SafeScreen>
   );
 }

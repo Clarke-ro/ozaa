@@ -80,7 +80,10 @@ export function WalletCard({
 
   const status = t('loyalty.cardA11y', {
     venue: venueName,
-    counter: card.counter,
+    counter:
+      wallet.progress.kind === 'points'
+        ? t('loyalty.pointsCounter', { counter: card.counter })
+        : card.counter,
     tier: t(`loyalty.tiers.${wallet.tier}`),
   });
 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
+import { useTranslation } from 'react-i18next';
 import { Gift, Utensils } from 'lucide-react-native';
 import { qrSvg } from '@/lib/qrSvg';
 import { QR_PAPER } from '@/theme/palette';
@@ -35,6 +36,7 @@ export function WalletCardFront({
   card: StampCard;
   qrText: string;
 }) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const ink = theme.onFill;
   const TierGlyph = TIER_ICON[wallet.tier];
@@ -114,7 +116,7 @@ export function WalletCardFront({
 
       <View style={styles.bottom}>
         <Text variant="display-l" style={[styles.counter, { color: ink }]}>
-          {points ? `${Math.min(wallet.progress.balance, card.goal)}/${card.goal}` : card.counter}
+          {points ? t('loyalty.pointsCounter', { counter: card.counter }) : card.counter}
         </Text>
         <View style={styles.smallQr}>
           <SvgXml xml={qrSvg(qrText, SMALL_QR)} width={SMALL_QR} height={SMALL_QR} />

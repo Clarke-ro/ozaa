@@ -313,7 +313,12 @@
     "unitsIn_one": "Earned 1",
     "unitsIn_other": "Earned {{count}}",
     "unitsOut_one": "Used 1",
-    "unitsOut_other": "Used {{count}}"
+    "unitsOut_other": "Used {{count}}",
+    "leaveTitle": "Delete your card?",
+    "leaveBody": "Your stamps and rewards at {{venue}} will be erased. You can't undo this.",
+    "leaveConfirm": "Delete card",
+    "leaveFailed": "That didn't go through and your card is still here. Check the connection and try again.",
+    "pointsCounter": "{{counter}} pts"
   },
   "review": {
     "title": "Leave a review",
