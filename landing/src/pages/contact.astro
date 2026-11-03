@@ -1,0 +1,161 @@
+---
+import Faq from "../components/Faq.astro";
+import Icon from "../components/Icon.astro";
+import PageHero from "../components/PageHero.astro";
+import { contactPage } from "../content/page";
+import Site from "../layouts/Site.astro";
+
+// Where the form posts: a form service's endpoint (e.g. Formspree or Web3Forms), from the env at
+// build time. These endpoints are public by design, so no secret key ever reaches the page.
+const endpoint = import.meta.env.PUBLIC_CONTACT_ENDPOINT ?? "";
+const form = contactPage.form;
+---
+
+<Site title={contactPage.title} description={contactPage.description}>
+  <PageHero tone="light" title={contactPage.heading} lead={contactPage.lead} />
+
+  <section class="contact-section" aria-label="Contact">
+    <form
+      class="contact-card"
+      id="contact-form"
+      novalidate
+      data-endpoint={endpoint}
+      data-missing-name={form.missingName}
+      data-bad-email={form.badEmail}
+      data-missing-message={form.missingMessage}
+      data-sending={form.sending}
+      data-send={form.send}
+      data-success={form.success}
+      data-error={form.error}
+      data-not-set-up={form.notSetUp}
+    >
+      <div class="field-row">
+        <label class="field">
+          <span>{form.name}</span>
+          <input name="name" type="text" autocomplete="name" required aria-describedby="name-error" />
+          <small class="field-error" id="name-error" hidden></small>
+        </label>
+        <label class="field">
+          <span>{form.email}</span>
+          <input name="email" type="email" inputmode="email" autocomplete="email" required aria-describedby="email-error" />
+          <small class="field-error" id="email-error" hidden></small>
+        </label>
+      </div>
+      <label class="field">
+        <span>{form.message}</span>
+        <textarea name="message" rows="6" placeholder={form.messagePlaceholder} required aria-describedby="message-error"></textarea>
+        <small class="field-error" id="message-error" hidden></small>
+      </label>
+      {/* Anti-spam: people never see or fill this; bots that fill every field get dropped. */}
+      <div class="hp" aria-hidden="true">
+        <label>Company <input name="company" type="text" tabindex="-1" autocomplete="off" /></label>
+      </div>
+      <button class="pill pill--black pill--lg contact-send" type="submit">{form.send}</button>
+      <p class="form-status" id="contact-status" role="status" aria-live="polite" hidden></p>
+    </form>
+
+    <ul class="info-cards">
+      {
+        contactPage.info.map((item) => (
+          <li class="info-card">
+            <span class="info-icon">
+              <Icon name={item.icon} size={20} />
+            </span>
+            <div>
+              <h2>{item.title}</h2>
+              <p class="info-value">{item.value || contactPage.comingSoon}</p>
+              <p class="info-note">{item.note}</p>
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <Faq id="contact-faq" heading={contactPage.faqHeading} items={contactPage.faq} />
+</Site>
+
+<script>
+  import { checkContact } from "../content/contactForm";
+
+  function setUpForm() {
+    const form = document.querySelector<HTMLFormElement>("#contact-form");
+    const status = document.querySelector<HTMLElement>("#contact-status");
+    if (!form || !status) return;
+    const copy = form.dataset;
+    const button = form.querySelector<HTMLButtonElement>(".contact-send");
+
+    const setStatus = (text: string, tone: "ok" | "bad" | "") => {
+      status.textContent = text;
+      status.dataset.tone = tone;
+      status.hidden = text === "";
+    };
+    const showErrors = (errors: Partial<Record<"name" | "email" | "message", string>>) => {
+      for (const field of ["name", "email", "message"] as const) {
+        const message = errors[field];
+        const input = form.elements.namedItem(field) as HTMLInputElement | null;
+        const note = form.querySelector<HTMLElement>(`#${field}-error`);
+        if (!input || !note) continue;
+        note.textContent = message ?? "";
+        note.hidden = !message;
+        input.setAttribute("aria-invalid", message ? "true" : "false");
+      }
+    };
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const data = new FormData(form);
+      const draft = {
+        name: String(data.get("name") ?? ""),
+        email: String(data.get("email") ?? ""),
+        message: String(data.get("message") ?? ""),
+        company: String(data.get("company") ?? ""),
+      };
+      const result = checkContact(draft, {
+        name: copy.missingName ?? "",
+        email: copy.badEmail ?? "",
+        message: copy.missingMessage ?? "",
+      });
+      if (!result.ok) {
+        showErrors(result.errors);
+        setStatus("", "");
+        (form.elements.namedItem(Object.keys(result.errors)[0] ?? "name") as HTMLElement | null)?.focus();
+        return;
+      }
+      showErrors({});
+      // A filled anti-spam field: pretend it worked and send nothing.
+      if (result.spam) {
+        form.reset();
+        setStatus(copy.success ?? "", "ok");
+        return;
+      }
+      if (!copy.endpoint) {
+        setStatus(copy.notSetUp ?? "", "bad");
+        return;
+      }
+      if (button) {
+        button.disabled = true;
+        button.textContent = copy.sending ?? "";
+      }
+      setStatus("", "");
+      try {
+        const response = await fetch(copy.endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({ name: draft.name.trim(), email: draft.email.trim(), message: draft.message.trim() }),
+        });
+        if (!response.ok) throw new Error(String(response.status));
+        form.reset();
+        setStatus(copy.success ?? "", "ok");
+      } catch {
+        setStatus(copy.error ?? "", "bad");
+      } finally {
+        if (button) {
+          button.disabled = false;
+          button.textContent = copy.send ?? "";
+        }
+      }
+    });
+  }
+  document.addEventListener("astro:page-load", setUpForm);
+</script>

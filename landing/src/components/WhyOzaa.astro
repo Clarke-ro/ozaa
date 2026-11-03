@@ -1,0 +1,25 @@
+---
+import { why } from "../content/page";
+import Icon from "./Icon.astro";
+---
+
+<section class="why" id="why" aria-labelledby="why-title">
+  <header class="section-head">
+    <p class="badge">{why.badge}</p>
+    <h2 id="why-title">{why.heading}</h2>
+  </header>
+  {/* A grid on wide screens; a sideways swipe carousel at 768 px and below. */}
+  <ul class="why-grid" tabindex="0" aria-label={why.heading}>
+    {
+      why.cards.map((card, index) => (
+        <li class="why-card reveal" style={`--delay: ${(index % 3) * 80}ms`}>
+          <span class="why-icon">
+            <Icon name={card.icon} size={22} />
+          </span>
+          <h3>{card.title}</h3>
+          <p>{card.body}</p>
+        </li>
+      ))
+    }
+  </ul>
+</section>

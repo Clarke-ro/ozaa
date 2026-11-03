@@ -1,0 +1,10 @@
+---
+import { notFound, routes } from "../content/page";
+---
+
+<section class="not-found" aria-labelledby="nf-title">
+  <p class="not-found-eyebrow">{notFound.eyebrow}</p>
+  <h1 id="nf-title">{notFound.heading}</h1>
+  <p class="not-found-lead">{notFound.lead}</p>
+  <a class="pill pill--black pill--lg" href={routes.home}>{notFound.button}</a>
+</section>

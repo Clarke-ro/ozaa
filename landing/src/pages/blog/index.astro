@@ -1,0 +1,13 @@
+---
+import BlogIndex from "../../components/BlogIndex.astro";
+import { blogPage } from "../../content/page";
+import { paginate } from "../../content/posts";
+import Site from "../../layouts/Site.astro";
+import { getPosts } from "../../lib/blog";
+
+const pages = paginate(await getPosts(), blogPage.perPage);
+---
+
+<Site title={blogPage.title} description={blogPage.description}>
+  <BlogIndex posts={pages[0] ?? []} page={1} pages={pages.length} />
+</Site>

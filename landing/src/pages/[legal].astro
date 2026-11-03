@@ -1,0 +1,23 @@
+---
+/** /terms, /privacy and /cookies: one template, each page from its Markdown file. */
+import { getCollection, render } from "astro:content";
+import PageHero from "../components/PageHero.astro";
+import { formatDate } from "../content/posts";
+import Site from "../layouts/Site.astro";
+
+export async function getStaticPaths() {
+  const pages = await getCollection("legal");
+  return pages.map((page) => ({ params: { legal: page.id }, props: { page } }));
+}
+
+const { page } = Astro.props;
+const { Content } = await render(page);
+---
+
+<Site title={page.data.title} noindex={page.data.placeholder}>
+  <PageHero tone="light" title={page.data.title} meta={`Last updated ${formatDate(page.data.updated)}`} />
+  <article class="legal">
+    {page.data.placeholder ? <p class="legal-placeholder">Placeholder text. Replace it with the real policy before launch.</p> : null}
+    <Content />
+  </article>
+</Site>

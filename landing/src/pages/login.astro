@@ -1,0 +1,20 @@
+---
+import AuthCard from "../components/AuthCard.astro";
+import { links } from "../content/links";
+import { authPages, routes } from "../content/page";
+import Base from "../layouts/Base.astro";
+
+const copy = authPages.login;
+---
+
+<Base title={copy.title}>
+  <AuthCard
+    heading={copy.heading}
+    lead={copy.lead}
+    button={copy.button}
+    href={links.owner}
+    other={copy.other}
+    otherLink={copy.otherLink}
+    otherHref={routes.start}
+  />
+</Base>

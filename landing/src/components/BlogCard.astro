@@ -1,0 +1,35 @@
+---
+import { blogPage } from "../content/page";
+import { formatDate, type PostSummary } from "../content/posts";
+
+interface Props {
+  post: PostSummary;
+  /** Card height in the "Keep reading" row lifts on hover; on the index it gains a shadow. */
+  lift?: boolean;
+  /** h2 on the blog index (under the page h1), h3 under a section heading. */
+  level?: 2 | 3;
+}
+
+const { post, lift = false, level = 2 } = Astro.props;
+const Heading = level === 2 ? "h2" : "h3";
+---
+
+{/* The whole card is one link. */}
+<a class:list={["blog-card", { "blog-card--lift": lift }]} href={`/blog/${post.slug}`}>
+  <img
+    class="blog-cover"
+    src={post.cover}
+    alt={post.coverAlt}
+    width="1200"
+    height="675"
+    loading="lazy"
+    decoding="async"
+  />
+  <p class="blog-meta">
+    <time datetime={post.date.toISOString()}>{formatDate(post.date)}</time> · {post.readTime}
+    {blogPage.minRead}
+  </p>
+  <Heading class="blog-title">{post.title}</Heading>
+  <p class="blog-excerpt">{post.description}</p>
+  <span class="blog-more">{blogPage.readMore}</span>
+</a>

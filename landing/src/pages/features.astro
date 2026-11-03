@@ -1,0 +1,50 @@
+---
+import Icon from "../components/Icon.astro";
+import PageHero from "../components/PageHero.astro";
+import { features, featuresPage, screenSize, screens } from "../content/page";
+import Site from "../layouts/Site.astro";
+---
+
+<Site title={featuresPage.title} description={featuresPage.description}>
+  <PageHero chip={featuresPage.chip} title={featuresPage.heading} lead={featuresPage.lead} />
+  <section class="page-body page-body--peach" aria-label="All features">
+    <ul class="feature-grid feature-grid--page">
+      {
+        features.cards.map((card, index) => {
+          const shot = screens[card.screen];
+          return (
+            <li class="feature-card reveal" style={`--delay: ${(index % 3) * 80}ms`}>
+              <div class={`feature-image tile--${card.tile}`}>
+                <img
+                  src={shot.src}
+                  alt={shot.alt}
+                  width={screenSize.width}
+                  height={screenSize.height}
+                  loading={index < 3 ? "eager" : "lazy"}
+                  decoding="async"
+                />
+              </div>
+              <h2 class="feature-card-title">{card.title}</h2>
+              <p>{card.body}</p>
+            </li>
+          );
+        })
+      }
+    </ul>
+
+    <h2 class="small-heading">{featuresPage.smallHeading}</h2>
+    <ul class="small-grid">
+      {
+        featuresPage.small.map((item, index) => (
+          <li class="small-card reveal" style={`--delay: ${(index % 4) * 60}ms`}>
+            <span class="small-icon">
+              <Icon name={item.icon} size={20} />
+            </span>
+            <h3>{item.title}</h3>
+            <p>{item.body}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</Site>

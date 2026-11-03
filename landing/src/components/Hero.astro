@@ -1,73 +1,37 @@
 ---
-import { hero, screenSize, screens } from "../content/page";
-import IPhoneMockup from "./IPhoneMockup.astro";
+import { hero, routes, screens } from "../content/page";
+import IPhone from "./IPhone.astro";
 
 const shot = screens[hero.screen];
 ---
 
-<section class="hero wrap" id="top" aria-labelledby="hero-title">
-  <div class="hero-bento">
-    <div class="bento-card bento-card--hero-copy">
-      <div class="eyebrow">
-        <span class="eyebrow-dot" aria-hidden="true"></span>
-        <span>{hero.support}</span>
-      </div>
-      <h1 id="hero-title">{hero.heading}</h1>
+<section class="hero" id="top" aria-labelledby="hero-title">
+  <div class="hero-inner">
+    <div class="hero-text">
+      <h1 id="hero-title">
+        {hero.before}<span class="hero-highlight">{hero.highlight}</span>{hero.after}
+      </h1>
       <p class="hero-lead">{hero.lead}</p>
-
-      <ul class="hero-pills" aria-label="Included table services">
-        <li>
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h12"/></svg>
-          Digital menu
-        </li>
-        <li>
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
-          One-tap Wi-Fi
-        </li>
-        <li>
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-          Call waiter
-        </li>
-        <li>
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
-          Split &amp; pay bill
-        </li>
-        <li>
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          Stamp card &amp; video stories
-        </li>
-      </ul>
-
-      <div class="hero-actions">
-        <a class="button" href="#contact">{hero.cta}</a>
-        <a class="button-secondary" href="#guests">Explore guest screens</a>
+      <div class="hero-buttons">
+        <a class="pill pill--orange pill--lg" href={routes.start}>{hero.primary}</a>
+        <a class="pill pill--glass pill--lg" href="#how" data-smooth>{hero.secondary}</a>
       </div>
-
-      <p class="support hero-footnote">{hero.samples}</p>
     </div>
-
-    <div class="bento-card bento-card--hero-showcase">
-      <div class="showcase-badges" aria-hidden="true">
-        <span class="showcase-badge showcase-badge--live">
-          <span class="status-dot"></span>
-          Scan at Table 12 · No app install
-        </span>
-        <span class="showcase-badge showcase-badge--accent">
-          iPhone 16 Pro
-        </span>
-      </div>
-
-      <div class="hero-phones">
-        <IPhoneMockup
-          src={shot.src}
-          alt={shot.alt}
-          width={screenSize.width}
-          height={screenSize.height}
-          priority={true}
-          size="hero"
-          caption={hero.caption}
-        />
-      </div>
+    <div class="hero-phone">
+      <IPhone src={shot.src} alt={shot.alt} full={shot.full} priority />
     </div>
   </div>
 </section>
+
+<script>
+  // "See how it works" glides down to the section (unless Reduce Motion is on).
+  document.addEventListener("click", (event) => {
+    const link = (event.target as HTMLElement).closest<HTMLAnchorElement>("a[data-smooth]");
+    const target = link && document.querySelector(link.hash);
+    if (!link || !target) return;
+    event.preventDefault();
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    target.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    history.replaceState(history.state, "", link.hash);
+  });
+</script>

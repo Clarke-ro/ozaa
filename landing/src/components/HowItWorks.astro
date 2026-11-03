@@ -1,0 +1,34 @@
+---
+import { how, routes, screens } from "../content/page";
+import IPhone from "./IPhone.astro";
+
+const shot = screens[how.screen];
+---
+
+<section class="how" id="how" aria-labelledby="how-title">
+  <div class="how-text">
+    <h2 id="how-title">{how.heading}</h2>
+    <ol class="how-steps">
+      {
+        how.steps.map((step, index) => (
+          <li class="reveal" style={`--delay: ${index * 90}ms`}>
+            <span class="how-number" aria-hidden="true">
+              {String(index + 1).padStart(2, "0")}
+            </span>
+            <div>
+              <h3>
+                <span class="visually-hidden">Step {index + 1}: </span>
+                {step.title}
+              </h3>
+              <p>{step.body}</p>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+    <a class="pill pill--dark pill--lg" href={routes.start}>{how.cta}</a>
+  </div>
+  <div class="how-visual reveal">
+    <IPhone src={shot.src} alt={shot.alt} />
+  </div>
+</section>

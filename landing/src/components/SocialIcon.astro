@@ -1,0 +1,39 @@
+---
+/**
+ * A social network's own logo on a circle in its brand colour. The glyphs and colours come
+ * from the simple-icons package at build time, so nothing is redrawn by hand and no icon
+ * library reaches the browser. With no url yet, it shows the logo without a link.
+ */
+import { siFacebook, siInstagram, siTiktok, siX } from "simple-icons";
+
+const brands = { instagram: siInstagram, x: siX, facebook: siFacebook, tiktok: siTiktok } as const;
+export type SocialName = keyof typeof brands;
+
+interface Props {
+  name: SocialName;
+  title: string;
+  url: string;
+}
+
+const { name, title, url } = Astro.props;
+const brand = brands[name];
+const style = `--brand: #${brand.hex}`;
+---
+
+{
+  url ? (
+    <a class="social" href={url} target="_blank" rel="noopener noreferrer" style={style}
+      aria-label={`${title} (opens in a new tab)`}>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d={brand.path} />
+      </svg>
+    </a>
+  ) : (
+    <span class="social" style={style} title={`${title} (coming soon)`}>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" role="img"
+        aria-label={`${title}, coming soon`}>
+        <path d={brand.path} />
+      </svg>
+    </span>
+  )
+}

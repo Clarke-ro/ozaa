@@ -1,0 +1,28 @@
+---
+import QRCode from "qrcode";
+import { links } from "../content/links";
+import { statement } from "../content/page";
+
+// Drawn once at build time, so the page ships a plain SVG and no QR library.
+// Level H keeps the code readable with up to 30% of it covered; the logo covers about 6%.
+const qr = await QRCode.toString(links.sample, {
+  type: "svg",
+  errorCorrectionLevel: "H",
+  margin: 0,
+  color: { dark: "#371808", light: "#ffffff" },
+});
+---
+
+<section class="statement" aria-label="What Ozaa does">
+  <p class="statement-text reveal">{statement.text}</p>
+  <a class="qr-card reveal" href={links.sample}>
+    <span class="qr-code" role="img" aria-label={statement.qrAlt}>
+      <span class="qr-svg" set:html={qr} />
+      <img class="qr-logo" src="/logo/ozaa-icon.svg" alt="" width="512" height="512" />
+    </span>
+    <span class="qr-text">
+      <strong>{statement.qrLabel}</strong>
+      <span>{statement.qrHint}</span>
+    </span>
+  </a>
+</section>

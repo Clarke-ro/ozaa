@@ -1,0 +1,53 @@
+---
+/**
+ * An iPhone 16 Pro drawn in CSS around a sample screen. The screenshot is the screen between
+ * the status bar and the home bar; the frame draws both, so every shot looks like a real phone.
+ * A `full` shot is the whole screen, taken with the safe areas: the status bar is laid over it
+ * (white, on the dark banner photo) and the app already leaves room for the home bar.
+ * Size it with the --phone CSS variable (its width).
+ */
+import { fullScreenSize, screenSize } from "../content/page";
+
+interface Props {
+  src: string;
+  alt: string;
+  /** Load straight away (the hero) instead of when scrolled near. */
+  priority?: boolean;
+  /** The screenshot is the whole screen, safe areas included. */
+  full?: boolean;
+}
+
+const { src, alt, priority = false, full = false } = Astro.props;
+const size = full ? fullScreenSize : screenSize;
+---
+
+<figure class:list={["iphone", { "iphone--full": full }]}>
+  <div class="iphone-body">
+    <span class="iphone-key iphone-key--action" aria-hidden="true"></span>
+    <span class="iphone-key iphone-key--up" aria-hidden="true"></span>
+    <span class="iphone-key iphone-key--down" aria-hidden="true"></span>
+    <span class="iphone-key iphone-key--power" aria-hidden="true"></span>
+    <div class="iphone-screen">
+      <div class="iphone-status" aria-hidden="true">
+        <span class="iphone-time">9:41</span>
+        <span class="iphone-island"></span>
+        <span class="iphone-icons">
+          <svg viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1" /><rect x="5" y="5.5" width="3" height="6.5" rx="1" /><rect x="10" y="3" width="3" height="9" rx="1" /><rect x="15" y="0" width="3" height="12" rx="1" /></svg>
+          <svg viewBox="0 0 16 12"><path d="M8 11.5 5.6 9.1a3.4 3.4 0 0 1 4.8 0zM3.3 6.8a6.6 6.6 0 0 1 9.4 0l-1.4 1.4a4.6 4.6 0 0 0-6.6 0zM1 4.5a9.9 9.9 0 0 1 14 0l-1.4 1.4a7.9 7.9 0 0 0-11.2 0z" /></svg>
+          <svg viewBox="0 0 27 12"><rect x="0.5" y="0.5" width="22" height="11" rx="3.5" fill="none" stroke="currentColor" stroke-opacity="0.4" /><rect x="2" y="2" width="19" height="8" rx="2" /><path d="M24 4v4a2 2 0 0 0 0-4z" fill-opacity="0.4" /></svg>
+        </span>
+      </div>
+      <img
+        class="iphone-shot"
+        src={src}
+        alt={alt}
+        width={size.width}
+        height={size.height}
+        loading={priority ? "eager" : "lazy"}
+        decoding="async"
+        fetchpriority={priority ? "high" : undefined}
+      />
+      <div class="iphone-home" aria-hidden="true"><span></span></div>
+    </div>
+  </div>
+</figure>

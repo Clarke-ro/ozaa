@@ -1,0 +1,33 @@
+---
+import { blogPage } from "../content/page";
+import type { PostSummary } from "../content/posts";
+import BlogCard from "./BlogCard.astro";
+import PageHero from "./PageHero.astro";
+
+interface Props {
+  posts: PostSummary[];
+  page: number;
+  pages: number;
+}
+
+const { posts, page, pages } = Astro.props;
+const href = (n: number) => (n === 1 ? "/blog" : `/blog/page/${n}`);
+---
+
+<PageHero title={blogPage.heading} lead={blogPage.lead} />
+<section class="blog-list-section" aria-label="Posts">
+  <ul class="blog-grid">
+    {posts.map((post) => <li><BlogCard post={post} /></li>)}
+  </ul>
+  {
+    pages > 1 ? (
+      <nav class="pager" aria-label="Pages">
+        {page > 1 ? <a class="pill pill--peach" href={href(page - 1)}>{blogPage.newer}</a> : <span />}
+        <span class="pager-count">
+          {page} / {pages}
+        </span>
+        {page < pages ? <a class="pill pill--peach" href={href(page + 1)}>{blogPage.older}</a> : <span />}
+      </nav>
+    ) : null
+  }
+</section>

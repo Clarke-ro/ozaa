@@ -1,23 +1,82 @@
 ---
-import { footer, sections } from "../content/page";
+import { footer, routes } from "../content/page";
+import Icon from "./Icon.astro";
+import SocialIcon from "./SocialIcon.astro";
+
+const year = new Date().getFullYear();
 ---
 
 <footer class="footer">
-  <div class="wrap">
-    <div class="footer-bento">
-      <div class="footer-brand">
-        <a class="logo" href="#top">
-          <img src="/logo/ozaa-lockup.svg" alt="Ozaa" width="451" height="140" />
-        </a>
-        <p>{footer.line}</p>
-      </div>
-      <nav class="footer-nav" aria-label="Footer navigation">
-        {
-          sections.map((section) => (
-            <a href={`#${section.id}`}>{section.nav}</a>
-          ))
-        }
-      </nav>
+  {/* The last ask: a big heading on the left, the two ways in on the right. */}
+  <div class="footer-cta">
+    <div class="footer-cta-text">
+      <h2 class="reveal">{footer.cta}</h2>
+      <p>{footer.lead}</p>
+    </div>
+    <div class="footer-cta-buttons">
+      <a class="pill pill--orange pill--lg" href={routes.start}>{footer.ctaButton}</a>
+      <a class="pill pill--glass pill--lg" href={routes.demo}>
+        {footer.secondButton}
+        <Icon name="arrow" size={18} />
+      </a>
     </div>
   </div>
+
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href={routes.home} aria-label="Ozaa home">
+        {/* White lettering on the brown; the dark logo inside the light card on phones. */}
+        <picture>
+          <source media="(max-width: 640px)" srcset="/logo/ozaa-lockup.svg" />
+          <img src="/logo/ozaa-lockup-light.svg" alt="" width="451" height="140" />
+        </picture>
+      </a>
+      <p>{footer.tagline}</p>
+      <div class="footer-social">
+        <p>{footer.social}</p>
+        <ul>
+          {
+            footer.socials.map((social) => (
+              <li>
+                <SocialIcon name={social.icon} title={social.name} url={social.url} />
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+    {
+      footer.columns.map((column) => (
+        <nav class="footer-column" aria-label={column.heading}>
+          <h3>{column.heading}</h3>
+          <ul>
+            {column.links.map((link) => (
+              <li>
+                <a href={link.href}>{link.label}</a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      ))
+    }
+    <nav class="footer-column footer-column--legal" aria-label={footer.legalHeading}>
+      <h3>{footer.legalHeading}</h3>
+      <ul>
+        {footer.legal.map((item) => <li><a href={item.href}>{item.label}</a></li>)}
+        <li>
+          <button class="link-button" type="button" data-cookie-settings>
+            {footer.cookieSettings}
+          </button>
+        </li>
+      </ul>
+    </nav>
+  </div>
+
+  <div class="footer-bottom">
+    <p>© {year} ozaa. {footer.rights}</p>
+  </div>
+
+  {/* The name, huge and faint, sunk into the footer's bottom edge. Drawn by CSS from data-word,
+      so it is decoration only: screen readers and contrast checks skip it. */}
+  <div class="footer-watermark" aria-hidden="true" data-word={footer.watermark}></div>
 </footer>
