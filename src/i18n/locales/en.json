@@ -733,6 +733,18 @@
       "tables": "Seated now",
       "callsWaiting": "Needs someone now",
       "callsQuiet": "All quiet"
+    },
+    "setup": {
+      "title": "Complete your setup",
+      "percent": "{{percent}}% done",
+      "steps": {
+        "details": "Add your description and location",
+        "look": "Add your logo",
+        "menu": "Add your first dish",
+        "tables": "Add your tables and print the QR codes",
+        "wifi": "Add your Wi-Fi for guests",
+        "team": "Invite your staff"
+      }
     }
   },
   "ownerTables": {

@@ -24,6 +24,7 @@ import { StatTile } from '../../kit';
 import { NeedsYou } from './NeedsYou';
 import { LiveOrders } from './LiveOrders';
 import { OverviewPanel } from './OverviewPanel';
+import { SetupCard } from './SetupCard';
 
 // Live data refreshes every few seconds while the screen is open; the kitchen moves fast.
 const LIVE_MS = 5000;
@@ -35,7 +36,7 @@ const SHORTCUTS: { key: string; icon: LucideIcon; href: string }[] = [
   { key: 'feedback', icon: Inbox, href: '/owner/feedback' },
 ];
 
-/** Today: the overview panel, shortcuts, what needs you, four live numbers, and the open tickets. */
+/** Today: the overview panel, shortcuts, the setup checklist (until done), what needs you, four live numbers, and the open tickets. */
 export function DashboardScreen() {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -89,6 +90,7 @@ export function DashboardScreen() {
                   </Pressable>
                 ))}
               </View>
+              <SetupCard />
               <NeedsYou />
               <View style={styles.grid}>
                 <View style={{ flexBasis: basis, flexGrow: 1 }}>
