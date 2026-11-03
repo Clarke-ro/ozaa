@@ -1550,7 +1550,6 @@
     "marketingStatus": "Marketing status (Act 843)",
     "consented": "Agreed to offers by WhatsApp and SMS",
     "optedOut": "Opted out of offers",
-    "manualStamp": "+1 stamp (manual credit)",
-    "redeem": "Redeem a free dish"
+    "stampAtScan": "Stamp or redeem at Scan"
   }
 }

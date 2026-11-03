@@ -1,7 +1,8 @@
 import { makeStyles } from '@/ui/makeStyles';
 import { useState } from 'react';
 import { Platform, Pressable, Share, TextInput, View } from 'react-native';
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Award, ChevronRight, Search, Sparkles, Users, X } from 'lucide-react-native';
 import { api } from '@/lib/api';
@@ -19,7 +20,7 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
   const styles = useStyles();
   const theme = useTheme();
   const { t } = useTranslation();
-  const client = useQueryClient();
+  const router = useRouter();
 
   const [search, setSearch] = useState('');
   const [wantsOffersOnly, setWantsOffersOnly] = useState(false);
@@ -36,42 +37,6 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
     enabled: Boolean(venueId),
     // Keep the last results on screen while the next search loads, so the list doesn't flash.
     placeholderData: keepPreviousData,
-  });
-
-  const refresh = () => {
-    void client.invalidateQueries({ queryKey: ownerKeys.loyaltyCustomers(venueId) });
-    void client.invalidateQueries({ queryKey: ownerKeys.loyalty(venueId) });
-  };
-
-  // Manual stamp mutation
-  const stampMutation = useMutation({
-    mutationFn: (phone: string) =>
-      api.ownerScanLoyaltyCard(venueId, { qrPayload: phone, action: 'stamp' }),
-    onSuccess: (res) => {
-      refresh();
-      if (selectedCustomer) {
-        setSelectedCustomer({
-          ...selectedCustomer,
-          stamps: res.stamps,
-        });
-      }
-    },
-  });
-
-  // Manual redeem mutation
-  const redeemMutation = useMutation({
-    mutationFn: (phone: string) =>
-      api.ownerScanLoyaltyCard(venueId, { qrPayload: phone, action: 'redeem' }),
-    onSuccess: (res) => {
-      refresh();
-      if (selectedCustomer) {
-        setSelectedCustomer({
-          ...selectedCustomer,
-          stamps: res.stamps,
-          rewardsAvailable: Math.max(0, selectedCustomer.rewardsAvailable - 1),
-        });
-      }
-    },
   });
 
   const items = customersQuery.data?.items ?? [];
@@ -282,21 +247,16 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
                 </Text>
               </View>
 
-              {/* Manual Manager Actions */}
+              {/* Stamps and rewards go through Scan, which takes the guest's card code or their
+                  full phone number. This list only has the masked number, which can't find a card. */}
               <View style={styles.manualActions}>
                 <Button
-                  label={t('ownerMembers.manualStamp')}
-                  tone="primary"
-                  onPress={() => stampMutation.mutate(selectedCustomer.phoneMasked)}
-                  loading={stampMutation.isPending}
-                />
-
-                <Button
-                  label={t('ownerMembers.redeem')}
+                  label={t('ownerMembers.stampAtScan')}
                   tone="secondary"
-                  onPress={() => redeemMutation.mutate(selectedCustomer.phoneMasked)}
-                  loading={redeemMutation.isPending}
-                  disabled={selectedCustomer.rewardsAvailable <= 0 && selectedCustomer.stamps < 10}
+                  onPress={() => {
+                    setSelectedCustomer(null);
+                    router.push('/owner/scan');
+                  }}
                 />
               </View>
             </View>
