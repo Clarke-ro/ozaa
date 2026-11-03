@@ -15,7 +15,8 @@ test('the banner photo shows and share and language respond', async ({ page }) =
   await page.getByRole('button', { name: 'Share' }).click();
   await expect(page.getByText('Link copied')).toBeVisible();
   const copied = await page.evaluate(() => navigator.clipboard.readText());
-  expect(copied).toContain('/mamas-kitchen/t/12');
+  // The venue page only: a table link would let anyone join that table from anywhere.
+  expect(copied).toMatch(/\/mamas-kitchen$/);
 
   await page.getByRole('button', { name: 'Language' }).click();
   await expect(page.getByText('Français')).toBeVisible();

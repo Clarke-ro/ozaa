@@ -33,7 +33,7 @@ export function HomeScreen({ slug }: { slug: string }) {
   if (venue.isLoading) return <LoadingState />;
   if (venue.isError || !venue.data) return <ErrorState onRetry={() => void venue.refetch()} />;
   const place = venue.data;
-  const pageLink = venuePageLink(slug, tableCode);
+  const pageLink = venuePageLink(slug);
 
   return (
     <SafeScreen includeTop={false}>
@@ -79,8 +79,12 @@ export function HomeScreen({ slug }: { slug: string }) {
   );
 }
 
-function venuePageLink(slug: string, tableCode: string | null): string {
-  const path = tableCode ? `/${slug}/t/${tableCode}` : `/${slug}`;
+/**
+ * The venue's page, never the table's: a /slug/t/12 link would let anyone who gets it
+ * join table 12, order to it and call its waiter from anywhere.
+ */
+function venuePageLink(slug: string): string {
+  const path = `/${slug}`;
   const origin = globalThis.location?.origin;
   if (typeof origin === 'string' && origin.startsWith('http')) return `${origin}${path}`;
   return `${env.EXPO_PUBLIC_SITE_URL}${path}`;
