@@ -16,7 +16,7 @@ export const ownerKeys = {
   feedback: (venueId: string) => ['owner-feedback', venueId] as const,
   links: (venueId: string) => ['owner-links', venueId] as const,
   loyalty: (venueId: string) => ['owner-loyalty', venueId] as const,
-  services: (venueId: string) => ['services', venueId] as const,
+  services: (venueId: string) => ['owner-services', venueId] as const,
   /** The guest menu, keyed by venue slug; the owner menu builder reads and edits the same data. */
   menu: (slug: string) => ['menu', slug] as const,
 };
