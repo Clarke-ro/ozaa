@@ -127,7 +127,7 @@ export function GameScreen({ slug }: { slug: string }) {
                 maxLength={14}
                 onChangeText={setNick}
                 placeholder={t('game.nick')}
-                style={styles.nick}
+                style={[styles.nick, { borderColor: theme.line }]}
               />
               <Button
                 label={t('game.save')}
@@ -184,7 +184,6 @@ const styles = StyleSheet.create({
   },
   nick: {
     borderWidth: 1,
-    borderColor: '#E4E4E7',
     borderRadius: 12,
     height: 48,
     paddingHorizontal: 12,
