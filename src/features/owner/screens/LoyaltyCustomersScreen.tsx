@@ -1,9 +1,10 @@
 import { makeStyles } from '@/ui/makeStyles';
 import { useState } from 'react';
 import { Platform, Pressable, Share, TextInput, View } from 'react-native';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Award, ChevronRight, Search, Sparkles, Users, X } from 'lucide-react-native';
 import { api } from '@/lib/api';
+import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import type { LoyaltyCustomerSummary } from '@/lib/api/types';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
@@ -21,14 +22,17 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
   const [wantsOffersOnly, setWantsOffersOnly] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<LoyaltyCustomerSummary | null>(null);
 
+  const query = useDebouncedValue(search.trim());
   const customersQuery = useQuery({
-    queryKey: ['owner-loyalty-customers', venueId, search, wantsOffersOnly],
+    queryKey: ['owner-loyalty-customers', venueId, query, wantsOffersOnly],
     queryFn: () =>
       api.ownerListLoyaltyCustomers(venueId, {
-        search: search.trim() || undefined,
+        search: query || undefined,
         wantsOffers: wantsOffersOnly ? true : undefined,
       }),
     enabled: Boolean(venueId),
+    // Keep the last results on screen while the next search loads, so the list doesn't flash.
+    placeholderData: keepPreviousData,
   });
 
   const refresh = () => {

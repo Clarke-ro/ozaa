@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Inbox, Search, Shield, X } from 'lucide-react-native';
 import { api } from '@/lib/api';
+import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
@@ -29,7 +30,7 @@ export function FeedbackScreen() {
     const id = setInterval(() => setNow(Date.now()), 60_000);
     return () => clearInterval(id);
   }, []);
-  const query = search.trim();
+  const query = useDebouncedValue(search.trim());
 
   const list = useQuery({
     queryKey: [...ownerKeys.feedback(venueId), tab, query],
@@ -39,6 +40,8 @@ export function FeedbackScreen() {
         search: query || undefined,
       }),
     enabled: Boolean(venueId) && tab !== 'ai',
+    // Keep the last results on screen while the next search loads, so the list doesn't flash.
+    placeholderData: keepPreviousData,
   });
   // The count on the New tab, independent of the search box.
   const unread = useQuery({
