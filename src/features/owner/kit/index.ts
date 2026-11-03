@@ -20,5 +20,4 @@ export { Section } from './Section';
 export { InfoRow, InputRow, LinkRow, SectionBody, SwitchRow } from './Rows';
 export { SaveBar } from './SaveBar';
 export { Chips } from './Chips';
-export { Grain } from './Grain';
 export { Stepper } from './Stepper';

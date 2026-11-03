@@ -18,9 +18,6 @@ export const hapticSelection = () => run(() => Haptics.selectionAsync());
 export const hapticImpactLight = () =>
   run(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light));
 
-export const hapticImpact = () =>
-  run(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium));
-
 /** A save or scan went through. */
 export const hapticSuccess = () =>
   run(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success));
