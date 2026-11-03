@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { ClipboardList } from 'lucide-react-native';
 import { api } from '@/lib/api';
+import { PAYMENTS_ENABLED } from '@/lib/features';
 import { useGuestSession } from '@/features/session';
 import { useVenue } from '@/features/venue';
 import { DEFAULT_CURRENCY } from '@/lib/money';
@@ -98,13 +99,19 @@ export function StatusScreen({ slug }: { slug: string }) {
             </Text>
             <PriceText amount={o.totalPesewas} currency={currency} size="title" />
           </View>
-          <Text variant="caption" style={{ color: unpaid ? theme.muted : theme.success }}>
-            {t(`status.paid.${o.paymentStatus}`)}
-          </Text>
+          {PAYMENTS_ENABLED ? (
+            <Text variant="caption" style={{ color: unpaid ? theme.muted : theme.success }}>
+              {t(`status.paid.${o.paymentStatus}`)}
+            </Text>
+          ) : (
+            <Text variant="caption" style={{ color: theme.muted }}>
+              {t('status.payAtCounter')}
+            </Text>
+          )}
         </View>
 
         <View style={styles.actions}>
-          {unpaid ? (
+          {PAYMENTS_ENABLED && unpaid ? (
             <Button label={t('status.pay')} onPress={() => router.push(`/${slug}/pay`)} />
           ) : null}
           <View style={styles.pair}>

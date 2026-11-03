@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
 import type { ServiceSettings } from '@/lib/api/types';
 import { NOT_BUILT, type WifiSecurity } from '@/features/venue';
+import { PAYMENT_SERVICES } from '@/lib/features';
 import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
@@ -90,7 +91,9 @@ export function ServicesScreen() {
         {s ? (
           <View style={styles.stack}>
             {SECTIONS.map((section) => {
-              const items = s.services.filter((item) => item.section === section);
+              const items = s.services.filter(
+                (item) => item.section === section && !PAYMENT_SERVICES.includes(item.id),
+              );
               if (!items.length && section !== 'fun') return null;
               return (
                 <Section key={section} title={t(`home.sections.${section}`)}>

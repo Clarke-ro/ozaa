@@ -1,6 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { VenuePublic } from '@/lib/api/types';
+import { PAYMENT_SERVICES } from '@/lib/features';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { ServiceList } from './ServiceList';
@@ -28,7 +29,10 @@ export function ServiceGrid({
       {SECTIONS.map((section) => {
         const items = services.filter(
           (service) =>
-            service.enabled && service.section === section && !NOT_BUILT.includes(service.id),
+            service.enabled &&
+            service.section === section &&
+            !NOT_BUILT.includes(service.id) &&
+            !PAYMENT_SERVICES.includes(service.id),
         );
         if (items.length === 0) return null;
         return (

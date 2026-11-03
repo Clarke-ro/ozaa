@@ -43,7 +43,11 @@ const config: ExpoConfig = {
     ],
   ],
   experiments: { typedRoutes: true, chunking: { mode: 'granular' } },
-  extra: { router: { origin: false } },
+  extra: {
+    router: { origin: false },
+    // Payments are off in this build (docs/payments-removed.md). Start with PAYMENTS_ENABLED=true to show them.
+    paymentsEnabled: process.env.PAYMENTS_ENABLED === 'true',
+  },
 };
 
 export default config;

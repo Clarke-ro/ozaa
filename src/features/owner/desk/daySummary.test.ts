@@ -2,6 +2,8 @@ import { summarizeDay } from './daySummary';
 
 const base = {
   openCalls: 0,
+  openBillCalls: 0,
+  payments: true,
   ratings: [5, 4],
   nowIso: '2026-10-31T18:00:00Z',
   timeZone: 'Africa/Accra',
@@ -50,4 +52,33 @@ test('alerts name calls, unpaid served bills, an unchecked payout, and sold-out 
     ],
   });
   expect(summary.alerts.map((alert) => alert.code)).toEqual(['calls', 'bills', 'payout', 'sold_out']);
+});
+
+test('with payments off, bills come from bill requests and there is no payout alert', () => {
+  const summary = summarizeDay({
+    ...base,
+    payments: false,
+    openCalls: 3,
+    openBillCalls: 2,
+    payoutVerified: false,
+    orders: [
+      { status: 'served', paidPesewas: 0, createdAt: '2026-10-31T15:00:00Z', paymentStatus: 'unpaid' },
+    ],
+  });
+  expect(summary.alerts).toEqual([
+    { code: 'calls', count: 3 },
+    { code: 'bills', count: 2 },
+  ]);
+});
+
+test('with payments off and no bill requests, served unpaid orders raise nothing', () => {
+  const summary = summarizeDay({
+    ...base,
+    payments: false,
+    payoutVerified: false,
+    orders: [
+      { status: 'served', paidPesewas: 0, createdAt: '2026-10-31T15:00:00Z', paymentStatus: 'unpaid' },
+    ],
+  });
+  expect(summary.alerts).toEqual([]);
 });

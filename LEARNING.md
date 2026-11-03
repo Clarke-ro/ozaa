@@ -4,6 +4,41 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-03 · Switching payments off with a feature flag
+
+**What we built**
+
+This build has no payments. Guests order, then pay at the counter or ask for the bill. Owners see orders, tables and calls with no money screens. All the payment code still exists.
+
+**How it works**
+
+```
+app.config.ts  PAYMENTS_ENABLED=false  →  src/lib/features.ts  →  each screen checks PAYMENTS_ENABLED
+```
+
+Without payments, nothing marks a meal paid, so the bill request takes over:
+
+```
+guest asks for the bill → table shows "Waiting for the bill" → staff tap "Bill settled" → table is free
+```
+
+**Files to look at**
+
+- `src/lib/features.ts`: the one place the flag is read.
+- `src/features/owner/floor/floorStatus.ts`: table status with and without payments.
+- `src/features/owner/desk/daySummary.ts`: the bills alert comes from bill requests when payments are off.
+- `docs/payments-removed.md`: what's hidden, what's deleted, and how to bring it back.
+
+**New idea: a feature flag**
+
+A feature flag is a switch in the config that turns a feature on or off without deleting its code. Here, payments are off, but the Pay screen is still in the app, waiting. Flipping the switch brings it back. The full original version is also saved on the `feature/payments-v1` branch.
+
+**Try it yourself**
+
+Run `PAYMENTS_ENABLED=true npx expo start --web --clear` and open a table page. The "Pay & split bill" tile comes back. Run it again without the flag and it's gone.
+
+---
+
 ## 2026-11-02 · Making the guest page download less
 
 **What we built**

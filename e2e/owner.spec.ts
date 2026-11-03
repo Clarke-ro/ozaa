@@ -9,6 +9,7 @@ const tabs = [
 ] as const;
 
 // Everything else the owner reaches from More. Previews are labelled "<name>, Preview".
+// Payments and the Register preview are off in this build (PAYMENTS_ENABLED=false).
 const moreItems = [
   ['Floor', 'owner-floor'],
   ['Calls', 'owner-calls'],
@@ -21,14 +22,12 @@ const moreItems = [
   ['Feedback', 'owner-feedback'],
   ['Reviews', 'owner-reviews'],
   ['Insights', 'owner-insights'],
-  ['Payments', 'owner-payments'],
   ['Staff', 'owner-staff'],
   ['Scanner devices', 'owner-devices'],
   ['Business and locations', 'owner-business'],
   ['Setup', 'owner-setup'],
   ['Settings', 'owner-settings'],
   ['Stock, Preview', 'owner-stock'],
-  ['Register, Preview', 'owner-pos'],
   ['AI waiter, Preview', 'owner-ai'],
   ['Marketing, Preview', 'owner-marketing'],
 ] as const;

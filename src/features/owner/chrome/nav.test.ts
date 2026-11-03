@@ -20,11 +20,21 @@ test('a manager sees the venue tools except payouts and staff', () => {
   expect(ids).not.toContain('staff');
 });
 
-test('the owner sees payouts and staff', () => {
-  const ids = navFor('owner').map((item) => item.id);
+test('with payments on, the owner sees payouts and staff', () => {
+  const ids = navFor('owner', true).map((item) => item.id);
   expect(ids).toContain('payments');
+  expect(ids).toContain('pos');
   expect(ids).toContain('staff');
   expect(ids).toContain('setup');
+});
+
+test('with payments off, nobody sees payments or the counter till', () => {
+  for (const role of ['owner', 'manager', 'waiter'] as const) {
+    const ids = navFor(role, false).map((item) => item.id);
+    expect(ids).not.toContain('payments');
+    expect(ids).not.toContain('pos');
+  }
+  expect(navFor('owner', false).map((item) => item.id)).toContain('staff');
 });
 
 describe('phone tabs', () => {

@@ -1,12 +1,17 @@
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Check } from 'lucide-react-native';
+import { PAYMENTS_ENABLED } from '@/lib/features';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
 
-export const STEPS = ['venue', 'tables', 'wifi', 'payout'] as const;
-export type Step = (typeof STEPS)[number];
+const ALL_STEPS = ['venue', 'tables', 'wifi', 'payout'] as const;
+export type Step = (typeof ALL_STEPS)[number];
+/** The payout step sets up where payments settle, so it goes when payments are off. */
+export const STEPS: readonly Step[] = PAYMENTS_ENABLED
+  ? ALL_STEPS
+  : ALL_STEPS.filter((step) => step !== 'payout');
 
 /**
  * "Step 2 of 4" with a progress bar, then the steps joined by lines. Done steps get a tick, so

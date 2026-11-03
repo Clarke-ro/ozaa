@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ChevronDown, ChevronUp, MessageSquareText } from 'lucide-react-native';
 import type { Order } from '@/lib/api/types';
 import { pesewas } from '@/lib/brand';
+import { PAYMENTS_ENABLED } from '@/lib/features';
 import { formatMoney } from '@/lib/money';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
@@ -31,7 +32,7 @@ const PAID_TONE: Record<Order['paymentStatus'], PillTone> = {
 
 /**
  * One kitchen ticket. Collapsed it is one row: where it goes, how much, how long it has waited.
- * Tap to open what to cook (add-ons and notes), the payment and the one next step.
+ * Tap to open what to cook (add-ons and notes), the payment (when payments are on) and the one next step.
  */
 export function OrderCard({
   order,
@@ -177,11 +178,13 @@ export function OrderCard({
             <Text variant="title" style={styles.num}>
               {formatMoney(pesewas(order.totalPesewas), currency)}
             </Text>
-            <StatusPill
-              label={t(`ownerOrders.paid.${order.paymentStatus}`)}
-              tone={PAID_TONE[order.paymentStatus]}
-              icon={false}
-            />
+            {PAYMENTS_ENABLED ? (
+              <StatusPill
+                label={t(`ownerOrders.paid.${order.paymentStatus}`)}
+                tone={PAID_TONE[order.paymentStatus]}
+                icon={false}
+              />
+            ) : null}
           </View>
           {next ? (
             <Button label={next} size="md" tone="secondary" loading={busy} onPress={onNext} />

@@ -29,4 +29,4 @@ npx expo lint
 npx expo export -p web && npx playwright test
 ```
 
-The payments sandbox in `server/` starts only with a Paystack **test** key in the environment. Do not commit that key.
+Payments are off in this build (`PAYMENTS_ENABLED=false`). The payment code, including the Paystack sandbox server, is on the `feature/payments-v1` branch. See `docs/payments-removed.md` to bring it back.
