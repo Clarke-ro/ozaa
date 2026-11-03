@@ -8,15 +8,15 @@ import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
-import { orderTab, type OrderTab } from '../../desk/ops';
+import { ORDER_VIEWS, orderTab, orderTabCounts, type OrderView } from '../../desk/ops';
 import { FilterChips } from '@/ui/FilterChips';
 import { DEFAULT_CURRENCY } from '@/lib/money';
 import { EmptyCard } from '../../kit';
+import { OpenCalls } from './OpenCalls';
 import { OrderCard } from './OrderCard';
 import { useOrderMove } from './useOrderMove';
 
-const TABS: OrderTab[] = ['new', 'cooking', 'ready', 'done'];
-const LIVE: OrderTab[] = ['new', 'cooking', 'ready'];
+const LIVE: OrderView[] = ['new', 'cooking', 'ready'];
 // Ticket ages only need to move once every half minute.
 const TICK_MS = 30_000;
 
@@ -27,7 +27,7 @@ export function OrdersScreen() {
   const role = useOwnerSession((state) => state.role) ?? 'waiter';
   const { width } = useWindowDimensions();
   // Null until staff pick a stage; until then show the first stage that has tickets.
-  const [picked, setPicked] = useState<OrderTab | null>(null);
+  const [picked, setPicked] = useState<OrderView | null>(null);
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), TICK_MS);
@@ -49,28 +49,28 @@ export function OrdersScreen() {
   const move = useOrderMove(venueId, role);
 
   const all = orders.data?.items ?? [];
-  const count = (id: OrderTab) => all.filter((o) => orderTab(o.status) === id).length;
-  const tab = picked ?? LIVE.find((id) => count(id) > 0) ?? 'new';
+  const counts = orderTabCounts(all);
+  const tab = picked ?? LIVE.find((id) => counts[id] > 0) ?? 'new';
+  const live = LIVE.includes(tab);
   const twoUp = width >= 900;
   // Oldest first in the live tabs (who has waited longest), newest first once done.
   const shown = all
-    .filter((o) => orderTab(o.status) === tab)
+    .filter((o) => tab === 'all' || orderTab(o.status) === tab)
     .sort((a, b) =>
-      tab === 'done'
-        ? b.createdAt.localeCompare(a.createdAt)
-        : a.createdAt.localeCompare(b.createdAt),
+      !live ? b.createdAt.localeCompare(a.createdAt) : a.createdAt.localeCompare(b.createdAt),
     );
 
   return (
     <OwnerPage title={t('owner.orders')}>
-      <FilterChips<OrderTab>
+      <OpenCalls now={now} />
+      <FilterChips<OrderView>
         label={t('owner.orders')}
         value={tab}
         onChange={setPicked}
-        items={TABS.map((id) => ({
+        items={ORDER_VIEWS.map((id) => ({
           id,
           label: t(`ownerOrders.tabs.${id}`),
-          count: id === 'done' ? undefined : count(id),
+          count: counts[id],
         }))}
       />
       <DeskWait

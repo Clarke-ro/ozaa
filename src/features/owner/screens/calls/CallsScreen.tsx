@@ -1,17 +1,15 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { BellOff } from 'lucide-react-native';
-import { api } from '@/lib/api';
 import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
-import { ownerKeys } from '../../data/keys';
 import { averageResponseMinutes } from '../../desk/ops';
-import { DeskTabs, EmptyCard, toast } from '../../kit';
+import { DeskTabs, EmptyCard } from '../../kit';
 import { SummaryStrip } from '../../kit/SummaryStrip';
 import { CallCard } from './CallCard';
+import { useWaiterCalls } from './useWaiterCalls';
 
 type Tab = 'active' | 'history';
 
@@ -21,7 +19,6 @@ const TICK_MS = 30_000;
 /** Guests asking for a waiter. "On my way" tells the guest someone is coming; "Done" closes the call. */
 export function CallsScreen() {
   const { t } = useTranslation();
-  const client = useQueryClient();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const [tab, setTab] = useState<Tab>('active');
   const [now, setNow] = useState(() => Date.now());
@@ -29,24 +26,7 @@ export function CallsScreen() {
     const id = setInterval(() => setNow(Date.now()), TICK_MS);
     return () => clearInterval(id);
   }, []);
-  const key = ownerKeys.calls(venueId);
-  const calls = useQuery({
-    queryKey: key,
-    queryFn: () => api.ownerListWaiterCalls(venueId),
-    enabled: Boolean(venueId),
-    refetchInterval: 5000,
-  });
-
-  const update = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: 'acknowledged' | 'resolved' }) =>
-      api.ownerUpdateWaiterCall(id, { status }),
-    onSuccess: () => {
-      void client.invalidateQueries({ queryKey: key });
-      void client.invalidateQueries({ queryKey: ownerKeys.floor(venueId) });
-      void client.invalidateQueries({ queryKey: ownerKeys.dashboard(venueId) });
-    },
-    onError: () => toast.error(t('ownerKit.saveFailed')),
-  });
+  const { calls, update } = useWaiterCalls(venueId);
 
   const all = [...(calls.data?.items ?? [])].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   // Oldest waiting call first: that guest has waited longest.

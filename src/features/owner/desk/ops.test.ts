@@ -1,11 +1,18 @@
-import { averageResponseMinutes, canRefund, moneyTotals, orderTab, ticketAge } from './ops';
+import {
+  averageResponseMinutes,
+  canRefund,
+  moneyTotals,
+  orderTab,
+  orderTabCounts,
+  ticketAge,
+} from './ops';
 
 test('orders sort into New, Cooking, Ready and Done', () => {
   expect(orderTab('received')).toBe('new');
   expect(orderTab('preparing')).toBe('cooking');
   expect(orderTab('ready')).toBe('ready');
-  expect(orderTab('served')).toBe('done');
-  expect(orderTab('cancelled')).toBe('done');
+  expect(orderTab('served')).toBe('served');
+  expect(orderTab('cancelled')).toBe('rejected');
 });
 
 test('average response uses only calls someone picked up, rounded to whole minutes', () => {
@@ -67,4 +74,10 @@ describe('ticketAge', () => {
   it('never goes below zero when the phone clock is behind the server', () => {
     expect(ticketAge(sent, at(-3))).toEqual({ minutes: 0, tone: 'ok' });
   });
+});
+
+test('order tab counts cover every tab, and All counts every order', () => {
+  const statuses = ['received', 'received', 'preparing', 'served', 'cancelled'] as const;
+  const counts = orderTabCounts(statuses.map((status) => ({ status })));
+  expect(counts).toEqual({ new: 2, cooking: 1, ready: 0, served: 1, rejected: 1, all: 5 });
 });
