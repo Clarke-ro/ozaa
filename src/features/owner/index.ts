@@ -27,3 +27,4 @@ export { SocialsScreen } from './screens/SocialsScreen';
 export { ComingSoonScreen } from './screens/ComingSoonScreen';
 export { BillingScreen } from './screens/billing/BillingScreen';
 export { CustomersScreen } from './screens/CustomersScreen';
+export { CategoriesScreen } from './screens/menu/CategoriesScreen';
