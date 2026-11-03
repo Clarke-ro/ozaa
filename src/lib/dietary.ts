@@ -7,7 +7,13 @@ type Dietary = components['schemas']['Dietary'];
  * editor. `satisfies` keeps it in step with the contract: an unknown tag fails to compile, and
  * the check below fails if the contract adds a tag this list is missing.
  */
-export const DIETARY = ['vegetarian', 'vegan', 'gluten_free', 'halal', 'spicy'] as const satisfies readonly Dietary[];
+export const DIETARY = [
+  'vegetarian',
+  'vegan',
+  'gluten_free',
+  'halal',
+  'spicy',
+] as const satisfies readonly Dietary[];
 type Missing = Exclude<Dietary, (typeof DIETARY)[number]>;
 // If this line errors, add the new contract tag to DIETARY above.
 const allTagsListed: Missing extends never ? true : never = true;

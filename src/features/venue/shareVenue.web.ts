@@ -2,7 +2,10 @@ function isAbort(error: unknown): boolean {
   return error instanceof DOMException && error.name === 'AbortError';
 }
 
-export async function shareVenueLink(url: string, title: string): Promise<'shared' | 'copied' | 'dismissed'> {
+export async function shareVenueLink(
+  url: string,
+  title: string,
+): Promise<'shared' | 'copied' | 'dismissed'> {
   const nav = typeof navigator === 'undefined' ? undefined : navigator;
   if (nav && typeof nav.share === 'function') {
     try {

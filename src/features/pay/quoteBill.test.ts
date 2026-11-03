@@ -30,15 +30,18 @@ test('equal split gives the leftover pesewa to the first payer', () => {
 });
 
 test('my items adds only the chosen unpaid lines', () => {
-  const quote = quoteBill(
-    [...lines, { id: 'c', totalPesewas: pesewas(15), paid: true }],
-    { mode: 'items', lineIds: ['b'], tip: { customPesewas: pesewas(5) } },
-  );
+  const quote = quoteBill([...lines, { id: 'c', totalPesewas: pesewas(15), paid: true }], {
+    mode: 'items',
+    lineIds: ['b'],
+    tip: { customPesewas: pesewas(5) },
+  });
   expect(quote.sharePesewas).toBe(30);
   expect(quote.tipPesewas).toBe(5);
   expect(quote.remainingAfterPesewas).toBe(70);
 });
 
 test('a paid line cannot be selected again', () => {
-  expect(() => quoteBill(lines, { mode: 'items', lineIds: ['missing'] })).toThrow('line_unavailable');
+  expect(() => quoteBill(lines, { mode: 'items', lineIds: ['missing'] })).toThrow(
+    'line_unavailable',
+  );
 });

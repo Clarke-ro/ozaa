@@ -20,7 +20,9 @@ test('the countdown never marks the payment failed by itself', () => {
     { type: 'momo_started', reference: 'pay_1', approveBy: 10 },
   );
   expect(payTransition(waiting, { type: 'countdown_done' }).kind).toBe('checking');
-  expect(payTransition(waiting, { type: 'server_failed', message: 'Not enough money in the wallet.' })).toEqual({
+  expect(
+    payTransition(waiting, { type: 'server_failed', message: 'Not enough money in the wallet.' }),
+  ).toEqual({
     kind: 'failed',
     message: 'Not enough money in the wallet.',
   });
@@ -37,7 +39,8 @@ test('a card comes back from checkout into checking', () => {
 
 test('illegal jumps stay put', () => {
   expect(payTransition(payInitial, { type: 'confirm' })).toEqual(payInitial);
-  expect(payTransition({ kind: 'paid', reference: 'pay_1' }, { type: 'server_failed', message: 'no' }).kind).toBe(
-    'paid',
-  );
+  expect(
+    payTransition({ kind: 'paid', reference: 'pay_1' }, { type: 'server_failed', message: 'no' })
+      .kind,
+  ).toBe('paid');
 });

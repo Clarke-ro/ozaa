@@ -18,7 +18,11 @@ export function DeskTabs<T extends string>({
   const theme = useTheme();
   return (
     <View style={[styles.bar, { borderBottomColor: theme.line }]}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.row}
+      >
         {tabs.map((tab) => {
           const on = tab.id === value;
           return (
@@ -30,13 +34,19 @@ export function DeskTabs<T extends string>({
               onPress={() => onChange(tab.id)}
               style={[styles.tab, on && { borderBottomColor: theme.black }]}
             >
-              <Text variant="body-strong" style={{ color: on ? theme.text : theme.meta, fontSize: 16 }}>
+              <Text
+                variant="body-strong"
+                style={{ color: on ? theme.text : theme.meta, fontSize: 16 }}
+              >
                 {tab.label}
               </Text>
               {tab.count !== undefined ? (
                 on ? (
                   <View style={[styles.badge, { backgroundColor: theme.fill }]}>
-                    <Text variant="caption" style={{ color: theme.onFill, fontFamily: 'Inter_600' }}>
+                    <Text
+                      variant="caption"
+                      style={{ color: theme.onFill, fontFamily: 'Inter_600' }}
+                    >
                       {tab.count}
                     </Text>
                   </View>
@@ -65,5 +75,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2.5,
     borderBottomColor: 'transparent',
   },
-  badge: { minWidth: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
+  badge: {
+    minWidth: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
+  },
 });

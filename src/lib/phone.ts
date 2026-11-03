@@ -65,7 +65,8 @@ export function formatPhone(e164: string): string {
     if (national.length !== expected) break;
     return groupDigits(national, region.groups);
   }
-  if (digits.startsWith('1') && digits.length === 11) return `+1 ${groupDigits(digits.slice(1), [3, 3, 4])}`;
+  if (digits.startsWith('1') && digits.length === 11)
+    return `+1 ${groupDigits(digits.slice(1), [3, 3, 4])}`;
   return e164.startsWith('+') ? e164 : `+${digits}`;
 }
 
@@ -138,7 +139,10 @@ export function parsePhone(input: string, country: string = DEFAULT_COUNTRY): Pa
 }
 
 /** Parses a Ghana local number or international +E.164 number. */
-export function parseGhanaPhone(input: string, country: string = DEFAULT_COUNTRY): ParsedPhone | null {
+export function parseGhanaPhone(
+  input: string,
+  country: string = DEFAULT_COUNTRY,
+): ParsedPhone | null {
   return parsePhone(input, country);
 }
 

@@ -28,7 +28,8 @@ describe('owner menu filters', () => {
   });
 
   it('combines filter type, section and search', () => {
-    const names = (f: Parameters<typeof filterDishes>[2]) => filterDishes(items, order, f).map((d) => d.id);
+    const names = (f: Parameters<typeof filterDishes>[2]) =>
+      filterDishes(items, order, f).map((d) => d.id);
     expect(names({ status: 'off', section: 'all', query: '' })).toEqual(['Waakye']);
     expect(names({ status: 'all', section: 'drinks', query: '' })).toEqual(['Sobolo']);
     expect(names({ status: 'all', section: 'all', query: 'jol' })).toEqual(['Jollof']);
@@ -37,9 +38,8 @@ describe('owner menu filters', () => {
 
   it('keeps guest order: by section position, then as listed', () => {
     const mixed = [dish('Tea', { categoryId: 'drinks' }), dish('Rice')];
-    expect(filterDishes(mixed, order, { status: 'all', section: 'all', query: '' }).map((d) => d.id)).toEqual([
-      'Rice',
-      'Tea',
-    ]);
+    expect(
+      filterDishes(mixed, order, { status: 'all', section: 'all', query: '' }).map((d) => d.id),
+    ).toEqual(['Rice', 'Tea']);
   });
 });

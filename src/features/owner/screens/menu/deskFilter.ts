@@ -4,7 +4,10 @@ import type { MenuItem } from '@/lib/api/types';
 export const DISH_FILTERS = ['all', 'on', 'off', 'popular', 'no_photo'] as const;
 export type DishFilter = (typeof DISH_FILTERS)[number];
 
-type Dish = Pick<MenuItem, 'id' | 'categoryId' | 'name' | 'description' | 'available' | 'badges' | 'photo'>;
+type Dish = Pick<
+  MenuItem,
+  'id' | 'categoryId' | 'name' | 'description' | 'available' | 'badges' | 'photo'
+>;
 
 const matches: Record<DishFilter, (d: Dish) => boolean> = {
   all: () => true,

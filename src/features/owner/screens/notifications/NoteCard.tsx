@@ -57,7 +57,8 @@ export function NoteCard({ note, now }: { note: Note; now: number }) {
     typeof note.vars.reason === 'string' ? t(`waiter.reasons.${note.vars.reason}`) : '';
   const title = t(`ownerNotes.kind.${note.kind}`, { ...vars, reason });
   // Plain line icon like the guest list: venue colour, or red / green when the tone says so.
-  const ink = note.tone === 'alert' ? theme.error : note.tone === 'good' ? theme.success : theme.ink;
+  const ink =
+    note.tone === 'alert' ? theme.error : note.tone === 'good' ? theme.success : theme.ink;
   return (
     <Pressable
       accessibilityRole="button"

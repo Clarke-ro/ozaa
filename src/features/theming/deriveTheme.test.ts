@@ -52,7 +52,11 @@ test('every pair stays at 4.5:1 across 500 colours', () => {
     const hex =
       '#' +
       [0, 1, 2]
-        .map(() => Math.floor(next() * 256).toString(16).padStart(2, '0'))
+        .map(() =>
+          Math.floor(next() * 256)
+            .toString(16)
+            .padStart(2, '0'),
+        )
         .join('');
     const theme = deriveTheme(hex);
     expect(pairsPass(theme)).toBe(true);

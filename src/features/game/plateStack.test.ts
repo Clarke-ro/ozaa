@@ -1,4 +1,11 @@
-import { createStack, dropAligned, dropPlate, plateSpeed, stepStack, topOfBoard } from './plateStack';
+import {
+  createStack,
+  dropAligned,
+  dropPlate,
+  plateSpeed,
+  stepStack,
+  topOfBoard,
+} from './plateStack';
 
 test('sixteen aligned drops score 16 and earn the stamp', () => {
   let state = dropPlate(createStack());
@@ -13,7 +20,8 @@ test('sixteen aligned drops score 16 and earn the stamp', () => {
 
 test('a complete miss ends the round and keeps the score', () => {
   let state = dropPlate(createStack());
-  for (let tap = 0; tap < 16; tap += 1) state = dropAligned(state, { minScore: 15, alreadyToday: false });
+  for (let tap = 0; tap < 16; tap += 1)
+    state = dropAligned(state, { minScore: 15, alreadyToday: false });
   const previous = state.stack[state.stack.length - 1];
   expect(previous).toBeDefined();
   if (!state.current || !previous) throw new Error('plate');

@@ -8,18 +8,31 @@ const tables = [
 ];
 
 test('a table with no order and no guest is free', () => {
-  const [table] = deriveFloor({ payments: true, tables: [tables[0]!], orders: [], calls: [], seatedCodes: [] });
+  const [table] = deriveFloor({
+    payments: true,
+    tables: [tables[0]!],
+    orders: [],
+    calls: [],
+    seatedCodes: [],
+  });
   expect(table?.status).toBe('free');
   expect(table?.orderId).toBeNull();
 });
 
 test('a seated guest with no order is seated', () => {
-  const [table] = deriveFloor({ payments: true, tables: [tables[2]!], orders: [], calls: [], seatedCodes: ['7'] });
+  const [table] = deriveFloor({
+    payments: true,
+    tables: [tables[2]!],
+    orders: [],
+    calls: [],
+    seatedCodes: ['7'],
+  });
   expect(table?.status).toBe('seated');
 });
 
 test('an open kitchen ticket is ordered, and a served unpaid bill is waiting to pay', () => {
-  const floor = deriveFloor({ payments: true,
+  const floor = deriveFloor({
+    payments: true,
     tables,
     seatedCodes: [],
     calls: [],
@@ -55,7 +68,8 @@ test('an open kitchen ticket is ordered, and a served unpaid bill is waiting to 
 });
 
 test('a paid served table goes free, and a call beats every other status', () => {
-  const floor = deriveFloor({ payments: true,
+  const floor = deriveFloor({
+    payments: true,
     tables,
     seatedCodes: [],
     orders: [
@@ -80,7 +94,15 @@ test('a paid served table goes free, and a call beats every other status', () =>
         updatedAt: '2026-10-31T12:50:00Z',
       },
     ],
-    calls: [{ id: 'wcl_1', tableCode: '12', reason: 'water', status: 'open', createdAt: '2026-10-31T12:55:00Z' }],
+    calls: [
+      {
+        id: 'wcl_1',
+        tableCode: '12',
+        reason: 'water',
+        status: 'open',
+        createdAt: '2026-10-31T12:55:00Z',
+      },
+    ],
   });
   expect(floor.find((table) => table.code === '1')?.status).toBe('free');
   expect(floor.find((table) => table.code === '12')).toMatchObject({
@@ -91,7 +113,8 @@ test('a paid served table goes free, and a call beats every other status', () =>
 });
 
 test('a resolved call and a cancelled order do not hold the table', () => {
-  const [table] = deriveFloor({ payments: true,
+  const [table] = deriveFloor({
+    payments: true,
     tables: [tables[0]!],
     seatedCodes: [],
     orders: [
@@ -106,7 +129,15 @@ test('a resolved call and a cancelled order do not hold the table', () => {
         updatedAt: '2026-10-31T12:00:00Z',
       },
     ],
-    calls: [{ id: 'wcl_2', tableCode: '1', reason: 'bill', status: 'resolved', createdAt: '2026-10-31T12:55:00Z' }],
+    calls: [
+      {
+        id: 'wcl_2',
+        tableCode: '1',
+        reason: 'bill',
+        status: 'resolved',
+        createdAt: '2026-10-31T12:55:00Z',
+      },
+    ],
   });
   expect(table?.status).toBe('free');
 });
@@ -125,7 +156,13 @@ describe('with payments switched off', () => {
   const table3 = [tables[1]!];
 
   test('a served unpaid order is not waiting to pay; the guests are still at the table', () => {
-    const [table] = deriveFloor({ payments: false, tables: table3, orders: [served], calls: [], seatedCodes: [] });
+    const [table] = deriveFloor({
+      payments: false,
+      tables: table3,
+      orders: [served],
+      calls: [],
+      seatedCodes: [],
+    });
     expect(table?.status).toBe('seated');
     expect(table?.billPesewas).toBe(4500);
   });
@@ -136,10 +173,22 @@ describe('with payments switched off', () => {
         payments: false,
         tables: table3,
         orders: [served],
-        calls: [{ id: 'wcl_b', tableCode: '3', reason: 'bill', status, createdAt: '2026-10-31T12:40:00Z' }],
+        calls: [
+          {
+            id: 'wcl_b',
+            tableCode: '3',
+            reason: 'bill',
+            status,
+            createdAt: '2026-10-31T12:40:00Z',
+          },
+        ],
         seatedCodes: [],
       });
-      expect(table).toMatchObject({ status: 'waiting_to_pay', waiterCallId: 'wcl_b', waiterReason: 'bill' });
+      expect(table).toMatchObject({
+        status: 'waiting_to_pay',
+        waiterCallId: 'wcl_b',
+        waiterReason: 'bill',
+      });
     }
   });
 
@@ -148,7 +197,15 @@ describe('with payments switched off', () => {
       payments: false,
       tables: table3,
       orders: [served],
-      calls: [{ id: 'wcl_w', tableCode: '3', reason: 'water', status: 'open', createdAt: '2026-10-31T12:40:00Z' }],
+      calls: [
+        {
+          id: 'wcl_w',
+          tableCode: '3',
+          reason: 'water',
+          status: 'open',
+          createdAt: '2026-10-31T12:40:00Z',
+        },
+      ],
       seatedCodes: [],
     });
     expect(table?.status).toBe('needs_waiter');
@@ -159,7 +216,15 @@ describe('with payments switched off', () => {
       payments: false,
       tables: table3,
       orders: [served],
-      calls: [{ id: 'wcl_b', tableCode: '3', reason: 'bill', status: 'resolved', createdAt: '2026-10-31T12:40:00Z' }],
+      calls: [
+        {
+          id: 'wcl_b',
+          tableCode: '3',
+          reason: 'bill',
+          status: 'resolved',
+          createdAt: '2026-10-31T12:40:00Z',
+        },
+      ],
       seatedCodes: [],
     });
     expect(table?.status).toBe('free');
@@ -170,7 +235,15 @@ describe('with payments switched off', () => {
       payments: false,
       tables: table3,
       orders: [{ ...served, id: 'ord_4', status: 'received', createdAt: '2026-10-31T13:00:00Z' }],
-      calls: [{ id: 'wcl_b', tableCode: '3', reason: 'bill', status: 'resolved', createdAt: '2026-10-31T12:40:00Z' }],
+      calls: [
+        {
+          id: 'wcl_b',
+          tableCode: '3',
+          reason: 'bill',
+          status: 'resolved',
+          createdAt: '2026-10-31T12:40:00Z',
+        },
+      ],
       seatedCodes: [],
     });
     expect(table?.status).toBe('ordered');

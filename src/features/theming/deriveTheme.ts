@@ -30,7 +30,9 @@ export type DerivedTheme = {
 
 const round2 = (value: number) => Number(value.toFixed(2));
 
-function derived(input: Omit<DerivedTheme, 'ratios' | 'tooCloseToOzaa'> & { whiteOnAccent: number }): DerivedTheme {
+function derived(
+  input: Omit<DerivedTheme, 'ratios' | 'tooCloseToOzaa'> & { whiteOnAccent: number },
+): DerivedTheme {
   return {
     ...input,
     tooCloseToOzaa: !input.isDefault && input.ozaaDistance < 20,
@@ -75,7 +77,9 @@ export function deriveTheme(accent?: string | null): DerivedTheme {
       );
     } else {
       fill = darkenUntil(colour, WHITE, AA);
-      notes.push(`Neither white nor dark text passes on ${colour}, so buttons use the darker ${fill}.`);
+      notes.push(
+        `Neither white nor dark text passes on ${colour}, so buttons use the darker ${fill}.`,
+      );
     }
   }
 

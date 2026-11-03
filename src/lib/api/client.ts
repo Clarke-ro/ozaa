@@ -106,9 +106,7 @@ export type ApiClient = {
     },
     call: Call,
   ): Promise<{ id: string; googleReviewUrl: string | null }>;
-  getLeaderboard(
-    slug: string,
-  ): Promise<{
+  getLeaderboard(slug: string): Promise<{
     period: string;
     entries: { rank: number; nickname: string; score: number; sample?: boolean }[];
     stampRule: { enabled: boolean; minScore: number };

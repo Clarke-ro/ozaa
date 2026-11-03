@@ -40,7 +40,9 @@ export type FloorTableView = FloorTableInput & {
 const OPEN_KITCHEN = new Set<FloorOrder['status']>(['received', 'preparing', 'ready']);
 
 function latestOrder(orders: FloorOrder[], code: string): FloorOrder | null {
-  const matches = orders.filter((order) => order.tableCode === code && order.status !== 'cancelled');
+  const matches = orders.filter(
+    (order) => order.tableCode === code && order.status !== 'cancelled',
+  );
   matches.sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
   return matches[0] ?? null;
 }
@@ -48,7 +50,10 @@ function latestOrder(orders: FloorOrder[], code: string): FloorOrder | null {
 function fromOrder(order: FloorOrder | null, seated: boolean): FloorStatus {
   if (!order) return seated ? 'seated' : 'free';
   if (OPEN_KITCHEN.has(order.status)) return 'ordered';
-  if (order.status === 'served' && (order.paymentStatus === 'unpaid' || order.paymentStatus === 'part_paid')) {
+  if (
+    order.status === 'served' &&
+    (order.paymentStatus === 'unpaid' || order.paymentStatus === 'part_paid')
+  ) {
     return 'waiting_to_pay';
   }
   return seated ? 'seated' : 'free';
@@ -59,11 +64,16 @@ function fromOrder(order: FloorOrder | null, seated: boolean): FloorStatus {
  * an open or acknowledged bill request means the table is waiting for its bill, and staff
  * resolving it ("Bill settled") closes every order placed before the guest asked.
  */
-function withoutPayments(order: FloorOrder | null, calls: FloorCall[], seated: boolean): FloorStatus {
+function withoutPayments(
+  order: FloorOrder | null,
+  calls: FloorCall[],
+  seated: boolean,
+): FloorStatus {
   if (!order) return seated ? 'seated' : 'free';
   if (OPEN_KITCHEN.has(order.status)) return 'ordered';
   const settled = calls.some(
-    (call) => call.reason === 'bill' && call.status === 'resolved' && call.createdAt >= order.createdAt,
+    (call) =>
+      call.reason === 'bill' && call.status === 'resolved' && call.createdAt >= order.createdAt,
   );
   if (settled) return seated ? 'seated' : 'free';
   return 'seated';

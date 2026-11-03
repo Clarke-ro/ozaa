@@ -22,7 +22,11 @@ export function IconButton({
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
-      style={[styles.base, { backgroundColor: light ? 'rgba(255,255,255,0.92)' : theme.tint }, style]}
+      style={[
+        styles.base,
+        { backgroundColor: light ? 'rgba(255,255,255,0.92)' : theme.tint },
+        style,
+      ]}
     >
       {children}
     </Pressable>
