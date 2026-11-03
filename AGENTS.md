@@ -41,11 +41,11 @@ Clarke is building Ozaa, a QR table app for restaurants in Ghana. He is a **begi
 5. **Money:**
    - Integer pesewas only, and the server total wins.
    - Only a `succeeded` payment counts.
-   - Ozaa never holds funds; use Paystack split payments to the venue's subaccount.
+   - Ozaa never holds funds. Each restaurant connects its own Paystack keys; money goes straight to its account (BUILD.md section 4, changed 2026-11-03). A venue's secret key is stored encrypted on the server only.
    - **The Paystack secret key lives only on the server.** It never goes in the app, in `EXPO_PUBLIC_*` or in git.
    - Sandbox (test) keys only until Clarke says otherwise.
 6. **Privacy (Act 843):**
-   - No personal data in a guest session.
+   - No personal data in a guest session. Menu-link (pickup/delivery) orders may carry name, phone and delivery address on the order only.
    - Loyalty consent is recorded with its text version. Marketing consent is separate and unticked.
    - No phones or tokens in logs or URLs.
 7. **Expo hygiene:**
