@@ -1547,6 +1547,16 @@ export interface components {
             allergens?: string[];
             calories?: number;
             prepMinutes?: number;
+            /** @description True keeps the dish off the guest menu without deleting it. Like a hidden category, it is still sent (the owner menu editor reads the same menu) and guest screens leave it out. Orders for it fail with item_sold_out. Missing means false. */
+            hidden?: boolean;
+            /** @description A promo price below pricePesewas. When set, the server charges it (plus add-ons) and guests see the normal price struck through. Null or missing means no sale. */
+            salePricePesewas?: components["schemas"]["Pesewas"] | null;
+            /** @description How many are left. Null or missing means unlimited. Each order takes away its quantity; at 0 the server sets available to false. An order for more than is left fails with item_sold_out. */
+            stockCount?: number | null;
+            /** @description Smallest number a guest may order in one line. Missing means 1. */
+            minQuantity?: number;
+            /** @description Largest number a guest may order in one line. Missing means 50. Outside min..max the order fails with quantity_out_of_range. */
+            maxQuantity?: number;
         };
         MenuItemInput: {
             categoryId?: string;
@@ -1563,6 +1573,16 @@ export interface components {
             allergens?: string[];
             calories?: number;
             prepMinutes?: number;
+            /** @description True keeps the dish off the guest menu without deleting it. Like a hidden category, it is still sent (the owner menu editor reads the same menu) and guest screens leave it out. Orders for it fail with item_sold_out. Missing means false. */
+            hidden?: boolean;
+            /** @description A promo price below pricePesewas. When set, the server charges it (plus add-ons) and guests see the normal price struck through. Null or missing means no sale. */
+            salePricePesewas?: components["schemas"]["Pesewas"] | null;
+            /** @description How many are left. Null or missing means unlimited. Each order takes away its quantity; at 0 the server sets available to false. An order for more than is left fails with item_sold_out. */
+            stockCount?: number | null;
+            /** @description Smallest number a guest may order in one line. Missing means 1. */
+            minQuantity?: number;
+            /** @description Largest number a guest may order in one line. Missing means 50. Outside min..max the order fails with quantity_out_of_range. */
+            maxQuantity?: number;
         };
         Menu: {
             venueId: string;
