@@ -2,12 +2,15 @@ import assert from "node:assert/strict";
 import { access, readFile } from "node:fs/promises";
 import test from "node:test";
 import { checkContactDraft, contactMode } from "./contact.ts";
+import { appLinks, LOCAL_APP_URL } from "./links.ts";
 import {
   contact,
   guestFeatures,
   hero,
   ownerNow,
+  payments,
   pricing,
+  questions,
   screens,
   sections,
   site,
@@ -71,7 +74,7 @@ test("section ids are unique and the page renders each one", async () => {
 });
 
 test("every sample screen file exists once in the public folder", async () => {
-  const used = new Set<string>([screens[hero.screen].src]);
+  const used = new Set<string>([screens[hero.screen].src, screens[payments.screen].src]);
   for (const feature of guestFeatures) used.add(screens[feature.screen].src);
   for (const item of ownerNow) used.add(screens[item.screen].src);
   assert.equal(used.size, Object.keys(screens).length);
@@ -133,4 +136,31 @@ test("a ready contact with a blank link stays a placeholder", () => {
     }),
     "ready",
   );
+});
+
+test("feature rows pair up, two screens to a row", () => {
+  assert.equal(guestFeatures.length % 2, 0);
+  assert.equal(ownerNow.length % 2, 0);
+});
+
+test("Get Ozaa points at the web app, local until it is hosted", () => {
+  assert.deepEqual(appLinks(undefined), {
+    app: `${LOCAL_APP_URL}/`,
+    sample: `${LOCAL_APP_URL}/mamas-kitchen/t/12`,
+    owner: `${LOCAL_APP_URL}/owner/login`,
+  });
+  assert.equal(appLinks("https://app.example.com/").app, "https://app.example.com/");
+  assert.equal(appLinks("  ").owner, `${LOCAL_APP_URL}/owner/login`);
+});
+
+test("payment copy is not just one mobile money brand", () => {
+  const text = JSON.stringify({ payments, questions });
+  assert.equal(/MoMo/.test(text), false);
+  assert.match(text, /card/i);
+  assert.match(text, /never holds|does(n't| not) hold/i);
+});
+
+test("no copy promises video reviews, which the product dropped", async () => {
+  const text = await readFile(new URL("./page.ts", import.meta.url), "utf8");
+  assert.equal(/video/i.test(text), false);
 });

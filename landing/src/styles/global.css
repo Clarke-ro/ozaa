@@ -1,42 +1,29 @@
+/* Ozaa landing page. Colours and type follow design/tokens.json: black and white base, orange only
+   on buttons, icons and small accents (design/brand.md). */
 :root {
-  /* Full Ozaa v5.1 Color System (design/tokens.json) */
   --black: #111111;
   --white: #ffffff;
-  --grey900: #18181b;
-  --grey800: #27272a;
-  --grey700: #3f3f46;
   --grey600: #52525b;
   --grey500: #71717a;
   --grey200: #e4e4e7;
   --grey100: #f4f4f5;
-
-  --brand: #fc5205;
-  --on-brand: #111111;
+  --soft: #f7f7f8;
   --primary: #d24000;
   --hover: #ba3800;
   --pressed: #a33000;
   --tint: #fff1ea;
-  --text-on-tint: #ba3800;
-
-  --success: #15803d;
-  --success-tint: #ecfdf3;
+  --tint-ink: #ba3800;
   --error: #b91c1c;
-  --error-tint: #fef2f2;
+  --success: #15803d;
 
-  /* Typography & Layout Tokens */
-  --font-display: "Unbounded", "Noto Sans", system-ui, sans-serif;
-  --font-body: "Inter", "Noto Sans", system-ui, sans-serif;
-  --page: 1200px;
-  --measure: 62ch;
-  --header: 4.5rem;
-
-  /* Spacing & Radius Tokens */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
-  --radius-2xl: 28px;
-  --radius-full: 999px;
+  --font-display: "Unbounded", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --page: 1180px;
+  --gutter: clamp(16px, 4vw, 40px);
+  --header: 68px;
+  --radius: 12px;
+  --radius-card: 24px;
+  --shadow-card: 0 1px 2px rgba(17, 17, 17, 0.04), 0 8px 24px rgba(17, 17, 17, 0.06);
 
   color-scheme: light;
 }
@@ -45,23 +32,18 @@
   font-family: Unbounded;
   src: url("/fonts/Unbounded-700.woff2") format("woff2");
   font-weight: 700;
-  font-style: normal;
   font-display: swap;
 }
-
 @font-face {
   font-family: Inter;
   src: url("/fonts/Inter-400.woff2") format("woff2");
   font-weight: 400;
-  font-style: normal;
   font-display: swap;
 }
-
 @font-face {
   font-family: Inter;
   src: url("/fonts/Inter-600.woff2") format("woff2");
   font-weight: 600;
-  font-style: normal;
   font-display: swap;
 }
 
@@ -73,11 +55,18 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--header) + 16px);
+  -webkit-text-size-adjust: 100%;
 }
 
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
   }
 }
 
@@ -86,56 +75,47 @@ body {
   background: var(--white);
   color: var(--black);
   font-family: var(--font-body);
-  font-size: 16px;
+  font-size: 17px;
   line-height: 1.55;
-  text-wrap: pretty;
   -webkit-font-smoothing: antialiased;
 }
 
-img {
-  max-width: 100%;
+img,
+svg {
   display: block;
+  max-width: 100%;
+}
+
+h1,
+h2,
+h3,
+h4,
+p {
+  margin: 0;
 }
 
 h1,
 h2 {
   font-family: var(--font-display);
   font-weight: 700;
-  text-wrap: balance;
-  margin: 0;
   letter-spacing: -0.02em;
+  text-wrap: balance;
 }
 
 h1 {
-  font-size: clamp(2.1rem, 4.2vw, 3.25rem);
-  line-height: 1.12;
+  font-size: clamp(2.4rem, 5vw, 4rem);
+  line-height: 1.05;
 }
 
 h2 {
-  font-size: clamp(1.55rem, 2.6vw, 2.2rem);
-  line-height: 1.18;
-}
-
-h3,
-h4 {
-  font-family: var(--font-body);
-  font-weight: 600;
-  margin: 0;
-  letter-spacing: -0.01em;
+  font-size: clamp(1.8rem, 3.2vw, 2.6rem);
+  line-height: 1.12;
 }
 
 h3 {
-  font-size: 20px;
-  line-height: 26px;
-}
-
-h4 {
-  font-size: 17px;
-  line-height: 24px;
-}
-
-p {
-  margin: 0;
+  font-size: 1.2rem;
+  line-height: 1.3;
+  font-weight: 600;
 }
 
 a {
@@ -143,1105 +123,822 @@ a {
 }
 
 :focus-visible {
-  outline: 2.5px solid var(--brand);
+  outline: 3px solid var(--primary);
   outline-offset: 3px;
+  border-radius: 6px;
 }
 
 .skip {
   position: absolute;
   left: 16px;
-  top: 8px;
-  transform: translateY(-150%);
+  top: -60px;
+  z-index: 100;
+  padding: 10px 16px;
+  border-radius: var(--radius);
   background: var(--black);
   color: var(--white);
-  padding: 10px 16px;
-  border-radius: var(--radius-sm);
-  font-weight: 600;
-  z-index: 100;
 }
-
 .skip:focus {
-  transform: none;
+  top: 12px;
 }
 
 .visually-hidden {
   position: absolute;
   width: 1px;
   height: 1px;
-  padding: 0;
-  margin: -1px;
   overflow: hidden;
-  clip: rect(0, 0, 0, 0);
+  clip: rect(0 0 0 0);
   white-space: nowrap;
-  border: 0;
 }
 
 .wrap {
-  width: min(var(--page), calc(100% - 40px));
-  margin-inline: auto;
+  width: 100%;
+  max-width: calc(var(--page) + var(--gutter) * 2);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+.narrow {
+  max-width: calc(780px + var(--gutter) * 2);
 }
 
-/* ==========================================================================
-   Header & Navigation
-   ========================================================================== */
-
-.header {
-  position: sticky;
-  top: 0;
-  z-index: 40;
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--grey200);
-  padding-top: env(safe-area-inset-top);
-}
-
-.bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px 24px;
-  min-height: var(--header);
-  padding-block: 10px;
-}
-
-.logo {
-  display: inline-flex;
-  align-items: center;
-  line-height: 0;
-}
-
-.logo img {
-  height: 36px;
-  width: auto;
-}
-
-.nav {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px;
-}
-
-.nav a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 40px;
-  padding: 0 12px;
-  border-radius: var(--radius-full);
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 20px;
-  color: var(--grey600);
-  text-decoration: none;
-  transition: background-color 140ms ease, color 140ms ease;
-}
-
-.nav a:hover {
-  background: var(--tint);
-  color: var(--text-on-tint);
-}
-
-/* ==========================================================================
-   Buttons & Pills
-   ========================================================================== */
-
+/* Buttons: one filled orange action, the rest outlined. 52 px tall, 40 on the header. */
 .button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   min-height: 52px;
-  padding: 0 24px;
-  border: 0;
-  border-radius: var(--radius-md);
+  padding: 0 26px;
+  border: 1.5px solid var(--primary);
+  border-radius: var(--radius);
   background: var(--primary);
   color: var(--white);
-  font: 600 16px/20px var(--font-body);
+  font: 600 1rem/1 var(--font-body);
   text-decoration: none;
   cursor: pointer;
-  transition: background-color 150ms ease-out, transform 100ms ease-out;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
 }
-
-.button--sm {
-  min-height: 44px;
-  padding: 0 18px;
-  font-size: 14px;
-}
-
 .button:hover {
   background: var(--hover);
+  border-color: var(--hover);
 }
-
 .button:active {
   background: var(--pressed);
 }
-
-.button-secondary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 52px;
-  padding: 0 22px;
-  border: 1.5px solid var(--black);
-  border-radius: var(--radius-md);
-  background: var(--white);
+.button--sm {
+  min-height: 44px;
+  padding: 0 18px;
+  font-size: 0.95rem;
+}
+.button--ghost {
+  background: transparent;
+  border-color: var(--black);
   color: var(--black);
-  font: 600 16px/20px var(--font-body);
-  text-decoration: none;
-  transition: background-color 150ms ease-out;
 }
-
-.button-secondary:hover {
+.button--ghost:hover {
+  background: var(--black);
+  border-color: var(--black);
+  color: var(--white);
+}
+.button--light {
+  background: var(--white);
+  border-color: var(--white);
+  color: var(--black);
+}
+.button--light:hover {
   background: var(--grey100);
+  border-color: var(--grey100);
+}
+.button--outline-light {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.5);
+  color: var(--white);
+}
+.button--outline-light:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--white);
 }
 
+/* Header */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: saturate(180%) blur(14px);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  border-bottom: 1px solid rgba(17, 17, 17, 0.07);
+}
+@supports not (backdrop-filter: blur(1px)) {
+  .header {
+    background: var(--white);
+  }
+}
+.header-bar {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  height: var(--header);
+}
+.logo img {
+  height: 32px;
+  width: auto;
+}
+.header-nav {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+.header-nav a {
+  padding: 10px 14px;
+  border-radius: 10px;
+  color: var(--grey600);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+.header-nav a:hover {
+  background: var(--grey100);
+  color: var(--black);
+}
+@media (max-width: 920px) {
+  .header-nav {
+    display: none;
+  }
+  .header-bar .button {
+    margin-left: auto;
+  }
+}
+
+/* Hero */
+.hero {
+  padding: clamp(48px, 8vw, 104px) 0 clamp(64px, 9vw, 120px);
+  /* The tint circle behind the phone runs a little wide; keep it from adding a sideways scroll. */
+  overflow-x: clip;
+}
+.hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  align-items: center;
+  gap: clamp(40px, 6vw, 88px);
+}
+.hero-copy {
+  display: grid;
+  gap: 24px;
+  justify-items: start;
+}
 .eyebrow {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  align-self: flex-start;
   padding: 6px 14px;
-  border-radius: var(--radius-full);
+  border-radius: 999px;
   background: var(--tint);
-  color: var(--text-on-tint);
-  border: 1px solid rgba(210, 64, 0, 0.2);
-  font-size: 13px;
+  color: var(--tint-ink);
+  font-size: 0.9rem;
   font-weight: 600;
-  line-height: 18px;
-  margin-bottom: 20px;
 }
-
-.eyebrow-dot {
-  width: 8px;
-  height: 8px;
+.eyebrow::before {
+  content: "";
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: var(--brand);
-  flex-shrink: 0;
+  background: var(--primary);
 }
-
-.section-tag {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 12px;
-  border-radius: var(--radius-full);
-  background: var(--tint);
-  color: var(--text-on-tint);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  margin-bottom: 12px;
-}
-
-.bento-pill {
-  display: inline-flex;
-  align-items: center;
-  align-self: flex-start;
-  padding: 4px 10px;
-  border-radius: var(--radius-full);
-  background: var(--tint);
-  color: var(--text-on-tint);
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 16px;
-}
-
-.bento-pill--muted {
-  background: var(--grey100);
-  color: var(--grey600);
-}
-
-.bento-pill--dark {
-  background: rgba(252, 82, 5, 0.18);
-  color: #ff854d;
-  border: 1px solid rgba(252, 82, 5, 0.35);
-}
-
-.icon-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: var(--tint);
-  color: var(--primary);
-  font-family: var(--font-display);
-  font-size: 13px;
-  font-weight: 700;
-  flex-shrink: 0;
-}
-
-.icon-badge--dark {
-  background: var(--brand);
-  color: var(--on-brand);
-}
-
-/* ==========================================================================
-   Bento Card System
-   ========================================================================== */
-
-.bento-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  background: var(--white);
-  border: 1.5px solid var(--grey200);
-  border-radius: var(--radius-xl);
-  padding: 28px;
-  overflow: hidden;
-  transition: border-color 160ms ease;
-}
-
-.bento-card:hover {
-  border-color: #c8c8d0;
-}
-
-.bento-card--tone-tint {
-  background: var(--tint);
-  border-color: rgba(210, 64, 0, 0.22);
-}
-
-.bento-card--tone-tint:hover {
-  border-color: var(--primary);
-}
-
-.bento-card--tone-dark {
-  background: var(--black);
-  color: var(--white);
-  border-color: var(--black);
-}
-
-.bento-card--tone-dark p,
-.bento-card--tone-dark .close {
-  color: #d4d4d8;
-}
-
-.bento-card--tone-dark .bento-pill:not(.bento-pill--dark) {
-  background: var(--brand);
-  color: var(--on-brand);
-}
-
-/* ==========================================================================
-   Hero Bento Layout
-   ========================================================================== */
-
-.hero {
-  padding: 32px 0 24px;
-}
-
-.hero-bento {
-  display: grid;
-  gap: 24px;
-  grid-template-columns: 1fr;
-}
-
-.bento-card--hero-copy {
-  justify-content: center;
-  padding: clamp(28px, 4vw, 48px);
-  background: var(--white);
-  border: 1.5px solid var(--black);
-}
-
 .hero-lead {
-  font-size: clamp(1.05rem, 1.4vw, 1.2rem);
+  max-width: 34rem;
   color: var(--grey600);
-  max-width: 54ch;
-  margin-top: 16px;
+  font-size: clamp(1.05rem, 1.4vw, 1.2rem);
 }
-
-.hero-pills {
-  list-style: none;
-  padding: 0;
-  margin: 24px 0 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.hero-pills li {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  border-radius: var(--radius-full);
-  background: var(--grey100);
-  border: 1px solid var(--grey200);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--black);
-}
-
-.hero-pills svg {
-  color: var(--primary);
-  flex-shrink: 0;
-}
-
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin-top: 28px;
 }
-
-.hero-footnote {
-  margin-top: 20px;
-  font-size: 13px;
+.fine {
+  color: var(--grey500);
+  font-size: 0.85rem;
 }
-
-.support {
-  color: var(--grey600);
-}
-
-.bento-card--hero-showcase {
-  background: var(--grey100);
-  border: 1.5px solid var(--grey200);
-  padding: 24px;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.showcase-badges {
-  width: 100%;
+.hero-phone {
+  --phone: clamp(250px, 25vw, 320px);
+  position: relative;
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 20px;
+  justify-content: center;
+}
+/* One flat tint circle behind the phone: depth without a gradient. */
+.hero-phone::before {
+  content: "";
+  position: absolute;
+  inset: 8% -6% auto;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--tint);
+  z-index: -1;
+}
+@media (max-width: 860px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
+  }
+  .hero-phone {
+    --phone: min(260px, 70vw);
+  }
 }
 
-.showcase-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  border-radius: var(--radius-full);
-  font-size: 12px;
-  font-weight: 600;
+/* iPhone 16 Pro. Sizes are fractions of the phone width (cqw), so the frame scales cleanly. */
+.iphone {
+  width: var(--phone, 280px);
+  margin: 0;
+  container-type: inline-size;
+}
+.iphone-body {
+  position: relative;
+  padding: 3cqw;
+  border-radius: 15.5cqw;
+  background: #0b0b0c;
+  box-shadow:
+    0 0 0 1.5px #a8a49c,
+    0 0 0 3px #4a4844,
+    0 28px 60px -24px rgba(17, 17, 17, 0.45);
+}
+.iphone-key {
+  position: absolute;
+  width: 1.1cqw;
+  border-radius: 2px;
+  background: #8f8b84;
+}
+.iphone-key--action,
+.iphone-key--up,
+.iphone-key--down {
+  left: -2cqw;
+}
+.iphone-key--action {
+  top: 19cqw;
+  height: 7cqw;
+}
+.iphone-key--up {
+  top: 31cqw;
+  height: 12cqw;
+}
+.iphone-key--down {
+  top: 46cqw;
+  height: 12cqw;
+}
+.iphone-key--power {
+  right: -2cqw;
+  top: 35cqw;
+  height: 19cqw;
+}
+.iphone-screen {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12.6cqw;
   background: var(--white);
-  border: 1px solid var(--grey200);
+  container-type: inline-size;
+}
+/* Inside the screen, cqw is a fraction of the 393 pt screen width. */
+.iphone-status {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 13.7cqw;
+  padding: 0 7.5cqw 0 9cqw;
   color: var(--black);
 }
-
-.showcase-badge--accent {
-  background: var(--tint);
-  color: var(--text-on-tint);
-  border-color: rgba(210, 64, 0, 0.2);
+.iphone-time {
+  font: 600 4.3cqw/1 var(--font-body);
+  letter-spacing: -0.01em;
 }
-
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--success);
+.iphone-island {
+  position: absolute;
+  top: 2.8cqw;
+  left: 50%;
+  width: 32cqw;
+  height: 9.4cqw;
+  transform: translateX(-50%);
+  border-radius: 5cqw;
+  background: #000;
 }
-
-.hero-phones {
-  position: relative;
+.iphone-icons {
+  display: flex;
+  align-items: center;
+  gap: 1.4cqw;
+}
+.iphone-icons svg {
+  height: 3cqw;
+  width: auto;
+  fill: currentColor;
+}
+.iphone-icons svg:last-child {
+  height: 3.1cqw;
+}
+.iphone-shot {
+  width: 100%;
+  height: auto;
+}
+.iphone-home {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 20px;
-  width: 100%;
-  padding-block: 8px;
+  height: 8.6cqw;
+}
+.iphone-home span {
+  width: 35cqw;
+  height: 1.3cqw;
+  border-radius: 1cqw;
+  background: var(--black);
 }
 
-.hero-phone-secondary {
-  display: none;
+/* Sections */
+.section {
+  padding: clamp(72px, 10vw, 128px) 0;
 }
-
-/* ==========================================================================
-   iPhone 16 Pro Latest Hardware Mockup
-   ========================================================================== */
-
-.iphone-stage {
-  margin: 0;
-  width: auto;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.section--soft {
+  background: var(--soft);
 }
-
-.iphone-frame {
-  position: relative;
-  width: 236px;
-  max-width: 100%;
-  padding: 6px;
-  border-radius: 44px;
-  /* iPhone 16 Pro Titanium metallic outer rim */
-  background: linear-gradient(145deg, #4b4b52 0%, #18181b 35%, #27272a 70%, #52525b 100%);
-  box-shadow:
-    inset 0 0 0 1.25px rgba(255, 255, 255, 0.24),
-    0 20px 38px -14px rgba(17, 17, 17, 0.25),
-    0 4px 12px -2px rgba(17, 17, 17, 0.12);
+.section--tight {
+  padding: clamp(48px, 7vw, 80px) 0;
 }
-
-.iphone-stage--hero .iphone-frame {
-  width: 284px;
-  max-width: 100%;
-  padding: 7px;
-  border-radius: 48px;
+.section-head {
+  display: grid;
+  gap: 16px;
+  margin-bottom: clamp(40px, 6vw, 64px);
 }
-
-.iphone-stage--compact .iphone-frame {
-  width: 204px;
-  max-width: 100%;
-  padding: 5.5px;
-  border-radius: 38px;
-}
-
-/* iPhone 16 Pro Hardware Side Buttons */
-.iphone-btn {
-  position: absolute;
-  background: #27272a;
-  border-radius: 2px;
-}
-
-.iphone-btn--action {
-  left: -2.5px;
-  top: 72px;
-  width: 2.5px;
-  height: 20px;
-  background: var(--brand);
-}
-
-.iphone-btn--vol-up {
-  left: -2.5px;
-  top: 106px;
-  width: 2.5px;
-  height: 36px;
-}
-
-.iphone-btn--vol-down {
-  left: -2.5px;
-  top: 150px;
-  width: 2.5px;
-  height: 36px;
-}
-
-.iphone-btn--power {
-  right: -2.5px;
-  top: 122px;
-  width: 2.5px;
-  height: 52px;
-}
-
-.iphone-btn--camera {
-  right: -2px;
-  bottom: 118px;
-  width: 2px;
-  height: 30px;
-  background: #3f3f46;
-}
-
-.iphone-bezel {
-  position: relative;
-  background: #09090b;
-  padding: 6px;
-  border-radius: 38px;
-  overflow: hidden;
-}
-
-.iphone-stage--hero .iphone-bezel {
-  padding: 6.5px;
-  border-radius: 41px;
-}
-
-.iphone-stage--compact .iphone-bezel {
-  padding: 5px;
-  border-radius: 33px;
-}
-
-.iphone-speaker {
-  position: absolute;
-  top: 2px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 42px;
-  height: 3px;
-  border-radius: 999px;
-  background: #1f1f23;
-  z-index: 3;
-}
-
-.iphone-screen {
-  position: relative;
-  border-radius: 32px;
-  overflow: hidden;
-  background: var(--white);
-  aspect-ratio: 520 / 1125;
-}
-
-.iphone-stage--hero .iphone-screen {
-  border-radius: 35px;
-}
-
-.iphone-stage--compact .iphone-screen {
-  border-radius: 28px;
-}
-
-.iphone-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.caption {
-  margin-top: 12px;
-  color: var(--grey600);
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 18px;
+.section-head--center {
+  justify-items: center;
   text-align: center;
 }
-
-/* ==========================================================================
-   Section Scaffolding
-   ========================================================================== */
-
-.section {
-  padding: 56px 0;
-  scroll-margin-top: 6rem;
-}
-
-.section-head {
-  margin-bottom: 32px;
-  max-width: 68ch;
-}
-
-.section-sub {
-  margin-top: 12px;
+.section-lead {
+  max-width: 40rem;
   color: var(--grey600);
-  font-size: 16px;
+  font-size: 1.1rem;
 }
 
-/* ==========================================================================
-   How It Works — 3-Column Bento Steps
-   ========================================================================== */
-
-.bento-steps {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+/* Three steps */
+.steps {
   display: grid;
-  gap: 20px;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: none;
 }
-
-.bento-card--step {
-  border-top: 4px solid var(--brand);
+.step {
+  display: grid;
+  align-content: start;
   gap: 12px;
+  padding: 32px;
+  border-radius: var(--radius-card);
+  background: var(--white);
+  box-shadow: var(--shadow-card);
 }
-
 .step-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
-
-.step-num {
-  font-family: var(--font-display);
-  font-size: 28px;
-  line-height: 1;
+.step-number {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--black);
+  color: var(--white);
+  font: 700 1.05rem/1 var(--font-display);
+}
+.step-icon {
+  width: 30px;
+  height: 30px;
   color: var(--primary);
 }
-
-.bento-card--step p {
+.step p {
   color: var(--grey600);
 }
+@media (max-width: 860px) {
+  .steps {
+    grid-template-columns: 1fr;
+  }
+}
 
-/* ==========================================================================
-   Guests & Owners — Responsive Bento Grids
-   ========================================================================== */
-
-.bento-grid {
+/* Feature cards: two to a row, each with its own phone and room around it. */
+.feature-grid {
   display: grid;
-  gap: 20px;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(24px, 3vw, 40px);
 }
-
-.bento-card--feature,
-.bento-card--owner {
-  justify-content: space-between;
-  gap: 24px;
+.feature {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 36px;
+  padding: clamp(28px, 4vw, 48px) clamp(24px, 4vw, 48px);
+  border-radius: var(--radius-card);
+  background: var(--soft);
+  text-align: center;
 }
-
-.bento-copy {
-  flex: 1 1 0%;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.section--soft .feature {
+  background: var(--white);
+  box-shadow: var(--shadow-card);
 }
-
-.bento-copy p {
+.feature-copy {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+}
+.feature-copy h3 {
+  font-size: 1.35rem;
+}
+.feature-copy p {
+  max-width: 26rem;
   color: var(--grey600);
-  max-width: 44ch;
 }
-
-.bento-card--tone-dark .bento-copy p {
-  color: #d4d4d8;
-}
-
-.bento-mockup {
-  flex: 0 0 auto;
+.feature-phone {
+  --phone: clamp(220px, 22vw, 270px);
   display: flex;
   justify-content: center;
-  align-items: center;
+}
+@media (max-width: 760px) {
+  .feature-grid {
+    grid-template-columns: 1fr;
+  }
+  .feature-phone {
+    --phone: min(250px, 72vw);
+  }
 }
 
-/* Owner Roadmap Bento */
-.owner-roadmap {
-  margin-top: 40px;
-  padding-top: 32px;
-  border-top: 1px solid var(--grey200);
+/* Coming later */
+.later {
+  margin-top: clamp(56px, 8vw, 88px);
 }
-
-.roadmap-head {
+.later-head {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: baseline;
   justify-content: space-between;
-  gap: 12px 24px;
-  margin-bottom: 24px;
+  gap: 8px 24px;
+  margin-bottom: 20px;
 }
-
-.roadmap-head p {
-  color: var(--grey600);
+.later-head h3 {
+  font-size: 1.3rem;
 }
-
-.bento-card--later {
-  gap: 10px;
-  padding: 24px;
-  background: var(--grey100);
+.later-head p {
+  color: var(--grey500);
 }
-
-.bento-card--later p {
-  color: var(--grey600);
-}
-
-.later-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 6px;
-}
-
-/* ==========================================================================
-   Payments Bento
-   ========================================================================== */
-
-.bento-card--pay,
-.bento-card--pay-direct {
-  gap: 12px;
-}
-
-.pay-card-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 8px;
-}
-
-.bento-card--pay p {
-  color: var(--grey600);
-}
-
-/* ==========================================================================
-   Pricing Slot Bento
-   ========================================================================== */
-
-.bento-card--slot {
-  max-width: 44rem;
-  background: var(--tint);
-  border: 1.5px solid rgba(210, 64, 0, 0.28);
-  gap: 12px;
-}
-
-.slot-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.price {
-  font-variant-numeric: tabular-nums;
-  font-weight: 600;
-  color: var(--black);
-}
-
-/* ==========================================================================
-   Questions FAQ Bento
-   ========================================================================== */
-
-.faq-bento {
+.later-list {
   display: grid;
-  gap: 14px;
-  grid-template-columns: 1fr;
-}
-
-.bento-card--faq {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
   padding: 0;
-  border-radius: var(--radius-lg);
+  list-style: none;
+}
+.later-list li {
+  display: grid;
+  gap: 6px;
+  padding: 22px;
+  border: 1px dashed #d4d4d8;
+  border-radius: 18px;
+}
+.later-list h4 {
+  font-size: 1rem;
+}
+.later-list p {
+  color: var(--grey600);
+  font-size: 0.95rem;
+}
+@media (max-width: 960px) {
+  .later-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 520px) {
+  .later-list {
+    grid-template-columns: 1fr;
+  }
 }
 
-.bento-card--faq summary {
+/* Payments */
+.pay-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  align-items: center;
+  gap: clamp(40px, 6vw, 88px);
+}
+.pay-copy {
+  display: grid;
+  gap: 24px;
+}
+.methods {
+  display: grid;
+  gap: 12px;
+  margin: 8px 0 0;
+  padding: 0;
   list-style: none;
+}
+.methods li,
+.direct {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 18px 20px;
+  border-radius: 18px;
+}
+.methods li {
+  background: var(--soft);
+}
+.methods svg,
+.direct svg {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  padding: 10px;
+  border-radius: 12px;
+}
+.methods svg {
+  background: var(--tint);
+  color: var(--primary);
+}
+.methods h3,
+.direct h3 {
+  font-size: 1.05rem;
+}
+.methods p {
+  color: var(--grey600);
+  font-size: 0.95rem;
+}
+.direct {
+  background: var(--black);
+  color: var(--white);
+}
+.direct svg {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--white);
+}
+.direct p {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.95rem;
+}
+.pay-phone {
+  --phone: clamp(240px, 24vw, 300px);
+  display: flex;
+  justify-content: center;
+}
+@media (max-width: 860px) {
+  .pay-grid {
+    grid-template-columns: 1fr;
+  }
+  .pay-phone {
+    --phone: min(250px, 72vw);
+  }
+}
+
+/* Pricing */
+.pricing-note {
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  padding: clamp(28px, 5vw, 48px);
+  border-radius: var(--radius-card);
+  background: var(--soft);
+  text-align: center;
+}
+.pricing-note p {
+  max-width: 34rem;
+  color: var(--grey600);
+}
+.plans {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+.plan {
+  padding: 28px;
+  border-radius: var(--radius-card);
+  background: var(--soft);
+}
+.price {
+  margin: 8px 0;
+  font: 700 2rem/1.1 var(--font-display);
+}
+
+/* Questions */
+.faq {
+  display: grid;
+  gap: 12px;
+}
+.faq-item {
+  border-radius: 18px;
+  background: var(--white);
+  box-shadow: var(--shadow-card);
+}
+.faq-item summary {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  min-height: 56px;
+  min-height: 64px;
   padding: 18px 24px;
   font-weight: 600;
-  font-size: 16px;
+  font-size: 1.05rem;
   cursor: pointer;
+  list-style: none;
 }
-
-.bento-card--faq summary::-webkit-details-marker {
+.faq-item summary::-webkit-details-marker {
   display: none;
 }
-
-.faq-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: var(--tint);
+.faq-chevron {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  color: var(--grey500);
+  transition: transform 0.2s;
+}
+.faq-item[open] .faq-chevron {
+  transform: rotate(180deg);
   color: var(--primary);
-  font-weight: 700;
-  flex-shrink: 0;
-  transition: transform 150ms ease;
 }
-
-.bento-card--faq[open] {
-  border-color: var(--black);
-}
-
-.bento-card--faq[open] .faq-icon {
-  background: var(--primary);
-  color: var(--white);
-  transform: rotate(45deg);
-}
-
-.bento-card--faq p {
-  padding: 0 24px 20px;
-  max-width: var(--measure);
+.faq-item p {
+  padding: 0 24px 22px;
   color: var(--grey600);
 }
 
-/* ==========================================================================
-   Contact Two-Column Bento
-   ========================================================================== */
-
-.contact-bento {
+/* Contact */
+.contact {
   display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
   gap: 24px;
-  grid-template-columns: 1fr;
+  align-items: stretch;
 }
-
-.bento-card--contact-info {
-  justify-content: space-between;
-  gap: 20px;
-  padding: clamp(28px, 3.5vw, 40px);
-}
-
-.contact-lead {
-  font-size: 16px;
-  line-height: 1.55;
-}
-
-.contact-highlights {
-  list-style: none;
-  padding: 0;
-  margin: 8px 0 0;
+.contact-intro {
   display: grid;
-  gap: 14px;
-}
-
-.contact-highlights li {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 15px;
-  font-weight: 600;
+  align-content: center;
+  gap: 20px;
+  padding: clamp(32px, 5vw, 56px);
+  border-radius: 28px;
+  background: var(--black);
   color: var(--white);
 }
-
-.check-dot {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--brand);
-  color: var(--on-brand);
-  font-size: 13px;
-  font-weight: 700;
-  flex-shrink: 0;
+.contact-intro .section-lead {
+  color: rgba(255, 255, 255, 0.75);
 }
-
-.bento-card--contact-form {
-  padding: clamp(24px, 3.5vw, 40px);
+.contact-form {
+  padding: clamp(24px, 4vw, 40px);
+  border: 1px solid var(--grey200);
+  border-radius: 28px;
 }
-
 .notice {
-  padding: 14px 16px;
-  border: 1.5px solid var(--black);
-  border-radius: var(--radius-md);
-  background: var(--tint);
-  color: var(--black);
-  font-size: 14px;
-  font-weight: 600;
+  margin-bottom: 24px;
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  background: var(--grey100);
+  color: var(--grey600);
+  font-size: 0.9rem;
 }
-
 .form {
   display: grid;
   gap: 18px;
-  margin-top: 20px;
 }
-
-.form-row-2 {
+.form label {
   display: grid;
-  gap: 16px;
-  grid-template-columns: 1fr;
-}
-
-.form label,
-.reach {
-  display: grid;
-  gap: 8px;
+  gap: 6px;
   font-weight: 600;
-  font-size: 14px;
-  line-height: 20px;
+  font-size: 0.92rem;
 }
-
-.reach {
-  border: 1px solid var(--grey200);
-  border-radius: var(--radius-md);
-  background: var(--grey100);
-  margin: 0;
-  padding: 16px;
-  min-inline-size: 0;
-}
-
-.reach legend {
-  padding: 0 6px;
-  font-weight: 600;
-}
-
-.reach-fields {
-  display: grid;
-  gap: 12px;
-  margin-top: 4px;
-}
-
-.optional {
-  color: var(--grey600);
-  font-weight: 400;
-}
-
 .form input,
 .form textarea {
   width: 100%;
   min-height: 48px;
-  padding: 10px 14px;
-  border: 1.5px solid var(--grey200);
-  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  border: 1px solid var(--grey200);
+  border-radius: var(--radius);
   background: var(--white);
   color: var(--black);
-  font: 400 16px/22px var(--font-body);
-  transition: border-color 140ms ease;
+  font: 400 1rem/1.4 var(--font-body);
 }
-
-.form input:focus,
-.form textarea:focus {
-  border-color: var(--black);
-}
-
 .form textarea {
-  min-height: 96px;
+  min-height: 110px;
   resize: vertical;
 }
-
+.form input:focus,
+.form textarea:focus {
+  outline: 3px solid rgba(210, 64, 0, 0.25);
+  border-color: var(--primary);
+}
+.form-row-2,
+.reach-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.reach-fields {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.reach {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.reach legend {
+  margin-bottom: 10px;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+.optional {
+  color: var(--grey500);
+  font-weight: 400;
+}
 .error {
   color: var(--error);
-  background: var(--error-tint);
-  padding: 12px 14px;
-  border-radius: var(--radius-sm);
   font-weight: 600;
 }
-
 .status {
   margin-top: 16px;
-  padding: 16px;
-  border: 1.5px solid var(--black);
-  border-radius: var(--radius-md);
-  background: var(--tint);
+  color: var(--success);
   font-weight: 600;
 }
-
 .channels {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
   gap: 16px;
-  margin-top: 16px;
-}
-
-.text-link {
-  display: inline-flex;
   align-items: center;
-  min-height: 44px;
-  padding: 0 8px;
+}
+.text-link {
   color: var(--primary);
   font-weight: 600;
 }
+@media (max-width: 900px) {
+  .contact {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 640px) {
+  .form-row-2,
+  .reach-fields {
+    grid-template-columns: 1fr;
+  }
+}
 
-/* ==========================================================================
-   Footer Bento
-   ========================================================================== */
-
+/* Footer */
 .footer {
-  padding: 24px 0 48px;
+  padding: 64px 0 32px;
+  border-top: 1px solid var(--grey200);
+  background: var(--soft);
 }
-
-.footer-bento {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  padding: 32px;
-  border-radius: var(--radius-xl);
-  background: var(--grey100);
-  border: 1.5px solid var(--grey200);
+.footer-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 40px;
 }
-
 .footer-brand {
   display: grid;
-  gap: 12px;
+  gap: 16px;
+  align-content: start;
 }
-
 .footer-brand p {
+  max-width: 22rem;
   color: var(--grey600);
-  max-width: 48ch;
 }
-
-.footer-nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 20px;
+.footer-col h2 {
+  margin-bottom: 14px;
+  font: 600 0.8rem/1 var(--font-body);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--grey500);
 }
-
-.footer-nav a {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--black);
+.footer-col ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.footer-col a {
+  display: inline-block;
+  padding: 6px 0;
+  color: var(--grey600);
   text-decoration: none;
 }
-
-.footer-nav a:hover {
-  color: var(--primary);
+.footer-col a:hover {
+  color: var(--black);
 }
-
-/* ==========================================================================
-   Responsive Breakpoints (Tablet & Desktop Bento Grids)
-   ========================================================================== */
-
-@media (min-width: 720px) {
-  .bento-steps {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .bento-grid--guests {
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-  }
-
-  .bento-grid--guests > .bento-card--standard {
-    grid-column: span 6;
-  }
-
-  .bento-grid--guests > .bento-card--wide {
-    grid-column: span 12;
-    flex-direction: row;
-    align-items: center;
-  }
-
-  .bento-grid--guests > .bento-card--wide .bento-copy {
-    flex: 1;
-  }
-
-  .bento-grid--owners {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .bento-grid--later {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .bento-grid--payments {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .faq-bento {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .form-row-2 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .reach-fields {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .footer-bento {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-  }
+.footer-base {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 24px;
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--grey200);
+  color: var(--grey500);
+  font-size: 0.85rem;
 }
-
-@media (min-width: 1024px) {
-  .hero-bento {
-    grid-template-columns: 7fr 5fr;
-    align-items: stretch;
+@media (max-width: 760px) {
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
   }
-
-  .hero-phone-secondary {
-    display: block;
-    margin-top: 36px;
-  }
-
-  .bento-grid--guests > .bento-card--wide {
-    grid-column: span 6;
-    flex-direction: row;
-    align-items: center;
-  }
-
-  .bento-grid--guests > .bento-card--standard {
-    grid-column: span 3;
-  }
-
-  .bento-card--owner {
-    flex-direction: row;
-    align-items: center;
-  }
-
-  .bento-card--owner .bento-copy {
-    flex: 1;
-  }
-
-  .contact-bento {
-    grid-template-columns: 5fr 7fr;
-    align-items: start;
+  .footer-brand {
+    grid-column: 1 / -1;
   }
 }

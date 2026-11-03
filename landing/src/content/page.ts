@@ -1,47 +1,67 @@
 import { type PublicContact } from "./contact.ts";
 
-export const screenSize = { width: 520, height: 1125 } as const;
+/**
+ * Sample screens, captured from the app at 393×764 pt and 2×: an iPhone 16 Pro screen minus
+ * its status bar and home bar, which the mockup draws around them.
+ */
+export const screenSize = { width: 786, height: 1528 } as const;
 
 export const screens = {
   home: {
-    src: "/screens/home-default.webp",
-    alt: "Sample guest home in Ozaa, with the restaurant name, hours, and a way to open the menu.",
+    src: "/screens/home.webp",
+    alt: "A sample restaurant's table page, with the menu, call waiter, order status, pay and Wi-Fi.",
   },
   menu: {
     src: "/screens/menu.webp",
-    alt: "Sample menu in Ozaa, with dishes and a button to view the order.",
+    alt: "A sample menu with dish photos, prices and a View order bar.",
+  },
+  order: {
+    src: "/screens/order.webp",
+    alt: "A guest's order with a quantity control on each dish and the total.",
+  },
+  waiter: {
+    src: "/screens/waiter.webp",
+    alt: "A waiter call that has been sent, with its live status.",
+  },
+  status: {
+    src: "/screens/status.webp",
+    alt: "Order status, showing the steps from received to ready.",
   },
   wifi: {
     src: "/screens/wifi.webp",
-    alt: "Sample Wi-Fi screen in Ozaa.",
-  },
-  waiter: {
-    src: "/screens/waiter-sent.webp",
-    alt: "Sample screen after a guest calls the waiter.",
-  },
-  pay: {
-    src: "/screens/pay.webp",
-    alt: "Sample payment screen in Ozaa, with a bill and a way to pay.",
+    alt: "The Wi-Fi page with the network name, password and a join QR code.",
   },
   loyalty: {
     src: "/screens/loyalty.webp",
-    alt: "Sample loyalty stamp card in Ozaa.",
+    alt: "A digital stamp card with filled stamps and a small QR code.",
   },
   review: {
     src: "/screens/review.webp",
-    alt: "Sample review screen in Ozaa.",
+    alt: "A review screen with star ratings and quick tags.",
   },
   game: {
     src: "/screens/game.webp",
-    alt: "Sample waiting game in Ozaa.",
+    alt: "A short stacking game guests can play while they wait.",
   },
-  reviews: {
-    src: "/screens/owner-reviews.webp",
-    alt: "Sample owner screen for checking guest video reviews.",
+  pay: {
+    src: "/screens/pay.webp",
+    alt: "The bill, with whole bill, split equally and my items, a tip choice and payment methods.",
   },
-  services: {
-    src: "/screens/owner-services.webp",
-    alt: "Sample owner screen with a switch for each service.",
+  ownerToday: {
+    src: "/screens/owner-today.webp",
+    alt: "The owner's Today screen with sales and what needs attention now.",
+  },
+  ownerOrders: {
+    src: "/screens/owner-orders.webp",
+    alt: "The owner's orders, sorted by stage, with an open ticket.",
+  },
+  ownerMenu: {
+    src: "/screens/owner-menu.webp",
+    alt: "The owner's menu editor with a sold-out switch on each dish.",
+  },
+  ownerLoyalty: {
+    src: "/screens/owner-loyalty.webp",
+    alt: "The owner's loyalty settings: the reward, stamps needed and time between stamps.",
   },
 } as const;
 
@@ -49,27 +69,27 @@ export type ScreenName = keyof typeof screens;
 
 export const site = {
   name: "Ozaa",
-  title: "Ozaa. The table QR for your restaurant",
+  title: "Ozaa. Menu, waiter and bill, one scan away",
   description:
-    "Guests scan a table QR for the menu, the waiter, and the bill. Pay by card or mobile money. Ozaa is for restaurants anywhere, with the first launch in Africa.",
+    "Guests scan the QR on their table to read the menu, order, call a waiter and pay from their own phone. Restaurants run it all from one app.",
   url: "",
 } as const;
 
 export const hero = {
-  heading: "The table QR for your restaurant.",
-  lead: "Guests scan the code on the table. They get the menu, the Wi-Fi, the waiter, and the bill on their phone.",
-  support: "Ozaa is for restaurants anywhere. The first launch is in Africa.",
-  samples: "The phone pictures on this page are samples.",
-  cta: "Get Ozaa for your restaurant",
-  screen: "menu" as const satisfies ScreenName,
-  caption: "Sample guest screen.",
+  eyebrow: "No app for guests to install",
+  heading: "Menu, waiter and bill. One scan away.",
+  lead: "Guests scan the QR on their table to read the menu, order, call a waiter and pay, all from their own phone. You run the whole thing from one simple app.",
+  cta: "Get Ozaa",
+  secondary: "Try a sample table",
+  screen: "home" as const satisfies ScreenName,
+  note: "The screens on this page show sample restaurants.",
 };
 
 export const sections = [
-  { id: "how", nav: "How it works", heading: "How it works" },
-  { id: "guests", nav: "Guests", heading: "What guests can do from the table" },
-  { id: "owners", nav: "Owners", heading: "What you can do" },
-  { id: "pay", nav: "Payments", heading: "Pay from the phone" },
+  { id: "how", nav: "How it works", heading: "Three steps to a live table" },
+  { id: "guests", nav: "Guests", heading: "Everything at the table" },
+  { id: "owners", nav: "Owners", heading: "Run it from one app" },
+  { id: "pay", nav: "Payments", heading: "Guests pay their way" },
   { id: "pricing", nav: "Pricing", heading: "Pricing" },
   { id: "questions", nav: "Questions", heading: "Questions" },
   { id: "contact", nav: "Contact", heading: "Get Ozaa for your restaurant" },
@@ -77,132 +97,128 @@ export const sections = [
 
 export type SectionId = (typeof sections)[number]["id"];
 
+/** The sections worth a link in the header; the footer lists them all. */
+export const headerNav: readonly SectionId[] = ["how", "guests", "owners", "pay", "questions"];
+
+export const howLead = "From sign-up to the first order, with the phones and tablets you already have.";
+
 export const steps = [
   {
-    title: "Put a QR code on each table.",
-    body: "A guest points their camera at the code. There is no app to install.",
+    title: "Add your menu",
+    body: "Put in your dishes, prices and photos, and pick your colours. Switch on only the services you want.",
   },
   {
-    title: "The page opens in the browser.",
-    body: "They can read the menu, join the Wi-Fi, call the waiter, pay, collect a stamp, leave a review, or play a short game while they wait.",
+    title: "Print your table codes",
+    body: "Every table gets its own QR code. Print them as cards or stickers and set them out.",
   },
   {
-    title: "You decide what stays on.",
-    body: "Each service has a switch. You check a video review before it shows on your page.",
+    title: "Guests scan and order",
+    body: "Orders and waiter calls reach your phone or tablet straight away, with the table number on each.",
   },
 ] as const;
 
-export const guestNote =
-  "These pictures are sample screens. Names and prices in them are samples, not a list of customers, and not Ozaa's price.";
+export const guestLead =
+  "Each table opens your restaurant's own page, in your colours. Guests see only what you switch on.";
 
+/** Shown two to a row; keep the count even. */
 export const guestFeatures: readonly {
   title: string;
   body: string;
   screen: ScreenName;
 }[] = [
   {
-    title: "Menu",
-    body: "Guests read the menu and order from the table.",
+    title: "A menu worth browsing",
+    body: "Photos, dietary tags and what's popular. Guests add dishes as they go.",
     screen: "menu",
   },
   {
-    title: "Wi-Fi",
-    body: "The network name and password are on the page, so guests are not asking staff for them.",
-    screen: "wifi",
+    title: "Order from the table",
+    body: "Guests check their order, change amounts and send it to the kitchen.",
+    screen: "order",
   },
   {
-    title: "Waiter",
-    body: "A guest picks a reason and calls the waiter from the phone.",
+    title: "Call a waiter",
+    body: "Water, the bill or help with the menu. The table sees when someone is on the way.",
     screen: "waiter",
   },
   {
-    title: "The bill",
-    body: "They pay the whole bill, split it, or pay for their own items. Card and mobile money are both there.",
-    screen: "pay",
+    title: "Know when it's coming",
+    body: "Live order status, from received to ready, without asking.",
+    screen: "status",
   },
   {
-    title: "Stamps",
-    body: "A stamp card for repeat visits. Joining asks for a phone number and records consent.",
+    title: "Wi-Fi without asking",
+    body: "The network and password in one place, with a QR code to join.",
+    screen: "wifi",
+  },
+  {
+    title: "A stamp card on the phone",
+    body: "Stamps fill in with each visit. Guests tap the card to show staff its QR code.",
     screen: "loyalty",
   },
   {
-    title: "Reviews",
-    body: "A written note or a short video. You choose what other guests can see.",
+    title: "Reviews you hear first",
+    body: "Happy guests can share on Google. Unhappy ones reach you privately.",
     screen: "review",
   },
   {
-    title: "While they wait",
-    body: "A short game on the phone. It has no ads.",
+    title: "Something to do while they wait",
+    body: "A quick game with no ads. A high score can earn a stamp.",
     screen: "game",
-  },
-  {
-    title: "The table page",
-    body: "Each table opens on that restaurant's own page, with its name, hours, and services.",
-    screen: "home",
   },
 ];
 
-export const ownerIntro = "Two parts are ready to show. The rest comes later.";
+export const ownerLead = "The owner app runs on a phone, a tablet or the web.";
 
+/** Shown two to a row; keep the count even. */
 export const ownerNow: readonly {
   title: string;
   body: string;
   screen: ScreenName;
 }[] = [
   {
-    title: "Reviews",
-    body: "You watch each video, then feature it on your page or hide it.",
-    screen: "reviews",
+    title: "Your day at a glance",
+    body: "Sales, open tables and anything that needs you right now.",
+    screen: "ownerToday",
   },
   {
-    title: "Services",
-    body: "You turn each service on or off. A service that is off does not appear on the table page.",
-    screen: "services",
+    title: "Orders by stage",
+    body: "New, cooking and ready. Move each ticket on with one tap.",
+    screen: "ownerOrders",
+  },
+  {
+    title: "Change the menu in seconds",
+    body: "Edit dishes, mark an item sold out and reorder sections.",
+    screen: "ownerMenu",
+  },
+  {
+    title: "Your loyalty programme",
+    body: "Choose the reward, how many stamps it takes and the time between stamps.",
+    screen: "ownerLoyalty",
   },
 ];
 
-export const laterIntro = "These are not on the table page yet.";
+export const laterIntro = "On the way, not ready yet.";
 
 export const later = [
-  {
-    title: "POS",
-    body: "Staff take orders and cash at the counter.",
-  },
-  {
-    title: "Stock",
-    body: "Track what you have, and mark an item sold out.",
-  },
-  {
-    title: "Orders",
-    body: "The kitchen sees live orders, including takeaway.",
-  },
-  {
-    title: "AI waiter",
-    body: "Guests ask questions and order by text or voice.",
-  },
-  {
-    title: "Marketing",
-    body: "Send a message only to guests who agreed to hear from the restaurant.",
-  },
-  {
-    title: "Insights",
-    body: "See sales, busy hours, and what reviews mention.",
-  },
+  { title: "Counter till", body: "Staff take orders and cash at the counter." },
+  { title: "Stock", body: "Track what you have and mark items sold out automatically." },
+  { title: "AI waiter", body: "Guests ask questions and order by text or voice." },
+  { title: "Marketing", body: "Message only the guests who agreed to hear from you." },
 ] as const;
 
 export const payments = {
-  lead: "Guests pay the whole bill, split it evenly, or pay for their own items. They can add a tip before they confirm.",
+  lead: "Guests pay the whole bill, split it equally or pay for their own dishes, and can add a tip. They use the payment method they already trust.",
   methods: [
-    {
-      title: "Card",
-      body: "A guest can pay by card.",
-    },
-    {
-      title: "Mobile money",
-      body: "Mobile money sits next to the card. MoMo is one mobile money option.",
-    },
+    { title: "Cards", body: "Debit and credit cards." },
+    { title: "Mobile money", body: "The wallets people use every day." },
+    { title: "Local options", body: "Other methods the payment provider offers in your country." },
   ],
-  close: "The restaurant is paid directly. Ozaa does not hold the money.",
+  direct: {
+    title: "Paid straight to you",
+    body: "Each payment goes to your restaurant's own account through the payment provider. Ozaa never holds the money.",
+  },
+  screen: "pay" as const satisfies ScreenName,
 } as const;
 
 export type Pricing =
@@ -221,50 +237,61 @@ export type Pricing =
 
 export const pricing: Pricing = {
   status: "placeholder",
-  body: "This is a placeholder. No price is set, and this page does not name a currency. When a price exists, it belongs here, in the currency your restaurants pay in.",
+  body: "Pricing isn't set yet. This is a placeholder until it is, and it will be shown in the currency your restaurant pays in.",
 };
 
 export const questions = [
   {
-    question: "Do guests install an app?",
+    question: "Do guests need to download an app?",
     answer:
-      "No. They scan the QR code and the page opens in the phone's browser. They do not need an account.",
+      "No. They scan the QR code on the table and your page opens in their phone's browser. No account, no download.",
   },
   {
-    question: "How can a guest pay?",
+    question: "How do guests pay?",
     answer:
-      "By card or by mobile money. MoMo is one mobile money option. In the first markets, payments run through Paystack. The restaurant is paid directly. Ozaa does not hold the money.",
+      "With a card, mobile money or another method the payment provider offers where you are. They can pay the whole bill, split it equally or pay for their own dishes, and add a tip.",
+  },
+  {
+    question: "Does Ozaa hold my money?",
+    answer: "No. Each payment goes to your restaurant's own account through the payment provider.",
+  },
+  {
+    question: "Do I need new hardware?",
+    answer:
+      "No. Print the table QR codes and use the phones, tablets or computers you already have. The owner app runs on all three.",
+  },
+  {
+    question: "Can I choose what guests see?",
+    answer:
+      "Yes. Every service, from the menu to the game, has its own switch. A service that's off doesn't appear on the table page.",
   },
   {
     question: "Where is Ozaa available?",
-    answer:
-      "Ozaa is built for restaurants anywhere. The first launch is in Africa. This page does not list cities that are live.",
+    answer: "Ozaa is built for restaurants anywhere. The first launch is in Africa.",
   },
   {
     question: "What does it cost?",
-    answer: "The price is not set. The pricing section is a placeholder.",
-  },
-  {
-    question: "Can I turn a feature off?",
-    answer: "Yes. Each service has its own switch.",
-  },
-  {
-    question: "What happens to the details in this form?",
-    answer:
-      "Nothing. The form is a placeholder. It does not send or store what you type.",
+    answer: "Pricing isn't set yet. It will be shown here first.",
   },
 ] as const;
+
+export const contactLead =
+  "Open the app to try a sample table, or sign in to set up your own restaurant.";
 
 export const contact: PublicContact = {
   status: "placeholder",
   notice:
-    "Placeholder. This form does not send messages. A WhatsApp number, a phone number, and an email address are not on this page yet.",
+    "This form is a placeholder and doesn't send messages yet. A WhatsApp number, phone number and email address will be added here.",
   held: "Nothing was sent. This form is a placeholder.",
   missingRestaurant: "Add the restaurant name.",
   missingName: "Add your name.",
-  missingReach: "Add a phone number, an email address, or a WhatsApp number.",
+  missingReach: "Add a phone number, an email address or a WhatsApp number.",
 };
 
 export const footer = {
-  line: "A table QR for restaurants anywhere. The first launch is in Africa.",
+  line: "The table QR for restaurants anywhere. The first launch is in Africa.",
+  appHeading: "Try Ozaa",
+  pageHeading: "On this page",
+  openApp: "Open the app",
+  owner: "Owner sign in",
 } as const;

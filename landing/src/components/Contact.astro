@@ -5,7 +5,8 @@ interface Props {
 }
 
 const { id, heading } = Astro.props;
-import { contact } from "../content/page";
+import { links } from "../content/links";
+import { contact, contactLead } from "../content/page";
 import { contactMode } from "../content/contact";
 
 const mode = contactMode(contact);
@@ -13,30 +14,17 @@ const mode = contactMode(contact);
 
 <section class="section" id={id} aria-labelledby={`${id}-title`}>
   <div class="wrap">
-    <div class="contact-bento">
-      <div class="bento-card bento-card--contact-info bento-card--tone-dark">
-        <span class="bento-pill bento-pill--dark">Onboarding</span>
+    <div class="contact">
+      <div class="contact-intro">
         <h2 id={`${id}-title`}>{heading}</h2>
-        <p class="contact-lead">
-          Set up your tables, upload your menu, pick your venue colour, and switch on the services you want.
-        </p>
-        <ul class="contact-highlights">
-          <li>
-            <span class="check-dot" aria-hidden="true">✓</span>
-            Works in any mobile browser — no guest app install
-          </li>
-          <li>
-            <span class="check-dot" aria-hidden="true">✓</span>
-            Card and Mobile Money settled directly to your venue
-          </li>
-          <li>
-            <span class="check-dot" aria-hidden="true">✓</span>
-            Toggle each table service on or off anytime
-          </li>
-        </ul>
+        <p class="section-lead">{contactLead}</p>
+        <div class="hero-actions">
+          <a class="button button--light" href={links.app}>Open the Ozaa app</a>
+          <a class="button button--outline-light" href={links.sample}>Try a sample table</a>
+        </div>
       </div>
 
-      <div class="bento-card bento-card--contact-form">
+      <div class="contact-form">
         {
           mode === "ready" && contact.status === "ready" ? (
             <div class="channels">
@@ -136,7 +124,7 @@ const mode = contactMode(contact);
                   />
                 </label>
                 <p class="error" id="contact-error" role="alert" hidden></p>
-                <button class="button" type="submit">Submit</button>
+                <button class="button" type="submit">Send</button>
               </form>
               <p class="status" id="contact-status" role="status" tabindex="-1" hidden>
                 {contact.held}

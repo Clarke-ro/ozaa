@@ -1,23 +1,39 @@
 ---
+import { links } from "../content/links";
 import { footer, sections } from "../content/page";
+
+const year = new Date().getFullYear();
 ---
 
 <footer class="footer">
-  <div class="wrap">
-    <div class="footer-bento">
-      <div class="footer-brand">
-        <a class="logo" href="#top">
-          <img src="/logo/ozaa-lockup.svg" alt="Ozaa" width="451" height="140" />
-        </a>
-        <p>{footer.line}</p>
-      </div>
-      <nav class="footer-nav" aria-label="Footer navigation">
-        {
-          sections.map((section) => (
-            <a href={`#${section.id}`}>{section.nav}</a>
-          ))
-        }
-      </nav>
+  <div class="wrap footer-grid">
+    <div class="footer-brand">
+      <a class="logo" href="#top" aria-label="Ozaa, back to the top">
+        <img src="/logo/ozaa-lockup.svg" alt="" width="451" height="140" />
+      </a>
+      <p>{footer.line}</p>
     </div>
+    <nav class="footer-col" aria-label="On this page">
+      <h2>{footer.pageHeading}</h2>
+      <ul>
+        {sections.map((section) => (
+          <li>
+            <a href={`#${section.id}`}>{section.nav}</a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+    <div class="footer-col">
+      <h2>{footer.appHeading}</h2>
+      <ul>
+        <li><a href={links.app}>{footer.openApp}</a></li>
+        <li><a href={links.sample}>Sample table</a></li>
+        <li><a href={links.owner}>{footer.owner}</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="wrap footer-base">
+    <p>© {year} Ozaa</p>
+    <p>Screens show sample restaurants.</p>
   </div>
 </footer>

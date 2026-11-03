@@ -1,26 +1,37 @@
 ---
+import { questions } from "../content/page";
+
 interface Props {
   id: string;
   heading: string;
 }
 
 const { id, heading } = Astro.props;
-import { questions } from "../content/page";
 ---
 
-<section class="section" id={id} aria-labelledby={`${id}-title`}>
-  <div class="wrap">
-    <div class="section-head">
-      <span class="section-tag">FAQ</span>
+<section class="section section--soft" id={id} aria-labelledby={`${id}-title`}>
+  <div class="wrap narrow">
+    <header class="section-head section-head--center">
       <h2 id={`${id}-title`}>{heading}</h2>
-    </div>
-    <div class="faq-bento">
+    </header>
+    <div class="faq">
       {
         questions.map((item) => (
-          <details class="bento-card bento-card--faq">
+          <details class="faq-item">
             <summary>
               <span>{item.question}</span>
-              <span class="faq-icon" aria-hidden="true">+</span>
+              <svg
+                class="faq-chevron"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="m6 9 6 6 6-6" />
+              </svg>
             </summary>
             <p>{item.answer}</p>
           </details>

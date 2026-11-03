@@ -1,37 +1,37 @@
 ---
+import { pricing } from "../content/page";
+
 interface Props {
   id: string;
   heading: string;
 }
 
 const { id, heading } = Astro.props;
-import { pricing } from "../content/page";
 ---
 
-<section class="section" id={id} aria-labelledby={`${id}-title`}>
-  <div class="wrap">
-    <div class="section-head">
-      <span class="section-tag">Transparent plans</span>
-      <h2 id={`${id}-title`}>{heading}</h2>
-    </div>
+<section class="section section--tight" id={id} aria-labelledby={`${id}-title`}>
+  <div class="wrap narrow">
     {
       pricing.status === "placeholder" ? (
-        <div class="bento-card bento-card--slot slot">
-          <div class="slot-head">
-            <span class="bento-pill">Status · Placeholder</span>
-          </div>
+        <div class="pricing-note">
+          <h2 id={`${id}-title`}>{heading}</h2>
           <p>{pricing.body}</p>
         </div>
       ) : (
-        <div class="bento-grid bento-grid--later">
-          {pricing.plans.map((plan) => (
-            <article class="bento-card">
-              <h3>{plan.name}</h3>
-              <p class="price">{plan.price}</p>
-              <p>{plan.detail}</p>
-            </article>
-          ))}
-        </div>
+        <>
+          <header class="section-head section-head--center">
+            <h2 id={`${id}-title`}>{heading}</h2>
+          </header>
+          <div class="plans">
+            {pricing.plans.map((plan) => (
+              <article class="plan">
+                <h3>{plan.name}</h3>
+                <p class="price">{plan.price}</p>
+                <p>{plan.detail}</p>
+              </article>
+            ))}
+          </div>
+        </>
       )
     }
   </div>

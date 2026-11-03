@@ -24,6 +24,20 @@ npm run preview
 
 `npm run build` writes the static site to `dist/`.
 
+## Where "Get Ozaa" goes
+
+Every "Get Ozaa", "Open the app" and "Try a sample table" link goes to the Ozaa web app (the Expo app's web build). Set its address when you build:
+
+```
+PUBLIC_APP_URL=https://app.example.com npm run build
+```
+
+Without it, the links go to the local Expo web server at http://localhost:8081, so run `npm run web` in the app folder to follow them. The code is in `src/content/links.ts`.
+
+## Sample screens
+
+`public/screens/` holds screenshots of the real app, taken at 393×764 pt and 2× (an iPhone 16 Pro screen without its status bar and home bar, which `IPhone.astro` draws). Retake them when the app's screens change.
+
 ## Where to edit
 
 Copy, sample-screen labels, and the three placeholders live in `src/content/page.ts`.
