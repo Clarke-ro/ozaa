@@ -1,4 +1,4 @@
-import { isTabRoot, moreGroups, navFor, tabsFor } from './nav';
+import { isTabRoot, moreGroups, navFor, navGroups, tabsFor } from './nav';
 
 test('kitchen only sees the order tickets', () => {
   expect(navFor('kitchen').map((item) => item.id)).toEqual(['orders']);
@@ -121,5 +121,50 @@ describe('isTabRoot', () => {
     expect(isTabRoot('owner', '/owner/more')).toBe(true);
     expect(isTabRoot('owner', '/owner/branding')).toBe(false);
     expect(isTabRoot('waiter', '/owner/menu')).toBe(false);
+  });
+});
+
+describe('sidebar groups', () => {
+  test('the owner sidebar runs Main, then Sales, then Settings', () => {
+    const groups = navGroups('owner').map((entry) => entry.group);
+    expect(groups).toEqual(['main', 'sales', 'settings']);
+  });
+
+  test('each group holds the pages the owner expects there', () => {
+    const byGroup = Object.fromEntries(
+      navGroups('owner').map((entry) => [entry.group, entry.items.map((item) => item.id)]),
+    );
+    expect(byGroup.main).toEqual(
+      expect.arrayContaining(['dashboard', 'menu', 'categories', 'tables', 'insights', 'notice']),
+    );
+    expect(byGroup.sales).toEqual(
+      expect.arrayContaining(['orders', 'floor', 'customers', 'loyalty', 'promos']),
+    );
+    expect(byGroup.settings).toEqual(
+      expect.arrayContaining([
+        'business',
+        'branding',
+        'integrations',
+        'staff',
+        'billing',
+        'settings',
+      ]),
+    );
+  });
+
+  test('only the owner sees billing and integrations', () => {
+    for (const role of ['manager', 'waiter', 'kitchen', 'viewer'] as const) {
+      const ids = navFor(role).map((item) => item.id);
+      expect(ids).not.toContain('billing');
+      expect(ids).not.toContain('integrations');
+    }
+  });
+
+  test('the sidebar and More list every allowed page exactly once', () => {
+    for (const role of ['owner', 'manager', 'waiter', 'kitchen'] as const) {
+      const ids = navGroups(role).flatMap((entry) => entry.items.map((item) => item.id));
+      expect(new Set(ids).size).toBe(ids.length);
+      expect(ids.length).toBe(navFor(role).length);
+    }
   });
 });

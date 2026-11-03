@@ -27,9 +27,16 @@ export type OwnerNavId =
   | 'scan'
   | 'devices'
   | 'business'
-  | 'settings';
+  | 'settings'
+  | 'categories'
+  | 'notice'
+  | 'customers'
+  | 'promos'
+  | 'integrations'
+  | 'billing';
 
-export type NavGroup = 'service' | 'guestPage' | 'growth' | 'business' | 'previews';
+// Main runs the menu and guest page, Sales runs service and money, Settings holds the set-up pages.
+export type NavGroup = 'main' | 'sales' | 'settings' | 'previews';
 
 export type OwnerNavItem = {
   id: OwnerNavId;
@@ -51,45 +58,51 @@ export const OWNER_NAV: readonly OwnerNavItem[] = [
     id: 'dashboard',
     href: '/owner',
     roles: ['owner', 'manager', 'waiter', 'viewer'],
-    group: 'service',
+    group: 'main',
   },
   {
     id: 'notifications',
     href: '/owner/notifications',
     // Kitchen staff see only their tickets (see nav.test.ts), so no feed for them.
     roles: ['owner', 'manager', 'waiter', 'viewer'],
-    group: 'service',
+    group: 'main',
   },
-  { id: 'floor', href: '/owner/floor', roles: FRONT, group: 'service' },
+  { id: 'menu', href: '/owner/menu', roles: DESK, group: 'main' },
+  { id: 'categories', href: '/owner/categories', roles: DESK, group: 'main' },
+  { id: 'tables', href: '/owner/tables', roles: DESK, group: 'main' },
+  { id: 'links', href: '/owner/links', roles: DESK, group: 'main' },
+  { id: 'insights', href: '/owner/insights', roles: DESK, group: 'main' },
+  { id: 'notice', href: '/owner/notice', roles: DESK, group: 'main' },
   {
     id: 'orders',
     href: '/owner/orders',
     roles: ['owner', 'manager', 'waiter', 'kitchen'],
-    group: 'service',
+    group: 'sales',
   },
-  { id: 'calls', href: '/owner/calls', roles: FRONT, group: 'service' },
+  { id: 'floor', href: '/owner/floor', roles: FRONT, group: 'sales' },
+  { id: 'calls', href: '/owner/calls', roles: FRONT, group: 'sales' },
   {
     id: 'scan',
     href: '/owner/scan',
     roles: ['owner', 'manager', 'waiter', 'staff_scanner'],
-    group: 'service',
+    group: 'sales',
   },
-  { id: 'menu', href: '/owner/menu', roles: DESK, group: 'guestPage' },
-  { id: 'tables', href: '/owner/tables', roles: DESK, group: 'guestPage' },
-  { id: 'branding', href: '/owner/branding', roles: DESK, group: 'guestPage' },
-  { id: 'services', href: '/owner/services', roles: DESK, group: 'guestPage' },
-  { id: 'socials', href: '/owner/socials', roles: DESK, group: 'guestPage' },
-  { id: 'links', href: '/owner/links', roles: DESK, group: 'guestPage' },
-  { id: 'loyalty', href: '/owner/loyalty', roles: FRONT, group: 'growth' },
-  { id: 'feedback', href: '/owner/feedback', roles: DESK, group: 'growth' },
-  { id: 'reviews', href: '/owner/reviews', roles: DESK, group: 'growth' },
-  { id: 'insights', href: '/owner/insights', roles: DESK, group: 'growth' },
-  { id: 'payments', href: '/owner/payments', roles: ['owner'], group: 'business', payments: true },
-  { id: 'staff', href: '/owner/staff', roles: ['owner'], group: 'business' },
-  { id: 'devices', href: '/owner/devices', roles: DESK, group: 'business' },
-  { id: 'business', href: '/owner/business', roles: ['owner'], group: 'business' },
-  { id: 'setup', href: '/owner/setup', roles: ['owner'], group: 'business' },
-  { id: 'settings', href: '/owner/settings', roles: DESK, group: 'business' },
+  { id: 'customers', href: '/owner/customers', roles: DESK, group: 'sales' },
+  { id: 'loyalty', href: '/owner/loyalty', roles: FRONT, group: 'sales' },
+  { id: 'promos', href: '/owner/promos', roles: DESK, group: 'sales' },
+  { id: 'payments', href: '/owner/payments', roles: ['owner'], group: 'sales', payments: true },
+  { id: 'feedback', href: '/owner/feedback', roles: DESK, group: 'sales' },
+  { id: 'reviews', href: '/owner/reviews', roles: DESK, group: 'sales' },
+  { id: 'business', href: '/owner/business', roles: ['owner'], group: 'settings' },
+  { id: 'branding', href: '/owner/branding', roles: DESK, group: 'settings' },
+  { id: 'services', href: '/owner/services', roles: DESK, group: 'settings' },
+  { id: 'socials', href: '/owner/socials', roles: DESK, group: 'settings' },
+  { id: 'integrations', href: '/owner/integrations', roles: ['owner'], group: 'settings' },
+  { id: 'staff', href: '/owner/staff', roles: ['owner'], group: 'settings' },
+  { id: 'devices', href: '/owner/devices', roles: DESK, group: 'settings' },
+  { id: 'billing', href: '/owner/billing', roles: ['owner'], group: 'settings' },
+  { id: 'setup', href: '/owner/setup', roles: ['owner'], group: 'settings' },
+  { id: 'settings', href: '/owner/settings', roles: DESK, group: 'settings' },
   { id: 'stock', href: '/owner/stock', roles: DESK, group: 'previews', preview: true },
   {
     id: 'pos',
@@ -103,13 +116,7 @@ export const OWNER_NAV: readonly OwnerNavItem[] = [
   { id: 'marketing', href: '/owner/marketing', roles: DESK, group: 'previews', preview: true },
 ];
 
-export const NAV_GROUPS: readonly NavGroup[] = [
-  'service',
-  'guestPage',
-  'growth',
-  'business',
-  'previews',
-];
+export const NAV_GROUPS: readonly NavGroup[] = ['main', 'sales', 'settings', 'previews'];
 
 // Four tabs at most, so "More" always fits as the fifth (HIG: 3 to 5 tabs).
 // Owners and managers run the venue (menu, loyalty); waiters work the floor.
@@ -140,10 +147,20 @@ export function tabsFor(role: StaffRole): OwnerNavItem[] {
 
 export function moreGroups(role: StaffRole): { group: NavGroup; items: OwnerNavItem[] }[] {
   const tabs = new Set(TABS[role]);
-  const rest = navFor(role).filter((item) => !tabs.has(item.id));
+  return navGroups(role)
+    .map(({ group, items }) => ({
+      group,
+      items: items.filter((item) => !tabs.has(item.id)),
+    }))
+    .filter((entry) => entry.items.length > 0);
+}
+
+/** Every page this person may open, in sidebar groups. Empty groups are dropped. */
+export function navGroups(role: StaffRole): { group: NavGroup; items: OwnerNavItem[] }[] {
+  const allowed = navFor(role);
   return NAV_GROUPS.map((group) => ({
     group,
-    items: rest.filter((item) => item.group === group),
+    items: allowed.filter((item) => item.group === group),
   })).filter((entry) => entry.items.length > 0);
 }
 
