@@ -1,4 +1,5 @@
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { AlertTriangle } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
@@ -21,14 +22,15 @@ export function ConfirmDialog({
   visible,
   title,
   message,
-  confirmLabel = 'Confirm',
-  cancelLabel = 'Cancel',
+  confirmLabel,
+  cancelLabel,
   destructive = false,
   loading = false,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
   const theme = useTheme();
+  const { t } = useTranslation();
 
   if (!visible) return null;
 
@@ -37,7 +39,7 @@ export function ConfirmDialog({
       <View style={[styles.backdrop, { backgroundColor: theme.scrim }]}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Dismiss dialog"
+          accessibilityLabel={t('common.close')}
           style={StyleSheet.absoluteFill}
           onPress={onCancel}
         />
@@ -65,11 +67,16 @@ export function ConfirmDialog({
 
           <View style={styles.actions}>
             <View style={styles.btnWrap}>
-              <Button label={cancelLabel} tone="secondary" onPress={onCancel} disabled={loading} />
+              <Button
+                label={cancelLabel ?? t('common.cancel')}
+                tone="secondary"
+                onPress={onCancel}
+                disabled={loading}
+              />
             </View>
             <View style={styles.btnWrap}>
               <Button
-                label={confirmLabel}
+                label={confirmLabel ?? t('common.confirm')}
                 tone={destructive ? 'destructive' : 'primary'}
                 onPress={onConfirm}
                 loading={loading}

@@ -624,7 +624,11 @@
     "alertBills_one": "1 table is waiting to pay.",
     "alertBills_other": "{{count}} tables are waiting to pay.",
     "businessName": "Business name",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "loginBrand": "Ozaa restaurant management",
+    "loginLead": "Sign in to see your orders, kitchen tickets and floor.",
+    "codeLead": "Enter the 6-digit code we sent to your phone.",
+    "changeNumber": "Change number"
   },
   "errors": {
     "generic": "Something went wrong. Try again.",
@@ -640,7 +644,9 @@
   "common": {
     "back": "Back",
     "close": "Close",
-    "sample": "Sample"
+    "sample": "Sample",
+    "confirm": "Confirm",
+    "cancel": "Cancel"
   },
   "ownerKit": {
     "location": "Location",
@@ -1517,5 +1523,34 @@
       "call_sent": "You asked for: {{reason}}",
       "call_coming": "{{name}} is on the way with: {{reason}}"
     }
+  },
+  "ownerMembers": {
+    "search": "Search by diner phone or name",
+    "clearSearch": "Clear search",
+    "export": "Export CSV",
+    "exportTitle": "Ozaa loyalty members",
+    "optInTitle": "Marketing opt-in (Act 843)",
+    "optInBody": "Show only customers who agreed to receive SMS offers.",
+    "optInFilter": "Filter by opt-in",
+    "count": "Enrolled diners ({{count}})",
+    "noMatchTitle": "No customers match your search",
+    "noMatchBody": "Check the phone number or clear the search.",
+    "emptyTitle": "No loyalty members yet",
+    "emptyBody": "When diners scan your table QR and claim their pass, they appear here.",
+    "rewardsReady_one": "1 reward ready",
+    "rewardsReady_other": "{{count}} rewards ready",
+    "lastVisit": "{{phone}} · Last visit {{date}}",
+    "stamps_one": "1 stamp",
+    "stamps_other": "{{count}} stamps",
+    "profile": "Diner profile",
+    "activeStamps_one": "Member with 1 active stamp",
+    "activeStamps_other": "Member with {{count}} active stamps",
+    "currentStamps": "Current stamps",
+    "unclaimed": "Unclaimed rewards",
+    "marketingStatus": "Marketing status (Act 843)",
+    "consented": "Agreed to offers by WhatsApp and SMS",
+    "optedOut": "Opted out of offers",
+    "manualStamp": "+1 stamp (manual credit)",
+    "redeem": "Redeem a free dish"
   }
 }

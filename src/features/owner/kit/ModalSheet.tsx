@@ -10,6 +10,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
@@ -42,6 +43,7 @@ export function ModalSheet({
   footer,
 }: ModalSheetProps) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   if (!visible) return null;
@@ -69,7 +71,7 @@ export function ModalSheet({
       </View>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Close"
+        accessibilityLabel={t('common.close')}
         onPress={onClose}
         style={({ pressed }) => [
           styles.close,
@@ -127,7 +129,7 @@ export function ModalSheet({
       <View style={[styles.backdrop, { backgroundColor: theme.scrim }]}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Close overlay"
+          accessibilityLabel={t('common.close')}
           style={StyleSheet.absoluteFill}
           onPress={onClose}
         />
