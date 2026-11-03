@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useAudioPlayer } from 'expo-audio';
 import { api } from '@/lib/api';
 import { useOwnerSession } from '@/features/session';
-import { arrivals } from '../desk/arrivals';
+import { chimeStep, type ChimeState } from '../desk/arrivals';
 import { ownerKeys } from './keys';
 import { useOwnerPrefs } from './ownerPrefs';
 
@@ -38,36 +38,25 @@ export function useArrivalChime() {
     refetchInterval: LIVE_MS,
   });
 
-  const seenOrders = useRef<Set<string> | null>(null);
-  const seenCalls = useRef<Set<string> | null>(null);
+  const seen = useRef<ChimeState>({ orders: null, calls: null });
   // A new venue (location switch) starts fresh, so its existing orders don't ring.
   useEffect(() => {
-    seenOrders.current = null;
-    seenCalls.current = null;
+    seen.current = { orders: null, calls: null };
   }, [venueId]);
 
   useEffect(() => {
-    let fresh = 0;
-    // A switched-off query can still return cached data, so check the role here too.
-    if (orders.data && hearsOrders) {
-      const next = arrivals(
-        seenOrders.current,
-        orders.data.items.map((order) => order.id),
-      );
-      seenOrders.current = next.seen;
-      fresh += next.fresh;
-    }
-    if (calls.data && hearsCalls) {
-      // Only open calls ring; a call that was already answered elsewhere is not news.
-      const open = calls.data.items.filter((call) => call.status === 'open');
-      const next = arrivals(
-        seenCalls.current,
-        open.map((call) => call.id),
-      );
-      seenCalls.current = next.seen;
-      fresh += next.fresh;
-    }
-    if (fresh > 0 && on) {
+    const step = chimeStep(seen.current, {
+      // A switched-off query can still return cached data, so check the role here too.
+      orderIds: hearsOrders && orders.data ? orders.data.items.map((order) => order.id) : null,
+      // Only open calls ring; a call already answered elsewhere is not news.
+      openCallIds:
+        hearsCalls && calls.data
+          ? calls.data.items.filter((call) => call.status === 'open').map((call) => call.id)
+          : null,
+      on,
+    });
+    seen.current = step.state;
+    if (step.ring) {
       void player.seekTo(0);
       player.play();
     }
