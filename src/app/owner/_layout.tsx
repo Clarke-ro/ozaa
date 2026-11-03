@@ -7,12 +7,15 @@ import { ozaaOwnerDarkTheme, ozaaOwnerTheme, ThemeProvider } from '@/ui/theme';
 export default function OwnerLayout() {
   const token = useOwnerSession((state) => state.accessToken);
   const hydrated = useOwnerSession((state) => state.hydrated);
+  const role = useOwnerSession((state) => state.role);
   const path = usePathname();
   // The owner app follows the phone's light or dark setting. Guest pages stay light.
   const theme = useColorScheme() === 'dark' ? ozaaOwnerDarkTheme : ozaaOwnerTheme;
   const login = path === '/owner/login';
   if (!hydrated) return null;
   if (!token && !login) return <Redirect href="/owner/login" />;
+  // Already signed in: skip the form and land where sign-in would have sent them.
+  if (token && login) return <Redirect href={role === 'kitchen' ? '/owner/orders' : '/owner'} />;
   if (login) {
     return (
       <ThemeProvider theme={theme}>
