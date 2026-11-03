@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
   BellDot,
@@ -15,13 +15,13 @@ import {
   Users,
 } from 'lucide-react-native';
 import { api } from '@/lib/api';
-import { isOwnerQuery } from '@/lib/queryPersist';
 import { languageByCode } from '@/features/venue';
 import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { OwnerPage } from '../../chrome/OwnerPage';
+import { useSignOut } from '../../chrome/useSignOut';
 import { ownerKeys } from '../../data/keys';
 import { ConfirmDialog, InfoRow, LinkRow, Section, StatusPill } from '../../kit';
 import { DeleteAccountSheet } from './DeleteAccountSheet';
@@ -35,8 +35,7 @@ export function SettingsScreen() {
   const firstName = useOwnerSession((state) => state.firstName) ?? '';
   const role = useOwnerSession((state) => state.role) ?? 'owner';
   const venueId = useOwnerSession((state) => state.venueId);
-  const clearOwner = useOwnerSession((state) => state.clearOwner);
-  const client = useQueryClient();
+  const endSession = useSignOut();
   const business = useQuery({
     queryKey: ownerKeys.business(),
     queryFn: () => api.ownerGetBusiness(),
@@ -45,12 +44,8 @@ export function SettingsScreen() {
   const [sheet, setSheet] = useState<'language' | 'signOut' | 'delete' | null>(null);
 
   const signOut = () => {
-    clearOwner();
     setSheet(null);
-    router.replace('/owner/login');
-    // Drop this account's orders, customers and payouts so the next person to sign in on this
-    // device never sees them, not even for a moment.
-    client.removeQueries({ predicate: (query) => isOwnerQuery(query.queryKey) });
+    endSession();
   };
 
   return (

@@ -426,3 +426,36 @@ A payment is not a pile of yes/no flags. It is one step, and only some steps can
 **Try it yourself**
 
 In `src/features/pay/quoteBill.test.ts`, change the 3-way split example and run `npm test`. The first share should still be the one that carries the extra pesewa.
+
+---
+
+## 2026-11-03 · The owner sidebar in three groups
+
+**What we built**
+
+On a wide screen the owner sidebar now has three groups: Main, Sales and Settings. It shows your plan next to the Ozaa name, and it can fold down to a thin strip of icons. Help, your profile and Sign out sit at the bottom. Pages that aren't built yet (Categories, Store notice, Promos, Integrations, Help) open a short "Coming soon" page.
+
+**How it works**
+
+```
+nav.ts (one list of pages, each with a group and the roles allowed)
+   ├─ navGroups(role) → Sidebar.tsx (wide screens)
+   └─ moreGroups(role) → More screen (phones, minus the 4 tabs)
+```
+
+The plan badge reads `business.plan` from the API. The plan names and features come from `landing/src/content/pricing.ts`, the same file the website's pricing page uses, so the two can't disagree.
+
+**Files to look at**
+
+- `src/features/owner/chrome/nav.ts`: every owner page, its group and who can open it.
+- `src/features/owner/chrome/Sidebar.tsx` and `SidebarFooter.tsx`: the sidebar and its bottom rows.
+- `src/features/owner/chrome/useSignOut.ts`: sign out, shared by Settings and the sidebar.
+- `src/features/owner/screens/billing/`: the Billing page and the plans.
+
+**New idea: one source of truth**
+
+The list of pages lives in one place. The sidebar, the phone tabs and the More screen all read from it. To move a page, you change one line, and all three update.
+
+**Try it yourself**
+
+In `nav.ts`, change `customers` from `group: 'sales'` to `group: 'main'`, run `npm test`, and see which test tells you.
