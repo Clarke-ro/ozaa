@@ -35,8 +35,10 @@ export function Button({
   const theme = useTheme();
   const off = disabled || loading;
   const filled = tone === 'primary' || tone === 'destructive';
-  // The dark-mode error red is light, so its label flips to the dark page colour to keep 4.5:1.
-  const destructiveInk = theme.scheme === 'dark' ? theme.bg : theme.onFill;
+  // A red button's label is the page colour: white in light mode, near-black on the lighter
+  // dark-mode red. Never the venue's on-accent colour, which is dark for a yellow venue.
+  // palette.test.ts checks error against bg at 4.5:1 in both schemes.
+  const destructiveInk = theme.white;
   const ink =
     off && filled
       ? theme.meta
