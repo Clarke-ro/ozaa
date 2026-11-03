@@ -6,6 +6,10 @@ import { ownerKeys } from './keys';
 import { useOwnerPrefs } from './ownerPrefs';
 import { useArrivalChime } from './useArrivalChime';
 
+// CI runs many test files at once on two cores; the 1 s default wait is too tight there.
+const WAIT = { timeout: 5000 };
+jest.setTimeout(20_000);
+
 const mockPlayer = { play: jest.fn(), seekTo: jest.fn(() => Promise.resolve()) };
 jest.mock('@react-native-async-storage/async-storage', () =>
   jest.requireActual('@react-native-async-storage/async-storage/jest/async-storage-mock'),
@@ -38,7 +42,7 @@ async function setup(role: 'owner' | 'kitchen') {
   await waitFor(() => {
     expect(client.getQueryData(ownerKeys.orders('ven_1'))).toBeTruthy();
     if (role !== 'kitchen') expect(client.getQueryData(ownerKeys.calls('ven_1'))).toBeTruthy();
-  });
+  }, WAIT);
   await act(async () => {});
   cleanups.push(() => {
     hook.unmount();
@@ -63,29 +67,29 @@ afterEach(() => {
 
 test('rings for a new order after the first load, not for the orders already there', async () => {
   const client = await setup('owner');
-  await waitFor(() => expect(client.getQueryData(ownerKeys.orders('ven_1'))).toBeTruthy());
+  await waitFor(() => expect(client.getQueryData(ownerKeys.orders('ven_1'))).toBeTruthy(), WAIT);
   // Let the hook take in the first load before anything new arrives.
   await act(async () => {});
   expect(mockPlayer.play).not.toHaveBeenCalled();
   await act(() =>
     client.setQueryData(ownerKeys.orders('ven_1'), { items: [{ id: 'o1' }, { id: 'o2' }] }),
   );
-  await waitFor(() => expect(mockPlayer.play).toHaveBeenCalledTimes(1));
+  await waitFor(() => expect(mockPlayer.play).toHaveBeenCalledTimes(1), WAIT);
 });
 
 test('rings for a new waiter call, but the kitchen never hears calls', async () => {
   const owner = await setup('owner');
-  await waitFor(() => expect(owner.getQueryData(ownerKeys.calls('ven_1'))).toBeTruthy());
+  await waitFor(() => expect(owner.getQueryData(ownerKeys.calls('ven_1'))).toBeTruthy(), WAIT);
   // Let the hook take in the first load before anything new arrives.
   await act(async () => {});
   await act(() =>
     owner.setQueryData(ownerKeys.calls('ven_1'), { items: [{ id: 'c1', status: 'open' }] }),
   );
-  await waitFor(() => expect(mockPlayer.play).toHaveBeenCalledTimes(1));
+  await waitFor(() => expect(mockPlayer.play).toHaveBeenCalledTimes(1), WAIT);
 
   mockPlayer.play.mockClear();
   const kitchen = await setup('kitchen');
-  await waitFor(() => expect(kitchen.getQueryData(ownerKeys.orders('ven_1'))).toBeTruthy());
+  await waitFor(() => expect(kitchen.getQueryData(ownerKeys.orders('ven_1'))).toBeTruthy(), WAIT);
   // Let the hook take in the first load before anything new arrives.
   await act(async () => {});
   await act(() =>
@@ -98,7 +102,7 @@ test('rings for a new waiter call, but the kitchen never hears calls', async () 
 test('stays quiet when the owner turned the sound off', async () => {
   useOwnerPrefs.setState({ chime: false });
   const client = await setup('owner');
-  await waitFor(() => expect(client.getQueryData(ownerKeys.orders('ven_1'))).toBeTruthy());
+  await waitFor(() => expect(client.getQueryData(ownerKeys.orders('ven_1'))).toBeTruthy(), WAIT);
   // Let the hook take in the first load before anything new arrives.
   await act(async () => {});
   await act(() =>
