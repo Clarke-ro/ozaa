@@ -2,6 +2,15 @@ import { tokens } from './tokens';
 
 export type Scheme = 'light' | 'dark';
 
+/** Shadows are drawn in black on both schemes; their opacity sets the strength. */
+export const SHADOW_INK = '#000000';
+
+/** Frosted white over a photo or the game board, so dark text and icons stay readable. */
+export const PHOTO_VEIL = 'rgba(255,255,255,0.92)';
+
+/** QR codes sit on white in both schemes: phone cameras read dark-on-light most reliably. */
+export const QR_PAPER = '#FFFFFF';
+
 type Neutrals = {
   bg: string;
   /** Owner page background: one step off the card surface so cards stand out. */

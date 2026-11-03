@@ -138,7 +138,11 @@ export function stepStack(state: StackState, dtSeconds: number): StackState {
     dir = -1;
   }
   const falling = state.falling
-    .map((plate) => ({ ...plate, vy: plate.vy + 900 * dt, y: plate.y - ((plate.vy + 900 * dt) * dt) / PLATE_HEIGHT }))
+    .map((plate) => ({
+      ...plate,
+      vy: plate.vy + 900 * dt,
+      y: plate.y - ((plate.vy + 900 * dt) * dt) / PLATE_HEIGHT,
+    }))
     .filter((plate) => plate.y > -8);
   return { ...state, dir, current: { ...state.current, x }, falling };
 }

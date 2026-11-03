@@ -21,6 +21,7 @@ import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { ozaaTheme, ThemeProvider, useTheme } from '@/ui/theme';
 import { DeskCard, OzaaMark } from './kit';
+import { SHADOW_INK } from '@/theme/palette';
 
 const SAMPLES = [
   { label: "Mama's Kitchen (Owner)", phone: '0240000001' },
@@ -109,15 +110,13 @@ export function OwnerLogin() {
                 <View style={styles.brandLockup}>
                   <OzaaMark size={44} />
                   <Text variant="caption" style={styles.brandLabel}>
-                    OZAA RESTAURANT MANAGEMENT
+                    {t('owner.loginBrand')}
                   </Text>
                   <Text variant="display-m" style={styles.title}>
                     {t('owner.login')}
                   </Text>
                   <Text variant="body" style={styles.subtitle}>
-                    {sent
-                      ? 'Enter the 6-digit verification code sent to your phone.'
-                      : 'Sign in to access your orders dashboard, kitchen tickets, and floor status.'}
+                    {sent ? t('owner.codeLead') : t('owner.loginLead')}
                   </Text>
                 </View>
 
@@ -160,11 +159,11 @@ export function OwnerLogin() {
                       </Text>
                       <Pressable
                         accessibilityRole="button"
-                        accessibilityLabel="Change phone"
+                        accessibilityLabel={t('owner.changeNumber')}
                         onPress={() => setSent(false)}
                       >
                         <Text variant="caption" style={{ color: theme.ink, fontWeight: '600' }}>
-                          Change number
+                          {t('owner.changeNumber')}
                         </Text>
                       </Pressable>
                     </View>
@@ -267,7 +266,7 @@ const useStyles = makeStyles((theme) => ({
     paddingHorizontal: tokens.space[4],
     borderWidth: 1,
     borderColor: theme.line,
-    shadowColor: '#000',
+    shadowColor: SHADOW_INK,
     shadowOpacity: 0.05,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 4 },
@@ -278,6 +277,8 @@ const useStyles = makeStyles((theme) => ({
     textAlign: 'center',
   },
   brandLabel: {
+    // The words are stored in sentence case so screen readers say them as words.
+    textTransform: 'uppercase',
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 1.5,

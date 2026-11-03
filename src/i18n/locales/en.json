@@ -365,6 +365,7 @@
     "you": "you",
     "stamp": "Score {{score}}+ for a stamp",
     "earned": "You earned a loyalty stamp",
+    "sendFailed": "We couldn't save this score. Your next game will still count.",
     "offline": "No ads. Works offline. Only a nickname you choose is saved.",
     "drop": "Drop the plate"
   },
@@ -623,7 +624,11 @@
     "alertBills_one": "1 table is waiting to pay.",
     "alertBills_other": "{{count}} tables are waiting to pay.",
     "businessName": "Business name",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "loginBrand": "Ozaa restaurant management",
+    "loginLead": "Sign in to see your orders, kitchen tickets and floor.",
+    "codeLead": "Enter the 6-digit code we sent to your phone.",
+    "changeNumber": "Change number"
   },
   "errors": {
     "generic": "Something went wrong. Try again.",
@@ -632,12 +637,16 @@
     "offlineAgo_other": "You're offline. Showing what we saved {{count}} minutes ago.",
     "venueNotFound": "We can't find that restaurant. Scan the code again.",
     "tryAgain": "Try again",
-    "loading": "Loading"
+    "loading": "Loading",
+    "crashTitle": "This page stopped working",
+    "crashBody": "Something broke on our side. Try again to reload it."
   },
   "common": {
     "back": "Back",
     "close": "Close",
-    "sample": "Sample"
+    "sample": "Sample",
+    "confirm": "Confirm",
+    "cancel": "Cancel"
   },
   "ownerKit": {
     "location": "Location",
@@ -1514,5 +1523,45 @@
       "call_sent": "You asked for: {{reason}}",
       "call_coming": "{{name}} is on the way with: {{reason}}"
     }
+  },
+  "ownerMembers": {
+    "search": "Search by diner phone or name",
+    "clearSearch": "Clear search",
+    "export": "Export CSV",
+    "exportTitle": "Ozaa loyalty members",
+    "optInTitle": "Marketing opt-in (Act 843)",
+    "optInBody": "Show only customers who agreed to receive SMS offers.",
+    "optInFilter": "Filter by opt-in",
+    "count": "Enrolled diners ({{count}})",
+    "noMatchTitle": "No customers match your search",
+    "noMatchBody": "Check the phone number or clear the search.",
+    "emptyTitle": "No loyalty members yet",
+    "emptyBody": "When diners scan your table QR and claim their pass, they appear here.",
+    "rewardsReady_one": "1 reward ready",
+    "rewardsReady_other": "{{count}} rewards ready",
+    "lastVisit": "{{phone}} · Last visit {{date}}",
+    "stamps_one": "1 stamp",
+    "stamps_other": "{{count}} stamps",
+    "profile": "Diner profile",
+    "activeStamps_one": "Member with 1 active stamp",
+    "activeStamps_other": "Member with {{count}} active stamps",
+    "currentStamps": "Current stamps",
+    "unclaimed": "Unclaimed rewards",
+    "marketingStatus": "Marketing status (Act 843)",
+    "consented": "Agreed to offers by WhatsApp and SMS",
+    "optedOut": "Opted out of offers",
+    "stampAtScan": "Stamp or redeem at Scan"
+  },
+  "ownerAi": {
+    "title": "Ozaa feedback assistant",
+    "lead": "Answers come only from this venue's guest notes.",
+    "welcome": "Ask me about your guest feedback: repeat complaints, popular dishes or service speed.",
+    "suggestLoved": "What do diners love most about our dishes?",
+    "suggestRepeat": "Which complaints came up more than once this week?",
+    "suggestSpeed": "How can we turn tables and serve faster?",
+    "suggestMood": "Sum up how guests feel overall",
+    "placeholder": "Ask about guest feedback, food or service",
+    "ask": "Ask",
+    "failed": "That didn't go through. Check the connection and try again."
   }
 }

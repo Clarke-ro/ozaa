@@ -10,12 +10,16 @@ import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { useOwnerSession } from '@/features/session';
+import { DeskWait, SkeletonBlock } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
 import { salesLine } from '../../desk/dashboardModel';
 import { BarChart, Segmented } from '../../kit';
 
 type Range = 'today' | '7d' | '30d';
 const RANGES: Range[] = ['today', '7d', '30d'];
+const CHART_HEIGHT = 110;
+// The big number and its caption, so the skeleton is the same height and nothing jumps.
+const FIGURE_HEIGHT = 64;
 
 /**
  * The period switch, one big sales number and its bars. Sales only mean something when the app
@@ -32,8 +36,9 @@ export function SalesSummary({ dashboard }: { dashboard: OwnerDashboard }) {
     enabled: Boolean(venueId),
   });
   const money = (v: number) => formatMoney(pesewas(v), dashboard.currency);
+  const today = range === 'today';
   // Today uses the live dashboard figure; longer periods use the insights total.
-  const total = range === 'today' ? dashboard.salesTodayPesewas : (report.data?.salesPesewas ?? 0);
+  const total = today ? dashboard.salesTodayPesewas : (report.data?.salesPesewas ?? 0);
   const line = salesLine(dashboard);
   const caption =
     range === 'today'
@@ -56,18 +61,37 @@ export function SalesSummary({ dashboard }: { dashboard: OwnerDashboard }) {
         options={RANGES.map((id) => ({ id, label: t(`ownerInsights.range.${id}`) }))}
       />
 
-      <View style={styles.figure} accessible accessibilityLabel={`${money(total)}. ${caption}`}>
-        <Text variant="display-l" style={styles.total}>
-          {money(total)}
-        </Text>
-        <Text variant="caption" style={[styles.caption, { color: theme.muted }]}>
-          {caption}
-        </Text>
-      </View>
+      {/* Today's figure is live from the dashboard; a longer period waits for its report
+          instead of showing GH₵0.00 while it loads or after it fails. */}
+      <DeskWait
+        loading={!today && report.isPending}
+        error={!today && report.isError}
+        onRetry={() => void report.refetch()}
+        skeleton={
+          <>
+            <SkeletonBlock height={FIGURE_HEIGHT} />
+            <SkeletonBlock height={CHART_HEIGHT} />
+          </>
+        }
+      >
+        <View style={styles.figure} accessible accessibilityLabel={`${money(total)}. ${caption}`}>
+          <Text variant="display-l" style={styles.total}>
+            {money(total)}
+          </Text>
+          <Text variant="caption" style={[styles.caption, { color: theme.muted }]}>
+            {caption}
+          </Text>
+        </View>
 
-      {bars.length ? (
-        <BarChart bars={bars} format={money} summary={t('ownerInsights.sales')} height={110} />
-      ) : null}
+        {bars.length ? (
+          <BarChart
+            bars={bars}
+            format={money}
+            summary={t('ownerInsights.sales')}
+            height={CHART_HEIGHT}
+          />
+        ) : null}
+      </DeskWait>
     </>
   );
 }

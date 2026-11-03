@@ -588,8 +588,4 @@ export function serviceSettings(venue: VenuePublic): ServiceSettings {
   return { services: venue.services, game: venue.game ?? { enabled: false, minScore: 15 } };
 }
 
-export function slugForVenueId(world: World, venueId: string): string {
-  return venueById(world, venueId).slug;
-}
-
 export type { MenuCategory, MenuItem };

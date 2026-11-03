@@ -56,10 +56,6 @@ export function formatCedis(amount: Pesewas): string {
   return formatMoney(amount, 'GHS');
 }
 
-export function addPesewas(left: Pesewas, right: Pesewas): Pesewas {
-  return pesewas(left + right);
-}
-
 export function sumPesewas(amounts: readonly Pesewas[]): Pesewas {
   return pesewas(amounts.reduce((total, amount) => total + amount, 0));
 }
@@ -78,9 +74,4 @@ export function parseMoneyInput(text: string): Pesewas | null {
   const amount = Number(whole) * 100 + Number(fraction.padEnd(2, '0'));
   if (!isPesewas(amount)) return null;
   return pesewas(amount);
-}
-
-export function parsePesewas(value: unknown): Pesewas | null {
-  if (typeof value !== 'number' || !isPesewas(value)) return null;
-  return value;
 }

@@ -1,9 +1,12 @@
 import { makeStyles } from '@/ui/makeStyles';
 import { useState } from 'react';
 import { Platform, Pressable, Share, TextInput, View } from 'react-native';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Award, ChevronRight, Search, Sparkles, Users, X } from 'lucide-react-native';
 import { api } from '@/lib/api';
+import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import type { LoyaltyCustomerSummary } from '@/lib/api/types';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
@@ -11,60 +14,29 @@ import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { DeskWait } from '../chrome/OwnerPage';
 import { EmptyCard, ModalSheet, SectionLabel, Toggle } from '../kit';
+import { ownerKeys } from '../data/keys';
 
 export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
   const styles = useStyles();
   const theme = useTheme();
-  const client = useQueryClient();
+  const { t } = useTranslation();
+  const router = useRouter();
 
   const [search, setSearch] = useState('');
   const [wantsOffersOnly, setWantsOffersOnly] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<LoyaltyCustomerSummary | null>(null);
 
+  const query = useDebouncedValue(search.trim());
   const customersQuery = useQuery({
-    queryKey: ['owner-loyalty-customers', venueId, search, wantsOffersOnly],
+    queryKey: [...ownerKeys.loyaltyCustomers(venueId), query, wantsOffersOnly],
     queryFn: () =>
       api.ownerListLoyaltyCustomers(venueId, {
-        search: search.trim() || undefined,
+        search: query || undefined,
         wantsOffers: wantsOffersOnly ? true : undefined,
       }),
     enabled: Boolean(venueId),
-  });
-
-  const refresh = () => {
-    void client.invalidateQueries({ queryKey: ['owner-loyalty-customers', venueId] });
-    void client.invalidateQueries({ queryKey: ['owner-loyalty', venueId] });
-  };
-
-  // Manual stamp mutation
-  const stampMutation = useMutation({
-    mutationFn: (phone: string) =>
-      api.ownerScanLoyaltyCard(venueId, { qrPayload: phone, action: 'stamp' }),
-    onSuccess: (res) => {
-      refresh();
-      if (selectedCustomer) {
-        setSelectedCustomer({
-          ...selectedCustomer,
-          stamps: res.stamps,
-        });
-      }
-    },
-  });
-
-  // Manual redeem mutation
-  const redeemMutation = useMutation({
-    mutationFn: (phone: string) =>
-      api.ownerScanLoyaltyCard(venueId, { qrPayload: phone, action: 'redeem' }),
-    onSuccess: (res) => {
-      refresh();
-      if (selectedCustomer) {
-        setSelectedCustomer({
-          ...selectedCustomer,
-          stamps: res.stamps,
-          rewardsAvailable: Math.max(0, selectedCustomer.rewardsAvailable - 1),
-        });
-      }
-    },
+    // Keep the last results on screen while the next search loads, so the list doesn't flash.
+    placeholderData: keepPreviousData,
   });
 
   const items = customersQuery.data?.items ?? [];
@@ -93,7 +65,7 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
     } else {
       await Share.share({
         message: csvContent,
-        title: 'Ozaa Loyalty Members Export',
+        title: t('ownerMembers.exportTitle'),
       });
     }
   };
@@ -112,14 +84,14 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
             <TextInput
               value={search}
               onChangeText={setSearch}
-              placeholder="Search by diner phone or name..."
+              placeholder={t('ownerMembers.search')}
               placeholderTextColor={theme.meta}
               style={[styles.searchInput, { color: theme.text }]}
             />
             {search ? (
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Clear search"
+                accessibilityLabel={t('ownerMembers.clearSearch')}
                 onPress={() => setSearch('')}
                 hitSlop={14}
               >
@@ -129,7 +101,7 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
           </View>
 
           <Button
-            label="Export CSV"
+            label={t('ownerMembers.export')}
             tone="secondary"
             onPress={handleExportCsv}
             disabled={items.length === 0}
@@ -141,31 +113,27 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
           style={[styles.filterStrip, { backgroundColor: theme.wash, borderColor: theme.line }]}
         >
           <View style={styles.filterTextCol}>
-            <Text variant="body-strong">Act 843 Compliant Marketing Opt-In</Text>
+            <Text variant="body-strong">{t('ownerMembers.optInTitle')}</Text>
             <Text variant="caption" style={{ color: theme.meta }}>
-              Show only customers who explicitly agreed to receive broadcast SMS promotions.
+              {t('ownerMembers.optInBody')}
             </Text>
           </View>
 
           <Toggle
             value={wantsOffersOnly}
             onChange={(val) => setWantsOffersOnly(val)}
-            label="Filter by opt-in"
+            label={t('ownerMembers.optInFilter')}
           />
         </View>
 
         {/* Customer Count Header */}
-        <SectionLabel title={`ENROLLED DINERS (${totalCount})`} caps />
+        <SectionLabel title={t('ownerMembers.count', { count: totalCount })} caps />
 
         {items.length === 0 ? (
           <EmptyCard
             icon={Users}
-            title={search ? 'No customers match your search' : 'No loyalty members enrolled yet'}
-            description={
-              search
-                ? 'Check the phone number or clear search filters.'
-                : 'When diners scan your table QR and claim their pass, they appear here.'
-            }
+            title={search ? t('ownerMembers.noMatchTitle') : t('ownerMembers.emptyTitle')}
+            description={search ? t('ownerMembers.noMatchBody') : t('ownerMembers.emptyBody')}
           />
         ) : (
           <View style={styles.customersList}>
@@ -198,16 +166,17 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
                               variant="caption"
                               style={{ color: theme.warning, fontWeight: '700' }}
                             >
-                              {cust.rewardsAvailable} Reward{cust.rewardsAvailable > 1 ? 's' : ''}{' '}
-                              Ready!
+                              {t('ownerMembers.rewardsReady', { count: cust.rewardsAvailable })}
                             </Text>
                           </View>
                         ) : null}
                       </View>
 
                       <Text variant="caption" style={{ color: theme.meta }}>
-                        {cust.phoneMasked} • Last visit{' '}
-                        {new Date(cust.lastStampAt).toLocaleDateString()}
+                        {t('ownerMembers.lastVisit', {
+                          phone: cust.phoneMasked,
+                          date: new Date(cust.lastStampAt).toLocaleDateString(),
+                        })}
                       </Text>
                     </View>
 
@@ -216,7 +185,7 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
                       <View style={[styles.stampPill, { backgroundColor: theme.fill }]}>
                         <Award size={14} color={theme.onFill} />
                         <Text variant="caption" style={{ color: theme.onFill, fontWeight: '800' }}>
-                          {cust.stamps} Stamps
+                          {t('ownerMembers.stamps', { count: cust.stamps })}
                         </Text>
                       </View>
                     </View>
@@ -233,8 +202,10 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
         <ModalSheet
           visible={Boolean(selectedCustomer)}
           onClose={() => setSelectedCustomer(null)}
-          title={selectedCustomer?.name || selectedCustomer?.phoneMasked || 'Diner Profile'}
-          subtitle={`Member with ${selectedCustomer?.stamps ?? 0} active stamps`}
+          title={
+            selectedCustomer?.name || selectedCustomer?.phoneMasked || t('ownerMembers.profile')
+          }
+          subtitle={t('ownerMembers.activeStamps', { count: selectedCustomer?.stamps ?? 0 })}
         >
           {selectedCustomer ? (
             <View style={styles.modalContent}>
@@ -244,7 +215,7 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
                     {selectedCustomer.stamps}
                   </Text>
                   <Text variant="caption" style={{ color: theme.meta }}>
-                    Current Stamps
+                    {t('ownerMembers.currentStamps')}
                   </Text>
                 </View>
 
@@ -258,39 +229,34 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
                     {selectedCustomer.rewardsAvailable}
                   </Text>
                   <Text variant="caption" style={{ color: theme.meta }}>
-                    Unclaimed Rewards
+                    {t('ownerMembers.unclaimed')}
                   </Text>
                 </View>
               </View>
 
               {/* Marketing Opt-In Status */}
               <View style={[styles.optInNotice, { borderColor: theme.line }]}>
-                <Text variant="body-strong">Act 843 Marketing Status</Text>
+                <Text variant="body-strong">{t('ownerMembers.marketingStatus')}</Text>
                 <Text
                   variant="caption"
                   style={{ color: selectedCustomer.wantsOffers ? theme.success : theme.meta }}
                 >
                   {selectedCustomer.wantsOffers
-                    ? '✓ Consented to promotional WhatsApp & SMS updates'
-                    : '✕ Opted out of marketing promotions'}
+                    ? t('ownerMembers.consented')
+                    : t('ownerMembers.optedOut')}
                 </Text>
               </View>
 
-              {/* Manual Manager Actions */}
+              {/* Stamps and rewards go through Scan, which takes the guest's card code or their
+                  full phone number. This list only has the masked number, which can't find a card. */}
               <View style={styles.manualActions}>
                 <Button
-                  label="+1 Stamp (Manual Credit)"
-                  tone="primary"
-                  onPress={() => stampMutation.mutate(selectedCustomer.phoneMasked)}
-                  loading={stampMutation.isPending}
-                />
-
-                <Button
-                  label="Redeem Reward Free Dish"
+                  label={t('ownerMembers.stampAtScan')}
                   tone="secondary"
-                  onPress={() => redeemMutation.mutate(selectedCustomer.phoneMasked)}
-                  loading={redeemMutation.isPending}
-                  disabled={selectedCustomer.rewardsAvailable <= 0 && selectedCustomer.stamps < 10}
+                  onPress={() => {
+                    setSelectedCustomer(null);
+                    router.push('/owner/scan');
+                  }}
                 />
               </View>
             </View>

@@ -1,1 +1,1 @@
-export { cartCount, cartEstimate, useCart, type CartLine } from './cartStore';
+export { cartCount, cartEstimate, linesFor, useCart, type CartLine } from './cartStore';

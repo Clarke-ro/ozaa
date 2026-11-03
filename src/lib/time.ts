@@ -41,7 +41,10 @@ function nextOpen(hours: OpeningHours, fromWeekday: number, fromMinute: number):
     for (const interval of intervals) {
       const opens = minutes(interval.opens);
       if (offset === 0 && opens <= fromMinute) continue;
-      const when = offset === 0 ? clockLabel(interval.opens) : `${WEEKDAYS[day]} ${clockLabel(interval.opens)}`;
+      const when =
+        offset === 0
+          ? clockLabel(interval.opens)
+          : `${WEEKDAYS[day]} ${clockLabel(interval.opens)}`;
       return when;
     }
   }

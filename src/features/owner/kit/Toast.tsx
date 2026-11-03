@@ -7,6 +7,7 @@ import { hapticError, hapticSuccess } from '@/lib/haptics';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
+import { SHADOW_INK } from '@/theme/palette';
 
 type ToastTone = 'success' | 'error';
 type ToastState = { id: number; tone: ToastTone; message: string } | null;
@@ -95,7 +96,7 @@ const styles = StyleSheet.create({
     borderRadius: tokens.radius.md,
     borderCurve: 'continuous',
     borderWidth: 1,
-    shadowColor: '#000',
+    shadowColor: SHADOW_INK,
     shadowOpacity: 0.12,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 6 },

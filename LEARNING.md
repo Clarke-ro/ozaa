@@ -4,6 +4,40 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-03 · A hygiene pass: what the app remembers, and when
+
+**What we built**
+
+No new features. We fixed bugs that were hard to see: a crashed page now shows "This page stopped working" with Try again. A waiter who signs in on the owner's tablet no longer sees the owner's customers. A dish from one restaurant can't end up in another's order.
+
+**How it works**
+
+The app keeps a cache: answers from the server it may need again.
+
+```
+server answer → cache (memory) → only venue + menu → saved on the device
+sign out      → every key starting "owner-" is removed from the cache
+```
+
+Every cache entry has a key, like `['menu', 'mamas-kitchen']`. Keys are now built in one place, so a typo can't stop a screen refreshing.
+
+**Files to look at**
+
+- `src/lib/queryKeys.ts` and `src/features/owner/data/keys.ts`: every cache key
+- `src/lib/queryPersist.ts`: what may be saved, and what sign-out clears
+- `src/ui/AppErrorBoundary.tsx`: the crash screen
+- `docs/refactor-audit.md`: everything found, and what still needs your decision
+
+**New idea: a cache key**
+
+A cache is like a pigeonhole rack at reception. The key is the label on the hole. If one screen files the menu under "menu" and another looks under "Menu", the second finds nothing and shows old data. One label maker for everyone fixes that.
+
+**Try it yourself**
+
+In `src/lib/queryPersist.ts`, add `'wifi'` to `PERSISTED_ROOTS` and run `npm test`. The tests still pass, because they only check owner data. Then open the Wi-Fi page and look in your browser's Local Storage for `REACT_QUERY_OFFLINE_CACHE`. The Wi-Fi password is now saved on the phone. That's why the list is short. Put it back when you're done.
+
+---
+
 ## 2026-11-03 · Switching payments off with a feature flag
 
 **What we built**
@@ -45,6 +79,7 @@ Run `PAYMENTS_ENABLED=true npx expo start --web --clear` and open a table page. 
 The guest's first visit downloads about half as much JavaScript as before (1,034 KB down to about 560 KB), and the page no longer waits for fonts.
 
 **How it works**
+
 ```
 before: entry + one big "__common" file (every page's shared code, owner screens included)
 after:  entry + small "__shared" files, each holding only what that page needs
@@ -53,6 +88,7 @@ fonts:  show text in the system font at once, swap to Inter when it arrives
 ```
 
 **Files to look at**
+
 - `.env.production`: the two build flags that turn on tree shaking
 - `app.config.ts`: `experiments.chunking.mode: 'granular'`
 - `src/theme/fonts.ts`: `FontDisplay.SWAP` on the web
@@ -72,6 +108,7 @@ Run `npx expo export -p web`, then sort `dist/_expo/static/js/web` by size. Comm
 When a guest loses signal, the home and menu screens keep showing the saved menu with a quiet line: "You're offline. Showing what we saved 3 minutes ago." On a phone, the app stops checking the server while it sits in a pocket. The menu list got cheaper to redraw.
 
 **How it works**
+
 ```
 signal drops → React Query's onlineManager flips to offline → <OfflineNote> appears
 app to background → AppState "background" → focusManager pauses polling
@@ -79,13 +116,14 @@ tap "+" on a dish → only <MenuCartBar> re-renders (it reads the cart), not eve
 ```
 
 **Files to look at**
+
 - `src/ui/OfflineNote.tsx`: the offline line and the `useOnline()` hook
 - `src/lib/queryLifecycle.ts`: pausing polling in the background
 - `src/features/menu/MenuCartBar.tsx`: the bar that owns the cart subscription
 - `src/features/menu/MenuScreen.tsx`: the menu on FlashList
 
 **New idea: who subscribes decides who re-renders**
-A component re-renders when data it *reads* changes. The menu screen used to read the cart, so adding one dish redrew every card. Moving that read into the small bar means only the bar redraws. On a cheap phone that is the difference between smooth and stuttery.
+A component re-renders when data it _reads_ changes. The menu screen used to read the cart, so adding one dish redrew every card. Moving that read into the small bar means only the bar redraws. On a cheap phone that is the difference between smooth and stuttery.
 
 **Try it yourself**
 Open the menu in Chrome, open DevTools → Network, and switch "No throttling" to "Offline". Watch the note appear while the dishes stay. Switch back and it disappears.
@@ -98,6 +136,7 @@ Open the menu in Chrome, open DevTools → Network, and switch "No throttling" t
 The owner app now follows the phone's light or dark setting, has a proper back button on every inner screen, and only shows numbers the server actually sent. The menu builder can reorder sections and add dish photos, and the Tables screen can share and download QR codes.
 
 **How it works**
+
 ```
 phone setting (light/dark) → owner layout picks a theme → every screen reads colours by role
                                                          (bg, surface, text, ink, error…)
@@ -106,6 +145,7 @@ row tap → push a screen on top                       (back button + swipe back
 ```
 
 **Files to look at**
+
 - `src/theme/palette.ts`: the light and dark colours, with contrast checked in `palette.test.ts`
 - `src/ui/makeStyles.ts`: styles that change with the theme
 - `src/features/owner/chrome/nav.ts`: which tabs each role gets, and what goes in More
@@ -113,7 +153,7 @@ row tap → push a screen on top                       (back button + swipe back
 - `src/features/owner/screens/menu/reorder.ts`: moving a menu section up or down
 
 **New idea: colours by role, not by value**
-Before, screens said "make this `#FFFFFF`". In dark mode that stays white and glares. Now screens say "make this the *surface*" and the theme decides what surface means: white in light mode, near-black in dark mode. One file changes; every screen follows.
+Before, screens said "make this `#FFFFFF`". In dark mode that stays white and glares. Now screens say "make this the _surface_" and the theme decides what surface means: white in light mode, near-black in dark mode. One file changes; every screen follows.
 
 **Try it yourself**
 Open `src/theme/palette.ts` and change dark `surface` to `'#2A2A2E'`. Run `npm test`: the contrast test tells you if any text got too hard to read. Then switch your phone to dark mode and open Today.
@@ -125,6 +165,7 @@ Open `src/theme/palette.ts` and change dark `surface` to `'#2A2A2E'`. Run `npm t
 **What we built**
 
 We brought the entire Ozaa owner side and marketing landing page to production completeness:
+
 1. **Menu Builder & Table Print**: Custom category schedules, 14 standard allergen tags, modifier choices, sequential table codes, and printable vector table tent cards.
 2. **Venue Design & Reviews**: Star gating (4–5★ to Google, 1–3★ to private feedback), custom links with scheduling, Wi-Fi QR connect strings, and brand customizer.
 3. **Loyalty Hub & Camera Scanner**: Digital stamp cards with anti-fraud cooldown timers, customer roster with Act 843 filters, camera reticle scanner, and paired handheld devices.
@@ -163,6 +204,7 @@ Open `http://localhost:4321/` in your browser to test the interactive preview on
 A complete overhaul of the Ozaa Owner App from bare text rows into a high-fidelity, polished management dashboard across all 15 screens. We created a shared owner kit (`DeskCard`, `StatTile`, `BigStat`, `StatusPill`, `Toggle`, `DeskTabs`, `IconTile`, `CodeTile`, `ChipRow`) matching Ozaa brand tokens.
 
 Every screen now has full features:
+
 - **Dashboard**: Today's sales Unbounded headline, 3 metric cards, quick actions, and live order items with table code tiles.
 - **Floor**: Responsive table layout grid, derived status pills, and interactive table bill sheet with cash payment marking.
 - **Orders (Kitchen)**: Status tabs, ticket cards with checklists, elapsed timers, and "Start preparing" / "Mark ready" actions.

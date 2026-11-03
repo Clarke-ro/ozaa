@@ -23,6 +23,7 @@ import { useTheme } from '@/ui/theme';
 import { payInitial, payTransition } from './paymentMachine';
 import { PayMethods, type PayMethod } from './PayMethods';
 import { quoteBill } from './quoteBill';
+import { guestKeys } from '@/lib/queryKeys';
 
 const TIPS = [0, 5, 10, 15] as const;
 
@@ -39,7 +40,7 @@ export function PayScreen({ slug }: { slug: string }) {
   const orderId = useGuestSession((state) => (state.slug === slug ? state.orderId : null));
   const hydrated = useGuestSession((state) => state.hydrated);
   const order = useQuery({
-    queryKey: ['order', orderId],
+    queryKey: guestKeys.order(orderId),
     queryFn: () => api.getOrder(orderId ?? ''),
     enabled: Boolean(orderId),
   });
@@ -54,7 +55,7 @@ export function PayScreen({ slug }: { slug: string }) {
   const [reference, setReference] = useState<string | null>(null);
 
   const payment = useQuery({
-    queryKey: ['payment', reference],
+    queryKey: guestKeys.payment(reference),
     queryFn: () => api.getPayment(reference ?? ''),
     enabled:
       Boolean(reference) && (payState.kind === 'awaiting_approval' || payState.kind === 'checking'),
@@ -65,7 +66,7 @@ export function PayScreen({ slug }: { slug: string }) {
     if (!payment.data) return;
     if (payment.data.status === 'succeeded') {
       send({ type: 'server_succeeded', reference: payment.data.reference });
-      void client.invalidateQueries({ queryKey: ['loyalty'] });
+      void client.invalidateQueries({ queryKey: guestKeys.loyaltyAll() });
     }
     if (payment.data.status === 'failed')
       send({ type: 'server_failed', message: payment.data.failureReason ?? t('pay.failed') });

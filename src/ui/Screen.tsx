@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { ScrollView, StyleSheet, View, type ViewStyle } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tokens } from '@/theme/tokens';
 import { useTheme } from './theme';
@@ -52,16 +52,17 @@ export function Screen({
     <View style={[styles.screen, { backgroundColor: theme.white, paddingTop: insets.top }]}>
       {body}
       {footer ? (
-        <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 12), backgroundColor: theme.white }]}>
+        <View
+          style={[
+            styles.footer,
+            { paddingBottom: Math.max(insets.bottom, 12), backgroundColor: theme.white },
+          ]}
+        >
           {footer}
         </View>
       ) : null}
     </View>
   );
-}
-
-export function screenPad(): ViewStyle {
-  return { paddingHorizontal: tokens.grid.mobile.margin };
 }
 
 const styles = StyleSheet.create({

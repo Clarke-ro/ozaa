@@ -7,6 +7,7 @@ import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import type { Wallet } from './facts';
 import { stampsLeftPhrase } from './loyaltyRules';
+import { QR_PAPER } from '@/theme/palette';
 
 function scanFrameWatermarkSvg(fill: string): string {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="220" height="220"><defs><mask id="m" maskUnits="userSpaceOnUse" x="0" y="0" width="512" height="512"><rect x="112" y="112" width="288" height="288" rx="72" fill="#fff"/><g fill="#000"><g transform="translate(256 258) scale(0.78) translate(-252 -261)"><rect x="174.0" y="166" width="18" height="80" rx="9.0"/><rect x="201.0" y="166" width="18" height="80" rx="9.0"/><rect x="228.0" y="166" width="18" height="80" rx="9.0"/><path d="M174.0 228 H246.0 V244 C246.0 264 230.0 274 210 274 C190.0 274 174.0 264 174.0 244 Z"/><rect x="199.0" y="250" width="22" height="108" rx="11.0"/><path d="M286 164 C 326 172 340 226 322 276 H 286 Z"/><rect x="286" y="262" width="24" height="96" rx="12.0"/></g><path d="M150 184 V150 H184" fill="none" stroke="#000" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/><path d="M362 184 V150 H328" fill="none" stroke="#000" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/><path d="M150 328 V362 H184" fill="none" stroke="#000" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/><path d="M362 328 V362 H328" fill="none" stroke="#000" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/></g></mask></defs><rect width="512" height="512" fill="${fill}" mask="url(#m)"/></svg>`;
@@ -219,7 +220,7 @@ const styles = StyleSheet.create({
   track: { height: 12, borderRadius: 999, borderWidth: 1.5, overflow: 'hidden' },
   trackFill: { height: '100%', borderRadius: 999 },
   backFace: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 4 },
-  qrPad: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 10 },
+  qrPad: { backgroundColor: QR_PAPER, borderRadius: 16, padding: 10 },
   codeText: { letterSpacing: 2, fontVariant: ['tabular-nums'] },
   footerRow: {
     flexDirection: 'row',

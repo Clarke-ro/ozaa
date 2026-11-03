@@ -1,7 +1,7 @@
 import { useEffect, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { Stack } from 'expo-router';
-import { QueryClient } from '@tanstack/react-query';
+import { QueryClient, type Query } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -13,17 +13,34 @@ import i18n from '@/i18n';
 import { applyTextDirection, textDirection } from '@/i18n/direction';
 import { applySavedLanguage } from '@/features/venue';
 import { pausePollingInBackground } from '@/lib/queryLifecycle';
+import { shouldPersistQuery } from '@/lib/queryPersist';
 import { GestureRoot } from '@/ui/GestureRoot';
 import { useAppFonts } from '@/theme/fonts';
 import { ThemeProvider, ozaaTheme } from '@/ui/theme';
 
+// expo-router shows this in place of any screen that throws while rendering.
+export { AppErrorBoundary as ErrorBoundary } from '@/ui/AppErrorBoundary';
+
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
+const STALE_MS = 30_000;
+const PERSIST_MAX_AGE_MS = 60 * 60 * 1000;
+// Bump when the saved shape changes: older saves are thrown away. v2 dropped owner data.
+const PERSIST_BUSTER = 'v2';
+
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
+  defaultOptions: { queries: { retry: 1, staleTime: STALE_MS } },
 });
 
 const persister = createAsyncStoragePersister({ storage: AsyncStorage });
+const persistOptions = {
+  persister,
+  maxAge: PERSIST_MAX_AGE_MS,
+  buster: PERSIST_BUSTER,
+  dehydrateOptions: {
+    shouldDehydrateQuery: (query: Query) => shouldPersistQuery(query.queryKey, query.state.status),
+  },
+};
 pausePollingInBackground();
 
 function DirectionFrame({ children }: { children: ReactNode }) {
@@ -53,10 +70,7 @@ export default function RootLayout() {
     <GestureRoot>
       <I18nextProvider i18n={i18n}>
         <DirectionFrame>
-          <PersistQueryClientProvider
-            client={queryClient}
-            persistOptions={{ persister, maxAge: 1000 * 60 * 60 }}
-          >
+          <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
             <SafeAreaProvider>
               <ThemeProvider theme={ozaaTheme}>
                 {/* Guest pages are always light; the owner chrome sets its own style. */}

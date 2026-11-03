@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, type ViewStyle } from 'react-native';
 import { tokens } from '@/theme/tokens';
 import { useTheme } from './theme';
+import { PHOTO_VEIL } from '@/theme/palette';
 
 export function IconButton({
   label,
@@ -22,7 +23,7 @@ export function IconButton({
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
-      style={[styles.base, { backgroundColor: light ? 'rgba(255,255,255,0.92)' : theme.tint }, style]}
+      style={[styles.base, { backgroundColor: light ? PHOTO_VEIL : theme.tint }, style]}
     >
       {children}
     </Pressable>

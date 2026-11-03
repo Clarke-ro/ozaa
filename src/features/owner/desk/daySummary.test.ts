@@ -16,9 +16,24 @@ test('today sales use paid pesewas on the venue calendar day', () => {
   const summary = summarizeDay({
     ...base,
     orders: [
-      { status: 'served', paidPesewas: 248000, createdAt: '2026-10-31T12:00:00Z', paymentStatus: 'paid' },
-      { status: 'cancelled', paidPesewas: 5000, createdAt: '2026-10-31T13:00:00Z', paymentStatus: 'unpaid' },
-      { status: 'served', paidPesewas: 9000, createdAt: '2026-10-30T23:30:00Z', paymentStatus: 'paid' },
+      {
+        status: 'served',
+        paidPesewas: 248000,
+        createdAt: '2026-10-31T12:00:00Z',
+        paymentStatus: 'paid',
+      },
+      {
+        status: 'cancelled',
+        paidPesewas: 5000,
+        createdAt: '2026-10-31T13:00:00Z',
+        paymentStatus: 'unpaid',
+      },
+      {
+        status: 'served',
+        paidPesewas: 9000,
+        createdAt: '2026-10-30T23:30:00Z',
+        paymentStatus: 'paid',
+      },
     ],
   });
   expect(summary.salesTodayPesewas).toBe(248000);
@@ -34,7 +49,14 @@ test('a late evening order in Lagos still counts as the next local day', () => {
     nowIso: '2026-10-31T00:30:00Z',
     yesterdayPesewas: 0,
     ratings: [],
-    orders: [{ status: 'served', paidPesewas: 1000, createdAt: '2026-10-30T23:30:00Z', paymentStatus: 'paid' }],
+    orders: [
+      {
+        status: 'served',
+        paidPesewas: 1000,
+        createdAt: '2026-10-30T23:30:00Z',
+        paymentStatus: 'paid',
+      },
+    ],
   });
   expect(summary.salesTodayPesewas).toBe(1000);
   expect(summary.direction).toBe('none');
@@ -48,10 +70,20 @@ test('alerts name calls, unpaid served bills, an unchecked payout, and sold-out 
     payoutVerified: false,
     soldOut: ['Banku & tilapia'],
     orders: [
-      { status: 'served', paidPesewas: 0, createdAt: '2026-10-31T15:00:00Z', paymentStatus: 'unpaid' },
+      {
+        status: 'served',
+        paidPesewas: 0,
+        createdAt: '2026-10-31T15:00:00Z',
+        paymentStatus: 'unpaid',
+      },
     ],
   });
-  expect(summary.alerts.map((alert) => alert.code)).toEqual(['calls', 'bills', 'payout', 'sold_out']);
+  expect(summary.alerts.map((alert) => alert.code)).toEqual([
+    'calls',
+    'bills',
+    'payout',
+    'sold_out',
+  ]);
 });
 
 test('with payments off, bills come from bill requests and there is no payout alert', () => {
@@ -62,7 +94,12 @@ test('with payments off, bills come from bill requests and there is no payout al
     openBillCalls: 2,
     payoutVerified: false,
     orders: [
-      { status: 'served', paidPesewas: 0, createdAt: '2026-10-31T15:00:00Z', paymentStatus: 'unpaid' },
+      {
+        status: 'served',
+        paidPesewas: 0,
+        createdAt: '2026-10-31T15:00:00Z',
+        paymentStatus: 'unpaid',
+      },
     ],
   });
   expect(summary.alerts).toEqual([
@@ -77,7 +114,12 @@ test('with payments off and no bill requests, served unpaid orders raise nothing
     payments: false,
     payoutVerified: false,
     orders: [
-      { status: 'served', paidPesewas: 0, createdAt: '2026-10-31T15:00:00Z', paymentStatus: 'unpaid' },
+      {
+        status: 'served',
+        paidPesewas: 0,
+        createdAt: '2026-10-31T15:00:00Z',
+        paymentStatus: 'unpaid',
+      },
     ],
   });
   expect(summary.alerts).toEqual([]);

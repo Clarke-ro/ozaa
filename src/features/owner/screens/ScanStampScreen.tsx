@@ -13,6 +13,7 @@ import { useOwnerSession } from '@/features/session';
 import { OwnerPage, useGutter } from '../chrome/OwnerPage';
 import { ScanProblem, ScanResult } from './scan/ScanResult';
 import { ScanViewfinder } from './scan/ScanViewfinder';
+import { ownerKeys } from '../data/keys';
 
 /** Scan a guest's loyalty QR (or type its code) to add a stamp or redeem a reward. */
 export function ScanStampScreen() {
@@ -23,7 +24,7 @@ export function ScanStampScreen() {
   const client = useQueryClient();
   // The owner's own target. Until it loads, the result card shows the count without "N more".
   const program = useQuery({
-    queryKey: ['owner-loyalty', venueId],
+    queryKey: ownerKeys.loyalty(venueId),
     queryFn: () => api.ownerGetLoyalty(venueId),
     enabled: Boolean(venueId),
   });
@@ -39,8 +40,8 @@ export function ScanStampScreen() {
       setResult(data);
       setProblem(null);
       void (data.cooldownViolated ? hapticWarning() : hapticSuccess());
-      void client.invalidateQueries({ queryKey: ['owner-loyalty', venueId] });
-      void client.invalidateQueries({ queryKey: ['owner-loyalty-customers', venueId] });
+      void client.invalidateQueries({ queryKey: ownerKeys.loyalty(venueId) });
+      void client.invalidateQueries({ queryKey: ownerKeys.loyaltyCustomers(venueId) });
     },
     onError: (err: Error) => {
       void hapticWarning();

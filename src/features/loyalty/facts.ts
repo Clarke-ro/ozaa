@@ -67,7 +67,11 @@ function join(venue: VenueLoyalty, command: Extract<Command, { type: 'join' }>, 
       ...existing,
       firstName: command.firstName ?? existing.firstName,
       birthdayMonthDay: command.birthdayMonthDay ?? existing.birthdayMonthDay,
-      consent: { marketing: command.consent.marketing, at: now, textVersion: command.consent.textVersion },
+      consent: {
+        marketing: command.consent.marketing,
+        at: now,
+        textVersion: command.consent.textVersion,
+      },
     });
     return ok(next, 'duplicate', existing.id);
   }
@@ -78,7 +82,11 @@ function join(venue: VenueLoyalty, command: Extract<Command, { type: 'join' }>, 
     firstName: command.firstName ?? null,
     birthdayMonthDay: command.birthdayMonthDay ?? null,
     memberSince: now.slice(0, 10),
-    consent: { marketing: command.consent.marketing, at: now, textVersion: command.consent.textVersion },
+    consent: {
+      marketing: command.consent.marketing,
+      at: now,
+      textVersion: command.consent.textVersion,
+    },
     facts: [],
   };
   return ok(replace(venue, member), 'posted', id);
@@ -92,10 +100,16 @@ function leave(venue: VenueLoyalty, command: Extract<Command, { type: 'leave' }>
   return ok(brand({ ...unbrand(venue), members }), 'posted', existing.id);
 }
 
-function paidVisit(venue: VenueLoyalty, command: Extract<Command, { type: 'paid_visit' }>, now: string): Step {
+function paidVisit(
+  venue: VenueLoyalty,
+  command: Extract<Command, { type: 'paid_visit' }>,
+  now: string,
+): Step {
   if (!command.paid || !venue.programme.enabled) return ok(venue, 'skipped', null);
   const phone = command.loyaltyPhone ?? command.momoPhone;
-  const member = phone ? Object.values(venue.members).find((item) => item.phone === phone) : undefined;
+  const member = phone
+    ? Object.values(venue.members).find((item) => item.phone === phone)
+    : undefined;
   if (!member) return ok(venue, 'skipped', null);
   if (command.currency !== venue.programme.currency) return fail('currency_mismatch');
   const key = `earn:order:${command.orderId}`;
@@ -103,18 +117,28 @@ function paidVisit(venue: VenueLoyalty, command: Extract<Command, { type: 'paid_
   const units =
     venue.programme.earn.kind === 'stamps'
       ? 1
-      : Math.floor(command.amountMinor / venue.programme.earn.perMinor) * venue.programme.earn.points;
+      : Math.floor(command.amountMinor / venue.programme.earn.perMinor) *
+        venue.programme.earn.points;
   const fact: Fact = {
     kind: 'earn',
     id: `ern_${command.orderId}`,
     at: now,
     units,
-    source: { type: 'paid_visit', orderId: command.orderId, amountMinor: command.amountMinor, currency: command.currency },
+    source: {
+      type: 'paid_visit',
+      orderId: command.orderId,
+      amountMinor: command.amountMinor,
+      currency: command.currency,
+    },
   };
   return ok(replace(venue, { ...member, facts: [...member.facts, fact] }), 'posted', member.id);
 }
 
-function gameWin(venue: VenueLoyalty, command: Extract<Command, { type: 'game_win' }>, now: string): Step {
+function gameWin(
+  venue: VenueLoyalty,
+  command: Extract<Command, { type: 'game_win' }>,
+  now: string,
+): Step {
   if (!command.enabled || !venue.programme.enabled || command.score < command.minScore) {
     return ok(venue, 'skipped', null);
   }
@@ -134,7 +158,11 @@ function gameWin(venue: VenueLoyalty, command: Extract<Command, { type: 'game_wi
   return ok(replace(venue, { ...member, facts: [...member.facts, fact] }), 'posted', member.id);
 }
 
-function openClaim(venue: VenueLoyalty, command: Extract<Command, { type: 'open_claim' }>, now: string): Step {
+function openClaim(
+  venue: VenueLoyalty,
+  command: Extract<Command, { type: 'open_claim' }>,
+  now: string,
+): Step {
   const member = Object.values(venue.members).find((item) => item.phone === command.phone);
   if (!member) return fail('not_a_member');
   if (!venue.programme.enabled) return fail('programme_off');
@@ -171,10 +199,16 @@ function openClaim(venue: VenueLoyalty, command: Extract<Command, { type: 'open_
   return ok(replace(venue, { ...member, facts: [...member.facts, claim] }), 'posted', member.id);
 }
 
-function confirm(venue: VenueLoyalty, command: Extract<Command, { type: 'confirm' }>, now: string): Step {
+function confirm(
+  venue: VenueLoyalty,
+  command: Extract<Command, { type: 'confirm' }>,
+  now: string,
+): Step {
   const cleanCode = command.code.trim().toUpperCase();
   const found = Object.values(venue.members).flatMap((member) =>
-    member.facts.filter((fact) => fact.kind === 'claim' && fact.code === cleanCode).map((fact) => ({ member, fact })),
+    member.facts
+      .filter((fact) => fact.kind === 'claim' && fact.code === cleanCode)
+      .map((fact) => ({ member, fact })),
   );
   if (found.length !== 1) return fail('claim_unknown');
   const hit = found[0];
@@ -192,16 +226,30 @@ function confirm(venue: VenueLoyalty, command: Extract<Command, { type: 'confirm
     title: hit.fact.title,
     units: hit.fact.units,
   };
-  return ok(replace(venue, { ...hit.member, facts: [...hit.member.facts, row] }), 'posted', hit.member.id);
+  return ok(
+    replace(venue, { ...hit.member, facts: [...hit.member.facts, row] }),
+    'posted',
+    hit.member.id,
+  );
 }
 
-function saveProgramme(venue: VenueLoyalty, command: Extract<Command, { type: 'save_programme' }>, _now: string): Step {
-  const parsed = parseProgramme(command.input, command.venueCurrency, command.random, venue.programme);
+function saveProgramme(
+  venue: VenueLoyalty,
+  command: Extract<Command, { type: 'save_programme' }>,
+  _now: string,
+): Step {
+  const parsed = parseProgramme(
+    command.input,
+    command.venueCurrency,
+    command.random,
+    venue.programme,
+  );
   if (!parsed.ok) return fail(parsed.code);
   const earned = Object.values(venue.members).some((member) =>
     member.facts.some((fact) => fact.kind === 'earn' && fact.units > 0),
   );
-  if (earned && parsed.programme.earn.kind !== venue.programme.earn.kind) return fail('earn_mode_locked');
+  if (earned && parsed.programme.earn.kind !== venue.programme.earn.kind)
+    return fail('earn_mode_locked');
   return ok(brand({ ...unbrand(venue), programme: parsed.programme }), 'posted', null);
 }
 

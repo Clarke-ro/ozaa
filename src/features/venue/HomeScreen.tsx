@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { env } from '@/lib/env';
 import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { tokens } from '@/theme/tokens';
@@ -32,7 +33,7 @@ export function HomeScreen({ slug }: { slug: string }) {
   if (venue.isLoading) return <LoadingState />;
   if (venue.isError || !venue.data) return <ErrorState onRetry={() => void venue.refetch()} />;
   const place = venue.data;
-  const pageLink = venuePageLink(slug, tableCode);
+  const pageLink = venuePageLink(slug);
 
   return (
     <SafeScreen includeTop={false}>
@@ -78,25 +79,20 @@ export function HomeScreen({ slug }: { slug: string }) {
   );
 }
 
-function venuePageLink(slug: string, tableCode: string | null): string {
-  const path = tableCode ? `/${slug}/t/${tableCode}` : `/${slug}`;
+/**
+ * The venue's page, never the table's: a /slug/t/12 link would let anyone who gets it
+ * join table 12, order to it and call its waiter from anywhere.
+ */
+function venuePageLink(slug: string): string {
+  const path = `/${slug}`;
   const origin = globalThis.location?.origin;
   if (typeof origin === 'string' && origin.startsWith('http')) return `${origin}${path}`;
-  return `https://ozaa.app${path}`;
+  return `${env.EXPO_PUBLIC_SITE_URL}${path}`;
 }
 
+// Every service id has a guest route of the same name (src/app/[venue]/<id>).
 function serviceHref(slug: string, id: string): `/${string}` {
-  const path =
-    id === 'menu'
-      ? 'menu'
-      : id === 'status'
-        ? 'status'
-        : id === 'review'
-          ? 'review'
-          : id === 'play'
-            ? 'play'
-            : id;
-  return `/${slug}/${path}`;
+  return `/${slug}/${id}`;
 }
 
 const styles = StyleSheet.create({

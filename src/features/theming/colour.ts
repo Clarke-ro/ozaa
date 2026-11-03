@@ -2,7 +2,11 @@ export type Rgb = [number, number, number];
 
 export function hexToRgb(hex: string): Rgb {
   let value = hex.replace('#', '');
-  if (value.length === 3) value = value.split('').map((char) => char + char).join('');
+  if (value.length === 3)
+    value = value
+      .split('')
+      .map((char) => char + char)
+      .join('');
   const rgb: Rgb = [
     parseInt(value.slice(0, 2), 16),
     parseInt(value.slice(2, 4), 16),
@@ -32,7 +36,11 @@ function channelLuminance(channel: number): number {
 
 export function relativeLuminance(hex: string): number {
   const [red, green, blue] = hexToRgb(hex);
-  return 0.2126 * channelLuminance(red) + 0.7152 * channelLuminance(green) + 0.0722 * channelLuminance(blue);
+  return (
+    0.2126 * channelLuminance(red) +
+    0.7152 * channelLuminance(green) +
+    0.0722 * channelLuminance(blue)
+  );
 }
 
 /** WCAG 2.1 contrast ratio. */

@@ -146,9 +146,30 @@ describe('urgent items (the Needs you section)', () => {
       {
         ...empty,
         orders: [
-          { id: 'o1', number: 30, tableCode: '2', status: 'received', createdAt: at(25), readyAt: null },
-          { id: 'o2', number: 31, tableCode: '6', status: 'preparing', createdAt: at(21), readyAt: null },
-          { id: 'o3', number: 32, tableCode: '7', status: 'received', createdAt: at(3), readyAt: null },
+          {
+            id: 'o1',
+            number: 30,
+            tableCode: '2',
+            status: 'received',
+            createdAt: at(25),
+            readyAt: null,
+          },
+          {
+            id: 'o2',
+            number: 31,
+            tableCode: '6',
+            status: 'preparing',
+            createdAt: at(21),
+            readyAt: null,
+          },
+          {
+            id: 'o3',
+            number: 32,
+            tableCode: '7',
+            status: 'received',
+            createdAt: at(3),
+            readyAt: null,
+          },
         ],
       },
       now,
@@ -163,7 +184,13 @@ describe('urgent items (the Needs you section)', () => {
   it('pins tables waiting to pay with their count', () => {
     const notes = buildNotifications({ ...empty, alerts: [{ code: 'bills', count: 2 }] }, now);
     expect(notes).toEqual([
-      expect.objectContaining({ kind: 'bills', at: null, tone: 'alert', href: '/owner/floor', vars: { count: 2 } }),
+      expect.objectContaining({
+        kind: 'bills',
+        at: null,
+        tone: 'alert',
+        href: '/owner/floor',
+        vars: { count: 2 },
+      }),
     ]);
   });
 
@@ -174,7 +201,14 @@ describe('urgent items (the Needs you section)', () => {
         alerts: [{ code: 'payout' }],
         calls: [{ id: 'c1', tableCode: '4', reason: 'water', status: 'open', createdAt: at(1) }],
         transactions: [
-          { id: 't1', orderNumber: 13, amountPesewas: 100, currency: 'GHS', status: 'succeeded', createdAt: at(2) },
+          {
+            id: 't1',
+            orderNumber: 13,
+            amountPesewas: 100,
+            currency: 'GHS',
+            status: 'succeeded',
+            createdAt: at(2),
+          },
         ],
       },
       now,

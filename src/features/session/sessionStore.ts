@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
+import { useMyCalls } from './myCalls';
 import { ownerSessionStorage } from './ownerStorage';
 import { setAccessToken, setGuestToken, setLoyaltyToken as setApiLoyaltyToken } from '@/lib/api';
 import type { StaffRole } from '@/lib/api/types';
@@ -50,7 +51,7 @@ type OwnerSessionState = {
  */
 export const useGuestSession = create<GuestSessionState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       token: null,
       slug: null,
       tableCode: null,
@@ -59,6 +60,8 @@ export const useGuestSession = create<GuestSessionState>()(
       hydrated: false,
       markHydrated: () => set({ hydrated: true }),
       saveGuest: ({ token, slug, tableCode, orderId = null }) => {
+        // A new guest token is a new visit: the last table's waiter calls belong to that visit.
+        if (get().token !== token) useMyCalls.getState().clear();
         setGuestToken(token);
         set({ token, slug, tableCode, orderId });
       },

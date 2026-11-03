@@ -22,7 +22,11 @@ export function SectionLabel({
   return (
     <View style={styles.row}>
       {caps ? (
-        <Text variant="caption" accessibilityRole="header" style={[styles.caps, { color: theme.muted }]}>
+        <Text
+          variant="caption"
+          accessibilityRole="header"
+          style={[styles.caps, { color: theme.muted }]}
+        >
           {title.toUpperCase()}
         </Text>
       ) : (
@@ -42,7 +46,12 @@ export function SectionLabel({
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: tokens.space[2] },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: tokens.space[2],
+  },
   caps: { fontFamily: 'Inter_600', letterSpacing: 0.8 },
   title: { fontSize: 20, lineHeight: 26 },
 });

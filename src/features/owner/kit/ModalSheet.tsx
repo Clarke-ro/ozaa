@@ -10,10 +10,12 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
+import { SHADOW_INK } from '@/theme/palette';
 
 export interface ModalSheetProps {
   visible: boolean;
@@ -42,6 +44,7 @@ export function ModalSheet({
   footer,
 }: ModalSheetProps) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   if (!visible) return null;
@@ -69,7 +72,7 @@ export function ModalSheet({
       </View>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Close"
+        accessibilityLabel={t('common.close')}
         onPress={onClose}
         style={({ pressed }) => [
           styles.close,
@@ -127,7 +130,7 @@ export function ModalSheet({
       <View style={[styles.backdrop, { backgroundColor: theme.scrim }]}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Close overlay"
+          accessibilityLabel={t('common.close')}
           style={StyleSheet.absoluteFill}
           onPress={onClose}
         />
@@ -160,7 +163,7 @@ const styles = StyleSheet.create({
     borderCurve: 'continuous',
     borderWidth: StyleSheet.hairlineWidth,
     overflow: 'hidden',
-    shadowColor: '#000',
+    shadowColor: SHADOW_INK,
     shadowOpacity: 0.15,
     shadowRadius: 20,
     shadowOffset: { width: 0, height: 8 },

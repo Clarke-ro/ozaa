@@ -12,6 +12,8 @@ import {
   Store,
   Wallet,
 } from 'lucide-react-native';
+import { pesewas } from '@/lib/brand';
+import { DEFAULT_CURRENCY, formatMoney, sumPesewas } from '@/lib/money';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
@@ -27,16 +29,16 @@ export function PosShell() {
   const [paid, setPaid] = useState(false);
 
   const menu = [
-    { id: 'jollof', name: 'Jollof Rice & Chicken', price: 65 },
-    { id: 'banku', name: 'Banku & Grilled Tilapia', price: 75 },
-    { id: 'sobolo', name: 'Chilled Sobolo (500ml)', price: 15 },
-    { id: 'kelewele', name: 'Spicy Kelewele', price: 20 },
+    // Sample prices in pesewas, like every amount in the app.
+    { id: 'jollof', name: 'Jollof Rice & Chicken', price: pesewas(6500) },
+    { id: 'banku', name: 'Banku & Grilled Tilapia', price: pesewas(7500) },
+    { id: 'sobolo', name: 'Chilled Sobolo (500ml)', price: pesewas(1500) },
+    { id: 'kelewele', name: 'Spicy Kelewele', price: pesewas(2000) },
   ];
 
-  const total = selectedItems.reduce((acc, id) => {
-    const item = menu.find((m) => m.id === id);
-    return acc + (item?.price ?? 0);
-  }, 0);
+  const total = sumPesewas(
+    selectedItems.flatMap((id) => menu.find((m) => m.id === id)?.price ?? []),
+  );
 
   const toggleItem = (id: string) => {
     setPaid(false);
@@ -72,7 +74,7 @@ export function PosShell() {
                 variant="caption"
                 style={{ color: isSelected ? theme.ink : theme.meta, fontWeight: '700' }}
               >
-                GH₵{dish.price}
+                {formatMoney(dish.price, DEFAULT_CURRENCY)}
               </Text>
             </Pressable>
           );
@@ -84,7 +86,7 @@ export function PosShell() {
         <View style={styles.ticketRow}>
           <Text variant="body-strong">Counter Bill Total:</Text>
           <Text variant="display-m" style={styles.ticketTotalText}>
-            GH₵{total}
+            {formatMoney(total, DEFAULT_CURRENCY)}
           </Text>
         </View>
 

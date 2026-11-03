@@ -38,7 +38,10 @@ export function orderToast(status: OrderStatus): 'working' | 'ready' | null {
 
 const FORWARD: OrderMove[] = ['start', 'ready', 'serve'];
 
-export function nextOrderMove(status: OrderStatus, role: StaffRole): { move: OrderMove; status: OrderStatus } | null {
+export function nextOrderMove(
+  status: OrderStatus,
+  role: StaffRole,
+): { move: OrderMove; status: OrderStatus } | null {
   for (const move of FORWARD) {
     const next = orderTransition(status, move, role);
     if (next) return { move, status: next };
@@ -46,7 +49,11 @@ export function nextOrderMove(status: OrderStatus, role: StaffRole): { move: Ord
   return null;
 }
 
-export function orderTransition(status: OrderStatus, move: OrderMove, role: StaffRole): OrderStatus | null {
+export function orderTransition(
+  status: OrderStatus,
+  move: OrderMove,
+  role: StaffRole,
+): OrderStatus | null {
   if (!ALLOWED[role].includes(move)) return null;
   return NEXT[status][move] ?? null;
 }

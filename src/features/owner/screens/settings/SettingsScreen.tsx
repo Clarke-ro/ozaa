@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
   BellDot,
@@ -15,6 +15,7 @@ import {
   Users,
 } from 'lucide-react-native';
 import { api } from '@/lib/api';
+import { isOwnerQuery } from '@/lib/queryPersist';
 import { languageByCode } from '@/features/venue';
 import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
@@ -35,6 +36,7 @@ export function SettingsScreen() {
   const role = useOwnerSession((state) => state.role) ?? 'owner';
   const venueId = useOwnerSession((state) => state.venueId);
   const clearOwner = useOwnerSession((state) => state.clearOwner);
+  const client = useQueryClient();
   const business = useQuery({
     queryKey: ownerKeys.business(),
     queryFn: () => api.ownerGetBusiness(),
@@ -46,6 +48,9 @@ export function SettingsScreen() {
     clearOwner();
     setSheet(null);
     router.replace('/owner/login');
+    // Drop this account's orders, customers and payouts so the next person to sign in on this
+    // device never sees them, not even for a moment.
+    client.removeQueries({ predicate: (query) => isOwnerQuery(query.queryKey) });
   };
 
   return (

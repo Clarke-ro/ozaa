@@ -2,6 +2,7 @@ import { makeStyles } from '@/ui/makeStyles';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useMutation } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Sparkles } from 'lucide-react-native';
 import { api } from '@/lib/api';
 import { tokens } from '@/theme/tokens';
@@ -10,12 +11,8 @@ import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { DeskCard, IconTile } from '../kit';
 
-const SUGGESTIONS = [
-  'What do diners love most about our dishes?',
-  'Which complaints happened more than once this week?',
-  'How can we improve table turn time & service?',
-  'Summarize feedback sentiment breakdown',
-];
+// Starter questions, by their en.json keys under ownerAi.
+const SUGGESTIONS = ['suggestLoved', 'suggestRepeat', 'suggestSpeed', 'suggestMood'] as const;
 
 interface ChatMessage {
   id: string;
@@ -27,13 +24,14 @@ interface ChatMessage {
 export function AskOzaaAiScreen({ venueId }: { venueId: string }) {
   const styles = useStyles();
   const theme = useTheme();
+  const { t } = useTranslation();
   const [question, setQuestion] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'welcome',
       sender: 'assistant',
-      text: 'Hello! I am your Ozaa Feedback Assistant. Ask me anything about your diner feedback, repeat complaints, popular dishes, or service speed.',
-      suggestions: SUGGESTIONS,
+      text: t('ownerAi.welcome'),
+      suggestions: SUGGESTIONS.map((key) => t(`ownerAi.${key}`)),
     },
   ]);
 
@@ -70,9 +68,9 @@ export function AskOzaaAiScreen({ venueId }: { venueId: string }) {
         <View style={styles.header}>
           <IconTile icon={Sparkles} tone="tint" size={36} />
           <View style={{ flex: 1 }}>
-            <Text variant="title">Ozaa Feedback AI Assistant</Text>
+            <Text variant="title">{t('ownerAi.title')}</Text>
             <Text variant="caption" style={{ color: theme.meta }}>
-              Real-time intelligence synthesized strictly from this venue’s guest notes
+              {t('ownerAi.lead')}
             </Text>
           </View>
         </View>
@@ -134,19 +132,24 @@ export function AskOzaaAiScreen({ venueId }: { venueId: string }) {
           <TextInput
             value={question}
             onChangeText={setQuestion}
-            placeholder="Ask about diner feedback, food or service..."
+            placeholder={t('ownerAi.placeholder')}
             placeholderTextColor={theme.meta}
             onSubmitEditing={() => handleSend()}
             style={[styles.input, { borderColor: theme.line, color: theme.text }]}
           />
           <Button
-            label="Ask"
+            label={t('ownerAi.ask')}
             tone="primary"
             onPress={() => handleSend()}
             loading={askMutation.isPending}
             disabled={!question.trim()}
           />
         </View>
+        {askMutation.isError ? (
+          <Text variant="caption" accessibilityRole="alert" style={{ color: theme.error }}>
+            {t('ownerAi.failed')}
+          </Text>
+        ) : null}
       </DeskCard>
     </View>
   );

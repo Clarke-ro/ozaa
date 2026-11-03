@@ -6,3 +6,4 @@ export { chooseLanguage, LANGUAGES, languageByCode, type LanguageCode } from './
 export { mapsLink } from './VenueIntro';
 export { NOT_BUILT } from './ServiceGrid';
 export { VenueHomeBody } from './VenueHomeBody';
+export { TableEntryScreen } from './TableEntryScreen';

@@ -8,9 +8,15 @@ export default function MockCheckout() {
   const reference = ref ?? '';
   if (!PAYMENTS_ENABLED) return <Redirect href="/" />;
   return (
-    <View style={{ flex: 1, justifyContent: 'center', padding: 24, gap: 12, backgroundColor: '#fff' }}>
+    <View
+      style={{ flex: 1, justifyContent: 'center', padding: 24, gap: 12, backgroundColor: '#fff' }}
+    >
       <Button label="Pay" onPress={() => decideMockCard(reference, 'succeeded')} />
-      <Button label="Cancel" tone="secondary" onPress={() => decideMockCard(reference, 'abandoned')} />
+      <Button
+        label="Cancel"
+        tone="secondary"
+        onPress={() => decideMockCard(reference, 'abandoned')}
+      />
     </View>
   );
 }

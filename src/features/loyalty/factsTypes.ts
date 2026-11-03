@@ -50,14 +50,42 @@ export type Programme = {
 };
 
 export type EarnSource =
-  | { readonly type: 'paid_visit'; readonly orderId: string; readonly amountMinor: Minor; readonly currency: CurrencyCode }
+  | {
+      readonly type: 'paid_visit';
+      readonly orderId: string;
+      readonly amountMinor: Minor;
+      readonly currency: CurrencyCode;
+    }
   | { readonly type: 'game'; readonly runId: string; readonly day: string }
   | { readonly type: 'birthday'; readonly year: string; readonly title: string };
 
 export type Fact =
-  | { readonly kind: 'earn'; readonly id: string; readonly at: string; readonly units: number; readonly source: EarnSource }
-  | { readonly kind: 'claim'; readonly id: string; readonly at: string; readonly code: string; readonly rewardId: string; readonly title: string; readonly units: number; readonly expiresAt: string }
-  | { readonly kind: 'confirm'; readonly id: string; readonly at: string; readonly claimId: string; readonly rewardId: string; readonly title: string; readonly units: number };
+  | {
+      readonly kind: 'earn';
+      readonly id: string;
+      readonly at: string;
+      readonly units: number;
+      readonly source: EarnSource;
+    }
+  | {
+      readonly kind: 'claim';
+      readonly id: string;
+      readonly at: string;
+      readonly code: string;
+      readonly rewardId: string;
+      readonly title: string;
+      readonly units: number;
+      readonly expiresAt: string;
+    }
+  | {
+      readonly kind: 'confirm';
+      readonly id: string;
+      readonly at: string;
+      readonly claimId: string;
+      readonly rewardId: string;
+      readonly title: string;
+      readonly units: number;
+    };
 
 export type Member = {
   readonly id: string;
@@ -65,7 +93,11 @@ export type Member = {
   readonly firstName: string | null;
   readonly birthdayMonthDay: string | null;
   readonly memberSince: string;
-  readonly consent: { readonly marketing: boolean; readonly at: string; readonly textVersion: string };
+  readonly consent: {
+    readonly marketing: boolean;
+    readonly at: string;
+    readonly textVersion: string;
+  };
   readonly facts: readonly Fact[];
 };
 
@@ -77,17 +109,58 @@ export type VenueLoyalty = {
 };
 
 export type Step =
-  | { readonly ok: true; readonly next: VenueLoyalty; readonly effect: 'posted' | 'duplicate' | 'skipped'; readonly memberId: string | null }
+  | {
+      readonly ok: true;
+      readonly next: VenueLoyalty;
+      readonly effect: 'posted' | 'duplicate' | 'skipped';
+      readonly memberId: string | null;
+    }
   | { readonly ok: false; readonly error: { readonly code: LoyaltyErrorCode } };
 
 export type Command =
-  | { readonly type: 'join'; readonly phone: GhanaPhone; readonly firstName?: string; readonly birthdayMonthDay?: string; readonly consent: { readonly loyalty: boolean; readonly marketing: boolean; readonly textVersion: string }; readonly random: () => number }
+  | {
+      readonly type: 'join';
+      readonly phone: GhanaPhone;
+      readonly firstName?: string;
+      readonly birthdayMonthDay?: string;
+      readonly consent: {
+        readonly loyalty: boolean;
+        readonly marketing: boolean;
+        readonly textVersion: string;
+      };
+      readonly random: () => number;
+    }
   | { readonly type: 'leave'; readonly phone: GhanaPhone }
-  | { readonly type: 'paid_visit'; readonly orderId: string; readonly amountMinor: Minor; readonly currency: CurrencyCode; readonly paid: boolean; readonly loyaltyPhone: GhanaPhone | null; readonly momoPhone: GhanaPhone | null }
-  | { readonly type: 'game_win'; readonly phone: GhanaPhone; readonly runId: string; readonly score: number; readonly minScore: number; readonly enabled: boolean }
-  | { readonly type: 'open_claim'; readonly phone: GhanaPhone; readonly rewardId: string; readonly random: () => number }
+  | {
+      readonly type: 'paid_visit';
+      readonly orderId: string;
+      readonly amountMinor: Minor;
+      readonly currency: CurrencyCode;
+      readonly paid: boolean;
+      readonly loyaltyPhone: GhanaPhone | null;
+      readonly momoPhone: GhanaPhone | null;
+    }
+  | {
+      readonly type: 'game_win';
+      readonly phone: GhanaPhone;
+      readonly runId: string;
+      readonly score: number;
+      readonly minScore: number;
+      readonly enabled: boolean;
+    }
+  | {
+      readonly type: 'open_claim';
+      readonly phone: GhanaPhone;
+      readonly rewardId: string;
+      readonly random: () => number;
+    }
   | { readonly type: 'confirm'; readonly code: string }
-  | { readonly type: 'save_programme'; readonly input: unknown; readonly venueCurrency: string; readonly random: () => number };
+  | {
+      readonly type: 'save_programme';
+      readonly input: unknown;
+      readonly venueCurrency: string;
+      readonly random: () => number;
+    };
 
 export type HistoryRow = {
   readonly at: string;
@@ -115,8 +188,18 @@ export type Wallet = {
   };
   readonly cardNumber: string;
   readonly qrPayload: string;
-  readonly catalogue: readonly { readonly id: string; readonly title: string; readonly cost: number; readonly affordable: boolean }[];
-  readonly liveClaim: { readonly code: string; readonly expiresAt: string; readonly title: string; readonly units: number } | null;
+  readonly catalogue: readonly {
+    readonly id: string;
+    readonly title: string;
+    readonly cost: number;
+    readonly affordable: boolean;
+  }[];
+  readonly liveClaim: {
+    readonly code: string;
+    readonly expiresAt: string;
+    readonly title: string;
+    readonly units: number;
+  } | null;
   readonly history: readonly HistoryRow[];
 };
 
@@ -169,7 +252,11 @@ export function replace(venue: VenueLoyalty, member: Member): VenueLoyalty {
   return brand({ ...unbrand(venue), members: { ...venue.members, [member.id]: member } });
 }
 
-export function ok(next: VenueLoyalty, effect: 'posted' | 'duplicate' | 'skipped', memberId: string | null): Step {
+export function ok(
+  next: VenueLoyalty,
+  effect: 'posted' | 'duplicate' | 'skipped',
+  memberId: string | null,
+): Step {
   return { ok: true, next, effect, memberId };
 }
 

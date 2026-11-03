@@ -32,7 +32,10 @@ export type PayUiEvent =
 export const payInitial: PayUiState = { kind: 'choosing' };
 
 export function payTransition(state: PayUiState, event: PayUiEvent): PayUiState {
-  if (event.type === 'reset' && (state.kind === 'failed' || state.kind === 'timed_out' || state.kind === 'paid')) {
+  if (
+    event.type === 'reset' &&
+    (state.kind === 'failed' || state.kind === 'timed_out' || state.kind === 'paid')
+  ) {
     return payInitial;
   }
   switch (state.kind) {
@@ -44,7 +47,11 @@ export function payTransition(state: PayUiState, event: PayUiEvent): PayUiState 
       return event.type === 'confirm' ? { kind: 'starting' } : state;
     case 'starting':
       if (event.type === 'momo_started') {
-        return { kind: 'awaiting_approval', reference: event.reference, approveBy: event.approveBy };
+        return {
+          kind: 'awaiting_approval',
+          reference: event.reference,
+          approveBy: event.approveBy,
+        };
       }
       if (event.type === 'card_started') {
         return { kind: 'opening_checkout', reference: event.reference, url: event.url };
@@ -57,7 +64,9 @@ export function payTransition(state: PayUiState, event: PayUiEvent): PayUiState 
       if (event.type === 'countdown_done') return { kind: 'checking', reference: state.reference };
       return state;
     case 'opening_checkout':
-      return event.type === 'returned_from_checkout' ? { kind: 'checking', reference: state.reference } : state;
+      return event.type === 'returned_from_checkout'
+        ? { kind: 'checking', reference: state.reference }
+        : state;
     case 'checking':
       if (event.type === 'server_succeeded') return { kind: 'paid', reference: event.reference };
       if (event.type === 'server_failed') return { kind: 'failed', message: event.message };

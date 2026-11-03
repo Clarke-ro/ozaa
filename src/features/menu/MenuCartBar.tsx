@@ -2,7 +2,7 @@ import { Pressable, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { formatMoney } from '@/lib/money';
-import { cartCount, cartEstimate, useCart } from '@/features/cart';
+import { cartCount, cartEstimate, linesFor, useCart } from '@/features/cart';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 
@@ -14,7 +14,7 @@ export function MenuCartBar({ slug, currency }: { slug: string; currency: string
   const { t } = useTranslation();
   const theme = useTheme();
   const router = useRouter();
-  const lines = useCart((state) => state.lines);
+  const lines = useCart((state) => linesFor(state, slug));
   const count = cartCount(lines);
   if (count === 0) return null;
   return (

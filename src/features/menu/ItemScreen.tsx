@@ -19,6 +19,8 @@ import { tokens } from '@/theme/tokens';
 import { useTheme } from '@/ui/theme';
 import { addOnTotal, missingChoice, pickOption } from './dishLogic';
 import { DishGallery } from './DishGallery';
+import { guestKeys } from '@/lib/queryKeys';
+import { SHADOW_INK } from '@/theme/palette';
 
 /** One dish: swipeable photos, what is in it, the venue's add-on choices, and Add with the full price. */
 export function ItemScreen({ slug, itemId }: { slug: string; itemId: string }) {
@@ -27,7 +29,7 @@ export function ItemScreen({ slug, itemId }: { slug: string; itemId: string }) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const add = useCart((state) => state.add);
-  const menu = useQuery({ queryKey: ['menu', slug], queryFn: () => api.getMenu(slug) });
+  const menu = useQuery({ queryKey: guestKeys.menu(slug), queryFn: () => api.getMenu(slug) });
   const venue = useVenue(slug);
   const [quantity, setQuantity] = useState(1);
   const [note, setNote] = useState('');
@@ -381,7 +383,7 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
+    shadowColor: SHADOW_INK,
     shadowOpacity: 0.12,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },

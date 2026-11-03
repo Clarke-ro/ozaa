@@ -19,6 +19,7 @@ import {
 } from '../../kit';
 import { checkLink } from '../../desk/linkForm';
 import { LINK_ICONS } from './icons';
+import { ownerKeys } from '../../data/keys';
 
 type Placement = CustomLink['placement'];
 
@@ -48,7 +49,7 @@ export function LinkEditor({
     showErrors && !check.ok && check.field === field ? t(`ownerLinks.err.${field}`) : undefined;
   const done = (message: string) => {
     toast.success(message);
-    void client.invalidateQueries({ queryKey: ['owner-links', venueId] });
+    void client.invalidateQueries({ queryKey: ownerKeys.links(venueId) });
     onClose();
   };
 

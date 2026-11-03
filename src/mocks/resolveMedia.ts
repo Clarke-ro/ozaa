@@ -8,7 +8,3 @@ export function resolveMedia(url: string): number | { uri: string } {
   if (key in sampleMedia) return sampleMedia[key as SampleMediaKey];
   return { uri: url };
 }
-
-export function isSampleMedia(url: string): boolean {
-  return url.includes('mock.ozaa.app');
-}

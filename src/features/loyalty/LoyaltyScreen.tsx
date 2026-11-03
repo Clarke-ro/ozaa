@@ -19,6 +19,7 @@ import { LoyaltyDetails } from './LoyaltyDetails';
 import { LoyaltyIntro } from './LoyaltyIntro';
 import { LoyaltyJoinCard } from './LoyaltyJoinCard';
 import { WalletCard } from './WalletCard';
+import { guestKeys } from '@/lib/queryKeys';
 
 const CONSENT = 'consent-2026-10-v1';
 
@@ -54,12 +55,12 @@ export function LoyaltyScreen({ slug }: { slug: string }) {
   const [joining, setJoining] = useState(false);
 
   const programQuery = useQuery({
-    queryKey: ['loyalty-program', slug],
+    queryKey: guestKeys.loyaltyProgram(slug),
     queryFn: () => api.getVenueLoyaltyProgram(slug),
   });
 
   const cardQuery = useQuery({
-    queryKey: ['loyalty', slug, token],
+    queryKey: guestKeys.loyaltyCard(slug, token),
     queryFn: () => api.getMyLoyaltyCard(slug),
     enabled: Boolean(token),
     retry: false,
@@ -93,7 +94,7 @@ export function LoyaltyScreen({ slug }: { slug: string }) {
         consent: { loyalty: true, marketing, textVersion: CONSENT },
       });
       setJoinedCard(saved);
-      queryClient.setQueryData(['loyalty', slug, tokens.accessToken], saved);
+      queryClient.setQueryData(guestKeys.loyaltyCard(slug, tokens.accessToken), saved);
       return saved;
     },
     onError: (err) => setErrorMessage(err instanceof Error ? err.message : t('errors.generic')),
@@ -108,7 +109,7 @@ export function LoyaltyScreen({ slug }: { slug: string }) {
       );
       setJoinedCard(updated);
       setFlipped(true);
-      queryClient.setQueryData(['loyalty', slug, token], updated);
+      queryClient.setQueryData(guestKeys.loyaltyCard(slug, token), updated);
       return updated;
     },
   });
@@ -120,7 +121,7 @@ export function LoyaltyScreen({ slug }: { slug: string }) {
       setLoyaltyToken(null);
       setSent(false);
       setCode('');
-      void queryClient.removeQueries({ queryKey: ['loyalty', slug] });
+      void queryClient.removeQueries({ queryKey: guestKeys.loyaltyVenue(slug) });
     },
   });
 
@@ -131,7 +132,7 @@ export function LoyaltyScreen({ slug }: { slug: string }) {
     setLoyaltyToken(tokens.accessToken);
     const existing = await api.getMyLoyaltyCard(slug);
     setJoinedCard(existing);
-    queryClient.setQueryData(['loyalty', slug, tokens.accessToken], existing);
+    queryClient.setQueryData(guestKeys.loyaltyCard(slug, tokens.accessToken), existing);
   };
 
   const wireCard = cardQuery.data ?? joinedCard;

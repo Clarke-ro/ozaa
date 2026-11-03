@@ -61,14 +61,14 @@ export function useNotifications(): {
     ...opts,
   });
   const txs = useQuery({
-    queryKey: ['owner-transactions', venueId],
+    queryKey: ownerKeys.transactions(venueId),
     queryFn: () => api.ownerListTransactions(venueId),
     ...opts,
     // Payments off: no transactions to read, so the feed never shows payment lines.
     enabled: on && PAYMENTS_ENABLED,
   });
   const staff = useQuery({
-    queryKey: ['owner-staff', venueId],
+    queryKey: ownerKeys.staff(venueId),
     queryFn: () => api.ownerListStaff(venueId),
     ...opts,
   });

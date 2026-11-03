@@ -19,7 +19,7 @@ export function LanguagePicker({
   const theme = useTheme();
   if (!open) return null;
   return (
-    <View style={styles.backdrop}>
+    <View style={[styles.backdrop, { backgroundColor: theme.scrim }]}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t('common.close')}
@@ -70,7 +70,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     zIndex: 30,
-    backgroundColor: 'rgba(0,0,0,0.35)',
     justifyContent: 'flex-end',
   },
   sheet: { zIndex: 1, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, gap: 10 },

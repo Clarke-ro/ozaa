@@ -10,7 +10,13 @@ import { ErrorState, LoadingState } from '@/ui/states';
 import { useTheme } from '@/ui/theme';
 import { useOffers, useVenue } from '@/features/venue';
 
-export function SimpleScreen({ slug, kind }: { slug: string; kind: 'offers' | 'about' | 'feedback' | 'reserve' | 'events' }) {
+export function SimpleScreen({
+  slug,
+  kind,
+}: {
+  slug: string;
+  kind: 'offers' | 'about' | 'feedback' | 'reserve' | 'events';
+}) {
   const { t } = useTranslation();
   const theme = useTheme();
   const venue = useVenue(slug);
@@ -28,7 +34,9 @@ export function SimpleScreen({ slug, kind }: { slug: string; kind: 'offers' | 'a
           ? (offers.data?.items ?? []).map((offer) => (
               <View key={offer.id} style={[styles.card, { borderColor: theme.line }]}>
                 <Text variant="body-strong">{offer.title.en}</Text>
-                <Text variant="caption" style={{ color: theme.muted }}>{offer.detail?.en}</Text>
+                <Text variant="caption" style={{ color: theme.muted }}>
+                  {offer.detail?.en}
+                </Text>
               </View>
             ))
           : null}
@@ -48,9 +56,26 @@ export function SimpleScreen({ slug, kind }: { slug: string; kind: 'offers' | 'a
         {kind === 'feedback' ? (
           <>
             <Text variant="display-m">{t('simple.feedback')}</Text>
-            <Text variant="body" style={{ color: theme.muted }}>{t('simple.feedbackLead')}</Text>
-            <TextInput accessibilityLabel={t('simple.feedback')} value={message} onChangeText={setMessage} multiline style={[styles.input, { borderColor: theme.line }]} />
-            {sent ? <Text>{t('simple.sent')}</Text> : <Button label={t('simple.send')} onPress={() => { void api.sendFeedback({ message }).then(() => setSent(true)); }} />}
+            <Text variant="body" style={{ color: theme.muted }}>
+              {t('simple.feedbackLead')}
+            </Text>
+            <TextInput
+              accessibilityLabel={t('simple.feedback')}
+              value={message}
+              onChangeText={setMessage}
+              multiline
+              style={[styles.input, { borderColor: theme.line }]}
+            />
+            {sent ? (
+              <Text>{t('simple.sent')}</Text>
+            ) : (
+              <Button
+                label={t('simple.send')}
+                onPress={() => {
+                  void api.sendFeedback({ message }).then(() => setSent(true));
+                }}
+              />
+            )}
           </>
         ) : null}
       </View>

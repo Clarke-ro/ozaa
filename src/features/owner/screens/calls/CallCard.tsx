@@ -10,7 +10,6 @@ import { useTheme } from '@/ui/theme';
 import { ticketAge } from '../../desk/ops';
 import { StatusPill, type PillTone } from '../../kit';
 
-
 const STATUS_TONE: Record<WaiterCall['status'], PillTone> = {
   open: 'error',
   acknowledged: 'waiting',
@@ -99,7 +98,9 @@ export function CallCard({
           <Button
             label={
               // Payments off: resolving a bill request is how a table's bill is closed.
-              !PAYMENTS_ENABLED && call.reason === 'bill' ? t('owner.billSettled') : t('owner.doneCall')
+              !PAYMENTS_ENABLED && call.reason === 'bill'
+                ? t('owner.billSettled')
+                : t('owner.doneCall')
             }
             size="md"
             tone="primary"

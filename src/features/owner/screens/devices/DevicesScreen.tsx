@@ -12,13 +12,14 @@ import { tokens } from '@/theme/tokens';
 import { ConfirmDialog, EmptyCard, SectionLabel, toast } from '../../kit';
 import { DeviceCard } from './DeviceCard';
 import { PairSheet } from './PairSheet';
+import { ownerKeys } from '../../data/keys';
 
 /** Phones and tablets that can scan loyalty cards, each with when it was last used. */
 export function DevicesScreen() {
   const { t } = useTranslation();
   const client = useQueryClient();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
-  const key = ['owner-devices', venueId];
+  const key = ownerKeys.devices(venueId);
   const devices = useQuery({
     queryKey: key,
     queryFn: () => api.ownerListScannerDevices(venueId),
