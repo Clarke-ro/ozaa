@@ -1551,5 +1551,17 @@
     "consented": "Agreed to offers by WhatsApp and SMS",
     "optedOut": "Opted out of offers",
     "stampAtScan": "Stamp or redeem at Scan"
+  },
+  "ownerAi": {
+    "title": "Ozaa feedback assistant",
+    "lead": "Answers come only from this venue's guest notes.",
+    "welcome": "Ask me about your guest feedback: repeat complaints, popular dishes or service speed.",
+    "suggestLoved": "What do diners love most about our dishes?",
+    "suggestRepeat": "Which complaints came up more than once this week?",
+    "suggestSpeed": "How can we turn tables and serve faster?",
+    "suggestMood": "Sum up how guests feel overall",
+    "placeholder": "Ask about guest feedback, food or service",
+    "ask": "Ask",
+    "failed": "That didn't go through. Check the connection and try again."
   }
 }
