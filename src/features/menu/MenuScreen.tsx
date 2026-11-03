@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
 import { pesewas } from '@/lib/brand';
+import { isOnGuestMenu, quantityLimits, unitPrice } from '@/lib/dishRules';
 import { hapticImpactLight } from '@/lib/haptics';
 import { DEFAULT_CURRENCY } from '@/lib/money';
 import { useCart } from '@/features/cart';
@@ -55,7 +56,9 @@ export function MenuScreen({ slug }: { slug: string }) {
     .filter((c) => !c.hidden)
     .sort((a, b) => (a.kind === b.kind ? a.position - b.position : a.kind === 'food' ? -1 : 1));
   const active = section === 'all' || sections.some((c) => c.id === section) ? section : 'all';
-  const visible = menu.data.items.filter((i) => sections.some((c) => c.id === i.categoryId));
+  const visible = menu.data.items.filter(
+    (i) => isOnGuestMenu(i) && sections.some((c) => c.id === i.categoryId),
+  );
   const searching = query.trim().length > 0;
   // Searching looks across every section; otherwise show the picked one (or all of them).
   const shown = searching
@@ -74,8 +77,9 @@ export function MenuScreen({ slug }: { slug: string }) {
     add(slug, {
       menuItemId: item.id,
       name: item.name.en,
-      quantity: 1,
-      unitPricePesewas: pesewas(item.pricePesewas),
+      // Some dishes are sold in twos or more; start at the owner's minimum.
+      quantity: quantityLimits(item).min,
+      unitPricePesewas: pesewas(unitPrice(item)),
       modifierPesewas: pesewas(0),
       modifierOptionIds: [],
     });

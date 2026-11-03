@@ -21,6 +21,7 @@ const MESSAGES: Record<string, string> = {
   payment_declined: 'errors.paymentDeclined',
   rate_limited: 'errors.rateLimited',
   item_sold_out: 'errors.soldOut',
+  quantity_out_of_range: 'errors.quantityRange',
   not_modified: 'errors.notModified',
   unauthorized: 'errors.unauthorized',
   bad_code: 'errors.badCode',
