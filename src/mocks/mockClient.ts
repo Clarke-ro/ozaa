@@ -25,6 +25,7 @@ import {
   writtenFor,
 } from './ownerDesk';
 import { decideMockCard, readMockCard } from './cardBox';
+import { checkLine, takeStock, unitPrice } from '@/lib/dishRules';
 import { rememberOpenOrder } from './openOrder';
 import {
   createWorld,
@@ -368,7 +369,15 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
         const lines = body.lines.map((line) => {
           const item = menu.items.find((candidate) => candidate.id === line.menuItemId);
           if (!item) throw new ApiError(422, 'item_sold_out', 'That dish is not on the menu');
-          if (!item.available) throw new ApiError(422, 'item_sold_out', 'Sold out');
+          const check = checkLine(item, line.quantity);
+          if (check === 'sold_out') throw new ApiError(422, 'item_sold_out', 'Sold out');
+          if (check === 'out_of_range') {
+            throw new ApiError(
+              422,
+              'quantity_out_of_range',
+              'Change how many you want of this dish',
+            );
+          }
           const chosen = line.modifierOptionIds ?? [];
           const modifiers = item.modifierGroups.flatMap((group) =>
             group.options
@@ -376,19 +385,37 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
               .map((option) => ({ name: option.name.en, pricePesewas: option.pricePesewas })),
           );
           const extra = modifiers.reduce((sum, option) => sum + option.pricePesewas, 0);
-          const total = (item.pricePesewas + extra) * line.quantity;
+          // The sale price, when there is one, is what the guest pays (dishRules.unitPrice).
+          const unit = unitPrice(item);
+          const total = (unit + extra) * line.quantity;
           return {
             id: nextId(world, 'oln'),
             menuItemId: item.id,
             name: item.name.en,
             quantity: line.quantity,
             modifiers,
-            unitPricePesewas: item.pricePesewas,
+            unitPricePesewas: unit,
             totalPesewas: total,
             note: line.note,
             paid: false,
           };
         });
+        // Stock: two lines of the same dish count together, and nothing is taken until every line is fine.
+        const wanted = new Map<string, number>();
+        for (const line of body.lines) {
+          wanted.set(line.menuItemId, (wanted.get(line.menuItemId) ?? 0) + line.quantity);
+        }
+        for (const [id, quantity] of wanted) {
+          const item = menu.items.find((candidate) => candidate.id === id);
+          if (item?.stockCount != null && quantity > item.stockCount) {
+            throw new ApiError(422, 'item_sold_out', 'Not enough left');
+          }
+        }
+        for (const [id, quantity] of wanted) {
+          const index = menu.items.findIndex((candidate) => candidate.id === id);
+          const item = menu.items[index];
+          if (item) menu.items[index] = { ...item, ...takeStock(item, quantity) };
+        }
         const subtotal = lines.reduce((sum, line) => sum + line.totalPesewas, 0);
         const order: Order = {
           id: nextId(world, 'ord'),
@@ -806,6 +833,13 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
         badges: body.badges ?? [],
         modifierGroups: body.modifierGroups ?? [],
         prepMinutes: body.prepMinutes,
+        hidden: body.hidden ?? false,
+        salePricePesewas: body.salePricePesewas ?? null,
+        stockCount: body.stockCount ?? null,
+        minQuantity: body.minQuantity,
+        maxQuantity: body.maxQuantity,
+        // Like the server: a dish added with nothing in stock starts sold out.
+        ...(body.stockCount === 0 ? { available: false } : {}),
       };
       menu.items.push(item);
       return item;
@@ -827,6 +861,8 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
             : (mockUploadedImage(body.photoMediaId) ?? current.photo);
       const { photoMediaId: _photoMediaId, ...fields } = body;
       const next = { ...current, ...fields, photo };
+      // Setting the stock to 0 sells the dish out, as the server does.
+      if (body.stockCount === 0) next.available = false;
       menu.items[index] = next;
       return next;
     },
