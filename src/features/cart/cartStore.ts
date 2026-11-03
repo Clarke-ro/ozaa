@@ -35,7 +35,9 @@ export const useCart = create<CartState>((set) => ({
       const key = lineKey(line);
       const existing = lines.find((item) => item.key === key);
       const next = existing
-        ? lines.map((item) => (item.key === key ? { ...item, quantity: item.quantity + line.quantity } : item))
+        ? lines.map((item) =>
+            item.key === key ? { ...item, quantity: item.quantity + line.quantity } : item,
+          )
         : [...lines, { ...line, key }];
       return { slug, lines: next };
     }),
@@ -49,6 +51,19 @@ export const useCart = create<CartState>((set) => ({
   clear: () => set({ lines: [] }),
 }));
 
+const NO_LINES: readonly CartLine[] = [];
+
+/**
+ * The basket for this venue. The store holds one venue's basket at a time, so on any other
+ * venue's page it reads as empty and its dishes are never sent there.
+ */
+export function linesFor(
+  state: Pick<CartState, 'slug' | 'lines'>,
+  slug: string,
+): readonly CartLine[] {
+  return state.slug === slug ? state.lines : NO_LINES;
+}
+
 export function cartCount(lines: readonly CartLine[]): number {
   return lines.reduce((sum, line) => sum + line.quantity, 0);
 }
@@ -56,6 +71,9 @@ export function cartCount(lines: readonly CartLine[]): number {
 /** What the guest sees before sending. The kitchen’s total replaces it. */
 export function cartEstimate(lines: readonly CartLine[]): Pesewas {
   return pesewas(
-    lines.reduce((sum, line) => sum + (line.unitPricePesewas + line.modifierPesewas) * line.quantity, 0),
+    lines.reduce(
+      (sum, line) => sum + (line.unitPricePesewas + line.modifierPesewas) * line.quantity,
+      0,
+    ),
   );
 }

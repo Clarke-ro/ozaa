@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import * as Crypto from 'expo-crypto';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
-import { cartEstimate, useCart } from '@/features/cart';
+import { cartEstimate, linesFor, useCart } from '@/features/cart';
 import { useGuestSession } from '@/features/session';
 import { DEFAULT_CURRENCY, formatMoney } from '@/lib/money';
 import { useVenue } from '@/features/venue';
@@ -18,7 +18,7 @@ export function OrderSheet({ slug }: { slug: string }) {
   const { t } = useTranslation();
   const theme = useTheme();
   const router = useRouter();
-  const lines = useCart((state) => state.lines);
+  const lines = useCart((state) => linesFor(state, slug));
   const venue = useVenue(slug);
   const currency = venue.data?.currency ?? DEFAULT_CURRENCY;
   const clear = useCart((state) => state.clear);

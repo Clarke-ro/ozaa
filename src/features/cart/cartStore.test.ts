@@ -1,4 +1,4 @@
-import { cartCount, cartEstimate, useCart } from './cartStore';
+import { cartCount, cartEstimate, linesFor, useCart } from './cartStore';
 import { pesewas } from '@/lib/brand';
 
 const jollof = {
@@ -22,7 +22,18 @@ test('adding the same dish twice shows 2 and the summed estimate', () => {
 
 test('a different venue starts a new basket', () => {
   useCart.getState().add('mamas-kitchen', jollof);
-  useCart.getState().add('bean-there', { ...jollof, name: 'Flat white', unitPricePesewas: pesewas(3800) });
+  useCart
+    .getState()
+    .add('bean-there', { ...jollof, name: 'Flat white', unitPricePesewas: pesewas(3800) });
   expect(useCart.getState().slug).toBe('bean-there');
   expect(cartCount(useCart.getState().lines)).toBe(1);
+});
+
+test("another venue's page shows an empty basket, not the last venue's dishes", () => {
+  useCart.getState().add('mamas-kitchen', jollof);
+  const state = useCart.getState();
+  expect(linesFor(state, 'mamas-kitchen')).toHaveLength(1);
+  expect(linesFor(state, 'bean-there')).toHaveLength(0);
+  // The same empty list each time, so a zustand selector does not re-render forever.
+  expect(linesFor(state, 'bean-there')).toBe(linesFor(state, 'auntie-akos'));
 });
