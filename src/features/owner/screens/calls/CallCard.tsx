@@ -2,6 +2,7 @@ import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { REASON_ICON } from '@/features/waiter';
 import type { WaiterCall } from '@/lib/api/types';
+import { PAYMENTS_ENABLED } from '@/lib/features';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
@@ -96,7 +97,10 @@ export function CallCard({
             />
           ) : null}
           <Button
-            label={t('owner.doneCall')}
+            label={
+              // Payments off: resolving a bill request is how a table's bill is closed.
+              !PAYMENTS_ENABLED && call.reason === 'bill' ? t('owner.billSettled') : t('owner.doneCall')
+            }
             size="md"
             tone="primary"
             style={styles.flex}

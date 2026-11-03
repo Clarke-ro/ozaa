@@ -191,6 +191,7 @@
     "yourOrder": "Your order",
     "total": "Total",
     "pay": "Pay & split bill",
+    "payAtCounter": "Pay at the counter, or ask your waiter for the bill.",
     "call": "Call waiter",
     "noOrderTitle": "Order status",
     "noOrder": "No order yet",
@@ -424,7 +425,7 @@
     "free": "Free",
     "seated": "Seated",
     "ordered": "Ordered",
-    "waitingPay": "Waiting to pay",
+    "waitingPay": "Waiting for the bill",
     "needsWaiter": "Needs a waiter",
     "noBill": "No open bill on this table.",
     "cash": "Mark paid in cash",
@@ -433,6 +434,7 @@
     "markServed": "Mark served",
     "onTheWay": "On my way",
     "doneCall": "Done",
+    "billSettled": "Bill settled",
     "noCalls": "No one is calling.",
     "callOpen": "Waiting for someone to pick this up.",
     "noOrders": "No tickets in the kitchen.",
@@ -604,7 +606,7 @@
       "loyalty": "Stamp card, members and rewards",
       "feedback": "Private notes from guests",
       "reviews": "Ratings and replies",
-      "insights": "Sales, busy hours and top dishes",
+      "insights": "Top dishes, busy hours and guest mood",
       "payments": "Payments, refunds and payouts",
       "staff": "Who can sign in and what they see",
       "devices": "Phones paired for scanning",
@@ -720,6 +722,7 @@
   "ownerTables": {
     "lead": "Each table gets its own QR code. Guests scan it to see the menu, order and pay.",
     "cta": "Scan to see the menu, call a waiter and pay",
+    "ctaNoPay": "Scan to see the menu, order and call a waiter",
     "format": "Card style",
     "tent": "Tent card",
     "stand": "Stand",
@@ -758,7 +761,7 @@
     "errTooMany": "That is more than {{max}} tables. Add them in smaller groups.",
     "errAllExist": "Those tables already exist.",
     "emptyTitle": "No tables yet",
-    "emptyBody": "Add your tables to get a QR code for each one. Guests scan it to order and pay."
+    "emptyBody": "Add your tables to get a QR code for each one. Guests scan it to see the menu and order."
   },
   "ownerFeedback": {
     "lead": "Private notes guests leave from the table. Only you and your managers see them.",
@@ -1043,7 +1046,7 @@
     "legend": {
       "free": "Free",
       "occupied": "Occupied",
-      "paying": "Paying",
+      "paying": "Bill",
       "calling": "Calling"
     }
   },
@@ -1191,7 +1194,7 @@
     "table": "Table {{code}}",
     "takeaway": "Takeaway",
     "takeawayCode": "TA",
-    "showDetails": "Shows the dishes, payment and next step",
+    "showDetails": "Shows the dishes and the next step",
     "hideDetails": "Hides the ticket details",
     "paid": {
       "unpaid": "Not paid",
@@ -1468,7 +1471,7 @@
     "earlier": "Earlier",
     "now": "Right now",
     "empty": "All quiet",
-    "emptyBody": "New orders, waiter calls, guest notes and payments show here.",
+    "emptyBody": "New orders, waiter calls, and guest notes show here.",
     "bellA11y_one": "Notifications, 1 new",
     "bellA11y_other": "Notifications, {{count}} new",
     "kind": {
@@ -1482,8 +1485,8 @@
       "feedback": "A guest left a {{score}}-star note",
       "staff_joined": "{{name}} joined the team",
       "staff_invited": "{{name}} hasn't accepted the invite yet",
-      "bills_one": "1 table is waiting to pay",
-      "bills_other": "{{count}} tables are waiting to pay",
+      "bills_one": "1 table is waiting for the bill",
+      "bills_other": "{{count}} tables are waiting for the bill",
       "order_late": "Order #{{number}} for table {{table}} has waited over 20 minutes"
     },
     "allClear": "Nothing needs you right now."

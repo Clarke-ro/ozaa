@@ -1,4 +1,5 @@
 import type { StaffRole } from '@/features/orders';
+import { PAYMENTS_ENABLED } from '@/lib/features';
 
 export type OwnerNavId =
   | 'dashboard'
@@ -35,6 +36,8 @@ export type OwnerNavItem = {
   href: string;
   roles: readonly StaffRole[];
   group: NavGroup;
+  /** Only shown when PAYMENTS_ENABLED is true. */
+  payments?: true;
 };
 
 const FRONT: readonly StaffRole[] = ['owner', 'manager', 'waiter'];
@@ -79,14 +82,14 @@ export const OWNER_NAV: readonly OwnerNavItem[] = [
   { id: 'feedback', href: '/owner/feedback', roles: DESK, group: 'growth' },
   { id: 'reviews', href: '/owner/reviews', roles: DESK, group: 'growth' },
   { id: 'insights', href: '/owner/insights', roles: DESK, group: 'growth' },
-  { id: 'payments', href: '/owner/payments', roles: ['owner'], group: 'business' },
+  { id: 'payments', href: '/owner/payments', roles: ['owner'], group: 'business', payments: true },
   { id: 'staff', href: '/owner/staff', roles: ['owner'], group: 'business' },
   { id: 'devices', href: '/owner/devices', roles: DESK, group: 'business' },
   { id: 'business', href: '/owner/business', roles: ['owner'], group: 'business' },
   { id: 'setup', href: '/owner/setup', roles: ['owner'], group: 'business' },
   { id: 'settings', href: '/owner/settings', roles: DESK, group: 'business' },
   { id: 'stock', href: '/owner/stock', roles: DESK, group: 'previews' },
-  { id: 'pos', href: '/owner/pos', roles: FRONT, group: 'previews' },
+  { id: 'pos', href: '/owner/pos', roles: FRONT, group: 'previews', payments: true },
   { id: 'ai', href: '/owner/ai', roles: DESK, group: 'previews' },
   { id: 'marketing', href: '/owner/marketing', roles: DESK, group: 'previews' },
 ];
@@ -110,8 +113,8 @@ const TABS: Record<StaffRole, readonly OwnerNavId[]> = {
   staff_scanner: ['scan'],
 };
 
-export function navFor(role: StaffRole): OwnerNavItem[] {
-  return OWNER_NAV.filter((item) => item.roles.includes(role));
+export function navFor(role: StaffRole, payments: boolean = PAYMENTS_ENABLED): OwnerNavItem[] {
+  return OWNER_NAV.filter((item) => item.roles.includes(role) && (payments || !item.payments));
 }
 
 export function tabsFor(role: StaffRole): OwnerNavItem[] {

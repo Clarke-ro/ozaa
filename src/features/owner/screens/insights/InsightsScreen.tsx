@@ -7,6 +7,7 @@ import { Frown, Gift, Meh, QrCode, Smile, UtensilsCrossed } from 'lucide-react-n
 import { api } from '@/lib/api';
 import type { InsightsReport } from '@/lib/api/types';
 import { pesewas } from '@/lib/brand';
+import { PAYMENTS_ENABLED } from '@/lib/features';
 import { formatMoney } from '@/lib/money';
 import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
@@ -73,18 +74,20 @@ export function InsightsScreen() {
       >
         {r ? (
           <View style={styles.stack}>
-            <ChartCard
-              title={t('ownerInsights.sales')}
-              figure={money(r.salesPesewas)}
-              rows={r.series.map((p) => ({ label: p.label, value: money(p.pesewas) }))}
-              empty={r.series.length ? undefined : t('ownerDash.noTrend')}
-            >
-              <BarChart
-                bars={r.series.map((p) => ({ label: p.label, value: p.pesewas }))}
-                format={money}
-                summary={t('ownerInsights.sales')}
-              />
-            </ChartCard>
+            {PAYMENTS_ENABLED ? (
+              <ChartCard
+                title={t('ownerInsights.sales')}
+                figure={money(r.salesPesewas)}
+                rows={r.series.map((p) => ({ label: p.label, value: money(p.pesewas) }))}
+                empty={r.series.length ? undefined : t('ownerDash.noTrend')}
+              >
+                <BarChart
+                  bars={r.series.map((p) => ({ label: p.label, value: p.pesewas }))}
+                  format={money}
+                  summary={t('ownerInsights.sales')}
+                />
+              </ChartCard>
+            ) : null}
 
             {tiles.length ? (
               <View style={styles.grid}>
@@ -106,20 +109,29 @@ export function InsightsScreen() {
                   title={t('ownerInsights.topDishes')}
                   rows={r.topItems.map((item) => ({
                     label: item.name,
-                    value: money(item.pesewas),
+                    value: PAYMENTS_ENABLED
+                      ? money(item.pesewas)
+                      : t('ownerInsights.sold', { count: item.count }),
                   }))}
                   empty={r.topItems.length ? undefined : t('ownerDash.noTrend')}
                 >
+                  {/* Payments off: rank by how many sold, which comes from orders, not money taken. */}
                   <RankBars
                     items={[...r.topItems]
-                      .sort((a, b) => b.pesewas - a.pesewas)
+                      .sort((a, b) =>
+                        PAYMENTS_ENABLED ? b.pesewas - a.pesewas : b.count - a.count,
+                      )
                       .slice(0, 5)
-                      .map((item) => ({
-                        label: item.name,
-                        value: item.pesewas,
-                        detail: t('ownerInsights.sold', { count: item.count }),
-                      }))}
-                    format={(v) => shortMoney(v, r.currency)}
+                      .map((item) =>
+                        PAYMENTS_ENABLED
+                          ? {
+                              label: item.name,
+                              value: item.pesewas,
+                              detail: t('ownerInsights.sold', { count: item.count }),
+                            }
+                          : { label: item.name, value: item.count },
+                      )}
+                    format={(v) => (PAYMENTS_ENABLED ? shortMoney(v, r.currency) : n(v))}
                   />
                 </ChartCard>
               </View>

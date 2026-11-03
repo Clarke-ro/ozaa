@@ -7,6 +7,7 @@ import * as Crypto from 'expo-crypto';
 import { Bell } from 'lucide-react-native';
 import { api } from '@/lib/api';
 import { pesewas } from '@/lib/brand';
+import { PAYMENTS_ENABLED } from '@/lib/features';
 import { formatMoney } from '@/lib/money';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
@@ -113,7 +114,7 @@ export function FloorScreen() {
     },
     {
       id: 'waiting_to_pay' as const,
-      label: `Paying (${items.filter((i) => i.status === 'waiting_to_pay').length})`,
+      label: `${t('ownerFloor.legend.paying')} (${items.filter((i) => i.status === 'waiting_to_pay').length})`,
     },
     {
       id: 'active' as const,
@@ -177,7 +178,7 @@ export function FloorScreen() {
                     style={[styles.totalPrice, { fontVariant: ['tabular-nums'] }]}
                   >
                     {formatMoney(
-                      pesewas(Math.max(0, bill ? bill.totalPesewas - bill.paidPesewas : 0)),
+                      pesewas(Math.max(0, bill ? bill.totalPesewas - (PAYMENTS_ENABLED ? bill.paidPesewas : 0) : 0)),
                       currency,
                     )}
                   </Text>
@@ -238,7 +239,12 @@ export function FloorScreen() {
                       style={{ flex: 1 }}
                     />
                     <Button
-                      label={t('owner.doneCall')}
+                      label={
+                        // Payments off: resolving a bill request is how a table's bill is closed.
+                        !PAYMENTS_ENABLED && table.waiterReason === 'bill'
+                          ? t('owner.billSettled')
+                          : t('owner.doneCall')
+                      }
                       tone="secondary"
                       onPress={() => call.mutate({ id: table.waiterCallId!, status: 'resolved' })}
                       loading={call.isPending}
@@ -246,7 +252,7 @@ export function FloorScreen() {
                   </View>
                 ) : null}
 
-                {bill && table.orderId && table.status === 'waiting_to_pay' ? (
+                {PAYMENTS_ENABLED && bill && table.orderId && table.status === 'waiting_to_pay' ? (
                   <Button
                     label={t('owner.cash')}
                     tone="primary"
