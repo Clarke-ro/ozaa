@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useMutation } from '@tanstack/react-query';
 import * as Crypto from 'expo-crypto';
 import { useTranslation } from 'react-i18next';
+import { CircleCheck, Star } from 'lucide-react-native';
 import { api } from '@/lib/api';
 import { useVenue } from '@/features/venue';
 import { Button } from '@/ui/Button';
@@ -12,26 +14,77 @@ import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 
 const HIGHLIGHTS = ['food', 'service', 'speed', 'value', 'vibe'] as const;
+type Highlight = (typeof HIGHLIGHTS)[number];
 
+/** A written review: stars (required), what stood out, and an optional note. Every guest is thanked the same way. */
 export function ReviewScreen({ slug }: { slug: string }) {
   const { t } = useTranslation();
   const theme = useTheme();
   const router = useRouter();
   const venue = useVenue(slug);
-  const [stars, setStars] = useState(4);
-  const [picked, setPicked] = useState<string[]>(['food']);
+  // Nothing is chosen for the guest: a pre-filled rating would nudge the score.
+  const [stars, setStars] = useState(0);
+  const [picked, setPicked] = useState<Highlight[]>([]);
   const [text, setText] = useState('');
-  const [done, setDone] = useState<{ google: string | null } | null>(null);
+  // One key per review, so a double tap or a retry after a timeout never posts it twice.
+  const [key] = useState(() => Crypto.randomUUID());
+
+  const post = useMutation({
+    mutationFn: () =>
+      api.createReview(
+        { stars, highlights: picked, text: text.trim() || undefined },
+        { idempotencyKey: key },
+      ),
+  });
+
+  if (post.isSuccess) {
+    return (
+      <SafeScreen>
+        <PageHeader title={t('review.title')} subtitle={venue.data?.name} />
+        <View style={styles.done}>
+          <CircleCheck size={48} color={theme.success} />
+          <Text variant="title" style={styles.center}>
+            {t('review.thanks')}
+          </Text>
+          <Text variant="body" style={[styles.center, { color: theme.muted }]}>
+            {t('review.thanksBody', { venue: venue.data?.name ?? '' })}
+          </Text>
+          <Button
+            label={t('review.backHome')}
+            tone="secondary"
+            onPress={() => router.replace(`/${slug}`)}
+          />
+        </View>
+      </SafeScreen>
+    );
+  }
 
   return (
     <SafeScreen>
       <PageHeader title={t('review.title')} subtitle={venue.data?.name} />
-      <View style={{ padding: 20, gap: 12 }}>
-        <Text variant="display-m" style={{ textAlign: 'center' }}>{t('review.how')}</Text>
-        <View style={styles.stars}>
+      <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+        <Text variant="title" style={styles.center}>
+          {t('review.how')}
+        </Text>
+        <View
+          style={styles.stars}
+          accessibilityRole="radiogroup"
+          accessibilityLabel={t('review.how')}
+        >
           {[1, 2, 3, 4, 5].map((value) => (
-            <Pressable key={value} accessibilityRole="button" accessibilityLabel={`${value}`} onPress={() => setStars(value)}>
-              <Text variant="display-m" style={{ color: value <= stars ? theme.fill : theme.line }}>★</Text>
+            <Pressable
+              key={value}
+              accessibilityRole="radio"
+              accessibilityLabel={t('review.starsA11y', { count: value })}
+              accessibilityState={{ checked: value === stars }}
+              onPress={() => setStars(value)}
+              style={styles.star}
+            >
+              <Star
+                size={36}
+                color={value <= stars ? theme.fill : theme.line}
+                fill={value <= stars ? theme.fill : 'transparent'}
+              />
             </Pressable>
           ))}
         </View>
@@ -40,38 +93,77 @@ export function ReviewScreen({ slug }: { slug: string }) {
           {HIGHLIGHTS.map((item) => {
             const on = picked.includes(item);
             return (
-              <Pressable key={item} accessibilityRole="button" onPress={() => setPicked((current) => (on ? current.filter((value) => value !== item) : [...current, item]))} style={[styles.chip, { backgroundColor: on ? theme.fill : theme.white, borderColor: theme.line }]}>
-                <Text variant="caption" style={{ color: on ? theme.onFill : theme.text }}>{t(`review.highlights.${item}`)}</Text>
+              <Pressable
+                key={item}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: on }}
+                onPress={() =>
+                  setPicked((current) =>
+                    on ? current.filter((v) => v !== item) : [...current, item],
+                  )
+                }
+                style={[
+                  styles.chip,
+                  {
+                    backgroundColor: on ? theme.tint : theme.white,
+                    borderColor: on ? theme.ink : theme.line,
+                  },
+                ]}
+              >
+                <Text variant="body" style={{ color: on ? theme.badgeInk : theme.text }}>
+                  {t(`review.highlights.${item}`)}
+                </Text>
               </Pressable>
             );
           })}
         </View>
-        <TextInput accessibilityLabel={t('review.more')} value={text} onChangeText={setText} multiline placeholder={t('review.more')} style={[styles.input, { borderColor: theme.line }]} />
-        <Pressable accessibilityRole="button" onPress={() => router.push(`/${slug}/review/record`)}>
-          <Text variant="body-strong">{t('review.video')}</Text>
-          <Text variant="caption" style={{ color: theme.muted }}>{t('review.videoBody')}</Text>
-        </Pressable>
-        {done?.google ? <Text>{t('review.google')}</Text> : null}
-        {done && !done.google ? <Text>{t('review.private')}</Text> : null}
+        <TextInput
+          accessibilityLabel={t('review.more')}
+          value={text}
+          onChangeText={setText}
+          multiline
+          maxLength={500}
+          placeholder={t('review.more')}
+          placeholderTextColor={theme.meta}
+          style={[styles.input, { borderColor: theme.line, color: theme.text }]}
+        />
+        {post.isError ? (
+          <Text variant="body" accessibilityLiveRegion="polite" style={{ color: theme.error }}>
+            {t('review.failed')}
+          </Text>
+        ) : null}
         <Button
           label={t('review.post')}
-          onPress={() => {
-            void api
-              .createReview(
-                { stars, highlights: picked as ('food' | 'service' | 'speed' | 'value' | 'vibe')[], text },
-                { idempotencyKey: Crypto.randomUUID() },
-              )
-              .then((result) => setDone({ google: result.googleReviewUrl }));
-          }}
+          disabled={stars === 0}
+          loading={post.isPending}
+          onPress={() => post.mutate()}
         />
-      </View>
+      </ScrollView>
     </SafeScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  stars: { flexDirection: 'row', justifyContent: 'center', gap: 8 },
+  body: { padding: 20, gap: 16 },
+  center: { textAlign: 'center' },
+  stars: { flexDirection: 'row', justifyContent: 'center', gap: 4 },
+  star: { width: 52, height: 52, alignItems: 'center', justifyContent: 'center' },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 12, height: 36, justifyContent: 'center' },
-  input: { borderWidth: 1, borderRadius: 12, minHeight: 88, padding: 12 },
+  chip: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    minHeight: 40,
+    justifyContent: 'center',
+  },
+  input: {
+    borderWidth: 1,
+    borderRadius: 12,
+    minHeight: 96,
+    padding: 12,
+    fontSize: 16,
+    fontFamily: 'Inter_400',
+    textAlignVertical: 'top',
+  },
+  done: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 32 },
 });

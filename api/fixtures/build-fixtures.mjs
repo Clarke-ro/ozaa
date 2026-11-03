@@ -23,6 +23,17 @@ const { deriveTheme } = W.OzaaTheme;
 // Mock media lives under this fake host. The mock layer maps it to bundled files.
 const MEDIA = 'https://mock.ozaa.app/media/';
 const img = (p, w = 800, h = 600, alt = '') => ({ url: MEDIA + p, width: w, height: h, alt });
+// Two close-up crops of each dish photo (img/<dish>-2.jpg, -3.jpg) stand in for extra photos.
+const closeUps = (p, alt) =>
+  [2, 3].map(n => img(p.replace(/\.jpg$/, `-${n}.jpg`), 800, 800, `${alt}, close up`));
+// Sample diet tags by dish name, so the guest diet filter has something to offer.
+const DIET = {
+  'Jollof & chicken': ['halal'],
+  'Waakye special': ['halal'],
+  'Banku & tilapia': ['gluten_free', 'spicy'],
+  'Kɛlɛwɛlɛ': ['vegetarian', 'vegan', 'gluten_free', 'spicy'],
+  'Sobolo': ['vegetarian', 'vegan', 'gluten_free'],
+};
 const slugs = { mamas: 'mamas-kitchen', bean: 'bean-there', akos: 'auntie-akos' };
 const hoursUntil = { mamas: '22:00', bean: '20:00', akos: '21:00' };
 const LANG = { EN: 'en', TWI: 'tw' };
@@ -32,7 +43,7 @@ const daysAgo = s => {
   return new Date(now.getTime() - n * 864e5).toISOString();
 };
 
-const out = { venues: {}, menus: {}, stories: {}, leaderboards: {}, loyaltyCards: {}, wifi: {}, offers: {}, orders: {} };
+const out = { venues: {}, menus: {}, leaderboards: {}, loyaltyCards: {}, wifi: {}, offers: {}, orders: {} };
 
 for (const [key, v] of Object.entries(W.VENUES)) {
   const slug = slugs[key];
@@ -67,19 +78,11 @@ for (const [key, v] of Object.entries(W.VENUES)) {
   const items = v.items.map((it, i) => ({
     id: `itm_${key}${i}`, categoryId: categories[0].id,
     name: { en: it.n }, description: { en: it.d }, pricePesewas: Math.round(it.p * 100),
-    photo: img(it.img, 800, 800, it.n), available: true, dietary: [], badges: it.pop ? ['popular'] : [],
+    photo: img(it.img, 800, 800, it.n), gallery: closeUps(it.img, it.n), available: true, dietary: DIET[it.n] ?? [], badges: it.pop ? ['popular'] : [],
     modifierGroups: [], prepMinutes: 12,
   }));
   out.menus[slug] = { venueId, updatedAt: now.toISOString(), categories, items };
 
-  out.stories[slug] = {
-    items: v.stories.map(s => ({
-      id: `vrv_${key}${s.id}`, firstName: s.name, stars: s.stars, quote: s.quote, postedAt: daysAgo(s.ago),
-      avatar: img(s.av, 160, 160, s.name), poster: img(s.poster, 720, 1280),
-      video: { mp4Url: MEDIA + (s.video || 'media/review-ama.mp4'), durationSeconds: 18 },
-      menuItemId: items[s.dish % items.length].id, sample: true,
-    })),
-  };
   out.leaderboards[slug] = {
     period: 'week',
     entries: [['Ama', 41], ['Kojo', 37], ['Efua', 29], ['Yaw', 24], ['Akua', 19]].map(([nickname, score], i) => ({ rank: i + 1, nickname, score, sample: true })),

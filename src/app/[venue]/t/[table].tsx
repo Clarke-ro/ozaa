@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { z } from 'zod';
+import { z } from 'zod/mini';
 import { api } from '@/lib/api';
 import { useGuestSession } from '@/features/session';
 import { peekOpenOrder } from '@/mocks/openOrder';
 import { ErrorState, LoadingState } from '@/ui/states';
-const tableSchema = z.string().regex(/^[A-Za-z0-9-]{1,12}$/);
+const tableSchema = z.string().check(z.regex(/^[A-Za-z0-9-]{1,12}$/));
 
 export default function TableEntry() {
   const params = useLocalSearchParams<{ venue: string; table: string }>();

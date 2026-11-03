@@ -1,0 +1,107 @@
+import type { LucideIcon } from 'lucide-react-native';
+import { TrendingDown, TrendingUp } from 'lucide-react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { tokens } from '@/theme/tokens';
+import { Text } from '@/ui/Text';
+import { useTheme } from '@/ui/theme';
+
+/**
+ * A metric card: label top left, icon in a circle top right, the number, and one short line under it.
+ * `trend` colours that line and adds an arrow, so up and down never rest on colour alone.
+ * Tapping opens the screen behind the number.
+ */
+export function StatTile({
+  label,
+  value,
+  note,
+  icon: Icon,
+  tone,
+  trend,
+  onPress,
+}: {
+  label: string;
+  value: string;
+  note?: string;
+  icon?: LucideIcon;
+  /** `alert` marks a number that needs action now, with a red edge and icon as well as colour. */
+  tone?: 'alert';
+  trend?: 'up' | 'down';
+  onPress?: () => void;
+}) {
+  const theme = useTheme();
+  const alert = tone === 'alert';
+  const noteInk =
+    trend === 'up' ? theme.success : trend === 'down' || alert ? theme.error : theme.muted;
+  const Arrow = trend === 'up' ? TrendingUp : trend === 'down' ? TrendingDown : null;
+  const body = (
+    <>
+      <View style={styles.head}>
+        <Text variant="body" style={[styles.label, { color: theme.muted }]} numberOfLines={2}>
+          {label}
+        </Text>
+        {Icon ? (
+          <View style={styles.icon}>
+            <Icon size={18} color={alert ? theme.error : theme.ink} />
+          </View>
+        ) : null}
+      </View>
+      <Text variant="display-m" style={styles.value} numberOfLines={1} adjustsFontSizeToFit>
+        {value}
+      </Text>
+      {note ? (
+        <View style={styles.note}>
+          <Text variant="caption" style={{ color: noteInk }} numberOfLines={1}>
+            {note}
+          </Text>
+          {Arrow ? <Arrow size={14} color={noteInk} /> : null}
+        </View>
+      ) : null}
+    </>
+  );
+  const look = [
+    styles.tile,
+    {
+      // Clean card like the guest list; an alert keeps a red edge so it still stands out.
+      borderColor: theme.error,
+      borderWidth: alert ? 1.5 : 0,
+      backgroundColor: theme.surface,
+      boxShadow: tokens.shadow.card,
+    },
+  ];
+  if (!onPress) return <View style={look}>{body}</View>;
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${label}: ${value}${note ? `, ${note}` : ''}`}
+      onPress={onPress}
+      style={({ pressed }) => [
+        look,
+        pressed && { backgroundColor: theme.wash, transform: [{ scale: 0.98 }] },
+      ]}
+    >
+      {body}
+    </Pressable>
+  );
+}
+
+const styles = StyleSheet.create({
+  tile: {
+    gap: tokens.space[3],
+    padding: tokens.space[4],
+    borderRadius: tokens.radius.lg,
+    borderCurve: 'continuous',
+    minHeight: 120,
+    justifyContent: 'space-between',
+  },
+  head: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.space[2] },
+  label: { flex: 1 },
+  icon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  value: { fontVariant: ['tabular-nums'] },
+  note: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+});

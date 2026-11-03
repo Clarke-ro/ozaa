@@ -1,53 +1,174 @@
 {
   "mamas-kitchen": {
-    "venueId": "ven_mamas",
-    "stamps": 5,
-    "stampsNeeded": 8,
-    "reward": {
-      "id": "rwd_mamas",
-      "title": "Free jollof & chicken",
-      "stampsNeeded": 8
+    "programme": {
+      "enabled": true,
+      "currency": "GHS",
+      "earn": {
+        "kind": "stamps"
+      },
+      "tiers": [
+        { "id": "bronze", "minLifetime": 0 },
+        { "id": "silver", "minLifetime": 4 },
+        { "id": "gold", "minLifetime": 8 }
+      ],
+      "rewards": [
+        { "id": "rwd_sobolo", "title": "Free chilled sobolo", "cost": 4 },
+        { "id": "rwd_mamas", "title": "Free jollof & chicken", "cost": 8 }
+      ],
+      "expiryDays": 90,
+      "claimTtlSeconds": 600,
+      "birthdayTreat": "Free kelewele on your birthday",
+      "memberCount": 1
     },
-    "rewardReady": false,
-    "memberSince": "2026-03-14",
-    "history": [],
-    "consent": {
-      "marketing": false,
-      "at": "2026-03-14T18:02:00Z"
+    "member": {
+      "id": "mem_mamas",
+      "firstName": "Ama",
+      "phoneMasked": "024 *** 0099",
+      "birthdayMonthDay": "08-14",
+      "memberSince": "2026-03-14",
+      "consent": {
+        "marketing": false,
+        "at": "2026-03-14T18:02:00Z",
+        "textVersion": "consent-2026-10-v1"
+      },
+      "facts": [
+        {
+          "kind": "earn",
+          "id": "ern_ord_m1",
+          "at": "2026-10-12T13:15:00Z",
+          "units": 1,
+          "source": { "type": "paid_visit", "orderId": "ord_m1", "amountMinor": 8500, "currency": "GHS" }
+        },
+        {
+          "kind": "earn",
+          "id": "ern_ord_m2",
+          "at": "2026-10-18T19:40:00Z",
+          "units": 1,
+          "source": { "type": "paid_visit", "orderId": "ord_m2", "amountMinor": 12000, "currency": "GHS" }
+        },
+        {
+          "kind": "earn",
+          "id": "ern_game_m1",
+          "at": "2026-10-21T14:05:00Z",
+          "units": 1,
+          "source": { "type": "game", "runId": "run_m1", "day": "2026-10-21" }
+        },
+        {
+          "kind": "earn",
+          "id": "ern_ord_m3",
+          "at": "2026-10-25T20:10:00Z",
+          "units": 1,
+          "source": { "type": "paid_visit", "orderId": "ord_m3", "amountMinor": 9500, "currency": "GHS" }
+        },
+        {
+          "kind": "earn",
+          "id": "ern_ord_m4",
+          "at": "2026-10-29T18:30:00Z",
+          "units": 1,
+          "source": { "type": "paid_visit", "orderId": "ord_m4", "amountMinor": 14300, "currency": "GHS" }
+        }
+      ]
     }
   },
   "bean-there": {
-    "venueId": "ven_bean",
-    "stamps": 3,
-    "stampsNeeded": 10,
-    "reward": {
-      "id": "rwd_bean",
-      "title": "Free flat white",
-      "stampsNeeded": 10
+    "programme": {
+      "enabled": true,
+      "currency": "GHS",
+      "earn": {
+        "kind": "points",
+        "points": 1,
+        "perMinor": 100
+      },
+      "tiers": [
+        { "id": "bronze", "minLifetime": 0 },
+        { "id": "silver", "minLifetime": 40 },
+        { "id": "gold", "minLifetime": 100 }
+      ],
+      "rewards": [
+        { "id": "rwd_espresso", "title": "Free double espresso", "cost": 40 },
+        { "id": "rwd_bean", "title": "Free flat white", "cost": 80 }
+      ],
+      "expiryDays": 180,
+      "claimTtlSeconds": 600,
+      "birthdayTreat": "Free cinnamon roll on your birthday",
+      "memberCount": 1
     },
-    "rewardReady": false,
-    "memberSince": "2026-03-14",
-    "history": [],
-    "consent": {
-      "marketing": false,
-      "at": "2026-03-14T18:02:00Z"
+    "member": {
+      "id": "mem_bean",
+      "firstName": "Ama",
+      "phoneMasked": "020 *** 0099",
+      "birthdayMonthDay": "08-14",
+      "memberSince": "2026-03-14",
+      "consent": {
+        "marketing": false,
+        "at": "2026-03-14T18:02:00Z",
+        "textVersion": "consent-2026-10-v1"
+      },
+      "facts": [
+        {
+          "kind": "earn",
+          "id": "ern_ord_b1",
+          "at": "2026-10-20T09:30:00Z",
+          "units": 30,
+          "source": { "type": "paid_visit", "orderId": "ord_b1", "amountMinor": 3000, "currency": "GHS" }
+        },
+        {
+          "kind": "earn",
+          "id": "ern_ord_b2",
+          "at": "2026-10-28T10:15:00Z",
+          "units": 25,
+          "source": { "type": "paid_visit", "orderId": "ord_b2", "amountMinor": 2500, "currency": "GHS" }
+        }
+      ]
     }
   },
   "auntie-akos": {
-    "venueId": "ven_akos",
-    "stamps": 2,
-    "stampsNeeded": 6,
-    "reward": {
-      "id": "rwd_akos",
-      "title": "Free fufu & light soup",
-      "stampsNeeded": 6
+    "programme": {
+      "enabled": true,
+      "currency": "GHS",
+      "earn": {
+        "kind": "stamps"
+      },
+      "tiers": [
+        { "id": "bronze", "minLifetime": 0 },
+        { "id": "silver", "minLifetime": 3 },
+        { "id": "gold", "minLifetime": 6 }
+      ],
+      "rewards": [
+        { "id": "rwd_akos", "title": "Free fufu & light soup", "cost": 6 }
+      ],
+      "expiryDays": null,
+      "claimTtlSeconds": 600,
+      "birthdayTreat": null,
+      "memberCount": 1
     },
-    "rewardReady": false,
-    "memberSince": "2026-03-14",
-    "history": [],
-    "consent": {
-      "marketing": false,
-      "at": "2026-03-14T18:02:00Z"
+    "member": {
+      "id": "mem_akos",
+      "firstName": "Ama",
+      "phoneMasked": "027 *** 0099",
+      "birthdayMonthDay": null,
+      "memberSince": "2026-03-14",
+      "consent": {
+        "marketing": false,
+        "at": "2026-03-14T18:02:00Z",
+        "textVersion": "consent-2026-10-v1"
+      },
+      "facts": [
+        {
+          "kind": "earn",
+          "id": "ern_ord_a1",
+          "at": "2026-10-15T13:00:00Z",
+          "units": 1,
+          "source": { "type": "paid_visit", "orderId": "ord_a1", "amountMinor": 6500, "currency": "GHS" }
+        },
+        {
+          "kind": "earn",
+          "id": "ern_ord_a2",
+          "at": "2026-10-27T14:20:00Z",
+          "units": 1,
+          "source": { "type": "paid_visit", "orderId": "ord_a2", "amountMinor": 7000, "currency": "GHS" }
+        }
+      ]
     }
   }
 }

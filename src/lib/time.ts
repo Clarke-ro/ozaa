@@ -66,3 +66,21 @@ export function describeHours(hours: OpeningHours, now: Date): HoursLabel {
   const opens = nextOpen(hours, weekday, minute);
   return { open: false, text: opens ? `Closed · opens ${opens}` : 'Closed' };
 }
+
+/**
+ * "5 minutes ago", "3 hours ago", "2 days ago" from our own strings (en.json `time.*`).
+ * Not Intl.RelativeTimeFormat: Hermes, the engine on phones, doesn't have it, and calling it
+ * crashed every screen that shows a time like this.
+ */
+export function timeAgo(
+  iso: string,
+  now: number,
+  t: (key: string, vars?: { count?: number }) => string,
+): string {
+  const minutes = Math.floor(Math.max(0, now - Date.parse(iso)) / 60_000);
+  if (minutes < 1) return t('time.now');
+  if (minutes < 60) return t('time.minutesAgo', { count: minutes });
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return t('time.hoursAgo', { count: hours });
+  return t('time.daysAgo', { count: Math.floor(hours / 24) });
+}

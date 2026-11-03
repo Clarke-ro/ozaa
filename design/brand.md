@@ -3,6 +3,7 @@
 A summary of the brand Page for the coding agent. The numbers are in `tokens.json`. The screens are in `renders/`, and the working HTML prototype is in `prototype/`. Where this file and a render disagree, the render wins for layout and this file wins for rules. Ask Clarke if both seem wrong.
 
 ## 1. Logo: scan frame
+
 - An orange circle (#FC5205). Inside it sits a white rounded square with four QR-style corner marks, and a fork and knife cut out of the square, so they show orange.
 - Three drawings, picked by size (made by `logo/make_logo.py`):
   - **full** for 64 px and up
@@ -14,33 +15,37 @@ A summary of the brand Page for the coding agent. The numbers are in `tokens.jso
 - `logo/preview.png` shows every size side by side.
 
 ## 2. Colour
-| Token | Hex | Use |
-|---|---|---|
-| brand | #FC5205 | The logo only |
-| primary | #D24000 | Ozaa buttons, icons, radio dots, focus rings (white text on it passes AA) |
-| hover | #BA3800 | Hover on web |
-| pressed | #A33000 | Pressed |
-| tint | #FFF1EA | Icon-button fill, selected rows |
-| text | #111111 | All body text |
-| grey600 / 500 / 200 / 100 | #52525B / #71717A / #E4E4E7 / #F4F4F5 | Secondary text, captions, borders, disabled fills |
-| success / error | #15803D / #B91C1C | Status only |
-| white | #FFFFFF | Every background |
 
-- Backgrounds are white. No gradients, no coloured headers, no shadows. The one exception is the bottom-sheet shadow `0 -8px 24px rgba(0,0,0,.06)`.
+| Token                     | Hex                                   | Use                                                                       |
+| ------------------------- | ------------------------------------- | ------------------------------------------------------------------------- |
+| brand                     | #FC5205                               | The logo only                                                             |
+| primary                   | #D24000                               | Ozaa buttons, icons, radio dots, focus rings (white text on it passes AA) |
+| hover                     | #BA3800                               | Hover on web                                                              |
+| pressed                   | #A33000                               | Pressed                                                                   |
+| tint                      | #FFF1EA                               | Icon-button fill, selected rows                                           |
+| text                      | #111111                               | All body text                                                             |
+| grey600 / 500 / 200 / 100 | #52525B / #71717A / #E4E4E7 / #F4F4F5 | Secondary text, captions, borders, disabled fills                         |
+| success / error           | #15803D / #B91C1C                     | Status only                                                               |
+| white                     | #FFFFFF                               | Every background                                                          |
+
+- Backgrounds are white. No gradients, no coloured headers, no shadows. Two exceptions: the bottom-sheet shadow `0 -8px 24px rgba(0,0,0,.06)`, and the soft card shadow `0 4px 16px rgba(17,17,17,.07)` on the guest home service cards (Clarke, 2 Nov 2026).
 - Orange goes only on buttons, icons, radio dots and focus rings, never on large areas.
 
 ## 3. Type
+
 - **Unbounded** for display, **Inter** for everything else. Both cover ɛ ɔ ŋ ɖ ƒ ʋ ɣ ɓ ɗ ƙ ẹ ọ ṣ ₵ ₦. They are self-hosted as WOFF2 subsets (53 KB for three weights) with a Noto Sans fallback. Files are in `prototype/fonts/`; on native, load them with `expo-font`.
 - Scale (size/line height): display-l Unbounded 28/36 · display-m 22/28 · title Inter 600 18/24 · body 15/22 · caption 13/18 · button 16/20 600.
-- Prices always look like `GH₵65` (whole cedis) or `GH₵65.50`, with tabular figures.
+- Prices use tabular figures. The symbol comes from the venue currency. The Accra sample looks like `GH₵65` (whole cedis) or `GH₵65.50`.
 - A venue can pick a heading font: Unbounded, Noto Serif or Montserrat. Body text stays Inter.
 
 ## 4. Space, grid, radius
+
 - Spacing steps: 4, 8, 12, 16, 20, 24, 32, 40, 48, 64.
 - Mobile grid: 4 columns, 20 px side margins, 12 px gutter. Touch targets are at least 44 px.
 - Radius: sm 8, md 12, lg 16, xl 24, full.
 
 ## 5. Buttons and icons
+
 - **Primary:** fill #D24000 (or the venue fill), white text, 52 px tall, radius 12. **One filled button per screen**, pinned at the bottom.
 - **Secondary:** white with a 1.5 px #111 border. **Ghost:** text only.
 - **Icon button:** a 40 px circle with tint fill and a primary-colour icon.
@@ -48,6 +53,7 @@ A summary of the brand Page for the coding agent. The numbers are in `tokens.jso
 - Icons are Lucide (`lucide-react-native`) at 20 or 24 px with a 2 px stroke. No emoji as icons.
 
 ## 6. Guest home (renders: home-mamas, home-mamas-scrolled, home-default, home-default-scrolled)
+
 1. **Banner:** an edge-to-edge photo under the status bar, with a dark gradient over the top 120 px so the status bar reads. Share (left) and language (right) are white circles on it.
 2. **Logo:** an 84 px circle with a 4 px white ring, 20 px from the left, half over the banner. With no logo, show the initials on the venue colour.
 3. Name (heading font), description, a pin with the location, and live hours ("Open now · until 10 PM" with a green dot). A "Table 12" pill sits on the right.
@@ -59,10 +65,12 @@ A summary of the brand Page for the coding agent. The numbers are in `tokens.jso
    - **More:** Reserve a table, Events, Feedback & complaints, About & contact
 
    A section with no services switched on is hidden.
-6. **Bottom bar:** shows the live order status, or "View order · 3 · GH₵143" while on the menu. A compact header pins on scroll.
+
+6. **Bottom bar:** shows the live order status, or "View order · 3 · GH₵143" in the Accra sample while on the menu. A compact header pins on scroll.
 7. The footer line reads "Powered by Ozaa", with the micro logo.
 
 ## 7. Other guest screens
+
 - **Waiter:** pick a reason (Water, The bill, Cutlery, Order more, Clean the table, Something else), then see "Kwesi is on the way. Usually under 3 minutes."
 - **Order status:** four steps (Received, Being prepared, Ready, Served) with the ETA.
 - **Pay:** choose Whole bill, Split equally or My items; add a tip; pay with MTN MoMo, Telecel Cash, AT Money or card. MoMo shows the "approve on your phone" wait state.
@@ -71,13 +79,16 @@ A summary of the brand Page for the coding agent. The numbers are in `tokens.jso
 - **Food ready:** a black banner slides down over any screen, the game included, with a View button.
 
 ## 8. Owner side (Ozaa chrome: always Ozaa orange, never the venue colour)
+
 - **Video reviews** (render: owner-reviews): tabs To check, Featured and Hidden. Each card shows the thumbnail and length, first name, stars, dish, quote and consent state, with Hide and Feature buttons. Low ratings get a note suggesting a private reply.
 - **Services** (render: owner-services): an on/off switch for every service, plus a game-stamp switch with its target score.
 - **Customise** (renders: v4-reference/customise*.png): banner, logo, colour (presets or hex) with a live contrast note and preview, heading font, name, description, location and hours, then "Save and publish".
 - **Orders dashboard** (render: v4-reference/04-owner-dashboard.png for content; restyle it to v5 chrome): live orders by status, waiter calls and today's takings.
 
 ## 9. Venue theming (`prototype/theme.js`, function `deriveTheme`)
+
 A venue picks one colour, which goes on buttons, the active category chip, add buttons, Popular badges, quick-action icons, story rings and the stamp card. Everything else stays black, white and grey.
+
 1. **Text on the colour:** white if it reaches 4.5:1. If not, #111111 if that reaches 4.5:1. If neither does, darken the colour until white passes.
 2. **Colour on white** (icons and links): darken in 2% steps until it reaches 4.5:1. Yellow #FFC21A, for example, becomes #94710F.
 3. **Badges:** a tint mixing 14% colour with white, with the badge text darkened until it reaches 4.5:1 on the tint.
@@ -88,27 +99,30 @@ A venue picks one colour, which goes on buttons, the active category chip, add b
 Port this function to `src/features/theming/deriveTheme.ts` with tests first (pstack-tdd). The renders show the results for #B5432A, #1F5C3F and #FFC21A.
 
 ## 10. Words
-Talk to the guest in plain, short sentences. Say what happens next and that the money is safe. Never mention TakeOrder.
 
-| Moment | Copy |
-|---|---|
-| Menu | What are you having? |
-| Add | Add to order · GH₵70 |
-| Checkout | Pay GH₵143 with MoMo. You approve it on your phone. |
-| Waiting | Check your phone and enter your PIN to approve. |
-| Paid | Paid. Your order is with the kitchen. |
-| Failed | That didn't go through and nothing was taken. Try again? |
-| Loyalty | 6 of 10. Four more and the next one is on us. |
-| Call waiter | Kwesi is on the way. Usually under 3 minutes. |
-| Food ready | Your food is ready! Jollof & chicken is on its way to table 12. |
-| Game | A quick game. Beat the top score here. |
+Talk to the guest in plain, short sentences. Say what happens next and that the money is safe. Never mention TakeOrder. The money sentences below are the Accra sample. Another currency uses its own symbol in the same sentence.
+
+| Moment       | Copy                                                                                               |
+| ------------ | -------------------------------------------------------------------------------------------------- |
+| Menu         | What are you having?                                                                               |
+| Add          | Add to order · GH₵70                                                                               |
+| Checkout     | Pay GH₵143 with MoMo. You approve it on your phone.                                                |
+| Waiting      | Check your phone and enter your PIN to approve.                                                    |
+| Paid         | Paid. Your order is with the kitchen.                                                              |
+| Failed       | That didn't go through and nothing was taken. Try again?                                           |
+| Loyalty      | 6 of 10. Four more and the next one is on us.                                                      |
+| Call waiter  | Kwesi is on the way. Usually under 3 minutes.                                                      |
+| Food ready   | Your food is ready! Jollof & chicken is on its way to table 12.                                    |
+| Game         | A quick game. Beat the top score here.                                                             |
 | Video review | Mama's Kitchen can feature this video in their stories. Only your first name and rating are shown. |
-| Owner | You made GH₵2,480 today, 12% more than last Saturday. |
+| Owner        | You made GH₵2,480 today, 12% more than last Saturday.                                              |
 
 ## 11. Sample content
+
 The photos, avatars, story stills and review video in `prototype/img` and `prototype/media` are AI-generated placeholders. Label them "Sample" in the app, and replace them with each venue's own photos before launch. The dish videos were left out of this kit because the video menu is on the roadmap only.
 
 ## 12. Still open (not for the coding agent to decide)
-- A trademark search (Ghana Registrar-General, OAPI, WIPO).
-- A meaning check of "ozaa" with Twi, Ga, Ewe, Hausa, Yoruba and Igbo speakers.
+
+- A trademark search (Ghana Registrar-General, OAPI, WIPO, and the offices for later countries).
+- A meaning check of "ozaa" with speakers of French, Portuguese, Arabic, Swahili, and the languages of the first cities.
 - Domains: ozaa.africa, ozaa.app, getozaa.com and ozaapay.com were free on 31 Oct 2026, and ozaa.com is taken. Nothing has been bought.

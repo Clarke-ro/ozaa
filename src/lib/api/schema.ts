@@ -160,23 +160,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/venues/{venueSlug}/stories": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Featured video reviews shown as story circles on the guest home. */
-        get: operations["listStories"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/venues/{venueSlug}/offers": {
         parameters: {
             query?: never;
@@ -360,6 +343,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/venues/{venueSlug}/loyalty": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get the venue's loyalty programme (earn mode, tiers, rewards, expiry) before joining. */
+        get: operations["getVenueLoyaltyProgram"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/venues/{venueSlug}/loyalty/me": {
         parameters: {
             query?: never;
@@ -388,7 +388,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Redeem reward. */
+        /** Open a short-lived redemption claim code for staff to confirm. */
         post: operations["redeemReward"];
         delete?: never;
         options?: never;
@@ -405,60 +405,9 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Written review. 4-5 stars then offer the Google review link; 1-3 stars suggest private feedback. */
+        /** Written review. Every guest gets the same thank-you; the reply never depends on the star rating. */
         post: operations["createReview"];
         delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/video-reviews/uploads": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Get a one-time upload URL for a 15-30 s video (mp4, webm or mov, max 25 MB). */
-        post: operations["createVideoUpload"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/video-reviews": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Create video review. */
-        post: operations["createVideoReview"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/video-reviews/{videoReviewId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** The guest removes their video at any time (needs the delete token). */
-        delete: operations["deleteMyVideoReview"];
         options?: never;
         head?: never;
         patch?: never;
@@ -794,40 +743,6 @@ export interface paths {
         patch: operations["ownerUpdateWaiterCall"];
         trace?: never;
     };
-    "/owner/venues/{venueId}/video-reviews": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List video reviews (owner app). */
-        get: operations["ownerListVideoReviews"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/owner/video-reviews/{videoReviewId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Feature (needs the guest's featureConsent) or hide a video review. */
-        patch: operations["ownerModerateVideoReview"];
-        trace?: never;
-    };
     "/owner/venues/{venueId}/loyalty": {
         parameters: {
             query?: never;
@@ -853,10 +768,27 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Members with masked phone numbers. Only members who agreed to marketing can be messaged. */
+        /** Members with masked phone numbers and fact history. Only members who agreed to marketing can be messaged. */
         get: operations["ownerListLoyaltyMembers"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/loyalty/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm a guest's 6-character redemption claim code. Staff confirmation is the only debit. */
+        post: operations["ownerConfirmRedemption"];
         delete?: never;
         options?: never;
         head?: never;
@@ -876,6 +808,400 @@ export interface paths {
         put: operations["ownerSetPayoutAccount"];
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Today's sales, open tables, live orders, waiter calls, rating and alerts. */
+        get: operations["ownerGetDashboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/floor": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tables with a derived status. */
+        get: operations["ownerGetFloor"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/transactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Paystack sandbox charges and cash taken at the table. */
+        get: operations["ownerListTransactions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/transactions/{transactionId}/refund": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Refund a succeeded charge in full. Paystack sandbox, mocked. */
+        post: operations["ownerRefundTransaction"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/written-reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Star ratings and the replies the owner has sent. */
+        get: operations["ownerListWrittenReviews"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/written-reviews/{writtenReviewId}/reply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Save a private reply on a written review. */
+        post: operations["ownerReplyToReview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/insights": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sales, top dishes, peak hours and repeat guests. */
+        get: operations["ownerGetInsights"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List feedback items for a venue. */
+        get: operations["ownerListFeedback"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/feedback/{feedbackId}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Archive or unarchive a feedback item. */
+        patch: operations["ownerArchiveFeedback"];
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/feedback/ask": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ask AI assistant questions grounded on this venue's feedback. */
+        post: operations["ownerAskFeedbackAi"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List custom link buttons. */
+        get: operations["ownerListCustomLinks"];
+        put?: never;
+        /** Create a custom link button. */
+        post: operations["ownerCreateCustomLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/links/{linkId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a custom link button. */
+        delete: operations["ownerDeleteCustomLink"];
+        options?: never;
+        head?: never;
+        /** Update a custom link button. */
+        patch: operations["ownerUpdateCustomLink"];
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/loyalty/analytics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Loyalty analytics KPIs and trend series. */
+        get: operations["ownerGetLoyaltyAnalytics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/loyalty/customers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List enrolled loyalty customers with offer preference filter. */
+        get: operations["ownerListLoyaltyCustomers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/loyalty/scan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Scan a customer loyalty card QR to issue stamp or redeem. */
+        post: operations["ownerScanLoyaltyCard"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/business": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get business and its locations. */
+        get: operations["ownerGetBusiness"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update business name. */
+        patch: operations["ownerUpdateBusiness"];
+        trace?: never;
+    };
+    "/owner/business/locations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add a new location. */
+        post: operations["ownerCreateLocation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/business/locations/{locationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update location details. */
+        patch: operations["ownerUpdateLocation"];
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/devices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List paired scanner devices. */
+        get: operations["ownerListScannerDevices"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/devices/pair": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Pair a scanner device or generate a pairing code. */
+        post: operations["ownerPairScannerDevice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/devices/{deviceId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke a paired scanner device. */
+        delete: operations["ownerRevokeScannerDevice"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/staff/{staffId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke staff access. */
+        delete: operations["ownerRevokeStaff"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/account": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete account and personal data. */
+        delete: operations["deleteAccount"];
         options?: never;
         head?: never;
         patch?: never;
@@ -940,7 +1266,6 @@ export interface components {
         };
         OrderId: string;
         MenuItemId: string;
-        VideoReviewId: string;
         AuthTokens: {
             accessToken: string;
             refreshToken: string;
@@ -952,7 +1277,7 @@ export interface components {
          * @description owner does everything incl. payouts; manager everything except payouts and staff; waiter orders and waiter calls; kitchen order status only.
          * @enum {string}
          */
-        StaffRole: "owner" | "manager" | "waiter" | "kitchen";
+        StaffRole: "owner" | "manager" | "waiter" | "kitchen" | "viewer" | "staff_scanner";
         StaffUser: {
             id: string;
             firstName: string;
@@ -971,6 +1296,27 @@ export interface components {
             phoneMasked: string;
             /** @enum {string} */
             status: "invited" | "active" | "removed";
+            lastName?: string;
+            /**
+             * Format: date-time
+             * @description When they accepted the invite.
+             */
+            joinedAt?: string;
+            /**
+             * Format: date-time
+             * @description Last time they used the owner app. Null if never.
+             */
+            lastActiveAt?: string | null;
+            /** @description True while they are signed in on a device right now. */
+            onShift?: boolean;
+            /** @description What they did since the venue opened today. */
+            today?: {
+                /** @description Orders they moved to a new status. */
+                ordersHandled: number;
+                callsAnswered: number;
+                /** @description Average time to answer a waiter call. */
+                avgPickupMinutes?: number | null;
+            };
         };
         /**
          * @description Video menu is roadmap only and is not in this list.
@@ -1075,13 +1421,19 @@ export interface components {
                 stampsNeeded?: number;
                 rewardTitle?: string;
             } | null;
-            /** @constant */
-            currency: "GHS";
+            currency: components["schemas"]["Currency"];
             languages: components["schemas"]["Language"][];
             /** Format: uri */
             googleReviewUrl?: string | null;
             /** @description False until the payout account is checked. */
             payEnabled: boolean;
+            tagline?: string;
+            /** @enum {string} */
+            buttonTint?: "auto" | "light" | "dark";
+            /** @enum {string} */
+            stylePreset?: "default" | "classic" | "editorial" | "modern";
+            buttonOrder?: string[];
+            socials?: components["schemas"]["SocialLinks"];
         };
         VenueSettings: components["schemas"]["VenuePublic"] & {
             wifi?: components["schemas"]["Wifi"];
@@ -1103,12 +1455,20 @@ export interface components {
             /** Format: uri */
             googleReviewUrl?: string | null;
             languages?: components["schemas"]["Language"][];
+            tagline?: string;
+            /** @enum {string} */
+            buttonTint?: "auto" | "light" | "dark";
+            /** @enum {string} */
+            stylePreset?: "default" | "classic" | "editorial" | "modern";
+            buttonOrder?: string[];
+            socials?: components["schemas"]["SocialLinks"];
         };
         Wifi: {
             ssid: string;
             password?: string;
             /** @enum {string} */
-            security: "WPA" | "WEP" | "nopass";
+            security: "WPA" | "WPA2" | "WPA3" | "WEP" | "nopass" | "OPEN";
+            hidden?: boolean;
         };
         Table: {
             id: string;
@@ -1133,12 +1493,28 @@ export interface components {
              */
             kind: "food" | "drinks";
             position: number;
+            hidden?: boolean;
+            schedule?: {
+                days?: number[];
+                /** @example 12:00 */
+                startTime?: string;
+                /** @example 15:00 */
+                endTime?: string;
+            };
         };
         MenuCategoryInput: {
             name: components["schemas"]["LocalizedText"];
             /** @enum {string} */
             kind: "food" | "drinks";
             position?: number;
+            hidden?: boolean;
+            schedule?: {
+                days?: number[];
+                /** @example 12:00 */
+                startTime?: string;
+                /** @example 15:00 */
+                endTime?: string;
+            };
         };
         /** @description Add-ons like spice level or extra meat. min 1 and max 1 is a required single choice. */
         ModifierGroup: {
@@ -1159,11 +1535,17 @@ export interface components {
             description: components["schemas"]["LocalizedText"];
             pricePesewas: components["schemas"]["Pesewas"];
             photo?: components["schemas"]["Image"] | null;
+            /** @description Extra photos of the same dish, shown after `photo` on the dish page as swipeable pages. Empty or missing means only `photo` is shown. */
+            gallery?: components["schemas"]["Image"][];
             /** @description False shows "Sold out" and blocks adding. */
             available: boolean;
             dietary: components["schemas"]["Dietary"][];
+            /** @description Diet labels the owner typed in beyond the standard set (for example "Keto"). Shown as tags on the dish; the guest diet filters use `dietary` only. */
+            dietaryCustom?: string[];
             badges: ("popular" | "new" | "chef_pick")[];
             modifierGroups: components["schemas"]["ModifierGroup"][];
+            allergens?: string[];
+            calories?: number;
             prepMinutes?: number;
         };
         MenuItemInput: {
@@ -1174,8 +1556,12 @@ export interface components {
             photoMediaId?: string | null;
             available?: boolean;
             dietary?: components["schemas"]["Dietary"][];
+            /** @description Diet labels the owner typed in beyond the standard set (for example "Keto"). Shown as tags on the dish; the guest diet filters use `dietary` only. */
+            dietaryCustom?: string[];
             badges?: ("popular" | "new" | "chef_pick")[];
             modifierGroups?: components["schemas"]["ModifierGroup"][];
+            allergens?: string[];
+            calories?: number;
             prepMinutes?: number;
         };
         Menu: {
@@ -1366,87 +1752,126 @@ export interface components {
             /** @example consent-2026-10-v1 */
             textVersion: string;
         };
-        Reward: {
+        LoyaltyEarnMode: {
+            /** @constant */
+            kind: "stamps";
+        } | {
+            /** @constant */
+            kind: "points";
+            points: number;
+            perMinor: number;
+        };
+        LoyaltyTierBand: {
+            /** @enum {string} */
+            id: "bronze" | "silver" | "gold";
+            minLifetime: number;
+        };
+        RewardOffer: {
             id: string;
             /** @example Free jollof & chicken */
             title: string;
-            stampsNeeded: number;
+            cost: number;
         };
         LoyaltyProgram: {
             enabled: boolean;
-            stampsNeeded: number;
-            /** @description Spend per stamp when stampRule is one_per_min_spend. */
-            minSpendPesewas?: components["schemas"]["Pesewas"];
-            reward: components["schemas"]["Reward"];
-            birthdayTreat?: string | null;
-            /**
-             * @default one_per_paid_order
-             * @enum {string}
-             */
-            stampRule: "one_per_paid_order" | "one_per_min_spend";
+            /** @example GHS */
+            currency: string;
+            earn: components["schemas"]["LoyaltyEarnMode"];
+            tiers: components["schemas"]["LoyaltyTierBand"][];
+            rewards: components["schemas"]["RewardOffer"][];
+            expiryDays: number | null;
+            claimTtlSeconds: number;
+            birthdayTreat: string | null;
             readonly memberCount?: number;
+            /** @enum {string} */
+            programKind?: "rewards_pass" | "stamp_card" | "both";
+            /** @enum {string} */
+            cooldown?: "none" | "1h" | "4h" | "1d";
+            lockscreenMessage?: string;
+            stampsRequired?: number;
+            secondTierReward?: string;
+            secondTierStamps?: number;
+            automations?: {
+                welcomeReward?: string;
+                birthdayReward?: string;
+                winbackDays?: number;
+                winbackReward?: string;
+                reviewAskReward?: string;
+            };
+            passAppearance?: {
+                bgHex?: components["schemas"]["HexColor"];
+                textHex?: components["schemas"]["HexColor"];
+                coverUrl?: string;
+                logoUrl?: string;
+            };
         };
-        LoyaltyHistoryEntry: {
+        LoyaltyEarnSource: {
+            /** @constant */
+            type: "paid_visit";
+            orderId: string;
+            amountMinor: components["schemas"]["Pesewas"];
+            currency: string;
+        } | {
+            /** @constant */
+            type: "game";
+            runId: string;
+            /** Format: date */
+            day: string;
+        } | {
+            /** @constant */
+            type: "birthday";
+            year: string;
+            title: string;
+        };
+        LoyaltyFact: {
+            /** @constant */
+            kind: "earn";
+            id: string;
             /** Format: date-time */
             at: string;
-            change: number;
-            /** @enum {string} */
-            reason: "paid_order" | "game_score" | "reward_redeemed" | "birthday";
+            units: number;
+            source: components["schemas"]["LoyaltyEarnSource"];
+        } | {
+            /** @constant */
+            kind: "claim";
+            id: string;
+            /** Format: date-time */
+            at: string;
+            code: string;
+            rewardId: string;
+            title: string;
+            units: number;
+            /** Format: date-time */
+            expiresAt: string;
+        } | {
+            /** @constant */
+            kind: "confirm";
+            id: string;
+            /** Format: date-time */
+            at: string;
+            claimId: string;
+            rewardId: string;
+            title: string;
+            units: number;
         };
-        LoyaltyCard: {
-            venueId: string;
-            stamps: number;
-            stampsNeeded: number;
-            reward: components["schemas"]["Reward"];
-            rewardReady: boolean;
+        LoyaltyMember: {
+            id: string;
+            firstName: string | null;
+            phoneMasked: string;
+            birthdayMonthDay: string | null;
             /** Format: date */
             memberSince: string;
-            history?: components["schemas"]["LoyaltyHistoryEntry"][];
             consent: {
                 marketing: boolean;
                 /** Format: date-time */
                 at: string;
+                textVersion: string;
             };
+            facts: components["schemas"]["LoyaltyFact"][];
         };
-        LoyaltyMember: {
-            id: string;
-            firstName?: string | null;
-            phoneMasked: string;
-            stamps: number;
-            visits: number;
-            marketingConsent: boolean;
-            /** Format: date-time */
-            joinedAt: string;
-        };
-        /** @enum {string} */
-        ModerationState: "pending" | "featured" | "hidden";
-        Story: {
-            id: components["schemas"]["VideoReviewId"];
-            firstName: string;
-            stars: number;
-            quote?: string;
-            /** Format: date-time */
-            postedAt: string;
-            avatar?: components["schemas"]["Image"];
-            poster: components["schemas"]["Image"];
-            video: {
-                /** Format: uri */
-                hlsUrl?: string;
-                /**
-                 * Format: uri
-                 * @description 480p, used on data saver.
-                 */
-                mp4Url: string;
-                durationSeconds: number;
-            };
-            menuItemId?: components["schemas"]["MenuItemId"];
-            /** @description True for demo content. Show the Sample label. */
-            sample: boolean;
-        };
-        VideoReview: components["schemas"]["Story"] & {
-            state: components["schemas"]["ModerationState"];
-            featureConsent: boolean;
-            orderNumber?: number | null;
+        LoyaltyCard: {
+            programme: components["schemas"]["LoyaltyProgram"];
+            member: components["schemas"]["LoyaltyMember"];
         };
         LeaderboardEntry: {
             rank: number;
@@ -1486,6 +1911,265 @@ export interface components {
             verified: boolean;
             /** @description Ozaa's share taken by the Paystack split. Set by Ozaa, read-only here. */
             ozaaFeePercent: number;
+        };
+        /**
+         * @description Sample venues use GHS. Amount fields are minor units (pesewas, kobo, cents) except XOF, which is the whole franc.
+         * @enum {string}
+         */
+        Currency: "GHS" | "NGN" | "KES" | "ZAR" | "XOF" | "USD";
+        OwnerDashboard: {
+            salesTodayPesewas: components["schemas"]["Pesewas"];
+            currency: components["schemas"]["Currency"];
+            /** @description Versus the same venue yesterday. Null when yesterday was zero. */
+            changePercent: number | null;
+            /** @enum {string} */
+            direction: "up" | "down" | "flat" | "none";
+            openTables: number;
+            liveOrders: number;
+            openCalls: number;
+            ratingAverage: number | null;
+            ratingCount: number;
+            alerts: {
+                /** @enum {string} */
+                code: "calls" | "bills" | "payout" | "sold_out";
+                count?: number;
+                detail?: string;
+            }[];
+        };
+        /** @enum {string} */
+        FloorStatus: "free" | "seated" | "ordered" | "waiting_to_pay" | "needs_waiter";
+        FloorTable: {
+            id: string;
+            code: string;
+            label?: string;
+            /** Format: uri */
+            qrUrl?: string;
+            status: components["schemas"]["FloorStatus"];
+            orderId?: string | null;
+            orderNumber?: number | null;
+            orderStatus?: components["schemas"]["OrderStatus"] | null;
+            paymentStatus?: components["schemas"]["PaymentStatusSummary"] | null;
+            billPesewas?: components["schemas"]["Pesewas"] | null;
+            waiterCallId?: string | null;
+            waiterReason?: components["schemas"]["WaiterReason"] | null;
+        };
+        VenueTransaction: {
+            id: string;
+            reference: string;
+            orderId: components["schemas"]["OrderId"];
+            orderNumber: number;
+            /** @enum {string} */
+            method: "momo" | "card" | "cash";
+            provider?: components["schemas"]["MomoProvider"];
+            amountPesewas: components["schemas"]["Pesewas"];
+            currency: components["schemas"]["Currency"];
+            /** @enum {string} */
+            status: "succeeded" | "failed" | "abandoned" | "pending";
+            /** @enum {string} */
+            settlement: "pending" | "settled" | "refunded";
+            /** Format: date-time */
+            createdAt: string;
+            testMode: boolean;
+        };
+        WrittenReview: {
+            id: string;
+            stars: number;
+            firstName: string;
+            text?: string;
+            highlights?: ("food" | "service" | "speed" | "value" | "vibe" | "cleanliness")[];
+            /** Format: date-time */
+            createdAt: string;
+            reply?: string | null;
+        };
+        InsightsReport: {
+            /** @enum {string} */
+            range: "today" | "7d" | "30d" | "90d";
+            currency: components["schemas"]["Currency"];
+            salesPesewas: components["schemas"]["Pesewas"];
+            /** @description True until the ledger is real. Show the Sample label. */
+            sample: boolean;
+            scansCount?: number;
+            menuViewsCount?: number;
+            loyaltyMetrics?: {
+                enrolled?: number;
+                active?: number;
+                rewardReady?: number;
+                redeemed?: number;
+            };
+            feedbackSentimentSeries?: {
+                date: string;
+                positive: number;
+                neutral: number;
+                negative: number;
+            }[];
+            loyaltySeries?: {
+                date: string;
+                enrollments: number;
+                stamps: number;
+            }[];
+            series: {
+                label: string;
+                pesewas: components["schemas"]["Pesewas"];
+            }[];
+            topItems: {
+                name: string;
+                count: number;
+                pesewas: components["schemas"]["Pesewas"];
+            }[];
+            peakHours: {
+                hour: number;
+                orders: number;
+            }[];
+            repeatGuests: {
+                count: number;
+                sharePercent: number;
+            };
+        };
+        /** @enum {string} */
+        FeedbackSentiment: "positive" | "neutral" | "negative";
+        FeedbackItem: {
+            /** @example fbk_123 */
+            id: string;
+            venueId: string;
+            sentiment: components["schemas"]["FeedbackSentiment"];
+            score: number;
+            text: string;
+            photoUrl?: string | null;
+            contactName?: string | null;
+            contactPhone?: string | null;
+            archived: boolean;
+            /** Format: date-time */
+            visibleAfter: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        SocialLinks: {
+            /** Format: uri */
+            googleReviewUrl?: string | null;
+            instagram?: string | null;
+            facebook?: string | null;
+            tiktok?: string | null;
+            tripadvisor?: string | null;
+            whatsapp?: string | null;
+            x?: string | null;
+            youtube?: string | null;
+            phone?: string | null;
+            email?: string | null;
+            website?: string | null;
+            enabledLinks?: string[];
+        };
+        CustomLink: {
+            /** @example lnk_123 */
+            id: string;
+            venueId: string;
+            title: string;
+            url: string;
+            icon?: string;
+            /** @enum {string} */
+            placement: "button" | "banner" | "menu";
+            /** Format: date-time */
+            startDate?: string | null;
+            /** Format: date-time */
+            endDate?: string | null;
+            sortOrder: number;
+            clicks: number;
+            enabled: boolean;
+        };
+        CustomLinkInput: {
+            title: string;
+            url: string;
+            icon?: string;
+            /** @enum {string} */
+            placement?: "button" | "banner" | "menu";
+            /** Format: date-time */
+            startDate?: string | null;
+            /** Format: date-time */
+            endDate?: string | null;
+            sortOrder?: number;
+            enabled?: boolean;
+        };
+        LoyaltyCustomerSummary: {
+            id: string;
+            name: string;
+            phoneMasked: string;
+            email?: string | null;
+            stamps: number;
+            rewardsAvailable: number;
+            wantsOffers: boolean;
+            /** Format: date-time */
+            lastStampAt: string;
+        };
+        LoyaltyAnalyticsReport: {
+            /** @enum {string} */
+            range: "7d" | "30d" | "90d";
+            enrolledCount: number;
+            stampsIssued: number;
+            rewardsRedeemed: number;
+            newEnrollments: number;
+            series: {
+                date: string;
+                newEnrollments: number;
+                stampsIssued: number;
+                rewardsRedeemed: number;
+            }[];
+        };
+        LoyaltyScanResult: {
+            success: boolean;
+            card: components["schemas"]["LoyaltyCard"];
+            customerName: string;
+            stamps: number;
+            cooldownViolated?: boolean;
+            cooldownRemainingSeconds?: number;
+            rewardUnlocked?: boolean;
+            message?: string;
+        };
+        Business: {
+            id: string;
+            name: string;
+            ownerId: string;
+        };
+        Location: {
+            id: string;
+            businessId: string;
+            slug: string;
+            name: string;
+            email?: string | null;
+            phone?: string | null;
+            address1?: string | null;
+            address2?: string | null;
+            city?: string | null;
+            postcode?: string | null;
+            country: string;
+            currency: components["schemas"]["Currency"];
+        };
+        LocationInput: {
+            name: string;
+            address1?: string;
+            city?: string;
+            postcode?: string;
+            country: string;
+            isSeparateBusiness?: boolean;
+        };
+        LocationPatchInput: {
+            name?: string;
+            email?: string;
+            phone?: string;
+            address1?: string;
+            address2?: string;
+            city?: string;
+            postcode?: string;
+            country?: string;
+        };
+        ScannerDevice: {
+            id: string;
+            venueId: string;
+            name: string;
+            platform?: string;
+            /** Format: date-time */
+            pairedAt: string;
+            /** Format: date-time */
+            lastSeen: string;
+            pairingCode?: string | null;
         };
     };
     responses: {
@@ -1569,10 +2253,11 @@ export interface components {
         AcceptLanguage: string;
         VenueSlug: components["schemas"]["Slug"];
         VenueId: string;
+        TransactionId: string;
+        WrittenReviewId: string;
         OrderId: components["schemas"]["OrderId"];
         PaymentReference: string;
         WaiterCallId: string;
-        VideoReviewId: components["schemas"]["VideoReviewId"];
         CategoryId: string;
         MenuItemIdParam: components["schemas"]["MenuItemId"];
         TableId: string;
@@ -1850,30 +2535,6 @@ export interface operations {
                 };
             };
             404: components["responses"]["NotFound"];
-        };
-    };
-    listStories: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                venueSlug: components["parameters"]["VenueSlug"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Newest first, at most 12. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        items: components["schemas"]["Story"][];
-                    };
-                };
-            };
         };
     };
     listOffers: {
@@ -2158,6 +2819,29 @@ export interface operations {
             404: components["responses"]["NotFound"];
         };
     };
+    getVenueLoyaltyProgram: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueSlug: components["parameters"]["VenueSlug"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The venue's loyalty programme. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoyaltyProgram"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
     getMyLoyaltyCard: {
         parameters: {
             query?: never;
@@ -2169,7 +2853,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description The guest's stamp card at this venue. */
+            /** @description The guest's loyalty card and fact ledger at this venue. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -2178,13 +2862,7 @@ export interface operations {
                     "application/json": components["schemas"]["LoyaltyCard"];
                 };
             };
-            /** @description Not a member yet. Show the join screen. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+            404: components["responses"]["NotFound"];
         };
     };
     joinLoyalty: {
@@ -2217,6 +2895,7 @@ export interface operations {
                 };
             };
             400: components["responses"]["BadRequest"];
+            409: components["responses"]["Conflict"];
         };
     };
     leaveLoyalty: {
@@ -2260,7 +2939,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Reward applied. The card shows the new stamp count. */
+            /** @description Claim opened. Staff confirmation is the only debit. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -2269,6 +2948,7 @@ export interface operations {
                     "application/json": components["schemas"]["LoyaltyCard"];
                 };
             };
+            404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
         };
     };
@@ -2303,108 +2983,12 @@ export interface operations {
                         id: string;
                         /**
                          * Format: uri
-                         * @description Null when the venue has not linked Google.
+                         * @description Always null. Kept so older clients still parse; reviews are not routed by stars.
                          */
                         googleReviewUrl: string | null;
                     };
                 };
             };
-        };
-    };
-    createVideoUpload: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @enum {string} */
-                    contentType: "video/mp4" | "video/webm" | "video/quicktime";
-                    durationSeconds: number;
-                    sizeBytes: number;
-                };
-            };
-        };
-        responses: {
-            /** @description PUT the file to `uploadUrl` within 15 minutes. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        uploadId: string;
-                        /** Format: uri */
-                        uploadUrl: string;
-                        /** Format: date-time */
-                        expiresAt: string;
-                    };
-                };
-            };
-        };
-    };
-    createVideoReview: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description A new UUID per user action. Reuse it when retrying the same action. */
-                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    uploadId: string;
-                    stars: number;
-                    firstName?: string;
-                    quote?: string;
-                    menuItemId?: components["schemas"]["MenuItemId"];
-                    /** @description True lets the venue feature it as a story (first name and stars only). False keeps it a private review. */
-                    featureConsent: boolean;
-                };
-            };
-        };
-        responses: {
-            /** @description Saved with moderation state `pending`. A delete token is returned so the guest can remove it later. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        id: components["schemas"]["VideoReviewId"];
-                        deleteToken: string;
-                    };
-                };
-            };
-        };
-    };
-    deleteMyVideoReview: {
-        parameters: {
-            query?: never;
-            header: {
-                "X-Delete-Token": string;
-            };
-            path: {
-                videoReviewId: components["parameters"]["VideoReviewId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Deleted everywhere, including stories. */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: components["responses"]["NotFound"];
         };
     };
     getLeaderboard: {
@@ -3116,70 +3700,6 @@ export interface operations {
             };
         };
     };
-    ownerListVideoReviews: {
-        parameters: {
-            query?: {
-                state?: components["schemas"]["ModerationState"];
-                cursor?: components["parameters"]["Cursor"];
-            };
-            header?: never;
-            path: {
-                venueId: components["parameters"]["VenueId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description The To check, Featured and Hidden tabs. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        items: components["schemas"]["VideoReview"][];
-                        nextCursor?: string | null;
-                    };
-                };
-            };
-        };
-    };
-    ownerModerateVideoReview: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                videoReviewId: components["parameters"]["VideoReviewId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @enum {string} */
-                    state: "featured" | "hidden";
-                };
-            };
-        };
-        responses: {
-            /** @description Saved. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["VideoReview"];
-                };
-            };
-            /** @description Cannot feature a video without the guest's consent. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     ownerGetLoyalty: {
         parameters: {
             query?: never;
@@ -3226,6 +3746,8 @@ export interface operations {
                     "application/json": components["schemas"]["LoyaltyProgram"];
                 };
             };
+            400: components["responses"]["BadRequest"];
+            409: components["responses"]["Conflict"];
         };
     };
     ownerListLoyaltyMembers: {
@@ -3248,11 +3770,44 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        items: components["schemas"]["LoyaltyMember"][];
+                        items: components["schemas"]["LoyaltyCard"][];
                         nextCursor?: string | null;
                     };
                 };
             };
+        };
+    };
+    ownerConfirmRedemption: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description A new UUID per user action. Reuse it when retrying the same action. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    code: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Confirmed and debited on the member's card. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoyaltyCard"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
         };
     };
     ownerGetPayoutAccount: {
@@ -3309,6 +3864,672 @@ export interface operations {
                 };
             };
             422: components["responses"]["Unprocessable"];
+        };
+    };
+    ownerGetDashboard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Figures for the owner home. Sales count only money already taken. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OwnerDashboard"];
+                };
+            };
+        };
+    };
+    ownerGetFloor: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Status comes from orders and waiter calls. It is not stored on the table. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["FloorTable"][];
+                    };
+                };
+            };
+        };
+    };
+    ownerListTransactions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Owner role only. Settlement is mocked until the live Paystack account exists. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["VenueTransaction"][];
+                    };
+                };
+            };
+        };
+    };
+    ownerRefundTransaction: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description A new UUID per user action. Reuse it when retrying the same action. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                transactionId: components["parameters"]["TransactionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The charge is marked refunded. Only a succeeded payment can be refunded, and only once. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VenueTransaction"];
+                };
+            };
+            /** @description The charge cannot be refunded. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ownerListWrittenReviews: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Written reviews. 1 to 3 stars stay private. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["WrittenReview"][];
+                    };
+                };
+            };
+        };
+    };
+    ownerReplyToReview: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description A new UUID per user action. Reuse it when retrying the same action. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                writtenReviewId: components["parameters"]["WrittenReviewId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    text: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Saved. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WrittenReview"];
+                };
+            };
+        };
+    };
+    ownerGetInsights: {
+        parameters: {
+            query?: {
+                range?: "today" | "7d" | "30d" | "90d";
+            };
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sample figures until the real ledger exists. The response says sample true. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InsightsReport"];
+                };
+            };
+        };
+    };
+    ownerListFeedback: {
+        parameters: {
+            query?: {
+                state?: "all" | "new" | "archived";
+                search?: string;
+            };
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List of feedback. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["FeedbackItem"][];
+                    };
+                };
+            };
+        };
+    };
+    ownerArchiveFeedback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+                feedbackId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    archived: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated feedback item. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedbackItem"];
+                };
+            };
+        };
+    };
+    ownerAskFeedbackAi: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    question: string;
+                };
+            };
+        };
+        responses: {
+            /** @description AI answer. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        reply: string;
+                        suggestions?: string[];
+                    };
+                };
+            };
+        };
+    };
+    ownerListCustomLinks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List of custom links. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["CustomLink"][];
+                    };
+                };
+            };
+        };
+    };
+    ownerCreateCustomLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CustomLinkInput"];
+            };
+        };
+        responses: {
+            /** @description Created custom link. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomLink"];
+                };
+            };
+        };
+    };
+    ownerDeleteCustomLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+                linkId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ownerUpdateCustomLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+                linkId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CustomLinkInput"];
+            };
+        };
+        responses: {
+            /** @description Updated custom link. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomLink"];
+                };
+            };
+        };
+    };
+    ownerGetLoyaltyAnalytics: {
+        parameters: {
+            query?: {
+                range?: "7d" | "30d" | "90d";
+            };
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Loyalty analytics report. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoyaltyAnalyticsReport"];
+                };
+            };
+        };
+    };
+    ownerListLoyaltyCustomers: {
+        parameters: {
+            query?: {
+                search?: string;
+                wantsOffers?: boolean;
+            };
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Enrolled loyalty customers. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["LoyaltyCustomerSummary"][];
+                        totalCount: number;
+                    };
+                };
+            };
+        };
+    };
+    ownerScanLoyaltyCard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    qrPayload: string;
+                    /** @enum {string} */
+                    action: "stamp" | "redeem";
+                };
+            };
+        };
+        responses: {
+            /** @description Scan result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoyaltyScanResult"];
+                };
+            };
+        };
+    };
+    ownerGetBusiness: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Business details. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        business: components["schemas"]["Business"];
+                        locations: components["schemas"]["Location"][];
+                    };
+                };
+            };
+        };
+    };
+    ownerUpdateBusiness: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated business. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Business"];
+                };
+            };
+        };
+    };
+    ownerCreateLocation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LocationInput"];
+            };
+        };
+        responses: {
+            /** @description Created location. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Location"];
+                };
+            };
+        };
+    };
+    ownerUpdateLocation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                locationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LocationPatchInput"];
+            };
+        };
+        responses: {
+            /** @description Updated location. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Location"];
+                };
+            };
+        };
+    };
+    ownerListScannerDevices: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List of paired scanner devices. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["ScannerDevice"][];
+                    };
+                };
+            };
+        };
+    };
+    ownerPairScannerDevice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name: string;
+                    code?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Paired device or generated pairing code. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScannerDevice"];
+                };
+            };
+        };
+    };
+    ownerRevokeScannerDevice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+                deviceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Revoked. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ownerRevokeStaff: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+                staffId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Revoked. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    deleteAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    confirmText: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Account deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
 }

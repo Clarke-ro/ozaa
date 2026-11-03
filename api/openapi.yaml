@@ -9,7 +9,7 @@ info:
     and regenerate `src/lib/api/schema.ts` (openapi-typescript) in the same PR.
 
     Conventions:
-    - Money is always an integer number of pesewas (GH₵65.00 = 6500). Currency is GHS.
+    - Money is always an integer count of minor units (GH₵65.00 = 6500). The venue's `currency` says which unit. Sample venues are GHS. XOF stores the whole franc. Paystack charges in this build stay GHS.
     - Times are ISO 8601 strings in UTC (`2026-10-31T12:41:00Z`). The app shows them in the venue's time zone.
     - IDs are opaque strings with a prefix (`ven_`, `itm_`, `ord_`, `pay_`, `vrv_` ...). Never parse them.
     - Errors use Problem Details (RFC 9457) with `application/problem+json`.
@@ -41,6 +41,11 @@ tags:
   - name: owner-reviews
   - name: owner-loyalty
   - name: owner-payouts
+  - name: owner-insights
+  - name: owner-feedback
+  - name: owner-links
+  - name: owner-business
+  - name: owner-devices
   - name: webhooks
 security: []
 paths:
@@ -220,22 +225,6 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Wifi' }
         '404': { $ref: '#/components/responses/NotFound' }
-  /venues/{venueSlug}/stories:
-    get:
-      tags: [reviews]
-      operationId: listStories
-      summary: Featured video reviews shown as story circles on the guest home.
-      parameters: [{ $ref: '#/components/parameters/VenueSlug' }]
-      responses:
-        '200':
-          description: Newest first, at most 12.
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [items]
-                properties:
-                  items: { type: array, items: { $ref: '#/components/schemas/Story' } }
   /venues/{venueSlug}/offers:
     get:
       tags: [venues]
@@ -440,6 +429,19 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
 
   # ---------------------------------------------------------------- loyalty (guest, phone proved by OTP)
+  /venues/{venueSlug}/loyalty:
+    get:
+      tags: [loyalty]
+      operationId: getVenueLoyaltyProgram
+      summary: Get the venue's loyalty programme (earn mode, tiers, rewards, expiry) before joining.
+      parameters: [{ $ref: '#/components/parameters/VenueSlug' }]
+      responses:
+        '200':
+          description: The venue's loyalty programme.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoyaltyProgram' }
+        '404': { $ref: '#/components/responses/NotFound' }
   /venues/{venueSlug}/loyalty/me:
     get:
       tags: [loyalty]
@@ -449,11 +451,11 @@ paths:
       parameters: [{ $ref: '#/components/parameters/VenueSlug' }]
       responses:
         '200':
-          description: The guest's stamp card at this venue.
+          description: The guest's loyalty card and fact ledger at this venue.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/LoyaltyCard' }
-        '404': { description: Not a member yet. Show the join screen. }
+        '404': { $ref: '#/components/responses/NotFound' }
     put:
       tags: [loyalty]
       operationId: joinLoyalty
@@ -478,6 +480,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/LoyaltyCard' }
         '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/Conflict' }
     delete:
       tags: [loyalty]
       operationId: leaveLoyalty
@@ -490,7 +493,7 @@ paths:
     post:
       tags: [loyalty]
       operationId: redeemReward
-      summary: Redeem reward.
+      summary: Open a short-lived redemption claim code for staff to confirm.
       security: [{ loyaltyAuth: [] }]
       parameters: [{ $ref: '#/components/parameters/VenueSlug' }, { $ref: '#/components/parameters/IdempotencyKey' }]
       requestBody:
@@ -505,10 +508,11 @@ paths:
                 orderId: { $ref: '#/components/schemas/OrderId' }
       responses:
         '200':
-          description: Reward applied. The card shows the new stamp count.
+          description: Claim opened. Staff confirmation is the only debit.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/LoyaltyCard' }
+        '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
 
   # ---------------------------------------------------------------- reviews
@@ -517,7 +521,7 @@ paths:
       tags: [reviews]
       operationId: createReview
       security: [{ guestAuth: [] }]
-      summary: Written review. 4-5 stars then offer the Google review link; 1-3 stars suggest private feedback.
+      summary: Written review. Every guest gets the same thank-you; the reply never depends on the star rating.
       parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
       requestBody:
         required: true
@@ -541,85 +545,7 @@ paths:
                 required: [id, googleReviewUrl]
                 properties:
                   id: { type: string }
-                  googleReviewUrl: { type: ['string', 'null'], format: uri, description: Null when the venue has not linked Google. }
-  /video-reviews/uploads:
-    post:
-      tags: [reviews]
-      operationId: createVideoUpload
-      security: [{ guestAuth: [] }]
-      summary: Get a one-time upload URL for a 15-30 s video (mp4, webm or mov, max 25 MB).
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [contentType, durationSeconds, sizeBytes]
-              properties:
-                contentType: { type: string, enum: [video/mp4, video/webm, video/quicktime] }
-                durationSeconds: { type: number, minimum: 15, maximum: 30 }
-                sizeBytes: { type: integer, maximum: 26214400 }
-      responses:
-        '201':
-          description: PUT the file to `uploadUrl` within 15 minutes.
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [uploadId, uploadUrl, expiresAt]
-                properties:
-                  uploadId: { type: string }
-                  uploadUrl: { type: string, format: uri }
-                  expiresAt: { type: string, format: date-time }
-  /video-reviews:
-    post:
-      tags: [reviews]
-      operationId: createVideoReview
-      summary: Create video review.
-      security: [{ guestAuth: [] }]
-      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [uploadId, stars, featureConsent]
-              properties:
-                uploadId: { type: string }
-                stars: { type: integer, minimum: 1, maximum: 5 }
-                firstName: { type: string, maxLength: 40 }
-                quote: { type: string, maxLength: 120 }
-                menuItemId: { $ref: '#/components/schemas/MenuItemId' }
-                featureConsent:
-                  type: boolean
-                  description: True lets the venue feature it as a story (first name and stars only). False keeps it a private review.
-      responses:
-        '201':
-          description: Saved with moderation state `pending`. A delete token is returned so the guest can remove it later.
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [id, deleteToken]
-                properties:
-                  id: { $ref: '#/components/schemas/VideoReviewId' }
-                  deleteToken: { type: string }
-  /video-reviews/{videoReviewId}:
-    delete:
-      tags: [reviews]
-      operationId: deleteMyVideoReview
-      summary: The guest removes their video at any time (needs the delete token).
-      parameters:
-        - { $ref: '#/components/parameters/VideoReviewId' }
-        - in: header
-          name: X-Delete-Token
-          required: true
-          schema: { type: string }
-      responses:
-        '204': { description: 'Deleted everywhere, including stories.' }
-        '404': { $ref: '#/components/responses/NotFound' }
-
+                  googleReviewUrl: { type: ['string', 'null'], format: uri, description: 'Always null. Kept so older clients still parse; reviews are not routed by stars.' }
   # ---------------------------------------------------------------- game: Play while you wait
   /venues/{venueSlug}/game/leaderboard:
     get:
@@ -1110,53 +1036,6 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/WaiterCall' }
 
-  /owner/venues/{venueId}/video-reviews:
-    get:
-      tags: [owner-reviews]
-      operationId: ownerListVideoReviews
-      summary: List video reviews (owner app).
-      security: [{ ownerAuth: [] }]
-      parameters:
-        - { $ref: '#/components/parameters/VenueId' }
-        - in: query
-          name: state
-          schema: { $ref: '#/components/schemas/ModerationState' }
-        - { $ref: '#/components/parameters/Cursor' }
-      responses:
-        '200':
-          description: The To check, Featured and Hidden tabs.
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [items]
-                properties:
-                  items: { type: array, items: { $ref: '#/components/schemas/VideoReview' } }
-                  nextCursor: { type: ['string', 'null'] }
-  /owner/video-reviews/{videoReviewId}:
-    patch:
-      tags: [owner-reviews]
-      operationId: ownerModerateVideoReview
-      security: [{ ownerAuth: [] }]
-      summary: Feature (needs the guest's featureConsent) or hide a video review.
-      parameters: [{ $ref: '#/components/parameters/VideoReviewId' }]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [state]
-              properties:
-                state: { type: string, enum: [featured, hidden] }
-      responses:
-        '200':
-          description: Saved.
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/VideoReview' }
-        '409': { description: Cannot feature a video without the guest's consent. }
-
   /owner/venues/{venueId}/loyalty:
     get:
       tags: [owner-loyalty]
@@ -1187,12 +1066,14 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/LoyaltyProgram' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/Conflict' }
   /owner/venues/{venueId}/loyalty/members:
     get:
       tags: [owner-loyalty]
       operationId: ownerListLoyaltyMembers
       security: [{ ownerAuth: [] }]
-      summary: Members with masked phone numbers. Only members who agreed to marketing can be messaged.
+      summary: Members with masked phone numbers and fact history. Only members who agreed to marketing can be messaged.
       parameters: [{ $ref: '#/components/parameters/VenueId' }, { $ref: '#/components/parameters/Cursor' }]
       responses:
         '200':
@@ -1203,8 +1084,32 @@ paths:
                 type: object
                 required: [items]
                 properties:
-                  items: { type: array, items: { $ref: '#/components/schemas/LoyaltyMember' } }
+                  items: { type: array, items: { $ref: '#/components/schemas/LoyaltyCard' } }
                   nextCursor: { type: ['string', 'null'] }
+  /owner/venues/{venueId}/loyalty/confirm:
+    post:
+      tags: [owner-loyalty]
+      operationId: ownerConfirmRedemption
+      security: [{ ownerAuth: [] }]
+      summary: Confirm a guest's 6-character redemption claim code. Staff confirmation is the only debit.
+      parameters: [{ $ref: '#/components/parameters/VenueId' }, { $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code: { type: string, minLength: 6, maxLength: 6 }
+      responses:
+        '200':
+          description: Confirmed and debited on the member's card.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoyaltyCard' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
 
   /owner/venues/{venueId}/payout-account:
     get:
@@ -1238,6 +1143,540 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/PayoutAccount' }
         '422': { $ref: '#/components/responses/Unprocessable' }
+
+  /owner/venues/{venueId}/dashboard:
+    get:
+      tags: [owner-orders]
+      operationId: ownerGetDashboard
+      summary: Today's sales, open tables, live orders, waiter calls, rating and alerts.
+      security: [{ ownerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      responses:
+        '200':
+          description: Figures for the owner home. Sales count only money already taken.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OwnerDashboard' }
+  /owner/venues/{venueId}/floor:
+    get:
+      tags: [owner-tables]
+      operationId: ownerGetFloor
+      summary: Tables with a derived status.
+      security: [{ ownerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      responses:
+        '200':
+          description: Status comes from orders and waiter calls. It is not stored on the table.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/FloorTable' } }
+  /owner/venues/{venueId}/transactions:
+    get:
+      tags: [owner-payouts]
+      operationId: ownerListTransactions
+      summary: Paystack sandbox charges and cash taken at the table.
+      security: [{ ownerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      responses:
+        '200':
+          description: Owner role only. Settlement is mocked until the live Paystack account exists.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/VenueTransaction' } }
+  /owner/transactions/{transactionId}/refund:
+    post:
+      tags: [owner-payouts]
+      operationId: ownerRefundTransaction
+      summary: Refund a succeeded charge in full. Paystack sandbox, mocked.
+      security: [{ ownerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/TransactionId' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      responses:
+        '200':
+          description: The charge is marked refunded. Only a succeeded payment can be refunded, and only once.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/VenueTransaction' }
+        '409': { description: The charge cannot be refunded. }
+  /owner/venues/{venueId}/written-reviews:
+    get:
+      tags: [owner-reviews]
+      operationId: ownerListWrittenReviews
+      summary: Star ratings and the replies the owner has sent.
+      security: [{ ownerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      responses:
+        '200':
+          description: Written reviews. 1 to 3 stars stay private.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/WrittenReview' } }
+  /owner/written-reviews/{writtenReviewId}/reply:
+    post:
+      tags: [owner-reviews]
+      operationId: ownerReplyToReview
+      summary: Save a private reply on a written review.
+      security: [{ ownerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/WrittenReviewId' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text: { type: string, maxLength: 400 }
+      responses:
+        '200':
+          description: Saved.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WrittenReview' }
+  /owner/venues/{venueId}/insights:
+    get:
+      tags: [owner-insights]
+      operationId: ownerGetInsights
+      summary: Sales, top dishes, peak hours and repeat guests.
+      security: [{ ownerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/VenueId' }
+        - in: query
+          name: range
+          schema: { type: string, enum: [today, 7d, 30d, 90d], default: 7d }
+      responses:
+        '200':
+          description: Sample figures until the real ledger exists. The response says sample true.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InsightsReport' }
+
+  /owner/venues/{venueId}/feedback:
+    get:
+      tags: [owner-feedback]
+      operationId: ownerListFeedback
+      summary: List feedback items for a venue.
+      security: [{ ownerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/VenueId' }
+        - in: query
+          name: state
+          schema: { type: string, enum: [all, new, archived], default: new }
+        - in: query
+          name: search
+          schema: { type: string }
+      responses:
+        '200':
+          description: List of feedback.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/FeedbackItem' }
+
+  /owner/venues/{venueId}/feedback/{feedbackId}/archive:
+    patch:
+      tags: [owner-feedback]
+      operationId: ownerArchiveFeedback
+      summary: Archive or unarchive a feedback item.
+      security: [{ ownerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/VenueId' }
+        - in: path
+          name: feedbackId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [archived]
+              properties:
+                archived: { type: boolean }
+      responses:
+        '200':
+          description: Updated feedback item.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FeedbackItem' }
+
+  /owner/venues/{venueId}/feedback/ask:
+    post:
+      tags: [owner-feedback]
+      operationId: ownerAskFeedbackAi
+      summary: Ask AI assistant questions grounded on this venue's feedback.
+      security: [{ ownerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/VenueId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [question]
+              properties:
+                question: { type: string, minLength: 1, maxLength: 500 }
+      responses:
+        '200':
+          description: AI answer.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [reply]
+                properties:
+                  reply: { type: string }
+                  suggestions:
+                    type: array
+                    items: { type: string }
+
+  /owner/venues/{venueId}/links:
+    get:
+      tags: [owner-links]
+      operationId: ownerListCustomLinks
+      summary: List custom link buttons.
+      security: [{ ownerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/VenueId' }
+      responses:
+        '200':
+          description: List of custom links.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/CustomLink' }
+    post:
+      tags: [owner-links]
+      operationId: ownerCreateCustomLink
+      summary: Create a custom link button.
+      security: [{ ownerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/VenueId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CustomLinkInput' }
+      responses:
+        '201':
+          description: Created custom link.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CustomLink' }
+
+  /owner/venues/{venueId}/links/{linkId}:
+    patch:
+      tags: [owner-links]
+      operationId: ownerUpdateCustomLink
+      summary: Update a custom link button.
+      security: [{ ownerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/VenueId' }
+        - in: path
+          name: linkId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CustomLinkInput' }
+      responses:
+        '200':
+          description: Updated custom link.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CustomLink' }
+    delete:
+      tags: [owner-links]
+      operationId: ownerDeleteCustomLink
+      summary: Delete a custom link button.
+      security: [{ ownerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/VenueId' }
+        - in: path
+          name: linkId
+          required: true
+          schema: { type: string }
+      responses:
+        '204':
+          description: Deleted.
+
+  /owner/venues/{venueId}/loyalty/analytics:
+    get:
+      tags: [owner-loyalty]
+      operationId: ownerGetLoyaltyAnalytics
+      summary: Loyalty analytics KPIs and trend series.
+      security: [{ ownerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/VenueId' }
+        - in: query
+          name: range
+          schema: { type: string, enum: ['7d', '30d', '90d'], default: '30d' }
+      responses:
+        '200':
+          description: Loyalty analytics report.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoyaltyAnalyticsReport' }
+
+  /owner/venues/{venueId}/loyalty/customers:
+    get:
+      tags: [owner-loyalty]
+      operationId: ownerListLoyaltyCustomers
+      summary: List enrolled loyalty customers with offer preference filter.
+      security: [{ ownerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/VenueId' }
+        - in: query
+          name: search
+          schema: { type: string }
+        - in: query
+          name: wantsOffers
+          schema: { type: boolean }
+      responses:
+        '200':
+          description: Enrolled loyalty customers.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, totalCount]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/LoyaltyCustomerSummary' }
+                  totalCount: { type: integer }
+
+  /owner/venues/{venueId}/loyalty/scan:
+    post:
+      tags: [owner-loyalty]
+      operationId: ownerScanLoyaltyCard
+      summary: Scan a customer loyalty card QR to issue stamp or redeem.
+      security: [{ ownerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/VenueId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [qrPayload, action]
+              properties:
+                qrPayload: { type: string }
+                action: { type: string, enum: [stamp, redeem] }
+      responses:
+        '200':
+          description: Scan result.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoyaltyScanResult' }
+
+  /owner/business:
+    get:
+      tags: [owner-business]
+      operationId: ownerGetBusiness
+      summary: Get business and its locations.
+      security: [{ ownerAuth: [] }]
+      responses:
+        '200':
+          description: Business details.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [business, locations]
+                properties:
+                  business: { $ref: '#/components/schemas/Business' }
+                  locations:
+                    type: array
+                    items: { $ref: '#/components/schemas/Location' }
+    patch:
+      tags: [owner-business]
+      operationId: ownerUpdateBusiness
+      summary: Update business name.
+      security: [{ ownerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string, minLength: 2, maxLength: 60 }
+      responses:
+        '200':
+          description: Updated business.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Business' }
+
+  /owner/business/locations:
+    post:
+      tags: [owner-business]
+      operationId: ownerCreateLocation
+      summary: Add a new location.
+      security: [{ ownerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LocationInput' }
+      responses:
+        '201':
+          description: Created location.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Location' }
+
+  /owner/business/locations/{locationId}:
+    patch:
+      tags: [owner-business]
+      operationId: ownerUpdateLocation
+      summary: Update location details.
+      security: [{ ownerAuth: [] }]
+      parameters:
+        - in: path
+          name: locationId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LocationPatchInput' }
+      responses:
+        '200':
+          description: Updated location.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Location' }
+
+  /owner/venues/{venueId}/devices:
+    get:
+      tags: [owner-devices]
+      operationId: ownerListScannerDevices
+      summary: List paired scanner devices.
+      security: [{ ownerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/VenueId' }
+      responses:
+        '200':
+          description: List of paired scanner devices.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/ScannerDevice' }
+
+  /owner/venues/{venueId}/devices/pair:
+    post:
+      tags: [owner-devices]
+      operationId: ownerPairScannerDevice
+      summary: Pair a scanner device or generate a pairing code.
+      security: [{ ownerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/VenueId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                code: { type: string }
+      responses:
+        '200':
+          description: Paired device or generated pairing code.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ScannerDevice' }
+
+  /owner/venues/{venueId}/devices/{deviceId}:
+    delete:
+      tags: [owner-devices]
+      operationId: ownerRevokeScannerDevice
+      summary: Revoke a paired scanner device.
+      security: [{ ownerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/VenueId' }
+        - in: path
+          name: deviceId
+          required: true
+          schema: { type: string }
+      responses:
+        '204':
+          description: Revoked.
+
+  /owner/venues/{venueId}/staff/{staffId}:
+    delete:
+      tags: [owner-venue]
+      operationId: ownerRevokeStaff
+      summary: Revoke staff access.
+      security: [{ ownerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/VenueId' }
+        - in: path
+          name: staffId
+          required: true
+          schema: { type: string }
+      responses:
+        '204':
+          description: Revoked.
+
+  /auth/account:
+    delete:
+      tags: [auth]
+      operationId: deleteAccount
+      summary: Delete account and personal data.
+      security: [{ ownerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [confirmText]
+              properties:
+                confirmText: { type: string }
+      responses:
+        '204':
+          description: Account deleted.
 
 components:
   securitySchemes:
@@ -1281,6 +1720,16 @@ components:
       name: venueId
       required: true
       schema: { type: string, pattern: '^ven_[A-Za-z0-9]+$' }
+    TransactionId:
+      in: path
+      name: transactionId
+      required: true
+      schema: { type: string, pattern: '^txn_[A-Za-z0-9]+$' }
+    WrittenReviewId:
+      in: path
+      name: writtenReviewId
+      required: true
+      schema: { type: string, pattern: '^rev_[A-Za-z0-9]+$' }
     OrderId:
       in: path
       name: orderId
@@ -1296,11 +1745,6 @@ components:
       name: waiterCallId
       required: true
       schema: { type: string, pattern: '^wcl_[A-Za-z0-9]+$' }
-    VideoReviewId:
-      in: path
-      name: videoReviewId
-      required: true
-      schema: { $ref: '#/components/schemas/VideoReviewId' }
     CategoryId:
       in: path
       name: categoryId
@@ -1381,7 +1825,7 @@ components:
     GhanaPhone:
       type: string
       description: Ghana mobile number in E.164 (+233 then 9 digits). The app accepts "024 123 4567" and converts it.
-      pattern: '^\+233[0-9]{9}$'
+      pattern: '^\+[1-9][0-9]{6,14}$'
       example: '+233241234567'
     Language:
       type: string
@@ -1411,10 +1855,6 @@ components:
     MenuItemId:
       type: string
       pattern: '^itm_[A-Za-z0-9]+$'
-    VideoReviewId:
-      type: string
-      pattern: '^vrv_[A-Za-z0-9]+$'
-
     AuthTokens:
       type: object
       required: [accessToken, refreshToken, expiresAt]
@@ -1425,7 +1865,7 @@ components:
         user: { $ref: '#/components/schemas/StaffUser' }
     StaffRole:
       type: string
-      enum: [owner, manager, waiter, kitchen]
+      enum: [owner, manager, waiter, kitchen, viewer, staff_scanner]
       description: owner does everything incl. payouts; manager everything except payouts and staff; waiter orders and waiter calls; kitchen order status only.
     StaffUser:
       type: object
@@ -1452,6 +1892,21 @@ components:
         role: { $ref: '#/components/schemas/StaffRole' }
         phoneMasked: { type: string, example: '024 *** 4567' }
         status: { type: string, enum: [invited, active, removed] }
+        lastName: { type: string }
+        joinedAt: { type: string, format: date-time, description: When they accepted the invite. }
+        lastActiveAt:
+          type: ['string', 'null']
+          format: date-time
+          description: Last time they used the owner app. Null if never.
+        onShift: { type: boolean, description: True while they are signed in on a device right now. }
+        today:
+          type: object
+          description: What they did since the venue opened today.
+          required: [ordersHandled, callsAnswered]
+          properties:
+            ordersHandled: { type: integer, description: Orders they moved to a new status. }
+            callsAnswered: { type: integer }
+            avgPickupMinutes: { type: ['integer', 'null'], description: Average time to answer a waiter call. }
 
     ServiceId:
       type: string
@@ -1579,10 +2034,15 @@ components:
           properties:
             stampsNeeded: { type: integer }
             rewardTitle: { type: string }
-        currency: { type: string, const: GHS }
+        currency: { $ref: '#/components/schemas/Currency' }
         languages: { type: array, items: { $ref: '#/components/schemas/Language' } }
         googleReviewUrl: { type: ['string', 'null'], format: uri }
         payEnabled: { type: boolean, description: False until the payout account is checked. }
+        tagline: { type: string, maxLength: 100 }
+        buttonTint: { type: string, enum: [auto, light, dark] }
+        stylePreset: { type: string, enum: [default, classic, editorial, modern] }
+        buttonOrder: { type: array, items: { type: string } }
+        socials: { $ref: '#/components/schemas/SocialLinks' }
     VenueSettings:
       allOf:
         - { $ref: '#/components/schemas/VenuePublic' }
@@ -1603,13 +2063,19 @@ components:
         wifi: { $ref: '#/components/schemas/Wifi' }
         googleReviewUrl: { type: ['string', 'null'], format: uri }
         languages: { type: array, items: { $ref: '#/components/schemas/Language' } }
+        tagline: { type: string, maxLength: 100 }
+        buttonTint: { type: string, enum: [auto, light, dark] }
+        stylePreset: { type: string, enum: [default, classic, editorial, modern] }
+        buttonOrder: { type: array, items: { type: string } }
+        socials: { $ref: '#/components/schemas/SocialLinks' }
     Wifi:
       type: object
       required: [ssid, security]
       properties:
         ssid: { type: string, maxLength: 32 }
         password: { type: string, maxLength: 63 }
-        security: { type: string, enum: [WPA, WEP, nopass] }
+        security: { type: string, enum: [WPA, WPA2, WPA3, WEP, nopass, OPEN] }
+        hidden: { type: boolean }
     Table:
       type: object
       required: [id, code]
@@ -1630,6 +2096,13 @@ components:
         name: { $ref: '#/components/schemas/LocalizedText' }
         kind: { type: string, enum: [food, drinks], description: The Food and Drinks tabs. }
         position: { type: integer }
+        hidden: { type: boolean }
+        schedule:
+          type: object
+          properties:
+            days: { type: array, items: { type: integer } }
+            startTime: { type: string, example: '12:00' }
+            endTime: { type: string, example: '15:00' }
     MenuCategoryInput:
       type: object
       required: [name, kind]
@@ -1637,6 +2110,13 @@ components:
         name: { $ref: '#/components/schemas/LocalizedText' }
         kind: { type: string, enum: [food, drinks] }
         position: { type: integer }
+        hidden: { type: boolean }
+        schedule:
+          type: object
+          properties:
+            days: { type: array, items: { type: integer } }
+            startTime: { type: string, example: '12:00' }
+            endTime: { type: string, example: '15:00' }
     ModifierGroup:
       type: object
       required: [id, name, min, max, options]
@@ -1666,10 +2146,22 @@ components:
         pricePesewas: { $ref: '#/components/schemas/Pesewas' }
         photo:
           oneOf: [{ $ref: '#/components/schemas/Image' }, { type: 'null' }]
+        gallery:
+          type: array
+          maxItems: 5
+          description: Extra photos of the same dish, shown after `photo` on the dish page as swipeable pages. Empty or missing means only `photo` is shown.
+          items: { $ref: '#/components/schemas/Image' }
         available: { type: boolean, description: False shows "Sold out" and blocks adding. }
         dietary: { type: array, items: { $ref: '#/components/schemas/Dietary' } }
+        dietaryCustom:
+          type: array
+          maxItems: 6
+          description: Diet labels the owner typed in beyond the standard set (for example "Keto"). Shown as tags on the dish; the guest diet filters use `dietary` only.
+          items: { type: string, minLength: 1, maxLength: 24 }
         badges: { type: array, items: { type: string, enum: [popular, new, chef_pick] } }
         modifierGroups: { type: array, items: { $ref: '#/components/schemas/ModifierGroup' } }
+        allergens: { type: array, items: { type: string } }
+        calories: { type: integer }
         prepMinutes: { type: integer }
     MenuItemInput:
       type: object
@@ -1681,8 +2173,15 @@ components:
         photoMediaId: { type: ['string', 'null'] }
         available: { type: boolean }
         dietary: { type: array, items: { $ref: '#/components/schemas/Dietary' } }
+        dietaryCustom:
+          type: array
+          maxItems: 6
+          description: Diet labels the owner typed in beyond the standard set (for example "Keto"). Shown as tags on the dish; the guest diet filters use `dietary` only.
+          items: { type: string, minLength: 1, maxLength: 24 }
         badges: { type: array, items: { type: string, enum: [popular, new, chef_pick] } }
         modifierGroups: { type: array, items: { $ref: '#/components/schemas/ModifierGroup' } }
+        allergens: { type: array, items: { type: string } }
+        calories: { type: integer }
         prepMinutes: { type: integer }
     Menu:
       type: object
@@ -1862,94 +2361,148 @@ components:
         loyalty: { type: boolean, const: true, description: Must be true to join. }
         marketing: { type: boolean, description: Separate and unticked by default. WhatsApp or SMS promos only if true. }
         textVersion: { type: string, example: consent-2026-10-v1 }
-    Reward:
+    LoyaltyEarnMode:
+      oneOf:
+        - type: object
+          required: [kind]
+          properties:
+            kind: { type: string, const: stamps }
+        - type: object
+          required: [kind, points, perMinor]
+          properties:
+            kind: { type: string, const: points }
+            points: { type: integer, minimum: 1 }
+            perMinor: { type: integer, minimum: 1 }
+    LoyaltyTierBand:
       type: object
-      required: [id, title, stampsNeeded]
+      required: [id, minLifetime]
+      properties:
+        id: { type: string, enum: [bronze, silver, gold] }
+        minLifetime: { type: integer, minimum: 0 }
+    RewardOffer:
+      type: object
+      required: [id, title, cost]
       properties:
         id: { type: string }
-        title: { type: string, example: Free jollof & chicken }
-        stampsNeeded: { type: integer }
+        title: { type: string, maxLength: 80, example: Free jollof & chicken }
+        cost: { type: integer, minimum: 1 }
     LoyaltyProgram:
       type: object
-      required: [enabled, stampsNeeded, reward, stampRule]
+      required: [enabled, currency, earn, tiers, rewards, expiryDays, claimTtlSeconds, birthdayTreat]
       properties:
         enabled: { type: boolean }
-        stampsNeeded: { type: integer, minimum: 3, maximum: 20 }
-        minSpendPesewas:
-          description: Spend per stamp when stampRule is one_per_min_spend.
-          allOf: [{ $ref: '#/components/schemas/Pesewas' }]
-        reward: { $ref: '#/components/schemas/Reward' }
+        currency: { type: string, pattern: '^[A-Z]{3}$', example: GHS }
+        earn: { $ref: '#/components/schemas/LoyaltyEarnMode' }
+        tiers:
+          type: array
+          minItems: 3
+          maxItems: 3
+          items: { $ref: '#/components/schemas/LoyaltyTierBand' }
+        rewards:
+          type: array
+          items: { $ref: '#/components/schemas/RewardOffer' }
+        expiryDays: { type: ['integer', 'null'], minimum: 1 }
+        claimTtlSeconds: { type: integer, minimum: 60, maximum: 3600 }
         birthdayTreat: { type: ['string', 'null'] }
-        stampRule: { type: string, enum: [one_per_paid_order, one_per_min_spend], default: one_per_paid_order }
         memberCount: { type: integer, readOnly: true }
-    LoyaltyHistoryEntry:
-      type: object
-      required: [at, change, reason]
-      properties:
-        at: { type: string, format: date-time }
-        change: { type: integer }
-        reason: { type: string, enum: [paid_order, game_score, reward_redeemed, birthday] }
-    LoyaltyCard:
-      type: object
-      required: [venueId, stamps, stampsNeeded, reward, rewardReady, memberSince, consent]
-      properties:
-        venueId: { type: string }
-        stamps: { type: integer }
-        stampsNeeded: { type: integer }
-        reward: { $ref: '#/components/schemas/Reward' }
-        rewardReady: { type: boolean }
-        memberSince: { type: string, format: date }
-        history: { type: array, items: { $ref: '#/components/schemas/LoyaltyHistoryEntry' } }
-        consent:
+        programKind: { type: string, enum: [rewards_pass, stamp_card, both] }
+        cooldown: { type: string, enum: [none, 1h, 4h, 1d] }
+        lockscreenMessage: { type: string, maxLength: 60 }
+        stampsRequired: { type: integer }
+        secondTierReward: { type: string }
+        secondTierStamps: { type: integer }
+        automations:
           type: object
-          required: [marketing, at]
           properties:
-            marketing: { type: boolean }
+            welcomeReward: { type: string }
+            birthdayReward: { type: string }
+            winbackDays: { type: integer }
+            winbackReward: { type: string }
+            reviewAskReward: { type: string }
+        passAppearance:
+          type: object
+          properties:
+            bgHex: { $ref: '#/components/schemas/HexColor' }
+            textHex: { $ref: '#/components/schemas/HexColor' }
+            coverUrl: { type: string }
+            logoUrl: { type: string }
+    LoyaltyEarnSource:
+      oneOf:
+        - type: object
+          required: [type, orderId, amountMinor, currency]
+          properties:
+            type: { type: string, const: paid_visit }
+            orderId: { type: string }
+            amountMinor: { $ref: '#/components/schemas/Pesewas' }
+            currency: { type: string, pattern: '^[A-Z]{3}$' }
+        - type: object
+          required: [type, runId, day]
+          properties:
+            type: { type: string, const: game }
+            runId: { type: string }
+            day: { type: string, format: date }
+        - type: object
+          required: [type, year, title]
+          properties:
+            type: { type: string, const: birthday }
+            year: { type: string }
+            title: { type: string }
+    LoyaltyFact:
+      oneOf:
+        - type: object
+          required: [kind, id, at, units, source]
+          properties:
+            kind: { type: string, const: earn }
+            id: { type: string }
             at: { type: string, format: date-time }
+            units: { type: integer, minimum: 0 }
+            source: { $ref: '#/components/schemas/LoyaltyEarnSource' }
+        - type: object
+          required: [kind, id, at, code, rewardId, title, units, expiresAt]
+          properties:
+            kind: { type: string, const: claim }
+            id: { type: string }
+            at: { type: string, format: date-time }
+            code: { type: string, pattern: '^[A-Z0-9]{6}$' }
+            rewardId: { type: string }
+            title: { type: string }
+            units: { type: integer, minimum: 1 }
+            expiresAt: { type: string, format: date-time }
+        - type: object
+          required: [kind, id, at, claimId, rewardId, title, units]
+          properties:
+            kind: { type: string, const: confirm }
+            id: { type: string }
+            at: { type: string, format: date-time }
+            claimId: { type: string }
+            rewardId: { type: string }
+            title: { type: string }
+            units: { type: integer, minimum: 1 }
     LoyaltyMember:
       type: object
-      required: [id, phoneMasked, stamps, visits, marketingConsent, joinedAt]
+      required: [id, firstName, phoneMasked, birthdayMonthDay, memberSince, consent, facts]
       properties:
         id: { type: string }
         firstName: { type: ['string', 'null'] }
         phoneMasked: { type: string }
-        stamps: { type: integer }
-        visits: { type: integer }
-        marketingConsent: { type: boolean }
-        joinedAt: { type: string, format: date-time }
-
-    ModerationState:
-      type: string
-      enum: [pending, featured, hidden]
-    Story:
-      type: object
-      required: [id, firstName, stars, postedAt, poster, video, sample]
-      properties:
-        id: { $ref: '#/components/schemas/VideoReviewId' }
-        firstName: { type: string }
-        stars: { type: integer, minimum: 1, maximum: 5 }
-        quote: { type: string }
-        postedAt: { type: string, format: date-time }
-        avatar: { $ref: '#/components/schemas/Image' }
-        poster: { $ref: '#/components/schemas/Image' }
-        video:
+        birthdayMonthDay: { type: ['string', 'null'] }
+        memberSince: { type: string, format: date }
+        consent:
           type: object
-          required: [mp4Url, durationSeconds]
+          required: [marketing, at, textVersion]
           properties:
-            hlsUrl: { type: string, format: uri }
-            mp4Url: { type: string, format: uri, description: '480p, used on data saver.' }
-            durationSeconds: { type: number }
-        menuItemId: { $ref: '#/components/schemas/MenuItemId' }
-        sample: { type: boolean, description: True for demo content. Show the Sample label. }
-    VideoReview:
-      allOf:
-        - { $ref: '#/components/schemas/Story' }
-        - type: object
-          required: [state, featureConsent]
-          properties:
-            state: { $ref: '#/components/schemas/ModerationState' }
-            featureConsent: { type: boolean }
-            orderNumber: { type: ['integer', 'null'] }
+            marketing: { type: boolean }
+            at: { type: string, format: date-time }
+            textVersion: { type: string }
+        facts:
+          type: array
+          items: { $ref: '#/components/schemas/LoyaltyFact' }
+    LoyaltyCard:
+      type: object
+      required: [programme, member]
+      properties:
+        programme: { $ref: '#/components/schemas/LoyaltyProgram' }
+        member: { $ref: '#/components/schemas/LoyaltyMember' }
 
     LeaderboardEntry:
       type: object
@@ -1997,3 +2550,311 @@ components:
         accountMasked: { type: string, example: '**** 4567' }
         verified: { type: boolean }
         ozaaFeePercent: { type: number, description: 'Ozaa''s share taken by the Paystack split. Set by Ozaa, read-only here.' }
+
+    Currency:
+      type: string
+      enum: [GHS, NGN, KES, ZAR, XOF, USD]
+      description: Sample venues use GHS. Amount fields are minor units (pesewas, kobo, cents) except XOF, which is the whole franc.
+    OwnerDashboard:
+      type: object
+      required: [salesTodayPesewas, currency, changePercent, direction, openTables, liveOrders, openCalls, ratingAverage, ratingCount, alerts]
+      properties:
+        salesTodayPesewas: { $ref: '#/components/schemas/Pesewas' }
+        currency: { $ref: '#/components/schemas/Currency' }
+        changePercent: { type: ['integer', 'null'], description: Versus the same venue yesterday. Null when yesterday was zero. }
+        direction: { type: string, enum: [up, down, flat, none] }
+        openTables: { type: integer }
+        liveOrders: { type: integer }
+        openCalls: { type: integer }
+        ratingAverage: { type: ['number', 'null'] }
+        ratingCount: { type: integer }
+        alerts:
+          type: array
+          items:
+            type: object
+            required: [code]
+            properties:
+              code: { type: string, enum: [calls, bills, payout, sold_out] }
+              count: { type: integer }
+              detail: { type: string }
+    FloorStatus:
+      type: string
+      enum: [free, seated, ordered, waiting_to_pay, needs_waiter]
+    FloorTable:
+      type: object
+      required: [id, code, status]
+      properties:
+        id: { type: string }
+        code: { type: string }
+        label: { type: string }
+        qrUrl: { type: string, format: uri }
+        status: { $ref: '#/components/schemas/FloorStatus' }
+        orderId: { type: ['string', 'null'] }
+        orderNumber: { type: ['integer', 'null'] }
+        orderStatus: { oneOf: [{ $ref: '#/components/schemas/OrderStatus' }, { type: 'null' }] }
+        paymentStatus: { oneOf: [{ $ref: '#/components/schemas/PaymentStatusSummary' }, { type: 'null' }] }
+        billPesewas: { oneOf: [{ $ref: '#/components/schemas/Pesewas' }, { type: 'null' }] }
+        waiterCallId: { type: ['string', 'null'] }
+        waiterReason: { oneOf: [{ $ref: '#/components/schemas/WaiterReason' }, { type: 'null' }] }
+    VenueTransaction:
+      type: object
+      required: [id, reference, orderId, orderNumber, method, amountPesewas, currency, status, settlement, createdAt, testMode]
+      properties:
+        id: { type: string }
+        reference: { type: string }
+        orderId: { $ref: '#/components/schemas/OrderId' }
+        orderNumber: { type: integer }
+        method: { type: string, enum: [momo, card, cash] }
+        provider: { $ref: '#/components/schemas/MomoProvider' }
+        amountPesewas: { $ref: '#/components/schemas/Pesewas' }
+        currency: { $ref: '#/components/schemas/Currency' }
+        status: { type: string, enum: [succeeded, failed, abandoned, pending] }
+        settlement: { type: string, enum: [pending, settled, refunded] }
+        createdAt: { type: string, format: date-time }
+        testMode: { type: boolean }
+    WrittenReview:
+      type: object
+      required: [id, stars, firstName, createdAt]
+      properties:
+        id: { type: string }
+        stars: { type: integer, minimum: 1, maximum: 5 }
+        firstName: { type: string }
+        text: { type: string }
+        highlights:
+          type: array
+          items: { type: string, enum: [food, service, speed, value, vibe, cleanliness] }
+        createdAt: { type: string, format: date-time }
+        reply: { type: ['string', 'null'] }
+    InsightsReport:
+      type: object
+      required: [range, currency, salesPesewas, series, topItems, peakHours, repeatGuests, sample]
+      properties:
+        range: { type: string, enum: [today, 7d, 30d, 90d] }
+        currency: { $ref: '#/components/schemas/Currency' }
+        salesPesewas: { $ref: '#/components/schemas/Pesewas' }
+        sample: { type: boolean, description: True until the ledger is real. Show the Sample label. }
+        scansCount: { type: integer }
+        menuViewsCount: { type: integer }
+        loyaltyMetrics:
+          type: object
+          properties:
+            enrolled: { type: integer }
+            active: { type: integer }
+            rewardReady: { type: integer }
+            redeemed: { type: integer }
+        feedbackSentimentSeries:
+          type: array
+          items:
+            type: object
+            required: [date, positive, neutral, negative]
+            properties:
+              date: { type: string }
+              positive: { type: integer }
+              neutral: { type: integer }
+              negative: { type: integer }
+        loyaltySeries:
+          type: array
+          items:
+            type: object
+            required: [date, enrollments, stamps]
+            properties:
+              date: { type: string }
+              enrollments: { type: integer }
+              stamps: { type: integer }
+        series:
+          type: array
+          items:
+            type: object
+            required: [label, pesewas]
+            properties:
+              label: { type: string }
+              pesewas: { $ref: '#/components/schemas/Pesewas' }
+        topItems:
+          type: array
+          items:
+            type: object
+            required: [name, count, pesewas]
+            properties:
+              name: { type: string }
+              count: { type: integer }
+              pesewas: { $ref: '#/components/schemas/Pesewas' }
+        peakHours:
+          type: array
+          items:
+            type: object
+            required: [hour, orders]
+            properties:
+              hour: { type: integer, minimum: 0, maximum: 23 }
+              orders: { type: integer }
+        repeatGuests:
+          type: object
+          required: [count, sharePercent]
+          properties:
+            count: { type: integer }
+            sharePercent: { type: integer, minimum: 0, maximum: 100 }
+
+    FeedbackSentiment:
+      type: string
+      enum: [positive, neutral, negative]
+    FeedbackItem:
+      type: object
+      required: [id, venueId, sentiment, score, text, archived, visibleAfter, createdAt]
+      properties:
+        id: { type: string, example: fbk_123 }
+        venueId: { type: string }
+        sentiment: { $ref: '#/components/schemas/FeedbackSentiment' }
+        score: { type: integer, minimum: 1, maximum: 5 }
+        text: { type: string }
+        photoUrl: { type: ['string', 'null'] }
+        contactName: { type: ['string', 'null'] }
+        contactPhone: { type: ['string', 'null'] }
+        archived: { type: boolean }
+        visibleAfter: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
+
+    SocialLinks:
+      type: object
+      properties:
+        googleReviewUrl: { type: ['string', 'null'], format: uri }
+        instagram: { type: ['string', 'null'] }
+        facebook: { type: ['string', 'null'] }
+        tiktok: { type: ['string', 'null'] }
+        tripadvisor: { type: ['string', 'null'] }
+        whatsapp: { type: ['string', 'null'] }
+        x: { type: ['string', 'null'] }
+        youtube: { type: ['string', 'null'] }
+        phone: { type: ['string', 'null'] }
+        email: { type: ['string', 'null'] }
+        website: { type: ['string', 'null'] }
+        enabledLinks: { type: array, items: { type: string } }
+
+    CustomLink:
+      type: object
+      required: [id, venueId, title, url, placement, sortOrder, clicks, enabled]
+      properties:
+        id: { type: string, example: lnk_123 }
+        venueId: { type: string }
+        title: { type: string }
+        url: { type: string }
+        icon: { type: string }
+        placement: { type: string, enum: [button, banner, menu] }
+        startDate: { type: ['string', 'null'], format: date-time }
+        endDate: { type: ['string', 'null'], format: date-time }
+        sortOrder: { type: integer }
+        clicks: { type: integer }
+        enabled: { type: boolean }
+    CustomLinkInput:
+      type: object
+      required: [title, url]
+      properties:
+        title: { type: string }
+        url: { type: string }
+        icon: { type: string }
+        placement: { type: string, enum: [button, banner, menu] }
+        startDate: { type: ['string', 'null'], format: date-time }
+        endDate: { type: ['string', 'null'], format: date-time }
+        sortOrder: { type: integer }
+        enabled: { type: boolean }
+
+    LoyaltyCustomerSummary:
+      type: object
+      required: [id, name, phoneMasked, stamps, rewardsAvailable, wantsOffers, lastStampAt]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        phoneMasked: { type: string }
+        email: { type: ['string', 'null'] }
+        stamps: { type: integer }
+        rewardsAvailable: { type: integer }
+        wantsOffers: { type: boolean }
+        lastStampAt: { type: string, format: date-time }
+
+    LoyaltyAnalyticsReport:
+      type: object
+      required: [range, enrolledCount, stampsIssued, rewardsRedeemed, newEnrollments, series]
+      properties:
+        range: { type: string, enum: ['7d', '30d', '90d'] }
+        enrolledCount: { type: integer }
+        stampsIssued: { type: integer }
+        rewardsRedeemed: { type: integer }
+        newEnrollments: { type: integer }
+        series:
+          type: array
+          items:
+            type: object
+            required: [date, newEnrollments, stampsIssued, rewardsRedeemed]
+            properties:
+              date: { type: string }
+              newEnrollments: { type: integer }
+              stampsIssued: { type: integer }
+              rewardsRedeemed: { type: integer }
+
+    LoyaltyScanResult:
+      type: object
+      required: [success, card, customerName, stamps]
+      properties:
+        success: { type: boolean }
+        card: { $ref: '#/components/schemas/LoyaltyCard' }
+        customerName: { type: string }
+        stamps: { type: integer }
+        cooldownViolated: { type: boolean }
+        cooldownRemainingSeconds: { type: integer }
+        rewardUnlocked: { type: boolean }
+        message: { type: string }
+
+    Business:
+      type: object
+      required: [id, name, ownerId]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        ownerId: { type: string }
+    Location:
+      type: object
+      required: [id, businessId, slug, name, country, currency]
+      properties:
+        id: { type: string }
+        businessId: { type: string }
+        slug: { type: string }
+        name: { type: string }
+        email: { type: ['string', 'null'] }
+        phone: { type: ['string', 'null'] }
+        address1: { type: ['string', 'null'] }
+        address2: { type: ['string', 'null'] }
+        city: { type: ['string', 'null'] }
+        postcode: { type: ['string', 'null'] }
+        country: { type: string }
+        currency: { $ref: '#/components/schemas/Currency' }
+    LocationInput:
+      type: object
+      required: [name, country]
+      properties:
+        name: { type: string }
+        address1: { type: string }
+        city: { type: string }
+        postcode: { type: string }
+        country: { type: string }
+        isSeparateBusiness: { type: boolean }
+    LocationPatchInput:
+      type: object
+      properties:
+        name: { type: string }
+        email: { type: string }
+        phone: { type: string }
+        address1: { type: string }
+        address2: { type: string }
+        city: { type: string }
+        postcode: { type: string }
+        country: { type: string }
+
+    ScannerDevice:
+      type: object
+      required: [id, venueId, name, pairedAt, lastSeen]
+      properties:
+        id: { type: string }
+        venueId: { type: string }
+        name: { type: string }
+        platform: { type: string }
+        pairedAt: { type: string, format: date-time }
+        lastSeen: { type: string, format: date-time }
+        pairingCode: { type: ['string', 'null'] }

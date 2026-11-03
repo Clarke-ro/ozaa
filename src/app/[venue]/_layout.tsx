@@ -1,10 +1,10 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
-import { z } from 'zod';
+import { z } from 'zod/mini';
 import { themeFromAccent, ThemeProvider } from '@/ui/theme';
 import { useVenue } from '@/features/venue';
 import type { FontPair } from '@/ui/theme';
 
-const slugSchema = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+const slugSchema = z.string().check(z.regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/));
 
 export default function VenueLayout() {
   const params = useLocalSearchParams<{ venue: string }>();
@@ -17,8 +17,6 @@ export default function VenueLayout() {
   return (
     <ThemeProvider theme={theme}>
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="story/[id]" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="menu/[item]" options={{ presentation: 'transparentModal' }} />
         <Stack.Screen name="order" options={{ presentation: 'transparentModal' }} />
       </Stack>
     </ThemeProvider>

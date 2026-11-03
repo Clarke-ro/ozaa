@@ -10,7 +10,6 @@ The app talks to one interface, `ApiClient`. In Phases 0–4 that interface is b
   |---|---|
   | `venues.json` | `VenuePublic`: theme, services, hours, loyalty summary |
   | `menus.json` | `Menu` |
-  | `stories.json` | featured video reviews |
   | `offers.json` | offers |
   | `wifi.json` | Wi-Fi details |
   | `leaderboards.json` | game sample scores |
@@ -62,7 +61,7 @@ These photos and the video are **AI-generated samples**. Show a small "Sample" l
 | Verify | `POST /payments/{ref}/verify` returns the current state right away. |
 | Order after payment | On `succeeded`, add to `paidPesewas`, mark the paid lines (items mode), and set `paymentStatus` to `part_paid` or `paid`. On loyalty-joined sessions, add one stamp. |
 | OTP | Any Ghana phone works. The code is always `123456`. A wrong code 3 times gives 429 with `Retry-After: 30`. |
-| Owner | `+233240000001` is the owner of Mama's Kitchen, `+233240000002` a waiter, and `+233240000003` kitchen staff. Owner changes (services, theme) update the same in-memory venue, so the guest screens reflect them right away in the same browser. |
+| Owner | `+233240000001` is the owner of Mama's Kitchen, `+233240000002` a waiter, and `+233240000003` kitchen staff. Owner changes (services, theme, menu, order status) update the same in-memory venue, so the guest screens reflect them right away in the same browser. `GET /owner/venues/{id}/dashboard`, `/floor`, `/transactions`, `/written-reviews` and `/insights` are derived from that memory. A refund is the full succeeded amount, once. Insights are marked `sample: true`. Mama's Kitchen starts with table 12 ordered, table 3 waiting to pay, table 4 calling for water, and table 7 seated. |
 | Video upload | `POST /video-reviews/uploads` returns a fake pre-signed URL. The mock "upload" just waits 2 s, with progress events every 200 ms. The new review appears in the owner's To check tab. |
 | Game | No network in v1. The leaderboard endpoints exist in the contract and the mock, but the app doesn't call them until the shared leaderboard (roadmap). |
 
