@@ -12,3 +12,4 @@ export {
   type FontPair,
   type Theme,
 } from './theme';
+export { ConfirmDialog } from './ConfirmDialog';
