@@ -459,3 +459,34 @@ The list of pages lives in one place. The sidebar, the phone tabs and the More s
 **Try it yourself**
 
 In `nav.ts`, change `customers` from `group: 'sales'` to `group: 'main'`, run `npm test`, and see which test tells you.
+
+---
+
+## 2026-11-03 · "Complete your setup" on Today
+
+**What we built**
+
+A card on Today that lists six set-up steps, ticks off the ones you've done, and shows a % bar. Tap a step to go to the page that does it. The card goes away when every step is done. Only the owner sees it.
+
+**How it works**
+
+```
+venue + menu + tables + staff (already cached by other screens)
+   → useSetupChecklist → setupChecklist(facts) → { steps, percent, next } → SetupCard
+```
+
+`setupChecklist` is plain maths with no screen and no network: true/false facts in, a list out. That's why it can be tested in milliseconds.
+
+**Files to look at**
+
+- `src/features/owner/desk/setupChecklist.ts` and its test: the rules.
+- `src/features/owner/data/useSetupChecklist.ts`: turns API data into facts.
+- `src/features/owner/screens/dashboard/SetupCard.tsx`: the card.
+
+**New idea: derived state**
+
+We don't store "setup is 83% done" anywhere. We work it out each time from data we already have, so it can never be out of date.
+
+**Try it yourself**
+
+In `setupChecklist.test.ts`, add a test that a venue with 0 tables gets `next.id === 'tables'` when everything before it is done.
