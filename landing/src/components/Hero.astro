@@ -1,6 +1,5 @@
 ---
-import { links } from "../content/links";
-import { hero, screens } from "../content/page";
+import { hero, routes, screens } from "../content/page";
 import IPhone from "./IPhone.astro";
 
 const shot = screens[hero.screen];
@@ -14,8 +13,8 @@ const shot = screens[hero.screen];
       </h1>
       <p class="hero-lead">{hero.lead}</p>
       <div class="hero-buttons">
-        <a class="pill pill--orange pill--lg" href={links.app}>{hero.primary}</a>
-        <a class="pill pill--glass pill--lg" href="#how">{hero.secondary}</a>
+        <a class="pill pill--orange pill--lg" href={routes.start}>{hero.primary}</a>
+        <a class="pill pill--glass pill--lg" href="#how" data-smooth>{hero.secondary}</a>
       </div>
     </div>
     <div class="hero-phone">
@@ -23,3 +22,16 @@ const shot = screens[hero.screen];
     </div>
   </div>
 </section>
+
+<script>
+  // "See how it works" glides down to the section (unless Reduce Motion is on).
+  document.addEventListener("click", (event) => {
+    const link = (event.target as HTMLElement).closest<HTMLAnchorElement>("a[data-smooth]");
+    const target = link && document.querySelector(link.hash);
+    if (!link || !target) return;
+    event.preventDefault();
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    target.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    history.replaceState(history.state, "", link.hash);
+  });
+</script>

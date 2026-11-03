@@ -1,0 +1,22 @@
+---
+/** /blog/page/2 and on, once there are more than 12 posts. Page 1 is /blog. */
+import BlogIndex from "../../../components/BlogIndex.astro";
+import { blogPage } from "../../../content/page";
+import { paginate } from "../../../content/posts";
+import Site from "../../../layouts/Site.astro";
+import { getPosts } from "../../../lib/blog";
+
+export async function getStaticPaths() {
+  const pages = paginate(await getPosts(), blogPage.perPage);
+  return pages.slice(1).map((posts, index) => ({
+    params: { page: String(index + 2) },
+    props: { posts, page: index + 2, pages: pages.length },
+  }));
+}
+
+const { posts, page, pages } = Astro.props;
+---
+
+<Site title={`${blogPage.title}, page ${page}`} description={blogPage.description}>
+  <BlogIndex posts={posts} page={page} pages={pages} />
+</Site>

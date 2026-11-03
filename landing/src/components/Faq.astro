@@ -1,12 +1,21 @@
 ---
-import { faq } from "../content/page";
+/** A question-and-answer accordion. Used on Home, Pricing and Contact. */
+interface Props {
+  id: string;
+  heading: string;
+  items: readonly { question: string; answer: string }[];
+  /** The section background: white on Home, warm grey on Pricing. */
+  tone?: "white" | "warm";
+}
+
+const { id, heading, items, tone = "white" } = Astro.props;
 ---
 
-<section class="faq" id="faq" aria-labelledby="faq-title">
-  <h2 id="faq-title" class="faq-title">{faq.heading}</h2>
+<section class:list={["faq", `faq--${tone}`]} id={id} aria-labelledby={`${id}-title`}>
+  <h2 id={`${id}-title`} class="faq-title">{heading}</h2>
   <div class="faq-list">
     {
-      faq.items.map((item) => (
+      items.map((item) => (
         <details class="faq-item">
           <summary>
             <span>{item.question}</span>

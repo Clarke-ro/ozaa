@@ -1,0 +1,22 @@
+---
+/** The top of every inner page: clears the floating navbar, then a chip, the title and a line. */
+interface Props {
+  title: string;
+  lead?: string;
+  chip?: string;
+  /** dark: deep brown with white text. light: soft peach with brown text. */
+  tone?: "dark" | "light";
+  /** A line above the title in the light hero, e.g. "Last updated …". */
+  meta?: string;
+}
+
+const { title, lead, chip, tone = "dark", meta } = Astro.props;
+---
+
+<section class:list={["page-hero", `page-hero--${tone}`]} aria-labelledby="page-title">
+  {chip ? <p class="page-chip">{chip}</p> : null}
+  <h1 id="page-title">{title}</h1>
+  {lead ? <p class="page-lead">{lead}</p> : null}
+  {meta ? <p class="page-meta">{meta}</p> : null}
+  <slot />
+</section>

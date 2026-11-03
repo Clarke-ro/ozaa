@@ -1,0 +1,45 @@
+---
+/** Every content page: the floating navbar, the page, the shared footer and the floating CTA. */
+import type { ComponentProps } from "astro/types";
+import FloatingCta from "../components/FloatingCta.astro";
+import Footer from "../components/Footer.astro";
+import Navbar from "../components/Navbar.astro";
+import Base from "./Base.astro";
+
+type Props = ComponentProps<typeof Base>;
+const props = Astro.props;
+---
+
+<Base {...props}>
+  <Navbar />
+  <main id="content">
+    <slot />
+  </main>
+  <Footer />
+  <FloatingCta />
+</Base>
+
+<script>
+  // Cards and headings fade up as they scroll into view. Runs on every page, including
+  // after a client-side navigation. Without JavaScript, or with Reduce Motion on, they show.
+  function revealOnScroll() {
+    const items = document.querySelectorAll<HTMLElement>(".reveal:not(.is-visible)");
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) {
+      document.documentElement.classList.remove("can-reveal");
+      return;
+    }
+    document.documentElement.classList.add("can-reveal");
+    const seen = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          entry.target.classList.add("is-visible");
+          seen.unobserve(entry.target);
+        }
+      },
+      { rootMargin: "0px 0px -8% 0px", threshold: 0.12 },
+    );
+    items.forEach((item) => seen.observe(item));
+  }
+  document.addEventListener("astro:page-load", revealOnScroll);
+</script>

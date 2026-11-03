@@ -1,0 +1,101 @@
+---
+import { cookieBanner, routes } from "../content/page";
+---
+
+<section class="cookie" id="cookie-banner" aria-labelledby="cookie-title" hidden>
+  <h2 id="cookie-title" class="cookie-title">{cookieBanner.title}</h2>
+  <p class="cookie-body">
+    {cookieBanner.body} <a href={routes.cookies}>{cookieBanner.policy}</a>
+  </p>
+  <div class="cookie-choices" id="cookie-choices" hidden>
+    <label class="cookie-option">
+      <input type="checkbox" checked disabled />
+      <span><strong>{cookieBanner.necessary.title}</strong>{cookieBanner.necessary.body}</span>
+    </label>
+    <label class="cookie-option">
+      <input type="checkbox" name="analytics" />
+      <span><strong>{cookieBanner.analytics.title}</strong>{cookieBanner.analytics.body}</span>
+    </label>
+    <label class="cookie-option">
+      <input type="checkbox" name="marketing" />
+      <span><strong>{cookieBanner.marketing.title}</strong>{cookieBanner.marketing.body}</span>
+    </label>
+  </div>
+  <div class="cookie-actions">
+    <button type="button" class="cookie-btn" data-cookie="reject">{cookieBanner.reject}</button>
+    <button type="button" class="cookie-btn" data-cookie="choose" aria-expanded="false" aria-controls="cookie-choices">
+      {cookieBanner.choose}
+    </button>
+    <button type="button" class="cookie-btn" data-cookie="save" hidden>{cookieBanner.save}</button>
+    <button type="button" class="cookie-btn cookie-btn--primary" data-cookie="accept">
+      {cookieBanner.accept}
+    </button>
+  </div>
+</section>
+
+<script>
+  // The choice is kept in this browser. Nothing optional runs yet; when analytics or marketing
+  // scripts are added, load them only if `ozaa-cookies` allows it.
+  const KEY = "ozaa-cookies";
+  type Choice = { analytics: boolean; marketing: boolean; at: string };
+
+  const read = (): Choice | null => {
+    try {
+      const raw = localStorage.getItem(KEY);
+      return raw ? (JSON.parse(raw) as Choice) : null;
+    } catch {
+      return null;
+    }
+  };
+  const write = (choice: Omit<Choice, "at">) => {
+    try {
+      localStorage.setItem(KEY, JSON.stringify({ ...choice, at: new Date().toISOString() }));
+    } catch {
+      // Storage can be blocked (private mode); the banner simply asks again next visit.
+    }
+  };
+
+  const banner = document.querySelector<HTMLElement>("#cookie-banner");
+  const choices = document.querySelector<HTMLElement>("#cookie-choices");
+  if (banner && choices) {
+    const box = (name: string) => banner.querySelector<HTMLInputElement>(`input[name="${name}"]`);
+    const chooseBtn = banner.querySelector<HTMLButtonElement>('[data-cookie="choose"]');
+    const saveBtn = banner.querySelector<HTMLButtonElement>('[data-cookie="save"]');
+    const showChoices = (on: boolean) => {
+      choices.hidden = !on;
+      if (saveBtn) saveBtn.hidden = !on;
+      if (chooseBtn) {
+        chooseBtn.hidden = on;
+        chooseBtn.setAttribute("aria-expanded", String(on));
+      }
+    };
+    const open = (withChoices = false) => {
+      const saved = read();
+      const analytics = box("analytics");
+      const marketing = box("marketing");
+      if (analytics) analytics.checked = saved?.analytics ?? false;
+      if (marketing) marketing.checked = saved?.marketing ?? false;
+      showChoices(withChoices);
+      banner.hidden = false;
+    };
+    const done = (choice: Omit<Choice, "at">) => {
+      write(choice);
+      banner.hidden = true;
+    };
+
+    banner.addEventListener("click", (event) => {
+      const action = (event.target as HTMLElement).closest<HTMLElement>("[data-cookie]")?.dataset.cookie;
+      if (action === "reject") done({ analytics: false, marketing: false });
+      if (action === "accept") done({ analytics: true, marketing: true });
+      if (action === "choose") showChoices(true);
+      if (action === "save") {
+        done({ analytics: Boolean(box("analytics")?.checked), marketing: Boolean(box("marketing")?.checked) });
+      }
+    });
+    // "Cookie settings" in the footer, on any page.
+    document.addEventListener("click", (event) => {
+      if ((event.target as HTMLElement).closest("[data-cookie-settings]")) open(true);
+    });
+    if (!read()) open(false);
+  }
+</script>

@@ -1,6 +1,5 @@
 ---
-import { links } from "../content/links";
-import { features, screenSize, screens } from "../content/page";
+import { features, routes, screenSize, screens } from "../content/page";
 import Icon from "./Icon.astro";
 ---
 
@@ -32,7 +31,7 @@ import Icon from "./Icon.astro";
       })
     }
   </ul>
-  <a class="more-link" href={links.sample}>
+  <a class="more-link" href={routes.features}>
     {features.more}
     <Icon name="arrow" size={18} />
   </a>

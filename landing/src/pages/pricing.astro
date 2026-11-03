@@ -1,0 +1,84 @@
+---
+import Faq from "../components/Faq.astro";
+import Icon from "../components/Icon.astro";
+import PageHero from "../components/PageHero.astro";
+import { pricingPage, routes } from "../content/page";
+import { pricing } from "../content/pricing";
+import Site from "../layouts/Site.astro";
+
+const money = (amount: number) =>
+  amount === 0 ? "Free" : new Intl.NumberFormat("en", { style: "currency", currency: pricing.currency, maximumFractionDigits: 0 }).format(amount);
+---
+
+<Site title={pricingPage.title} description={pricingPage.description}>
+  <PageHero chip={pricingPage.chip} title={pricingPage.heading} lead={pricingPage.lead} />
+
+  <section class="pricing" aria-label="Plans">
+    <div class="period-toggle" role="group" aria-label="Billing period">
+      <button type="button" class="period-btn is-active" data-period="monthly" aria-pressed="true">
+        {pricing.periods.monthly}
+      </button>
+      <button type="button" class="period-btn" data-period="yearly" aria-pressed="false">
+        {pricing.periods.yearly} <span class="period-save">{pricing.yearlyNote}</span>
+      </button>
+    </div>
+    {pricing.placeholder ? <p class="pricing-notice">{pricing.notice}</p> : null}
+
+    <ul class="plans">
+      {
+        pricing.plans.map((plan) => (
+          <li class:list={["plan", { "plan--popular": "popular" in plan && plan.popular }]}>
+            {"popular" in plan && plan.popular ? <p class="plan-tag">{pricing.popular}</p> : null}
+            <h2>{plan.name}</h2>
+            <p class="plan-blurb">{plan.blurb}</p>
+            <p class="plan-price">
+              <span data-price-monthly>{money(plan.monthly)}</span>
+              <span data-price-yearly hidden>{money(plan.yearly)}</span>
+              {plan.monthly > 0 ? (
+                <span class="plan-per">
+                  <span data-price-monthly>{pricing.perMonth}</span>
+                  <span data-price-yearly hidden>{pricing.billedYearly}</span>
+                </span>
+              ) : null}
+            </p>
+            <ul class="plan-features">
+              {plan.features.map((feature) => (
+                <li class:list={{ "is-off": !feature.included }}>
+                  <Icon name={feature.included ? "tick" : "cross"} size={18} />
+                  <span>
+                    {feature.label}
+                    {feature.included ? null : <span class="visually-hidden"> (not included)</span>}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <a class="pill pill--dark plan-cta" href={routes.start}>
+              {pricing.cta}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <Faq id="pricing-faq" heading={pricingPage.faqHeading} items={pricingPage.faq} tone="warm" />
+</Site>
+
+<script>
+  // Monthly / yearly: swap which price each card shows.
+  function setUpToggle() {
+    const buttons = document.querySelectorAll<HTMLButtonElement>(".period-btn");
+    if (!buttons.length) return;
+    const show = (period: string) => {
+      buttons.forEach((button) => {
+        const on = button.dataset.period === period;
+        button.classList.toggle("is-active", on);
+        button.setAttribute("aria-pressed", String(on));
+      });
+      document.querySelectorAll<HTMLElement>("[data-price-monthly]").forEach((el) => (el.hidden = period !== "monthly"));
+      document.querySelectorAll<HTMLElement>("[data-price-yearly]").forEach((el) => (el.hidden = period !== "yearly"));
+    };
+    buttons.forEach((button) => button.addEventListener("click", () => show(button.dataset.period ?? "monthly")));
+  }
+  document.addEventListener("astro:page-load", setUpToggle);
+</script>

@@ -1,0 +1,63 @@
+---
+import Icon from "../components/Icon.astro";
+import PageHero from "../components/PageHero.astro";
+import { appLinks } from "../content/links";
+import { demoPage, routes, screenSize, screens } from "../content/page";
+import Site from "../layouts/Site.astro";
+
+const app = appLinks(import.meta.env.PUBLIC_APP_URL);
+const root = app.app.replace(/\/$/, "");
+---
+
+<Site title={demoPage.title} description={demoPage.description}>
+  <PageHero tone="light" title={demoPage.heading} lead={demoPage.lead} />
+
+  <section class="demo-section" aria-label="Sample menus">
+    <ul class="demo-row">
+      {
+        demoPage.menus.map((menu) => {
+          const shot = screens[menu.screen];
+          return (
+            <li class="demo-card reveal">
+              <div class="demo-shot">
+                <img
+                  src={shot.src}
+                  alt={shot.alt}
+                  width={screenSize.width}
+                  height={screenSize.height}
+                  loading="eager"
+                  decoding="async"
+                />
+              </div>
+              <div class="demo-info">
+                <div>
+                  <h2>{menu.name}</h2>
+                  <p>{menu.kind}</p>
+                </div>
+                <a
+                  class="pill pill--dark pill--sm"
+                  href={`${root}/${menu.slug}/t/${menu.table}`}
+                  aria-label={`${demoPage.preview} ${menu.name}`}
+                  data-astro-reload
+                >
+                  {demoPage.preview}
+                </a>
+              </div>
+            </li>
+          );
+        })
+      }
+    </ul>
+  </section>
+
+  <section class="demo-strip" aria-labelledby="demo-strip-title">
+    <h2 id="demo-strip-title">{demoPage.stripHeading}</h2>
+    <ul>
+      {demoPage.strip.map((item) => <li><Icon name="tick" size={18} />{item}</li>)}
+    </ul>
+    <a class="more-link more-link--plain" href={routes.features}>
+      {demoPage.stripMore}
+      <Icon name="arrow" size={18} />
+    </a>
+  </section>
+</Site>

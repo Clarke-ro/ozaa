@@ -1,20 +1,35 @@
 ---
-import { links } from "../content/links";
-import { nav } from "../content/page";
+import { nav, routes } from "../content/page";
 import Icon from "./Icon.astro";
+
+// Exact path match only: a blog post, Contact and the legal pages highlight nothing.
+const here = Astro.url.pathname.replace(/\/$/, "") || "/";
+const isActive = (href: string) => href === here;
 ---
 
 <header class="navbar-wrap">
   <nav class="navbar" aria-label="Main">
-    <a class="navbar-logo" href="#top" aria-label="Ozaa, back to the top">
+    <a class="navbar-logo" href={routes.home} aria-label="Ozaa home">
       <img src="/logo/ozaa-lockup.svg" alt="" width="451" height="140" />
     </a>
     <ul class="navbar-links">
-      {nav.links.map((link) => <li><a href={link.href}>{link.label}</a></li>)}
+      {
+        nav.links.map((link) => (
+          <li>
+            <a
+              href={link.href}
+              class:list={[{ active: isActive(link.href) }]}
+              aria-current={isActive(link.href) ? "page" : undefined}
+            >
+              {link.label}
+            </a>
+          </li>
+        ))
+      }
     </ul>
     <div class="navbar-actions">
-      <a class="pill pill--peach" href={links.owner}>{nav.login}</a>
-      <a class="pill pill--orange" href={links.app}>{nav.start}</a>
+      <a class="pill pill--peach" href={routes.login}>{nav.login}</a>
+      <a class="pill pill--orange" href={routes.start}>{nav.start}</a>
     </div>
     <button
       class="navbar-toggle"
@@ -42,7 +57,12 @@ import Icon from "./Icon.astro";
         {
           nav.links.map((link, index) => (
             <li style={`--i: ${index}`}>
-              <a href={link.href} data-close-link>
+              <a
+                href={link.href}
+                data-close
+                class:list={[{ active: isActive(link.href) }]}
+                aria-current={isActive(link.href) ? "page" : undefined}
+              >
                 {link.label}
               </a>
             </li>
@@ -50,68 +70,70 @@ import Icon from "./Icon.astro";
         }
       </ul>
       <div class="mobile-actions" style={`--i: ${nav.links.length}`}>
-        <a class="pill pill--peach" href={links.owner}>{nav.login}</a>
-        <a class="pill pill--orange" href={links.app}>{nav.start}</a>
+        <a class="pill pill--peach" href={routes.login} data-close>{nav.login}</a>
+        <a class="pill pill--orange" href={routes.start} data-close>{nav.start}</a>
       </div>
     </div>
   </div>
 </header>
 
 <script>
-  // The small-screen menu: opens over a dimmed page, closes on a link, the backdrop, the
-  // close button or Escape, and gives focus back to the button that opened it.
-  const toggle = document.querySelector<HTMLButtonElement>(".navbar-toggle");
-  const menu = document.querySelector<HTMLElement>("#mobile-menu");
-  const label = toggle?.querySelector<HTMLElement>("[data-toggle-label]");
-  if (toggle && menu && label) {
-    const focusables = () =>
-      [...menu.querySelectorAll<HTMLElement>("a, button:not([tabindex='-1'])")];
+  // The small-screen menu. It's set up again after each client-side page change, because the
+  // navbar is part of the new page. Document-wide keys are bound once.
+  type Menu = { open: () => void; close: (refocus?: boolean) => void; root: HTMLElement };
+  let current: Menu | null = null;
+
+  function setUp() {
+    const toggle = document.querySelector<HTMLButtonElement>(".navbar-toggle");
+    const root = document.querySelector<HTMLElement>("#mobile-menu");
+    const label = toggle?.querySelector<HTMLElement>("[data-toggle-label]");
+    if (!toggle || !root || !label) return;
+    document.body.style.overflow = "";
+    const focusables = () => [...root.querySelectorAll<HTMLElement>("a, button:not([tabindex='-1'])")];
     const open = () => {
-      menu.hidden = false;
-      requestAnimationFrame(() => menu.classList.add("is-open"));
+      root.hidden = false;
+      requestAnimationFrame(() => root.classList.add("is-open"));
       toggle.setAttribute("aria-expanded", "true");
       label.textContent = toggle.dataset.close ?? "";
       document.body.style.overflow = "hidden";
       focusables()[0]?.focus();
     };
-    const close = () => {
-      menu.classList.remove("is-open");
+    const close = (refocus = true) => {
+      root.classList.remove("is-open");
       toggle.setAttribute("aria-expanded", "false");
       label.textContent = toggle.dataset.open ?? "";
       document.body.style.overflow = "";
-      const done = () => {
-        menu.hidden = true;
-        menu.removeEventListener("transitionend", done);
-      };
       const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-      if (reduce) done();
-      else menu.addEventListener("transitionend", done);
-      toggle.focus();
+      if (reduce) root.hidden = true;
+      else root.addEventListener("transitionend", () => (root.hidden = true), { once: true });
+      if (refocus) toggle.focus();
     };
-    toggle.addEventListener("click", () => (menu.hidden ? open() : close()));
-    menu.querySelectorAll("[data-close], [data-close-link]").forEach((el) =>
-      el.addEventListener("click", close),
+    toggle.addEventListener("click", () => (root.hidden ? open() : close()));
+    // A link closes the menu (and the next page loads); the backdrop and × close it too.
+    root.querySelectorAll<HTMLElement>("[data-close]").forEach((el) =>
+      el.addEventListener("click", () => close(el.tagName !== "A")),
     );
-    document.addEventListener("keydown", (event) => {
-      if (menu.hidden) return;
-      if (event.key === "Escape") close();
-      // Keep Tab inside the open menu.
-      if (event.key === "Tab") {
-        const items = focusables();
-        const first = items[0];
-        const last = items[items.length - 1];
-        if (event.shiftKey && document.activeElement === first) {
-          event.preventDefault();
-          last?.focus();
-        } else if (!event.shiftKey && document.activeElement === last) {
-          event.preventDefault();
-          first?.focus();
-        }
-      }
-    });
-    // Widening the window past the breakpoint closes the menu.
-    matchMedia("(min-width: 741px)").addEventListener("change", (event) => {
-      if (event.matches && !menu.hidden) close();
-    });
+    current = { open, close, root };
   }
+
+  document.addEventListener("astro:page-load", setUp);
+  document.addEventListener("keydown", (event) => {
+    if (!current || current.root.hidden) return;
+    if (event.key === "Escape") current.close();
+    if (event.key === "Tab") {
+      const items = [...current.root.querySelectorAll<HTMLElement>("a, button:not([tabindex='-1'])")];
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
+      }
+    }
+  });
+  matchMedia("(min-width: 741px)").addEventListener("change", (event) => {
+    if (event.matches && current && !current.root.hidden) current.close(false);
+  });
 </script>

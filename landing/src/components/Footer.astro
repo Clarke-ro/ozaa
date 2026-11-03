@@ -1,24 +1,20 @@
 ---
-import { links } from "../content/links";
-import { footer } from "../content/page";
+import { footer, routes } from "../content/page";
 import Icon from "./Icon.astro";
 
-// Footer links name app pages as "app:<page>"; everything else is an anchor on this page.
-const resolve = (href: string) =>
-  href.startsWith("app:") ? links[href.slice(4) as keyof typeof links] : href;
 const year = new Date().getFullYear();
 ---
 
 <footer class="footer">
   <div class="footer-cta">
     <h2 class="reveal">{footer.cta}</h2>
-    <a class="pill pill--white pill--lg" href={links.app}>{footer.ctaButton}</a>
+    <a class="pill pill--white pill--lg" href={routes.start}>{footer.ctaButton}</a>
   </div>
 
   <div class="footer-card">
     <div class="footer-top">
       <div class="footer-brand">
-        <a href="#top" aria-label="Ozaa, back to the top">
+        <a href={routes.home} aria-label="Ozaa home">
           <img src="/logo/ozaa-lockup.svg" alt="" width="451" height="140" />
         </a>
         <p>{footer.tagline}</p>
@@ -31,7 +27,7 @@ const year = new Date().getFullYear();
               <ul>
                 {column.links.map((link) => (
                   <li>
-                    <a href={resolve(link.href)}>{link.label}</a>
+                    <a href={link.href}>{link.label}</a>
                   </li>
                 ))}
               </ul>
@@ -49,7 +45,13 @@ const year = new Date().getFullYear();
             footer.socials.map((social) => (
               <li>
                 {social.url ? (
-                  <a class="social" href={social.url} aria-label={social.name}>
+                  <a
+                    class="social"
+                    href={social.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${social.name} (opens in a new tab)`}
+                  >
                     <Icon name={social.icon} size={18} />
                   </a>
                 ) : (
@@ -63,13 +65,17 @@ const year = new Date().getFullYear();
         </ul>
       </div>
       <ul class="footer-legal">
-        {
-          footer.legal.map((item) => (
-            <li>{item.url ? <a href={item.url}>{item.label}</a> : <span>{item.label}</span>}</li>
-          ))
-        }
+        {footer.legal.map((item) => <li><a href={item.href}>{item.label}</a></li>)}
+        <li>
+          <button class="link-button" type="button" data-cookie-settings>
+            {footer.cookieSettings}
+          </button>
+        </li>
         <li>© {year} ozaa</li>
       </ul>
     </div>
   </div>
+
+  {/* The name, huge and faint, sunk into the footer's bottom edge. */}
+  <p class="footer-watermark" aria-hidden="true">{footer.watermark}</p>
 </footer>

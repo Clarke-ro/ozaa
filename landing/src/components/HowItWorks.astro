@@ -1,6 +1,5 @@
 ---
-import { links } from "../content/links";
-import { how, screens } from "../content/page";
+import { how, routes, screens } from "../content/page";
 import IPhone from "./IPhone.astro";
 
 const shot = screens[how.screen];
@@ -27,7 +26,7 @@ const shot = screens[how.screen];
         ))
       }
     </ol>
-    <a class="pill pill--white pill--lg" href={links.app}>{how.cta}</a>
+    <a class="pill pill--white pill--lg" href={routes.start}>{how.cta}</a>
   </div>
   <div class="how-visual reveal">
     <IPhone src={shot.src} alt={shot.alt} />

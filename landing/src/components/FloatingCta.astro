@@ -1,7 +1,6 @@
 ---
-import { links } from "../content/links";
-import { floating } from "../content/page";
+import { floating, routes } from "../content/page";
 ---
 
 {/* Shown at 1024 px and below, where the navbar buttons are out of reach once you scroll. */}
-<a class="floating-cta pill" href={links.app}>{floating.label}</a>
+<a class="floating-cta pill" href={routes.start}>{floating.label}</a>

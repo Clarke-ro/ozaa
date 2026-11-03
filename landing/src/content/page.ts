@@ -38,6 +38,18 @@ export const screens = {
     src: "/screens/owner-menu.webp",
     alt: "The menu builder with a sold-out switch on each dish.",
   },
+  demoMamas: {
+    src: "/screens/demo-mamas-kitchen.webp",
+    alt: "Mama's Kitchen's sample menu.",
+  },
+  demoBean: {
+    src: "/screens/demo-bean-there.webp",
+    alt: "Bean There café's sample menu.",
+  },
+  demoAkos: {
+    src: "/screens/demo-auntie-akos.webp",
+    alt: "Auntie Akos Chop Bar's sample menu.",
+  },
   ownerTables: {
     src: "/screens/owner-tables.webp",
     alt: "A printable table card with the restaurant name, table 12 and its QR code.",
@@ -54,13 +66,28 @@ export const site = {
   url: "",
 } as const;
 
+/** The site's pages. Every navbar and footer link is one of these routes. */
+export const routes = {
+  home: "/",
+  features: "/features",
+  demo: "/demo",
+  pricing: "/pricing",
+  blog: "/blog",
+  contact: "/contact",
+  terms: "/terms",
+  privacy: "/privacy",
+  cookies: "/cookies",
+  login: "/login",
+  start: "/get-started",
+} as const;
+
 export const nav = {
   links: [
-    { href: "#features", label: "Features" },
-    { href: "#how", label: "How it works" },
-    { href: "#who", label: "For who" },
-    { href: "#why", label: "Why ozaa" },
-    { href: "#faq", label: "FAQ" },
+    { href: routes.home, label: "Home" },
+    { href: routes.features, label: "Features" },
+    { href: routes.demo, label: "Demo" },
+    { href: routes.pricing, label: "Pricing" },
+    { href: routes.blog, label: "Blog" },
   ],
   login: "Log in",
   start: "Get started",
@@ -239,18 +266,18 @@ export const footer = {
     {
       heading: "Product",
       links: [
-        { label: "Features", href: "#features" },
-        { label: "How it works", href: "#how" },
-        { label: "For who", href: "#who" },
-        { label: "FAQ", href: "#faq" },
+        { label: "Home", href: routes.home },
+        { label: "Features", href: routes.features },
+        { label: "Demo", href: routes.demo },
+        { label: "Pricing", href: routes.pricing },
       ],
     },
     {
       heading: "Company",
       links: [
-        { label: "Log in", href: "app:owner" },
-        { label: "Try a sample table", href: "app:sample" },
-        { label: "Get started", href: "app:app" },
+        { label: "Blog", href: routes.blog },
+        { label: "Contact", href: routes.contact },
+        { label: "Log in", href: routes.login },
       ],
     },
   ],
@@ -262,11 +289,157 @@ export const footer = {
     { name: "Facebook", icon: "facebook", url: "" },
     { name: "TikTok", icon: "tiktok", url: "" },
   ],
-  /** Placeholders until the pages are written; an empty url shows plain text. */
   legal: [
-    { label: "Privacy", url: "" },
-    { label: "Terms", url: "" },
+    { label: "Terms", href: routes.terms },
+    { label: "Privacy", href: routes.privacy },
+    { label: "Cookies", href: routes.cookies },
   ],
+  cookieSettings: "Cookie settings",
+  /** The huge word set into the bottom edge of the footer. */
+  watermark: "OZAA",
 } as const;
 
 export const floating = { label: "Get started" } as const;
+
+/* ---------- Other pages ---------- */
+
+export const featuresPage = {
+  title: "Features",
+  description:
+    "Every Ozaa feature for restaurants: table ordering, waiter calls, bill requests, QR codes, the menu builder, loyalty and more.",
+  chip: "Features",
+  heading: "Everything your tables need, in one place",
+  lead: "From the first scan to the last stamp, Ozaa runs table service on the guest's own phone.",
+  smallHeading: "And the details that make it work",
+  small: [
+    { icon: "wifi", title: "Wi-Fi QR", body: "Guests join your Wi-Fi in one tap. No password on a chalkboard." },
+    { icon: "link", title: "Custom links", body: "Add buttons for bookings, delivery or your socials to the table page." },
+    { icon: "shield", title: "Feedback and review gating", body: "Happy guests go to Google; unhappy ones reach you privately first." },
+    { icon: "chart", title: "Analytics", body: "Busy hours, popular dishes and repeat guests at a glance." },
+    { icon: "team", title: "Multi-location teams", body: "One login for every branch, with roles for owners, managers, waiters and kitchen." },
+    { icon: "store", title: "Your venue page", body: "Your name, banner, logo and colours on every table." },
+  ],
+} as const;
+
+export const demoPage = {
+  title: "Demo",
+  description: "Open a live Ozaa demo menu and see what your guests would see.",
+  heading: "See Ozaa at a sample table",
+  lead: "Each menu below is a live demo. Open one and order, call a waiter or join the loyalty card, just like a guest would.",
+  preview: "Preview",
+  menus: [
+    { name: "Mama's Kitchen", kind: "Home-style restaurant", slug: "mamas-kitchen", table: "12", screen: "demoMamas" },
+    { name: "Bean There", kind: "Café", slug: "bean-there", table: "1", screen: "demoBean" },
+    { name: "Auntie Akos Chop Bar", kind: "Chop bar", slug: "auntie-akos", table: "1", screen: "demoAkos" },
+  ],
+  stripHeading: "What every demo includes",
+  strip: ["Menu with photos", "Table ordering", "Waiter calls", "Bill requests", "Loyalty stamps", "Wi-Fi QR"],
+  stripMore: "See all features",
+} as const;
+
+export const pricingPage = {
+  title: "Pricing",
+  description: "Simple plans for restaurants of every size. Start free and upgrade when you're ready.",
+  chip: "Pricing",
+  heading: "Simple plans for every kind of table",
+  lead: "Start free. Upgrade when your tables are busy.",
+  faqHeading: "Pricing questions",
+  faq: [
+    { question: "Can I start for free?", answer: "Yes. The Free plan has a menu, table ordering and waiter calls for a few tables, with no time limit." },
+    { question: "Can I change plans later?", answer: "Yes. Move up or down at any time and your menu, tables and settings stay as they are." },
+    { question: "Is there a contract?", answer: "No. Monthly plans can stop at the end of any month." },
+    { question: "Are these the final prices?", answer: "Not yet. Prices on this page are placeholders until launch." },
+  ],
+} as const;
+
+export const contactPage = {
+  title: "Contact",
+  description: "Questions about Ozaa for your restaurant? Send us a message.",
+  heading: "Get in touch",
+  lead: "Questions about Ozaa for your restaurant? Send a message and we'll get back to you.",
+  form: {
+    name: "Your name",
+    email: "Email",
+    message: "Message",
+    messagePlaceholder: "Tell us about your restaurant and what you'd like to know",
+    send: "Send message",
+    sending: "Sending…",
+    success: "Thanks, your message is on its way. We'll reply by email.",
+    error: "That didn't send. Check your connection and try again.",
+    notSetUp: "Sending isn't set up yet, so this message wasn't sent. Please try again later.",
+    missingName: "Add your name.",
+    badEmail: "Add an email address we can reply to.",
+    missingMessage: "Add a message.",
+  },
+  /** Placeholders: an empty value shows "Coming soon". */
+  info: [
+    { icon: "mail", title: "Email", value: "", note: "We read every message." },
+    { icon: "clock", title: "Response time", value: "Within 1 working day", note: "Usually much sooner." },
+    { icon: "chat", title: "WhatsApp", value: "", note: "Chat with the team." },
+  ],
+  comingSoon: "Coming soon",
+  faqHeading: "Before you write",
+  faq: [
+    { question: "Can I try Ozaa first?", answer: "Yes. Open a sample table from the Demo page and order like a guest would." },
+    { question: "Do you help with setup?", answer: "Yes. Tell us about your restaurant and we'll help you get your menu and tables ready." },
+    { question: "Is Ozaa available where I am?", answer: "Ozaa is built for restaurants anywhere, and the first launch is in Africa. Ask us about your city." },
+  ],
+} as const;
+
+export const authPages = {
+  login: {
+    title: "Log in",
+    heading: "Log in to Ozaa",
+    lead: "Owners and staff sign in with their phone number in the Ozaa app.",
+    button: "Continue to sign in",
+    other: "New to Ozaa?",
+    otherLink: "Get started",
+  },
+  start: {
+    title: "Get started",
+    heading: "Set up your restaurant",
+    lead: "Sign in with your phone number, then add your menu and print your table codes. You can look around a sample restaurant first.",
+    button: "Start with your phone number",
+    sample: "Try a sample table first",
+    other: "Already have an account?",
+    otherLink: "Log in",
+  },
+  back: "Back to the site",
+} as const;
+
+export const notFound = {
+  eyebrow: "ERROR 404",
+  heading: "Page not found.",
+  lead: "The page you're looking for has moved or never existed.",
+  button: "Back to home",
+} as const;
+
+export const blogPage = {
+  title: "Blog",
+  description: "Ideas and guides for running busier, smoother tables.",
+  heading: "Blog",
+  lead: "Ideas and guides for running busier, smoother tables.",
+  readMore: "Read more",
+  minRead: "min read",
+  back: "Back to blog",
+  keepReading: "Keep reading",
+  ctaHeading: "Try ozaa free",
+  ctaBody: "Put your menu on every table and take orders from the guest's own phone.",
+  ctaButton: "Get started free",
+  perPage: 12,
+  newer: "Newer posts",
+  older: "Older posts",
+} as const;
+
+export const cookieBanner = {
+  title: "Cookies",
+  body: "We store your choice in your browser. Optional cookies for analytics and marketing only run if you allow them.",
+  policy: "Cookie policy",
+  reject: "Reject all",
+  choose: "Choose",
+  accept: "Accept all",
+  save: "Save choices",
+  necessary: { title: "Necessary", body: "Remembers this choice. Always on." },
+  analytics: { title: "Analytics", body: "Helps us see which pages are useful." },
+  marketing: { title: "Marketing", body: "Lets us measure campaigns." },
+} as const;

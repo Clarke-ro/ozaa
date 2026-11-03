@@ -1,0 +1,68 @@
+---
+import { getCollection, render } from "astro:content";
+import BlogCard from "../../components/BlogCard.astro";
+import Icon from "../../components/Icon.astro";
+import { blogPage, routes } from "../../content/page";
+import { formatDate, related } from "../../content/posts";
+import Site from "../../layouts/Site.astro";
+import { getPosts } from "../../lib/blog";
+
+export async function getStaticPaths() {
+  const entries = await getCollection("blog");
+  return entries.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const posts = await getPosts();
+const post = posts.find((item) => item.slug === entry.id);
+const more = related(posts, entry.id);
+---
+
+<Site
+  title={entry.data.title}
+  description={entry.data.description}
+  type="article"
+  publishedTime={entry.data.date}
+  preload={entry.data.cover}
+>
+  <div class="post-page">
+    <header class="post-head">
+      <div class="post-head-inner">
+      <a class="post-back" href={routes.blog}>
+        <Icon name="back" size={18} />
+        {blogPage.back}
+      </a>
+      <p class="post-meta">
+        <time datetime={entry.data.date.toISOString()}>{formatDate(entry.data.date)}</time> · {post?.readTime}
+        {blogPage.minRead}
+      </p>
+      <h1>{entry.data.title}</h1>
+      <p class="post-lead">{entry.data.description}</p>
+      </div>
+    </header>
+
+    <article class="post">
+      <img class="post-cover" src={entry.data.cover} alt={entry.data.coverAlt} width="1200" height="675" fetchpriority="high" />
+      <div class="post-body">
+        <Content />
+      </div>
+      <aside class="post-cta" aria-labelledby="post-cta-title">
+        <h2 id="post-cta-title">{blogPage.ctaHeading}</h2>
+        <p>{blogPage.ctaBody}</p>
+        <a class="pill pill--orange pill--lg" href={routes.start}>{blogPage.ctaButton}</a>
+      </aside>
+    </article>
+
+    {
+      more.length ? (
+        <section class="keep-reading" aria-labelledby="keep-title">
+          <h2 id="keep-title">{blogPage.keepReading}</h2>
+          <ul class="blog-grid">
+            {more.map((item) => <li><BlogCard post={item} lift level={3} /></li>)}
+          </ul>
+        </section>
+      ) : null
+    }
+  </div>
+</Site>

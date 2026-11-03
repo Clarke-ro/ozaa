@@ -1,8 +1,8 @@
-# Ozaa landing page
+# Ozaa marketing site
 
 This folder is the marketing site. It is separate from the guest and owner app.
 
-The page is for restaurant owners anywhere; Africa is the first launch. It covers table service only (menu, ordering, waiter calls, the bill request, loyalty and feedback). Taking money comes in a later build, so the page doesn't describe it, and a test keeps it that way.
+The site is for restaurant owners anywhere; Africa is the first launch. It covers table service only (menu, ordering, waiter calls, the bill request, loyalty and feedback). Taking money comes in a later build, so the site doesn't describe it, and a test keeps it that way.
 
 ## Run it
 
@@ -15,34 +15,50 @@ npm run check
 npm run dev
 ```
 
-`npm run dev` serves the page at http://localhost:4321.
+`npm run dev` serves the site at http://localhost:4321. `npm run build` writes the static site to `dist/`, and `npm run preview` serves that build (with a real 404 status for unknown pages).
+
+## Pages
+
+| Route | What it is |
+| --- | --- |
+| `/` | Home |
+| `/features` | Every feature |
+| `/demo` | Live sample menus |
+| `/pricing` | Plans (placeholder prices) |
+| `/blog`, `/blog/<slug>` | Blog index and posts; `/blog/page/<n>` once there are more than 12 posts |
+| `/contact` | Contact form |
+| `/terms`, `/privacy`, `/cookies` | Legal pages |
+| `/login`, `/get-started` | Hand over to the owner sign-in in the app |
+| `/sitemap.xml`, `/rss.xml` | Built from the pages and posts |
+| anything else | The 404 page, served with a 404 status |
+
+Pages swap through Astro's client router with link prefetching, and no transition animation.
+
+## Settings (env variables at build time)
+
+| Variable | What it does | Until it's set |
+| --- | --- | --- |
+| `PUBLIC_APP_URL` | Where Log in, Get started and the demo menus go (the Expo web app) | http://localhost:8081, so run `npm run web` in the app folder |
+| `PUBLIC_CONTACT_ENDPOINT` | The form service URL the contact form posts to (for example a Formspree or Web3Forms form). These URLs are public, so no secret key is involved | The form says sending isn't set up yet and sends nothing |
+| `SITE_URL` | The public domain, for canonical links, share images, the sitemap and RSS | http://localhost:4321 |
 
 ```
-npm run build
-npm run preview
+PUBLIC_APP_URL=https://app.example.com PUBLIC_CONTACT_ENDPOINT=https://formspree.io/f/xxxx SITE_URL=https://example.com npm run build
 ```
-
-`npm run build` writes the static site to `dist/`.
-
-## Where "Get started" goes
-
-Every "Get started", "Log in" and "Try a sample table" link goes to the Ozaa web app (the Expo app's web build). Set its address when you build:
-
-```
-PUBLIC_APP_URL=https://app.example.com npm run build
-```
-
-Without it, the links go to the local Expo web server at http://localhost:8081, so run `npm run web` in the app folder to follow them. The code is in `src/content/links.ts`.
 
 ## Where to edit
 
 - **Words:** every piece of copy is in `src/content/page.ts`.
+- **Prices:** `src/content/pricing.ts`. Set `placeholder: false` when the prices are real.
+- **Blog:** add `src/content/blog/<kebab-case-slug>.md` with `title`, `description`, `date`, `cover` and `coverAlt` in the frontmatter. Read time is worked out from the word count unless you set `readTime`. Covers go in `public/blog/`.
+- **Legal:** paste the real policy into `src/content/legal/terms.md`, `privacy.md` or `cookies.md`, and set `placeholder: false`. Placeholder pages are hidden from search engines and the sitemap.
 - **Look:** colours, radii, shadows, spacing and type sizes are tokens at the top of `src/styles/global.css`. Components use the tokens, never raw values.
-- **Sections:** one component each in `src/components/`, in page order in `src/pages/index.astro`.
-- **Placeholders** (an empty `url` shows the item without a link until it's real):
-  - `footer.socials`: the Instagram, X, Facebook and TikTok addresses.
-  - `footer.legal`: the Privacy and Terms pages.
-  - `site.url`: the public domain, with no slash at the end. The page uses it for the canonical link and the social image.
+- **Social links:** `footer.socials` in `page.ts`. An empty `url` shows the icon without a link; a real one opens in a new tab.
+- **Contact details:** `contactPage.info` in `page.ts`. An empty value shows "Coming soon".
+
+## Cookies
+
+The banner stores the visitor's choice in `localStorage` under `ozaa-cookies`. Nothing optional runs yet; when analytics or marketing scripts are added, load them only if that choice allows it. "Cookie settings" in the footer reopens the banner.
 
 ## Sample screens
 

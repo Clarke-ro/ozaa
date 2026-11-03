@@ -1,0 +1,10 @@
+---
+/** Any unknown address, including a blog post that doesn't exist. Served with a 404 status. */
+import NotFound from "../components/NotFound.astro";
+import { notFound } from "../content/page";
+import Site from "../layouts/Site.astro";
+---
+
+<Site title={notFound.heading} noindex>
+  <NotFound />
+</Site>
