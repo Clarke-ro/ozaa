@@ -13,10 +13,14 @@ import { VenueIntro } from './VenueIntro';
 // Banner height below the status bar; the logo hangs half over its bottom edge.
 const BANNER = 140;
 const LOGO = 64;
+// The table pill's height; the bell matches it.
+const PILL = 30;
+// Grows the bell's touch area from 30 to the 44 pt minimum (HIG).
+const BELL_SLOP = (44 - PILL) / 2;
 
 /**
  * Everything a guest sees on the venue home, with no data loading of its own: banner, share and
- * language, logo, table pill, name and hours, the service cards and the footer. The guest page
+ * language, logo, table pill and notifications bell, name, the service cards and the footer. The guest page
  * and the owner's Branding preview both draw this, so the preview is exactly the guest layout.
  */
 export function VenueHomeBody({
@@ -66,25 +70,6 @@ export function VenueHomeBody({
         >
           <Share2 color={theme.black} size={18} strokeWidth={2} />
         </Pressable>
-        {onNotices ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t('notices.bellA11y', { count: notices })}
-            onPress={onNotices}
-            style={[fab, styles.bell]}
-          >
-            <Bell color={theme.black} size={18} strokeWidth={2} />
-            {notices > 0 ? (
-              <View
-                style={[styles.badge, { backgroundColor: theme.fill, borderColor: theme.surface }]}
-              >
-                <Text variant="caption" style={[styles.badgeText, { color: theme.onFill }]}>
-                  {notices > 9 ? '9+' : notices}
-                </Text>
-              </View>
-            ) : null}
-          </Pressable>
-        ) : null}
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={t('home.chooseLanguage')}
@@ -112,14 +97,45 @@ export function VenueHomeBody({
         </View>
       </View>
       <View style={styles.identity}>
-        {tableCode ? (
-          <View style={[styles.pill, { borderColor: theme.line, backgroundColor: theme.surface }]}>
-            <Utensils color={theme.ink} size={14} strokeWidth={2} />
-            <Text variant="caption" style={styles.strong}>
-              {t('home.table', { code: tableCode })}
-            </Text>
-          </View>
-        ) : null}
+        {/* The table pill, then the bell on its right, level with the venue name. */}
+        <View style={styles.actions}>
+          {tableCode ? (
+            <View
+              style={[styles.pill, { borderColor: theme.line, backgroundColor: theme.surface }]}
+            >
+              <Utensils color={theme.ink} size={14} strokeWidth={2} />
+              <Text variant="caption" style={styles.strong}>
+                {t('home.table', { code: tableCode })}
+              </Text>
+            </View>
+          ) : null}
+          {onNotices ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('notices.bellA11y', { count: notices })}
+              onPress={onNotices}
+              hitSlop={BELL_SLOP}
+              style={({ pressed }) => [
+                styles.bell,
+                { borderColor: theme.line, backgroundColor: pressed ? theme.wash : theme.surface },
+              ]}
+            >
+              <Bell color={theme.black} size={16} strokeWidth={2} />
+              {notices > 0 ? (
+                <View
+                  style={[
+                    styles.badge,
+                    { backgroundColor: theme.fill, borderColor: theme.surface },
+                  ]}
+                >
+                  <Text variant="caption" style={[styles.badgeText, { color: theme.onFill }]}>
+                    {notices > 9 ? '9+' : notices}
+                  </Text>
+                </View>
+              ) : null}
+            </Pressable>
+          ) : null}
+        </View>
         <VenueIntro venue={venue} />
       </View>
       {children}
@@ -144,8 +160,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   share: { start: tokens.space[4], width: 40 },
-  // Next to Share: 40 wide plus a small gap.
-  bell: { start: tokens.space[4] + 40 + tokens.space[2], width: 40 },
   badge: {
     position: 'absolute',
     top: -4,
@@ -188,11 +202,24 @@ const styles = StyleSheet.create({
     paddingTop: LOGO / 2 + tokens.space[2],
     paddingBottom: tokens.space[2],
   },
-  pill: {
+  actions: {
     position: 'absolute',
     end: tokens.grid.mobile.margin,
     top: tokens.space[2] + 2,
-    height: 30,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[2],
+  },
+  bell: {
+    width: PILL,
+    height: PILL,
+    borderRadius: tokens.radius.full,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pill: {
+    height: PILL,
     borderRadius: tokens.radius.full,
     borderWidth: 1,
     paddingHorizontal: tokens.space[3],

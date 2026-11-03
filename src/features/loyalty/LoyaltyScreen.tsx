@@ -8,15 +8,18 @@ import type { LoyaltyCard } from '@/lib/api/types';
 import { asGhanaPhone, countryForVenue, parsePhone } from '@/lib/phone';
 import { useVenue } from '@/features/venue';
 import { useGuestSession } from '@/features/session';
-import { Button } from '@/ui/Button';
+import { Phone, Trash2 } from 'lucide-react-native';
+import { ConfirmDialog } from '@/ui/ConfirmDialog';
 import { PageHeader } from '@/ui/PageHeader';
 import { SafeScreen } from '@/ui/Screen';
-import { Text } from '@/ui/Text';
 import { tokens } from '@/theme/tokens';
-import { useTheme } from '@/ui/theme';
+import { ActivityList } from './ActivityList';
+import { CardAction } from './CardAction';
+import { ClaimBox } from './ClaimBox';
 import { programmeFromWire, walletFromWire } from './facts';
-import { LoyaltyDetails } from './LoyaltyDetails';
+import { HowToEarn } from './HowToEarn';
 import { LoyaltyIntro } from './LoyaltyIntro';
+import { RewardsList } from './RewardsList';
 import { LoyaltyJoinCard } from './LoyaltyJoinCard';
 import { WalletCard } from './WalletCard';
 import { guestKeys } from '@/lib/queryKeys';
@@ -31,7 +34,6 @@ function defaultSamplePhone(slug: string): string {
 
 export function LoyaltyScreen({ slug }: { slug: string }) {
   const { t } = useTranslation();
-  const theme = useTheme();
   const queryClient = useQueryClient();
   const setLoyaltyToken = useGuestSession((state) => state.setLoyaltyToken);
   const token = useGuestSession((state) => state.loyaltyToken);
@@ -53,6 +55,8 @@ export function LoyaltyScreen({ slug }: { slug: string }) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   // The join form waits until the guest asks for it, so the page leads with what they get.
   const [joining, setJoining] = useState(false);
+  // Deleting a card can't be undone, so it asks first.
+  const [confirmLeave, setConfirmLeave] = useState(false);
 
   const programQuery = useQuery({
     queryKey: guestKeys.loyaltyProgram(slug),
@@ -123,6 +127,11 @@ export function LoyaltyScreen({ slug }: { slug: string }) {
       setCode('');
       void queryClient.removeQueries({ queryKey: guestKeys.loyaltyVenue(slug) });
     },
+    onSuccess: () => {
+      setConfirmLeave(false);
+      // Back to the start: the card is gone, so the page offers Join again.
+      setJoining(false);
+    },
   });
 
   const openSample = async () => {
@@ -157,51 +166,42 @@ export function LoyaltyScreen({ slug }: { slug: string }) {
               venueName={placeName}
               venueInitials={initials}
               wallet={wallet}
+              rewardCosts={programme.rewards.map((reward) => reward.cost)}
               flipped={flipped}
               onFlip={() => setFlipped((value) => !value)}
             />
-            <LoyaltyDetails
+            {wallet.liveClaim ? <ClaimBox claim={wallet.liveClaim} /> : null}
+            <RewardsList
               programme={programme}
               wallet={wallet}
-              gameMinScore={gameMinScore}
               redeemingId={redeem.isPending ? (redeem.variables ?? null) : null}
               onRedeem={(rewardId) => redeem.mutate(rewardId)}
             />
-            <View style={[styles.privacyBox, { backgroundColor: theme.surface }]}>
-              <Text variant="caption" style={{ color: theme.meta }}>
-                {t('loyalty.privacyNote')}
-              </Text>
-              <View style={styles.privacyActions}>
-                <Button
-                  label={t('loyalty.switchPhone')}
-                  tone="secondary"
-                  onPress={() => {
-                    setJoinedCard(null);
-                    setLoyaltyToken(null);
-                    setSent(false);
-                  }}
-                />
-                <Button
-                  label={t('loyalty.leave')}
-                  tone="ghost"
-                  loading={leave.isPending}
-                  onPress={() => leave.mutate()}
-                />
-              </View>
+            <HowToEarn programme={programme} gameMinScore={gameMinScore} />
+            <ActivityList history={wallet.history} programme={programme} />
+            <View style={styles.actions}>
+              <CardAction
+                icon={Phone}
+                label={t('loyalty.switchPhone')}
+                onPress={() => {
+                  setJoinedCard(null);
+                  setLoyaltyToken(null);
+                  setSent(false);
+                }}
+              />
+              <CardAction
+                icon={Trash2}
+                tone="danger"
+                label={t('loyalty.leave')}
+                onPress={() => {
+                  leave.reset();
+                  setConfirmLeave(true);
+                }}
+              />
             </View>
           </>
         ) : (
           <>
-            {joining ? null : (
-              <LoyaltyIntro
-                venueName={placeName}
-                // The easiest reward to reach is the best hook.
-                firstReward={
-                  [...(programme?.rewards ?? [])].sort((a, b) => a.cost - b.cost)[0] ?? null
-                }
-                onJoin={() => setJoining(true)}
-              />
-            )}
             {joining ? (
               <LoyaltyJoinCard
                 venueName={placeName}
@@ -225,18 +225,26 @@ export function LoyaltyScreen({ slug }: { slug: string }) {
                 onConfirm={() => verify.mutate()}
                 onOpenSample={() => void openSample()}
               />
-            ) : null}
-            {programme ? (
-              <LoyaltyDetails
-                programme={programme}
-                wallet={null}
-                gameMinScore={gameMinScore}
-                redeemingId={null}
-              />
-            ) : null}
+            ) : (
+              <LoyaltyIntro venueName={placeName} onJoin={() => setJoining(true)} />
+            )}
+            {/* Rewards and tiers only mean something once you have a card, so a visitor sees how to earn. */}
+            {programme ? <HowToEarn programme={programme} gameMinScore={gameMinScore} /> : null}
           </>
         )}
       </ScrollView>
+      <ConfirmDialog
+        visible={confirmLeave}
+        destructive
+        title={t('loyalty.leaveTitle')}
+        message={
+          leave.isError ? t('loyalty.leaveFailed') : t('loyalty.leaveBody', { venue: placeName })
+        }
+        confirmLabel={t('loyalty.leaveConfirm')}
+        loading={leave.isPending}
+        onConfirm={() => leave.mutate()}
+        onCancel={() => setConfirmLeave(false)}
+      />
     </SafeScreen>
   );
 }
@@ -247,11 +255,5 @@ const styles = StyleSheet.create({
     gap: tokens.space[6],
     paddingBottom: tokens.space[12],
   },
-  privacyBox: {
-    borderRadius: tokens.radius.lg,
-    padding: tokens.space[4],
-    gap: tokens.space[3],
-    boxShadow: tokens.shadow.card,
-  },
-  privacyActions: { gap: tokens.space[2] },
+  actions: { gap: tokens.space[3] },
 });

@@ -2,9 +2,9 @@ import { Modal, Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
-import { Button } from '@/ui/Button';
-import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
+import { Button } from './Button';
+import { Text } from './Text';
+import { useTheme } from './theme';
 import { SHADOW_INK } from '@/theme/palette';
 
 export interface ConfirmDialogProps {

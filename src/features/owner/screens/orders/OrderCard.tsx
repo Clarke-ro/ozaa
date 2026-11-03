@@ -149,11 +149,9 @@ export function OrderCard({
           <View style={[styles.lines, { borderColor: theme.line }]}>
             {order.lines.map((line) => (
               <View key={line.id} style={styles.line}>
-                <View style={[styles.qty, { backgroundColor: theme.wash }]}>
-                  <Text variant="body-strong" style={styles.num}>
-                    {line.quantity}
-                  </Text>
-                </View>
+                <Text variant="body-strong" style={[styles.qty, styles.num]}>
+                  {line.quantity}×
+                </Text>
                 <View style={styles.flex}>
                   <Text variant="body-strong">{line.name}</Text>
                   {line.modifiers?.length ? (
@@ -217,14 +215,8 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
   },
   line: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.space[3] },
-  qty: {
-    minWidth: 32,
-    height: 32,
-    paddingHorizontal: tokens.space[2],
-    borderRadius: tokens.radius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  // A fixed column, so the dish names line up under each other.
+  qty: { minWidth: 32 },
   note: {
     flexDirection: 'row',
     alignItems: 'center',

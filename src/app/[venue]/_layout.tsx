@@ -16,9 +16,7 @@ export default function VenueLayout() {
   const theme = themeFromAccent(venue.data?.theme.accent, fontPair);
   return (
     <ThemeProvider theme={theme}>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="order" options={{ presentation: 'transparentModal' }} />
-      </Stack>
+      <Stack screenOptions={{ headerShown: false }} />
     </ThemeProvider>
   );
 }

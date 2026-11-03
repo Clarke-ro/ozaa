@@ -1,6 +1,7 @@
 export { ChipRow } from './ChipRow';
 export { CodeTile } from './CodeTile';
-export { ConfirmDialog } from './ConfirmDialog';
+// Shared with the guest app, so it lives in src/ui.
+export { ConfirmDialog } from '@/ui/ConfirmDialog';
 export { DeskCard } from './DeskCard';
 export { DeskTabs, type DeskTab } from './DeskTabs';
 export { EmptyCard } from './EmptyCard';

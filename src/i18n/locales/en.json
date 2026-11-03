@@ -28,8 +28,7 @@
     },
     "more": "More",
     "less": "Less",
-    "moreHint": "Shows the full description",
-    "directions": "{{place}}. Opens directions"
+    "moreHint": "Shows the full description"
   },
   "services": {
     "menu": {
@@ -279,21 +278,11 @@
     "switchPhone": "Use another number",
     "redeem": "Get claim code",
     "ready": "Ready",
-    "since": "Since {{date}}",
-    "cardNumber": "Card no.",
-    "flipToQr": "Show staff QR",
-    "flipToFront": "Back to card",
-    "scanAtTable": "Show this QR code to your waiter at the table.",
     "claimTitle": "Show this code to staff",
-    "claimLead": "Your waiter enters this 6-character code to confirm your reward. Until staff confirm, nothing is taken from your card.",
     "claimExpires": "Code active until {{time}}",
     "yourRewards": "Your rewards",
     "atStamps": "At {{count}} stamps",
     "atPoints": "At {{count}} points",
-    "tiersTitle": "Member tiers",
-    "tierThresholdStamps": "{{count}}+ lifetime stamps",
-    "tierThresholdPoints": "{{count}}+ lifetime points",
-    "currentTier": "Current",
     "tiers": {
       "bronze": "Bronze",
       "silver": "Silver",
@@ -315,15 +304,21 @@
     "historyGame": "Plate Stack high score",
     "historyBirthday": "Birthday treat",
     "historyRedeem": "Redeemed · {{title}}",
-    "progressReady": "Your reward is ready.",
-    "progressClaim": "Code {{code}} is waiting for staff.",
-    "progressOneStamp": "1 of {{total}}. One more and the next one is on us.",
-    "progressMoreStamps": "{{balance}} of {{total}}. {{left}} more and the next one is on us.",
-    "progressPoints": "{{balance}} of {{total}} pts · {{left}} pts to go",
-    "privacyNote": "Act 843: your phone number is kept only for this venue's card. Deleting your card erases your record here.",
     "introTitle": "Collect stamps at {{venue}}",
-    "introReward": "Your first reward: {{reward}}.",
-    "introBody": "Free to join with your phone number. No app to install."
+    "tapToScan": "Tap your card to get scanned",
+    "tapBack": "Tap to see your stamps",
+    "cardA11y": "{{venue}} loyalty card. {{counter}}. {{tier}} member.",
+    "backA11y": "Your QR code for staff to scan",
+    "historyEmptyTitle": "No activity yet",
+    "unitsIn_one": "Earned 1",
+    "unitsIn_other": "Earned {{count}}",
+    "unitsOut_one": "Used 1",
+    "unitsOut_other": "Used {{count}}",
+    "leaveTitle": "Delete your card?",
+    "leaveBody": "Your stamps and rewards at {{venue}} will be erased. You can't undo this.",
+    "leaveConfirm": "Delete card",
+    "leaveFailed": "That didn't go through and your card is still here. Check the connection and try again.",
+    "pointsCounter": "{{counter}} pts"
   },
   "review": {
     "title": "Leave a review",
@@ -1563,5 +1558,16 @@
     "placeholder": "Ask about guest feedback, food or service",
     "ask": "Ask",
     "failed": "That didn't go through. Check the connection and try again."
+  },
+  "basket": {
+    "title": "Your order",
+    "items": "Items",
+    "estimate": "The kitchen confirms the final total when it accepts your order.",
+    "addMore": "Add more dishes",
+    "less": "One less {{name}}",
+    "more": "One more {{name}}",
+    "emptyTitle": "Nothing in your order yet",
+    "emptyBody": "Add dishes from the menu, then send them to the kitchen.",
+    "browse": "Browse the menu"
   }
 }

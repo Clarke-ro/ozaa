@@ -12,7 +12,7 @@ import { formatMoney } from '@/lib/money';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
+import { fontFamily, useTheme } from '@/ui/theme';
 import { useOwnerSession } from '@/features/session';
 import { nextOrderMove, type OrderStatus, type StaffRole } from '@/features/orders';
 import { DeskWait, OwnerPage } from '../chrome/OwnerPage';
@@ -211,11 +211,9 @@ export function FloorScreen() {
                 <View style={styles.billLines}>
                   {bill.lines.map((line) => (
                     <View key={line.id} style={styles.orderLineRow}>
-                      <View style={styles.qtyBadge}>
-                        <Text variant="caption" style={styles.qtyText}>
-                          {line.quantity}×
-                        </Text>
-                      </View>
+                      <Text variant="body" style={styles.qtyText}>
+                        {line.quantity}×
+                      </Text>
                       <Text variant="body" style={{ flex: 1 }}>
                         {line.name}
                       </Text>
@@ -368,16 +366,8 @@ const useStyles = makeStyles((theme) => ({
     alignItems: 'center',
     gap: tokens.space[2],
   },
-  qtyBadge: {
-    backgroundColor: theme.wash,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  qtyText: {
-    fontFamily: 'Inter_600',
-    fontSize: 12,
-  },
+  // A fixed column, so the dish names line up under each other.
+  qtyText: { fontFamily: fontFamily.strong, minWidth: 28, fontVariant: ['tabular-nums'] },
   detailActions: {
     gap: tokens.space[2],
     paddingTop: tokens.space[2],
