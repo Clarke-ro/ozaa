@@ -2,3 +2,7 @@ ts	phase	decision	why	evidence	result
 2026-10-31T14:40:00Z	phase-0	One Expo app with file routes under src/app and a single ApiClient	BUILD.md already fixed the layout. A second data layer would drift from the contract.	api/openapi.yaml operationIds and BUILD.md section 6	adopted
 2026-10-31T15:10:00Z	phase-0	Port deriveTheme from the HTML prototype instead of inventing a new contrast rule	The three sample venues already have known ratios.	deriveTheme.test.ts matches #B5432A, #1F5C3F and #FFC21A	adopted
 2026-10-31T16:00:00Z	phase-2	Payments sandbox refuses to boot without an sk_test_ key	A missing secret must not look like a successful charge.	server/index.mjs exits when the key is absent or not a test key	adopted
+2026-11-03T12:00:00Z	menurite-gap	Each restaurant connects its own Paystack keys instead of split payments	Clarke chose it: venues keep full control and Ozaa takes no cut	docs/menurite-gap-table.md question 1	adopted
+2026-11-03T12:00:00Z	menurite-gap	Build the gap-table UI on the mock, then the backend	Clarke approved the work; UI first keeps the order of BUILD.md	docs/menurite-gap-table.md question 2	adopted
+2026-11-03T12:00:00Z	menurite-gap	Two order channels: table QR (no contact data) and menu link (name, phone, address on the order)	Pickup and delivery need a way to reach the customer	docs/menurite-gap-table.md question 3	adopted
+2026-11-03T12:00:00Z	menurite-gap	Plan badge uses the landing placeholder plans; guest pages get dark mode	Clarke answers to questions 5 and 6	docs/menurite-gap-table.md	adopted

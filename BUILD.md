@@ -39,7 +39,7 @@ Ozaa is a global product with a global mindset, launching in Africa first. The s
 
 The venue owner has an Ozaa app (phone and web). In it they switch services on and off, customise their page, watch orders come in, and moderate video reviews.
 
-The money goes straight to the venue through Paystack split payments, with Ozaa's fee taken by the split. **Ozaa never holds anyone's money.**
+The money goes straight to the venue's own Paystack account: each restaurant connects its own Paystack keys (decision of 2026-11-03). Ozaa takes no cut of guest payments and **never holds anyone's money.**
 
 The name on everything is **Ozaa**. Never mention TakeOrder anywhere: code, comments, copy, commits or docs.
 
@@ -82,8 +82,10 @@ These are settled. Do not reopen them.
 - **Guest home:** an edge-to-edge banner with a round logo at bottom-left, then name, description, location and hours. Below that come the video-review story circles, then services in four sections (At your table, Rewards, Fun while you wait, More). Each service opens its own screen.
 - **Game:** "Play while you wait" is for every guest. It has a weekly leaderboard, an optional loyalty stamp at the owner's target score, and the food-ready banner can appear over it.
 - **Owner side:** review moderation, service toggles, the Customise page, and an orders dashboard.
-- **Payments:** Paystack, sandbox first. MoMo on MTN, Telecel and AT, plus card. Split payments. Never hold funds.
-- **Build order:** frontend first against a fixed API contract and a mock. The backend comes only after Clarke approves the UI.
+- **Payments:** Paystack, test mode first. MoMo on MTN, Telecel and AT, plus card. *Changed 2026-11-03:* each restaurant pastes its own Paystack public and secret keys (Settings > Integrations). The secret key is stored encrypted on the server only and never reaches the app, the browser or a log. No split payments, no pooled accounts, no payouts. Never hold funds. Manual methods (cash, card machine, bank transfer, MoMo to the merchant number) are marked paid by staff.
+- **Two ways to order** *(2026-11-03)*: walk-in guests scan a **table QR** (no contact details, call waiter, ask for the bill). Online customers use the venue's **menu link** (`/<venue-slug>`) to order for pickup or delivery, and give a name and phone (plus an address for delivery). That contact data lives on the order only, never in the guest session, and is never logged.
+- **Plans:** the owner plan badge and Billing page use the placeholder plans from `landing/src/content/pricing.ts` until real prices are set.
+- **Build order:** frontend first against a fixed API contract and a mock. The backend comes only after Clarke approves the UI. *2026-11-03:* Clarke approved the MenuRite-gap work (`docs/menurite-gap-table.md`): build all of its UI on the mock first, then hook in the backend.
 - **Code style:** Clarke is learning, so code must be simple, readable, and commented where it is not obvious. Every feature gets a LEARNING.md entry.
 
 ## 5. Stack and why
@@ -445,7 +447,7 @@ Ghana is the first launch market and the default sample: cedis, `+233`, and `Afr
 
 ### 12.3 Data protection (Act 843)
 
-- The guest session holds no personal data.
+- The guest session holds no personal data. Online (menu link) orders carry the customer's name and phone, and an address for delivery, on the order itself, with a short notice saying why we ask. Never in the session, a URL or a log.
 - A phone number is collected only to join loyalty or for an owner or staff login.
 - **Consent:**
   - Joining loyalty needs a ticked consent box for loyalty itself.
@@ -590,12 +592,36 @@ Work top to bottom. Each box is one small PR that ends in a verifiable state (ps
   - Lighthouse
 - [ ] **UI APPROVAL GATE:** Clarke gets screenshots of every screen side by side with the renders, for all 3 venues, plus a short screen recording of the guest flow (scan → order → pay → stamp → review) and the owner flow. **Wait for his written yes.**
 
+### Phase 4b: Owner dashboard and online ordering (gap table, on mocks)
+
+Approved by Clarke on 2026-11-03. Details and file locations are in `docs/menurite-gap-table.md`. One PR per box. Contract boxes (marked *contract*) go first in their own PR.
+
+- [ ] 4b.1 Sidebar in Main / Sales / Settings, collapsible, plan badge at the top (landing placeholder plans), help, profile and log out at the bottom. Pages with no screen yet open a "Coming soon" page.
+- [ ] 4b.2 Home: "Complete your setup" checklist with a % bar, worked out from data the app already loads.
+- [ ] 4b.3 Orders: counts on every tab, All and Rejected tabs, waiter calls and bill requests on Orders.
+- [ ] 4b.4 Sound alert for new orders and waiter calls while the owner app is open.
+- [ ] 4b.5 Categories as its own page.
+- [ ] 4b.6 QR codes and links page: menu link (copy, share, download QR), embed snippet, table QR codes.
+- [ ] 4b.7 "Size" preset in the add-ons editor (one required choice, each size with its own price).
+- [ ] 4b.8 *contract* + UI: item status (available, out of stock, hidden), sale price, stock count, min and max quantity.
+- [ ] 4b.9 *contract* + UI: store notice (scrolling banner and popup, each with a schedule and a show/hide toggle).
+- [ ] 4b.10 *contract* + UI: customization of item sort order, list or grid layout, and guest light/dark mode.
+- [ ] 4b.11 *contract* + UI: menu editor on a live phone preview, publish toggle, menu link and quick style on the right.
+- [ ] 4b.12 *contract* + UI: orders date filter and manual "create order".
+- [ ] 4b.13 *contract* + UI: Home stats for orders today, pending orders and visitors today.
+- [ ] 4b.14 *contract* + UI: online ordering settings (on/off, pickup prep time, delivery fees, distance, free threshold).
+- [ ] 4b.15 *contract* + UI: menu-link guest flow (pickup or delivery, contact form, confirmation and status page) and the source on every order.
+- [ ] 4b.16 *contract* + UI: Sales page (totals, counts by status, discounts, top items, revenue over time, by source).
+- [ ] 4b.17 *contract* + UI: Settings > Integrations > Payments (own Paystack keys, where to find them, test/live, test connection), manual methods, mark paid by method, payment status on orders and sales. Split bill hidden.
+- [ ] 4b.18 WhatsApp order-alerts number field, behind a flag that stays off.
+- [ ] **Review:** Clarke sees every new screen in light and dark, phone and tablet, then says go for the backend (per-venue encrypted Paystack keys, webhook per venue, push alerts).
+
 ### Phase 5: Backend for products 1–4
 
 - [ ] 5.1 `server/`: Hono + TypeScript, Postgres with Drizzle migrations, config parsed with zod, structured logs without personal data.
 - [ ] 5.2 Implement the contract exactly. Run contract tests that call every operation and validate responses against `openapi.yaml`, and reuse the fixtures as seed data.
 - [ ] 5.3 Auth (OTP via an SMS provider Clarke chooses), roles, rate limits, idempotency store.
-- [ ] 5.4 Money: Paystack live-ready (still test keys), subaccounts, webhooks, reconciliation job (verify pending payments older than 5 min).
+- [ ] 5.4 Money: Paystack live-ready (still test keys), each venue's own keys stored encrypted, a webhook URL per venue checked with that venue's secret, reconciliation job (verify pending payments older than 5 min).
 - [ ] 5.5 Media: object storage with pre-signed uploads, image resizing, video transcoding to 480p and a poster.
 - [ ] 5.6 Switch the app to `EXPO_PUBLIC_API_MODE=http` in staging. The Playwright suite must pass against staging.
 - [ ] 5.7 Privacy page, consent records, data deletion, backups.
