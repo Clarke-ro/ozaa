@@ -1,6 +1,7 @@
 import type { ErrorBoundaryProps } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
+import { useAppFonts } from '@/theme/fonts';
 import { tokens } from '@/theme/tokens';
 import { Button } from './Button';
 import { Text } from './Text';
@@ -14,6 +15,8 @@ import { useTheme } from './theme';
 export function AppErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   const { t } = useTranslation();
   const theme = useTheme();
+  // The layout that loads the fonts may be the part that crashed, so load them here too.
+  useAppFonts();
   return (
     <View style={[styles.page, { backgroundColor: theme.bg }]} accessibilityRole="alert">
       <Text variant="display-m">{t('errors.crashTitle')}</Text>
