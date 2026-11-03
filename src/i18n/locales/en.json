@@ -365,6 +365,7 @@
     "you": "you",
     "stamp": "Score {{score}}+ for a stamp",
     "earned": "You earned a loyalty stamp",
+    "sendFailed": "We couldn't save this score. Your next game will still count.",
     "offline": "No ads. Works offline. Only a nickname you choose is saved.",
     "drop": "Drop the plate"
   },
