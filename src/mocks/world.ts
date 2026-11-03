@@ -484,7 +484,12 @@ export function createWorld(now: number): World {
     feedback: [],
     customLinks: [],
     business: {
-      business: { id: 'biz_mamas', name: "Mama's Hospitality Group", ownerId: 'usr_ama' },
+      business: {
+        id: 'biz_mamas',
+        name: "Mama's Hospitality Group",
+        ownerId: 'usr_ama',
+        plan: 'free',
+      },
       locations: [
         {
           id: 'ven_mamas',

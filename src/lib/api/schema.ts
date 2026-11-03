@@ -2127,6 +2127,11 @@ export interface components {
             id: string;
             name: string;
             ownerId: string;
+            /**
+             * @description The Ozaa plan this business is on. Matches the plan ids on the pricing page. Billing is not live yet, so this is read-only.
+             * @enum {string}
+             */
+            plan: "free" | "pro" | "business";
         };
         Location: {
             id: string;
