@@ -602,7 +602,7 @@ Approved by Clarke on 2026-11-03. Details and file locations are in `docs/menuri
 - [x] 4b.4 Sound alert for new orders and waiter calls while the owner app is open.
 - [x] 4b.5 Categories as its own page.
 - [x] 4b.6 QR codes and links page: menu link (copy, share, download QR), embed snippet, table QR codes.
-- [ ] 4b.7 "Size" preset in the add-ons editor (one required choice, each size with its own price).
+- [x] 4b.7 "Size" preset in the add-ons editor (one required choice, each size with its own price).
 - [ ] 4b.8 *contract* + UI: item status (available, out of stock, hidden), sale price, stock count, min and max quantity.
 - [ ] 4b.9 *contract* + UI: store notice (scrolling banner and popup, each with a schedule and a show/hide toggle).
 - [ ] 4b.10 *contract* + UI: customization of item sort order, list or grid layout, and guest light/dark mode.

@@ -967,7 +967,13 @@
       "popular": "Popular",
       "no_photo": "No photo"
     },
-    "deleteDish": "Delete dish"
+    "deleteDish": "Delete dish",
+    "addSizes": "Add sizes",
+    "sizeName": "Size",
+    "sizeSmall": "Small",
+    "sizeMedium": "Medium",
+    "sizeLarge": "Large",
+    "ruleOneHint": "Guests must pick one. Each price here is added to the dish price, so leave the smallest at 0."
   },
   "ownerBranding": {
     "lead": "How your page looks to guests: colour, words, photos and the order of the buttons.",
