@@ -7,16 +7,16 @@ const shot = screens[hero.screen];
 ---
 
 <section class="hero" id="top" aria-labelledby="hero-title">
-  <div class="wrap hero-grid">
-    <div class="hero-copy">
-      <p class="eyebrow">{hero.eyebrow}</p>
-      <h1 id="hero-title">{hero.heading}</h1>
+  <div class="hero-inner">
+    <div class="hero-text">
+      <h1 id="hero-title">
+        {hero.before}<span class="hero-highlight">{hero.highlight}</span>{hero.after}
+      </h1>
       <p class="hero-lead">{hero.lead}</p>
-      <div class="hero-actions">
-        <a class="button" href={links.app}>{hero.cta}</a>
-        <a class="button button--ghost" href={links.sample}>{hero.secondary}</a>
+      <div class="hero-buttons">
+        <a class="pill pill--orange pill--lg" href={links.app}>{hero.primary}</a>
+        <a class="pill pill--glass pill--lg" href="#how">{hero.secondary}</a>
       </div>
-      <p class="fine">{hero.note}</p>
     </div>
     <div class="hero-phone">
       <IPhone src={shot.src} alt={shot.alt} priority />

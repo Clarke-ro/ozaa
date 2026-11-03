@@ -2,7 +2,7 @@
 
 This folder is the marketing site. It is separate from the guest and owner app.
 
-The page is for restaurant owners anywhere. Africa is the first launch. Guests pay by card or by mobile money. MoMo is one mobile money option.
+The page is for restaurant owners anywhere; Africa is the first launch. It covers table service only (menu, ordering, waiter calls, the bill request, loyalty and feedback). Taking money comes in a later build, so the page doesn't describe it, and a test keeps it that way.
 
 ## Run it
 
@@ -24,9 +24,9 @@ npm run preview
 
 `npm run build` writes the static site to `dist/`.
 
-## Where "Get Ozaa" goes
+## Where "Get started" goes
 
-Every "Get Ozaa", "Open the app" and "Try a sample table" link goes to the Ozaa web app (the Expo app's web build). Set its address when you build:
+Every "Get started", "Log in" and "Try a sample table" link goes to the Ozaa web app (the Expo app's web build). Set its address when you build:
 
 ```
 PUBLIC_APP_URL=https://app.example.com npm run build
@@ -34,16 +34,18 @@ PUBLIC_APP_URL=https://app.example.com npm run build
 
 Without it, the links go to the local Expo web server at http://localhost:8081, so run `npm run web` in the app folder to follow them. The code is in `src/content/links.ts`.
 
-## Sample screens
-
-`public/screens/` holds screenshots of the real app, taken at 393×764 pt and 2× (an iPhone 16 Pro screen without its status bar and home bar, which `IPhone.astro` draws). Retake them when the app's screens change.
-
 ## Where to edit
 
-Copy, sample-screen labels, and the three placeholders live in `src/content/page.ts`.
+- **Words:** every piece of copy is in `src/content/page.ts`.
+- **Look:** colours, radii, shadows, spacing and type sizes are tokens at the top of `src/styles/global.css`. Components use the tokens, never raw values.
+- **Sections:** one component each in `src/components/`, in page order in `src/pages/index.astro`.
+- **Placeholders** (an empty `url` shows the item without a link until it's real):
+  - `footer.socials`: the Instagram, X, Facebook and TikTok addresses.
+  - `footer.legal`: the Privacy and Terms pages.
+  - `site.url`: the public domain, with no slash at the end. The page uses it for the canonical link and the social image.
 
-- `site.url` stays empty until there is a public domain. Then set it to the origin, with no slash at the end. The page uses it for the canonical link and the social image URL.
-- `contact` is a placeholder. The form does not send. When a WhatsApp number, a phone number, and an email exist, change `status` to `"ready"` and add `whatsappHref`, `phoneHref`, and `emailHref`.
-- `pricing` is a placeholder. There is no price and no currency. When a price exists, change `status` to `"ready"` and add `plans`. Put the amount in the currency the restaurant pays in.
+## Sample screens
 
-Do not add customer names, quotes, counts, or logos. The phone pictures are sample screens.
+`public/screens/` holds screenshots of the real app, taken from a build with payments off at 393×764 pt and 2× (an iPhone 16 Pro screen without its status bar and home bar, which `IPhone.astro` draws). Retake them when the app's screens change. A test checks each file is used exactly once.
+
+Do not add customer names, quotes, counts or logos. The phone pictures are sample screens.

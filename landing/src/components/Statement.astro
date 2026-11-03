@@ -1,0 +1,19 @@
+---
+import { statement } from "../content/page";
+
+// The loop runs over two identical copies, so sliding by exactly one copy's width is seamless.
+const run = statement.marquee.map((word) => `${word} •`).join(" ");
+---
+
+<section class="statement" aria-label="What Ozaa does">
+  <p class="statement-text reveal">{statement.text}</p>
+  <div class="ribbon">
+    <p class="visually-hidden">{statement.marquee.join(", ")}</p>
+    <div class="ribbon-track" aria-hidden="true">
+      <span>{run}</span>
+      <span>{run}</span>
+      <span>{run}</span>
+      <span>{run}</span>
+    </div>
+  </div>
+</section>

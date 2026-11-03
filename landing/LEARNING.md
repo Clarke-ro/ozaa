@@ -12,7 +12,7 @@ A one-page site that explains Ozaa to a restaurant owner. Guests scan a QR code 
 
 **How it works**
 
-The site is static. A build step turns the page into HTML, CSS, and one small script for the contact form. There is no server and no database.
+The site is static. A build step turns the page into HTML, CSS, and two small scripts: one opens the phone menu, one fades cards in as you scroll. There is no server and no database.
 
 ```
 page.ts  →  Astro components  →  dist/index.html

@@ -1,0 +1,39 @@
+---
+import { links } from "../content/links";
+import { features, screenSize, screens } from "../content/page";
+import Icon from "./Icon.astro";
+---
+
+<section class="features" id="features" aria-labelledby="features-title">
+  <header class="section-head">
+    <p class="badge">{features.badge}</p>
+    <h2 id="features-title">{features.heading}</h2>
+  </header>
+  <ul class="feature-grid">
+    {
+      features.cards.map((card, index) => {
+        const shot = screens[card.screen];
+        return (
+          <li class="feature-card reveal" style={`--delay: ${(index % 3) * 80}ms`}>
+            <div class={`feature-image tile--${card.tile}`}>
+              <img
+                src={shot.src}
+                alt={shot.alt}
+                width={screenSize.width}
+                height={screenSize.height}
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+            <h3>{card.title}</h3>
+            <p>{card.body}</p>
+          </li>
+        );
+      })
+    }
+  </ul>
+  <a class="more-link" href={links.sample}>
+    {features.more}
+    <Icon name="arrow" size={18} />
+  </a>
+</section>

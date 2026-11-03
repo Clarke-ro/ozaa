@@ -1,0 +1,22 @@
+---
+import { who } from "../content/page";
+---
+
+<section class="who" id="who" aria-labelledby="who-title">
+  <h2 id="who-title" class="who-title reveal">{who.heading}</h2>
+  {/* The full list once for screen readers; the moving rows repeat it and are hidden from them. */}
+  <ul class="visually-hidden">
+    {who.rows.flat().map((name) => <li>{name}</li>)}
+  </ul>
+  {
+    who.rows.map((row, rowIndex) => (
+      <div class={`who-row ${rowIndex % 2 ? "who-row--reverse" : ""}`} aria-hidden="true">
+        <div class="who-track">
+          {[...row, ...row, ...row, ...row].map((name, index) => (
+            <span class={`who-pill ${(index + rowIndex) % 2 ? "who-pill--rose" : ""}`}>{name}</span>
+          ))}
+        </div>
+      </div>
+    ))
+  }
+</section>

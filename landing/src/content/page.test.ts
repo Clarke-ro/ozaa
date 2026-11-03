@@ -1,20 +1,8 @@
 import assert from "node:assert/strict";
-import { access, readFile } from "node:fs/promises";
+import { access, readdir, readFile } from "node:fs/promises";
 import test from "node:test";
-import { checkContactDraft, contactMode } from "./contact.ts";
 import { appLinks, LOCAL_APP_URL } from "./links.ts";
-import {
-  contact,
-  guestFeatures,
-  hero,
-  ownerNow,
-  payments,
-  pricing,
-  questions,
-  screens,
-  sections,
-  site,
-} from "./page.ts";
+import { faq, features, footer, hero, how, nav, screens, site, why } from "./page.ts";
 
 const banned: readonly RegExp[] = [
   /TakeOrder/i,
@@ -28,122 +16,61 @@ const banned: readonly RegExp[] = [
   /₵/,
 ];
 
+const read = (path: string) => readFile(new URL(path, import.meta.url), "utf8");
+
 test("published copy does not name a forbidden word or a currency mark", async () => {
-  const files = [
-    new URL("./page.ts", import.meta.url),
-    new URL("./contact.ts", import.meta.url),
-    new URL("../pages/index.astro", import.meta.url),
-    new URL("../../README.md", import.meta.url),
-    new URL("../../LEARNING.md", import.meta.url),
+  for (const path of ["./page.ts", "../pages/index.astro", "../../README.md", "../../LEARNING.md"]) {
+    const text = await read(path);
+    for (const pattern of banned) assert.equal(pattern.test(text), false, `${path} matches ${pattern}`);
+  }
+});
+
+test("no payments wording anywhere: payments come in a later build", async () => {
+  const words = /\bpay(s|ment|ments|ing)?\b|\bmomo\b|mobile money|checkout|\bsplit (the )?bill|\btips?\b|card payment/i;
+  const files = ["./page.ts"];
+  for (const name of await readdir(new URL("../components/", import.meta.url))) {
+    files.push(`../components/${name}`);
+  }
+  for (const path of files) {
+    const text = await read(path);
+    assert.equal(words.test(text), false, `${path} mentions payments: ${text.match(words)?.[0]}`);
+  }
+});
+
+test("every sample screen file is used once and exists in the public folder", async () => {
+  const used = new Set<string>([screens[hero.screen].src, screens[how.screen].src]);
+  for (const card of features.cards) used.add(screens[card.screen].src);
+  assert.equal(used.size, Object.keys(screens).length, "a screen is listed but never shown");
+  for (const src of used) await access(new URL(`../../public${src}`, import.meta.url));
+  const files = await readdir(new URL("../../public/screens/", import.meta.url));
+  assert.equal(files.length, used.size, "public/screens has a file the page doesn't use");
+});
+
+test("every navbar link lands on a section of the page", async () => {
+  const components = await Promise.all(
+    (await readdir(new URL("../components/", import.meta.url))).map((name) =>
+      read(`../components/${name}`),
+    ),
+  );
+  const markup = components.join("\n");
+  const all: readonly { href: string }[] = [
+    ...nav.links,
+    ...footer.columns.flatMap((column): readonly { href: string }[] => column.links),
   ];
-  for (const file of files) {
-    const text = await readFile(file, "utf8");
-    for (const pattern of banned) {
-      assert.equal(
-        pattern.test(text),
-        false,
-        `${file.pathname} matches ${pattern}`,
-      );
-    }
+  for (const link of all) {
+    if (!link.href.startsWith("#")) continue;
+    assert.match(markup, new RegExp(`id="${link.href.slice(1)}"`), `${link.href} has no section`);
   }
 });
 
-test("pricing and contact stay placeholders until Clarke fills them", () => {
-  assert.equal(pricing.status, "placeholder");
-  assert.equal(contactMode(contact), "placeholder");
-  assert.equal(contact.status, "placeholder");
+test("the grids and lists have the counts the layout is built for", () => {
+  assert.equal(features.cards.length, 6);
+  assert.equal(why.cards.length, 6);
+  assert.ok(faq.items.length >= 5 && faq.items.length <= 6);
+});
+
+test("Get started points at the web app, local until it is hosted", () => {
   assert.equal(site.url, "");
-  if (pricing.status !== "placeholder") return;
-  assert.match(pricing.body, /placeholder/i);
-  if (contact.status === "placeholder") {
-    assert.match(contact.notice, /placeholder/i);
-    assert.match(contact.held, /nothing was sent/i);
-  }
-});
-
-test("section ids are unique and the page renders each one", async () => {
-  const ids = sections.map((section) => section.id);
-  assert.equal(new Set(ids).size, ids.length);
-  const index = await readFile(
-    new URL("../pages/index.astro", import.meta.url),
-    "utf8",
-  );
-  for (const id of ids) {
-    assert.match(index, new RegExp(`\\b${id}:`));
-  }
-});
-
-test("every sample screen file exists once in the public folder", async () => {
-  const used = new Set<string>([screens[hero.screen].src, screens[payments.screen].src]);
-  for (const feature of guestFeatures) used.add(screens[feature.screen].src);
-  for (const item of ownerNow) used.add(screens[item.screen].src);
-  assert.equal(used.size, Object.keys(screens).length);
-  for (const src of used) {
-    await access(new URL(`../../public${src}`, import.meta.url));
-  }
-});
-
-test("the contact check asks for a restaurant, a name, and one way to reply", () => {
-  assert.equal(contact.status, "placeholder");
-  if (contact.status !== "placeholder") return;
-  const copy = contact;
-  const empty = {
-    restaurant: "",
-    name: "",
-    phone: "",
-    email: "",
-    whatsapp: "",
-    message: "",
-  };
-  assert.deepEqual(checkContactDraft(empty, copy), {
-    ok: false,
-    field: "restaurant",
-    message: copy.missingRestaurant,
-  });
-  assert.equal(
-    checkContactDraft({ ...empty, restaurant: "North Cafe" }, copy).ok,
-    false,
-  );
-  const noReach = checkContactDraft(
-    { ...empty, restaurant: "North Cafe", name: "Ama" },
-    copy,
-  );
-  assert.equal(noReach.ok, false);
-  if (!noReach.ok) assert.equal(noReach.field, "reach");
-  const ready = checkContactDraft(
-    { ...empty, restaurant: "North Cafe", name: "Ama", email: "a@cafe.test" },
-    copy,
-  );
-  assert.deepEqual(ready, { ok: true });
-});
-
-test("a ready contact with a blank link stays a placeholder", () => {
-  assert.equal(
-    contactMode({
-      status: "ready",
-      whatsappHref: "https://wa.me/100",
-      phoneHref: "",
-      emailHref: "mailto:hi@example.com",
-    }),
-    "placeholder",
-  );
-  assert.equal(
-    contactMode({
-      status: "ready",
-      whatsappHref: "https://wa.me/100",
-      phoneHref: "tel:+100",
-      emailHref: "mailto:hi@example.com",
-    }),
-    "ready",
-  );
-});
-
-test("feature rows pair up, two screens to a row", () => {
-  assert.equal(guestFeatures.length % 2, 0);
-  assert.equal(ownerNow.length % 2, 0);
-});
-
-test("Get Ozaa points at the web app, local until it is hosted", () => {
   assert.deepEqual(appLinks(undefined), {
     app: `${LOCAL_APP_URL}/`,
     sample: `${LOCAL_APP_URL}/mamas-kitchen/t/12`,
@@ -153,14 +80,6 @@ test("Get Ozaa points at the web app, local until it is hosted", () => {
   assert.equal(appLinks("  ").owner, `${LOCAL_APP_URL}/owner/login`);
 });
 
-test("payment copy is not just one mobile money brand", () => {
-  const text = JSON.stringify({ payments, questions });
-  assert.equal(/MoMo/.test(text), false);
-  assert.match(text, /card/i);
-  assert.match(text, /never holds|does(n't| not) hold/i);
-});
-
-test("no copy promises video reviews, which the product dropped", async () => {
-  const text = await readFile(new URL("./page.ts", import.meta.url), "utf8");
-  assert.equal(/video/i.test(text), false);
+test("placeholder socials and legal links stay unlinked until they have a real address", () => {
+  for (const item of [...footer.socials, ...footer.legal]) assert.equal(item.url, "");
 });

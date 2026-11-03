@@ -1,0 +1,117 @@
+---
+import { links } from "../content/links";
+import { nav } from "../content/page";
+import Icon from "./Icon.astro";
+---
+
+<header class="navbar-wrap">
+  <nav class="navbar" aria-label="Main">
+    <a class="navbar-logo" href="#top" aria-label="Ozaa, back to the top">
+      <img src="/logo/ozaa-lockup.svg" alt="" width="451" height="140" />
+    </a>
+    <ul class="navbar-links">
+      {nav.links.map((link) => <li><a href={link.href}>{link.label}</a></li>)}
+    </ul>
+    <div class="navbar-actions">
+      <a class="pill pill--peach" href={links.owner}>{nav.login}</a>
+      <a class="pill pill--orange" href={links.app}>{nav.start}</a>
+    </div>
+    <button
+      class="navbar-toggle"
+      type="button"
+      aria-expanded="false"
+      aria-controls="mobile-menu"
+      data-open={nav.open}
+      data-close={nav.close}
+    >
+      <span class="visually-hidden" data-toggle-label>{nav.open}</span>
+      <Icon name="menu" size={22} />
+    </button>
+  </nav>
+
+  <div class="mobile-menu" id="mobile-menu" hidden>
+    <button class="mobile-backdrop" type="button" tabindex="-1" aria-hidden="true" data-close></button>
+    <div class="mobile-card" role="dialog" aria-modal="true" aria-label="Menu">
+      <div class="mobile-head">
+        <img src="/logo/ozaa-lockup.svg" alt="Ozaa" width="451" height="140" />
+        <button class="mobile-close" type="button" data-close aria-label={nav.close}>
+          <Icon name="close" size={22} />
+        </button>
+      </div>
+      <ul class="mobile-links">
+        {
+          nav.links.map((link, index) => (
+            <li style={`--i: ${index}`}>
+              <a href={link.href} data-close-link>
+                {link.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      <div class="mobile-actions" style={`--i: ${nav.links.length}`}>
+        <a class="pill pill--peach" href={links.owner}>{nav.login}</a>
+        <a class="pill pill--orange" href={links.app}>{nav.start}</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<script>
+  // The small-screen menu: opens over a dimmed page, closes on a link, the backdrop, the
+  // close button or Escape, and gives focus back to the button that opened it.
+  const toggle = document.querySelector<HTMLButtonElement>(".navbar-toggle");
+  const menu = document.querySelector<HTMLElement>("#mobile-menu");
+  const label = toggle?.querySelector<HTMLElement>("[data-toggle-label]");
+  if (toggle && menu && label) {
+    const focusables = () =>
+      [...menu.querySelectorAll<HTMLElement>("a, button:not([tabindex='-1'])")];
+    const open = () => {
+      menu.hidden = false;
+      requestAnimationFrame(() => menu.classList.add("is-open"));
+      toggle.setAttribute("aria-expanded", "true");
+      label.textContent = toggle.dataset.close ?? "";
+      document.body.style.overflow = "hidden";
+      focusables()[0]?.focus();
+    };
+    const close = () => {
+      menu.classList.remove("is-open");
+      toggle.setAttribute("aria-expanded", "false");
+      label.textContent = toggle.dataset.open ?? "";
+      document.body.style.overflow = "";
+      const done = () => {
+        menu.hidden = true;
+        menu.removeEventListener("transitionend", done);
+      };
+      const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (reduce) done();
+      else menu.addEventListener("transitionend", done);
+      toggle.focus();
+    };
+    toggle.addEventListener("click", () => (menu.hidden ? open() : close()));
+    menu.querySelectorAll("[data-close], [data-close-link]").forEach((el) =>
+      el.addEventListener("click", close),
+    );
+    document.addEventListener("keydown", (event) => {
+      if (menu.hidden) return;
+      if (event.key === "Escape") close();
+      // Keep Tab inside the open menu.
+      if (event.key === "Tab") {
+        const items = focusables();
+        const first = items[0];
+        const last = items[items.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last?.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first?.focus();
+        }
+      }
+    });
+    // Widening the window past the breakpoint closes the menu.
+    matchMedia("(min-width: 741px)").addEventListener("change", (event) => {
+      if (event.matches && !menu.hidden) close();
+    });
+  }
+</script>
