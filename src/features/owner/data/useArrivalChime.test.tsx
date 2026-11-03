@@ -77,36 +77,5 @@ test('rings for a new order after the first load, not for the orders already the
   await waitFor(() => expect(mockPlayer.play).toHaveBeenCalledTimes(1), WAIT);
 });
 
-test('rings for a new waiter call, but the kitchen never hears calls', async () => {
-  const owner = await setup('owner');
-  await waitFor(() => expect(owner.getQueryData(ownerKeys.calls('ven_1'))).toBeTruthy(), WAIT);
-  // Let the hook take in the first load before anything new arrives.
-  await act(async () => {});
-  await act(() =>
-    owner.setQueryData(ownerKeys.calls('ven_1'), { items: [{ id: 'c1', status: 'open' }] }),
-  );
-  await waitFor(() => expect(mockPlayer.play).toHaveBeenCalledTimes(1), WAIT);
-
-  mockPlayer.play.mockClear();
-  const kitchen = await setup('kitchen');
-  await waitFor(() => expect(kitchen.getQueryData(ownerKeys.orders('ven_1'))).toBeTruthy(), WAIT);
-  // Let the hook take in the first load before anything new arrives.
-  await act(async () => {});
-  await act(() =>
-    kitchen.setQueryData(ownerKeys.calls('ven_1'), { items: [{ id: 'c2', status: 'open' }] }),
-  );
-  await act(() => kitchen.setQueryData(ownerKeys.orders('ven_1'), { items: [{ id: 'o1' }] }));
-  expect(mockPlayer.play).not.toHaveBeenCalled();
-});
-
-test('stays quiet when the owner turned the sound off', async () => {
-  useOwnerPrefs.setState({ chime: false });
-  const client = await setup('owner');
-  await waitFor(() => expect(client.getQueryData(ownerKeys.orders('ven_1'))).toBeTruthy(), WAIT);
-  // Let the hook take in the first load before anything new arrives.
-  await act(async () => {});
-  await act(() =>
-    client.setQueryData(ownerKeys.orders('ven_1'), { items: [{ id: 'o1' }, { id: 'o9' }] }),
-  );
-  expect(mockPlayer.play).not.toHaveBeenCalled();
-});
+// Calls, the kitchen and the sound switch are covered by chimeStep's tests in desk/arrivals.test.ts,
+// which need no timers or React. This file only checks the hook is wired to the cache and the speaker.
