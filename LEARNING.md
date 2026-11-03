@@ -554,3 +554,34 @@ The first load only fills `seen`, so opening the app doesn't ring for orders alr
 **Try it yourself**
 
 In `gen-chime.mjs`, change `880.0` to `784.0` and run `node scripts/gen-chime.mjs`. The second note is now lower. Listen to `assets/sounds/new-order.wav`.
+
+---
+
+## 2026-11-03 · Categories on their own page
+
+**What we built**
+
+Categories (we call them sections in the code) now have their own page in the sidebar, with Food and Drinks shown apart. You can add, rename, hide, move and delete sections there. The Sections sheet on the Menu screen still works the same.
+
+**How it works**
+
+```
+SectionsList (the rows and the New section button)
+   ├─ SectionsSheet   → a pop-up on the Menu screen
+   └─ CategoriesScreen → a full page, once for Food and once for Drinks
+```
+
+Both use `useMenuDesk`, so a change on one shows on the other straight away.
+
+**Files to look at**
+
+- `src/features/owner/screens/menu/SectionsList.tsx`: the shared list.
+- `src/features/owner/screens/menu/CategoriesScreen.tsx`: the page.
+
+**New idea: lift the shared part out**
+
+When two screens need the same thing, we move it into its own component and pass in what changes (here, the list of sections and what each button does). The two screens can't drift apart.
+
+**Try it yourself**
+
+Add a section called "Desserts" on the Categories page, then open Menu → Sections. It's already there.
