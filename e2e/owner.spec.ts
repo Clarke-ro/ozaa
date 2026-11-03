@@ -38,7 +38,10 @@ const moreItems = [
 
 async function waitLoaded(page: Page) {
   await page.waitForTimeout(350);
-  await expect(page.getByRole('progressbar')).toHaveCount(0, { timeout: 10_000 });
+  // Only the loading skeletons. Other progress bars (the setup checklist on Today) stay on screen.
+  await expect(page.getByRole('progressbar', { name: 'Loading', exact: true })).toHaveCount(0, {
+    timeout: 10_000,
+  });
   await page.waitForTimeout(250);
 }
 
