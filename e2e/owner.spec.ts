@@ -27,9 +27,7 @@ const moreItems = [
   ['Business and locations', 'owner-business'],
   ['Setup', 'owner-setup'],
   ['Settings', 'owner-settings'],
-  ['Stock, Preview', 'owner-stock'],
-  ['AI waiter, Preview', 'owner-ai'],
-  ['Marketing, Preview', 'owner-marketing'],
+  // The roadmap previews (Stock, AI waiter, Marketing) are off unless PREVIEWS_ENABLED=true.
 ] as const;
 
 async function waitLoaded(page: Page) {
@@ -88,7 +86,7 @@ test('owner screens on phone (390x844): every tab and every More item opens, wit
 test('owner screens on tablet (1024x768) use the sidebar', async ({ page }) => {
   await page.setViewportSize({ width: 1024, height: 768 });
   await signInAsOwner(page, true);
-  for (const [label, name] of [...tabs, ...moreItems.filter(([l]) => !l.endsWith('Preview'))]) {
+  for (const [label, name] of [...tabs, ...moreItems]) {
     await page.getByRole('button', { name: label, exact: true }).first().click();
     await waitLoaded(page);
     await page.screenshot({ path: `test-results/${name}-tablet.png`, fullPage: false });
