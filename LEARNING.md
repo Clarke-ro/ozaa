@@ -521,3 +521,36 @@ A "cancelled" order is shown to staff as "Rejected". The order's status in the A
 **Try it yourself**
 
 In `ops.test.ts`, add a test with an empty list and check that every count is 0.
+
+---
+
+## 2026-11-03 · A chime for new orders and waiter calls
+
+**What we built**
+
+While the owner app is open, on any screen, a short two-note chime plays when a new order or a new waiter call comes in. Kitchen staff hear orders only. Settings has a switch to turn the sound off, and the phone remembers it.
+
+**How it works**
+
+```
+every 5 s: orders + calls (same cache as the Orders and Calls screens)
+   → arrivals(seen, ids) → how many ids we haven't seen before
+   → more than 0, and sound is on → play the chime
+```
+
+The first load only fills `seen`, so opening the app doesn't ring for orders already waiting.
+
+**Files to look at**
+
+- `src/features/owner/desk/arrivals.ts`: what counts as new.
+- `src/features/owner/data/useArrivalChime.ts`: polls, compares, plays.
+- `src/features/owner/data/ownerPrefs.ts`: the saved on/off switch.
+- `scripts/gen-chime.mjs`: makes the sound file from two sine waves. We own it; nothing was downloaded.
+
+**New idea: a hook test with fakes**
+
+`useArrivalChime.test.tsx` swaps the real speaker and API for fakes (`jest.mock`), pushes a new order into the cache, and checks that `play` was called once. We test the behaviour without making any noise.
+
+**Try it yourself**
+
+In `gen-chime.mjs`, change `880.0` to `784.0` and run `node scripts/gen-chime.mjs`. The second note is now lower. Listen to `assets/sounds/new-order.wav`.

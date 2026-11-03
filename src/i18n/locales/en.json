@@ -1067,7 +1067,9 @@
     },
     "venue": "Your venue",
     "appearance": "Appearance",
-    "appearanceValue": "Follows your phone"
+    "appearanceValue": "Follows your phone",
+    "chime": "Sound for new orders",
+    "chimeHint": "A short chime when an order or a waiter call comes in, while Ozaa is open."
   },
   "ownerFloor": {
     "table": "Table",
