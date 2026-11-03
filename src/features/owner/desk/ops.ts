@@ -1,8 +1,19 @@
 import type { Order, VenueTransaction, WaiterCall } from '@/lib/api/types';
 
-export type OrderTab = 'new' | 'cooking' | 'ready' | 'done';
+export type OrderTab = 'new' | 'cooking' | 'ready' | 'served' | 'rejected';
+/** A tab on the Orders screen: one stage, or every order. */
+export type OrderView = OrderTab | 'all';
 
-/** Which Orders tab a ticket belongs in. Served and cancelled tickets leave the live tabs. */
+export const ORDER_VIEWS: readonly OrderView[] = [
+  'new',
+  'cooking',
+  'ready',
+  'served',
+  'rejected',
+  'all',
+];
+
+/** Which Orders tab a ticket belongs in. A cancelled order shows as Rejected to staff. */
 export function orderTab(status: Order['status']): OrderTab {
   switch (status) {
     case 'received':
@@ -11,9 +22,27 @@ export function orderTab(status: Order['status']): OrderTab {
       return 'cooking';
     case 'ready':
       return 'ready';
-    default:
-      return 'done';
+    case 'served':
+      return 'served';
+    case 'cancelled':
+      return 'rejected';
   }
+}
+
+/** How many orders sit in each tab, for the numbers on the tabs. */
+export function orderTabCounts(
+  orders: readonly Pick<Order, 'status'>[],
+): Record<OrderView, number> {
+  const counts: Record<OrderView, number> = {
+    new: 0,
+    cooking: 0,
+    ready: 0,
+    served: 0,
+    rejected: 0,
+    all: orders.length,
+  };
+  for (const order of orders) counts[orderTab(order.status)] += 1;
+  return counts;
 }
 
 export type TicketAge = { minutes: number; tone: 'ok' | 'late' | 'very_late' };

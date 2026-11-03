@@ -490,3 +490,34 @@ We don't store "setup is 83% done" anywhere. We work it out each time from data 
 **Try it yourself**
 
 In `setupChecklist.test.ts`, add a test that a venue with 0 tables gets `next.id === 'tables'` when everything before it is done.
+
+---
+
+## 2026-11-03 · Orders tabs with counts, and calls on Orders
+
+**What we built**
+
+Orders now has six tabs, each with a number: New, Cooking, Ready, Served, Rejected and All. Waiter calls and bill requests that nobody has closed show at the top of Orders, so staff can answer a table without leaving the tickets.
+
+**How it works**
+
+```
+orders → orderTabCounts → { new: 2, cooking: 2, ready: 1, served: 4, rejected: 0, all: 9 }
+calls  → useWaiterCalls  → OpenCalls (Orders) and CallsScreen (Calls) share one hook
+```
+
+A "cancelled" order is shown to staff as "Rejected". The order's status in the API doesn't change.
+
+**Files to look at**
+
+- `src/features/owner/desk/ops.ts`: `orderTab`, `orderTabCounts`, `ORDER_VIEWS`.
+- `src/features/owner/screens/calls/useWaiterCalls.ts`: load calls and update them.
+- `src/features/owner/screens/orders/OpenCalls.tsx`: the strip on Orders.
+
+**New idea: a `switch` with no `default`**
+
+`orderTab` lists every status by name, with no catch-all. If someone adds a new status to the contract, TypeScript says this function no longer returns for every case, so nobody forgets to place it in a tab.
+
+**Try it yourself**
+
+In `ops.test.ts`, add a test with an empty list and check that every count is 0.
