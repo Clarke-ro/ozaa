@@ -11,6 +11,7 @@ import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { ozaaTheme, ThemeProvider, useTheme } from '@/ui/theme';
 import { Segmented } from '../../kit';
+import { QR_PAPER } from '@/theme/palette';
 
 // Card accents. Names are read out by screen readers and shown under the selected swatch.
 export const CARD_ACCENTS = [
@@ -23,7 +24,6 @@ export const CARD_ACCENTS = [
 
 // A QR code must be dark on light or many phone cameras will not read it, so these never follow dark mode.
 const QR_INK = '#111111';
-const QR_PAPER = '#FFFFFF';
 
 export function TableCardControls({
   template,

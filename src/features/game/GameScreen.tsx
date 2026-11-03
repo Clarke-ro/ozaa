@@ -12,6 +12,7 @@ import { Button } from '@/ui/Button';
 import { useTheme } from '@/ui/theme';
 import { createStack, dropPlate, stepStack, topOfBoard, type StackState } from './plateStack';
 import { guestKeys } from '@/lib/queryKeys';
+import { PHOTO_VEIL } from '@/theme/palette';
 
 // The contract's example stamp rule, used until the venue's own rule has loaded.
 const DEFAULT_MIN_SCORE = 15;
@@ -180,7 +181,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     padding: 24,
-    backgroundColor: 'rgba(255,255,255,0.92)',
+    backgroundColor: PHOTO_VEIL,
   },
   nick: {
     borderWidth: 1,

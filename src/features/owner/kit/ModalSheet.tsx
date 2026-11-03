@@ -15,6 +15,7 @@ import { X } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
+import { SHADOW_INK } from '@/theme/palette';
 
 export interface ModalSheetProps {
   visible: boolean;
@@ -162,7 +163,7 @@ const styles = StyleSheet.create({
     borderCurve: 'continuous',
     borderWidth: StyleSheet.hairlineWidth,
     overflow: 'hidden',
-    shadowColor: '#000',
+    shadowColor: SHADOW_INK,
     shadowOpacity: 0.15,
     shadowRadius: 20,
     shadowOffset: { width: 0, height: 8 },

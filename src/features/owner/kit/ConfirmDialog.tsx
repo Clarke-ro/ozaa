@@ -5,6 +5,7 @@ import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
+import { SHADOW_INK } from '@/theme/palette';
 
 export interface ConfirmDialogProps {
   visible: boolean;
@@ -104,7 +105,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: tokens.space[5],
     gap: tokens.space[4],
-    shadowColor: '#000',
+    shadowColor: SHADOW_INK,
     shadowOpacity: 0.15,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 6 },

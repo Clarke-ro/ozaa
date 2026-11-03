@@ -3,6 +3,7 @@ import { hapticSelection } from '@/lib/haptics';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
+import { SHADOW_INK } from '@/theme/palette';
 
 /** iOS-style segmented control for a few mutually exclusive choices (date ranges, filters). */
 export function Segmented<T extends string>({
@@ -77,7 +78,7 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   on: {
-    shadowColor: '#000',
+    shadowColor: SHADOW_INK,
     shadowOpacity: 0.06,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 1 },

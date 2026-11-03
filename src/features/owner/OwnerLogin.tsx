@@ -21,6 +21,7 @@ import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { ozaaTheme, ThemeProvider, useTheme } from '@/ui/theme';
 import { DeskCard, OzaaMark } from './kit';
+import { SHADOW_INK } from '@/theme/palette';
 
 const SAMPLES = [
   { label: "Mama's Kitchen (Owner)", phone: '0240000001' },
@@ -265,7 +266,7 @@ const useStyles = makeStyles((theme) => ({
     paddingHorizontal: tokens.space[4],
     borderWidth: 1,
     borderColor: theme.line,
-    shadowColor: '#000',
+    shadowColor: SHADOW_INK,
     shadowOpacity: 0.05,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 4 },
