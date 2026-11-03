@@ -28,8 +28,7 @@
     },
     "more": "More",
     "less": "Less",
-    "moreHint": "Shows the full description",
-    "directions": "{{place}}. Opens directions"
+    "moreHint": "Shows the full description"
   },
   "services": {
     "menu": {
