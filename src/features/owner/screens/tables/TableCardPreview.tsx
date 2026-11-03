@@ -2,6 +2,7 @@ import { Image, Pressable, StyleSheet, View } from 'react-native';
 import Svg, { Path, Rect } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
 import { Check } from 'lucide-react-native';
+import { env } from '@/lib/env';
 import type { Table } from '@/lib/api/types';
 import { qrModules } from '@/lib/qrSvg';
 import { hapticSelection } from '@/lib/haptics';
@@ -135,7 +136,7 @@ export function TableCardPreview({
 }
 
 function QrMark({ url }: { url: string }) {
-  const drawn = qrModules(url || 'https://ozaa.app', 168);
+  const drawn = qrModules(url || env.EXPO_PUBLIC_SITE_URL, 168);
   return (
     <Svg width={168} height={168} viewBox={`0 0 ${drawn.size} ${drawn.size}`}>
       <Rect width={drawn.size} height={drawn.size} fill={QR_PAPER} />
