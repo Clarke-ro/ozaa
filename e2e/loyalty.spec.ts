@@ -11,10 +11,20 @@ test('guest loyalty wallet card, earn history, claim code QR, and owner confirma
   // The join form (with the sample card) opens after tapping Join.
   await page.getByRole('button', { name: 'Join the card' }).click();
   await page.getByRole('button', { name: 'Open sample card (Ama)' }).click();
-  await expect(page.getByText('Ama · Since 2026-03-14')).toBeVisible();
-  await expect(page.getByText('Your reward is ready.')).toBeVisible();
+  // Rewards at 4 and 8: with 5 stamps the card counts toward the 8.
+  const card = page.getByRole('button', { name: /Mama's Kitchen loyalty card\. 5\/8\./ });
+  await expect(card).toBeVisible();
+  await expect(page.getByText('Tap your card to get scanned')).toBeVisible();
   await page.waitForTimeout(600);
   await page.screenshot({ path: 'test-results/loyalty-wallet-front.png', fullPage: false });
+
+  // Tapping the card turns it over to the big QR, and tapping again turns it back.
+  await card.click();
+  await expect(page.getByText('Tap to see your stamps')).toBeVisible();
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: 'test-results/loyalty-wallet-back.png', fullPage: false });
+  await page.getByRole('button', { name: 'Your QR code for staff to scan' }).click();
+  await expect(page.getByText('Tap your card to get scanned')).toBeVisible();
 
   await page.getByText('Activity').scrollIntoViewIfNeeded();
   await page.waitForTimeout(400);

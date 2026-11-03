@@ -8,15 +8,17 @@ import type { LoyaltyCard } from '@/lib/api/types';
 import { asGhanaPhone, countryForVenue, parsePhone } from '@/lib/phone';
 import { useVenue } from '@/features/venue';
 import { useGuestSession } from '@/features/session';
-import { Button } from '@/ui/Button';
+import { Phone, Trash2 } from 'lucide-react-native';
 import { PageHeader } from '@/ui/PageHeader';
 import { SafeScreen } from '@/ui/Screen';
-import { Text } from '@/ui/Text';
 import { tokens } from '@/theme/tokens';
-import { useTheme } from '@/ui/theme';
+import { ActivityList } from './ActivityList';
+import { CardAction } from './CardAction';
+import { ClaimBox } from './ClaimBox';
 import { programmeFromWire, walletFromWire } from './facts';
-import { LoyaltyDetails } from './LoyaltyDetails';
+import { HowToEarn } from './HowToEarn';
 import { LoyaltyIntro } from './LoyaltyIntro';
+import { RewardsList } from './RewardsList';
 import { LoyaltyJoinCard } from './LoyaltyJoinCard';
 import { WalletCard } from './WalletCard';
 import { guestKeys } from '@/lib/queryKeys';
@@ -31,7 +33,6 @@ function defaultSamplePhone(slug: string): string {
 
 export function LoyaltyScreen({ slug }: { slug: string }) {
   const { t } = useTranslation();
-  const theme = useTheme();
   const queryClient = useQueryClient();
   const setLoyaltyToken = useGuestSession((state) => state.setLoyaltyToken);
   const token = useGuestSession((state) => state.loyaltyToken);
@@ -157,51 +158,40 @@ export function LoyaltyScreen({ slug }: { slug: string }) {
               venueName={placeName}
               venueInitials={initials}
               wallet={wallet}
+              rewardCosts={programme.rewards.map((reward) => reward.cost)}
               flipped={flipped}
               onFlip={() => setFlipped((value) => !value)}
             />
-            <LoyaltyDetails
+            {wallet.liveClaim ? <ClaimBox claim={wallet.liveClaim} /> : null}
+            <RewardsList
               programme={programme}
               wallet={wallet}
-              gameMinScore={gameMinScore}
               redeemingId={redeem.isPending ? (redeem.variables ?? null) : null}
               onRedeem={(rewardId) => redeem.mutate(rewardId)}
             />
-            <View style={[styles.privacyBox, { backgroundColor: theme.surface }]}>
-              <Text variant="caption" style={{ color: theme.meta }}>
-                {t('loyalty.privacyNote')}
-              </Text>
-              <View style={styles.privacyActions}>
-                <Button
-                  label={t('loyalty.switchPhone')}
-                  tone="secondary"
-                  onPress={() => {
-                    setJoinedCard(null);
-                    setLoyaltyToken(null);
-                    setSent(false);
-                  }}
-                />
-                <Button
-                  label={t('loyalty.leave')}
-                  tone="ghost"
-                  loading={leave.isPending}
-                  onPress={() => leave.mutate()}
-                />
-              </View>
+            <HowToEarn programme={programme} gameMinScore={gameMinScore} />
+            <ActivityList history={wallet.history} programme={programme} />
+            <View style={styles.actions}>
+              <CardAction
+                icon={Phone}
+                label={t('loyalty.switchPhone')}
+                onPress={() => {
+                  setJoinedCard(null);
+                  setLoyaltyToken(null);
+                  setSent(false);
+                }}
+              />
+              <CardAction
+                icon={Trash2}
+                tone="danger"
+                label={t('loyalty.leave')}
+                busy={leave.isPending}
+                onPress={() => leave.mutate()}
+              />
             </View>
           </>
         ) : (
           <>
-            {joining ? null : (
-              <LoyaltyIntro
-                venueName={placeName}
-                // The easiest reward to reach is the best hook.
-                firstReward={
-                  [...(programme?.rewards ?? [])].sort((a, b) => a.cost - b.cost)[0] ?? null
-                }
-                onJoin={() => setJoining(true)}
-              />
-            )}
             {joining ? (
               <LoyaltyJoinCard
                 venueName={placeName}
@@ -225,15 +215,11 @@ export function LoyaltyScreen({ slug }: { slug: string }) {
                 onConfirm={() => verify.mutate()}
                 onOpenSample={() => void openSample()}
               />
-            ) : null}
-            {programme ? (
-              <LoyaltyDetails
-                programme={programme}
-                wallet={null}
-                gameMinScore={gameMinScore}
-                redeemingId={null}
-              />
-            ) : null}
+            ) : (
+              <LoyaltyIntro venueName={placeName} onJoin={() => setJoining(true)} />
+            )}
+            {/* Rewards and tiers only mean something once you have a card, so a visitor sees how to earn. */}
+            {programme ? <HowToEarn programme={programme} gameMinScore={gameMinScore} /> : null}
           </>
         )}
       </ScrollView>
@@ -247,11 +233,5 @@ const styles = StyleSheet.create({
     gap: tokens.space[6],
     paddingBottom: tokens.space[12],
   },
-  privacyBox: {
-    borderRadius: tokens.radius.lg,
-    padding: tokens.space[4],
-    gap: tokens.space[3],
-    boxShadow: tokens.shadow.card,
-  },
-  privacyActions: { gap: tokens.space[2] },
+  actions: { gap: tokens.space[3] },
 });

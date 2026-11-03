@@ -35,5 +35,6 @@ export {
   isRewardReady,
   stampsAfterPaidOrder,
   stampsAfterRedeem,
-  stampsLeftPhrase,
+  stampCard,
+  type StampCard,
 } from './loyaltyRules';
