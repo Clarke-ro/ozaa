@@ -2,21 +2,26 @@
 /**
  * An iPhone 16 Pro drawn in CSS around a sample screen. The screenshot is the screen between
  * the status bar and the home bar; the frame draws both, so every shot looks like a real phone.
+ * A `full` shot is the whole screen, taken with the safe areas: the status bar is laid over it
+ * (white, on the dark banner photo) and the app already leaves room for the home bar.
  * Size it with the --phone CSS variable (its width).
  */
-import { screenSize } from "../content/page";
+import { fullScreenSize, screenSize } from "../content/page";
 
 interface Props {
   src: string;
   alt: string;
   /** Load straight away (the hero) instead of when scrolled near. */
   priority?: boolean;
+  /** The screenshot is the whole screen, safe areas included. */
+  full?: boolean;
 }
 
-const { src, alt, priority = false } = Astro.props;
+const { src, alt, priority = false, full = false } = Astro.props;
+const size = full ? fullScreenSize : screenSize;
 ---
 
-<figure class="iphone">
+<figure class:list={["iphone", { "iphone--full": full }]}>
   <div class="iphone-body">
     <span class="iphone-key iphone-key--action" aria-hidden="true"></span>
     <span class="iphone-key iphone-key--up" aria-hidden="true"></span>
@@ -36,8 +41,8 @@ const { src, alt, priority = false } = Astro.props;
         class="iphone-shot"
         src={src}
         alt={alt}
-        width={screenSize.width}
-        height={screenSize.height}
+        width={size.width}
+        height={size.height}
         loading={priority ? "eager" : "lazy"}
         decoding="async"
         fetchpriority={priority ? "high" : undefined}

@@ -1,81 +1,82 @@
 ---
 import { footer, routes } from "../content/page";
 import Icon from "./Icon.astro";
+import SocialIcon from "./SocialIcon.astro";
 
 const year = new Date().getFullYear();
 ---
 
 <footer class="footer">
+  {/* The last ask: a big heading on the left, the two ways in on the right. */}
   <div class="footer-cta">
-    <h2 class="reveal">{footer.cta}</h2>
-    <a class="pill pill--white pill--lg" href={routes.start}>{footer.ctaButton}</a>
+    <div class="footer-cta-text">
+      <h2 class="reveal">{footer.cta}</h2>
+      <p>{footer.lead}</p>
+    </div>
+    <div class="footer-cta-buttons">
+      <a class="pill pill--orange pill--lg" href={routes.start}>{footer.ctaButton}</a>
+      <a class="pill pill--glass pill--lg" href={routes.demo}>
+        {footer.secondButton}
+        <Icon name="arrow" size={18} />
+      </a>
+    </div>
   </div>
 
-  <div class="footer-card">
-    <div class="footer-top">
-      <div class="footer-brand">
-        <a href={routes.home} aria-label="Ozaa home">
-          <img src="/logo/ozaa-lockup.svg" alt="" width="451" height="140" />
-        </a>
-        <p>{footer.tagline}</p>
-      </div>
-      <div class="footer-columns">
-        {
-          footer.columns.map((column) => (
-            <nav aria-label={column.heading}>
-              <h3>{column.heading}</h3>
-              <ul>
-                {column.links.map((link) => (
-                  <li>
-                    <a href={link.href}>{link.label}</a>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-          ))
-        }
-      </div>
-    </div>
-
-    <div class="footer-bottom">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href={routes.home} aria-label="Ozaa home">
+        {/* White lettering on the brown; the dark logo inside the light card on phones. */}
+        <picture>
+          <source media="(max-width: 640px)" srcset="/logo/ozaa-lockup.svg" />
+          <img src="/logo/ozaa-lockup-light.svg" alt="" width="451" height="140" />
+        </picture>
+      </a>
+      <p>{footer.tagline}</p>
       <div class="footer-social">
         <p>{footer.social}</p>
         <ul>
           {
             footer.socials.map((social) => (
               <li>
-                {social.url ? (
-                  <a
-                    class="social"
-                    href={social.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`${social.name} (opens in a new tab)`}
-                  >
-                    <Icon name={social.icon} size={18} />
-                  </a>
-                ) : (
-                  <span class="social" title={`${social.name} (coming soon)`}>
-                    <Icon name={social.icon} size={18} label={`${social.name}, coming soon`} />
-                  </span>
-                )}
+                <SocialIcon name={social.icon} title={social.name} url={social.url} />
               </li>
             ))
           }
         </ul>
       </div>
-      <ul class="footer-legal">
+    </div>
+    {
+      footer.columns.map((column) => (
+        <nav class="footer-column" aria-label={column.heading}>
+          <h3>{column.heading}</h3>
+          <ul>
+            {column.links.map((link) => (
+              <li>
+                <a href={link.href}>{link.label}</a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      ))
+    }
+    <nav class="footer-column footer-column--legal" aria-label={footer.legalHeading}>
+      <h3>{footer.legalHeading}</h3>
+      <ul>
         {footer.legal.map((item) => <li><a href={item.href}>{item.label}</a></li>)}
         <li>
           <button class="link-button" type="button" data-cookie-settings>
             {footer.cookieSettings}
           </button>
         </li>
-        <li>© {year} ozaa</li>
       </ul>
-    </div>
+    </nav>
   </div>
 
-  {/* The name, huge and faint, sunk into the footer's bottom edge. */}
-  <p class="footer-watermark" aria-hidden="true">{footer.watermark}</p>
+  <div class="footer-bottom">
+    <p>© {year} ozaa. {footer.rights}</p>
+  </div>
+
+  {/* The name, huge and faint, sunk into the footer's bottom edge. Drawn by CSS from data-word,
+      so it is decoration only: screen readers and contrast checks skip it. */}
+  <div class="footer-watermark" aria-hidden="true" data-word={footer.watermark}></div>
 </footer>

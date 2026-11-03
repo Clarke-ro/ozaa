@@ -64,4 +64,8 @@ The banner stores the visitor's choice in `localStorage` under `ozaa-cookies`. N
 
 `public/screens/` holds screenshots of the real app, taken from a build with payments off at 393×764 pt and 2× (an iPhone 16 Pro screen without its status bar and home bar, which `IPhone.astro` draws). Retake them when the app's screens change. A test checks each file is used exactly once.
 
+The hero's `home.webp` and the three `demo-*.webp` venue pages on the Try it page are different: each is the whole screen (393×852 pt at 2×), taken with the phone's safe areas, so the banner photo runs up behind the status bar. They're marked `full: true` in `page.ts`.
+
+The QR code under the statement is drawn at build time and opens the sample table at `PUBLIC_APP_URL`. Until that's set it points at localhost, so a phone can't open it yet.
+
 Do not add customer names, quotes, counts or logos. The phone pictures are sample screens.

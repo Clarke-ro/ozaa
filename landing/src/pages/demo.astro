@@ -1,8 +1,9 @@
 ---
 import Icon from "../components/Icon.astro";
+import IPhone from "../components/IPhone.astro";
 import PageHero from "../components/PageHero.astro";
 import { appLinks } from "../content/links";
-import { demoPage, routes, screenSize, screens } from "../content/page";
+import { demoPage, routes, screens } from "../content/page";
 import Site from "../layouts/Site.astro";
 
 const app = appLinks(import.meta.env.PUBLIC_APP_URL);
@@ -20,14 +21,7 @@ const root = app.app.replace(/\/$/, "");
           return (
             <li class="demo-card reveal">
               <div class="demo-shot">
-                <img
-                  src={shot.src}
-                  alt={shot.alt}
-                  width={screenSize.width}
-                  height={screenSize.height}
-                  loading="eager"
-                  decoding="async"
-                />
+                <IPhone src={shot.src} alt={shot.alt} full={shot.full} priority />
               </div>
               <div class="demo-info">
                 <div>

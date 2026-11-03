@@ -40,19 +40,18 @@ const isActive = (href: string) => href === here;
       data-close={nav.close}
     >
       <span class="visually-hidden" data-toggle-label>{nav.open}</span>
-      <Icon name="menu" size={22} />
+      {/* The bars turn into a cross while the menu is open (CSS, from aria-expanded). */}
+      <Icon name="menu" size={22} class="toggle-open" />
+      <Icon name="close" size={22} class="toggle-close" />
     </button>
   </nav>
 
   <div class="mobile-menu" id="mobile-menu" hidden>
     <button class="mobile-backdrop" type="button" tabindex="-1" aria-hidden="true" data-close></button>
     <div class="mobile-card" role="dialog" aria-modal="true" aria-label="Menu">
-      <div class="mobile-head">
-        <img src="/logo/ozaa-lockup.svg" alt="Ozaa" width="451" height="140" />
-        <button class="mobile-close" type="button" data-close aria-label={nav.close}>
-          <Icon name="close" size={22} />
-        </button>
-      </div>
+      {/* The visible close is the navbar's cross; this one is for keyboards and screen readers,
+          which stay inside the card while it's open. It shows when it has focus. */}
+      <button class="mobile-close visually-hidden" type="button" data-close>{nav.close}</button>
       <ul class="mobile-links">
         {
           nav.links.map((link, index) => (

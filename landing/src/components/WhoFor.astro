@@ -13,7 +13,7 @@ import { who } from "../content/page";
       <div class={`who-row ${rowIndex % 2 ? "who-row--reverse" : ""}`} aria-hidden="true">
         <div class="who-track">
           {[...row, ...row, ...row, ...row].map((name, index) => (
-            <span class={`who-pill ${(index + rowIndex) % 2 ? "who-pill--rose" : ""}`}>{name}</span>
+            <span class={`who-pill ${(index + rowIndex) % 2 ? "who-pill--alt" : ""}`}>{name}</span>
           ))}
         </div>
       </div>

@@ -9,9 +9,16 @@
  */
 export const screenSize = { width: 786, height: 1528 } as const;
 
+/**
+ * The whole iPhone 16 Pro screen (393×852 pt at 2×), taken with the phone's safe areas, so
+ * the app's banner runs up under the status bar the way it does on a real phone.
+ */
+export const fullScreenSize = { width: 786, height: 1704 } as const;
+
 export const screens = {
   home: {
     src: "/screens/home.webp",
+    full: true,
     alt: "A sample restaurant's table page with the menu, call waiter, order status and Wi-Fi.",
   },
   menu: {
@@ -40,15 +47,18 @@ export const screens = {
   },
   demoMamas: {
     src: "/screens/demo-mamas-kitchen.webp",
-    alt: "Mama's Kitchen's sample menu.",
+    full: true,
+    alt: "Mama's Kitchen's table page with its banner photo, menu, call waiter and Wi-Fi.",
   },
   demoBean: {
     src: "/screens/demo-bean-there.webp",
-    alt: "Bean There café's sample menu.",
+    full: true,
+    alt: "Bean There café's table page with its banner photo, menu, call waiter and Wi-Fi.",
   },
   demoAkos: {
     src: "/screens/demo-auntie-akos.webp",
-    alt: "Auntie Akos Chop Bar's sample menu.",
+    full: true,
+    alt: "Auntie Akos Chop Bar's table page with its banner photo, menu and call waiter.",
   },
   ownerTables: {
     src: "/screens/owner-tables.webp",
@@ -85,7 +95,7 @@ export const nav = {
   links: [
     { href: routes.home, label: "Home" },
     { href: routes.features, label: "Features" },
-    { href: routes.demo, label: "Demo" },
+    { href: routes.demo, label: "Try it" },
     { href: routes.pricing, label: "Pricing" },
     { href: routes.blog, label: "Blog" },
   ],
@@ -107,7 +117,10 @@ export const hero = {
 
 export const statement = {
   text: "One QR code on the table, and your menu, your orders and every guest request are in the same place. Change a dish once and every table sees it.",
-  marquee: ["Scan", "Order", "Call waiter", "Ask for bill", "Loyalty", "Feedback"],
+  /** The QR under the text opens the sample table, so a visitor can try it on their phone. */
+  qrLabel: "Scan to open a sample table",
+  qrHint: "Point your phone camera at the code. The sample menu opens in your browser.",
+  qrAlt: "QR code that opens the Mama's Kitchen sample table",
 } as const;
 
 /** Each card's picture is an app screen sitting on a coloured tile. */
@@ -260,7 +273,9 @@ export const faq = {
 
 export const footer = {
   cta: "Ready to upgrade your tables?",
+  lead: "Set up your menu, print your table codes and take your first order today.",
   ctaButton: "Get started free",
+  secondButton: "Try a sample table",
   tagline: "Every table, one scan away.",
   columns: [
     {
@@ -268,19 +283,27 @@ export const footer = {
       links: [
         { label: "Home", href: routes.home },
         { label: "Features", href: routes.features },
-        { label: "Demo", href: routes.demo },
+        { label: "Try it", href: routes.demo },
         { label: "Pricing", href: routes.pricing },
       ],
     },
     {
-      heading: "Company",
+      heading: "Resources",
       links: [
         { label: "Blog", href: routes.blog },
-        { label: "Contact", href: routes.contact },
+        { label: "Get started", href: routes.start },
+      ],
+    },
+    {
+      heading: "Support",
+      links: [
+        { label: "Contact us", href: routes.contact },
         { label: "Log in", href: routes.login },
       ],
     },
   ],
+  legalHeading: "Legal",
+  rights: "All rights reserved.",
   social: "Stay connected",
   /** Placeholders: an empty url shows the icon without a link until the account exists. */
   socials: [
@@ -322,7 +345,7 @@ export const featuresPage = {
 } as const;
 
 export const demoPage = {
-  title: "Demo",
+  title: "Try it",
   description: "Open a live Ozaa demo menu and see what your guests would see.",
   heading: "See Ozaa at a sample table",
   lead: "Each menu below is a live demo. Open one and order, call a waiter or join the loyalty card, just like a guest would.",
