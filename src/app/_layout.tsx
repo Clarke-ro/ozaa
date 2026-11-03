@@ -17,6 +17,9 @@ import { GestureRoot } from '@/ui/GestureRoot';
 import { useAppFonts } from '@/theme/fonts';
 import { ThemeProvider, ozaaTheme } from '@/ui/theme';
 
+// expo-router shows this in place of any screen that throws while rendering.
+export { AppErrorBoundary as ErrorBoundary } from '@/ui/AppErrorBoundary';
+
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
 const queryClient = new QueryClient({

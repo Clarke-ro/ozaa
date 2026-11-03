@@ -632,7 +632,9 @@
     "offlineAgo_other": "You're offline. Showing what we saved {{count}} minutes ago.",
     "venueNotFound": "We can't find that restaurant. Scan the code again.",
     "tryAgain": "Try again",
-    "loading": "Loading"
+    "loading": "Loading",
+    "crashTitle": "This page stopped working",
+    "crashBody": "Something broke on our side. Try again to reload it."
   },
   "common": {
     "back": "Back",
