@@ -585,3 +585,34 @@ When two screens need the same thing, we move it into its own component and pass
 **Try it yourself**
 
 Add a section called "Desserts" on the Categories page, then open Menu → Sections. It's already there.
+
+---
+
+## 2026-11-03 · Your menu link, next to the table QR codes
+
+**What we built**
+
+The "QR codes and links" page now starts with your menu link (`https://ozaa.app/<your-slug>`) and buttons to copy it, share it, or download it as a QR code. Under that is a short piece of code you can paste into your own website to show the menu there. The table QR codes are below, as before.
+
+**How it works**
+
+```
+site address (EXPO_PUBLIC_SITE_URL) + venue slug → menuLink → copy / share / QR
+menuLink + venue name → embedSnippet → <iframe …> for the venue's website
+```
+
+The menu link is different from a table QR code: a table code tells us which table the guest sits at, and the menu link doesn't. Ordering from the link (pickup and delivery) comes in 4b.15.
+
+**Files to look at**
+
+- `src/features/owner/desk/menuLink.ts` and its test.
+- `src/features/owner/screens/tables/MenuLinkCard.tsx`: the card.
+- `src/features/owner/screens/tables/IconAction.tsx`: the square buttons, now shared.
+
+**New idea: escaping**
+
+Owners paste our code into their own site. If a venue name had a `"` in it, the code could break or, worse, run something. `embedSnippet` turns `"`, `<`, `>`, `'` and `&` into safe codes first. The test with `<script>` proves it.
+
+**Try it yourself**
+
+Copy the code, paste it into a file called `test.html`, and open that file in your browser.
