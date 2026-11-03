@@ -27,12 +27,21 @@ const moreItems = [
   ['Business and locations', 'owner-business'],
   ['Setup', 'owner-setup'],
   ['Settings', 'owner-settings'],
+  ['Categories', 'owner-categories'],
+  ['Store notice', 'owner-notice'],
+  ['Customers', 'owner-customers'],
+  ['Promos and coupons', 'owner-promos'],
+  ['Integrations', 'owner-integrations'],
+  ['Billing', 'owner-billing'],
   // The roadmap previews (Stock, AI waiter, Marketing) are off unless PREVIEWS_ENABLED=true.
 ] as const;
 
 async function waitLoaded(page: Page) {
   await page.waitForTimeout(350);
-  await expect(page.getByRole('progressbar')).toHaveCount(0, { timeout: 10_000 });
+  // Only the loading skeletons. Other progress bars (the setup checklist on Today) stay on screen.
+  await expect(page.getByRole('progressbar', { name: 'Loading', exact: true })).toHaveCount(0, {
+    timeout: 10_000,
+  });
   await page.waitForTimeout(250);
 }
 

@@ -10,7 +10,12 @@ import {
   Gift,
   Globe,
   Grid2x2,
+  CreditCard,
   Inbox,
+  Layers,
+  Plug,
+  TicketPercent,
+  UserRoundSearch,
   LayoutDashboard,
   Link,
   ListChecks,
@@ -64,6 +69,12 @@ export const NAV_ICONS: Record<OwnerNavId | 'more', LucideIcon> = {
   business: Building2,
   settings: Settings,
   notifications: BellDot,
+  categories: Layers,
+  notice: Megaphone,
+  customers: UserRoundSearch,
+  promos: TicketPercent,
+  integrations: Plug,
+  billing: CreditCard,
   more: Menu,
 };
 
@@ -90,12 +101,15 @@ export function NavRow({
   label,
   current,
   compact,
+  iconOnly,
 }: {
   id: OwnerNavId | 'more';
   href: string;
   label: string;
   current: boolean;
   compact?: boolean;
+  /** The collapsed sidebar: icon only, the label stays for screen readers. */
+  iconOnly?: boolean;
 }) {
   const theme = useTheme();
   const goTo = useGoTo();
@@ -115,25 +129,28 @@ export function NavRow({
       }}
       style={({ pressed }) => [
         compact ? styles.tab : styles.row,
+        iconOnly && styles.iconOnly,
         !compact && current && { backgroundColor: theme.tint },
         pressed && { opacity: 0.7 },
       ]}
     >
       <Icon color={color} size={compact ? 24 : 20} strokeWidth={current ? 2.4 : 2} />
-      <Text
-        variant="caption"
-        numberOfLines={1}
-        maxFontSizeMultiplier={1.4}
-        style={[
-          compact ? styles.tabLabel : styles.rowLabel,
-          {
-            color: current ? theme.ink : compact ? theme.muted : theme.text,
-            fontFamily: current ? 'Inter_600' : 'Inter_400',
-          },
-        ]}
-      >
-        {label}
-      </Text>
+      {iconOnly ? null : (
+        <Text
+          variant="caption"
+          numberOfLines={1}
+          maxFontSizeMultiplier={1.4}
+          style={[
+            compact ? styles.tabLabel : styles.rowLabel,
+            {
+              color: current ? theme.ink : compact ? theme.muted : theme.text,
+              fontFamily: current ? 'Inter_600' : 'Inter_400',
+            },
+          ]}
+        >
+          {label}
+        </Text>
+      )}
     </Pressable>
   );
 }
@@ -148,6 +165,7 @@ const styles = StyleSheet.create({
     borderRadius: tokens.radius.sm,
     borderCurve: 'continuous',
   },
+  iconOnly: { justifyContent: 'center', paddingHorizontal: 0 },
   rowLabel: { fontSize: tokens.type.body.size, lineHeight: tokens.type.body.line },
   tab: { flex: 1, minHeight: 48, alignItems: 'center', justifyContent: 'center', gap: 2 },
   tabLabel: { fontSize: 11, lineHeight: 13 },

@@ -2804,11 +2804,15 @@ components:
 
     Business:
       type: object
-      required: [id, name, ownerId]
+      required: [id, name, ownerId, plan]
       properties:
         id: { type: string }
         name: { type: string }
         ownerId: { type: string }
+        plan:
+          type: string
+          enum: [free, pro, business]
+          description: The Ozaa plan this business is on. Matches the plan ids on the pricing page. Billing is not live yet, so this is read-only.
     Location:
       type: object
       required: [id, businessId, slug, name, country, currency]

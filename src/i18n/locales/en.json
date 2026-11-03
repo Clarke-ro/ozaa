@@ -580,10 +580,9 @@
     "settings": "Settings",
     "back": "Back",
     "navGroups": {
-      "service": "Service",
-      "guestPage": "Guest page",
-      "growth": "Loyalty and growth",
-      "business": "Business",
+      "main": "Main",
+      "sales": "Sales",
+      "settings": "Settings",
       "previews": "Coming later"
     },
     "moreLead": "Everything else for running the venue.",
@@ -612,7 +611,14 @@
       "stock": "Ingredients and auto sold out",
       "pos": "Take orders at the counter",
       "ai": "Answers guest questions",
-      "marketing": "Messages to guests who opted in"
+      "marketing": "Messages to guests who opted in",
+      "notifications": "New orders, calls and reviews",
+      "categories": "Sections of your menu",
+      "notice": "A banner or popup on your menu",
+      "customers": "People on your loyalty card",
+      "promos": "Codes and discounts",
+      "integrations": "Payments and connected apps",
+      "billing": "Your Ozaa plan"
     },
     "alertCalls_one": "1 waiter call is waiting.",
     "alertCalls_other": "{{count}} waiter calls are waiting.",
@@ -623,7 +629,13 @@
     "loginBrand": "Ozaa restaurant management",
     "loginLead": "Sign in to see your orders, kitchen tickets and floor.",
     "codeLead": "Enter the 6-digit code we sent to your phone.",
-    "changeNumber": "Change number"
+    "changeNumber": "Change number",
+    "categories": "Categories",
+    "notice": "Store notice",
+    "customers": "Customers",
+    "promos": "Promos and coupons",
+    "integrations": "Integrations",
+    "billing": "Billing"
   },
   "errors": {
     "generic": "Something went wrong. Try again.",
@@ -721,6 +733,18 @@
       "tables": "Seated now",
       "callsWaiting": "Needs someone now",
       "callsQuiet": "All quiet"
+    },
+    "setup": {
+      "title": "Complete your setup",
+      "percent": "{{percent}}% done",
+      "steps": {
+        "details": "Add your description and location",
+        "look": "Add your logo",
+        "menu": "Add your first dish",
+        "tables": "Add your tables and print the QR codes",
+        "wifi": "Add your Wi-Fi for guests",
+        "team": "Invite your staff"
+      }
     }
   },
   "ownerTables": {
@@ -1193,7 +1217,9 @@
       "new": "New",
       "cooking": "Cooking",
       "ready": "Ready",
-      "done": "Done"
+      "served": "Served",
+      "rejected": "Rejected",
+      "all": "All"
     },
     "table": "Table {{code}}",
     "takeaway": "Takeaway",
@@ -1215,7 +1241,9 @@
       "new": "No new orders",
       "cooking": "Nothing cooking",
       "ready": "Nothing waiting to go out",
-      "done": "No finished orders yet"
+      "served": "Nothing served yet",
+      "rejected": "No rejected orders",
+      "all": "No orders yet"
     },
     "emptyBody": "Orders from the tables show here as soon as guests send them.",
     "waited": "{{count}} min",
@@ -1224,7 +1252,9 @@
     "waitedLabel": "Waiting {{count}} min",
     "stage": "{{label}}, {{count}} orders",
     "items_one": "{{count}} item",
-    "items_other": "{{count}} items"
+    "items_other": "{{count}} items",
+    "openCalls_one": "{{count}} table waiting for you",
+    "openCalls_other": "{{count}} tables waiting for you"
   },
   "ownerCalls": {
     "status": {
@@ -1569,5 +1599,31 @@
     "emptyTitle": "Nothing in your order yet",
     "emptyBody": "Add dishes from the menu, then send them to the kitchen.",
     "browse": "Browse the menu"
+  },
+  "ownerChrome": {
+    "collapse": "Collapse sidebar",
+    "expand": "Expand sidebar",
+    "help": "Help",
+    "plan": "{{plan}} plan",
+    "profile": "Your profile"
+  },
+  "ownerSoon": {
+    "title": "Coming soon",
+    "categories": "Categories get their own page soon. For now, open Menu and tap Sections.",
+    "notice": "Soon you can show a banner or a popup on your menu, on a schedule.",
+    "promos": "Soon you can make promo codes and discounts for your menu.",
+    "integrations": "Soon you can connect your own Paystack account and choose how guests pay.",
+    "help": "Help articles are on their way. For now, ask the person who set up Ozaa for you.",
+    "back": "Back to Today"
+  },
+  "ownerBilling": {
+    "title": "Billing",
+    "current": "Your plan",
+    "yourPlan": "Current plan",
+    "notLive": "Billing isn’t live yet. You won’t be charged.",
+    "perMonth": "{{price}} a month",
+    "placeholder": "These are placeholder prices from the Ozaa pricing page.",
+    "included": "included",
+    "notIncluded": "not included"
   }
 }

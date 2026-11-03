@@ -24,3 +24,6 @@ export { ScanStampScreen } from './screens/ScanStampScreen';
 export { NotificationsScreen } from './screens/notifications/NotificationsScreen';
 export { SettingsScreen } from './screens/settings/SettingsScreen';
 export { SocialsScreen } from './screens/SocialsScreen';
+export { ComingSoonScreen } from './screens/ComingSoonScreen';
+export { BillingScreen } from './screens/billing/BillingScreen';
+export { CustomersScreen } from './screens/CustomersScreen';

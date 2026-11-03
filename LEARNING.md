@@ -426,3 +426,98 @@ A payment is not a pile of yes/no flags. It is one step, and only some steps can
 **Try it yourself**
 
 In `src/features/pay/quoteBill.test.ts`, change the 3-way split example and run `npm test`. The first share should still be the one that carries the extra pesewa.
+
+---
+
+## 2026-11-03 · The owner sidebar in three groups
+
+**What we built**
+
+On a wide screen the owner sidebar now has three groups: Main, Sales and Settings. It shows your plan next to the Ozaa name, and it can fold down to a thin strip of icons. Help, your profile and Sign out sit at the bottom. Pages that aren't built yet (Categories, Store notice, Promos, Integrations, Help) open a short "Coming soon" page.
+
+**How it works**
+
+```
+nav.ts (one list of pages, each with a group and the roles allowed)
+   ├─ navGroups(role) → Sidebar.tsx (wide screens)
+   └─ moreGroups(role) → More screen (phones, minus the 4 tabs)
+```
+
+The plan badge reads `business.plan` from the API. The plan names and features come from `landing/src/content/pricing.ts`, the same file the website's pricing page uses, so the two can't disagree.
+
+**Files to look at**
+
+- `src/features/owner/chrome/nav.ts`: every owner page, its group and who can open it.
+- `src/features/owner/chrome/Sidebar.tsx` and `SidebarFooter.tsx`: the sidebar and its bottom rows.
+- `src/features/owner/chrome/useSignOut.ts`: sign out, shared by Settings and the sidebar.
+- `src/features/owner/screens/billing/`: the Billing page and the plans.
+
+**New idea: one source of truth**
+
+The list of pages lives in one place. The sidebar, the phone tabs and the More screen all read from it. To move a page, you change one line, and all three update.
+
+**Try it yourself**
+
+In `nav.ts`, change `customers` from `group: 'sales'` to `group: 'main'`, run `npm test`, and see which test tells you.
+
+---
+
+## 2026-11-03 · "Complete your setup" on Today
+
+**What we built**
+
+A card on Today that lists six set-up steps, ticks off the ones you've done, and shows a % bar. Tap a step to go to the page that does it. The card goes away when every step is done. Only the owner sees it.
+
+**How it works**
+
+```
+venue + menu + tables + staff (already cached by other screens)
+   → useSetupChecklist → setupChecklist(facts) → { steps, percent, next } → SetupCard
+```
+
+`setupChecklist` is plain maths with no screen and no network: true/false facts in, a list out. That's why it can be tested in milliseconds.
+
+**Files to look at**
+
+- `src/features/owner/desk/setupChecklist.ts` and its test: the rules.
+- `src/features/owner/data/useSetupChecklist.ts`: turns API data into facts.
+- `src/features/owner/screens/dashboard/SetupCard.tsx`: the card.
+
+**New idea: derived state**
+
+We don't store "setup is 83% done" anywhere. We work it out each time from data we already have, so it can never be out of date.
+
+**Try it yourself**
+
+In `setupChecklist.test.ts`, add a test that a venue with 0 tables gets `next.id === 'tables'` when everything before it is done.
+
+---
+
+## 2026-11-03 · Orders tabs with counts, and calls on Orders
+
+**What we built**
+
+Orders now has six tabs, each with a number: New, Cooking, Ready, Served, Rejected and All. Waiter calls and bill requests that nobody has closed show at the top of Orders, so staff can answer a table without leaving the tickets.
+
+**How it works**
+
+```
+orders → orderTabCounts → { new: 2, cooking: 2, ready: 1, served: 4, rejected: 0, all: 9 }
+calls  → useWaiterCalls  → OpenCalls (Orders) and CallsScreen (Calls) share one hook
+```
+
+A "cancelled" order is shown to staff as "Rejected". The order's status in the API doesn't change.
+
+**Files to look at**
+
+- `src/features/owner/desk/ops.ts`: `orderTab`, `orderTabCounts`, `ORDER_VIEWS`.
+- `src/features/owner/screens/calls/useWaiterCalls.ts`: load calls and update them.
+- `src/features/owner/screens/orders/OpenCalls.tsx`: the strip on Orders.
+
+**New idea: a `switch` with no `default`**
+
+`orderTab` lists every status by name, with no catch-all. If someone adds a new status to the contract, TypeScript says this function no longer returns for every case, so nobody forgets to place it in a tab.
+
+**Try it yourself**
+
+In `ops.test.ts`, add a test with an empty list and check that every count is 0.
