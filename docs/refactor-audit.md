@@ -116,7 +116,44 @@ No unused files beyond those two. The dependencies `src/` never imports (`expo-l
 
 ## 10. Numbers
 
-Filled in from `npx expo export -p web` and reruns of the checks. See the report in the PR for before and after.
+| Measure                                                 | Before                   | After                                                  |
+| ------------------------------------------------------- | ------------------------ | ------------------------------------------------------ |
+| Type errors                                             | 0                        | 0                                                      |
+| Lint errors / warnings                                  | 0 / 1                    | 0 / 0                                                  |
+| Unit tests                                              | 221 in 44 suites         | 230 in 47 suites                                       |
+| Playwright e2e (`dist/`)                                | not run                  | 21 of 21 pass                                          |
+| Route crawl: 45 routes × light/dark × 320, 390, 1280 px | not run                  | 0 console errors, 0 page errors, 0 crashes, 0 overflow |
+| Prettier drift (hand-written files)                     | 40 files                 | 0                                                      |
+| Web JS, all chunks                                      | 3,372 KB (785 KB gzip)   | 3,376 KB (787 KB gzip)                                 |
+| Web entry chunk                                         | 1,181 KB (291.0 KB gzip) | 1,178 KB (290.9 KB gzip)                               |
+| Web export time                                         | 2 min 52 s               | 2 min 12 s (warm cache, so not comparable)             |
+
+The bundle is flat. The deletions were small, and the new strings and hooks weigh about the same. Startup time and slowest screens weren't measured. There's no native build here, and the dev server stalled on this machine, so I had no reliable timing. Bundle size is the only performance number I can stand behind.
+
+## 11. What was fixed
+
+| Finding                                                     | Status                                                                                                           | Commit                 |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| B1 no error boundary                                        | Fixed, then fixed again so the crash screen loads its fonts. Checked by building with one route forced to throw. | `fix(app)` ×2          |
+| B2 sign-out kept owner data                                 | Fixed. Owner queries are removed at sign-out.                                                                    | `fix(privacy)`         |
+| B3 everything persisted                                     | Fixed. Only `venue` and `menu` are saved, and old saves are discarded (buster `v2`). Checked in the browser.     | `fix(privacy)`         |
+| B4 game score sent twice, fake duration, hidden Align cheat | Fixed                                                                                                            | `fix(game)`            |
+| B5 manual stamp sends masked phone                          | **Open**, see D3                                                                                                 | none                   |
+| B6 old waiter calls carried over                            | Fixed                                                                                                            | `fix(waiter)`          |
+| B7 cart leaked across venues                                | Fixed                                                                                                            | `fix(cart)`            |
+| B8 sales showed GH₵0.00 while loading                       | Fixed (shows only with payments on)                                                                              | `fix(owner)`           |
+| B9 search per keystroke                                     | Fixed for feedback and loyalty members                                                                           | `perf(owner)`          |
+| B10 signed-in owner saw sign-in                             | Fixed                                                                                                            | `fix(owner)`           |
+| Table QR "Try again" went home, route not thin              | Fixed                                                                                                            | `fix(venue)`           |
+| **New:** EXPO_PUBLIC_ values never reached a build          | Fixed. Checked by finding a marker value in the exported bundle.                                                 | `fix(env)`             |
+| Hand-typed query keys                                       | Fixed: `guestKeys` plus a full `ownerKeys`, with tests                                                           | `refactor`             |
+| Dead code (section 6)                                       | Deleted                                                                                                          | `chore`                |
+| Hex colours on landing, not-found and game                  | Fixed where a theme value matched exactly                                                                        | `style`                |
+| English in owner sign-in, members list, sheets, dialogs     | Moved to `en.json`                                                                                               | `fix(i18n)`            |
+| `https://ozaa.app` in screens, no-op `serviceHref`          | Fixed (`EXPO_PUBLIC_SITE_URL`)                                                                                   | `refactor(venue)`      |
+| Lint warning, Prettier drift                                | Fixed                                                                                                            | `chore(i18n)`, `style` |
+
+Not done, and why: the two kits stay separate, there are no route groups, off-scale style numbers and shadow colours stay, guest screens keep their spinners, the product shells are unchanged, and long owner lists aren't virtualised. Each of these is a "Needs decision" item below, or waits on the backend.
 
 ## Needs decision (Clarke)
 
