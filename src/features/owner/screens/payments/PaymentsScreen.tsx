@@ -17,6 +17,7 @@ import { ChipRow, EmptyCard, SectionLabel, StatusPill, toast } from '../../kit';
 import { SummaryStrip } from '../../kit/SummaryStrip';
 import { TransactionRow } from './TransactionRow';
 import { TransactionSheet } from './TransactionSheet';
+import { ownerKeys } from '../../data/keys';
 
 type Filter = 'all' | VenueTransaction['method'];
 
@@ -27,14 +28,14 @@ export function PaymentsScreen() {
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const [filter, setFilter] = useState<Filter>('all');
   const [openId, setOpenId] = useState<string | null>(null);
-  const txKey = ['owner-transactions', venueId];
+  const txKey = ownerKeys.transactions(venueId);
   const txs = useQuery({
     queryKey: txKey,
     queryFn: () => api.ownerListTransactions(venueId),
     enabled: Boolean(venueId),
   });
   const payout = useQuery({
-    queryKey: ['owner-payout', venueId],
+    queryKey: ownerKeys.payout(venueId),
     queryFn: () => api.ownerGetPayoutAccount(venueId),
     enabled: Boolean(venueId),
   });

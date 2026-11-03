@@ -11,6 +11,7 @@ import { Text } from '@/ui/Text';
 import { Button } from '@/ui/Button';
 import { useTheme } from '@/ui/theme';
 import { createStack, dropPlate, stepStack, topOfBoard, type StackState } from './plateStack';
+import { guestKeys } from '@/lib/queryKeys';
 
 // The contract's example stamp rule, used until the venue's own rule has loaded.
 const DEFAULT_MIN_SCORE = 15;
@@ -62,7 +63,7 @@ export function GameScreen({ slug }: { slug: string }) {
       .submitScore(slug, { score: finalScore, runId: Crypto.randomUUID(), durationMs })
       .then((res) => {
         if (res.stampEarned) setStampEarned(true);
-        void client.invalidateQueries({ queryKey: ['loyalty'] });
+        void client.invalidateQueries({ queryKey: guestKeys.loyaltyAll() });
       })
       .catch(() => setSendFailed(true));
   }, [finalScore, slug, client]);

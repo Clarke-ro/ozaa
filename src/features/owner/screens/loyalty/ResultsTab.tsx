@@ -8,6 +8,7 @@ import { tokens } from '@/theme/tokens';
 import { DeskWait, SkeletonBlock } from '../../chrome/OwnerPage';
 import { bucket } from '../../desk/dashboardModel';
 import { BarChart, ChartCard, Segmented, StatTile } from '../../kit';
+import { ownerKeys } from '../../data/keys';
 
 type Range = '7d' | '30d' | '90d';
 const MAX_BARS = 7;
@@ -17,7 +18,7 @@ export function ResultsTab({ venueId }: { venueId: string }) {
   const { t, i18n } = useTranslation();
   const [range, setRange] = useState<Range>('30d');
   const report = useQuery({
-    queryKey: ['owner-loyalty-analytics', venueId, range],
+    queryKey: [...ownerKeys.loyaltyAnalytics(venueId), range],
     queryFn: () => api.ownerGetLoyaltyAnalytics(venueId, range),
     enabled: Boolean(venueId),
   });

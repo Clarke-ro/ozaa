@@ -18,6 +18,7 @@ import { nextOrderMove, type OrderStatus, type StaffRole } from '@/features/orde
 import { DeskWait, OwnerPage } from '../chrome/OwnerPage';
 import { FloorTile } from './floor/FloorTile';
 import { ChipRow, DeskCard } from '../kit';
+import { ownerKeys } from '../data/keys';
 
 const LABEL = {
   free: 'owner.free',
@@ -48,28 +49,28 @@ export function FloorScreen() {
   const [filter, setFilter] = useState<FilterType>('all');
 
   const floor = useQuery({
-    queryKey: ['owner-floor', venueId],
+    queryKey: ownerKeys.floor(venueId),
     queryFn: () => api.ownerGetFloor(venueId),
     enabled: Boolean(venueId),
     refetchInterval: 5000,
   });
 
   const orders = useQuery({
-    queryKey: ['owner-orders', venueId],
+    queryKey: ownerKeys.orders(venueId),
     queryFn: () => api.ownerListOrders(venueId),
     enabled: Boolean(venueId),
   });
 
   const venue = useQuery({
-    queryKey: ['owner-venue', venueId],
+    queryKey: ownerKeys.venue(venueId),
     queryFn: () => api.ownerGetVenue(venueId),
     enabled: Boolean(venueId),
   });
 
   const refresh = () => {
-    void client.invalidateQueries({ queryKey: ['owner-floor', venueId] });
-    void client.invalidateQueries({ queryKey: ['owner-orders', venueId] });
-    void client.invalidateQueries({ queryKey: ['owner-dashboard', venueId] });
+    void client.invalidateQueries({ queryKey: ownerKeys.floor(venueId) });
+    void client.invalidateQueries({ queryKey: ownerKeys.orders(venueId) });
+    void client.invalidateQueries({ queryKey: ownerKeys.dashboard(venueId) });
   };
 
   const status = useMutation({
@@ -178,7 +179,12 @@ export function FloorScreen() {
                     style={[styles.totalPrice, { fontVariant: ['tabular-nums'] }]}
                   >
                     {formatMoney(
-                      pesewas(Math.max(0, bill ? bill.totalPesewas - (PAYMENTS_ENABLED ? bill.paidPesewas : 0) : 0)),
+                      pesewas(
+                        Math.max(
+                          0,
+                          bill ? bill.totalPesewas - (PAYMENTS_ENABLED ? bill.paidPesewas : 0) : 0,
+                        ),
+                      ),
                       currency,
                     )}
                   </Text>

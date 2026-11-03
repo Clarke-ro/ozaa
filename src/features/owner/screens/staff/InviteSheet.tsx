@@ -9,6 +9,7 @@ import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { Chips, Field, ModalSheet, toast } from '../../kit';
+import { ownerKeys } from '../../data/keys';
 
 // Owners are not invited from here: a second owner can change payouts, so that stays a support step.
 export const INVITE_ROLES: StaffRole[] = [
@@ -37,7 +38,7 @@ export function InviteSheet({ venueId, onClose }: { venueId: string; onClose: ()
       api.ownerInviteStaff(venueId, { firstName: name.trim(), phone: parsed?.phone ?? '', role }),
     onSuccess: () => {
       toast.success(t('ownerStaff.invited', { name: name.trim() }));
-      void client.invalidateQueries({ queryKey: ['owner-staff', venueId] });
+      void client.invalidateQueries({ queryKey: ownerKeys.staff(venueId) });
       onClose();
     },
     onError: () => toast.error(t('ownerKit.saveFailed')),

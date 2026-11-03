@@ -15,6 +15,7 @@ import { ConfirmDialog, EmptyCard, InfoRow, ModalSheet, SectionLabel, toast } fr
 import { SummaryStrip } from '../../kit/SummaryStrip';
 import { StaffCard } from './StaffCard';
 import { InviteSheet } from './InviteSheet';
+import { ownerKeys } from '../../data/keys';
 
 /** Who can sign in to this venue and what each person can do. */
 export function StaffScreen() {
@@ -28,7 +29,7 @@ export function StaffScreen() {
   }, []);
   const client = useQueryClient();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
-  const key = ['owner-staff', venueId];
+  const key = ownerKeys.staff(venueId);
   const staff = useQuery({
     queryKey: key,
     queryFn: () => api.ownerListStaff(venueId),

@@ -26,6 +26,7 @@ import { MenuCartBar } from './MenuCartBar';
 import { DishRow } from './DishRow';
 import { MenuControls, type MenuView } from './MenuControls';
 import { menuRows, type MenuRow } from './menuRows';
+import { guestKeys } from '@/lib/queryKeys';
 
 /**
  * The guest menu: a fixed bar to search, filter and pick a section, then the dishes as a list
@@ -36,7 +37,7 @@ export function MenuScreen({ slug }: { slug: string }) {
   const theme = useTheme();
   const router = useRouter();
   const { width } = useWindowDimensions();
-  const menu = useQuery({ queryKey: ['menu', slug], queryFn: () => api.getMenu(slug) });
+  const menu = useQuery({ queryKey: guestKeys.menu(slug), queryFn: () => api.getMenu(slug) });
   const venue = useVenue(slug);
   const add = useCart((state) => state.add);
   const [section, setSection] = useState('all');

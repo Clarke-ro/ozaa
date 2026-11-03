@@ -8,6 +8,7 @@ import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { REASON_ICON } from './reasonIcon';
+import { guestKeys } from '@/lib/queryKeys';
 
 // Checks the call often enough that "on the way" shows within a few seconds of the tap.
 const POLL_MS = 3000;
@@ -17,7 +18,7 @@ export function CallStatusCard({ id, now }: { id: string; now: number }) {
   const { t } = useTranslation();
   const theme = useTheme();
   const call = useQuery({
-    queryKey: ['waiter', id],
+    queryKey: guestKeys.waiterCall(id),
     queryFn: () => api.getWaiterCall(id),
     // Stop asking once it is done.
     refetchInterval: (q) => (q.state.data?.status === 'resolved' ? false : POLL_MS),

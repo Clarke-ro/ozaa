@@ -12,6 +12,7 @@ import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { DeskWait } from '../chrome/OwnerPage';
 import { EmptyCard, ModalSheet, SectionLabel, Toggle } from '../kit';
+import { ownerKeys } from '../data/keys';
 
 export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
   const styles = useStyles();
@@ -24,7 +25,7 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
 
   const query = useDebouncedValue(search.trim());
   const customersQuery = useQuery({
-    queryKey: ['owner-loyalty-customers', venueId, query, wantsOffersOnly],
+    queryKey: [...ownerKeys.loyaltyCustomers(venueId), query, wantsOffersOnly],
     queryFn: () =>
       api.ownerListLoyaltyCustomers(venueId, {
         search: query || undefined,
@@ -36,8 +37,8 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
   });
 
   const refresh = () => {
-    void client.invalidateQueries({ queryKey: ['owner-loyalty-customers', venueId] });
-    void client.invalidateQueries({ queryKey: ['owner-loyalty', venueId] });
+    void client.invalidateQueries({ queryKey: ownerKeys.loyaltyCustomers(venueId) });
+    void client.invalidateQueries({ queryKey: ownerKeys.loyalty(venueId) });
   };
 
   // Manual stamp mutation

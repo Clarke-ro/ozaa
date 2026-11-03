@@ -19,6 +19,7 @@ import { tokens } from '@/theme/tokens';
 import { useTheme } from '@/ui/theme';
 import { addOnTotal, missingChoice, pickOption } from './dishLogic';
 import { DishGallery } from './DishGallery';
+import { guestKeys } from '@/lib/queryKeys';
 
 /** One dish: swipeable photos, what is in it, the venue's add-on choices, and Add with the full price. */
 export function ItemScreen({ slug, itemId }: { slug: string; itemId: string }) {
@@ -27,7 +28,7 @@ export function ItemScreen({ slug, itemId }: { slug: string; itemId: string }) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const add = useCart((state) => state.add);
-  const menu = useQuery({ queryKey: ['menu', slug], queryFn: () => api.getMenu(slug) });
+  const menu = useQuery({ queryKey: guestKeys.menu(slug), queryFn: () => api.getMenu(slug) });
   const venue = useVenue(slug);
   const [quantity, setQuantity] = useState(1);
   const [note, setNote] = useState('');

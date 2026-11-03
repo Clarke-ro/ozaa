@@ -17,6 +17,7 @@ import { Text } from '@/ui/Text';
 import { ErrorState, LoadingState } from '@/ui/states';
 import { useTheme } from '@/ui/theme';
 import { StatusTimeline } from './StatusTimeline';
+import { guestKeys } from '@/lib/queryKeys';
 
 // Same pace as the bell, so both agree.
 const LIVE_MS = 10_000;
@@ -31,7 +32,7 @@ export function StatusScreen({ slug }: { slug: string }) {
   const orderId = useGuestSession((state) => (state.slug === slug ? state.orderId : null));
   const hydrated = useGuestSession((state) => state.hydrated);
   const order = useQuery({
-    queryKey: ['order', orderId],
+    queryKey: guestKeys.order(orderId),
     queryFn: () => api.getOrder(orderId ?? ''),
     enabled: Boolean(orderId),
     refetchInterval: LIVE_MS,

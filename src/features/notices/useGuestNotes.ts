@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { api } from '@/lib/api';
 import { useGuestSession, useMyCalls } from '@/features/session';
 import { buildGuestNotes, unseenGuestNotes, type GuestNote } from './guestNotes';
+import { guestKeys } from '@/lib/queryKeys';
 
 // Same pace as the order status page, so the bell and the page agree.
 const LIVE_MS = 10_000;
@@ -18,14 +19,14 @@ export function useGuestNotes(slug: string): { notes: GuestNote[]; unseen: numbe
   const callIds = useMyCalls((s) => s.ids);
   const seen = useGuestNotesSeen((s) => s.at);
   const order = useQuery({
-    queryKey: ['order', orderId],
+    queryKey: guestKeys.order(orderId),
     queryFn: () => api.getOrder(orderId ?? ''),
     enabled: Boolean(orderId),
     refetchInterval: LIVE_MS,
   });
   const calls = useQueries({
     queries: callIds.map((id) => ({
-      queryKey: ['waiter', id],
+      queryKey: guestKeys.waiterCall(id),
       queryFn: () => api.getWaiterCall(id),
       refetchInterval: LIVE_MS,
     })),

@@ -22,6 +22,7 @@ import {
 import { formFrom, programFrom, STAMPS, WINBACK_DAYS, type Cooldown } from './program';
 import { StampPreview } from './StampPreview';
 import { TreatToggle } from './TreatToggle';
+import { guestKeys } from '@/lib/queryKeys';
 
 /** Form state and save for the program. Lives in the screen so its SaveBar can be pinned to the page. */
 export function useProgramEditor(venueId: string, program: LoyaltyProgram | undefined) {
@@ -36,7 +37,7 @@ export function useProgramEditor(venueId: string, program: LoyaltyProgram | unde
       draft.reset();
       setShowErrors(false);
       void client.invalidateQueries({ queryKey: ownerKeys.loyalty(venueId) });
-      void client.invalidateQueries({ queryKey: ['loyalty'] });
+      void client.invalidateQueries({ queryKey: guestKeys.loyaltyAll() });
     },
     onError: () => toast.error(t('ownerKit.saveFailed')),
   });

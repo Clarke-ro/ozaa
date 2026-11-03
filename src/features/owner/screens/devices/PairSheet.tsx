@@ -8,6 +8,7 @@ import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { Field, ModalSheet, toast } from '../../kit';
+import { ownerKeys } from '../../data/keys';
 
 /**
  * Pairing in two steps: name the phone, then the server issues a one-time code that staff
@@ -21,7 +22,7 @@ export function PairSheet({ venueId, onClose }: { venueId: string; onClose: () =
   const [showError, setShowError] = useState(false);
   const pair = useMutation({
     mutationFn: () => api.ownerPairScannerDevice(venueId, { name: name.trim() }),
-    onSuccess: () => void client.invalidateQueries({ queryKey: ['owner-devices', venueId] }),
+    onSuccess: () => void client.invalidateQueries({ queryKey: ownerKeys.devices(venueId) }),
     onError: () => toast.error(t('ownerKit.saveFailed')),
   });
   const code = pair.data?.pairingCode;

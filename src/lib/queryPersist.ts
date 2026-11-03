@@ -1,11 +1,15 @@
 import type { QueryKey, QueryStatus } from '@tanstack/react-query';
+import { guestKeys } from './queryKeys';
 
 /**
  * Only the venue and menu are saved to the device, so a guest on bad data still sees the menu
  * (BUILD.md section 11). Owner data and loyalty cards hold names, masked phones and emails,
  * so they stay in memory and go when the tab closes or the owner signs out (Act 843).
  */
-const PERSISTED_ROOTS: ReadonlySet<unknown> = new Set(['venue', 'menu']);
+const PERSISTED_ROOTS: ReadonlySet<unknown> = new Set([
+  guestKeys.venue('')[0],
+  guestKeys.menu('')[0],
+]);
 
 /** Every owner cache key starts with this (see features/owner/data/keys.ts). */
 const OWNER_PREFIX = 'owner-';

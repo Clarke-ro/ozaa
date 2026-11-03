@@ -14,6 +14,7 @@ import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { EmptyCard, Toggle, toast, SectionLabel } from '../../kit';
 import { linkIcon } from './icons';
 import { LinkEditor } from './LinkEditor';
+import { ownerKeys } from '../../data/keys';
 
 const PLACEMENTS: CustomLink['placement'][] = ['button', 'banner', 'menu'];
 
@@ -31,7 +32,7 @@ export function LinksScreen() {
   const { t, i18n } = useTranslation();
   const client = useQueryClient();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
-  const key = ['owner-links', venueId];
+  const key = ownerKeys.links(venueId);
   const links = useQuery({
     queryKey: key,
     queryFn: () => api.ownerListCustomLinks(venueId),

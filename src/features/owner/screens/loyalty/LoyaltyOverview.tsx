@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import { SkeletonBlock } from '../../chrome/OwnerPage';
 import { SectionLabel } from '../../kit';
 import { SummaryStrip } from '../../kit/SummaryStrip';
+import { ownerKeys } from '../../data/keys';
 
 // The overview always shows the last 30 days; Results lets the owner change the range.
 const RANGE = '30d';
@@ -14,7 +15,7 @@ const RANGE = '30d';
 export function LoyaltyOverview({ venueId }: { venueId: string }) {
   const { t, i18n } = useTranslation();
   const report = useQuery({
-    queryKey: ['owner-loyalty-analytics', venueId, RANGE],
+    queryKey: [...ownerKeys.loyaltyAnalytics(venueId), RANGE],
     queryFn: () => api.ownerGetLoyaltyAnalytics(venueId, RANGE),
     enabled: Boolean(venueId),
   });

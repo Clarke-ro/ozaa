@@ -12,6 +12,7 @@ import { useTheme } from '@/ui/theme';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { EmptyCard, Segmented, toast } from '../../kit';
 import { ReviewCard } from './ReviewCard';
+import { ownerKeys } from '../../data/keys';
 
 type Filter = 'all' | 'reply';
 
@@ -22,7 +23,7 @@ export function ReviewsScreen() {
   const client = useQueryClient();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const [filter, setFilter] = useState<Filter>('all');
-  const key = ['owner-written', venueId];
+  const key = ownerKeys.reviews(venueId);
   const reviews = useQuery({
     queryKey: key,
     queryFn: () => api.ownerListWrittenReviews(venueId),
