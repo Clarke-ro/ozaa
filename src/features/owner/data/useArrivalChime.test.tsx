@@ -10,6 +10,15 @@ const mockPlayer = { play: jest.fn(), seekTo: jest.fn(() => Promise.resolve()) }
 jest.mock('@react-native-async-storage/async-storage', () =>
   jest.requireActual('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
+// The owner session is saved in the phone's keychain; in tests, keep it in memory.
+jest.mock('expo-secure-store', () => {
+  const store = new Map<string, string>();
+  return {
+    getItemAsync: (key: string) => Promise.resolve(store.get(key) ?? null),
+    setItemAsync: (key: string, value: string) => Promise.resolve(void store.set(key, value)),
+    deleteItemAsync: (key: string) => Promise.resolve(void store.delete(key)),
+  };
+});
 jest.mock('expo-audio', () => ({ useAudioPlayer: () => mockPlayer }));
 jest.mock('@/lib/api', () => ({
   api: {
@@ -25,6 +34,12 @@ async function setup(role: 'owner' | 'kitchen') {
     <QueryClientProvider client={client}>{children}</QueryClientProvider>
   );
   const hook = await renderHook(() => useArrivalChime(), { wrapper });
+  // Both first loads must land, and the hook must take them in, before a test adds anything new.
+  await waitFor(() => {
+    expect(client.getQueryData(ownerKeys.orders('ven_1'))).toBeTruthy();
+    if (role !== 'kitchen') expect(client.getQueryData(ownerKeys.calls('ven_1'))).toBeTruthy();
+  });
+  await act(async () => {});
   cleanups.push(() => {
     hook.unmount();
     client.clear();
@@ -36,8 +51,9 @@ const cleanups: (() => void)[] = [];
 
 beforeEach(async () => {
   mockPlayer.play.mockClear();
-  // Let the saved setting load first, so it can't overwrite what a test sets.
+  // Let the saved settings and session load first, so they can't overwrite what a test sets.
   await useOwnerPrefs.persist.rehydrate();
+  await useOwnerSession.persist.rehydrate();
   useOwnerPrefs.setState({ chime: true });
 });
 
