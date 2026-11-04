@@ -12,6 +12,7 @@ import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { CodeTile, StatusPill, type PillTone } from '../../kit';
 import { ticketAge } from '../../desk/ops';
+import { OrderContact } from './OrderContact';
 
 const STATUS_TONE: Record<Order['status'], PillTone> = {
   received: 'waiting',
@@ -60,9 +61,21 @@ export function OrderCard({
     hour: '2-digit',
     minute: '2-digit',
   });
+  // Table orders show the table; menu-link orders say pickup or delivery, and who for.
   const where = order.tableCode
     ? t('ownerOrders.table', { code: order.tableCode })
-    : t('ownerOrders.takeaway');
+    : order.source === 'delivery' || order.source === 'pickup'
+      ? order.contact
+        ? t(`ownerOrders.source.${order.source}For`, { name: order.contact.name })
+        : t(`ownerOrders.source.${order.source}`)
+      : t('ownerOrders.takeaway');
+  const tile =
+    order.tableCode ??
+    (order.source === 'delivery'
+      ? t('ownerOrders.source.deliveryCode')
+      : order.source === 'pickup'
+        ? t('ownerOrders.source.pickupCode')
+        : t('ownerOrders.takeawayCode'));
   const items = order.lines.reduce((sum, line) => sum + line.quantity, 0);
   const edge =
     live && age.tone === 'very_late'
@@ -95,11 +108,7 @@ export function OrderCard({
         onPress={() => setOpen((v) => !v)}
         style={styles.head}
       >
-        <CodeTile
-          code={order.tableCode ?? t('ownerOrders.takeawayCode')}
-          size={44}
-          tone={order.status === 'received' ? 'tint' : 'wash'}
-        />
+        <CodeTile code={tile} size={44} tone={order.status === 'received' ? 'tint' : 'wash'} />
         <View style={styles.flex}>
           <View style={styles.titleRow}>
             <Text variant="body-strong" numberOfLines={1} style={styles.shrink}>
@@ -146,6 +155,7 @@ export function OrderCard({
 
       {open ? (
         <>
+          <OrderContact order={order} />
           <View style={[styles.lines, { borderColor: theme.line }]}>
             {order.lines.map((line) => (
               <View key={line.id} style={styles.line}>

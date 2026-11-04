@@ -16,7 +16,9 @@ import { ownerKeys } from '../../data/keys';
 import { useDraft } from '../../data/useDraft';
 import { useSaveVenue } from '../../data/useSaveVenue';
 import { checkOrdering, orderingDraftOf, type OrderingDraft } from '../../desk/orderingForm';
-import { Field, SaveBar, Section, SectionBody, SwitchRow } from '../../kit';
+import { Field, SaveBar, Section, SectionBody, SwitchRow, toast } from '../../kit';
+import { Button } from '@/ui/Button';
+import { hereOnce } from '@/lib/here';
 
 // The worked example under the delivery fields: a typical short trip and a typical order.
 const EXAMPLE_KM = 3;
@@ -47,6 +49,20 @@ export function OnlineOrderingScreen() {
   const example = check.ok ? deliveryQuote(check.settings, EXAMPLE_KM, EXAMPLE_FOOD) : null;
   // Delivery distance is measured from the venue's map pin.
   const noPin = f.deliveryOn && (v?.location.lat == null || v.location.lng == null);
+
+  const [locating, setLocating] = useState(false);
+  // The venue's map pin: the owner stands in the venue and taps once. Delivery distance starts here.
+  const setPin = async () => {
+    if (!v) return;
+    setLocating(true);
+    const here = await hereOnce();
+    setLocating(false);
+    if (!here.ok) {
+      toast.error(t(`linkOrder.locate.${here.reason}`));
+      return;
+    }
+    save.mutate({ location: { label: v.location.label, ...here.point } });
+  };
 
   const submit = () => {
     if (!check.ok) {
@@ -176,11 +192,18 @@ export function OnlineOrderingScreen() {
                     })}
                   </Text>
                 ) : null}
-                {noPin ? (
-                  <Text variant="caption" style={{ color: theme.warning }}>
-                    {t('ownerOrdering.noPin')}
+                <View style={styles.pin}>
+                  <Text variant="caption" style={{ color: noPin ? theme.warning : theme.meta }}>
+                    {noPin ? t('ownerOrdering.noPin') : t('ownerOrdering.pinSet')}
                   </Text>
-                ) : null}
+                  <Button
+                    label={noPin ? t('ownerOrdering.setPin') : t('ownerOrdering.movePin')}
+                    tone="secondary"
+                    size="md"
+                    loading={locating}
+                    onPress={() => void setPin()}
+                  />
+                </View>
               </View>
             </SectionBody>
           ) : null}
@@ -195,4 +218,5 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: tokens.space[3] },
   // minWidth 0 lets two fields share a phone-width row on the web.
   flex: { flex: 1, minWidth: 0 },
+  pin: { gap: tokens.space[2], alignItems: 'flex-start' },
 });

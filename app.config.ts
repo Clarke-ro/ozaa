@@ -41,6 +41,16 @@ const config: ExpoConfig = {
         microphonePermission: 'Ozaa records sound with your video review.',
       },
     ],
+    [
+      'expo-location',
+      {
+        // Only while the app is open, and only when someone taps "Use my location". Never in the background.
+        locationWhenInUsePermission:
+          'Ozaa uses your location to work out delivery to you, or to put your venue on the map.',
+        locationAlwaysAndWhenInUsePermission: false,
+        locationAlwaysPermission: false,
+      },
+    ],
   ],
   experiments: { typedRoutes: true, chunking: { mode: 'granular' } },
   extra: {

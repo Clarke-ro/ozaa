@@ -59,13 +59,22 @@ export function StatusScreen({ slug }: { slug: string }) {
   if (order.isError || !order.data) return <ErrorState onRetry={() => void order.refetch()} />;
   const o = order.data;
   const unpaid = o.paymentStatus === 'unpaid' || o.paymentStatus === 'part_paid';
+  const fromLink = o.source === 'pickup' || o.source === 'delivery';
   const card = [styles.card, { backgroundColor: theme.surface }];
 
   return (
     <SafeScreen>
       <PageHeader
         title={t('status.title', { number: o.number })}
-        subtitle={o.tableCode ? t('home.table', { code: o.tableCode }) : undefined}
+        subtitle={
+          o.tableCode
+            ? t('home.table', { code: o.tableCode })
+            : o.source === 'delivery'
+              ? t('linkOrder.status.delivery')
+              : o.source === 'pickup'
+                ? t('linkOrder.status.pickup')
+                : undefined
+        }
       />
       <ScrollView contentContainerStyle={styles.page}>
         <View style={card}>
@@ -77,6 +86,14 @@ export function StatusScreen({ slug }: { slug: string }) {
           {o.etaMinutes != null && (o.status === 'received' || o.status === 'preparing') ? (
             <Text variant="body" style={{ color: theme.muted }}>
               {t('status.eta', { minutes: o.etaMinutes })}
+            </Text>
+          ) : null}
+          {o.source === 'pickup' && o.status === 'ready' ? (
+            <Text variant="body-strong">{t('linkOrder.status.collect')}</Text>
+          ) : null}
+          {o.source === 'delivery' && o.deliveryAddress ? (
+            <Text variant="body" style={{ color: theme.muted }}>
+              {t('linkOrder.status.to', { address: o.deliveryAddress })}
             </Text>
           ) : null}
           <View style={styles.timeline}>
@@ -94,6 +111,14 @@ export function StatusScreen({ slug }: { slug: string }) {
               <PriceText amount={line.totalPesewas} currency={currency} />
             </View>
           ))}
+          {o.deliveryFeePesewas ? (
+            <View style={styles.row}>
+              <Text variant="body" style={styles.flex}>
+                {t('linkOrder.deliveryFee')}
+              </Text>
+              <PriceText amount={o.deliveryFeePesewas} currency={currency} />
+            </View>
+          ) : null}
           <View style={[styles.row, styles.total, { borderColor: theme.line }]}>
             <Text variant="body-strong" style={styles.flex}>
               {t('status.total')}
@@ -106,7 +131,11 @@ export function StatusScreen({ slug }: { slug: string }) {
             </Text>
           ) : (
             <Text variant="caption" style={{ color: theme.muted }}>
-              {t('status.payAtCounter')}
+              {o.source === 'delivery'
+                ? t('linkOrder.status.payDelivery')
+                : o.source === 'pickup'
+                  ? t('linkOrder.status.payPickup')
+                  : t('status.payAtCounter')}
             </Text>
           )}
         </View>
@@ -116,13 +145,16 @@ export function StatusScreen({ slug }: { slug: string }) {
             <Button label={t('status.pay')} onPress={() => router.push(`/${slug}/pay`)} />
           ) : null}
           <View style={styles.pair}>
-            <Button
-              label={t('status.call')}
-              tone="secondary"
-              size="md"
-              style={styles.flex}
-              onPress={() => router.push(`/${slug}/waiter`)}
-            />
+            {/* Only a guest at a table can call a waiter. */}
+            {fromLink ? null : (
+              <Button
+                label={t('status.call')}
+                tone="secondary"
+                size="md"
+                style={styles.flex}
+                onPress={() => router.push(`/${slug}/waiter`)}
+              />
+            )}
             <Button
               label={t('status.orderMore')}
               tone="secondary"
