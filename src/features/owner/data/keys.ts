@@ -29,6 +29,8 @@ export const ownerKeys = {
   transactions: (venueId: string) => ['owner-transactions', venueId] as const,
   payout: (venueId: string) => ['owner-payout', venueId] as const,
   reviews: (venueId: string) => ['owner-written', venueId] as const,
+  /** Add the range after this: `[...sales(id), '7d']`. */
+  sales: (venueId: string) => ['owner-sales', venueId] as const,
   /** The guest menu, keyed by venue slug; the owner menu builder reads and edits the same data. */
   menu: guestKeys.menu,
 };

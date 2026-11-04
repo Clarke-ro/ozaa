@@ -17,7 +17,9 @@ function watchErrors(page: Page): string[] {
   return errors;
 }
 
-test('guest: scan a table, order, ask for the bill, and never see a payment screen', async ({ page }) => {
+test('guest: scan a table, order, ask for the bill, and never see a payment screen', async ({
+  page,
+}) => {
   const errors = watchErrors(page);
   await page.goto('/mamas-kitchen/t/12', { waitUntil: 'domcontentloaded' });
   await expect(page.getByText('Call waiter').first()).toBeVisible({ timeout: 15_000 });
@@ -26,7 +28,10 @@ test('guest: scan a table, order, ask for the bill, and never see a payment scre
 
   // Move inside the app: a full page load restarts the in-browser mock and forgets the table.
   await page.getByRole('button', { name: /^Menu/ }).first().click();
-  await page.getByRole('button', { name: /^Add .+ to your order$/ }).first().click();
+  await page
+    .getByRole('button', { name: /^Add .+ to your order$/ })
+    .first()
+    .click();
   await page.getByRole('button', { name: /View order/ }).click();
   await page.getByRole('button', { name: 'Send to kitchen' }).click();
 
@@ -58,7 +63,9 @@ async function signInAsOwner(page: Page) {
   await page.getByRole('button', { name: 'Send code', exact: true }).click();
   await page.getByRole('textbox', { name: 'Code', exact: true }).fill('123456');
   await page.getByRole('button', { name: 'Enter', exact: true }).click();
-  await expect(page.getByRole('tab', { name: 'Today', exact: true })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('tab', { name: 'Today', exact: true })).toBeVisible({
+    timeout: 15_000,
+  });
 }
 
 test('owner: orders, floor, calls and insights work with no payment cards', async ({ page }) => {
@@ -74,7 +81,10 @@ test('owner: orders, floor, calls and insights work with no payment cards', asyn
   await page.getByRole('tab', { name: 'More', exact: true }).click();
   await expect(page.getByRole('button', { name: /^Payments/ })).toHaveCount(0);
   await expect(page.getByRole('button', { name: /^Register/ })).toHaveCount(0);
-  await page.getByRole('button', { name: /^Floor/ }).first().click();
+  await page
+    .getByRole('button', { name: /^Floor/ })
+    .first()
+    .click();
   await expect(page.getByText(/^Bill \(\d+\)$/)).toBeVisible({ timeout: 15_000 });
   await noPayWords(page);
   await page.screenshot({ path: 'test-results/payments-off-owner-floor.png' });
@@ -84,9 +94,13 @@ test('owner: orders, floor, calls and insights work with no payment cards', asyn
   await page.screenshot({ path: 'test-results/payments-off-owner-orders.png' });
 
   await page.getByRole('tab', { name: 'More', exact: true }).click();
-  await page.getByRole('button', { name: /^Insights/ }).first().click();
+  await page
+    .getByRole('button', { name: /^Insights/ })
+    .first()
+    .click();
   await expect(page.getByText('Top dishes', { exact: true })).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByText('Sales', { exact: true })).toHaveCount(0);
+  // Only what's on screen: the More list (still in the page, hidden) has a Sales page link.
+  await expect(page.getByText('Sales', { exact: true }).locator('visible=true')).toHaveCount(0);
   await page.screenshot({ path: 'test-results/payments-off-owner-insights.png' });
 
   // Old links to payment screens land somewhere useful.

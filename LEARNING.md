@@ -935,3 +935,37 @@ The name and phone live only in the checkout screen while it's open, and then on
 **Try it yourself**
 
 Turn on online ordering with pickup only, open your menu link in a private window, and order. Then find it under New on Orders.
+
+---
+
+## 2026-11-04 · The Sales page
+
+**What we built**
+
+A **Sales** page under Sales in the sidebar, for All time, Today, Yesterday, the last 7 days or the last 30 days. It shows:
+- **Six tiles:** order value, orders, completed, in progress, cancelled and discounts given
+- **Order value by day**
+- **Where orders came from:** tables, pickup or delivery
+- **Top dishes**
+
+**How it works**
+
+```
+range chip → orderRange (venue's midnight) → ownerGetSales(since, until)
+server: orders in range → salesReport → money, counts, sources, top 5, days
+```
+
+It counts what was **ordered**, paid or not; payments come with the next box. A discount is saved on the order line when the order is placed, so if a sale ends tomorrow, today's discount still shows.
+
+**Files to look at**
+
+- `src/lib/sales.ts` and its test.
+- `src/features/owner/screens/sales/SalesScreen.tsx`.
+
+**New idea: freeze facts when they happen**
+
+We could work out discounts later by comparing with today's menu prices, but prices change. Writing the discount onto the order line at the moment of ordering keeps the history true.
+
+**Try it yourself**
+
+Put a dish on sale, create an order for it, then open Sales. Discounts given goes up.

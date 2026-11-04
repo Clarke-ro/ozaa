@@ -15,6 +15,7 @@ import {
   Layers,
   Plug,
   TicketPercent,
+  TrendingUp,
   UserRoundSearch,
   LayoutDashboard,
   Link,
@@ -77,6 +78,7 @@ export const NAV_ICONS: Record<OwnerNavId | 'more', LucideIcon> = {
   integrations: Plug,
   billing: CreditCard,
   ordering: ShoppingBag,
+  sales: TrendingUp,
   more: Menu,
 };
 

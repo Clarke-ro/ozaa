@@ -611,7 +611,7 @@ Approved by Clarke on 2026-11-03. Details and file locations are in `docs/menuri
 - [x] 4b.13 *contract* + UI: Home stats for orders today, pending orders and visitors today.
 - [x] 4b.14 *contract* + UI: online ordering settings (on/off, pickup prep time, delivery fees, distance, free threshold).
 - [x] 4b.15 *contract* + UI: menu-link guest flow (pickup or delivery, contact form, confirmation and status page) and the source on every order.
-- [ ] 4b.16 *contract* + UI: Sales page (totals, counts by status, discounts, top items, revenue over time, by source).
+- [x] 4b.16 *contract* + UI: Sales page (totals, counts by status, discounts, top items, revenue over time, by source).
 - [ ] 4b.17 *contract* + UI: Settings > Integrations > Payments (own Paystack keys, where to find them, test/live, test connection), manual methods, mark paid by method, payment status on orders and sales. Split bill hidden.
 - [ ] 4b.18 WhatsApp order-alerts number field, behind a flag that stays off.
 - [ ] **Review:** Clarke sees every new screen in light and dark, phone and tablet, then says go for the backend (per-venue encrypted Paystack keys, webhook per venue, push alerts).
