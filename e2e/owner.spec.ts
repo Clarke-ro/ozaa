@@ -33,6 +33,7 @@ const moreItems = [
   ['Promos and coupons', 'owner-promos'],
   ['Integrations', 'owner-integrations'],
   ['Billing', 'owner-billing'],
+  ['Online ordering', 'owner-ordering'],
   // The roadmap previews (Stock, AI waiter, Marketing) are off unless PREVIEWS_ENABLED=true.
 ] as const;
 

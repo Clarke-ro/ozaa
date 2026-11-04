@@ -68,6 +68,8 @@ export function percentOf(amount: Pesewas, percent: number): Pesewas {
 
 /** Owner price fields. "65.50" and "GH₵2,480" both become pesewas. */
 export function parseMoneyInput(text: string): Pesewas | null {
+  // Symbols and commas are dropped below ("GH₵2,480" is fine), but a minus sign is never a price.
+  if (text.includes('-')) return null;
   const cleaned = text.replace(/[^\d.]/g, '');
   if (!/^\d+(\.\d{1,2})?$/.test(cleaned)) return null;
   const [whole, fraction = ''] = cleaned.split('.');

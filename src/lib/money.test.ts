@@ -30,6 +30,9 @@ test('reads a price the owner typed back into pesewas', () => {
   expect(parseMoneyInput('65.5')).toBe(6550);
   expect(parseMoneyInput('')).toBeNull();
   expect(parseMoneyInput('12.345')).toBeNull();
+  // A minus sign is never a price; without this "-65" would read as GH₵65.
+  expect(parseMoneyInput('-65')).toBeNull();
+  expect(parseMoneyInput('GH₵-2')).toBeNull();
 });
 
 test('rounds a tip half-up to the minor unit', () => {
