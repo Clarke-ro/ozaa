@@ -1294,6 +1294,29 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/InsightsReport' }
 
+  /owner/venues/{venueId}/sales:
+    get:
+      tags: [owner-insights]
+      operationId: ownerGetSales
+      summary: "Real order figures for a date range: value, counts by status, discounts, delivery fees, by source, top dishes and day by day."
+      security: [{ ownerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/VenueId' }
+        - in: query
+          name: since
+          description: Orders created at or after this moment. Leave out for all time.
+          schema: { type: string, format: date-time }
+        - in: query
+          name: until
+          description: Orders created before this moment.
+          schema: { type: string, format: date-time }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SalesReport' }
+
   /owner/venues/{venueId}/feedback:
     get:
       tags: [owner-feedback]
@@ -2421,6 +2444,9 @@ components:
         totalPesewas: { $ref: '#/components/schemas/Pesewas' }
         note: { type: string }
         paid: { type: boolean, description: True once this line was paid in a "my items" split. }
+        discountPesewas:
+          allOf: [{ $ref: '#/components/schemas/Pesewas' }]
+          description: "How much the sale price saved on this line (normal price minus sale price, times quantity), fixed when ordered. Missing means none." 
     TaxLine:
       type: object
       required: [code, label, amountPesewas]
@@ -2891,6 +2917,54 @@ components:
             count: { type: integer }
             sharePercent: { type: integer, minimum: 0, maximum: 100 }
 
+    SalesReport:
+      type: object
+      required: [currency, orderCount, valuePesewas, byStatus, discountsPesewas, deliveryFeesPesewas, bySource, topItems, days]
+      description: "Built from orders, not payments: what was ordered. Cancelled orders count in byStatus only, never in money."
+      properties:
+        currency: { $ref: '#/components/schemas/Currency' }
+        orderCount: { type: integer, minimum: 0, description: Orders that weren't cancelled. }
+        valuePesewas: { $ref: '#/components/schemas/Pesewas' }
+        byStatus:
+          type: object
+          required: [received, preparing, ready, served, cancelled]
+          properties:
+            received: { type: integer }
+            preparing: { type: integer }
+            ready: { type: integer }
+            served: { type: integer }
+            cancelled: { type: integer }
+        discountsPesewas: { $ref: '#/components/schemas/Pesewas' }
+        deliveryFeesPesewas: { $ref: '#/components/schemas/Pesewas' }
+        bySource:
+          type: array
+          items:
+            type: object
+            required: [source, orders, pesewas]
+            properties:
+              source: { $ref: '#/components/schemas/OrderSource' }
+              orders: { type: integer }
+              pesewas: { $ref: '#/components/schemas/Pesewas' }
+        topItems:
+          type: array
+          maxItems: 5
+          items:
+            type: object
+            required: [name, count, pesewas]
+            properties:
+              name: { type: string }
+              count: { type: integer }
+              pesewas: { $ref: '#/components/schemas/Pesewas' }
+        days:
+          type: array
+          description: One entry per calendar day in the venue's time zone that had orders, oldest first.
+          items:
+            type: object
+            required: [date, orders, pesewas]
+            properties:
+              date: { type: string, example: '2026-11-04' }
+              orders: { type: integer }
+              pesewas: { $ref: '#/components/schemas/Pesewas' }
     FeedbackSentiment:
       type: string
       enum: [positive, neutral, negative]

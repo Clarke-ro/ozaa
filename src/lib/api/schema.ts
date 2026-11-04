@@ -936,6 +936,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/owner/venues/{venueId}/sales": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Real order figures for a date range: value, counts by status, discounts, delivery fees, by source, top dishes and day by day. */
+        get: operations["ownerGetSales"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/owner/venues/{venueId}/feedback": {
         parameters: {
             query?: never;
@@ -1738,6 +1755,8 @@ export interface components {
             note?: string;
             /** @description True once this line was paid in a "my items" split. */
             paid: boolean;
+            /** @description How much the sale price saved on this line (normal price minus sale price, times quantity), fixed when ordered. Missing means none. */
+            discountPesewas?: components["schemas"]["Pesewas"];
         };
         TaxLine: {
             /** @enum {string} */
@@ -2167,6 +2186,39 @@ export interface components {
                 count: number;
                 sharePercent: number;
             };
+        };
+        /** @description Built from orders, not payments: what was ordered. Cancelled orders count in byStatus only, never in money. */
+        SalesReport: {
+            currency: components["schemas"]["Currency"];
+            /** @description Orders that weren't cancelled. */
+            orderCount: number;
+            valuePesewas: components["schemas"]["Pesewas"];
+            byStatus: {
+                received: number;
+                preparing: number;
+                ready: number;
+                served: number;
+                cancelled: number;
+            };
+            discountsPesewas: components["schemas"]["Pesewas"];
+            deliveryFeesPesewas: components["schemas"]["Pesewas"];
+            bySource: {
+                source: components["schemas"]["OrderSource"];
+                orders: number;
+                pesewas: components["schemas"]["Pesewas"];
+            }[];
+            topItems: {
+                name: string;
+                count: number;
+                pesewas: components["schemas"]["Pesewas"];
+            }[];
+            /** @description One entry per calendar day in the venue's time zone that had orders, oldest first. */
+            days: {
+                /** @example 2026-11-04 */
+                date: string;
+                orders: number;
+                pesewas: components["schemas"]["Pesewas"];
+            }[];
         };
         /** @enum {string} */
         FeedbackSentiment: "positive" | "neutral" | "negative";
@@ -4226,6 +4278,33 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InsightsReport"];
+                };
+            };
+        };
+    };
+    ownerGetSales: {
+        parameters: {
+            query?: {
+                /** @description Orders created at or after this moment. Leave out for all time. */
+                since?: string;
+                /** @description Orders created before this moment. */
+                until?: string;
+            };
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SalesReport"];
                 };
             };
         };

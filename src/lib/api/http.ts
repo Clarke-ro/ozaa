@@ -484,6 +484,13 @@ export function createHttpClient(baseUrl: string, tokens: TokenSource): ApiClien
           headers: headers('access', call),
         }),
       ),
+    ownerGetSales: (venueId, filter) =>
+      ok(
+        client.GET('/owner/venues/{venueId}/sales', {
+          params: { path: { venueId }, query: { since: filter?.since, until: filter?.until } },
+          headers: headers('access'),
+        }),
+      ),
     ownerGetInsights: (venueId, range) =>
       ok(
         client.GET('/owner/venues/{venueId}/insights', {

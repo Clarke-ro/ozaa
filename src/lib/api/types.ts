@@ -62,6 +62,7 @@ export type OnlineFulfilment = Schemas['OnlineFulfilment'];
 export type OrderSource = Schemas['OrderSource'];
 export type GeoPoint = Schemas['GeoPoint'];
 export type OrderContact = Schemas['OrderContact'];
+export type SalesReport = Schemas['SalesReport'];
 export type StoreNotices = Schemas['StoreNotices'];
 export type Location = Schemas['Location'];
 export type LocationInput = Schemas['LocationInput'];
