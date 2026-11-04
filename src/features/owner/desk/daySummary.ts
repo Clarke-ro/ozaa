@@ -13,6 +13,10 @@ export type DeskAlert = {
 
 export type DaySummary = {
   salesTodayPesewas: number;
+  /** Orders placed today in the venue's zone, cancelled ones left out. */
+  ordersToday: number;
+  /** Orders the kitchen hasn't started, whatever day they came in. */
+  pendingOrders: number;
   changePercent: number | null;
   direction: 'up' | 'down' | 'flat' | 'none';
   ratingAverage: number | null;
@@ -20,7 +24,8 @@ export type DaySummary = {
   alerts: DeskAlert[];
 };
 
-function calendarDay(iso: string, timeZone: string): string {
+/** The venue's calendar date for a moment, like 2026-11-04. */
+export function calendarDay(iso: string, timeZone: string): string {
   return new Intl.DateTimeFormat('en-CA', {
     timeZone,
     year: 'numeric',
@@ -49,6 +54,12 @@ export function summarizeDay(input: {
     if (calendarDay(order.createdAt, input.timeZone) !== today) return sum;
     return sum + order.paidPesewas;
   }, 0);
+
+  const ordersToday = input.orders.filter(
+    (order) =>
+      order.status !== 'cancelled' && calendarDay(order.createdAt, input.timeZone) === today,
+  ).length;
+  const pendingOrders = input.orders.filter((order) => order.status === 'received').length;
 
   let direction: DaySummary['direction'] = 'none';
   let changePercent: number | null = null;
@@ -84,5 +95,14 @@ export function summarizeDay(input: {
       detail: input.soldOut.join(', '),
     });
 
-  return { salesTodayPesewas, changePercent, direction, ratingAverage, ratingCount, alerts };
+  return {
+    salesTodayPesewas,
+    ordersToday,
+    pendingOrders,
+    changePercent,
+    direction,
+    ratingAverage,
+    ratingCount,
+    alerts,
+  };
 }

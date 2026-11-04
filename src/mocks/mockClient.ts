@@ -402,7 +402,12 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
           item.order.status !== 'cancelled',
       );
       const orderId = open?.order.id ?? null;
-      world.sessions.set(token, { slug: venue.slug, tableCode, orderId });
+      world.sessions.set(token, {
+        slug: venue.slug,
+        tableCode,
+        orderId,
+        startedAt: new Date(now()).toISOString(),
+      });
       rememberOpenOrder(token, orderId);
       const table =
         world.tables[venue.id]?.find((item) => item.code === tableCode) ??

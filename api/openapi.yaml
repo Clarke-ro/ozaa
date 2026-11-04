@@ -2686,9 +2686,12 @@ components:
       description: Sample venues use GHS. Amount fields are minor units (pesewas, kobo, cents) except XOF, which is the whole franc.
     OwnerDashboard:
       type: object
-      required: [salesTodayPesewas, currency, changePercent, direction, openTables, liveOrders, openCalls, ratingAverage, ratingCount, alerts]
+      required: [salesTodayPesewas, currency, changePercent, direction, openTables, liveOrders, openCalls, ratingAverage, ratingCount, alerts, ordersToday, pendingOrders, visitorsToday]
       properties:
         salesTodayPesewas: { $ref: '#/components/schemas/Pesewas' }
+        ordersToday: { type: integer, minimum: 0, description: "Orders placed since midnight in the venue's time zone, not counting cancelled ones." }
+        pendingOrders: { type: integer, minimum: 0, description: "Orders still waiting for the kitchen to start (status received)." }
+        visitorsToday: { type: integer, minimum: 0, description: "Guest visits since midnight in the venue's time zone. One table scan or one opened menu link is one visit; no guest is identified." }
         currency: { $ref: '#/components/schemas/Currency' }
         changePercent: { type: ['integer', 'null'], description: Versus the same venue yesterday. Null when yesterday was zero. }
         direction: { type: string, enum: [up, down, flat, none] }

@@ -139,7 +139,12 @@ export type World = {
   >;
   idempotency: Map<string, unknown>;
   otpFails: Map<string, number>;
-  sessions: Map<string, { slug: string; tableCode: string | null; orderId: string | null }>;
+  sessions: Map<
+    string,
+    { slug: string; tableCode: string | null; orderId: string | null; startedAt: string }
+  >;
+  /** Sample visits already counted today, so the demo isn't empty. Real visits add to it. */
+  visitorBase: Record<string, number>;
   access: Map<string, { phone: string; purpose: 'owner_login' | 'guest_loyalty' }>;
   refresh: Map<string, string>;
   seq: number;
@@ -161,6 +166,7 @@ function seedOwnerDesk(world: World, now: number): void {
   if (!mama) return;
   world.seatedCodes[mama.id] = ['7'];
   world.yesterdayPesewas[mama.id] = 221429;
+  world.visitorBase[mama.id] = 37;
 
   // Seed feedback
   world.feedback.push(
@@ -480,6 +486,7 @@ export function createWorld(now: number): World {
     calls: [],
     seatedCodes: {},
     yesterdayPesewas: {},
+    visitorBase: {},
     written: [],
     transactions: [],
     loyalty,
