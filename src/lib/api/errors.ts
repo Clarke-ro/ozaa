@@ -22,6 +22,7 @@ const MESSAGES: Record<string, string> = {
   rate_limited: 'errors.rateLimited',
   item_sold_out: 'errors.soldOut',
   quantity_out_of_range: 'errors.quantityRange',
+  venue_not_published: 'errors.notPublished',
   not_modified: 'errors.notModified',
   unauthorized: 'errors.unauthorized',
   bad_code: 'errors.badCode',

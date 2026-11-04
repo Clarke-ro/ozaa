@@ -46,6 +46,23 @@ export function ErrorState({ onRetry }: { onRetry: () => void }) {
   );
 }
 
+/** A venue whose owner hasn't published the menu yet. */
+export function NotOpenState() {
+  const { t } = useTranslation();
+  return (
+    <SafeScreen>
+      <View style={styles.box}>
+        <Text variant="title" accessibilityRole="header" style={styles.copy}>
+          {t('notOpen.title')}
+        </Text>
+        <Text variant="body" style={styles.copy}>
+          {t('notOpen.body')}
+        </Text>
+      </View>
+    </SafeScreen>
+  );
+}
+
 const styles = StyleSheet.create({
   box: {
     flex: 1,

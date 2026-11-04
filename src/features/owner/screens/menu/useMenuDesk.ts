@@ -4,7 +4,7 @@ import { api } from '@/lib/api';
 import type { Menu, MenuItem } from '@/lib/api/types';
 import { ownerKeys } from '../../data/keys';
 import { toast } from '../../kit';
-import { moveSection, sortSections } from './reorder';
+import { dishPositions, moveSection, sortSections } from './reorder';
 
 /** Menu data and every change the menu builder can make. Each change refetches the menu when it lands. */
 export function useMenuDesk(venueId: string) {
@@ -106,6 +106,18 @@ export function useMenuDesk(venueId: string) {
     onSettled: refresh,
   });
 
+  // After a drag in one section: save the new position of each dish that moved.
+  const reorderDishes = useMutation({
+    mutationFn: async ({ dishes, orderedIds }: { dishes: MenuItem[]; orderedIds: string[] }) => {
+      for (const update of dishPositions(dishes, orderedIds)) {
+        await api.ownerUpdateItem(venueId, update.id, { position: update.position });
+      }
+    },
+    onSuccess: () => toast.success(t('ownerKit.saved')),
+    onError: failed,
+    onSettled: refresh,
+  });
+
   return {
     venue,
     menu,
@@ -118,5 +130,6 @@ export function useMenuDesk(venueId: string) {
     removeItem,
     removeSection,
     move,
+    reorderDishes,
   };
 }
