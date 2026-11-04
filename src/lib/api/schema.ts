@@ -1391,6 +1391,24 @@ export interface components {
             services: components["schemas"]["ServiceToggle"][];
             game: components["schemas"]["GameStampRule"];
         };
+        /** @description How the guest menu looks. Every field is optional; missing means the default shown. */
+        MenuStyle: {
+            /**
+             * @description Order of dishes inside each section. manual (default) keeps the owner's order; popular_first puts dishes with the popular badge first, then the owner's order.
+             * @enum {string}
+             */
+            itemSort?: "manual" | "name" | "price_low" | "price_high" | "popular_first";
+            /**
+             * @description How the menu opens (default list). Guests can still switch.
+             * @enum {string}
+             */
+            layout?: "list" | "grid";
+            /**
+             * @description Guest pages in light (default) or dark, or auto to follow the guest's phone.
+             * @enum {string}
+             */
+            colorScheme?: "light" | "dark" | "auto";
+        };
         /** @description A message the venue shows on its guest pages, such as "Kitchen closes at 9 tonight". */
         StoreNotice: {
             /** @description The owner's show/hide switch. */
@@ -1457,6 +1475,7 @@ export interface components {
             stylePreset?: "default" | "classic" | "editorial" | "modern";
             buttonOrder?: string[];
             socials?: components["schemas"]["SocialLinks"];
+            menuStyle?: components["schemas"]["MenuStyle"];
             /** @description Only notices that are switched on and inside their start and end times right now. Missing or null parts mean nothing to show. */
             notices?: components["schemas"]["StoreNotices"];
         };
@@ -1490,6 +1509,7 @@ export interface components {
             buttonOrder?: string[];
             socials?: components["schemas"]["SocialLinks"];
             noticeSettings?: components["schemas"]["StoreNotices"];
+            menuStyle?: components["schemas"]["MenuStyle"];
         };
         Wifi: {
             ssid: string;

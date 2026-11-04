@@ -54,6 +54,7 @@ export type LoyaltyAnalyticsReport = Schemas['LoyaltyAnalyticsReport'];
 export type LoyaltyScanResult = Schemas['LoyaltyScanResult'];
 export type Business = Schemas['Business'];
 export type StoreNotice = Schemas['StoreNotice'];
+export type MenuStyle = Schemas['MenuStyle'];
 export type StoreNotices = Schemas['StoreNotices'];
 export type Location = Schemas['Location'];
 export type LocationInput = Schemas['LocationInput'];
