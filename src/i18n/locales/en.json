@@ -620,7 +620,8 @@
       "customers": "People on your loyalty card",
       "promos": "Codes and discounts",
       "integrations": "Payments and connected apps",
-      "billing": "Your Ozaa plan"
+      "billing": "Your Ozaa plan",
+      "ordering": "Pickup and delivery from your menu link"
     },
     "alertCalls_one": "1 waiter call is waiting.",
     "alertCalls_other": "{{count}} waiter calls are waiting.",
@@ -637,7 +638,8 @@
     "customers": "Customers",
     "promos": "Promos and coupons",
     "integrations": "Integrations",
-    "billing": "Billing"
+    "billing": "Billing",
+    "ordering": "Online ordering"
   },
   "errors": {
     "generic": "Something went wrong. Try again.",
@@ -1773,5 +1775,34 @@
   "notOpen": {
     "title": "Not open yet",
     "body": "This menu isn’t open yet. Please check back soon or ask a member of staff."
+  },
+  "ownerOrdering": {
+    "lead": "Let people order from your menu link for pickup or delivery. Table QR orders don’t change.",
+    "main": "Take online orders",
+    "mainOn": "On. Your menu link takes orders.",
+    "mainOff": "Off. Your menu link shows the menu only.",
+    "mainNote": "Customers give a name and phone so you can reach them. They never see each other’s details.",
+    "pickup": "Pickup",
+    "pickupOn": "Offer pickup",
+    "prep": "Ready in (minutes)",
+    "prepHint": "Shown to the customer when they order.",
+    "delivery": "Delivery",
+    "deliveryOn": "Offer delivery",
+    "minimumFee": "Lowest fee ({{currency}})",
+    "perKm": "Fee per km ({{currency}})",
+    "maxKm": "Furthest (km)",
+    "freeOver": "Free from ({{currency}})",
+    "freeOverHint": "Optional. Empty means never free.",
+    "example": "Example: {{km}} km away with {{food}} of food, delivery is {{fee}}.",
+    "free": "free",
+    "noPin": "Delivery fees use the distance from your venue to the customer. Your venue has no map position yet; setting it comes with the delivery checkout.",
+    "err": {
+      "method": "Turn on pickup or delivery, or switch online orders off.",
+      "prep": "Type the minutes as a whole number up to 240.",
+      "minimumFee": "Type the lowest fee, like 10.00. Use 0 for none.",
+      "perKm": "Type the fee per km, like 2.50. Use 0 for none.",
+      "maxKm": "Type a distance from 0.5 to 50 km.",
+      "freeOver": "Type an amount like 200.00, or leave it empty."
+    }
   }
 }

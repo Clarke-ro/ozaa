@@ -864,3 +864,39 @@ The app could count orders itself, but then each phone might count differently, 
 **Try it yourself**
 
 Create an order from Orders, then go back to Today. Orders today and Pending each go up by one.
+
+---
+
+## 2026-11-04 · Online ordering settings
+
+**What we built**
+
+A new **Online ordering** page under Settings:
+- **Take online orders**, the main switch for your menu link (table QR orders aren't affected)
+- **Pickup**, with how many minutes until it's ready
+- **Delivery**, with the lowest fee, the fee per km, the furthest distance, and an optional amount from which delivery is free
+
+A line under the delivery fields works out an example as you type, like "3 km with GH₵50 of food, delivery is GH₵10".
+
+**How it works**
+
+```
+form text → checkOrdering → settings in pesewas → saved on the venue
+deliveryQuote(settings, km, food) = free above the threshold, else max(lowest fee, km × per km)
+```
+
+`deliveryQuote` lives in `src/lib`, so the guest checkout (next) and the server use the same rule.
+
+**Files to look at**
+
+- `src/lib/onlineOrdering.ts` and its test: the fee rule.
+- `src/features/owner/desk/orderingForm.ts` and its test.
+- `src/features/owner/screens/ordering/OnlineOrderingScreen.tsx`.
+
+**New idea: a test that finds a bug**
+
+While writing the form test, "-1" was accepted as GH₵1.00. `parseMoneyInput` threw away the minus sign. We fixed it at the root, in `src/lib/money.ts`, so no money field anywhere can take a negative number.
+
+**Try it yourself**
+
+Set the fee per km to 5 and watch the example change. Then set "Free from" to 40.

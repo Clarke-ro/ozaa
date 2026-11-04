@@ -28,6 +28,7 @@ import {
   ScanLine,
   Settings,
   Settings2,
+  ShoppingBag,
   Smartphone,
   Star,
   Store,
@@ -75,6 +76,7 @@ export const NAV_ICONS: Record<OwnerNavId | 'more', LucideIcon> = {
   promos: TicketPercent,
   integrations: Plug,
   billing: CreditCard,
+  ordering: ShoppingBag,
   more: Menu,
 };
 

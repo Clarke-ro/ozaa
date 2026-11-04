@@ -29,3 +29,4 @@ export { BillingScreen } from './screens/billing/BillingScreen';
 export { CustomersScreen } from './screens/CustomersScreen';
 export { CategoriesScreen } from './screens/menu/CategoriesScreen';
 export { NoticeScreen } from './screens/notice/NoticeScreen';
+export { OnlineOrderingScreen } from './screens/ordering/OnlineOrderingScreen';
