@@ -16,7 +16,12 @@ import { useVenue } from './useVenue';
 import { ErrorState, LoadingState } from '@/ui/states';
 import { OfflineNote } from '@/ui/OfflineNote';
 import { useGuestSession } from '@/features/session';
-import { useGuestNotes } from '@/features/notices';
+import {
+  StoreNoticeBanner,
+  StoreNoticePopup,
+  useGuestNotes,
+  useLiveNotices,
+} from '@/features/notices';
 
 export function HomeScreen({ slug }: { slug: string }) {
   const { t, i18n } = useTranslation();
@@ -29,6 +34,7 @@ export function HomeScreen({ slug }: { slug: string }) {
   const venue = useVenue(slug);
   const notices = useGuestNotes(slug);
   const tableCode = useGuestSession((state) => (state.slug === slug ? state.tableCode : null));
+  const storeNotice = useLiveNotices(venue.data?.notices);
 
   if (venue.isLoading) return <LoadingState />;
   if (venue.isError || !venue.data) return <ErrorState onRetry={() => void venue.refetch()} />;
@@ -37,11 +43,16 @@ export function HomeScreen({ slug }: { slug: string }) {
 
   return (
     <SafeScreen includeTop={false}>
+      {/* The banner takes the top safe area, so the hero below doesn't pad for it twice. */}
+      {storeNotice.banner ? (
+        <StoreNoticeBanner notice={storeNotice.banner} topInset={insets.top} />
+      ) : null}
+      {storeNotice.popup ? <StoreNoticePopup slug={slug} notice={storeNotice.popup} /> : null}
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 96 }}>
         <VenueHomeBody
           venue={place}
           tableCode={tableCode}
-          topInset={insets.top}
+          topInset={storeNotice.banner ? 0 : insets.top}
           languageLabel={language.label}
           onShare={() => {
             void shareVenueLink(pageLink, place.name).then((result) => {

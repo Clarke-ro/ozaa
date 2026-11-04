@@ -1,4 +1,4 @@
-import { ComingSoonScreen } from '@/features/owner';
+import { NoticeScreen } from '@/features/owner';
 export default function Route() {
-  return <ComingSoonScreen page="notice" />;
+  return <NoticeScreen />;
 }

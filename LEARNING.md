@@ -686,3 +686,39 @@ The API stores `available` and `hidden`. The owner sees one choice with three op
 **Try it yourself**
 
 Set a dish's sale price above its normal price. The form stops you. In `dishRules.test.ts`, find the test that says the server would ignore it too.
+
+---
+
+## 2026-11-04 · Store notice: a banner and a popup
+
+**What we built**
+
+A Store notice page for the owner with two cards:
+- **Scrolling banner:** runs across the top of the home and menu pages.
+- **Popup:** shows once when a guest opens the page.
+
+Each has a show/hide switch, the words, and optional start and end times, like "2026-11-04 18:00".
+
+**How it works**
+
+```
+owner types → checkNotice (words, times, end after start) → saved on the venue
+server → guests get only notices that are on and inside their times (liveNotices)
+guest app → checks the times again every minute (useLiveNotices)
+```
+
+The phone remembers which popup a guest closed, by its words, so it doesn't pop up again. If the owner changes the words, it shows once more.
+
+**Files to look at**
+
+- `src/lib/notices.ts`: when a notice is live.
+- `src/features/owner/desk/noticeForm.ts`: reading typed times in the venue's time zone.
+- `src/features/notices/StoreNoticeBanner.tsx` and `StoreNoticePopup.tsx`.
+
+**New idea: time zones**
+
+"18:00" means different moments in Accra and London. We read typed times in the venue's own zone (`hours.timezone`) and save them as one exact moment (UTC). Every phone then shows them right, wherever the owner is.
+
+**Try it yourself**
+
+Set a banner with an end time two minutes from now, open the guest home and wait. It goes away by itself.

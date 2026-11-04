@@ -1590,7 +1590,9 @@
       "order_served": "Order #{{number}} was served. Enjoy!",
       "call_sent": "You asked for: {{reason}}",
       "call_coming": "{{name}} is on the way with: {{reason}}"
-    }
+    },
+    "ok": "OK",
+    "close": "Close"
   },
   "ownerMembers": {
     "search": "Search by diner phone or name",
@@ -1652,7 +1654,6 @@
   },
   "ownerSoon": {
     "title": "Coming soon",
-    "notice": "Soon you can show a banner or a popup on your menu, on a schedule.",
     "promos": "Soon you can make promo codes and discounts for your menu.",
     "integrations": "Soon you can connect your own Paystack account and choose how guests pay.",
     "help": "Help articles are on their way. For now, ask the person who set up Ozaa for you.",
@@ -1667,5 +1668,35 @@
     "placeholder": "These are placeholder prices from the Ozaa pricing page.",
     "included": "included",
     "notIncluded": "not included"
+  },
+  "ownerNotice": {
+    "lead": "A short message on your guest pages, such as a closing time or tonight’s offer.",
+    "banner": {
+      "title": "Scrolling banner",
+      "note": "Runs across the top of your home and menu pages.",
+      "placeholder": "Kitchen closes at 9 tonight"
+    },
+    "popup": {
+      "title": "Popup",
+      "note": "Shows once when a guest opens your page. They see it again only if you change it.",
+      "placeholder": "Live band from 8 on Friday"
+    },
+    "show": "Show to guests",
+    "showOn": "On. Guests see it inside the times below.",
+    "showOff": "Off. Guests don’t see it.",
+    "heading": "Heading",
+    "headingHint": "Optional, for example Tonight",
+    "text": "Message",
+    "count": "{{count}} of 280",
+    "starts": "Starts",
+    "ends": "Ends",
+    "timesHint": "Optional. Leave both empty to show it until you switch it off. Times are in {{zone}}.",
+    "preview": "Preview",
+    "err": {
+      "title": "Keep the heading to 60 characters.",
+      "text": "Type a message of up to 280 characters, or switch this off.",
+      "starts": "Type the start like 2026-11-04 18:00, or leave it empty.",
+      "ends": "Type the end like 2026-11-04 23:00, after the start, or leave it empty."
+    }
   }
 }
