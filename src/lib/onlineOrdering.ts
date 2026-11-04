@@ -1,4 +1,5 @@
-import type { OnlineOrdering } from '@/lib/api/types';
+import type { GeoPoint, OnlineFulfilment, OnlineOrdering } from '@/lib/api/types';
+import { distanceKm } from '@/lib/geo';
 
 /** The venue's online ordering with every part filled in. Missing means everything is off. */
 export function onlineOrderingOf(settings: OnlineOrdering | null | undefined): OnlineOrdering {
@@ -36,4 +37,45 @@ export function deliveryQuote(
     return { ok: true, feePesewas: 0 };
   const byDistance = Math.round(distanceKm * delivery.feePerKmPesewas);
   return { ok: true, feePesewas: Math.max(delivery.minimumFeePesewas, byDistance) };
+}
+
+export type FulfilmentCheck =
+  | { ok: true; source: 'pickup' | 'delivery'; deliveryFeePesewas: number; etaMinutes: number }
+  | {
+      ok: false;
+      code:
+        | 'online_ordering_off'
+        | 'method_off'
+        | 'missing_contact'
+        | 'missing_address'
+        | 'missing_location'
+        | 'no_venue_location'
+        | 'too_far';
+    };
+
+/**
+ * Can this menu-link order be taken, and on what terms? The server's check; the guest app runs
+ * it too, to show the fee and any problem before the customer sends the order.
+ */
+export function checkFulfilment(
+  settings: OnlineOrdering,
+  venuePin: GeoPoint | null,
+  fulfilment: OnlineFulfilment,
+  foodPesewas: number,
+): FulfilmentCheck {
+  if (!settings.enabled) return { ok: false, code: 'online_ordering_off' };
+  if (!fulfilment.contact.name.trim() || !fulfilment.contact.phone)
+    return { ok: false, code: 'missing_contact' };
+  const eta = settings.pickup.prepMinutes;
+  if (fulfilment.type === 'pickup') {
+    if (!settings.pickup.enabled) return { ok: false, code: 'method_off' };
+    return { ok: true, source: 'pickup', deliveryFeePesewas: 0, etaMinutes: eta };
+  }
+  if (!settings.delivery.enabled) return { ok: false, code: 'method_off' };
+  if (!venuePin) return { ok: false, code: 'no_venue_location' };
+  if (!fulfilment.address?.trim()) return { ok: false, code: 'missing_address' };
+  if (!fulfilment.location) return { ok: false, code: 'missing_location' };
+  const quote = deliveryQuote(settings, distanceKm(venuePin, fulfilment.location), foodPesewas);
+  if (!quote.ok) return { ok: false, code: quote.reason === 'too_far' ? 'too_far' : 'method_off' };
+  return { ok: true, source: 'delivery', deliveryFeePesewas: quote.feePesewas, etaMinutes: eta };
 }

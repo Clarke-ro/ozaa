@@ -18,7 +18,10 @@ import type {
   LoyaltyProgram,
   Menu,
   Order,
+  OnlineFulfilment,
   OrderLineInput,
+  OrderSource,
+  OrderContact,
   Payment,
   VenuePublic,
   VenueTheme,
@@ -35,6 +38,7 @@ import {
 } from './ownerDesk';
 import { decideMockCard, readMockCard } from './cardBox';
 import { checkLine, takeStock, unitPrice } from '@/lib/dishRules';
+import { checkFulfilment, onlineOrderingOf } from '@/lib/onlineOrdering';
 import { rememberOpenOrder } from './openOrder';
 import {
   createWorld,
@@ -136,6 +140,52 @@ function themeOf(accent: string | null, fontPair: VenueTheme['fontPair']): Venue
   };
 }
 
+type OrderExtras = {
+  source: OrderSource;
+  contact?: OrderContact | null;
+  deliveryAddress?: string | null;
+  deliveryFeePesewas?: number;
+  etaMinutes?: number;
+};
+
+/** Server rules for a menu-link order; a refusal becomes the same error the real server sends. */
+function linkExtras(
+  venue: VenuePublic,
+  fulfilment: OnlineFulfilment | undefined,
+  foodPesewas: number,
+  forceOn = false,
+): OrderExtras {
+  if (!fulfilment) throw new ApiError(400, 'missing_contact', 'Add your name and phone number');
+  const settings = onlineOrderingOf(venue.onlineOrdering);
+  const pin =
+    venue.location.lat != null && venue.location.lng != null
+      ? { lat: venue.location.lat, lng: venue.location.lng }
+      : null;
+  const check = checkFulfilment(
+    // Staff taking a phone order don't need online ordering switched on.
+    forceOn
+      ? { ...settings, enabled: true, pickup: { ...settings.pickup, enabled: true } }
+      : settings,
+    pin,
+    fulfilment,
+    foodPesewas,
+  );
+  if (!check.ok) {
+    throw new ApiError(
+      check.code === 'missing_contact' ? 400 : 422,
+      check.code,
+      'This order cannot be taken',
+    );
+  }
+  return {
+    source: check.source,
+    contact: { name: fulfilment.contact.name.trim(), phone: fulfilment.contact.phone },
+    deliveryAddress: check.source === 'delivery' ? (fulfilment.address?.trim() ?? null) : null,
+    deliveryFeePesewas: check.deliveryFeePesewas,
+    etaMinutes: check.etaMinutes,
+  };
+}
+
 export function createMockClient(options: MockOptions = {}): ApiClient {
   const now = options.now ?? (() => Date.now());
   const world = createWorld(now());
@@ -164,6 +214,8 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
     body: { lines: OrderLineInput[] },
     tableCode: string | null,
     manual: boolean,
+    /** Runs once the food total is known, before any stock is taken; throws to refuse. */
+    extras: (foodPesewas: number) => OrderExtras = () => ({ source: 'table' }),
   ): Order {
     const lines = body.lines.map((line) => {
       const item = menu.items.find((candidate) => candidate.id === line.menuItemId);
@@ -195,6 +247,9 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
         paid: false,
       };
     });
+    const subtotal = lines.reduce((sum, line) => sum + line.totalPesewas, 0);
+    const extra = extras(subtotal);
+    const deliveryFee = extra.deliveryFeePesewas ?? 0;
     // Stock: two lines of the same dish count together, and nothing is taken until every line is fine.
     const wanted = new Map<string, number>();
     for (const line of body.lines) {
@@ -211,7 +266,6 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       const item = menu.items[index];
       if (item) menu.items[index] = { ...item, ...takeStock(item, quantity) };
     }
-    const subtotal = lines.reduce((sum, line) => sum + line.totalPesewas, 0);
     const order: Order = {
       id: nextId(world, 'ord'),
       number: 100 + world.orders.length,
@@ -222,9 +276,13 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       lines,
       subtotalPesewas: subtotal,
       taxes: [],
-      totalPesewas: subtotal,
+      totalPesewas: subtotal + deliveryFee,
       paidPesewas: 0,
-      etaMinutes: 12,
+      source: extra.source,
+      contact: extra.contact ?? null,
+      deliveryAddress: extra.deliveryAddress ?? null,
+      deliveryFeePesewas: deliveryFee,
+      etaMinutes: extra.etaMinutes ?? 12,
       createdAt: new Date(now()).toISOString(),
       updatedAt: new Date(now()).toISOString(),
       readyAt: null,
@@ -464,7 +522,9 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
         if (venue.published === false) {
           throw new ApiError(422, 'venue_not_published', 'This menu is not open yet');
         }
-        const order = placeOrder(venue, menu, body, session.tableCode, false);
+        const order = placeOrder(venue, menu, body, session.tableCode, false, (food) =>
+          session.tableCode ? { source: 'table' } : linkExtras(venue, body.fulfilment, food),
+        );
         session.orderId = order.id;
         return order;
       });
@@ -969,7 +1029,12 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
         const menu = world.menus[venue.slug];
         if (!menu) throw new ApiError(404, 'order_not_found', 'Menu not found');
         // Works while unpublished, so staff can try the menu before opening.
-        return placeOrder(venue, menu, body, body.tableCode ?? null, true);
+        const tableCode = body.tableCode ?? null;
+        return placeOrder(venue, menu, body, tableCode, true, (food) =>
+          body.fulfilment
+            ? linkExtras(venue, body.fulfilment, food, true)
+            : { source: tableCode ? 'table' : 'pickup' },
+        );
       });
     },
     async ownerSetOrderStatus(orderId, body) {

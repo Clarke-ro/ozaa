@@ -1,4 +1,4 @@
-import { deliveryQuote, onlineOrderingOf } from './onlineOrdering';
+import { checkFulfilment, deliveryQuote, onlineOrderingOf } from './onlineOrdering';
 
 const delivery = {
   enabled: true,
@@ -55,4 +55,82 @@ test('too far, delivery off or ordering off are refused with the reason', () => 
 test('a distance that is not a real number is refused, never charged', () => {
   expect(deliveryQuote(settings, Number.NaN, 5000)).toEqual({ ok: false, reason: 'bad_distance' });
   expect(deliveryQuote(settings, -1, 5000)).toEqual({ ok: false, reason: 'bad_distance' });
+});
+
+describe('checkFulfilment', () => {
+  const venuePin = { lat: 5.556, lng: -0.1822 };
+  const contact = { name: 'Esi', phone: '+233241234567' };
+  // About 2.2 km north of the venue.
+  const near = { lat: 5.576, lng: -0.1822 };
+  const far = { lat: 5.7, lng: -0.1822 };
+
+  test('pickup needs ordering and pickup on, and gives the prep time', () => {
+    expect(checkFulfilment(settings, null, { type: 'pickup', contact }, 5000)).toEqual({
+      ok: true,
+      source: 'pickup',
+      deliveryFeePesewas: 0,
+      etaMinutes: 20,
+    });
+    const noPickup = { ...settings, pickup: { enabled: false, prepMinutes: 20 } };
+    expect(checkFulfilment(noPickup, null, { type: 'pickup', contact }, 5000)).toEqual({
+      ok: false,
+      code: 'method_off',
+    });
+  });
+
+  test('delivery adds the fee for the distance from the venue pin', () => {
+    const check = checkFulfilment(
+      settings,
+      venuePin,
+      { type: 'delivery', contact, address: 'House 4, Oxford St', location: near },
+      5000,
+    );
+    // 2.2 km × 250 = 556, below the 1000 minimum.
+    expect(check).toEqual({
+      ok: true,
+      source: 'delivery',
+      deliveryFeePesewas: 1000,
+      etaMinutes: 20,
+    });
+  });
+
+  test('delivery is refused without the venue pin, the address or the location, or when too far', () => {
+    const order = { type: 'delivery' as const, contact, address: 'House 4', location: near };
+    expect(checkFulfilment(settings, null, order, 5000)).toEqual({
+      ok: false,
+      code: 'no_venue_location',
+    });
+    expect(checkFulfilment(settings, venuePin, { ...order, address: ' ' }, 5000)).toEqual({
+      ok: false,
+      code: 'missing_address',
+    });
+    expect(checkFulfilment(settings, venuePin, { ...order, location: undefined }, 5000)).toEqual({
+      ok: false,
+      code: 'missing_location',
+    });
+    expect(checkFulfilment(settings, venuePin, { ...order, location: far }, 5000)).toEqual({
+      ok: false,
+      code: 'too_far',
+    });
+  });
+
+  test('with online ordering off, nothing can be ordered from the link', () => {
+    expect(
+      checkFulfilment({ ...settings, enabled: false }, null, { type: 'pickup', contact }, 5000),
+    ).toEqual({
+      ok: false,
+      code: 'online_ordering_off',
+    });
+  });
+
+  test('a contact needs a name and a phone', () => {
+    expect(
+      checkFulfilment(
+        settings,
+        null,
+        { type: 'pickup', contact: { name: ' ', phone: '+233241234567' } },
+        5000,
+      ),
+    ).toEqual({ ok: false, code: 'missing_contact' });
+  });
 });
