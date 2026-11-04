@@ -2076,6 +2076,9 @@ components:
         buttonOrder: { type: array, items: { type: string } }
         socials: { $ref: '#/components/schemas/SocialLinks' }
         menuStyle: { $ref: '#/components/schemas/MenuStyle' }
+        published:
+          type: boolean
+          description: False while the owner is still setting up. Guest pages then say the menu isn't open yet, and ordering fails with venue_not_published. Missing means true.
         notices:
           allOf: [{ $ref: '#/components/schemas/StoreNotices' }]
           description: Only notices that are switched on and inside their start and end times right now. Missing or null parts mean nothing to show.
@@ -2109,6 +2112,7 @@ components:
         socials: { $ref: '#/components/schemas/SocialLinks' }
         noticeSettings: { $ref: '#/components/schemas/StoreNotices' }
         menuStyle: { $ref: '#/components/schemas/MenuStyle' }
+        published: { type: boolean }
     Wifi:
       type: object
       required: [ssid, security]
@@ -2224,6 +2228,10 @@ components:
           minimum: 1
           maximum: 50
           description: Largest number a guest may order in one line. Missing means 50. Outside min..max the order fails with quantity_out_of_range.
+        position:
+          type: integer
+          minimum: 0
+          description: Order inside its section when the venue sorts by its own order (itemSort manual). Lower comes first; dishes without one keep the order the menu lists them in, after those that have one.
     MenuItemInput:
       type: object
       properties:
@@ -2264,6 +2272,10 @@ components:
           minimum: 1
           maximum: 50
           description: Largest number a guest may order in one line. Missing means 50. Outside min..max the order fails with quantity_out_of_range.
+        position:
+          type: integer
+          minimum: 0
+          description: Order inside its section when the venue sorts by its own order (itemSort manual). Lower comes first; dishes without one keep the order the menu lists them in, after those that have one.
     Menu:
       type: object
       required: [venueId, updatedAt, categories, items]

@@ -1,4 +1,4 @@
-import { moveSection, sortSections } from './reorder';
+import { dishPositions, moveSection, sortSections } from './reorder';
 
 const cats = [
   { id: 'a', position: 0 },
@@ -46,4 +46,27 @@ test('sortSections orders by position, then by original order', () => {
       { id: 'a', position: 1 },
     ]).map((c) => c.id),
   ).toEqual(['a', 'b']);
+});
+
+describe('dishPositions', () => {
+  const dishes = [
+    { id: 'a', position: 0 },
+    { id: 'b', position: 1 },
+    { id: 'c', position: 2 },
+  ];
+  test('a drag that changes nothing sends nothing', () => {
+    expect(dishPositions(dishes, ['a', 'b', 'c'])).toEqual([]);
+  });
+  test('only dishes whose position changed are sent', () => {
+    expect(dishPositions(dishes, ['a', 'c', 'b'])).toEqual([
+      { id: 'c', position: 1 },
+      { id: 'b', position: 2 },
+    ]);
+  });
+  test('dishes with no position yet all get one', () => {
+    expect(dishPositions([{ id: 'x' }, { id: 'y' }], ['y', 'x'])).toEqual([
+      { id: 'y', position: 0 },
+      { id: 'x', position: 1 },
+    ]);
+  });
 });

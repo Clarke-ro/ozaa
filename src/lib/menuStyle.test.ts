@@ -1,5 +1,5 @@
 import type { MenuItem } from '@/lib/api/types';
-import { guestScheme, menuStyleOf, sortDishes } from './menuStyle';
+import { guestScheme, isPublished, menuStyleOf, sortDishes } from './menuStyle';
 
 const dish = (
   id: string,
@@ -58,4 +58,20 @@ test('auto follows the phone; light and dark are fixed', () => {
   expect(guestScheme('auto', null)).toBe('light');
   expect(guestScheme('dark', 'light')).toBe('dark');
   expect(guestScheme('light', 'dark')).toBe('light');
+});
+
+test('your order uses position first; dishes without one keep their place after', () => {
+  const withPos = [
+    { ...dish('a', 'A', 100), position: 2 },
+    { ...dish('b', 'B', 100) },
+    { ...dish('c', 'C', 100), position: 0 },
+    { ...dish('d', 'D', 100), position: 1 },
+  ];
+  expect(ids(sortDishes(withPos, 'manual'))).toEqual(['c', 'd', 'a', 'b']);
+});
+
+test('a venue is published unless it says false', () => {
+  expect(isPublished({})).toBe(true);
+  expect(isPublished({ published: true })).toBe(true);
+  expect(isPublished({ published: false })).toBe(false);
 });

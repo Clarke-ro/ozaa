@@ -14,7 +14,7 @@ export function menuStyleOf(style: MenuStyle | null | undefined): FullMenuStyle 
 }
 
 type Dish = Pick<MenuItem, 'id' | 'name' | 'pricePesewas' | 'available' | 'badges'> &
-  Partial<Pick<MenuItem, 'salePricePesewas'>>;
+  Partial<Pick<MenuItem, 'salePricePesewas' | 'position'>>;
 
 /**
  * Dishes in the venue's chosen order. Always a new array, and stable: dishes that tie keep the
@@ -23,8 +23,12 @@ type Dish = Pick<MenuItem, 'id' | 'name' | 'pricePesewas' | 'available' | 'badge
 export function sortDishes<T extends Dish>(dishes: readonly T[], sort: Sort): T[] {
   const list = [...dishes];
   switch (sort) {
-    case 'manual':
-      return list;
+    case 'manual': {
+      // Dishes with a position come first, in that order; the rest keep the menu's own order.
+      const rank = (dish: T) => dish.position ?? Number.POSITIVE_INFINITY;
+      // Two dishes without a position give Infinity - Infinity = NaN; `|| 0` turns that into a tie.
+      return list.sort((a, b) => rank(a) - rank(b) || 0);
+    }
     case 'name':
       return list.sort((a, b) =>
         a.name.en.localeCompare(b.name.en, undefined, { sensitivity: 'base' }),
@@ -47,4 +51,9 @@ export function guestScheme(
 ): 'light' | 'dark' {
   if (choice === 'auto') return phone === 'dark' ? 'dark' : 'light';
   return choice;
+}
+
+/** Guests can see the menu unless the owner has unpublished it. Missing means published. */
+export function isPublished(venue: { published?: boolean }): boolean {
+  return venue.published !== false;
 }
