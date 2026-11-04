@@ -21,7 +21,7 @@ import { tokens } from '@/theme/tokens';
 import { useTheme } from '@/ui/theme';
 import { DietFilterSheet } from './DietFilterSheet';
 import { DishCard } from './DishCard';
-import { canQuickAdd, searchItems } from './dishLogic';
+import { canQuickAdd, searchItems } from '@/lib/dishLogic';
 import { dietOptions } from '@/lib/dietary';
 import { filterMenuItems } from './filterMenu';
 import { MenuCartBar } from './MenuCartBar';

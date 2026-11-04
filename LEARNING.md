@@ -794,3 +794,34 @@ The preview draws dishes with the same `DishRow` guests get, inside the venue's 
 **Try it yourself**
 
 Switch "Menu is published" off, then open your menu link in another tab.
+
+---
+
+## 2026-11-04 · Orders by date, and orders staff type in
+
+**What we built**
+
+Orders has a second row of chips: All time, Today, Yesterday, Last 7 days and Last 30 days. There's also a **Create order** button for owners, managers and waiters, for a guest at the counter or on the phone. You pick a table (or Counter), add dishes, choose their options and add a note. The order goes to the kitchen like any other.
+
+**How it works**
+
+```
+range chip → orderRange(range, now, venue time zone) → { since, until } → ownerListOrders
+Create order → manualOrder(lines) → checks + estimate → ownerCreateOrder → same pricing as guests
+```
+
+The server works out the real total. The amount on the button is only a guide.
+
+**Files to look at**
+
+- `src/features/owner/desk/orderRange.ts` and `manualOrder.ts`, with their tests.
+- `src/features/owner/screens/orders/CreateOrderSheet.tsx` and `PickDishRow.tsx`.
+- `placeOrder` in `src/mocks/mockClient.ts`: one path for guest and staff orders.
+
+**New idea: idempotency**
+
+The sheet makes one id when it opens and sends it with the order. If the phone's connection drops and the order is sent again, the server sees the same id and returns the first order instead of making a second one.
+
+**Try it yourself**
+
+Create an order for the Counter, then find it under New. It says Takeaway, because it has no table.

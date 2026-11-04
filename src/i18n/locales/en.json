@@ -1333,7 +1333,33 @@
     "items_one": "{{count}} item",
     "items_other": "{{count}} items",
     "openCalls_one": "{{count}} table waiting for you",
-    "openCalls_other": "{{count}} tables waiting for you"
+    "openCalls_other": "{{count}} tables waiting for you",
+    "range": {
+      "label": "Dates",
+      "all": "All time",
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "7d": "Last 7 days",
+      "30d": "Last 30 days"
+    },
+    "create": {
+      "open": "Create order",
+      "title": "Create order",
+      "lead": "For a guest at the counter or on the phone. It goes to the kitchen like any other order.",
+      "table": "Table",
+      "counter": "Counter",
+      "dishes": "Dishes",
+      "howMany": "How many {{name}}",
+      "required": "pick one",
+      "note": "Note for the kitchen",
+      "notePlaceholder": "For example: no pepper",
+      "send": "Send order · {{total}}",
+      "sendEmpty": "Send order",
+      "estimate": "The total is worked out again when the order is sent.",
+      "errEmpty": "Add at least one dish.",
+      "errChoice": "Pick the {{group}} for the dish marked in red.",
+      "sent": "Order #{{number}} sent to the kitchen"
+    }
   },
   "ownerCalls": {
     "status": {

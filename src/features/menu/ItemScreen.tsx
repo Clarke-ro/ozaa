@@ -18,7 +18,7 @@ import { VenueImage } from '@/ui/VenueImage';
 import { ErrorState, LoadingState } from '@/ui/states';
 import { tokens } from '@/theme/tokens';
 import { useTheme } from '@/ui/theme';
-import { addOnTotal, missingChoice, pickOption } from './dishLogic';
+import { addOnTotal, missingChoice, pickOption } from '@/lib/dishLogic';
 import { DishPrice } from './DishPrice';
 import { DishGallery } from './DishGallery';
 import { guestKeys } from '@/lib/queryKeys';
