@@ -2002,6 +2002,12 @@ export interface components {
         Currency: "GHS" | "NGN" | "KES" | "ZAR" | "XOF" | "USD";
         OwnerDashboard: {
             salesTodayPesewas: components["schemas"]["Pesewas"];
+            /** @description Orders placed since midnight in the venue's time zone, not counting cancelled ones. */
+            ordersToday: number;
+            /** @description Orders still waiting for the kitchen to start (status received). */
+            pendingOrders: number;
+            /** @description Guest visits since midnight in the venue's time zone. One table scan or one opened menu link is one visit; no guest is identified. */
+            visitorsToday: number;
             currency: components["schemas"]["Currency"];
             /** @description Versus the same venue yesterday. Null when yesterday was zero. */
             changePercent: number | null;

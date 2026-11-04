@@ -124,3 +124,25 @@ test('with payments off and no bill requests, served unpaid orders raise nothing
   });
   expect(summary.alerts).toEqual([]);
 });
+
+test('orders today skip cancelled ones and earlier days; pending counts only received', () => {
+  const order = (status: string, createdAt: string) => ({
+    status,
+    paidPesewas: 0,
+    createdAt,
+    paymentStatus: 'unpaid',
+  });
+  const summary = summarizeDay({
+    ...base,
+    orders: [
+      order('received', '2026-10-31T09:00:00Z'),
+      order('received', '2026-10-30T22:00:00Z'),
+      order('preparing', '2026-10-31T10:00:00Z'),
+      order('cancelled', '2026-10-31T11:00:00Z'),
+      order('served', '2026-10-31T12:00:00Z'),
+    ],
+  });
+  expect(summary.ordersToday).toBe(3);
+  // Yesterday's received ticket still needs the kitchen, so it counts as pending.
+  expect(summary.pendingOrders).toBe(2);
+});

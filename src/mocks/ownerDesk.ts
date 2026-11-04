@@ -1,5 +1,6 @@
 import { pesewas } from '@/lib/brand';
 import type {
+  VenuePublic,
   InsightsReport,
   Order,
   OwnerDashboard,
@@ -8,7 +9,7 @@ import type {
 } from '@/lib/api/types';
 import { ApiError } from '@/lib/api/errors';
 import { PAYMENTS_ENABLED } from '@/lib/features';
-import { summarizeDay } from '../features/owner/desk/daySummary';
+import { calendarDay, summarizeDay } from '../features/owner/desk/daySummary';
 import { deriveFloor, type FloorOrder } from '../features/owner/floor/floorStatus';
 import { refundCharge } from '../features/owner/desk/refund';
 import { venueById, type World } from './world';
@@ -47,6 +48,20 @@ export function floorFor(world: World, venueId: string) {
       payments: PAYMENTS_ENABLED,
     }),
   };
+}
+
+/** Guest sessions started today (venue's zone). One scan or one opened link is one visit. */
+function visitsToday(world: World, venue: VenuePublic, now: number): number {
+  const today = calendarDay(new Date(now).toISOString(), venue.hours.timezone);
+  let count = 0;
+  for (const session of world.sessions.values()) {
+    if (
+      session.slug === venue.slug &&
+      calendarDay(session.startedAt, venue.hours.timezone) === today
+    )
+      count += 1;
+  }
+  return count;
 }
 
 export function dashboardFor(world: World, venueId: string, now: number): OwnerDashboard {
@@ -89,6 +104,9 @@ export function dashboardFor(world: World, venueId: string, now: number): OwnerD
     ratingAverage: summary.ratingAverage,
     ratingCount: summary.ratingCount,
     alerts: summary.alerts,
+    ordersToday: summary.ordersToday,
+    pendingOrders: summary.pendingOrders,
+    visitorsToday: (world.visitorBase[venueId] ?? 0) + visitsToday(world, venue, now),
   };
 }
 
