@@ -484,6 +484,54 @@ export function createHttpClient(baseUrl: string, tokens: TokenSource): ApiClien
           headers: headers('access', call),
         }),
       ),
+    ownerRecordManualPayment: (orderId, body, call) =>
+      ok(
+        client.POST('/owner/orders/{orderId}/manual-payment', {
+          body,
+          params: {
+            path: { orderId },
+            header: { 'Idempotency-Key': call?.idempotencyKey ?? '' },
+          },
+          headers: headers('access', call),
+        }),
+      ),
+    ownerGetPaymentSettings: (venueId) =>
+      ok(
+        client.GET('/owner/venues/{venueId}/payment-settings', {
+          params: { path: { venueId } },
+          headers: headers('access'),
+        }),
+      ),
+    ownerSetManualPayments: (venueId, body) =>
+      ok(
+        client.PUT('/owner/venues/{venueId}/payment-settings/manual', {
+          body,
+          params: { path: { venueId } },
+          headers: headers('access'),
+        }),
+      ),
+    ownerConnectPaystack: (venueId, body) =>
+      ok(
+        client.PUT('/owner/venues/{venueId}/payment-settings/paystack', {
+          body,
+          params: { path: { venueId } },
+          headers: headers('access'),
+        }),
+      ),
+    ownerDisconnectPaystack: (venueId) =>
+      ok(
+        client.DELETE('/owner/venues/{venueId}/payment-settings/paystack', {
+          params: { path: { venueId } },
+          headers: headers('access'),
+        }),
+      ),
+    ownerTestPaystack: (venueId) =>
+      ok(
+        client.POST('/owner/venues/{venueId}/payment-settings/paystack/test', {
+          params: { path: { venueId } },
+          headers: headers('access'),
+        }),
+      ),
     ownerGetSales: (venueId, filter) =>
       ok(
         client.GET('/owner/venues/{venueId}/sales', {

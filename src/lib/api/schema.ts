@@ -713,6 +713,101 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/owner/venues/{venueId}/payment-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** How this venue takes payment: its own Paystack account (if connected) and the manual methods. Owner only. */
+        get: operations["ownerGetPaymentSettings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/payment-settings/manual": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Switch cash, card machine, bank transfer and MoMo-to-merchant on or off, with their details. */
+        put: operations["ownerSetManualPayments"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/payment-settings/paystack": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Connect the venue's own Paystack account with its public and secret keys. The server checks them with Paystack first.
+         * @description Money goes straight to the venue's Paystack account; Ozaa never holds it. The secret key is
+         *     stored encrypted on the server only. It is never returned, logged or sent to an app.
+         *     Fails with paystack_keys_invalid (Paystack refused them), paystack_mode_mismatch (test keys
+         *     in live mode or the reverse) or live_not_enabled (Ozaa takes test keys only for now).
+         */
+        put: operations["ownerConnectPaystack"];
+        post?: never;
+        /** Remove the Paystack keys. Guests can no longer pay online; manual methods stay. */
+        delete: operations["ownerDisconnectPaystack"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/payment-settings/paystack/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Check the saved keys still work with Paystack, without taking any money. */
+        post: operations["ownerTestPaystack"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/orders/{orderId}/manual-payment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Staff mark an order paid by cash, card machine, bank transfer or MoMo to the merchant number.
+         * @description Marks the whole order total as paid. Owners, managers and waiters. A second call for a paid order changes nothing.
+         */
+        post: operations["ownerRecordManualPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/owner/venues/{venueId}/waiter-calls": {
         parameters: {
             query?: never;
@@ -1506,8 +1601,9 @@ export interface components {
             languages: components["schemas"]["Language"][];
             /** Format: uri */
             googleReviewUrl?: string | null;
-            /** @description False until the payout account is checked. */
+            /** @description Older field, same as payMethods.online: true when the venue's own Paystack is connected. */
             payEnabled: boolean;
+            payMethods?: components["schemas"]["GuestPayMethods"];
             tagline?: string;
             /** @enum {string} */
             buttonTint?: "auto" | "light" | "dark";
@@ -1782,6 +1878,8 @@ export interface components {
             totalPesewas: components["schemas"]["Pesewas"];
             paidPesewas: components["schemas"]["Pesewas"];
             source?: components["schemas"]["OrderSource"];
+            /** @description Set when the order is paid. Null while unpaid. */
+            paymentMethod?: components["schemas"]["PaymentMethodUsed"] | null;
             /** @description Menu-link orders only. */
             contact?: components["schemas"]["OrderContact"] | null;
             deliveryAddress?: string | null;
@@ -2042,6 +2140,78 @@ export interface components {
             menuItemId?: components["schemas"]["MenuItemId"];
             /** Format: date-time */
             endsAt?: string | null;
+        };
+        /** @enum {string} */
+        ManualPaymentMethod: "cash" | "card_machine" | "bank_transfer" | "momo_merchant";
+        /**
+         * @description How an order was paid. Online ones come from Paystack (through the venue's own account); the rest are marked by staff.
+         * @enum {string}
+         */
+        PaymentMethodUsed: "online_card" | "online_momo" | "cash" | "card_machine" | "bank_transfer" | "momo_merchant";
+        ManualPayments: {
+            cash: boolean;
+            /** @description A card machine (POS terminal) at the counter. */
+            cardMachine: boolean;
+            bankTransfer: {
+                enabled: boolean;
+                bankName?: string;
+                accountName?: string;
+                accountNumber?: string;
+            };
+            /** @description The venue's own MoMo merchant number, shown to guests to send money to. */
+            momo: {
+                enabled: boolean;
+                network?: components["schemas"]["MomoProvider"];
+                number?: components["schemas"]["GhanaPhone"];
+                /** @description The name guests see when they send, to check it's right. */
+                name?: string;
+            };
+        };
+        PaystackConnection: {
+            /** @enum {string} */
+            mode: "test" | "live";
+            /** @description Safe to show; it starts with pk_test_ or pk_live_. */
+            publicKey: string;
+            /**
+             * @description The last 4 characters only. The secret key itself is never returned.
+             * @example ••••1a2b
+             */
+            secretKeyHint: string;
+            /** Format: date-time */
+            connectedAt: string;
+            /** Format: date-time */
+            lastCheckedAt?: string | null;
+        };
+        PaystackKeysInput: {
+            /** @enum {string} */
+            mode: "test" | "live";
+            publicKey: string;
+            /** @description Sent once over HTTPS to be checked and stored encrypted. Never returned. */
+            secretKey: string;
+        };
+        PaymentSettings: {
+            /** @description Null until the owner connects their own Paystack account. */
+            paystack: components["schemas"]["PaystackConnection"] | null;
+            manual: components["schemas"]["ManualPayments"];
+        };
+        /** @description What a guest can use to pay at this venue. Built from the venue's payment settings; never includes a key. */
+        GuestPayMethods: {
+            /** @description True when the venue's Paystack is connected: card and MoMo prompt in the app. */
+            online: boolean;
+            /** @description True while the venue uses Paystack test keys. Show a "Test payment" label. */
+            testMode?: boolean;
+            cash: boolean;
+            cardMachine: boolean;
+            bankTransfer?: {
+                bankName?: string;
+                accountName?: string;
+                accountNumber?: string;
+            } | null;
+            momo?: {
+                network?: components["schemas"]["MomoProvider"];
+                number?: components["schemas"]["GhanaPhone"];
+                name?: string;
+            } | null;
         };
         PayoutAccountInput: {
             businessName: string;
@@ -3878,6 +4048,168 @@ export interface operations {
                     "application/json": components["schemas"]["Order"];
                 };
             };
+        };
+    };
+    ownerGetPaymentSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK. The Paystack secret key is never returned, only its last 4 characters. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentSettings"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    ownerSetManualPayments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ManualPayments"];
+            };
+        };
+        responses: {
+            /** @description Saved. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentSettings"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    ownerConnectPaystack: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PaystackKeysInput"];
+            };
+        };
+        responses: {
+            /** @description Connected. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentSettings"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["Unprocessable"];
+        };
+    };
+    ownerDisconnectPaystack: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Disconnected. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentSettings"];
+                };
+            };
+        };
+    };
+    ownerTestPaystack: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The result of the check. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        ok: boolean;
+                        /** Format: date-time */
+                        checkedAt: string;
+                        /** @description Plain words, safe to show, when ok is false. */
+                        message?: string;
+                    };
+                };
+            };
+        };
+    };
+    ownerRecordManualPayment: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description A new UUID per user action. Reuse it when retrying the same action. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                orderId: components["parameters"]["OrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    method: components["schemas"]["ManualPaymentMethod"];
+                };
+            };
+        };
+        responses: {
+            /** @description Saved. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Order"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
         };
     };
     ownerListWaiterCalls: {

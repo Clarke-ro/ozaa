@@ -1024,6 +1024,121 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Order' }
+  /owner/venues/{venueId}/payment-settings:
+    get:
+      tags: [owner-payments]
+      operationId: ownerGetPaymentSettings
+      security: [{ ownerAuth: [] }]
+      summary: "How this venue takes payment: its own Paystack account (if connected) and the manual methods. Owner only."
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      responses:
+        '200':
+          description: OK. The Paystack secret key is never returned, only its last 4 characters.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaymentSettings' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /owner/venues/{venueId}/payment-settings/manual:
+    put:
+      tags: [owner-payments]
+      operationId: ownerSetManualPayments
+      security: [{ ownerAuth: [] }]
+      summary: Switch cash, card machine, bank transfer and MoMo-to-merchant on or off, with their details.
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ManualPayments' }
+      responses:
+        '200':
+          description: Saved.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaymentSettings' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /owner/venues/{venueId}/payment-settings/paystack:
+    put:
+      tags: [owner-payments]
+      operationId: ownerConnectPaystack
+      security: [{ ownerAuth: [] }]
+      summary: "Connect the venue's own Paystack account with its public and secret keys. The server checks them with Paystack first."
+      description: |
+        Money goes straight to the venue's Paystack account; Ozaa never holds it. The secret key is
+        stored encrypted on the server only. It is never returned, logged or sent to an app.
+        Fails with paystack_keys_invalid (Paystack refused them), paystack_mode_mismatch (test keys
+        in live mode or the reverse) or live_not_enabled (Ozaa takes test keys only for now).
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PaystackKeysInput' }
+      responses:
+        '200':
+          description: Connected.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaymentSettings' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+    delete:
+      tags: [owner-payments]
+      operationId: ownerDisconnectPaystack
+      security: [{ ownerAuth: [] }]
+      summary: Remove the Paystack keys. Guests can no longer pay online; manual methods stay.
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      responses:
+        '200':
+          description: Disconnected.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaymentSettings' }
+  /owner/venues/{venueId}/payment-settings/paystack/test:
+    post:
+      tags: [owner-payments]
+      operationId: ownerTestPaystack
+      security: [{ ownerAuth: [] }]
+      summary: Check the saved keys still work with Paystack, without taking any money.
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      responses:
+        '200':
+          description: The result of the check.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok, checkedAt]
+                properties:
+                  ok: { type: boolean }
+                  checkedAt: { type: string, format: date-time }
+                  message: { type: string, description: "Plain words, safe to show, when ok is false." }
+  /owner/orders/{orderId}/manual-payment:
+    post:
+      tags: [owner-orders]
+      operationId: ownerRecordManualPayment
+      security: [{ ownerAuth: [] }]
+      summary: Staff mark an order paid by cash, card machine, bank transfer or MoMo to the merchant number.
+      description: Marks the whole order total as paid. Owners, managers and waiters. A second call for a paid order changes nothing.
+      parameters: [{ $ref: '#/components/parameters/OrderId' }, { $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [method]
+              properties:
+                method: { $ref: '#/components/schemas/ManualPaymentMethod' }
+      responses:
+        '200':
+          description: Saved.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
   /owner/venues/{venueId}/waiter-calls:
     get:
       tags: [owner-orders]
@@ -2143,7 +2258,8 @@ components:
         currency: { $ref: '#/components/schemas/Currency' }
         languages: { type: array, items: { $ref: '#/components/schemas/Language' } }
         googleReviewUrl: { type: ['string', 'null'], format: uri }
-        payEnabled: { type: boolean, description: False until the payout account is checked. }
+        payEnabled: { type: boolean, description: "Older field, same as payMethods.online: true when the venue's own Paystack is connected." }
+        payMethods: { $ref: '#/components/schemas/GuestPayMethods' }
         tagline: { type: string, maxLength: 100 }
         buttonTint: { type: string, enum: [auto, light, dark] }
         stylePreset: { type: string, enum: [default, classic, editorial, modern] }
@@ -2473,6 +2589,9 @@ components:
         totalPesewas: { $ref: '#/components/schemas/Pesewas' }
         paidPesewas: { $ref: '#/components/schemas/Pesewas' }
         source: { $ref: '#/components/schemas/OrderSource' }
+        paymentMethod:
+          oneOf: [{ $ref: '#/components/schemas/PaymentMethodUsed' }, { type: 'null' }]
+          description: Set when the order is paid. Null while unpaid.
         contact:
           oneOf: [{ $ref: '#/components/schemas/OrderContact' }, { type: 'null' }]
           description: Menu-link orders only.
@@ -2743,6 +2862,81 @@ components:
         menuItemId: { $ref: '#/components/schemas/MenuItemId' }
         endsAt: { type: ['string', 'null'], format: date-time }
 
+    ManualPaymentMethod:
+      type: string
+      enum: [cash, card_machine, bank_transfer, momo_merchant]
+    PaymentMethodUsed:
+      type: string
+      enum: [online_card, online_momo, cash, card_machine, bank_transfer, momo_merchant]
+      description: How an order was paid. Online ones come from Paystack (through the venue's own account); the rest are marked by staff.
+    ManualPayments:
+      type: object
+      required: [cash, cardMachine, bankTransfer, momo]
+      properties:
+        cash: { type: boolean }
+        cardMachine: { type: boolean, description: A card machine (POS terminal) at the counter. }
+        bankTransfer:
+          type: object
+          required: [enabled]
+          properties:
+            enabled: { type: boolean }
+            bankName: { type: string, maxLength: 60 }
+            accountName: { type: string, maxLength: 60 }
+            accountNumber: { type: string, maxLength: 30 }
+        momo:
+          type: object
+          required: [enabled]
+          description: The venue's own MoMo merchant number, shown to guests to send money to.
+          properties:
+            enabled: { type: boolean }
+            network: { $ref: '#/components/schemas/MomoProvider' }
+            number: { $ref: '#/components/schemas/GhanaPhone' }
+            name: { type: string, maxLength: 60, description: "The name guests see when they send, to check it's right." }
+    PaystackConnection:
+      type: object
+      required: [mode, publicKey, secretKeyHint, connectedAt]
+      properties:
+        mode: { type: string, enum: [test, live] }
+        publicKey: { type: string, description: "Safe to show; it starts with pk_test_ or pk_live_." }
+        secretKeyHint: { type: string, example: '••••1a2b', description: The last 4 characters only. The secret key itself is never returned. }
+        connectedAt: { type: string, format: date-time }
+        lastCheckedAt: { type: ['string', 'null'], format: date-time }
+    PaystackKeysInput:
+      type: object
+      required: [mode, publicKey, secretKey]
+      properties:
+        mode: { type: string, enum: [test, live] }
+        publicKey: { type: string, pattern: '^pk_(test|live)_[A-Za-z0-9]{10,}$' }
+        secretKey: { type: string, writeOnly: true, pattern: '^sk_(test|live)_[A-Za-z0-9]{10,}$', description: "Sent once over HTTPS to be checked and stored encrypted. Never returned." }
+    PaymentSettings:
+      type: object
+      required: [paystack, manual]
+      properties:
+        paystack:
+          oneOf: [{ $ref: '#/components/schemas/PaystackConnection' }, { type: 'null' }]
+          description: Null until the owner connects their own Paystack account.
+        manual: { $ref: '#/components/schemas/ManualPayments' }
+    GuestPayMethods:
+      type: object
+      required: [online, cash, cardMachine]
+      description: What a guest can use to pay at this venue. Built from the venue's payment settings; never includes a key.
+      properties:
+        online: { type: boolean, description: "True when the venue's Paystack is connected: card and MoMo prompt in the app." }
+        testMode: { type: boolean, description: True while the venue uses Paystack test keys. Show a "Test payment" label. }
+        cash: { type: boolean }
+        cardMachine: { type: boolean }
+        bankTransfer:
+          type: ['object', 'null']
+          properties:
+            bankName: { type: string }
+            accountName: { type: string }
+            accountNumber: { type: string }
+        momo:
+          type: ['object', 'null']
+          properties:
+            network: { $ref: '#/components/schemas/MomoProvider' }
+            number: { $ref: '#/components/schemas/GhanaPhone' }
+            name: { type: string }
     PayoutAccountInput:
       type: object
       required: [businessName, settlement]
