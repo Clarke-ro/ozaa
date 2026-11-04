@@ -328,13 +328,14 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       return {
         guestToken: token,
         expiresAt: new Date(now() + 12 * 3600_000).toISOString(),
-        venue: publicVenue(venue),
+        venue: publicVenue(venue, world.notices[venue.slug], now()),
         table,
       };
     },
     async getVenue(slug, call) {
       await gate();
-      const venue = publicVenue(venueBySlug(world, slug));
+      const found = venueBySlug(world, slug);
+      const venue = publicVenue(found, world.notices[found.slug], now());
       const tag = etag(venue);
       if (call?.ifNoneMatch === tag) throw new ApiError(304, 'not_modified', 'Not modified');
       return venue;
@@ -706,13 +707,17 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       await gate();
       accessOf(world, tokens);
       const venue = venueById(world, venueId);
-      return { ...venue, wifi: world.wifi[venue.slug] };
+      return {
+        ...venue,
+        wifi: world.wifi[venue.slug],
+        noticeSettings: world.notices[venue.slug] ?? { banner: null, popup: null },
+      };
     },
     async ownerUpdateVenue(venueId, body) {
       await gate();
       accessOf(world, tokens);
       const venue = venueById(world, venueId);
-      const { bannerMediaId, logoMediaId, ...fields } = body;
+      const { bannerMediaId, logoMediaId, noticeSettings, ...fields } = body;
       const banner = mockUploadedImage(bannerMediaId) ?? venue.banner;
       const logo = logoMediaId === null ? null : (mockUploadedImage(logoMediaId) ?? venue.logo);
       const next = {
@@ -724,7 +729,15 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       };
       world.venues[venue.slug] = next;
       if (body.wifi) world.wifi[venue.slug] = body.wifi;
-      return { ...next, wifi: world.wifi[venue.slug] };
+      if (noticeSettings) {
+        const current = world.notices[venue.slug] ?? { banner: null, popup: null };
+        world.notices[venue.slug] = { ...current, ...noticeSettings };
+      }
+      return {
+        ...next,
+        wifi: world.wifi[venue.slug],
+        noticeSettings: world.notices[venue.slug] ?? { banner: null, popup: null },
+      };
     },
     async ownerSetTheme(venueId, body) {
       await gate();
