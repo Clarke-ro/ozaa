@@ -34,7 +34,8 @@ export type OwnerNavId =
   | 'promos'
   | 'integrations'
   | 'billing'
-  | 'ordering';
+  | 'ordering'
+  | 'sales';
 
 // Main runs the menu and guest page, Sales runs service and money, Settings holds the set-up pages.
 export type NavGroup = 'main' | 'sales' | 'settings' | 'previews';
@@ -80,6 +81,7 @@ export const OWNER_NAV: readonly OwnerNavItem[] = [
     roles: ['owner', 'manager', 'waiter', 'kitchen'],
     group: 'sales',
   },
+  { id: 'sales', href: '/owner/sales', roles: DESK, group: 'sales' },
   { id: 'floor', href: '/owner/floor', roles: FRONT, group: 'sales' },
   { id: 'calls', href: '/owner/calls', roles: FRONT, group: 'sales' },
   {

@@ -621,7 +621,8 @@
       "promos": "Codes and discounts",
       "integrations": "Payments and connected apps",
       "billing": "Your Ozaa plan",
-      "ordering": "Pickup and delivery from your menu link"
+      "ordering": "Pickup and delivery from your menu link",
+      "sales": "Money, orders and top dishes"
     },
     "alertCalls_one": "1 waiter call is waiting.",
     "alertCalls_other": "{{count}} waiter calls are waiting.",
@@ -639,7 +640,8 @@
     "promos": "Promos and coupons",
     "integrations": "Integrations",
     "billing": "Billing",
-    "ordering": "Online ordering"
+    "ordering": "Online ordering",
+    "sales": "Sales"
   },
   "errors": {
     "generic": "Something went wrong. Try again.",
@@ -1377,7 +1379,8 @@
       "pickupFor": "Pickup · {{name}}",
       "deliveryFor": "Delivery · {{name}}",
       "pickupCode": "PU",
-      "deliveryCode": "DL"
+      "deliveryCode": "DL",
+      "table": "Table"
     },
     "call": "Call {{name}}"
   },
@@ -1859,5 +1862,32 @@
       "payPickup": "Pay when you collect it.",
       "payDelivery": "Pay the rider when your food arrives."
     }
+  },
+  "ownerSales": {
+    "lead": "What was ordered, from every table and your menu link. Paid or not; payments come separately.",
+    "stats": {
+      "value": "Order value",
+      "orders": "Orders",
+      "completed": "Completed",
+      "inProgress": "In progress",
+      "cancelled": "Cancelled",
+      "discounts": "Discounts given"
+    },
+    "notes": {
+      "value": "Cancelled orders not counted",
+      "orders": "Not counting cancelled",
+      "completed": "Served or handed over",
+      "inProgress": "New, cooking or ready",
+      "cancelled": "Rejected or cancelled",
+      "discounts": "From sale prices"
+    },
+    "overTime": "Order value by day",
+    "overTimeSummary": "Order value for each day in the range",
+    "bySource": "Where orders came from",
+    "deliveryFees": "Includes {{amount}} in delivery fees",
+    "orders_one": "{{count}} order",
+    "orders_other": "{{count}} orders",
+    "topItems": "Top dishes",
+    "empty": "No orders in these dates yet."
   }
 }
