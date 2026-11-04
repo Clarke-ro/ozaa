@@ -10,6 +10,7 @@ import { useTheme } from '@/ui/theme';
 import { useOwnerSession } from '@/features/session';
 import { EmptyCard, ToastHost } from '../kit';
 import { NavRow, useGoTo } from './NavRow';
+import { useArrivalChime } from '../data/useArrivalChime';
 import { Sidebar } from './Sidebar';
 import { canOpen, isCurrent, tabsFor } from './nav';
 
@@ -24,6 +25,7 @@ export function OwnerChrome({ children }: { children: ReactNode }) {
   const theme = useTheme();
   const role = useOwnerSession((state) => state.role) ?? 'waiter';
   const path = usePathname();
+  useArrivalChime();
   const tabBarSpace = wide
     ? tokens.space[6]
     : TAB_BAR_HEIGHT + Math.max(insets.bottom, tokens.space[2]) + tokens.space[3];

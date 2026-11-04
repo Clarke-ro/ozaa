@@ -599,7 +599,7 @@ Approved by Clarke on 2026-11-03. Details and file locations are in `docs/menuri
 - [x] 4b.1 Sidebar in Main / Sales / Settings, collapsible, plan badge at the top (landing placeholder plans), help, profile and log out at the bottom. Pages with no screen yet open a "Coming soon" page.
 - [x] 4b.2 Home: "Complete your setup" checklist with a % bar, worked out from data the app already loads.
 - [x] 4b.3 Orders: counts on every tab, All and Rejected tabs, waiter calls and bill requests on Orders.
-- [ ] 4b.4 Sound alert for new orders and waiter calls while the owner app is open.
+- [x] 4b.4 Sound alert for new orders and waiter calls while the owner app is open.
 - [ ] 4b.5 Categories as its own page.
 - [ ] 4b.6 QR codes and links page: menu link (copy, share, download QR), embed snippet, table QR codes.
 - [ ] 4b.7 "Size" preset in the add-ons editor (one required choice, each size with its own price).

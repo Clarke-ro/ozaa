@@ -20,6 +20,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          # Astro needs a recent 22.x; the runner's cached 22 can be older, so ask for the newest.
+          check-latest: true
           cache: npm
           cache-dependency-path: landing/package-lock.json
       - run: npm ci
