@@ -616,3 +616,34 @@ Owners paste our code into their own site. If a venue name had a `"` in it, the 
 **Try it yourself**
 
 Copy the code, paste it into a file called `test.html`, and open that file in your browser.
+
+---
+
+## 2026-11-03 · Sizes for a dish
+
+**What we built**
+
+In the dish editor, under Add-ons, there's a new **Add sizes** button. It adds a "Size" group with Small, Medium and Large. The guest must pick one. You type how much more each bigger size costs.
+
+**How it works**
+
+```
+dish price GH₵50  +  Size: Small +0 / Medium +10 / Large +20
+guest picks Large → the order line is GH₵70
+```
+
+Sizes are just an add-on group with the rule "Pick one". The server already adds the chosen add-on's price to the dish price, so we didn't need to change the API.
+
+**Files to look at**
+
+- `src/features/owner/screens/menu/addOnPresets.ts`: `sizeGroup` and `blankGroup`.
+- `src/features/owner/screens/menu/GroupCard.tsx`: one group, now in its own file.
+- `src/mocks/mockClient.ts` (search `extra`): where the add-on price is added.
+
+**New idea: reuse a model before inventing one**
+
+We could have added a new "variations" field to the API. Using the add-on group we already had gives the same result with no API change, no new server code and no new tests for the money maths.
+
+**Try it yourself**
+
+Edit a dish, add sizes, set Large to 20 and save. Then order it as a guest and check the line total.
