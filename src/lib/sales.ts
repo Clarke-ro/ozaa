@@ -3,6 +3,8 @@ import type { Order, OrderSource } from '@/lib/api/types';
 /** Only what the report reads, so tests and the mock can pass small objects. */
 export type SalesOrder = Pick<Order, 'status' | 'createdAt' | 'totalPesewas'> & {
   source?: OrderSource;
+  paymentStatus?: Order['paymentStatus'];
+  paymentMethod?: Order['paymentMethod'];
   deliveryFeePesewas?: number;
   lines: { name: string; quantity: number; totalPesewas: number; discountPesewas?: number }[];
 };
@@ -13,6 +15,7 @@ export type SalesNumbers = {
   byStatus: Record<Order['status'], number>;
   discountsPesewas: number;
   deliveryFeesPesewas: number;
+  payments: { onlinePesewas: number; inPersonPesewas: number; unpaidPesewas: number };
   bySource: { source: OrderSource; orders: number; pesewas: number }[];
   topItems: { name: string; count: number; pesewas: number }[];
   days: { date: string; orders: number; pesewas: number }[];
@@ -49,6 +52,7 @@ export function salesReport(orders: readonly SalesOrder[], timeZone: string): Sa
   let discountsPesewas = 0;
   let deliveryFeesPesewas = 0;
   let orderCount = 0;
+  const payments = { onlinePesewas: 0, inPersonPesewas: 0, unpaidPesewas: 0 };
 
   for (const order of orders) {
     byStatus[order.status] += 1;
@@ -56,6 +60,14 @@ export function salesReport(orders: readonly SalesOrder[], timeZone: string): Sa
     orderCount += 1;
     valuePesewas += order.totalPesewas;
     deliveryFeesPesewas += order.deliveryFeePesewas ?? 0;
+    // Only a fully paid order counts as paid; part-paid still has money to collect.
+    if (order.paymentStatus === 'paid') {
+      const online = order.paymentMethod === 'online_card' || order.paymentMethod === 'online_momo';
+      if (online) payments.onlinePesewas += order.totalPesewas;
+      else payments.inPersonPesewas += order.totalPesewas;
+    } else {
+      payments.unpaidPesewas += order.totalPesewas;
+    }
     const source = order.source ?? 'table';
     const s = sources.get(source) ?? { orders: 0, pesewas: 0 };
     sources.set(source, { orders: s.orders + 1, pesewas: s.pesewas + order.totalPesewas });
@@ -78,6 +90,7 @@ export function salesReport(orders: readonly SalesOrder[], timeZone: string): Sa
     byStatus,
     discountsPesewas,
     deliveryFeesPesewas,
+    payments,
     bySource: [...sources]
       .map(([source, value]) => ({ source, ...value }))
       .sort((a, b) => b.pesewas - a.pesewas),

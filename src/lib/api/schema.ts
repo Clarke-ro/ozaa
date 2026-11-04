@@ -2372,6 +2372,12 @@ export interface components {
             };
             discountsPesewas: components["schemas"]["Pesewas"];
             deliveryFeesPesewas: components["schemas"]["Pesewas"];
+            /** @description The order value split by how it was paid: online (Paystack, into the venue's own account), in person (marked by staff), or not yet. */
+            payments: {
+                onlinePesewas: components["schemas"]["Pesewas"];
+                inPersonPesewas: components["schemas"]["Pesewas"];
+                unpaidPesewas: components["schemas"]["Pesewas"];
+            };
             bySource: {
                 source: components["schemas"]["OrderSource"];
                 orders: number;

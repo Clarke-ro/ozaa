@@ -82,3 +82,21 @@ test('days group by the venue calendar, oldest first', () => {
     { date: '2026-11-04', orders: 2, pesewas: 10000 },
   ]);
 });
+
+test('payments split the value: online, in person, or not yet (part-paid counts as not yet)', () => {
+  const report = salesReport(
+    [
+      order({ totalPesewas: 5000, paymentStatus: 'paid', paymentMethod: 'online_momo' }),
+      order({ totalPesewas: 3000, paymentStatus: 'paid', paymentMethod: 'cash' }),
+      order({ totalPesewas: 2000, paymentStatus: 'unpaid' }),
+      order({ totalPesewas: 4000, paymentStatus: 'part_paid' }),
+      order({ status: 'cancelled', totalPesewas: 9000, paymentStatus: 'unpaid' }),
+    ],
+    tz,
+  );
+  expect(report.payments).toEqual({
+    onlinePesewas: 5000,
+    inPersonPesewas: 3000,
+    unpaidPesewas: 6000,
+  });
+});
