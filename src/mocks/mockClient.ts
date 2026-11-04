@@ -13,7 +13,16 @@ import { deriveTheme } from '../features/theming/deriveTheme';
 import { ghanaPhone, isGhanaPhone, pesewas } from '@/lib/brand';
 import type { ApiClient, TokenSource } from '@/lib/api/client';
 import { ApiError, OfflineError } from '@/lib/api/errors';
-import type { LoyaltyCard, LoyaltyProgram, Order, Payment, VenueTheme } from '@/lib/api/types';
+import type {
+  LoyaltyCard,
+  LoyaltyProgram,
+  Menu,
+  Order,
+  OrderLineInput,
+  Payment,
+  VenuePublic,
+  VenueTheme,
+} from '@/lib/api/types';
 import { qrSvg } from '@/lib/qrSvg';
 import {
   dashboardFor,
@@ -142,6 +151,86 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       const wait = latencyMs * (0.5 + random());
       await new Promise((resolve) => setTimeout(resolve, wait));
     }
+  }
+
+  /**
+   * Prices an order from the menu, checks stock and limits, takes the stock, and records it.
+   * Guest orders and staff orders both come through here, so the money rules can't drift apart.
+   * `manual` keeps a ticket where staff put it instead of moving itself along.
+   */
+  function placeOrder(
+    venue: VenuePublic,
+    menu: Menu,
+    body: { lines: OrderLineInput[] },
+    tableCode: string | null,
+    manual: boolean,
+  ): Order {
+    const lines = body.lines.map((line) => {
+      const item = menu.items.find((candidate) => candidate.id === line.menuItemId);
+      if (!item) throw new ApiError(422, 'item_sold_out', 'That dish is not on the menu');
+      const check = checkLine(item, line.quantity);
+      if (check === 'sold_out') throw new ApiError(422, 'item_sold_out', 'Sold out');
+      if (check === 'out_of_range') {
+        throw new ApiError(422, 'quantity_out_of_range', 'Change how many you want of this dish');
+      }
+      const chosen = line.modifierOptionIds ?? [];
+      const modifiers = item.modifierGroups.flatMap((group) =>
+        group.options
+          .filter((option) => chosen.includes(option.id))
+          .map((option) => ({ name: option.name.en, pricePesewas: option.pricePesewas })),
+      );
+      const extra = modifiers.reduce((sum, option) => sum + option.pricePesewas, 0);
+      // The sale price, when there is one, is what the guest pays (dishRules.unitPrice).
+      const unit = unitPrice(item);
+      const total = (unit + extra) * line.quantity;
+      return {
+        id: nextId(world, 'oln'),
+        menuItemId: item.id,
+        name: item.name.en,
+        quantity: line.quantity,
+        modifiers,
+        unitPricePesewas: unit,
+        totalPesewas: total,
+        note: line.note,
+        paid: false,
+      };
+    });
+    // Stock: two lines of the same dish count together, and nothing is taken until every line is fine.
+    const wanted = new Map<string, number>();
+    for (const line of body.lines) {
+      wanted.set(line.menuItemId, (wanted.get(line.menuItemId) ?? 0) + line.quantity);
+    }
+    for (const [id, quantity] of wanted) {
+      const item = menu.items.find((candidate) => candidate.id === id);
+      if (item?.stockCount != null && quantity > item.stockCount) {
+        throw new ApiError(422, 'item_sold_out', 'Not enough left');
+      }
+    }
+    for (const [id, quantity] of wanted) {
+      const index = menu.items.findIndex((candidate) => candidate.id === id);
+      const item = menu.items[index];
+      if (item) menu.items[index] = { ...item, ...takeStock(item, quantity) };
+    }
+    const subtotal = lines.reduce((sum, line) => sum + line.totalPesewas, 0);
+    const order: Order = {
+      id: nextId(world, 'ord'),
+      number: 100 + world.orders.length,
+      venueId: venue.id,
+      tableCode,
+      status: 'received',
+      paymentStatus: 'unpaid',
+      lines,
+      subtotalPesewas: subtotal,
+      taxes: [],
+      totalPesewas: subtotal,
+      paidPesewas: 0,
+      etaMinutes: 12,
+      createdAt: new Date(now()).toISOString(),
+      updatedAt: new Date(now()).toISOString(),
+      readyAt: null,
+    };
+    world.orders.push({ order, receivedAt: now(), manual });
+    return order;
   }
 
   function remember<T>(key: string | undefined, make: () => T): T {
@@ -370,75 +459,7 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
         if (venue.published === false) {
           throw new ApiError(422, 'venue_not_published', 'This menu is not open yet');
         }
-        const lines = body.lines.map((line) => {
-          const item = menu.items.find((candidate) => candidate.id === line.menuItemId);
-          if (!item) throw new ApiError(422, 'item_sold_out', 'That dish is not on the menu');
-          const check = checkLine(item, line.quantity);
-          if (check === 'sold_out') throw new ApiError(422, 'item_sold_out', 'Sold out');
-          if (check === 'out_of_range') {
-            throw new ApiError(
-              422,
-              'quantity_out_of_range',
-              'Change how many you want of this dish',
-            );
-          }
-          const chosen = line.modifierOptionIds ?? [];
-          const modifiers = item.modifierGroups.flatMap((group) =>
-            group.options
-              .filter((option) => chosen.includes(option.id))
-              .map((option) => ({ name: option.name.en, pricePesewas: option.pricePesewas })),
-          );
-          const extra = modifiers.reduce((sum, option) => sum + option.pricePesewas, 0);
-          // The sale price, when there is one, is what the guest pays (dishRules.unitPrice).
-          const unit = unitPrice(item);
-          const total = (unit + extra) * line.quantity;
-          return {
-            id: nextId(world, 'oln'),
-            menuItemId: item.id,
-            name: item.name.en,
-            quantity: line.quantity,
-            modifiers,
-            unitPricePesewas: unit,
-            totalPesewas: total,
-            note: line.note,
-            paid: false,
-          };
-        });
-        // Stock: two lines of the same dish count together, and nothing is taken until every line is fine.
-        const wanted = new Map<string, number>();
-        for (const line of body.lines) {
-          wanted.set(line.menuItemId, (wanted.get(line.menuItemId) ?? 0) + line.quantity);
-        }
-        for (const [id, quantity] of wanted) {
-          const item = menu.items.find((candidate) => candidate.id === id);
-          if (item?.stockCount != null && quantity > item.stockCount) {
-            throw new ApiError(422, 'item_sold_out', 'Not enough left');
-          }
-        }
-        for (const [id, quantity] of wanted) {
-          const index = menu.items.findIndex((candidate) => candidate.id === id);
-          const item = menu.items[index];
-          if (item) menu.items[index] = { ...item, ...takeStock(item, quantity) };
-        }
-        const subtotal = lines.reduce((sum, line) => sum + line.totalPesewas, 0);
-        const order: Order = {
-          id: nextId(world, 'ord'),
-          number: 100 + world.orders.length,
-          venueId: venue.id,
-          tableCode: session.tableCode,
-          status: 'received',
-          paymentStatus: 'unpaid',
-          lines,
-          subtotalPesewas: subtotal,
-          taxes: [],
-          totalPesewas: subtotal,
-          paidPesewas: 0,
-          etaMinutes: 12,
-          createdAt: new Date(now()).toISOString(),
-          updatedAt: new Date(now()).toISOString(),
-          readyAt: null,
-        };
-        world.orders.push({ order, receivedAt: now(), manual: false });
+        const order = placeOrder(venue, menu, body, session.tableCode, false);
         session.orderId = order.id;
         return order;
       });
@@ -917,12 +938,34 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       if (!table?.qrUrl) throw new ApiError(404, 'venue_not_found', 'Table not found');
       return qrSvg(table.qrUrl, 256);
     },
-    async ownerListOrders(venueId) {
+    async ownerListOrders(venueId, filter) {
       await gate();
+      const since = filter?.since ? Date.parse(filter.since) : -Infinity;
+      const until = filter?.until ? Date.parse(filter.until) : Infinity;
       const items = world.orders
         .filter((item) => item.order.venueId === venueId)
+        .filter((item) => {
+          const at = Date.parse(item.order.createdAt);
+          return at >= since && at < until;
+        })
         .map((item) => fresh(world, item, now(), fast));
       return { items, nextCursor: null as string | null };
+    },
+    async ownerCreateOrder(venueId, body, call) {
+      await gate();
+      const row = accessOf(world, tokens);
+      const staff = STAFF.find((person) => person.phone === row.phone);
+      // Kitchen staff and viewers can't take orders; owners, managers and waiters can.
+      if (!staff || !['owner', 'manager', 'waiter'].includes(staff.role)) {
+        throw new ApiError(403, 'forbidden', 'Your role cannot add orders');
+      }
+      return remember(call.idempotencyKey, () => {
+        const venue = venueById(world, venueId);
+        const menu = world.menus[venue.slug];
+        if (!menu) throw new ApiError(404, 'order_not_found', 'Menu not found');
+        // Works while unpublished, so staff can try the menu before opening.
+        return placeOrder(venue, menu, body, body.tableCode ?? null, true);
+      });
     },
     async ownerSetOrderStatus(orderId, body) {
       await gate();

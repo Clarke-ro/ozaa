@@ -341,11 +341,22 @@ export function createHttpClient(baseUrl: string, tokens: TokenSource): ApiClien
         throw problem(result.error, result.response.status);
       return result.data;
     },
-    ownerListOrders: (venueId) =>
+    ownerListOrders: (venueId, filter) =>
       ok(
         client.GET('/owner/venues/{venueId}/orders', {
-          params: { path: { venueId } },
+          params: { path: { venueId }, query: { since: filter?.since, until: filter?.until } },
           headers: headers('access'),
+        }),
+      ),
+    ownerCreateOrder: (venueId, body, call) =>
+      ok(
+        client.POST('/owner/venues/{venueId}/orders', {
+          body,
+          params: {
+            path: { venueId },
+            header: { 'Idempotency-Key': call.idempotencyKey ?? '' },
+          },
+          headers: headers('access', call),
         }),
       ),
     ownerSetOrderStatus: (orderId, body) =>

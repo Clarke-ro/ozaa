@@ -942,6 +942,11 @@ paths:
           explode: false
         - in: query
           name: since
+          description: Only orders created at or after this moment.
+          schema: { type: string, format: date-time }
+        - in: query
+          name: until
+          description: Only orders created before this moment. With since, a date range such as one day in the venue's time zone.
           schema: { type: string, format: date-time }
         - { $ref: '#/components/parameters/Cursor' }
       responses:
@@ -950,6 +955,29 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/OrderPage' }
+    post:
+      tags: [owner-orders]
+      operationId: ownerCreateOrder
+      security: [{ ownerAuth: [] }]
+      summary: Staff enter an order by hand, for a guest at the counter or on the phone. Priced and stock-checked like a guest order.
+      description: Owners, managers and waiters may do this. Works while the menu is unpublished, so staff can test before opening.
+      parameters:
+        - { $ref: '#/components/parameters/VenueId' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OwnerCreateOrderRequest' }
+      responses:
+        '201':
+          description: Order created with status `received` and payment status `unpaid`.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
   /owner/orders/{orderId}/status:
     put:
       tags: [owner-orders]
@@ -2307,6 +2335,14 @@ components:
         clientOrderId: { type: string, format: uuid, description: Made on the phone so an offline retry never creates two orders. }
         lines: { type: array, minItems: 1, maxItems: 60, items: { $ref: '#/components/schemas/OrderLineInput' } }
         note: { type: string, maxLength: 200 }
+    OwnerCreateOrderRequest:
+      allOf:
+        - { $ref: '#/components/schemas/CreateOrderRequest' }
+        - type: object
+          properties:
+            tableCode:
+              type: ['string', 'null']
+              description: The table it's for, or null for a counter or phone order.
     OrderLine:
       type: object
       required: [id, menuItemId, name, quantity, unitPricePesewas, totalPesewas, paid]
