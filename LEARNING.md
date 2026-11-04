@@ -825,3 +825,42 @@ The sheet makes one id when it opens and sends it with the order. If the phone's
 **Try it yourself**
 
 Create an order for the Counter, then find it under New. It says Takeaway, because it has no table.
+
+---
+
+## 2026-11-04 · Today: orders, pending and visitors
+
+**What we built**
+
+Today now shows six numbers:
+- Orders today
+- Pending (orders the kitchen hasn't started; red when any are waiting)
+- Visitors today
+- Waiter calls
+- Open tables
+- Rating
+
+Sales today stays in the panel at the top whenever payments are on.
+
+**How it works**
+
+```
+server: summarizeDay → ordersToday (no cancelled, since the venue's midnight), pendingOrders (received)
+        guest sessions started today → visitorsToday
+app:    one dashboard call, polled every 5 s → six tiles
+```
+
+A "visit" is one table scan or one opened menu link. We count visits, not people, and never learn who the guest is.
+
+**Files to look at**
+
+- `src/features/owner/desk/daySummary.ts` and its test.
+- `src/features/owner/screens/dashboard/DashboardScreen.tsx`.
+
+**New idea: count on the server**
+
+The app could count orders itself, but then each phone might count differently, for example around midnight. The server counts once, and every screen shows the same number.
+
+**Try it yourself**
+
+Create an order from Orders, then go back to Today. Orders today and Pending each go up by one.

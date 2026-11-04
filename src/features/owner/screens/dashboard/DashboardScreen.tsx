@@ -5,7 +5,9 @@ import { useTranslation } from 'react-i18next';
 import {
   Bell,
   ClipboardList,
+  Eye,
   Grid2x2,
+  Hourglass,
   Inbox,
   QrCode,
   ScanLine,
@@ -36,7 +38,7 @@ const SHORTCUTS: { key: string; icon: LucideIcon; href: string }[] = [
   { key: 'feedback', icon: Inbox, href: '/owner/feedback' },
 ];
 
-/** Today: the overview panel, shortcuts, the setup checklist (until done), what needs you, four live numbers, and the open tickets. */
+/** Today: the overview panel, shortcuts, the setup checklist (until done), what needs you, six numbers, and the open tickets. */
 export function DashboardScreen() {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -50,8 +52,8 @@ export function DashboardScreen() {
     refetchInterval: LIVE_MS,
   });
   const d = desk.data;
-  // Two columns on phones, four on wide screens, one at the largest text sizes.
-  const basis = fontScale > 1.5 ? '100%' : width >= 700 ? '23%' : '47%';
+  // Two columns on phones, three on wide screens (six tiles), one at the largest text sizes.
+  const basis = fontScale > 1.5 ? '100%' : width >= 700 ? '31%' : '47%';
   const gutter = width >= 768 ? tokens.space[6] : tokens.space[4];
 
   return (
@@ -95,11 +97,34 @@ export function DashboardScreen() {
               <View style={styles.grid}>
                 <View style={{ flexBasis: basis, flexGrow: 1 }}>
                   <StatTile
-                    label={t('owner.liveOrders')}
-                    value={String(d.liveOrders)}
-                    note={t('ownerDash.notes.orders')}
+                    label={t('ownerDash.stats.ordersToday')}
+                    value={String(d.ordersToday)}
+                    note={t('ownerDash.notes.ordersToday')}
                     icon={ClipboardList}
                     onPress={() => router.push('/owner/orders')}
+                  />
+                </View>
+                <View style={{ flexBasis: basis, flexGrow: 1 }}>
+                  <StatTile
+                    label={t('ownerDash.stats.pending')}
+                    value={String(d.pendingOrders)}
+                    note={
+                      d.pendingOrders > 0
+                        ? t('ownerDash.notes.pendingWaiting')
+                        : t('ownerDash.notes.pendingClear')
+                    }
+                    icon={Hourglass}
+                    tone={d.pendingOrders > 0 ? 'alert' : undefined}
+                    onPress={() => router.push('/owner/orders')}
+                  />
+                </View>
+                <View style={{ flexBasis: basis, flexGrow: 1 }}>
+                  <StatTile
+                    label={t('ownerDash.stats.visitors')}
+                    value={String(d.visitorsToday)}
+                    note={t('ownerDash.notes.visitors')}
+                    icon={Eye}
+                    onPress={() => router.push('/owner/insights')}
                   />
                 </View>
                 <View style={{ flexBasis: basis, flexGrow: 1 }}>

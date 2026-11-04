@@ -608,7 +608,7 @@ Approved by Clarke on 2026-11-03. Details and file locations are in `docs/menuri
 - [x] 4b.10 *contract* + UI: customization of item sort order, list or grid layout, and guest light/dark mode.
 - [x] 4b.11 *contract* + UI: menu editor on a live phone preview, publish toggle, menu link and quick style on the right.
 - [x] 4b.12 *contract* + UI: orders date filter and manual "create order".
-- [ ] 4b.13 *contract* + UI: Home stats for orders today, pending orders and visitors today.
+- [x] 4b.13 *contract* + UI: Home stats for orders today, pending orders and visitors today.
 - [ ] 4b.14 *contract* + UI: online ordering settings (on/off, pickup prep time, delivery fees, distance, free threshold).
 - [ ] 4b.15 *contract* + UI: menu-link guest flow (pickup or delivery, contact form, confirmation and status page) and the source on every order.
 - [ ] 4b.16 *contract* + UI: Sales page (totals, counts by status, discounts, top items, revenue over time, by source).
