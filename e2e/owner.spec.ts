@@ -14,7 +14,7 @@ const moreItems = [
   ['Floor', 'owner-floor'],
   ['Calls', 'owner-calls'],
   ['Scan and stamp', 'owner-scan'],
-  ['Tables and QR', 'owner-tables'],
+  ['QR codes and links', 'owner-tables'],
   ['Branding', 'owner-branding'],
   ['Services', 'owner-services'],
   ['Social links', 'owner-socials'],

@@ -141,7 +141,9 @@
     "showGrid": "Show as photo cards",
     "showList": "Show as a list",
     "sectionsLabel": "Menu sections",
-    "allSections": "All"
+    "allSections": "All",
+    "salePrice": "Now {{now}}, was {{was}}",
+    "limits": "Order {{min}} to {{max}}"
   },
   "dietary": {
     "vegetarian": "Vegetarian",
@@ -396,7 +398,7 @@
     "payments": "Payments",
     "payouts": "Payouts",
     "reviews": "Reviews",
-    "tables": "Tables and QR",
+    "tables": "QR codes and links",
     "branding": "Branding",
     "staff": "Staff",
     "insights": "Insights",
@@ -593,7 +595,7 @@
       "calls": "Guests asking for a waiter",
       "scan": "Add stamps and confirm rewards",
       "menu": "Dishes, prices, add-ons and sold out",
-      "tables": "QR codes to print or share",
+      "tables": "Your menu link and table QR codes",
       "branding": "Colour, font and buttons on your page",
       "services": "What guests can do, and the Wi-Fi",
       "socials": "Instagram, WhatsApp and more",
@@ -646,7 +648,8 @@
     "tryAgain": "Try again",
     "loading": "Loading",
     "crashTitle": "This page stopped working",
-    "crashBody": "Something broke on our side. Try again to reload it."
+    "crashBody": "Something broke on our side. Try again to reload it.",
+    "quantityRange": "One dish in your order is for too few or too many. Change how many and send it again."
   },
   "common": {
     "back": "Back",
@@ -789,7 +792,16 @@
     "errTooMany": "That is more than {{max}} tables. Add them in smaller groups.",
     "errAllExist": "Those tables already exist.",
     "emptyTitle": "No tables yet",
-    "emptyBody": "Add your tables to get a QR code for each one. Guests scan it to see the menu and order."
+    "emptyBody": "Add your tables to get a QR code for each one. Guests scan it to see the menu and order.",
+    "menuLink": "Your menu link",
+    "menuLinkHint": "Put this in your Instagram, TikTok and WhatsApp bio. Anyone who opens it sees your menu. It is not tied to a table.",
+    "copyLink": "Copy link",
+    "copyFailed": "Could not copy. Select the text and copy it yourself.",
+    "embedTitle": "Add the menu to your website",
+    "embedHint": "Paste this code into your website where the menu should appear.",
+    "copyCode": "Copy code",
+    "codeCopied": "Code copied",
+    "tableCodes": "Table QR codes"
   },
   "ownerFeedback": {
     "lead": "Private notes guests leave from the table. Only you and your managers see them.",
@@ -932,7 +944,10 @@
       "addOns": "Each add-on group needs a name and named options, and guests must be able to pick enough.",
       "days": "Pick at least one day.",
       "start": "Use 24-hour time, like 11:00.",
-      "end": "Use 24-hour time, after the start."
+      "end": "Use 24-hour time, after the start.",
+      "salePrice": "Make the sale price lower than the normal price, or leave it empty.",
+      "stock": "Type a whole number, like 20, or leave it empty.",
+      "quantity": "Use whole numbers from 1 to 50, with min no higher than max."
     },
     "allergen": {
       "celery": "Celery",
@@ -958,7 +973,33 @@
       "popular": "Popular",
       "no_photo": "No photo"
     },
-    "deleteDish": "Delete dish"
+    "deleteDish": "Delete dish",
+    "addSizes": "Add sizes",
+    "sizeName": "Size",
+    "sizeSmall": "Small",
+    "sizeMedium": "Medium",
+    "sizeLarge": "Large",
+    "ruleOneHint": "Guests must pick one. Each price here is added to the dish price, so leave the smallest at 0.",
+    "pricingStock": "Pricing and stock",
+    "status": "Status",
+    "statusAvailable": "Available",
+    "statusSoldOut": "Out of stock",
+    "statusHidden": "Hidden",
+    "statusHint": {
+      "available": "Guests can see and order it.",
+      "sold_out": "Guests see it marked Sold out and can’t order it.",
+      "hidden": "Guests don’t see it. Nothing is deleted."
+    },
+    "salePrice": "Sale price ({{currency}})",
+    "salePriceHint": "Optional. Leave empty for no sale. Guests see the normal price crossed out.",
+    "stock": "Stock count",
+    "stockHint": "Optional. Leave empty for unlimited. At 0 the dish shows as Sold out.",
+    "stockPlaceholder": "Unlimited",
+    "minQuantity": "Min per order",
+    "maxQuantity": "Max per order",
+    "onSale": "On sale at {{price}}",
+    "left_one": "{{count}} left",
+    "left_other": "{{count}} left"
   },
   "ownerBranding": {
     "lead": "How your page looks to guests: colour, words, photos and the order of the buttons.",
@@ -1067,7 +1108,9 @@
     },
     "venue": "Your venue",
     "appearance": "Appearance",
-    "appearanceValue": "Follows your phone"
+    "appearanceValue": "Follows your phone",
+    "chime": "Sound for new orders",
+    "chimeHint": "A short chime when an order or a waiter call comes in, while Ozaa is open."
   },
   "ownerFloor": {
     "table": "Table",
@@ -1609,7 +1652,6 @@
   },
   "ownerSoon": {
     "title": "Coming soon",
-    "categories": "Categories get their own page soon. For now, open Menu and tap Sections.",
     "notice": "Soon you can show a banner or a popup on your menu, on a schedule.",
     "promos": "Soon you can make promo codes and discounts for your menu.",
     "integrations": "Soon you can connect your own Paystack account and choose how guests pay.",

@@ -521,3 +521,168 @@ A "cancelled" order is shown to staff as "Rejected". The order's status in the A
 **Try it yourself**
 
 In `ops.test.ts`, add a test with an empty list and check that every count is 0.
+
+---
+
+## 2026-11-03 · A chime for new orders and waiter calls
+
+**What we built**
+
+While the owner app is open, on any screen, a short two-note chime plays when a new order or a new waiter call comes in. Kitchen staff hear orders only. Settings has a switch to turn the sound off, and the phone remembers it.
+
+**How it works**
+
+```
+every 5 s: orders + calls (same cache as the Orders and Calls screens)
+   → arrivals(seen, ids) → how many ids we haven't seen before
+   → more than 0, and sound is on → play the chime
+```
+
+The first load only fills `seen`, so opening the app doesn't ring for orders already waiting.
+
+**Files to look at**
+
+- `src/features/owner/desk/arrivals.ts`: what counts as new.
+- `src/features/owner/data/useArrivalChime.ts`: polls, compares, plays.
+- `src/features/owner/data/ownerPrefs.ts`: the saved on/off switch.
+- `scripts/gen-chime.mjs`: makes the sound file from two sine waves. We own it; nothing was downloaded.
+
+**New idea: a hook test with fakes**
+
+`useArrivalChime.test.tsx` swaps the real speaker and API for fakes (`jest.mock`), pushes a new order into the cache, and checks that `play` was called once. We test the behaviour without making any noise.
+
+**Try it yourself**
+
+In `gen-chime.mjs`, change `880.0` to `784.0` and run `node scripts/gen-chime.mjs`. The second note is now lower. Listen to `assets/sounds/new-order.wav`.
+
+---
+
+## 2026-11-03 · Categories on their own page
+
+**What we built**
+
+Categories (we call them sections in the code) now have their own page in the sidebar, with Food and Drinks shown apart. You can add, rename, hide, move and delete sections there. The Sections sheet on the Menu screen still works the same.
+
+**How it works**
+
+```
+SectionsList (the rows and the New section button)
+   ├─ SectionsSheet   → a pop-up on the Menu screen
+   └─ CategoriesScreen → a full page, once for Food and once for Drinks
+```
+
+Both use `useMenuDesk`, so a change on one shows on the other straight away.
+
+**Files to look at**
+
+- `src/features/owner/screens/menu/SectionsList.tsx`: the shared list.
+- `src/features/owner/screens/menu/CategoriesScreen.tsx`: the page.
+
+**New idea: lift the shared part out**
+
+When two screens need the same thing, we move it into its own component and pass in what changes (here, the list of sections and what each button does). The two screens can't drift apart.
+
+**Try it yourself**
+
+Add a section called "Desserts" on the Categories page, then open Menu → Sections. It's already there.
+
+---
+
+## 2026-11-03 · Your menu link, next to the table QR codes
+
+**What we built**
+
+The "QR codes and links" page now starts with your menu link (`https://ozaa.app/<your-slug>`) and buttons to copy it, share it, or download it as a QR code. Under that is a short piece of code you can paste into your own website to show the menu there. The table QR codes are below, as before.
+
+**How it works**
+
+```
+site address (EXPO_PUBLIC_SITE_URL) + venue slug → menuLink → copy / share / QR
+menuLink + venue name → embedSnippet → <iframe …> for the venue's website
+```
+
+The menu link is different from a table QR code: a table code tells us which table the guest sits at, and the menu link doesn't. Ordering from the link (pickup and delivery) comes in 4b.15.
+
+**Files to look at**
+
+- `src/features/owner/desk/menuLink.ts` and its test.
+- `src/features/owner/screens/tables/MenuLinkCard.tsx`: the card.
+- `src/features/owner/screens/tables/IconAction.tsx`: the square buttons, now shared.
+
+**New idea: escaping**
+
+Owners paste our code into their own site. If a venue name had a `"` in it, the code could break or, worse, run something. `embedSnippet` turns `"`, `<`, `>`, `'` and `&` into safe codes first. The test with `<script>` proves it.
+
+**Try it yourself**
+
+Copy the code, paste it into a file called `test.html`, and open that file in your browser.
+
+---
+
+## 2026-11-03 · Sizes for a dish
+
+**What we built**
+
+In the dish editor, under Add-ons, there's a new **Add sizes** button. It adds a "Size" group with Small, Medium and Large. The guest must pick one. You type how much more each bigger size costs.
+
+**How it works**
+
+```
+dish price GH₵50  +  Size: Small +0 / Medium +10 / Large +20
+guest picks Large → the order line is GH₵70
+```
+
+Sizes are just an add-on group with the rule "Pick one". The server already adds the chosen add-on's price to the dish price, so we didn't need to change the API.
+
+**Files to look at**
+
+- `src/features/owner/screens/menu/addOnPresets.ts`: `sizeGroup` and `blankGroup`.
+- `src/features/owner/screens/menu/GroupCard.tsx`: one group, now in its own file.
+- `src/mocks/mockClient.ts` (search `extra`): where the add-on price is added.
+
+**New idea: reuse a model before inventing one**
+
+We could have added a new "variations" field to the API. Using the add-on group we already had gives the same result with no API change, no new server code and no new tests for the money maths.
+
+**Try it yourself**
+
+Edit a dish, add sizes, set Large to 20 and save. Then order it as a guest and check the line total.
+
+---
+
+## 2026-11-03 · Sale price, stock and limits per dish
+
+**What we built**
+
+In the dish editor, a new "Pricing and stock" part has:
+- a status: Available, Out of stock or Hidden
+- a sale price (optional)
+- a stock count (empty means unlimited)
+- min and max per order
+
+Guests see the sale price with the old price crossed out. Hidden dishes don't show, and the quantity buttons stop at your limits. When stock reaches 0, the dish shows as Sold out.
+
+**How it works**
+
+```
+src/lib/dishRules.ts  (one set of rules)
+   ├─ guest screens: unitPrice, quantityLimits, isOnGuestMenu
+   ├─ owner editor:  dishStatus / statusFields
+   └─ mock server:   checkLine, takeStock, unitPrice  ← the real server will use the same file
+```
+
+The server always has the last word on money and stock. The guest screens only help people stay inside the rules.
+
+**Files to look at**
+
+- `src/lib/dishRules.ts` and its test.
+- `src/features/owner/screens/menu/DishStockFields.tsx` and `checkStock` in `forms.ts`.
+- `src/features/menu/DishPrice.tsx`: the price with the sale.
+
+**New idea: one status from two fields**
+
+The API stores `available` and `hidden`. The owner sees one choice with three options. `dishStatus` turns two yes/no fields into one word, and `statusFields` turns it back.
+
+**Try it yourself**
+
+Set a dish's sale price above its normal price. The form stops you. In `dishRules.test.ts`, find the test that says the server would ignore it too.

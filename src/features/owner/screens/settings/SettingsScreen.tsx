@@ -13,6 +13,7 @@ import {
   Trash2,
   UserRound,
   Users,
+  Volume2,
 } from 'lucide-react-native';
 import { api } from '@/lib/api';
 import { languageByCode } from '@/features/venue';
@@ -23,7 +24,8 @@ import { useTheme } from '@/ui/theme';
 import { OwnerPage } from '../../chrome/OwnerPage';
 import { useSignOut } from '../../chrome/useSignOut';
 import { ownerKeys } from '../../data/keys';
-import { ConfirmDialog, InfoRow, LinkRow, Section, StatusPill } from '../../kit';
+import { ConfirmDialog, InfoRow, LinkRow, Section, StatusPill, SwitchRow } from '../../kit';
+import { useOwnerPrefs } from '../../data/ownerPrefs';
 import { DeleteAccountSheet } from './DeleteAccountSheet';
 import { LanguageSheet } from './LanguageSheet';
 
@@ -36,6 +38,8 @@ export function SettingsScreen() {
   const role = useOwnerSession((state) => state.role) ?? 'owner';
   const venueId = useOwnerSession((state) => state.venueId);
   const endSession = useSignOut();
+  const chime = useOwnerPrefs((state) => state.chime);
+  const setChime = useOwnerPrefs((state) => state.setChime);
   const business = useQuery({
     queryKey: ownerKeys.business(),
     queryFn: () => api.ownerGetBusiness(),
@@ -111,6 +115,13 @@ export function SettingsScreen() {
           icon={BellDot}
           label={t('owner.notifications')}
           onPress={() => router.push('/owner/notifications')}
+        />
+        <SwitchRow
+          icon={Volume2}
+          label={t('ownerSettings.chime')}
+          hint={t('ownerSettings.chimeHint')}
+          value={chime}
+          onChange={setChime}
         />
       </Section>
 

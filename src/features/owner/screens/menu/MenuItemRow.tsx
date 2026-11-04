@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ImageOff } from 'lucide-react-native';
 import type { MenuItem } from '@/lib/api/types';
 import { pesewas } from '@/lib/brand';
+import { onSale, unitPrice } from '@/lib/dishRules';
 import { formatMoney } from '@/lib/money';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
@@ -10,9 +11,11 @@ import { VenueImage } from '@/ui/VenueImage';
 import { useTheme } from '@/ui/theme';
 import { Toggle } from '../../kit';
 
+const LOW_STOCK = 5;
+
 /**
  * One dish, kept compact: photo, name, price and section, and the on-the-menu switch.
- * Tap the row to edit (delete lives in the editor). Sold out dims the row and says so in words.
+ * Tap the row to edit (delete lives in the editor). Sold out and hidden dim the row and say so in words.
  */
 export function MenuItemRow({
   item,
@@ -30,11 +33,18 @@ export function MenuItemRow({
 }) {
   const theme = useTheme();
   const { t } = useTranslation();
-  const off = !item.available;
+  const off = !item.available || item.hidden === true;
+  const money = (amount: number) => formatMoney(pesewas(amount), currency);
   const meta = [
-    formatMoney(pesewas(item.pricePesewas), currency),
+    onSale(item)
+      ? t('ownerMenu.onSale', { price: money(unitPrice(item)) })
+      : money(item.pricePesewas),
     section,
-    off ? t('owner.soldOut') : null,
+    item.hidden ? t('ownerMenu.statusHidden') : !item.available ? t('owner.soldOut') : null,
+    // A few left is worth seeing at a glance; plenty or unlimited isn't.
+    item.available && item.stockCount != null && item.stockCount <= LOW_STOCK
+      ? t('ownerMenu.left', { count: item.stockCount })
+      : null,
   ]
     .filter(Boolean)
     .join(' · ');
@@ -61,7 +71,8 @@ export function MenuItemRow({
           <Text
             variant="caption"
             numberOfLines={1}
-            style={[styles.meta, { color: off ? theme.error : theme.muted }]}
+            // Red only for sold out, which guests notice; hidden is the owner's choice, so it stays grey.
+            style={[styles.meta, { color: !item.available ? theme.error : theme.muted }]}
           >
             {meta}
           </Text>

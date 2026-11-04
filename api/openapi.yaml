@@ -2163,6 +2163,26 @@ components:
         allergens: { type: array, items: { type: string } }
         calories: { type: integer }
         prepMinutes: { type: integer }
+        hidden:
+          type: boolean
+          description: True keeps the dish off the guest menu without deleting it. Like a hidden category, it is still sent (the owner menu editor reads the same menu) and guest screens leave it out. Orders for it fail with item_sold_out. Missing means false.
+        salePricePesewas:
+          oneOf: [{ $ref: '#/components/schemas/Pesewas' }, { type: 'null' }]
+          description: A promo price below pricePesewas. When set, the server charges it (plus add-ons) and guests see the normal price struck through. Null or missing means no sale.
+        stockCount:
+          type: ['integer', 'null']
+          minimum: 0
+          description: How many are left. Null or missing means unlimited. Each order takes away its quantity; at 0 the server sets available to false. An order for more than is left fails with item_sold_out.
+        minQuantity:
+          type: integer
+          minimum: 1
+          maximum: 50
+          description: Smallest number a guest may order in one line. Missing means 1.
+        maxQuantity:
+          type: integer
+          minimum: 1
+          maximum: 50
+          description: Largest number a guest may order in one line. Missing means 50. Outside min..max the order fails with quantity_out_of_range.
     MenuItemInput:
       type: object
       properties:
@@ -2183,6 +2203,26 @@ components:
         allergens: { type: array, items: { type: string } }
         calories: { type: integer }
         prepMinutes: { type: integer }
+        hidden:
+          type: boolean
+          description: True keeps the dish off the guest menu without deleting it. Like a hidden category, it is still sent (the owner menu editor reads the same menu) and guest screens leave it out. Orders for it fail with item_sold_out. Missing means false.
+        salePricePesewas:
+          oneOf: [{ $ref: '#/components/schemas/Pesewas' }, { type: 'null' }]
+          description: A promo price below pricePesewas. When set, the server charges it (plus add-ons) and guests see the normal price struck through. Null or missing means no sale.
+        stockCount:
+          type: ['integer', 'null']
+          minimum: 0
+          description: How many are left. Null or missing means unlimited. Each order takes away its quantity; at 0 the server sets available to false. An order for more than is left fails with item_sold_out.
+        minQuantity:
+          type: integer
+          minimum: 1
+          maximum: 50
+          description: Smallest number a guest may order in one line. Missing means 1.
+        maxQuantity:
+          type: integer
+          minimum: 1
+          maximum: 50
+          description: Largest number a guest may order in one line. Missing means 50. Outside min..max the order fails with quantity_out_of_range.
     Menu:
       type: object
       required: [venueId, updatedAt, categories, items]

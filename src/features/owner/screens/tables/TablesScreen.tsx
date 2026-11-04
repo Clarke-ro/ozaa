@@ -10,12 +10,14 @@ import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
-import { fontFamily, useTheme } from '@/ui/theme';
+import { useTheme } from '@/ui/theme';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
 import { EmptyCard, SectionLabel, toast } from '../../kit';
 import { AddTablesSheet } from './AddTablesSheet';
 import { CARD_ACCENTS, TableCardControls, TableCardPreview } from './TableCardPreview';
+import { IconAction } from './IconAction';
+import { MenuLinkCard } from './MenuLinkCard';
 import { canPrint, downloadQr, printHtml, shareLink } from './qrActions';
 
 export function TablesScreen() {
@@ -170,6 +172,8 @@ export function TablesScreen() {
         ) : null
       }
     >
+      {venue.data ? <MenuLinkCard slug={venue.data.slug} venueName={venueName} /> : null}
+      <SectionLabel title={t('ownerTables.tableCodes')} caps />
       <DeskWait
         loading={tables.isLoading}
         error={tables.isError}
@@ -206,34 +210,6 @@ export function TablesScreen() {
   );
 }
 
-function IconAction({
-  icon: Icon,
-  label,
-  onPress,
-}: {
-  icon: typeof Share2;
-  label: string;
-  onPress: () => void;
-}) {
-  const theme = useTheme();
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.iconAction,
-        { borderColor: theme.line, backgroundColor: pressed ? theme.wash : theme.surface },
-      ]}
-    >
-      <Icon size={18} color={theme.ink} />
-      <Text variant="caption" numberOfLines={1} style={{ fontFamily: fontFamily.strong }}>
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   split: { flexDirection: 'row', gap: tokens.space[6], alignItems: 'flex-start' },
@@ -246,17 +222,6 @@ const styles = StyleSheet.create({
   },
   actions: { gap: tokens.space[3] },
   row: { flexDirection: 'row', gap: tokens.space[2] },
-  iconAction: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: tokens.space[1],
-    minHeight: tokens.touchTarget + tokens.space[4],
-    paddingHorizontal: tokens.space[2],
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: tokens.radius.md,
-    borderCurve: 'continuous',
-  },
   listWrap: { gap: tokens.space[2] },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.space[2] },
   seat: {
