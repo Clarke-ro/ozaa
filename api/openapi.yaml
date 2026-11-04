@@ -2002,6 +2002,22 @@ components:
       properties:
         services: { type: array, items: { $ref: '#/components/schemas/ServiceToggle' } }
         game: { $ref: '#/components/schemas/GameStampRule' }
+    StoreNotice:
+      type: object
+      required: [enabled, text]
+      description: A message the venue shows on its guest pages, such as "Kitchen closes at 9 tonight".
+      properties:
+        enabled: { type: boolean, description: The owner's show/hide switch. }
+        title: { type: string, maxLength: 60, description: Heading for the popup. The banner ignores it. }
+        text: { type: string, minLength: 1, maxLength: 280 }
+        startsAt: { type: ['string', 'null'], format: date-time, description: Shown from this moment. Null means straight away. }
+        endsAt: { type: ['string', 'null'], format: date-time, description: Hidden from this moment. Null means until switched off. }
+    StoreNotices:
+      type: object
+      description: At most one scrolling banner and one popup per venue.
+      properties:
+        banner: { oneOf: [{ $ref: '#/components/schemas/StoreNotice' }, { type: 'null' }] }
+        popup: { oneOf: [{ $ref: '#/components/schemas/StoreNotice' }, { type: 'null' }] }
     VenuePublic:
       type: object
       required: [id, slug, name, description, location, hours, theme, banner, services, currency, languages, payEnabled]
@@ -2043,12 +2059,18 @@ components:
         stylePreset: { type: string, enum: [default, classic, editorial, modern] }
         buttonOrder: { type: array, items: { type: string } }
         socials: { $ref: '#/components/schemas/SocialLinks' }
+        notices:
+          allOf: [{ $ref: '#/components/schemas/StoreNotices' }]
+          description: Only notices that are switched on and inside their start and end times right now. Missing or null parts mean nothing to show.
     VenueSettings:
       allOf:
         - { $ref: '#/components/schemas/VenuePublic' }
         - type: object
           properties:
             wifi: { $ref: '#/components/schemas/Wifi' }
+            noticeSettings:
+              allOf: [{ $ref: '#/components/schemas/StoreNotices' }]
+              description: Every notice as the owner set it, including ones switched off or outside their times.
     VenueSettingsPatch:
       type: object
       properties:
@@ -2068,6 +2090,7 @@ components:
         stylePreset: { type: string, enum: [default, classic, editorial, modern] }
         buttonOrder: { type: array, items: { type: string } }
         socials: { $ref: '#/components/schemas/SocialLinks' }
+        noticeSettings: { $ref: '#/components/schemas/StoreNotices' }
     Wifi:
       type: object
       required: [ssid, security]

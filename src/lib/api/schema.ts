@@ -1391,6 +1391,29 @@ export interface components {
             services: components["schemas"]["ServiceToggle"][];
             game: components["schemas"]["GameStampRule"];
         };
+        /** @description A message the venue shows on its guest pages, such as "Kitchen closes at 9 tonight". */
+        StoreNotice: {
+            /** @description The owner's show/hide switch. */
+            enabled: boolean;
+            /** @description Heading for the popup. The banner ignores it. */
+            title?: string;
+            text: string;
+            /**
+             * Format: date-time
+             * @description Shown from this moment. Null means straight away.
+             */
+            startsAt?: string | null;
+            /**
+             * Format: date-time
+             * @description Hidden from this moment. Null means until switched off.
+             */
+            endsAt?: string | null;
+        };
+        /** @description At most one scrolling banner and one popup per venue. */
+        StoreNotices: {
+            banner?: components["schemas"]["StoreNotice"] | null;
+            popup?: components["schemas"]["StoreNotice"] | null;
+        };
         VenuePublic: {
             id: string;
             slug: components["schemas"]["Slug"];
@@ -1434,9 +1457,13 @@ export interface components {
             stylePreset?: "default" | "classic" | "editorial" | "modern";
             buttonOrder?: string[];
             socials?: components["schemas"]["SocialLinks"];
+            /** @description Only notices that are switched on and inside their start and end times right now. Missing or null parts mean nothing to show. */
+            notices?: components["schemas"]["StoreNotices"];
         };
         VenueSettings: components["schemas"]["VenuePublic"] & {
             wifi?: components["schemas"]["Wifi"];
+            /** @description Every notice as the owner set it, including ones switched off or outside their times. */
+            noticeSettings?: components["schemas"]["StoreNotices"];
         };
         VenueSettingsPatch: {
             name?: string;
@@ -1462,6 +1489,7 @@ export interface components {
             stylePreset?: "default" | "classic" | "editorial" | "modern";
             buttonOrder?: string[];
             socials?: components["schemas"]["SocialLinks"];
+            noticeSettings?: components["schemas"]["StoreNotices"];
         };
         Wifi: {
             ssid: string;

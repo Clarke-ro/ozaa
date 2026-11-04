@@ -9,6 +9,7 @@ import {
   type VenueLoyalty,
 } from '../features/loyalty/facts';
 import { ApiError } from '@/lib/api/errors';
+import { liveNotices } from '@/lib/notices';
 import type {
   LoyaltyCard,
   Menu,
@@ -20,6 +21,7 @@ import type {
   ServiceSettings,
   StaffMember,
   StaffRole,
+  StoreNotices,
   Table,
   VenuePublic,
   Business,
@@ -110,6 +112,8 @@ export type World = {
   venues: Record<string, VenuePublic>;
   menus: Record<string, Menu>;
   wifi: Record<string, Wifi>;
+  /** Store notices as the owner set them, by venue slug. Guests only get the live ones. */
+  notices: Record<string, StoreNotices>;
   offers: Record<string, Offer[]>;
   orders: LiveOrder[];
   calls: (WaiterCall & { venueId: string })[];
@@ -470,6 +474,7 @@ export function createWorld(now: number): World {
     venues,
     menus,
     wifi,
+    notices: {},
     offers,
     orders,
     calls: [],
@@ -574,8 +579,17 @@ export function venueById(world: World, venueId: string): VenuePublic {
   return venue;
 }
 
-export function publicVenue(venue: VenuePublic): VenuePublic {
-  return { ...venue, services: venue.services.filter((service) => service.enabled) };
+export function publicVenue(
+  venue: VenuePublic,
+  notices: StoreNotices | undefined,
+  now: number,
+): VenuePublic {
+  return {
+    ...venue,
+    services: venue.services.filter((service) => service.enabled),
+    // Like the server: guests get only what should show right now.
+    notices: liveNotices(notices, now),
+  };
 }
 
 export function nextId(world: World, prefix: string): string {
