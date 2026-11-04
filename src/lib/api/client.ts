@@ -23,6 +23,7 @@ import type {
   LoyaltyScanResult,
   Menu,
   OwnerCreateOrderRequest,
+  SalesReport,
   MenuCategory,
   MenuCategoryInput,
   MenuItem,
@@ -199,6 +200,8 @@ export type ApiClient = {
   ownerListWrittenReviews(venueId: string): Promise<{ items: WrittenReview[] }>;
   ownerReplyToReview(reviewId: string, body: { text: string }, call?: Call): Promise<WrittenReview>;
   ownerGetInsights(venueId: string, range?: InsightsReport['range']): Promise<InsightsReport>;
+  /** Real order figures; `since` (inclusive) and `until` (exclusive) are ISO times. */
+  ownerGetSales(venueId: string, filter?: { since?: string; until?: string }): Promise<SalesReport>;
   ownerListFeedback(
     venueId: string,
     query?: { state?: 'all' | 'new' | 'archived'; search?: string },

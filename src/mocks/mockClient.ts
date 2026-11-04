@@ -23,6 +23,7 @@ import type {
   OrderSource,
   OrderContact,
   Payment,
+  SalesReport,
   VenuePublic,
   VenueTheme,
 } from '@/lib/api/types';
@@ -39,6 +40,7 @@ import {
 import { decideMockCard, readMockCard } from './cardBox';
 import { checkLine, takeStock, unitPrice } from '@/lib/dishRules';
 import { checkFulfilment, onlineOrderingOf } from '@/lib/onlineOrdering';
+import { salesReport } from '@/lib/sales';
 import { rememberOpenOrder } from './openOrder';
 import {
   createWorld,
@@ -243,6 +245,8 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
         modifiers,
         unitPricePesewas: unit,
         totalPesewas: total,
+        // Fixed now, so Sales still shows the right discount after the sale ends.
+        discountPesewas: (item.pricePesewas - unit) * line.quantity,
         note: line.note,
         paid: false,
       };
@@ -1184,6 +1188,24 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       await gate();
       accessOf(world, tokens);
       return remember(call?.idempotencyKey, () => replyFor(world, reviewId, body.text));
+    },
+    async ownerGetSales(venueId, filter) {
+      await gate();
+      accessOf(world, tokens);
+      const venue = venueById(world, venueId);
+      const since = filter?.since ? Date.parse(filter.since) : -Infinity;
+      const until = filter?.until ? Date.parse(filter.until) : Infinity;
+      const orders = world.orders
+        .map((row) => row.order)
+        .filter((order) => order.venueId === venueId)
+        .filter((order) => {
+          const at = Date.parse(order.createdAt);
+          return at >= since && at < until;
+        });
+      return {
+        currency: venue.currency,
+        ...salesReport(orders, venue.hours.timezone),
+      } as SalesReport;
     },
     async ownerGetInsights(venueId, range = '7d') {
       await gate();
