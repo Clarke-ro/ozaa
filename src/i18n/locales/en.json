@@ -649,7 +649,8 @@
     "loading": "Loading",
     "crashTitle": "This page stopped working",
     "crashBody": "Something broke on our side. Try again to reload it.",
-    "quantityRange": "One dish in your order is for too few or too many. Change how many and send it again."
+    "quantityRange": "One dish in your order is for too few or too many. Change how many and send it again.",
+    "notPublished": "This menu isn’t open yet, so the order wasn’t sent."
   },
   "common": {
     "back": "Back",
@@ -999,7 +1000,23 @@
     "maxQuantity": "Max per order",
     "onSale": "On sale at {{price}}",
     "left_one": "{{count}} left",
-    "left_other": "{{count}} left"
+    "left_other": "{{count}} left",
+    "live": {
+      "mode": "How to edit the menu",
+      "preview": "Live preview",
+      "list": "List",
+      "phone": "Your guest menu, as guests see it",
+      "reorder": "Reorder dishes in {{name}}",
+      "reorderTitle": "Order of {{name}}",
+      "reorderLead": "Drag a dish by its handle. Guests see this order when Dish order is set to Your order.",
+      "hiddenDish": "Hidden from guests",
+      "addTo": "Add a dish to {{name}}",
+      "link": "Your live menu",
+      "view": "View menu",
+      "published": "Menu is published",
+      "publishedOn": "Guests can see your menu and order.",
+      "publishedOff": "Hidden. Guests see a page that says the menu isn’t open yet."
+    }
   },
   "ownerBranding": {
     "lead": "How your page looks to guests: colour, words, photos and the order of the buttons.",
@@ -1717,5 +1734,9 @@
       "starts": "Type the start like 2026-11-04 18:00, or leave it empty.",
       "ends": "Type the end like 2026-11-04 23:00, after the start, or leave it empty."
     }
+  },
+  "notOpen": {
+    "title": "Not open yet",
+    "body": "This menu isn’t open yet. Please check back soon or ask a member of staff."
   }
 }

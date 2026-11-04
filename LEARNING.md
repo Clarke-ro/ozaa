@@ -759,3 +759,38 @@ When two dishes tie (both "popular"), a stable sort keeps them in the order they
 **Try it yourself**
 
 Pick Dark and Grid in Branding, save, and open your guest menu.
+
+---
+
+## 2026-11-04 · Edit the menu on a live phone preview
+
+**What we built**
+
+On a wide screen, Menu now opens as a **Live preview**. Your guest menu sits in a phone frame, in your own colours and font. On the right are your menu link, a **Menu is published** switch, and the menu style choices.
+- Tap a dish to edit it.
+- Each section has **Add dish**, an edit button and, when dish order is "Your order", a **Reorder** button where you drag dishes into place.
+- On a phone, switch between Live preview and List at the top.
+
+When the menu isn't published, guests see a "Not open yet" page, and orders are refused.
+
+**How it works**
+
+```
+PhonePreview ─ uses the guest's own DishRow, inside the venue's theme
+   tap dish → DishEditor   Reorder → DragList → dishPositions → save only what moved
+MenuRail ─ each change saves at once (useSaveVenue), so the preview updates beside it
+```
+
+**Files to look at**
+
+- `src/features/owner/screens/menu/live/`: `LiveMenu`, `PhonePreview`, `PreviewSection`, `ReorderSheet`, `MenuRail`.
+- `dishPositions` in `menu/reorder.ts` and its test.
+- `src/app/[venue]/_layout.tsx`: where an unpublished venue shows the closed page.
+
+**New idea: reuse the real component**
+
+The preview draws dishes with the same `DishRow` guests get, inside the venue's theme. What you see is what guests see, and if we change `DishRow` later the preview changes with it.
+
+**Try it yourself**
+
+Switch "Menu is published" off, then open your menu link in another tab.

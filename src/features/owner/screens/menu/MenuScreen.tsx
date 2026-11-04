@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, TextInput, View, useWindowDimensions } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { ListOrdered, Search, UtensilsCrossed, X } from 'lucide-react-native';
 import type { MenuCategory, MenuItem } from '@/lib/api/types';
@@ -10,13 +10,17 @@ import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { FilterChips } from '@/ui/FilterChips';
-import { ConfirmDialog, EmptyCard } from '../../kit';
+import { ConfirmDialog, EmptyCard, Segmented } from '../../kit';
 import { DISH_FILTERS, filterCounts, filterDishes, type DishFilter } from './deskFilter';
 import { MenuItemRow } from './MenuItemRow';
 import { DishEditor } from './DishEditor';
 import { SectionEditor } from './SectionEditor';
 import { SectionsSheet } from './SectionsSheet';
 import { useMenuDesk } from './useMenuDesk';
+import { LiveMenu } from './live/LiveMenu';
+
+// From this width the phone preview and its side panel fit together, so the menu opens live.
+const LIVE_FIRST = 1100;
 
 type Pending =
   | { kind: 'item'; item: MenuItem }
@@ -35,6 +39,9 @@ export function MenuScreen() {
   const [editingSection, setEditingSection] = useState<MenuCategory | null | undefined>(undefined);
   const [sectionsOpen, setSectionsOpen] = useState(false);
   const [pending, setPending] = useState<Pending | null>(null);
+  const { width } = useWindowDimensions();
+  const [picked, setPicked] = useState<'list' | 'live' | null>(null);
+  const mode = picked ?? (width >= LIVE_FIRST ? 'live' : 'list');
 
   const all = desk.menu.data?.items ?? [];
   // Food sections first, then drinks, each in the order guests see them.
@@ -76,119 +83,145 @@ export function MenuScreen() {
         error={desk.menu.isError || desk.venue.isError}
         onRetry={() => void desk.menu.refetch()}
       >
-        {/* Three slim rows: search, what kind of dishes, which section. */}
-        <View style={styles.controls}>
-          <View style={styles.searchRow}>
-            <View style={[styles.search, { backgroundColor: theme.surface }]}>
-              <Search size={18} color={theme.muted} />
-              <TextInput
-                value={query}
-                onChangeText={setQuery}
-                placeholder={t('ownerMenu.search')}
-                placeholderTextColor={theme.meta}
-                accessibilityLabel={t('ownerMenu.search')}
-                returnKeyType="search"
-                style={[styles.input, { color: theme.text }]}
-              />
-              {query ? (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={t('ownerFeedback.clear')}
-                  onPress={() => setQuery('')}
-                  hitSlop={tokens.space[2]}
-                >
-                  <X size={18} color={theme.muted} />
-                </Pressable>
-              ) : null}
-            </View>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={t('ownerMenu.sections')}
-              onPress={() => setSectionsOpen(true)}
-              style={({ pressed }) => [
-                styles.iconBtn,
-                { backgroundColor: pressed ? theme.wash : theme.surface },
-              ]}
-            >
-              <ListOrdered size={20} color={theme.ink} />
-            </Pressable>
-          </View>
-          <FilterChips<DishFilter>
-            label={t('ownerMenu.filterLabel')}
-            value={status}
-            onChange={setStatus}
-            items={DISH_FILTERS.map((id) => ({
-              id,
-              label: t(`ownerMenu.filter.${id}`),
-              count: typeCounts[id],
-            }))}
-          />
-          <FilterChips
-            label={t('ownerMenu.sections')}
-            value={section}
-            onChange={setSection}
-            items={[
-              { id: 'all', label: t('ownerMenu.allSections') },
-              ...sections.map((s) => ({
-                id: s.id,
-                label: s.hidden ? `${s.name.en} (${t('ownerMenu.hidden')})` : s.name.en,
-                count: sectionCount(s.id),
-              })),
-            ]}
-          />
-        </View>
-
-        {sections.length === 0 ? (
-          <EmptyCard
-            icon={UtensilsCrossed}
-            title={t('ownerMenu.noSections')}
-            description={t('ownerMenu.noSectionsBody')}
-            actionLabel={t('ownerMenu.newSection')}
-            onAction={() => setEditingSection(null)}
-          />
-        ) : shown.length === 0 ? (
-          <EmptyCard
-            icon={UtensilsCrossed}
-            title={query ? t('ownerMenu.noMatch') : t('ownerMenu.noDishes')}
-            description={query ? t('ownerFeedback.noMatchBody') : t('ownerMenu.noDishesBody')}
-            actionLabel={query ? undefined : t('ownerMenu.addDish')}
-            onAction={query ? undefined : () => setEditingItem(null)}
+        <Segmented
+          label={t('ownerMenu.live.mode')}
+          value={mode}
+          onChange={setPicked}
+          options={[
+            { id: 'live', label: t('ownerMenu.live.preview') },
+            { id: 'list', label: t('ownerMenu.live.list') },
+          ]}
+        />
+        {mode === 'live' && desk.venue.data ? (
+          <LiveMenu
+            venue={desk.venue.data}
+            sections={sections}
+            dishes={all}
+            onEditDish={setEditingItem}
+            onAddDish={(id) => {
+              setSection(id);
+              setEditingItem(null);
+            }}
+            onEditSection={setEditingSection}
+            onReorder={(dishes, orderedIds) => desk.reorderDishes.mutate({ dishes, orderedIds })}
           />
         ) : (
           <>
-            <View style={styles.bulk}>
-              <Text variant="caption" style={[styles.flex, { color: theme.muted }]}>
-                {t('ownerMenu.showing', { count: shown.length })}
-              </Text>
-              <Button
-                label={t('ownerMenu.allOffShort')}
-                tone="ghost"
-                size="md"
-                style={styles.bulkBtn}
-                disabled={desk.setAll.isPending}
-                onPress={() => setPending({ kind: 'soldOut', items: shown })}
+            {/* Three slim rows: search, what kind of dishes, which section. */}
+            <View style={styles.controls}>
+              <View style={styles.searchRow}>
+                <View style={[styles.search, { backgroundColor: theme.surface }]}>
+                  <Search size={18} color={theme.muted} />
+                  <TextInput
+                    value={query}
+                    onChangeText={setQuery}
+                    placeholder={t('ownerMenu.search')}
+                    placeholderTextColor={theme.meta}
+                    accessibilityLabel={t('ownerMenu.search')}
+                    returnKeyType="search"
+                    style={[styles.input, { color: theme.text }]}
+                  />
+                  {query ? (
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={t('ownerFeedback.clear')}
+                      onPress={() => setQuery('')}
+                      hitSlop={tokens.space[2]}
+                    >
+                      <X size={18} color={theme.muted} />
+                    </Pressable>
+                  ) : null}
+                </View>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={t('ownerMenu.sections')}
+                  onPress={() => setSectionsOpen(true)}
+                  style={({ pressed }) => [
+                    styles.iconBtn,
+                    { backgroundColor: pressed ? theme.wash : theme.surface },
+                  ]}
+                >
+                  <ListOrdered size={20} color={theme.ink} />
+                </Pressable>
+              </View>
+              <FilterChips<DishFilter>
+                label={t('ownerMenu.filterLabel')}
+                value={status}
+                onChange={setStatus}
+                items={DISH_FILTERS.map((id) => ({
+                  id,
+                  label: t(`ownerMenu.filter.${id}`),
+                  count: typeCounts[id],
+                }))}
               />
-              <Button
-                label={t('ownerMenu.allOnShort')}
-                tone="ghost"
-                size="md"
-                style={styles.bulkBtn}
-                disabled={desk.setAll.isPending}
-                onPress={() => desk.setAll.mutate({ items: shown, available: true })}
+              <FilterChips
+                label={t('ownerMenu.sections')}
+                value={section}
+                onChange={setSection}
+                items={[
+                  { id: 'all', label: t('ownerMenu.allSections') },
+                  ...sections.map((s) => ({
+                    id: s.id,
+                    label: s.hidden ? `${s.name.en} (${t('ownerMenu.hidden')})` : s.name.en,
+                    count: sectionCount(s.id),
+                  })),
+                ]}
               />
             </View>
-            <View style={styles.list}>
-              {shown.map((item) => (
-                <MenuItemRow
-                  key={item.id}
-                  item={item}
-                  currency={desk.currency}
-                  section={section === 'all' ? sectionName(item.categoryId) : undefined}
-                  onToggle={() => desk.toggle.mutate(item)}
-                  onEdit={() => setEditingItem(item)}
-                />
-              ))}
-            </View>
+
+            {sections.length === 0 ? (
+              <EmptyCard
+                icon={UtensilsCrossed}
+                title={t('ownerMenu.noSections')}
+                description={t('ownerMenu.noSectionsBody')}
+                actionLabel={t('ownerMenu.newSection')}
+                onAction={() => setEditingSection(null)}
+              />
+            ) : shown.length === 0 ? (
+              <EmptyCard
+                icon={UtensilsCrossed}
+                title={query ? t('ownerMenu.noMatch') : t('ownerMenu.noDishes')}
+                description={query ? t('ownerFeedback.noMatchBody') : t('ownerMenu.noDishesBody')}
+                actionLabel={query ? undefined : t('ownerMenu.addDish')}
+                onAction={query ? undefined : () => setEditingItem(null)}
+              />
+            ) : (
+              <>
+                <View style={styles.bulk}>
+                  <Text variant="caption" style={[styles.flex, { color: theme.muted }]}>
+                    {t('ownerMenu.showing', { count: shown.length })}
+                  </Text>
+                  <Button
+                    label={t('ownerMenu.allOffShort')}
+                    tone="ghost"
+                    size="md"
+                    style={styles.bulkBtn}
+                    disabled={desk.setAll.isPending}
+                    onPress={() => setPending({ kind: 'soldOut', items: shown })}
+                  />
+                  <Button
+                    label={t('ownerMenu.allOnShort')}
+                    tone="ghost"
+                    size="md"
+                    style={styles.bulkBtn}
+                    disabled={desk.setAll.isPending}
+                    onPress={() => desk.setAll.mutate({ items: shown, available: true })}
+                  />
+                </View>
+                <View style={styles.list}>
+                  {shown.map((item) => (
+                    <MenuItemRow
+                      key={item.id}
+                      item={item}
+                      currency={desk.currency}
+                      section={section === 'all' ? sectionName(item.categoryId) : undefined}
+                      onToggle={() => desk.toggle.mutate(item)}
+                      onEdit={() => setEditingItem(item)}
+                    />
+                  ))}
+                </View>
+              </>
+            )}
           </>
         )}
       </DeskWait>

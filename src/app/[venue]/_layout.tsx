@@ -1,7 +1,8 @@
 import { useColorScheme } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { guestScheme, menuStyleOf } from '@/lib/menuStyle';
+import { guestScheme, isPublished, menuStyleOf } from '@/lib/menuStyle';
+import { NotOpenState } from '@/ui/states';
 import { z } from 'zod/mini';
 import { themeFromAccent, ThemeProvider } from '@/ui/theme';
 import { useVenue } from '@/features/venue';
@@ -23,7 +24,14 @@ export default function VenueLayout() {
   return (
     <ThemeProvider theme={theme}>
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.bg } }} />
+      {/* Until the owner publishes, every guest page shows the same "not open yet" page. */}
+      {venue.data && !isPublished(venue.data) ? (
+        <NotOpenState />
+      ) : (
+        <Stack
+          screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.bg } }}
+        />
+      )}
     </ThemeProvider>
   );
 }
