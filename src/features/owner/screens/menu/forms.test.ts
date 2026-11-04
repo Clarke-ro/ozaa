@@ -1,6 +1,6 @@
 // Imported directly: the menu feature index pulls in storage that Jest does not load.
 import { isCategoryAvailable } from '../../../menu/menuSchedule';
-import { checkDish, checkSection, dayNumber, WEEK } from './forms';
+import { checkDish, checkSection, checkStock, dayNumber, WEEK } from './forms';
 
 describe('days', () => {
   test('Monday to Saturday are 1-6 and Sunday is 0, like Date.getUTCDay and the guest menu', () => {
@@ -77,6 +77,51 @@ describe('checkDish', () => {
     expect(checkDish({ ...base, groups: [{ ...group, min: 2, max: 2 }] })).toEqual({
       ok: false,
       field: 'addOns',
+    });
+  });
+});
+
+describe('checkStock', () => {
+  const blank = { pricePesewas: 5000, salePrice: '', stock: '', minQuantity: '', maxQuantity: '' };
+
+  test('all blank means no sale, unlimited stock and the default limits', () => {
+    expect(checkStock(blank)).toEqual({
+      ok: true,
+      salePricePesewas: null,
+      stockCount: null,
+      minQuantity: 1,
+      maxQuantity: 50,
+    });
+  });
+
+  test('a sale price must be above 0 and below the normal price', () => {
+    expect(checkStock({ ...blank, salePrice: '40' })).toMatchObject({
+      ok: true,
+      salePricePesewas: 4000,
+    });
+    expect(checkStock({ ...blank, salePrice: '50' })).toEqual({ ok: false, field: 'salePrice' });
+    expect(checkStock({ ...blank, salePrice: '0' })).toEqual({ ok: false, field: 'salePrice' });
+    expect(checkStock({ ...blank, salePrice: 'abc' })).toEqual({ ok: false, field: 'salePrice' });
+  });
+
+  test('stock is a whole number from 0 up; 0 is allowed and means sold out', () => {
+    expect(checkStock({ ...blank, stock: '0' })).toMatchObject({ ok: true, stockCount: 0 });
+    expect(checkStock({ ...blank, stock: ' 12 ' })).toMatchObject({ ok: true, stockCount: 12 });
+    expect(checkStock({ ...blank, stock: '2.5' })).toEqual({ ok: false, field: 'stock' });
+    expect(checkStock({ ...blank, stock: '-1' })).toEqual({ ok: false, field: 'stock' });
+  });
+
+  test('min and max are 1 to 50, and min cannot be above max', () => {
+    expect(checkStock({ ...blank, minQuantity: '2', maxQuantity: '6' })).toMatchObject({
+      ok: true,
+      minQuantity: 2,
+      maxQuantity: 6,
+    });
+    expect(checkStock({ ...blank, minQuantity: '0' })).toEqual({ ok: false, field: 'quantity' });
+    expect(checkStock({ ...blank, maxQuantity: '51' })).toEqual({ ok: false, field: 'quantity' });
+    expect(checkStock({ ...blank, minQuantity: '5', maxQuantity: '3' })).toEqual({
+      ok: false,
+      field: 'quantity',
     });
   });
 });

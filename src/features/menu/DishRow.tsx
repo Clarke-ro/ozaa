@@ -3,10 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { Plus, UtensilsCrossed } from 'lucide-react-native';
 import type { MenuItem } from '@/lib/api/types';
 import { tokens } from '@/theme/tokens';
-import { PriceText } from '@/ui/PriceText';
 import { Text } from '@/ui/Text';
 import { VenueImage } from '@/ui/VenueImage';
 import { fontFamily, useTheme } from '@/ui/theme';
+import { DishPrice } from './DishPrice';
 
 /**
  * One dish in the list view (the default): a square photo, name, one line of description,
@@ -57,7 +57,7 @@ export function DishRow({
             </Text>
           ) : null}
           <View style={styles.meta}>
-            <PriceText amount={item.pricePesewas} currency={currency} />
+            <DishPrice item={item} currency={currency} />
             {popular ? (
               <Text variant="caption" style={[styles.tag, { color: theme.badgeInk }]}>
                 {t('menu.popular')}

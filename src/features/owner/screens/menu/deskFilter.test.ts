@@ -43,3 +43,8 @@ describe('owner menu filters', () => {
     ).toEqual(['Rice', 'Tea']);
   });
 });
+
+test('a hidden dish is not counted as on the menu', () => {
+  const hidden = { ...dish('h1'), hidden: true };
+  expect(filterCounts([hidden]).on).toBe(0);
+});

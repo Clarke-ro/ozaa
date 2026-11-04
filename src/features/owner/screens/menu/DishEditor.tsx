@@ -4,21 +4,14 @@ import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
 import type { MenuCategory, MenuItem, ModifierGroup } from '@/lib/api/types';
+import { dishStatus, statusFields, type DishStatus } from '@/lib/dishRules';
 import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
-import {
-  Chips,
-  Field,
-  ModalSheet,
-  PhotoField,
-  Section,
-  SectionBody,
-  SwitchRow,
-  toast,
-} from '../../kit';
+import { Chips, Field, ModalSheet, PhotoField, Section, SectionBody, toast } from '../../kit';
 import { AddOnsEditor } from './AddOnsEditor';
-import { checkDish } from './forms';
+import { checkDish, checkStock } from './forms';
+import { DishStockFields, type StockDraft } from './DishStockFields';
 import { DishTags } from './DishTags';
 
 /** Full-screen form for one dish or drink. Save is pinned at the bottom so it is always in reach. */
@@ -50,7 +43,13 @@ export function DishEditor({
   const [sectionId, setSectionId] = useState(
     item?.categoryId ?? defaultSectionId ?? sections[0]?.id ?? '',
   );
-  const [available, setAvailable] = useState(item?.available ?? true);
+  const [status, setStatus] = useState<DishStatus>(item ? dishStatus(item) : 'available');
+  const [stockDraft, setStockDraft] = useState<StockDraft>({
+    salePrice: item?.salePricePesewas != null ? (item.salePricePesewas / 100).toFixed(2) : '',
+    stock: item?.stockCount != null ? String(item.stockCount) : '',
+    minQuantity: item?.minQuantity != null ? String(item.minQuantity) : '',
+    maxQuantity: item?.maxQuantity != null ? String(item.maxQuantity) : '',
+  });
   const [calories, setCalories] = useState(item?.calories ? String(item.calories) : '');
   const [dietary, setDietary] = useState<MenuItem['dietary']>(item?.dietary ?? []);
   const [dietaryCustom, setDietaryCustom] = useState<string[]>(item?.dietaryCustom ?? []);
@@ -61,19 +60,26 @@ export function DishEditor({
   const [photoUrl, setPhotoUrl] = useState<string | null>(item?.photo?.url ?? null);
   const [showErrors, setShowErrors] = useState(false);
 
-  const check = checkDish({ name, price, categoryId: sectionId, groups });
+  const dish = checkDish({ name, price, categoryId: sectionId, groups });
+  const stock = checkStock({ pricePesewas: dish.ok ? dish.pricePesewas : 0, ...stockDraft });
+  // The first problem wins, top of the form first, so the owner fixes one thing at a time.
+  const failed = !dish.ok ? dish.field : !stock.ok ? stock.field : null;
   const error = (field: string) =>
-    showErrors && !check.ok && check.field === field ? t(`ownerMenu.err.${field}`) : undefined;
+    showErrors && failed === field ? t(`ownerMenu.err.${field}`) : undefined;
 
   const save = useMutation({
     mutationFn: () => {
-      if (!check.ok) throw new Error('invalid');
+      if (!dish.ok || !stock.ok) throw new Error('invalid');
       const body = {
-        name: { ...item?.name, en: check.name },
+        name: { ...item?.name, en: dish.name },
         description: { ...item?.description, en: description.trim() },
-        pricePesewas: check.pricePesewas,
+        pricePesewas: dish.pricePesewas,
         categoryId: sectionId,
-        available,
+        ...statusFields(status),
+        salePricePesewas: stock.salePricePesewas,
+        stockCount: stock.stockCount,
+        minQuantity: stock.minQuantity,
+        maxQuantity: stock.maxQuantity,
         dietary,
         dietaryCustom,
         allergens,
@@ -103,7 +109,7 @@ export function DishEditor({
           label={item ? t('ownerKit.save') : t('ownerMenu.addDish')}
           style={styles.flex}
           loading={save.isPending}
-          onPress={() => (check.ok ? save.mutate() : setShowErrors(true))}
+          onPress={() => (failed === null ? save.mutate() : setShowErrors(true))}
         />
       }
     >
@@ -155,12 +161,19 @@ export function DishEditor({
             </Text>
           ) : null}
         </SectionBody>
-        <SwitchRow
-          label={t('owner.onMenu')}
-          hint={t('ownerMenu.availableHint')}
-          value={available}
-          onChange={setAvailable}
-        />
+      </Section>
+
+      <Section title={t('ownerMenu.pricingStock')}>
+        <SectionBody>
+          <DishStockFields
+            status={status}
+            onStatus={setStatus}
+            draft={stockDraft}
+            onDraft={setStockDraft}
+            currency={currency}
+            error={error}
+          />
+        </SectionBody>
       </Section>
 
       <DishTags

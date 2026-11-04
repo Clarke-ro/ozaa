@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Check, Clock, Flame, Minus, Plus } from 'lucide-react-native';
 import { api } from '@/lib/api';
 import { pesewas } from '@/lib/brand';
+import { isOnGuestMenu, quantityLimits, unitPrice } from '@/lib/dishRules';
 import { hapticImpactLight, hapticSelection } from '@/lib/haptics';
 import { DEFAULT_CURRENCY, formatMoney } from '@/lib/money';
 import { useCart } from '@/features/cart';
@@ -18,6 +19,7 @@ import { ErrorState, LoadingState } from '@/ui/states';
 import { tokens } from '@/theme/tokens';
 import { useTheme } from '@/ui/theme';
 import { addOnTotal, missingChoice, pickOption } from './dishLogic';
+import { DishPrice } from './DishPrice';
 import { DishGallery } from './DishGallery';
 import { guestKeys } from '@/lib/queryKeys';
 import { SHADOW_INK } from '@/theme/palette';
@@ -38,15 +40,21 @@ export function ItemScreen({ slug, itemId }: { slug: string; itemId: string }) {
   const item = menu.data?.items.find((candidate) => candidate.id === itemId);
 
   if (menu.isLoading) return <LoadingState />;
-  if (!item) return <ErrorState onRetry={() => router.back()} />;
+  if (!item || !isOnGuestMenu(item)) return <ErrorState onRetry={() => router.back()} />;
 
   const currency = venue.data?.currency ?? DEFAULT_CURRENCY;
   const money = (v: number) => formatMoney(pesewas(v), currency);
   const extra = addOnTotal(item.modifierGroups, picks);
-  const total = (item.pricePesewas + extra) * quantity;
+  const limits = quantityLimits(item);
+  // Keep the count inside the owner's limits, even if stock dropped while the page was open.
+  const count = Math.min(limits.max, Math.max(limits.min, quantity));
+  const total = (unitPrice(item) + extra) * count;
   const missing = missingChoice(item.modifierGroups, picks);
   const related = (menu.data?.items ?? [])
-    .filter((i) => i.categoryId === item.categoryId && i.id !== item.id && i.available)
+    .filter(
+      (i) =>
+        i.categoryId === item.categoryId && i.id !== item.id && i.available && isOnGuestMenu(i),
+    )
     .slice(0, 6);
   const facts = [
     item.prepMinutes ? { icon: Clock, text: t('menu.prep', { count: item.prepMinutes }) } : null,
@@ -62,8 +70,8 @@ export function ItemScreen({ slug, itemId }: { slug: string; itemId: string }) {
     add(slug, {
       menuItemId: item.id,
       name: item.name.en,
-      quantity,
-      unitPricePesewas: pesewas(item.pricePesewas),
+      quantity: count,
+      unitPricePesewas: pesewas(unitPrice(item)),
       modifierPesewas: pesewas(extra),
       modifierOptionIds: Object.values(picks).flat(),
       note: note.trim() || undefined,
@@ -87,9 +95,9 @@ export function ItemScreen({ slug, itemId }: { slug: string; itemId: string }) {
             <Text variant="display-m" style={styles.flex}>
               {item.name.en}
             </Text>
-            <Text variant="title" style={styles.num}>
-              {money(item.pricePesewas)}
-            </Text>
+            <View>
+              <DishPrice item={item} currency={currency} size="title" />
+            </View>
           </View>
           {item.description.en ? (
             <Text variant="body" style={{ color: theme.muted }}>
@@ -202,19 +210,31 @@ export function ItemScreen({ slug, itemId }: { slug: string; itemId: string }) {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={t('menu.less')}
-              onPress={() => setQuantity((q) => Math.max(1, q - 1))}
-              style={[styles.step, { backgroundColor: theme.wash }]}
+              accessibilityState={{ disabled: count <= limits.min }}
+              disabled={count <= limits.min}
+              onPress={() => setQuantity(Math.max(limits.min, count - 1))}
+              style={[
+                styles.step,
+                { backgroundColor: theme.wash },
+                count <= limits.min && styles.off,
+              ]}
             >
               <Minus size={18} color={theme.text} />
             </Pressable>
             <Text variant="title" style={styles.qty}>
-              {quantity}
+              {count}
             </Text>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={t('menu.more')}
-              onPress={() => setQuantity((q) => Math.min(50, q + 1))}
-              style={[styles.step, { backgroundColor: theme.wash }]}
+              accessibilityState={{ disabled: count >= limits.max }}
+              disabled={count >= limits.max}
+              onPress={() => setQuantity(Math.min(limits.max, count + 1))}
+              style={[
+                styles.step,
+                { backgroundColor: theme.wash },
+                count >= limits.max && styles.off,
+              ]}
             >
               <Plus size={18} color={theme.text} />
             </Pressable>
@@ -315,7 +335,8 @@ const styles = StyleSheet.create({
   body: { padding: 20, gap: 16 },
   titleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   flex: { flex: 1 },
-  num: { fontVariant: ['tabular-nums'] },
+  // A stepper at its limit fades, so it doesn't look tappable.
+  off: { opacity: 0.4 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
     flexDirection: 'row',

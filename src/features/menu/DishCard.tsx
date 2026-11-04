@@ -2,11 +2,11 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Plus, UtensilsCrossed } from 'lucide-react-native';
 import type { MenuItem } from '@/lib/api/types';
-import { PriceText } from '@/ui/PriceText';
 import { Text } from '@/ui/Text';
 import { VenueImage } from '@/ui/VenueImage';
 import { tokens } from '@/theme/tokens';
 import { fontFamily, useTheme } from '@/ui/theme';
+import { DishPrice } from './DishPrice';
 
 /**
  * One dish in the menu grid: photo, name, price and an add button. The description lives on
@@ -69,7 +69,7 @@ export function DishCard({
           <Text variant="caption" numberOfLines={1} style={styles.name}>
             {item.name.en}
           </Text>
-          <PriceText amount={item.pricePesewas} currency={currency} />
+          <DishPrice item={item} currency={currency} />
         </View>
       </Pressable>
       {onAdd ? (

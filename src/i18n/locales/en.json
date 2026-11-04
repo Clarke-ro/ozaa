@@ -141,7 +141,9 @@
     "showGrid": "Show as photo cards",
     "showList": "Show as a list",
     "sectionsLabel": "Menu sections",
-    "allSections": "All"
+    "allSections": "All",
+    "salePrice": "Now {{now}}, was {{was}}",
+    "limits": "Order {{min}} to {{max}}"
   },
   "dietary": {
     "vegetarian": "Vegetarian",
@@ -646,7 +648,8 @@
     "tryAgain": "Try again",
     "loading": "Loading",
     "crashTitle": "This page stopped working",
-    "crashBody": "Something broke on our side. Try again to reload it."
+    "crashBody": "Something broke on our side. Try again to reload it.",
+    "quantityRange": "One dish in your order is for too few or too many. Change how many and send it again."
   },
   "common": {
     "back": "Back",
@@ -941,7 +944,10 @@
       "addOns": "Each add-on group needs a name and named options, and guests must be able to pick enough.",
       "days": "Pick at least one day.",
       "start": "Use 24-hour time, like 11:00.",
-      "end": "Use 24-hour time, after the start."
+      "end": "Use 24-hour time, after the start.",
+      "salePrice": "Make the sale price lower than the normal price, or leave it empty.",
+      "stock": "Type a whole number, like 20, or leave it empty.",
+      "quantity": "Use whole numbers from 1 to 50, with min no higher than max."
     },
     "allergen": {
       "celery": "Celery",
@@ -973,7 +979,27 @@
     "sizeSmall": "Small",
     "sizeMedium": "Medium",
     "sizeLarge": "Large",
-    "ruleOneHint": "Guests must pick one. Each price here is added to the dish price, so leave the smallest at 0."
+    "ruleOneHint": "Guests must pick one. Each price here is added to the dish price, so leave the smallest at 0.",
+    "pricingStock": "Pricing and stock",
+    "status": "Status",
+    "statusAvailable": "Available",
+    "statusSoldOut": "Out of stock",
+    "statusHidden": "Hidden",
+    "statusHint": {
+      "available": "Guests can see and order it.",
+      "sold_out": "Guests see it marked Sold out and can’t order it.",
+      "hidden": "Guests don’t see it. Nothing is deleted."
+    },
+    "salePrice": "Sale price ({{currency}})",
+    "salePriceHint": "Optional. Leave empty for no sale. Guests see the normal price crossed out.",
+    "stock": "Stock count",
+    "stockHint": "Optional. Leave empty for unlimited. At 0 the dish shows as Sold out.",
+    "stockPlaceholder": "Unlimited",
+    "minQuantity": "Min per order",
+    "maxQuantity": "Max per order",
+    "onSale": "On sale at {{price}}",
+    "left_one": "{{count}} left",
+    "left_other": "{{count}} left"
   },
   "ownerBranding": {
     "lead": "How your page looks to guests: colour, words, photos and the order of the buttons.",
