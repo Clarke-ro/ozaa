@@ -367,6 +367,9 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
         const venue = venueBySlug(world, session.slug);
         const menu = world.menus[session.slug];
         if (!menu) throw new ApiError(404, 'order_not_found', 'Menu not found');
+        if (venue.published === false) {
+          throw new ApiError(422, 'venue_not_published', 'This menu is not open yet');
+        }
         const lines = body.lines.map((line) => {
           const item = menu.items.find((candidate) => candidate.id === line.menuItemId);
           if (!item) throw new ApiError(422, 'item_sold_out', 'That dish is not on the menu');
@@ -848,6 +851,10 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
         badges: body.badges ?? [],
         modifierGroups: body.modifierGroups ?? [],
         prepMinutes: body.prepMinutes,
+        // A new dish goes to the end of its section.
+        position:
+          body.position ??
+          menu.items.filter((other) => other.categoryId === body.categoryId).length,
         hidden: body.hidden ?? false,
         salePricePesewas: body.salePricePesewas ?? null,
         stockCount: body.stockCount ?? null,

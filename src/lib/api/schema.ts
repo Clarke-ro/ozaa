@@ -1476,6 +1476,8 @@ export interface components {
             buttonOrder?: string[];
             socials?: components["schemas"]["SocialLinks"];
             menuStyle?: components["schemas"]["MenuStyle"];
+            /** @description False while the owner is still setting up. Guest pages then say the menu isn't open yet, and ordering fails with venue_not_published. Missing means true. */
+            published?: boolean;
             /** @description Only notices that are switched on and inside their start and end times right now. Missing or null parts mean nothing to show. */
             notices?: components["schemas"]["StoreNotices"];
         };
@@ -1510,6 +1512,7 @@ export interface components {
             socials?: components["schemas"]["SocialLinks"];
             noticeSettings?: components["schemas"]["StoreNotices"];
             menuStyle?: components["schemas"]["MenuStyle"];
+            published?: boolean;
         };
         Wifi: {
             ssid: string;
@@ -1605,6 +1608,8 @@ export interface components {
             minQuantity?: number;
             /** @description Largest number a guest may order in one line. Missing means 50. Outside min..max the order fails with quantity_out_of_range. */
             maxQuantity?: number;
+            /** @description Order inside its section when the venue sorts by its own order (itemSort manual). Lower comes first; dishes without one keep the order the menu lists them in, after those that have one. */
+            position?: number;
         };
         MenuItemInput: {
             categoryId?: string;
@@ -1631,6 +1636,8 @@ export interface components {
             minQuantity?: number;
             /** @description Largest number a guest may order in one line. Missing means 50. Outside min..max the order fails with quantity_out_of_range. */
             maxQuantity?: number;
+            /** @description Order inside its section when the venue sorts by its own order (itemSort manual). Lower comes first; dishes without one keep the order the menu lists them in, after those that have one. */
+            position?: number;
         };
         Menu: {
             venueId: string;
