@@ -726,6 +726,8 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
         banner,
         logo,
         location: body.location ? { ...venue.location, ...body.location } : venue.location,
+        // Saving one menu style choice keeps the others.
+        menuStyle: body.menuStyle ? { ...venue.menuStyle, ...body.menuStyle } : venue.menuStyle,
       };
       world.venues[venue.slug] = next;
       if (body.wifi) world.wifi[venue.slug] = body.wifi;
