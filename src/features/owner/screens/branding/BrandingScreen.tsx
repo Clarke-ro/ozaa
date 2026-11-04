@@ -13,6 +13,8 @@ import { BUTTON_KEYS, ButtonsSection } from './ButtonsSection';
 import { GuestPreview } from './GuestPreview';
 import { buttonLook, isHex, type Tint } from './look';
 import { LookSection, type FontPair } from './LookSection';
+import { MenuStyleSection } from './MenuStyleSection';
+import { menuStyleOf } from '@/lib/menuStyle';
 
 type Tab = 'look' | 'words' | 'buttons' | 'preview';
 
@@ -44,6 +46,7 @@ export function BrandingScreen() {
     description: v?.description?.en ?? '',
     tint: (v?.buttonTint ?? 'auto') as Tint,
     order: v?.buttonOrder?.length ? v.buttonOrder : [...BUTTON_KEYS],
+    menuStyle: menuStyleOf(v?.menuStyle),
   });
   // Photos upload straight away; their ids are saved with the rest. undefined means unchanged.
   const [banner, setBanner] = useState<{ id: string; url: string | null } | undefined>(undefined);
@@ -82,6 +85,7 @@ export function BrandingScreen() {
         description: { ...v?.description, en: f.description.trim() },
         buttonTint: f.tint,
         buttonOrder: f.order,
+        menuStyle: f.menuStyle,
         ...(banner ? { bannerMediaId: banner.id } : {}),
         ...(logo ? { logoMediaId: logo.id } : {}),
       });
@@ -148,6 +152,10 @@ export function BrandingScreen() {
                   onAccent={(hex) => draft.set('accent', hex)}
                   font={f.font}
                   onFont={(font) => draft.set('font', font)}
+                />
+                <MenuStyleSection
+                  style={f.menuStyle}
+                  onChange={(next) => draft.set('menuStyle', next)}
                 />
               </>
             ) : null}

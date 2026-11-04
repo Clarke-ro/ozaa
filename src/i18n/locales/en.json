@@ -1046,7 +1046,26 @@
       "preview": "Preview"
     },
     "fontSample": "Aa",
-    "orderLabel": "Order on the guest page"
+    "orderLabel": "Order on the guest page",
+    "menuStyle": {
+      "title": "Menu style",
+      "note": "How your menu looks to guests. Guests can still switch between list and grid.",
+      "sort": "Dish order in each section",
+      "sorts": {
+        "manual": "Your order",
+        "popular_first": "Popular first",
+        "name": "A to Z",
+        "price_low": "Price, low to high",
+        "price_high": "Price, high to low"
+      },
+      "layout": "Menu opens as",
+      "list": "List",
+      "grid": "Grid",
+      "scheme": "Guest pages",
+      "light": "Light",
+      "dark": "Dark",
+      "auto": "Follow phone"
+    }
   },
   "ownerPages": {
     "businessLead": "Your business name and every location you run on Ozaa.",

@@ -722,3 +722,40 @@ The phone remembers which popup a guest closed, by its words, so it doesn't pop 
 **Try it yourself**
 
 Set a banner with an end time two minutes from now, open the guest home and wait. It goes away by itself.
+
+---
+
+## 2026-11-04 · Menu style: dish order, list or grid, light or dark
+
+**What we built**
+
+Branding → Look has a new **Menu style** part with three choices:
+- **Dish order** in each section: your order, Popular first, A to Z, or price low or high
+- **How the menu opens:** a list or a grid. Guests can still switch.
+- **Guest pages:** Light, Dark, or Follow phone
+
+The default is your order, a list, and light, so nothing changes until you pick.
+
+**How it works**
+
+```
+venue.menuStyle → menuStyleOf (fills the defaults)
+   ├─ MenuScreen: sortDishes(items, itemSort), opens in `layout`
+   └─ [venue]/_layout: guestScheme(colorScheme, phone) → the dark or light theme for every guest page
+```
+
+Dark mode was cheap because the guest screens ask the theme for colours by their job ("background", "text") and never type a colour code. Switching the theme switches every screen.
+
+**Files to look at**
+
+- `src/lib/menuStyle.ts` and its test.
+- `src/features/owner/screens/branding/MenuStyleSection.tsx`.
+- `src/app/[venue]/_layout.tsx`: where light or dark is picked.
+
+**New idea: a stable sort**
+
+When two dishes tie (both "popular"), a stable sort keeps them in the order they had before. So "Popular first" still respects how you arranged each group.
+
+**Try it yourself**
+
+Pick Dark and Grid in Branding, save, and open your guest menu.

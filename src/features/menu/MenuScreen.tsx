@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
 import { pesewas } from '@/lib/brand';
 import { isOnGuestMenu, quantityLimits, unitPrice } from '@/lib/dishRules';
+import { menuStyleOf, sortDishes } from '@/lib/menuStyle';
 import { hapticImpactLight } from '@/lib/haptics';
 import { DEFAULT_CURRENCY } from '@/lib/money';
 import { useCart } from '@/features/cart';
@@ -47,18 +48,21 @@ export function MenuScreen({ slug }: { slug: string }) {
   const [diets, setDiets] = useState<string[]>([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [query, setQuery] = useState('');
-  const [view, setView] = useState<MenuView>('list');
+  // Null until the guest switches; until then the venue's chosen layout is used.
+  const [picked, setPicked] = useState<MenuView | null>(null);
 
   if (menu.isLoading) return <LoadingState />;
   if (menu.isError || !menu.data) return <ErrorState onRetry={() => void menu.refetch()} />;
 
   const currency = venue.data?.currency ?? DEFAULT_CURRENCY;
+  const style = menuStyleOf(venue.data?.menuStyle);
+  const view: MenuView = picked ?? style.layout;
   // Food sections first, then drinks, each in the venue's order.
   const sections = menu.data.categories
     .filter((c) => !c.hidden)
     .sort((a, b) => (a.kind === b.kind ? a.position - b.position : a.kind === 'food' ? -1 : 1));
   const active = section === 'all' || sections.some((c) => c.id === section) ? section : 'all';
-  const visible = menu.data.items.filter(
+  const visible = sortDishes(menu.data.items, style.itemSort).filter(
     (i) => isOnGuestMenu(i) && sections.some((c) => c.id === i.categoryId),
   );
   const searching = query.trim().length > 0;
@@ -137,7 +141,7 @@ export function MenuScreen({ slug }: { slug: string }) {
         diets={diets.length}
         onFilters={options.length > 0 ? () => setFiltersOpen(true) : null}
         view={view}
-        onView={setView}
+        onView={setPicked}
         sections={sections}
         active={active}
         onSection={setSection}
