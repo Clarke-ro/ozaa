@@ -736,7 +736,11 @@
       "orders": "In the kitchen now",
       "tables": "Seated now",
       "callsWaiting": "Needs someone now",
-      "callsQuiet": "All quiet"
+      "callsQuiet": "All quiet",
+      "ordersToday": "Since midnight",
+      "pendingWaiting": "Waiting for the kitchen",
+      "pendingClear": "Kitchen is up to date",
+      "visitors": "From scans and links"
     },
     "setup": {
       "title": "Complete your setup",
@@ -749,6 +753,11 @@
         "wifi": "Add your Wi-Fi for guests",
         "team": "Invite your staff"
       }
+    },
+    "stats": {
+      "ordersToday": "Orders today",
+      "pending": "Pending",
+      "visitors": "Visitors today"
     }
   },
   "ownerTables": {
