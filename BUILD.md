@@ -605,7 +605,7 @@ Approved by Clarke on 2026-11-03. Details and file locations are in `docs/menuri
 - [x] 4b.7 "Size" preset in the add-ons editor (one required choice, each size with its own price).
 - [x] 4b.8 *contract* + UI: item status (available, out of stock, hidden), sale price, stock count, min and max quantity.
 - [x] 4b.9 *contract* + UI: store notice (scrolling banner and popup, each with a schedule and a show/hide toggle).
-- [ ] 4b.10 *contract* + UI: customization of item sort order, list or grid layout, and guest light/dark mode.
+- [x] 4b.10 *contract* + UI: customization of item sort order, list or grid layout, and guest light/dark mode.
 - [ ] 4b.11 *contract* + UI: menu editor on a live phone preview, publish toggle, menu link and quick style on the right.
 - [ ] 4b.12 *contract* + UI: orders date filter and manual "create order".
 - [ ] 4b.13 *contract* + UI: Home stats for orders today, pending orders and visitors today.

@@ -1,4 +1,7 @@
+import { useColorScheme } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { guestScheme, menuStyleOf } from '@/lib/menuStyle';
 import { z } from 'zod/mini';
 import { themeFromAccent, ThemeProvider } from '@/ui/theme';
 import { useVenue } from '@/features/venue';
@@ -13,10 +16,14 @@ export default function VenueLayout() {
   const venue = useVenue(slug);
   const font = venue.data?.theme.fontPair;
   const fontPair: FontPair = font === 'serif' || font === 'bold' || font === 'ozaa' ? font : 'ozaa';
-  const theme = themeFromAccent(venue.data?.theme.accent, fontPair);
+  const phone = useColorScheme();
+  // Light unless the venue chose dark, or chose auto and the guest's phone is dark.
+  const scheme = guestScheme(menuStyleOf(venue.data?.menuStyle).colorScheme, phone);
+  const theme = themeFromAccent(venue.data?.theme.accent, fontPair, scheme);
   return (
     <ThemeProvider theme={theme}>
-      <Stack screenOptions={{ headerShown: false }} />
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.bg } }} />
     </ThemeProvider>
   );
 }
