@@ -1323,7 +1323,9 @@
       "unpaid": "Not paid",
       "part_paid": "Part paid",
       "paid": "Paid",
-      "refunded": "Refunded"
+      "refunded": "Refunded",
+      "online": "Paid online",
+      "by": "Paid · {{method}}"
     },
     "move": {
       "start": "Start cooking",
@@ -1383,7 +1385,19 @@
       "deliveryCode": "DL",
       "table": "Table"
     },
-    "call": "Call {{name}}"
+    "call": "Call {{name}}",
+    "method": {
+      "cash": "Cash",
+      "card_machine": "Card machine",
+      "bank_transfer": "Bank transfer",
+      "momo_merchant": "MoMo to your number"
+    },
+    "markPaid": {
+      "open": "Mark paid",
+      "title": "How did order #{{number}} pay?",
+      "lead": "Marks the full {{total}} as paid.",
+      "done": "Order #{{number}} marked paid"
+    }
   },
   "ownerCalls": {
     "status": {
@@ -1888,7 +1902,11 @@
     "orders_one": "{{count}} order",
     "orders_other": "{{count}} orders",
     "topItems": "Top dishes",
-    "empty": "No orders in these dates yet."
+    "empty": "No orders in these dates yet.",
+    "paid": "How it was paid",
+    "paidOnline": "Paid online",
+    "paidInPerson": "Paid in person",
+    "unpaid": "Not paid yet"
   },
   "ownerPay": {
     "lead": "How guests pay you. Online payments go straight to your own Paystack account; Ozaa never holds your money.",

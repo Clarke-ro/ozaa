@@ -4,6 +4,9 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
   Ban,
+  Banknote,
+  Clock,
+  Globe,
   Bike,
   CircleCheck,
   ClipboardList,
@@ -127,6 +130,41 @@ export function SalesScreen() {
                 bars={r.days.map((day) => ({ label: day.date.slice(5), value: day.pesewas }))}
                 format={money}
                 summary={t('ownerSales.overTimeSummary')}
+              />
+            </ChartCard>
+
+            <ChartCard
+              title={t('ownerSales.paid')}
+              rows={[
+                { label: t('ownerSales.paidOnline'), value: money(r.payments.onlinePesewas) },
+                { label: t('ownerSales.paidInPerson'), value: money(r.payments.inPersonPesewas) },
+                { label: t('ownerSales.unpaid'), value: money(r.payments.unpaidPesewas) },
+              ]}
+              empty={r.orderCount ? undefined : t('ownerSales.empty')}
+            >
+              <SplitBar
+                showCount={false}
+                summary={t('ownerSales.paid')}
+                parts={[
+                  {
+                    label: t('ownerSales.paidOnline'),
+                    amount: r.payments.onlinePesewas,
+                    color: theme.success,
+                    icon: Globe,
+                  },
+                  {
+                    label: t('ownerSales.paidInPerson'),
+                    amount: r.payments.inPersonPesewas,
+                    color: theme.fill,
+                    icon: Banknote,
+                  },
+                  {
+                    label: t('ownerSales.unpaid'),
+                    amount: r.payments.unpaidPesewas,
+                    color: theme.line,
+                    icon: Clock,
+                  },
+                ]}
               />
             </ChartCard>
 

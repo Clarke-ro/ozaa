@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { ChevronDown, ChevronUp, MessageSquareText } from 'lucide-react-native';
 import type { Order } from '@/lib/api/types';
 import { pesewas } from '@/lib/brand';
-import { PAYMENTS_ENABLED } from '@/lib/features';
 import { formatMoney } from '@/lib/money';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
@@ -33,7 +32,7 @@ const PAID_TONE: Record<Order['paymentStatus'], PillTone> = {
 
 /**
  * One kitchen ticket. Collapsed it is one row: where it goes, how much, how long it has waited.
- * Tap to open what to cook (add-ons and notes), the payment (when payments are on) and the one next step.
+ * Tap to open what to cook (add-ons and notes), how it was paid (or Mark paid) and the one next step.
  */
 export function OrderCard({
   order,
@@ -42,6 +41,7 @@ export function OrderCard({
   next,
   busy,
   onNext,
+  onMarkPaid,
 }: {
   order: Order;
   currency: string;
@@ -50,6 +50,8 @@ export function OrderCard({
   next: string | null;
   busy: boolean;
   onNext: () => void;
+  /** Set for staff who may mark orders paid; shown on unpaid tickets only. */
+  onMarkPaid?: () => void;
 }) {
   const theme = useTheme();
   const { t, i18n } = useTranslation();
@@ -77,6 +79,13 @@ export function OrderCard({
         ? t('ownerOrders.source.pickupCode')
         : t('ownerOrders.takeawayCode'));
   const items = order.lines.reduce((sum, line) => sum + line.quantity, 0);
+  // "Paid online" or "Paid · Cash", so staff know whether money is already in.
+  const paidLabel =
+    order.paymentStatus === 'paid' && order.paymentMethod
+      ? order.paymentMethod.startsWith('online')
+        ? t('ownerOrders.paid.online')
+        : t('ownerOrders.paid.by', { method: t(`ownerOrders.method.${order.paymentMethod}`) })
+      : t(`ownerOrders.paid.${order.paymentStatus}`);
   const edge =
     live && age.tone === 'very_late'
       ? theme.error
@@ -186,14 +195,16 @@ export function OrderCard({
             <Text variant="title" style={styles.num}>
               {formatMoney(pesewas(order.totalPesewas), currency)}
             </Text>
-            {PAYMENTS_ENABLED ? (
-              <StatusPill
-                label={t(`ownerOrders.paid.${order.paymentStatus}`)}
-                tone={PAID_TONE[order.paymentStatus]}
-                icon={false}
-              />
-            ) : null}
+            <StatusPill label={paidLabel} tone={PAID_TONE[order.paymentStatus]} icon={false} />
           </View>
+          {onMarkPaid && order.paymentStatus !== 'paid' && order.status !== 'cancelled' ? (
+            <Button
+              label={t('ownerOrders.markPaid.open')}
+              size="md"
+              tone="ghost"
+              onPress={onMarkPaid}
+            />
+          ) : null}
           {next ? (
             <Button label={next} size="md" tone="secondary" loading={busy} onPress={onNext} />
           ) : null}
