@@ -22,6 +22,7 @@ import type {
   LoyaltyProgram,
   LoyaltyScanResult,
   Menu,
+  OwnerCreateOrderRequest,
   MenuCategory,
   MenuCategoryInput,
   MenuItem,
@@ -150,7 +151,12 @@ export type ApiClient = {
     tableId: string,
     format?: 'svg' | 'png' | 'pdf',
   ): Promise<string>;
-  ownerListOrders(venueId: string): Promise<{ items: Order[]; nextCursor?: string | null }>;
+  /** `since` (inclusive) and `until` (exclusive) are ISO times; leave both out for every order. */
+  ownerListOrders(
+    venueId: string,
+    filter?: { since?: string; until?: string },
+  ): Promise<{ items: Order[]; nextCursor?: string | null }>;
+  ownerCreateOrder(venueId: string, body: OwnerCreateOrderRequest, call: Call): Promise<Order>;
   ownerSetOrderStatus(orderId: string, body: { status: Order['status'] }): Promise<Order>;
   ownerRecordCashPayment(
     orderId: string,

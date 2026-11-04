@@ -668,7 +668,11 @@ export interface paths {
         /** Orders dashboard. Poll every 5 s (realtime push comes later). */
         get: operations["ownerListOrders"];
         put?: never;
-        post?: never;
+        /**
+         * Staff enter an order by hand, for a guest at the counter or on the phone. Priced and stock-checked like a guest order.
+         * @description Owners, managers and waiters may do this. Works while the menu is unpublished, so staff can test before opening.
+         */
+        post: operations["ownerCreateOrder"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1667,6 +1671,10 @@ export interface components {
             clientOrderId: string;
             lines: components["schemas"]["OrderLineInput"][];
             note?: string;
+        };
+        OwnerCreateOrderRequest: components["schemas"]["CreateOrderRequest"] & {
+            /** @description The table it's for, or null for a counter or phone order. */
+            tableCode?: string | null;
         };
         OrderLine: {
             id: string;
@@ -3642,7 +3650,10 @@ export interface operations {
         parameters: {
             query?: {
                 status?: components["schemas"]["OrderStatus"][];
+                /** @description Only orders created at or after this moment. */
                 since?: string;
+                /** @description Only orders created before this moment. With since, a date range such as one day in the venue's time zone. */
+                until?: string;
                 cursor?: components["parameters"]["Cursor"];
             };
             header?: never;
@@ -3662,6 +3673,38 @@ export interface operations {
                     "application/json": components["schemas"]["OrderPage"];
                 };
             };
+        };
+    };
+    ownerCreateOrder: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description A new UUID per user action. Reuse it when retrying the same action. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OwnerCreateOrderRequest"];
+            };
+        };
+        responses: {
+            /** @description Order created with status `received` and payment status `unpaid`. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Order"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["Unprocessable"];
         };
     };
     ownerSetOrderStatus: {
