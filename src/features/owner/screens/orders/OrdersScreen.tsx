@@ -12,11 +12,16 @@ import { ORDER_VIEWS, orderTab, orderTabCounts, type OrderView } from '../../des
 import { FilterChips } from '@/ui/FilterChips';
 import { DEFAULT_CURRENCY } from '@/lib/money';
 import { EmptyCard } from '../../kit';
+import { Button } from '@/ui/Button';
+import { ORDER_RANGES, orderRange, type OrderRange } from '../../desk/orderRange';
+import { CreateOrderSheet } from './CreateOrderSheet';
 import { OpenCalls } from './OpenCalls';
 import { OrderCard } from './OrderCard';
 import { useOrderMove } from './useOrderMove';
 
 const LIVE: OrderView[] = ['new', 'cooking', 'ready'];
+// Only a safety net while the venue loads; every venue has a zone in its opening hours.
+const FALLBACK_ZONE = 'Africa/Accra';
 // Ticket ages only need to move once every half minute.
 const TICK_MS = 30_000;
 
@@ -28,23 +33,30 @@ export function OrdersScreen() {
   const { width } = useWindowDimensions();
   // Null until staff pick a stage; until then show the first stage that has tickets.
   const [picked, setPicked] = useState<OrderView | null>(null);
+  const [range, setRange] = useState<OrderRange>('all');
+  const [creating, setCreating] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), TICK_MS);
     return () => clearInterval(id);
   }, []);
-  const key = ownerKeys.orders(venueId);
-  const orders = useQuery({
-    queryKey: key,
-    queryFn: () => api.ownerListOrders(venueId),
-    enabled: Boolean(venueId),
-    refetchInterval: 5000,
-  });
   const venue = useQuery({
     queryKey: ownerKeys.venue(venueId),
     queryFn: () => api.ownerGetVenue(venueId),
     enabled: Boolean(venueId),
   });
+  // The range's days start at midnight where the venue is, not where this phone is.
+  const filter = orderRange(range, now, venue.data?.hours.timezone ?? FALLBACK_ZONE);
+  // "All time" shares the cache with the chime and Today; a range gets its own entry under it,
+  // so any save that refreshes the orders refreshes this list too.
+  const key = range === 'all' ? ownerKeys.orders(venueId) : [...ownerKeys.orders(venueId), range];
+  const orders = useQuery({
+    queryKey: key,
+    queryFn: () => api.ownerListOrders(venueId, filter),
+    enabled: Boolean(venueId),
+    refetchInterval: 5000,
+  });
+  const canCreate = role === 'owner' || role === 'manager' || role === 'waiter';
 
   const move = useOrderMove(venueId, role);
 
@@ -61,7 +73,18 @@ export function OrdersScreen() {
     );
 
   return (
-    <OwnerPage title={t('owner.orders')}>
+    <OwnerPage
+      title={t('owner.orders')}
+      action={
+        canCreate && venue.data ? (
+          <Button
+            label={t('ownerOrders.create.open')}
+            size="md"
+            onPress={() => setCreating(true)}
+          />
+        ) : null
+      }
+    >
       <OpenCalls now={now} />
       <FilterChips<OrderView>
         label={t('owner.orders')}
@@ -72,6 +95,12 @@ export function OrdersScreen() {
           label: t(`ownerOrders.tabs.${id}`),
           count: counts[id],
         }))}
+      />
+      <FilterChips<OrderRange>
+        label={t('ownerOrders.range.label')}
+        value={range}
+        onChange={setRange}
+        items={ORDER_RANGES.map((id) => ({ id, label: t(`ownerOrders.range.${id}`) }))}
       />
       <DeskWait
         loading={orders.isLoading}
@@ -101,6 +130,14 @@ export function OrdersScreen() {
           </View>
         )}
       </DeskWait>
+      {creating && venue.data ? (
+        <CreateOrderSheet
+          venueId={venueId}
+          slug={venue.data.slug}
+          currency={venue.data.currency}
+          onClose={() => setCreating(false)}
+        />
+      ) : null}
     </OwnerPage>
   );
 }
