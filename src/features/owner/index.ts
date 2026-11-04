@@ -28,3 +28,4 @@ export { ComingSoonScreen } from './screens/ComingSoonScreen';
 export { BillingScreen } from './screens/billing/BillingScreen';
 export { CustomersScreen } from './screens/CustomersScreen';
 export { CategoriesScreen } from './screens/menu/CategoriesScreen';
+export { NoticeScreen } from './screens/notice/NoticeScreen';

@@ -28,6 +28,7 @@ import { DishRow } from './DishRow';
 import { MenuControls, type MenuView } from './MenuControls';
 import { menuRows, type MenuRow } from './menuRows';
 import { guestKeys } from '@/lib/queryKeys';
+import { StoreNoticeBanner, useLiveNotices } from '@/features/notices';
 
 /**
  * The guest menu: a fixed bar to search, filter and pick a section, then the dishes as a list
@@ -40,6 +41,7 @@ export function MenuScreen({ slug }: { slug: string }) {
   const { width } = useWindowDimensions();
   const menu = useQuery({ queryKey: guestKeys.menu(slug), queryFn: () => api.getMenu(slug) });
   const venue = useVenue(slug);
+  const storeNotice = useLiveNotices(venue.data?.notices);
   const add = useCart((state) => state.add);
   const [section, setSection] = useState('all');
   const [diets, setDiets] = useState<string[]>([]);
@@ -128,6 +130,7 @@ export function MenuScreen({ slug }: { slug: string }) {
   return (
     <SafeScreen>
       <PageHeader title={t('menu.title')} subtitle={venue.data?.name ?? ''} />
+      {storeNotice.banner ? <StoreNoticeBanner notice={storeNotice.banner} /> : null}
       <MenuControls
         query={query}
         onQuery={setQuery}
