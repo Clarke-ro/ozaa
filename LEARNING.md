@@ -647,3 +647,42 @@ We could have added a new "variations" field to the API. Using the add-on group 
 **Try it yourself**
 
 Edit a dish, add sizes, set Large to 20 and save. Then order it as a guest and check the line total.
+
+---
+
+## 2026-11-03 · Sale price, stock and limits per dish
+
+**What we built**
+
+In the dish editor, a new "Pricing and stock" part has:
+- a status: Available, Out of stock or Hidden
+- a sale price (optional)
+- a stock count (empty means unlimited)
+- min and max per order
+
+Guests see the sale price with the old price crossed out. Hidden dishes don't show, and the quantity buttons stop at your limits. When stock reaches 0, the dish shows as Sold out.
+
+**How it works**
+
+```
+src/lib/dishRules.ts  (one set of rules)
+   ├─ guest screens: unitPrice, quantityLimits, isOnGuestMenu
+   ├─ owner editor:  dishStatus / statusFields
+   └─ mock server:   checkLine, takeStock, unitPrice  ← the real server will use the same file
+```
+
+The server always has the last word on money and stock. The guest screens only help people stay inside the rules.
+
+**Files to look at**
+
+- `src/lib/dishRules.ts` and its test.
+- `src/features/owner/screens/menu/DishStockFields.tsx` and `checkStock` in `forms.ts`.
+- `src/features/menu/DishPrice.tsx`: the price with the sale.
+
+**New idea: one status from two fields**
+
+The API stores `available` and `hidden`. The owner sees one choice with three options. `dishStatus` turns two yes/no fields into one word, and `statusFields` turns it back.
+
+**Try it yourself**
+
+Set a dish's sale price above its normal price. The form stops you. In `dishRules.test.ts`, find the test that says the server would ignore it too.

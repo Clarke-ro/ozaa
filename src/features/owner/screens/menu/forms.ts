@@ -66,3 +66,58 @@ export function checkDish(input: {
   }
   return { ok: true, name, pricePesewas };
 }
+
+export type StockCheck =
+  | {
+      ok: true;
+      salePricePesewas: number | null;
+      stockCount: number | null;
+      minQuantity: number;
+      maxQuantity: number;
+    }
+  | { ok: false; field: 'salePrice' | 'stock' | 'quantity' };
+
+// The contract's limits for one order line.
+const LINE_MIN = 1;
+const LINE_MAX = 50;
+
+/** A whole number typed by the owner, or null when the text isn't one. */
+function wholeNumber(text: string): number | null {
+  const trimmed = text.trim();
+  return /^\d+$/.test(trimmed) ? Number.parseInt(trimmed, 10) : null;
+}
+
+/**
+ * The "Pricing and stock" fields. Blank means "not set": no sale, unlimited stock, and 1 to 50
+ * per order. A sale price must be below the normal price, or it wouldn't be a sale.
+ */
+export function checkStock(input: {
+  pricePesewas: number;
+  salePrice: string;
+  stock: string;
+  minQuantity: string;
+  maxQuantity: string;
+}): StockCheck {
+  let salePricePesewas: number | null = null;
+  if (input.salePrice.trim()) {
+    salePricePesewas = parseMoneyInput(input.salePrice);
+    if (!salePricePesewas || salePricePesewas <= 0 || salePricePesewas >= input.pricePesewas)
+      return { ok: false, field: 'salePrice' };
+  }
+  let stockCount: number | null = null;
+  if (input.stock.trim()) {
+    stockCount = wholeNumber(input.stock);
+    if (stockCount === null) return { ok: false, field: 'stock' };
+  }
+  const minQuantity = input.minQuantity.trim() ? wholeNumber(input.minQuantity) : LINE_MIN;
+  const maxQuantity = input.maxQuantity.trim() ? wholeNumber(input.maxQuantity) : LINE_MAX;
+  if (
+    minQuantity === null ||
+    maxQuantity === null ||
+    minQuantity < LINE_MIN ||
+    maxQuantity > LINE_MAX ||
+    minQuantity > maxQuantity
+  )
+    return { ok: false, field: 'quantity' };
+  return { ok: true, salePricePesewas, stockCount, minQuantity, maxQuantity };
+}

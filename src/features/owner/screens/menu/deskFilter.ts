@@ -7,11 +7,13 @@ export type DishFilter = (typeof DISH_FILTERS)[number];
 type Dish = Pick<
   MenuItem,
   'id' | 'categoryId' | 'name' | 'description' | 'available' | 'badges' | 'photo'
->;
+> &
+  Pick<Partial<MenuItem>, 'hidden'>;
 
 const matches: Record<DishFilter, (d: Dish) => boolean> = {
   all: () => true,
-  on: (d) => d.available,
+  // "On the menu" means guests can see and order it, so hidden dishes don't count.
+  on: (d) => d.available && !d.hidden,
   off: (d) => !d.available,
   popular: (d) => d.badges.includes('popular'),
   no_photo: (d) => !d.photo,
