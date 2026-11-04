@@ -16,6 +16,11 @@ import { PageHeader } from '@/ui/PageHeader';
 import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
+import { pesewas } from '@/lib/brand';
+import { toMessageKey } from '@/lib/api/errors';
+import { onlineOrderingOf } from '@/lib/onlineOrdering';
+import { LinkCheckoutCard } from './LinkCheckoutCard';
+import { checkCheckout, type CheckoutDraft } from './linkCheckout';
 import { OrderLine } from './OrderLine';
 
 const EMPTY_ICON = 64;
@@ -35,17 +40,62 @@ export function OrderScreen({ slug }: { slug: string }) {
   const venue = useVenue(slug);
   const table = useGuestSession((state) => (state.slug === slug ? state.tableCode : null));
   const setOrderId = useGuestSession((state) => state.setOrderId);
+  const saveGuest = useGuestSession((state) => state.saveGuest);
+  const hasSession = useGuestSession((state) => state.slug === slug && Boolean(state.token));
+  // No table means the guest came from the menu link: pickup or delivery, with contact details.
+  const online = table === null;
+  const ordering = onlineOrderingOf(venue.data?.onlineOrdering);
+  const venuePin =
+    venue.data?.location.lat != null && venue.data.location.lng != null
+      ? { lat: venue.data.location.lat, lng: venue.data.location.lng }
+      : null;
+  const [draft, setDraft] = useState<CheckoutDraft>({
+    type: 'pickup',
+    name: '',
+    phone: '',
+    address: '',
+    location: null,
+  });
+  const [tried, setTried] = useState(false);
+  const [errorKey, setErrorKey] = useState('errors.generic');
   const currency = venue.data?.currency ?? DEFAULT_CURRENCY;
   const [sending, setSending] = useState(false);
   const [error, setError] = useState(false);
   const count = cartCount(lines);
-  const total = formatMoney(cartEstimate(lines), currency);
+  const food = cartEstimate(lines);
+  // Only offer what the venue offers; pickup first when both are on.
+  const type =
+    ordering.pickup.enabled && ordering.delivery.enabled
+      ? draft.type
+      : ordering.delivery.enabled
+        ? 'delivery'
+        : 'pickup';
+  const check = checkCheckout({ ...draft, type }, ordering, venuePin, food);
+  const fee = online && check.ok ? check.deliveryFeePesewas : 0;
+  const total = formatMoney(pesewas(food + fee), currency);
+  const canOrderHere = !online || ordering.enabled;
   const place = venue.data?.name ?? '';
 
-  const send = () => {
+  const send = async () => {
+    if (online && !check.ok) {
+      setTried(true);
+      return;
+    }
     setSending(true);
     setError(false);
     const clientOrderId = Crypto.randomUUID();
+    // A menu-link visit has no table scan to start a session, so start one now (no personal data).
+    if (online && !hasSession) {
+      try {
+        const session = await api.createGuestSession({ venueSlug: slug });
+        saveGuest({ token: session.guestToken, slug, tableCode: null });
+      } catch (failure) {
+        setErrorKey(toMessageKey(failure));
+        setSending(false);
+        setError(true);
+        return;
+      }
+    }
     api
       .createOrder(
         {
@@ -56,6 +106,7 @@ export function OrderScreen({ slug }: { slug: string }) {
             modifierOptionIds: line.modifierOptionIds,
             note: line.note,
           })),
+          ...(online && check.ok ? { fulfilment: check.fulfilment } : {}),
         },
         { idempotencyKey: clientOrderId },
       )
@@ -64,7 +115,8 @@ export function OrderScreen({ slug }: { slug: string }) {
         clear();
         router.replace(`/${slug}/status`);
       })
-      .catch(() => {
+      .catch((failure) => {
+        setErrorKey(toMessageKey(failure));
         setSending(false);
         setError(true);
       });
@@ -125,6 +177,17 @@ export function OrderScreen({ slug }: { slug: string }) {
               </Pressable>
             </View>
 
+            {online && canOrderHere ? (
+              <LinkCheckoutCard
+                settings={ordering}
+                draft={{ ...draft, type }}
+                onDraft={setDraft}
+                check={check}
+                showErrors={tried}
+                currency={currency}
+              />
+            ) : null}
+
             <View style={[styles.card, styles.summary, { backgroundColor: theme.surface }]}>
               <View style={styles.summaryRow}>
                 <Text variant="body" style={{ color: theme.muted }}>
@@ -134,6 +197,16 @@ export function OrderScreen({ slug }: { slug: string }) {
                   {count}
                 </Text>
               </View>
+              {fee > 0 ? (
+                <View style={styles.summaryRow}>
+                  <Text variant="body" style={{ color: theme.muted }}>
+                    {t('linkOrder.deliveryFee')}
+                  </Text>
+                  <Text variant="body" style={[styles.num, { color: theme.muted }]}>
+                    {formatMoney(pesewas(fee), currency)}
+                  </Text>
+                </View>
+              ) : null}
               <View style={[styles.rule, { backgroundColor: theme.line }]} />
               <View style={styles.summaryRow}>
                 <Text variant="title">{t('status.total')}</Text>
@@ -159,10 +232,20 @@ export function OrderScreen({ slug }: { slug: string }) {
           >
             {error ? (
               <Text variant="caption" accessibilityRole="alert" style={{ color: theme.error }}>
-                {t('errors.generic')}
+                {t(errorKey)}
               </Text>
             ) : null}
-            <Button label={t('menu.send')} loading={sending} onPress={send} />
+            {canOrderHere ? (
+              <Button
+                label={online ? t('linkOrder.place') : t('menu.send')}
+                loading={sending}
+                onPress={() => void send()}
+              />
+            ) : (
+              <Text variant="body" style={{ color: theme.muted }}>
+                {t('linkOrder.tableOnly')}
+              </Text>
+            )}
           </View>
         </>
       )}

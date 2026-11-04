@@ -900,3 +900,38 @@ While writing the form test, "-1" was accepted as GH₵1.00. `parseMoneyInput` t
 **Try it yourself**
 
 Set the fee per km to 5 and watch the example change. Then set "Free from" to 40.
+
+---
+
+## 2026-11-04 · Ordering from the menu link: pickup and delivery
+
+**What we built**
+
+Someone who opens your menu link (from Instagram, TikTok or WhatsApp) can now order without sitting at a table. At checkout they choose **Pickup** or **Delivery** (only what you offer) and give their name and phone. For delivery they also give the address and tap **Use my location**. They see the delivery fee before they send. After sending, their status page says Pickup or Delivery, shows the address and fee, and says how to pay.
+
+On your Orders screen these show as "Pickup · Esi" or "Delivery · Esi". Open the ticket to see the name, a tap-to-call phone number and the address. On the Online ordering page, **Use my current location** puts your venue on the map; stand in the venue when you tap it.
+
+Table QR orders work exactly as before.
+
+**How it works**
+
+```
+no table → menu-link visit → LinkCheckoutCard → checkCheckout (name, Ghana phone, address, location)
+   fee = checkFulfilment → distanceKm(venue pin, phone location) → deliveryQuote
+send → start a session for this visit (no personal data) → createOrder with fulfilment
+server → same checkFulfilment → source, fee in the total, or a clear refusal
+```
+
+**Files to look at**
+
+- `src/features/orders/linkCheckout.ts` and its test, and `LinkCheckoutCard.tsx`.
+- `src/lib/onlineOrdering.ts` (`checkFulfilment`) and `src/lib/geo.ts` (`distanceKm`).
+- `src/features/owner/screens/orders/OrderContact.tsx`.
+
+**New idea: personal data stays where it's needed**
+
+The name and phone live only in the checkout screen while it's open, and then on the order. They aren't saved on the phone, put in a link or written to a log. That's how we follow Ghana's Data Protection Act (Act 843) while still letting the restaurant call the customer.
+
+**Try it yourself**
+
+Turn on online ordering with pickup only, open your menu link in a private window, and order. Then find it under New on Orders.

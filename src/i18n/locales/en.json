@@ -1370,7 +1370,16 @@
       "errEmpty": "Add at least one dish.",
       "errChoice": "Pick the {{group}} for the dish marked in red.",
       "sent": "Order #{{number}} sent to the kitchen"
-    }
+    },
+    "source": {
+      "pickup": "Pickup",
+      "delivery": "Delivery",
+      "pickupFor": "Pickup · {{name}}",
+      "deliveryFor": "Delivery · {{name}}",
+      "pickupCode": "PU",
+      "deliveryCode": "DL"
+    },
+    "call": "Call {{name}}"
   },
   "ownerCalls": {
     "status": {
@@ -1795,7 +1804,7 @@
     "freeOverHint": "Optional. Empty means never free.",
     "example": "Example: {{km}} km away with {{food}} of food, delivery is {{fee}}.",
     "free": "free",
-    "noPin": "Delivery fees use the distance from your venue to the customer. Your venue has no map position yet; setting it comes with the delivery checkout.",
+    "noPin": "Delivery fees use the distance from your venue. Stand in your venue and tap the button to set its place on the map.",
     "err": {
       "method": "Turn on pickup or delivery, or switch online orders off.",
       "prep": "Type the minutes as a whole number up to 240.",
@@ -1803,6 +1812,52 @@
       "perKm": "Type the fee per km, like 2.50. Use 0 for none.",
       "maxKm": "Type a distance from 0.5 to 50 km.",
       "freeOver": "Type an amount like 200.00, or leave it empty."
+    },
+    "pinSet": "Your venue is on the map. Delivery distance starts here.",
+    "setPin": "Use my current location",
+    "movePin": "Update the venue location"
+  },
+  "linkOrder": {
+    "title": "How do you want it?",
+    "how": "Pickup or delivery",
+    "pickup": "Pickup",
+    "delivery": "Delivery",
+    "pickupOnly": "Pickup",
+    "deliveryOnly": "Delivery",
+    "pickupHint": "Ready about {{minutes}} minutes after you order. Collect it at the counter.",
+    "name": "Your name",
+    "phone": "Phone number",
+    "address": "Delivery address",
+    "addressHint": "House number, street and a landmark",
+    "useLocation": "Use my location",
+    "locationAgain": "Update my location",
+    "locationSet": "Location added. The rider uses it with your address.",
+    "locate": {
+      "denied": "Location is off for this page. Allow it in your browser or phone settings, then try again.",
+      "unavailable": "We couldn’t find your location. Try again near a window or with mobile data on."
+    },
+    "fee": "Delivery fee: {{fee}}",
+    "feeFree": "Delivery is free for this order.",
+    "deliveryFee": "Delivery",
+    "why": "We share your name and phone with the restaurant only, so they can reach you about this order.",
+    "place": "Place order",
+    "tableOnly": "This menu takes orders at the table. Scan the code on your table to order.",
+    "err": {
+      "name": "Add your name.",
+      "phone": "Type a Ghana mobile number, like 024 123 4567.",
+      "address": "Add the delivery address.",
+      "location": "Tap Use my location so we can work out the delivery fee.",
+      "too_far": "You’re further than {{km}} km away, so we can’t deliver. Choose Pickup instead.",
+      "tooFarShort": "You’re too far away for delivery. Choose Pickup instead.",
+      "unavailable": "Online orders aren’t open right now. Please order at the restaurant."
+    },
+    "status": {
+      "pickup": "Pickup",
+      "delivery": "Delivery",
+      "collect": "Ready. Collect it at the counter.",
+      "to": "To: {{address}}",
+      "payPickup": "Pay when you collect it.",
+      "payDelivery": "Pay the rider when your food arrives."
     }
   }
 }
