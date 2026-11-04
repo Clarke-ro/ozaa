@@ -6,3 +6,4 @@ ts	phase	decision	why	evidence	result
 2026-11-03T12:00:00Z	menurite-gap	Build the gap-table UI on the mock, then the backend	Clarke approved the work; UI first keeps the order of BUILD.md	docs/menurite-gap-table.md question 2	adopted
 2026-11-03T12:00:00Z	menurite-gap	Two order channels: table QR (no contact data) and menu link (name, phone, address on the order)	Pickup and delivery need a way to reach the customer	docs/menurite-gap-table.md question 3	adopted
 2026-11-03T12:00:00Z	menurite-gap	Plan badge uses the landing placeholder plans; guest pages get dark mode	Clarke answers to questions 5 and 6	docs/menurite-gap-table.md	adopted
+2026-11-04T10:00:00Z	4b.15	Delivery distance comes from the customer phone location (with permission), measured straight-line from the venue map pin	No outside maps provider or cost; the customer still types the address for the rider	Clarke picked it over delivery zones and a maps provider	adopted

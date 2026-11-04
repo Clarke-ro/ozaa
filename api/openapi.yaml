@@ -248,7 +248,7 @@ paths:
       tags: [orders]
       operationId: createOrder
       security: [{ guestAuth: [] }]
-      summary: Place an order for the guest's table. The server prices it from the menu.
+      summary: "Place an order: for the guest's table, or from the menu link for pickup or delivery (send fulfilment). The server prices it from the menu, adds any delivery fee, and its total wins."
       parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
       requestBody:
         required: true
@@ -2362,6 +2362,37 @@ components:
         clientOrderId: { type: string, format: uuid, description: Made on the phone so an offline retry never creates two orders. }
         lines: { type: array, minItems: 1, maxItems: 60, items: { $ref: '#/components/schemas/OrderLineInput' } }
         note: { type: string, maxLength: 200 }
+        fulfilment:
+          allOf: [{ $ref: '#/components/schemas/OnlineFulfilment' }]
+          description: "Required for a menu-link order. Fails with online_ordering_off, method_off, too_far or no_venue_location when it can't be met."
+    OrderSource:
+      type: string
+      enum: [table, pickup, delivery]
+      description: "Where an order came from: a table QR, or the menu link for pickup or delivery. Missing on older orders means table."
+    GeoPoint:
+      type: object
+      required: [lat, lng]
+      properties:
+        lat: { type: number, minimum: -90, maximum: 90 }
+        lng: { type: number, minimum: -180, maximum: 180 }
+    OrderContact:
+      type: object
+      required: [name, phone]
+      description: "How the venue reaches a menu-link customer. Kept on the order only, never in the guest session, a URL or a log (Act 843)."
+      properties:
+        name: { type: string, minLength: 1, maxLength: 60 }
+        phone: { $ref: '#/components/schemas/GhanaPhone' }
+    OnlineFulfilment:
+      type: object
+      required: [type, contact]
+      description: "Sent with an order from the menu link (a guest session with no table). Ignored for table orders."
+      properties:
+        type: { type: string, enum: [pickup, delivery] }
+        contact: { $ref: '#/components/schemas/OrderContact' }
+        address: { type: string, minLength: 1, maxLength: 200, description: "Delivery only: where the rider goes, in the customer's words." }
+        location:
+          allOf: [{ $ref: '#/components/schemas/GeoPoint' }]
+          description: "Delivery only: the customer's phone position, shared with their permission. The fee uses the straight-line distance from the venue's map pin."
     OwnerCreateOrderRequest:
       allOf:
         - { $ref: '#/components/schemas/CreateOrderRequest' }
@@ -2415,6 +2446,14 @@ components:
           items: { $ref: '#/components/schemas/TaxLine' }
         totalPesewas: { $ref: '#/components/schemas/Pesewas' }
         paidPesewas: { $ref: '#/components/schemas/Pesewas' }
+        source: { $ref: '#/components/schemas/OrderSource' }
+        contact:
+          oneOf: [{ $ref: '#/components/schemas/OrderContact' }, { type: 'null' }]
+          description: Menu-link orders only.
+        deliveryAddress: { type: ['string', 'null'] }
+        deliveryFeePesewas:
+          allOf: [{ $ref: '#/components/schemas/Pesewas' }]
+          description: "Included in totalPesewas. 0 or missing for pickup and table orders."
         etaMinutes: { type: ['integer', 'null'] }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }

@@ -186,7 +186,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Place an order for the guest's table. The server prices it from the menu. */
+        /** Place an order: for the guest's table, or from the menu link for pickup or delivery (send fulfilment). The server prices it from the menu, adds any delivery fee, and its total wins. */
         post: operations["createOrder"];
         delete?: never;
         options?: never;
@@ -1693,6 +1693,32 @@ export interface components {
             clientOrderId: string;
             lines: components["schemas"]["OrderLineInput"][];
             note?: string;
+            /** @description Required for a menu-link order. Fails with online_ordering_off, method_off, too_far or no_venue_location when it can't be met. */
+            fulfilment?: components["schemas"]["OnlineFulfilment"];
+        };
+        /**
+         * @description Where an order came from: a table QR, or the menu link for pickup or delivery. Missing on older orders means table.
+         * @enum {string}
+         */
+        OrderSource: "table" | "pickup" | "delivery";
+        GeoPoint: {
+            lat: number;
+            lng: number;
+        };
+        /** @description How the venue reaches a menu-link customer. Kept on the order only, never in the guest session, a URL or a log (Act 843). */
+        OrderContact: {
+            name: string;
+            phone: components["schemas"]["GhanaPhone"];
+        };
+        /** @description Sent with an order from the menu link (a guest session with no table). Ignored for table orders. */
+        OnlineFulfilment: {
+            /** @enum {string} */
+            type: "pickup" | "delivery";
+            contact: components["schemas"]["OrderContact"];
+            /** @description Delivery only: where the rider goes, in the customer's words. */
+            address?: string;
+            /** @description Delivery only: the customer's phone position, shared with their permission. The fee uses the straight-line distance from the venue's map pin. */
+            location?: components["schemas"]["GeoPoint"];
         };
         OwnerCreateOrderRequest: components["schemas"]["CreateOrderRequest"] & {
             /** @description The table it's for, or null for a counter or phone order. */
@@ -1736,6 +1762,12 @@ export interface components {
             taxes: components["schemas"]["TaxLine"][];
             totalPesewas: components["schemas"]["Pesewas"];
             paidPesewas: components["schemas"]["Pesewas"];
+            source?: components["schemas"]["OrderSource"];
+            /** @description Menu-link orders only. */
+            contact?: components["schemas"]["OrderContact"] | null;
+            deliveryAddress?: string | null;
+            /** @description Included in totalPesewas. 0 or missing for pickup and table orders. */
+            deliveryFeePesewas?: components["schemas"]["Pesewas"];
             etaMinutes?: number | null;
             /** Format: date-time */
             createdAt: string;
