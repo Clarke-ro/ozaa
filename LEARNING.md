@@ -969,3 +969,38 @@ We could work out discounts later by comparing with today's menu prices, but pri
 **Try it yourself**
 
 Put a dish on sale, create an order for it, then open Sales. Discounts given goes up.
+
+---
+
+## 2026-11-04 · Payments: your own Paystack account
+
+**What we built**
+
+**Settings → Integrations** now has two parts.
+
+- **Paystack (card and MoMo):** steps for finding your keys in the Paystack dashboard, a Test/Live choice (Live stays off for now), and boxes for your public and secret key. When you connect, Ozaa checks the keys. After that you only ever see the last 4 characters of the secret key. **Test connection** checks the keys still work, and **Disconnect** removes them.
+- **Pay in person:** switches for cash, card machine, bank transfer and MoMo to your own number, with the details guests need.
+
+**How it works**
+
+```
+you type the secret key → it goes once to Ozaa's server → stored encrypted (server, later)
+the app gets back only: mode, public key, "••••9876", the date
+guests get only: can I pay online? test mode? cash? MoMo number?
+```
+
+Money goes straight from the guest to **your** Paystack account. Ozaa never holds it.
+
+**Files to look at**
+
+- `src/lib/payments.ts` and its test: key checks, the hint, what guests see.
+- `src/features/owner/screens/integrations/`: `PaystackCard`, `ManualPaymentsCard`.
+- `src/mocks/mockClient.payments.test.ts`: proves the secret never comes back.
+
+**New idea: write-only secrets**
+
+In the contract, the secret key is marked `writeOnly`. Apps can send it, but no reply ever contains it. The test reads every reply after connecting and checks the key isn't anywhere.
+
+**Try it yourself**
+
+Connect with `pk_test_` and `sk_test_` keys from your own Paystack test account, then try a `pk_live_` key and see why it's refused.

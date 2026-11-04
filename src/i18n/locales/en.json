@@ -654,7 +654,8 @@
     "crashTitle": "This page stopped working",
     "crashBody": "Something broke on our side. Try again to reload it.",
     "quantityRange": "One dish in your order is for too few or too many. Change how many and send it again.",
-    "notPublished": "This menu isn’t open yet, so the order wasn’t sent."
+    "notPublished": "This menu isn’t open yet, so the order wasn’t sent.",
+    "forbidden": "Your role can’t do this. Ask the owner."
   },
   "common": {
     "back": "Back",
@@ -1740,7 +1741,6 @@
   "ownerSoon": {
     "title": "Coming soon",
     "promos": "Soon you can make promo codes and discounts for your menu.",
-    "integrations": "Soon you can connect your own Paystack account and choose how guests pay.",
     "help": "Help articles are on their way. For now, ask the person who set up Ozaa for you.",
     "back": "Back to Today"
   },
@@ -1889,5 +1889,60 @@
     "orders_other": "{{count}} orders",
     "topItems": "Top dishes",
     "empty": "No orders in these dates yet."
+  },
+  "ownerPay": {
+    "lead": "How guests pay you. Online payments go straight to your own Paystack account; Ozaa never holds your money.",
+    "paystack": "Paystack (card and MoMo)",
+    "ownAccount": "Your own Paystack account. Guests pay by card or MoMo (MTN, Telecel, AirtelTigo) and the money goes to you.",
+    "whereTitle": "Where to find your keys",
+    "step1": "Log in to your Paystack dashboard.",
+    "step2": "Open Settings, then API Keys & Webhooks.",
+    "step3": "Copy the Test Public Key and the Test Secret Key, and paste them below.",
+    "openPaystack": "Open Paystack",
+    "mode": "Mode",
+    "testMode": "Test",
+    "liveMode": "Live",
+    "testHint": "Test keys take pretend payments, so you can try everything safely.",
+    "liveOff": "Live payments are switched off while Ozaa is being tested. Use your test keys for now.",
+    "publicKey": "Public key",
+    "secretKey": "Secret key",
+    "secretHint": "Sent once to Ozaa’s server, kept encrypted, and never shown again.",
+    "connect": "Connect Paystack",
+    "connected": "Paystack connected",
+    "isConnected": "Connected since {{date}}",
+    "test": "Test connection",
+    "testOk": "Paystack answered. Your keys work.",
+    "testFailed": "Paystack didn’t accept your keys. Check them in your dashboard and connect again.",
+    "disconnect": "Disconnect",
+    "disconnectTitle": "Disconnect Paystack?",
+    "disconnectBody": "Guests won’t be able to pay online until you connect again. Cash and your other methods keep working.",
+    "manual": "Pay in person",
+    "manualNote": "Staff mark these orders as paid on the Orders screen.",
+    "cash": "Cash",
+    "cardMachine": "Card machine at the counter",
+    "cardMachineHint": "Your own POS terminal.",
+    "bank": "Bank transfer",
+    "bankName": "Bank",
+    "accountName": "Account name",
+    "accountNumber": "Account number",
+    "momo": "MoMo to your number",
+    "momoHint": "Guests send money to your merchant number.",
+    "network": "Network",
+    "networks": {
+      "mtn": "MTN MoMo",
+      "vod": "Telecel Cash",
+      "atl": "AT Money"
+    },
+    "momoNumber": "MoMo number",
+    "momoName": "Name on the account",
+    "momoNameHint": "Guests see it when they send, so they know it’s you.",
+    "saveManual": "Save payment methods",
+    "err": {
+      "paystack_keys_invalid": "These don’t look like Paystack keys. The public key starts with pk_ and the secret key with sk_.",
+      "paystack_mode_mismatch": "These keys don’t match the mode. Test mode needs pk_test_ and sk_test_ keys.",
+      "live_not_enabled": "Live payments are switched off for now. Use your test keys.",
+      "bank": "Add the account name and number, or switch bank transfer off.",
+      "momo": "Pick the network and type the MoMo number, or switch MoMo off."
+    }
   }
 }
