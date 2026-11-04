@@ -2030,6 +2030,29 @@ components:
       properties:
         services: { type: array, items: { $ref: '#/components/schemas/ServiceToggle' } }
         game: { $ref: '#/components/schemas/GameStampRule' }
+    OnlineOrdering:
+      type: object
+      required: [enabled, pickup, delivery]
+      description: Orders from the menu link (not a table QR). Off until the owner turns it on.
+      properties:
+        enabled: { type: boolean, description: "The main switch. Off: the menu link shows the menu but takes no orders." }
+        pickup:
+          type: object
+          required: [enabled, prepMinutes]
+          properties:
+            enabled: { type: boolean }
+            prepMinutes: { type: integer, minimum: 0, maximum: 240, description: "How long until a pickup order is ready, shown to the customer." }
+        delivery:
+          type: object
+          required: [enabled, minimumFeePesewas, feePerKmPesewas, maxDistanceKm]
+          properties:
+            enabled: { type: boolean }
+            minimumFeePesewas: { $ref: '#/components/schemas/Pesewas' }
+            feePerKmPesewas: { $ref: '#/components/schemas/Pesewas' }
+            maxDistanceKm: { type: number, minimum: 0.5, maximum: 50, description: "No delivery beyond this distance from the venue." }
+            freeOverPesewas:
+              oneOf: [{ $ref: '#/components/schemas/Pesewas' }, { type: 'null' }]
+              description: "Delivery is free when the food comes to at least this much. Null means never free."
     MenuStyle:
       type: object
       description: How the guest menu looks. Every field is optional; missing means the default shown.
@@ -2104,6 +2127,9 @@ components:
         buttonOrder: { type: array, items: { type: string } }
         socials: { $ref: '#/components/schemas/SocialLinks' }
         menuStyle: { $ref: '#/components/schemas/MenuStyle' }
+        onlineOrdering:
+          allOf: [{ $ref: '#/components/schemas/OnlineOrdering' }]
+          description: Missing means online ordering is off.
         published:
           type: boolean
           description: False while the owner is still setting up. Guest pages then say the menu isn't open yet, and ordering fails with venue_not_published. Missing means true.
@@ -2141,6 +2167,7 @@ components:
         noticeSettings: { $ref: '#/components/schemas/StoreNotices' }
         menuStyle: { $ref: '#/components/schemas/MenuStyle' }
         published: { type: boolean }
+        onlineOrdering: { $ref: '#/components/schemas/OnlineOrdering' }
     Wifi:
       type: object
       required: [ssid, security]

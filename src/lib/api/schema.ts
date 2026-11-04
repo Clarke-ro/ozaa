@@ -1395,6 +1395,25 @@ export interface components {
             services: components["schemas"]["ServiceToggle"][];
             game: components["schemas"]["GameStampRule"];
         };
+        /** @description Orders from the menu link (not a table QR). Off until the owner turns it on. */
+        OnlineOrdering: {
+            /** @description The main switch. Off: the menu link shows the menu but takes no orders. */
+            enabled: boolean;
+            pickup: {
+                enabled: boolean;
+                /** @description How long until a pickup order is ready, shown to the customer. */
+                prepMinutes: number;
+            };
+            delivery: {
+                enabled: boolean;
+                minimumFeePesewas: components["schemas"]["Pesewas"];
+                feePerKmPesewas: components["schemas"]["Pesewas"];
+                /** @description No delivery beyond this distance from the venue. */
+                maxDistanceKm: number;
+                /** @description Delivery is free when the food comes to at least this much. Null means never free. */
+                freeOverPesewas?: components["schemas"]["Pesewas"] | null;
+            };
+        };
         /** @description How the guest menu looks. Every field is optional; missing means the default shown. */
         MenuStyle: {
             /**
@@ -1480,6 +1499,8 @@ export interface components {
             buttonOrder?: string[];
             socials?: components["schemas"]["SocialLinks"];
             menuStyle?: components["schemas"]["MenuStyle"];
+            /** @description Missing means online ordering is off. */
+            onlineOrdering?: components["schemas"]["OnlineOrdering"];
             /** @description False while the owner is still setting up. Guest pages then say the menu isn't open yet, and ordering fails with venue_not_published. Missing means true. */
             published?: boolean;
             /** @description Only notices that are switched on and inside their start and end times right now. Missing or null parts mean nothing to show. */
@@ -1517,6 +1538,7 @@ export interface components {
             noticeSettings?: components["schemas"]["StoreNotices"];
             menuStyle?: components["schemas"]["MenuStyle"];
             published?: boolean;
+            onlineOrdering?: components["schemas"]["OnlineOrdering"];
         };
         Wifi: {
             ssid: string;

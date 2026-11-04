@@ -55,6 +55,7 @@ export type LoyaltyScanResult = Schemas['LoyaltyScanResult'];
 export type Business = Schemas['Business'];
 export type StoreNotice = Schemas['StoreNotice'];
 export type MenuStyle = Schemas['MenuStyle'];
+export type OnlineOrdering = Schemas['OnlineOrdering'];
 export type OwnerCreateOrderRequest = Schemas['OwnerCreateOrderRequest'];
 export type OrderLineInput = Schemas['OrderLineInput'];
 export type StoreNotices = Schemas['StoreNotices'];
