@@ -4,6 +4,40 @@ Plain notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-07 · Frosted glass header
+
+**What we built**
+
+The landing site's top bar is now a full-width frosted glass strip pinned to the top of the screen, inspired by the Yolé header. It uses the light logo, warm white links, a glassy outlined "Log in" pill, and the filled orange "Get started" pill, with a thin bottom hair-line.
+
+**How it works**
+
+CSS blurs whatever scrolls behind the bar in real time:
+
+```
+page content scrolls under <header>
+   ├─ background: rgba(55, 24, 8, 0.72) tints the bar warm espresso
+   ├─ backdrop-filter: blur(22px) saturate(160%) frosts the pixels behind it
+   └─ border-bottom: 1px solid rgba(255, 255, 255, 0.22) draws the bottom hair-line
+```
+
+Because the bar is `position: fixed` and 72% opaque, white links stay readable at over 5:1 contrast even when a white card scrolls underneath.
+
+**Files to look at**
+
+- `src/components/Navbar.astro`: switches the logo to `cravins-lockup-light.svg` and the "Log in" button to `pill--glass`.
+- `src/styles/global.css`: the `--nav-glass` tokens and the `.navbar` rules.
+
+**New idea: `backdrop-filter` vs `filter`**
+
+`filter: blur()` blurs the element itself (including its text). `backdrop-filter: blur()` blurs only what sits *behind* the element, as long as the element's background is partly see-through (`rgba`).
+
+**Try it yourself**
+
+In `src/styles/global.css`, change `blur(22px)` on `.navbar` to `blur(4px)`, then scroll the home page. You'll see the headings and cards behind the bar turn almost sharp instead of frosted.
+
+---
+
 ## 2026-11-03 · A site of its own: QR code, footer and phone frames
 
 **What we built**
