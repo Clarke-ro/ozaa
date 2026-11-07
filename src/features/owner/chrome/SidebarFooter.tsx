@@ -4,14 +4,21 @@ import { useTranslation } from 'react-i18next';
 import { CircleHelp, LogOut, UserRound, type LucideIcon } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
+import { ThemeProvider, useTheme, type Theme } from '@/ui/theme';
 import { useOwnerSession } from '@/features/session';
 import { ConfirmDialog } from '../kit';
 import { useGoTo } from './NavRow';
 import { useSignOut } from './useSignOut';
 
 /** Help, who is signed in, and sign out, pinned under the sidebar's scrolling list. */
-export function SidebarFooter({ collapsed }: { collapsed: boolean }) {
+export function SidebarFooter({
+  collapsed,
+  dialogTheme,
+}: {
+  collapsed: boolean;
+  /** The sidebar is always dark; the sign-out dialog sits over the page, so it uses the page's theme. */
+  dialogTheme: Theme;
+}) {
   const theme = useTheme();
   const { t } = useTranslation();
   const goTo = useGoTo();
@@ -41,17 +48,19 @@ export function SidebarFooter({ collapsed }: { collapsed: boolean }) {
         collapsed={collapsed}
         onPress={() => setConfirming(true)}
       />
-      <ConfirmDialog
-        visible={confirming}
-        title={t('ownerSettings.signOutTitle')}
-        message={t('ownerSettings.signOutBody')}
-        confirmLabel={t('ownerSettings.signOut')}
-        onConfirm={() => {
-          setConfirming(false);
-          signOut();
-        }}
-        onCancel={() => setConfirming(false)}
-      />
+      <ThemeProvider theme={dialogTheme}>
+        <ConfirmDialog
+          visible={confirming}
+          title={t('ownerSettings.signOutTitle')}
+          message={t('ownerSettings.signOutBody')}
+          confirmLabel={t('ownerSettings.signOut')}
+          onConfirm={() => {
+            setConfirming(false);
+            signOut();
+          }}
+          onCancel={() => setConfirming(false)}
+        />
+      </ThemeProvider>
     </View>
   );
 }
@@ -75,12 +84,16 @@ function FooterRow({
       accessibilityRole="button"
       accessibilityLabel={detail ? `${label}, ${detail}` : label}
       onPress={onPress}
-      style={({ pressed }) => [styles.row, collapsed && styles.rail, pressed && { opacity: 0.7 }]}
+      style={({ pressed }) => [
+        styles.row,
+        collapsed && styles.rail,
+        pressed && { backgroundColor: theme.wash },
+      ]}
     >
       <Icon size={20} color={theme.muted} />
       {collapsed ? null : (
         <View style={styles.text}>
-          <Text variant="body" numberOfLines={1} style={{ color: theme.text }}>
+          <Text variant="body" numberOfLines={1} style={[styles.label, { color: theme.muted }]}>
             {label}
           </Text>
           {detail ? (
@@ -106,9 +119,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: tokens.space[3],
-    paddingHorizontal: tokens.space[2],
+    paddingHorizontal: tokens.space[3],
     borderRadius: tokens.radius.sm,
   },
   rail: { justifyContent: 'center', paddingHorizontal: 0 },
   text: { flex: 1 },
+  label: { fontSize: tokens.type.body.size - 1 },
 });

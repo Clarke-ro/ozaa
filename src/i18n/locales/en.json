@@ -703,7 +703,22 @@
       "menu": "Edit menu",
       "feedback": "Feedback"
     },
+    "line": {
+      "ordersToday_one": "order today",
+      "ordersToday_other": "orders today",
+      "visitors_one": "visitor",
+      "visitors_other": "visitors",
+      "tables_one": "table seated",
+      "tables_other": "tables seated",
+      "rating_one": "from 1 rating",
+      "rating_other": "from {{count}} ratings"
+    },
     "seeAll": "See all",
+    "shortcuts": "Shortcuts",
+    "openCount_one": "{{count}} open",
+    "openCount_other": "{{count}} open",
+    "waitingCount_one": "{{count}} waiting",
+    "waitingCount_other": "{{count}} waiting",
     "noLiveOrders": "No open orders right now.",
     "items_one": "{{count}} item",
     "items_other": "{{count}} items",
@@ -743,13 +758,17 @@
       "callsWaiting": "Needs someone now",
       "callsQuiet": "All quiet",
       "ordersToday": "Since midnight",
-      "pendingWaiting": "Waiting for the kitchen",
-      "pendingClear": "Kitchen is up to date",
       "visitors": "From scans and links"
     },
+    "flow": {
+      "lateStage_one": "{{label}}: the oldest has waited {{count}} min",
+      "lateStage_other": "{{label}}: the oldest has waited {{count}} min"
+    },
     "setup": {
-      "title": "Complete your setup",
+      "title": "Finish setting up",
       "percent": "{{percent}}% done",
+      "next": "Next: {{step}}",
+      "continue": "Continue",
       "steps": {
         "details": "Add your description and location",
         "look": "Add your logo",
@@ -761,7 +780,6 @@
     },
     "stats": {
       "ordersToday": "Orders today",
-      "pending": "Pending",
       "visitors": "Visitors today"
     }
   },
@@ -1164,6 +1182,22 @@
   },
   "ownerFloor": {
     "table": "Table",
+    "tableName": "Table {{name}}",
+    "orderNumber": "Order #{{number}}",
+    "due": "Amount due",
+    "callNotice": "Guest call: {{reason}}",
+    "billHeading": "On the bill",
+    "qty_one": "{{count}}×",
+    "qty_other": "{{count}}×",
+    "noMatch": "No tables in this group right now.",
+    "filter": {
+      "label": "Show tables",
+      "all": "All",
+      "calls": "Calls",
+      "paying": "Bill",
+      "active": "Active",
+      "free": "Free"
+    },
     "legend": {
       "free": "Free",
       "occupied": "Occupied",
@@ -1345,7 +1379,8 @@
     "waitedHours": "{{count}} h",
     "justNow": "Just now",
     "waitedLabel": "Waiting {{count}} min",
-    "stage": "{{label}}, {{count}} orders",
+    "stage_one": "{{label}}, {{count}} order",
+    "stage_other": "{{label}}, {{count}} orders",
     "items_one": "{{count}} item",
     "items_other": "{{count}} items",
     "openCalls_one": "{{count}} table waiting for you",
@@ -1414,6 +1449,7 @@
     "avgA11y_one": "Average pick-up time 1 minute",
     "avgA11y_other": "Average pick-up time {{count}} minutes",
     "avgShort": "Avg pick-up",
+    "answerSoon": "Guests are waiting",
     "minutes_one": "1 min",
     "minutes_other": "{{count}} min",
     "waited_one": "waiting 1 min",
@@ -1746,6 +1782,7 @@
     "browse": "Browse the menu"
   },
   "ownerChrome": {
+    "brand": "Ozaa",
     "collapse": "Collapse sidebar",
     "expand": "Expand sidebar",
     "help": "Help",

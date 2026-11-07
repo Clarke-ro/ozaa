@@ -90,6 +90,9 @@ export function DragList({
               {
                 top: index * STEP,
                 backgroundColor: theme.surface,
+                borderColor: theme.line,
+                // Only the row being dragged casts a shadow: it is lifted off the list.
+                boxShadow: lifted ? tokens.shadow.card : undefined,
                 zIndex: lifted ? 2 : 1,
                 transform: [{ translateY: lifted ? dy : offset }],
               },
@@ -124,7 +127,7 @@ const styles = StyleSheet.create({
     paddingStart: tokens.space[4],
     borderRadius: tokens.radius.lg,
     borderCurve: 'continuous',
-    boxShadow: tokens.shadow.card,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   num: { width: 16, fontVariant: ['tabular-nums'] },
   flex: { flex: 1 },

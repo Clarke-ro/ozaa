@@ -1,25 +1,24 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { ClipboardList } from 'lucide-react-native';
 import { api } from '@/lib/api';
 import { useOwnerSession } from '@/features/session';
-import { tokens } from '@/theme/tokens';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
-import { ORDER_VIEWS, orderTab, orderTabCounts, type OrderView } from '../../desk/ops';
-import { FilterChips } from '@/ui/FilterChips';
+import { orderTab, orderTabCounts, type OrderView } from '../../desk/ops';
 import { DEFAULT_CURRENCY } from '@/lib/money';
 import { EmptyCard } from '../../kit';
 import { Button } from '@/ui/Button';
-import { ORDER_RANGES, orderRange, type OrderRange } from '../../desk/orderRange';
+import { orderRange, type OrderRange } from '../../desk/orderRange';
 import { CreateOrderSheet } from './CreateOrderSheet';
 import { MarkPaidSheet, inPersonMethods } from './MarkPaidSheet';
 import type { Order } from '@/lib/api/types';
 import { guestKeys } from '@/lib/queryKeys';
 import { OpenCalls } from './OpenCalls';
 import { OrderCard } from './OrderCard';
+import { OrdersToolbar } from './OrdersToolbar';
+import { TicketGrid } from './TicketGrid';
 import { useOrderMove } from './useOrderMove';
 
 const LIVE: OrderView[] = ['new', 'cooking', 'ready'];
@@ -33,7 +32,6 @@ export function OrdersScreen() {
   const { t } = useTranslation();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const role = useOwnerSession((state) => state.role) ?? 'waiter';
-  const { width } = useWindowDimensions();
   // Null until staff pick a stage; until then show the first stage that has tickets.
   const [picked, setPicked] = useState<OrderView | null>(null);
   const [range, setRange] = useState<OrderRange>('all');
@@ -75,7 +73,6 @@ export function OrdersScreen() {
   const counts = orderTabCounts(all);
   const tab = picked ?? LIVE.find((id) => counts[id] > 0) ?? 'new';
   const live = LIVE.includes(tab);
-  const twoUp = width >= 900;
   // Oldest first in the live tabs (who has waited longest), newest first once done.
   const shown = all
     .filter((o) => tab === 'all' || orderTab(o.status) === tab)
@@ -86,6 +83,7 @@ export function OrdersScreen() {
   return (
     <OwnerPage
       title={t('owner.orders')}
+      width="wide"
       action={
         canCreate && venue.data ? (
           <Button
@@ -97,22 +95,7 @@ export function OrdersScreen() {
       }
     >
       <OpenCalls now={now} />
-      <FilterChips<OrderView>
-        label={t('owner.orders')}
-        value={tab}
-        onChange={setPicked}
-        items={ORDER_VIEWS.map((id) => ({
-          id,
-          label: t(`ownerOrders.tabs.${id}`),
-          count: counts[id],
-        }))}
-      />
-      <FilterChips<OrderRange>
-        label={t('ownerOrders.range.label')}
-        value={range}
-        onChange={setRange}
-        items={ORDER_RANGES.map((id) => ({ id, label: t(`ownerOrders.range.${id}`) }))}
-      />
+      <OrdersToolbar tab={tab} counts={counts} onTab={setPicked} range={range} onRange={setRange} />
       <DeskWait
         loading={orders.isLoading}
         error={orders.isError}
@@ -125,21 +108,20 @@ export function OrdersScreen() {
             description={t('ownerOrders.emptyBody')}
           />
         ) : (
-          <View style={[styles.list, twoUp && styles.grid]}>
-            {shown.map((order) => (
-              <View key={order.id} style={twoUp ? styles.half : null}>
-                <OrderCard
-                  order={order}
-                  now={now}
-                  currency={venue.data?.currency ?? DEFAULT_CURRENCY}
-                  next={move.label(order)}
-                  busy={move.busy(order)}
-                  onNext={() => move.run(order)}
-                  onMarkPaid={canCreate ? () => setPaying(order) : undefined}
-                />
-              </View>
-            ))}
-          </View>
+          <TicketGrid
+            orders={shown}
+            renderTicket={(order) => (
+              <OrderCard
+                order={order}
+                now={now}
+                currency={venue.data?.currency ?? DEFAULT_CURRENCY}
+                next={move.label(order)}
+                busy={move.busy(order)}
+                onNext={() => move.run(order)}
+                onMarkPaid={canCreate ? () => setPaying(order) : undefined}
+              />
+            )}
+          />
         )}
       </DeskWait>
       {paying && venue.data ? (
@@ -162,9 +144,3 @@ export function OrdersScreen() {
     </OwnerPage>
   );
 }
-
-const styles = StyleSheet.create({
-  list: { gap: tokens.space[3] },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start' },
-  half: { flexBasis: '48%', flexGrow: 1 },
-});

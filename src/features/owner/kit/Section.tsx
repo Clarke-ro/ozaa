@@ -69,8 +69,8 @@ const styles = StyleSheet.create({
   },
   title: { fontFamily: 'Inter_600', letterSpacing: 0.8 },
   card: {
-    boxShadow: tokens.shadow.card,
-    borderRadius: tokens.radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: tokens.radius.lg,
     borderCurve: 'continuous',
     overflow: 'hidden',
   },

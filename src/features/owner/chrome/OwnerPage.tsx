@@ -1,42 +1,36 @@
 import type { ReactNode } from 'react';
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-  useWindowDimensions,
-} from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { usePathname, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { ChevronLeft, CloudOff } from 'lucide-react-native';
+import { ChevronLeft } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tokens } from '@/theme/tokens';
-import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { useOwnerSession } from '@/features/session';
-import { isTabRoot } from './nav';
+import { useOwnerLayout } from './layout';
+import { isTabRoot, navFor } from './nav';
+import { NotificationBell } from './NotificationBell';
 
-// Matches OwnerChrome: from this width the sidebar replaces the tab bar.
-const WIDE = 840;
+export { DeskWait, SkeletonBlock } from './DeskWait';
 
-// 16 pt margins on phones, 24 on tablets and up (HIG layout margins).
+/** Page margin: 16 on phones, 24 on tablets, 32 on desktops. */
 export function useGutter() {
-  const { width } = useWindowDimensions();
-  return width >= 768 ? tokens.space[6] : tokens.space[4];
+  return useOwnerLayout().gutter;
 }
 
 /**
- * Every owner screen sits in this: safe scroll area, back button on detail screens,
- * the title, an optional line under it, and one optional action on the right.
+ * Every owner screen sits in this: a header with Back (phones, detail screens), the title, one
+ * optional action and the bell, then the scrolling page.
+ * `width="form"` keeps settings and forms at a readable width; `wide` is for dashboards and lists.
  */
 export function OwnerPage({
   title,
   subtitle,
   action,
   footer,
+  width = 'form',
+  bell,
   children,
 }: {
   title: string;
@@ -45,45 +39,52 @@ export function OwnerPage({
   action?: ReactNode;
   /** Pinned under the scroll area, e.g. a SaveBar. */
   footer?: ReactNode;
+  width?: 'form' | 'wide';
+  /** Show the bell on phones too (wide screens always show it). */
+  bell?: boolean;
   children: ReactNode;
 }) {
   const theme = useTheme();
-  const gutter = useGutter();
+  const { wide, gutter } = useOwnerLayout();
   const insets = useSafeAreaInsets();
+  const role = useOwnerSession((state) => state.role) ?? 'waiter';
+  const mayNotify = navFor(role).some((item) => item.id === 'notifications');
+  const showBell = mayNotify && (wide || bell);
+  // The header and the page share one width, so the title lines up with the content under it.
+  const frame = { maxWidth: tokens.owner.page[width] + gutter * 2, paddingHorizontal: gutter };
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={[styles.fill, { backgroundColor: theme.bg }]}
     >
-      {/* Every page puts Back, its title and its one action in the header row. Today has its own panel. */}
-      {
-        <View
-          style={[
-            styles.bar,
-            {
-              paddingTop: insets.top + tokens.space[2],
-              paddingHorizontal: gutter,
-              borderBottomColor: theme.line,
-              backgroundColor: theme.surface,
-            },
-          ]}
-        >
-          <View style={styles.barInner}>
-            <BackButton />
-            <Text
-              variant="title"
-              accessibilityRole="header"
-              numberOfLines={1}
-              style={styles.barTitle}
-            >
-              {title}
-            </Text>
-            {action ? <View style={styles.action}>{action}</View> : null}
-          </View>
+      <View
+        style={[
+          styles.bar,
+          wide && styles.barWide,
+          {
+            paddingTop: insets.top + (wide ? 0 : tokens.space[2]),
+            borderBottomColor: theme.line,
+            backgroundColor: theme.surface,
+          },
+        ]}
+      >
+        <View style={[styles.barInner, frame]}>
+          <BackButton />
+          <Text
+            variant={wide ? 'display-m' : 'title'}
+            accessibilityRole="header"
+            numberOfLines={1}
+            style={styles.barTitle}
+          >
+            {title}
+          </Text>
+          {action ? <View style={styles.action}>{action}</View> : null}
+          {showBell ? <NotificationBell /> : null}
         </View>
-      }
+      </View>
       <ScrollView
-        contentContainerStyle={[styles.page, { paddingHorizontal: gutter }]}
+        contentContainerStyle={[styles.page, frame, wide && styles.pageWide]}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
       >
@@ -105,9 +106,9 @@ function BackButton() {
   const router = useRouter();
   const path = usePathname();
   const role = useOwnerSession((state) => state.role) ?? 'waiter';
-  const { width } = useWindowDimensions();
+  const { wide } = useOwnerLayout();
   // On wide screens every section sits in the sidebar, so each page is a root with nothing to go back to.
-  if (width >= WIDE || isTabRoot(role, path)) return null;
+  if (wide || isTabRoot(role, path)) return null;
   return (
     <Pressable
       accessibilityRole="button"
@@ -121,69 +122,7 @@ function BackButton() {
   );
 }
 
-/** Grey blocks in the shape of the content while it loads, so nothing jumps when it arrives. */
-export function SkeletonBlock({
-  height = 72,
-  width = '100%',
-}: {
-  height?: number;
-  width?: number | `${number}%`;
-}) {
-  const theme = useTheme();
-  return (
-    <View style={{ height, width, borderRadius: tokens.radius.md, backgroundColor: theme.wash }} />
-  );
-}
-
-export function DeskWait({
-  loading,
-  error,
-  onRetry,
-  children,
-  skeleton,
-}: {
-  loading: boolean;
-  error: boolean;
-  onRetry: () => void;
-  children: ReactNode;
-  /** Optional custom skeleton; by default three card-sized blocks. */
-  skeleton?: ReactNode;
-}) {
-  const { t } = useTranslation();
-  const theme = useTheme();
-  if (loading) {
-    return (
-      <View
-        style={styles.wait}
-        accessibilityRole="progressbar"
-        accessibilityLabel={t('errors.loading')}
-      >
-        {skeleton ?? (
-          <>
-            <SkeletonBlock height={96} />
-            <SkeletonBlock />
-            <SkeletonBlock />
-          </>
-        )}
-      </View>
-    );
-  }
-  if (error) {
-    return (
-      <View
-        style={[styles.error, { borderColor: theme.line, backgroundColor: theme.surface }]}
-        accessibilityRole="alert"
-      >
-        <CloudOff size={28} color={theme.muted} />
-        <Text variant="body" style={styles.center}>
-          {t('ownerKit.loadFailed')}
-        </Text>
-        <Button label={t('ownerKit.tryAgain')} onPress={onRetry} tone="secondary" size="md" />
-      </View>
-    );
-  }
-  return children;
-}
+const BACK = tokens.space[10];
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
@@ -192,40 +131,28 @@ const styles = StyleSheet.create({
     paddingBottom: tokens.space[16] + tokens.space[8],
     gap: tokens.space[4],
     width: '100%',
-    maxWidth: 880,
     alignSelf: 'center',
   },
+  pageWide: { paddingTop: tokens.space[6], gap: tokens.space[6] },
   // Sits in front of the title on the same line, so detail screens lose no height to it.
   back: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: BACK,
+    height: BACK,
+    borderRadius: tokens.radius.full,
     alignItems: 'center',
     justifyContent: 'center',
     marginVertical: 2,
   },
   bar: { borderBottomWidth: StyleSheet.hairlineWidth, paddingBottom: tokens.space[2] },
+  barWide: { paddingBottom: 0, justifyContent: 'center', minHeight: tokens.owner.topBar },
   barInner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: tokens.space[2],
-    minHeight: 44,
+    gap: tokens.space[3],
+    minHeight: tokens.touchTarget,
     width: '100%',
-    maxWidth: 880,
     alignSelf: 'center',
   },
   barTitle: { flex: 1 },
-  headRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
-  title: { flex: 1 },
   action: { flexShrink: 0 },
-  wait: { gap: tokens.space[3] },
-  error: {
-    alignItems: 'center',
-    gap: tokens.space[3],
-    padding: tokens.space[6],
-    borderWidth: 1,
-    borderRadius: tokens.radius.lg,
-    borderCurve: 'continuous',
-  },
-  center: { textAlign: 'center' },
 });

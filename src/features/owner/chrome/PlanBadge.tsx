@@ -42,5 +42,9 @@ const styles = StyleSheet.create({
     borderRadius: tokens.radius.sm,
     borderWidth: StyleSheet.hairlineWidth,
   },
-  label: { fontFamily: 'Inter_600', fontSize: 12, lineHeight: 16 },
+  label: {
+    fontFamily: 'Inter_600',
+    fontSize: tokens.owner.micro.size,
+    lineHeight: tokens.owner.micro.line,
+  },
 });

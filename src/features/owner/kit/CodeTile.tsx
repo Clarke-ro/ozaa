@@ -18,7 +18,7 @@ export function CodeTile({
   const ink = tone === 'tint' ? theme.badgeInk : tone === 'alert' ? theme.error : theme.text;
   return (
     <View style={[styles.tile, { width: size, height: size, backgroundColor: bg }]}>
-      <Text variant="body-strong" style={{ color: ink, fontSize: 16 }} numberOfLines={1}>
+      <Text variant="button" style={{ color: ink }} numberOfLines={1}>
         {code}
       </Text>
     </View>

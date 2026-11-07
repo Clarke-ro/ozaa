@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
@@ -10,44 +11,45 @@ export type SummaryItem = {
   tone?: 'alert';
 };
 
-/** A row of equal white tiles, each one big number and a short label, read left to right. */
+/** A few numbers in one box, split by thin lines, read left to right. */
 export function SummaryStrip({ items }: { items: readonly SummaryItem[] }) {
   const theme = useTheme();
   return (
-    <View style={styles.row}>
-      {items.map((item) => (
-        <View
-          key={item.label}
-          accessible
-          accessibilityLabel={`${item.label}: ${item.value}`}
-          style={[styles.tile, { backgroundColor: theme.surface, borderColor: theme.line }]}
-        >
-          <Text
-            variant="title"
-            numberOfLines={1}
-            style={[styles.value, { color: item.tone === 'alert' ? theme.error : theme.text }]}
-          >
-            {item.value}
-          </Text>
-          <Text variant="caption" numberOfLines={1} style={{ color: theme.muted }}>
-            {item.label}
-          </Text>
-        </View>
+    <View style={[styles.row, { backgroundColor: theme.surface, borderColor: theme.line }]}>
+      {items.map((item, index) => (
+        <Fragment key={item.label}>
+          {index > 0 ? <View style={[styles.rule, { backgroundColor: theme.line }]} /> : null}
+          <View accessible accessibilityLabel={`${item.label}: ${item.value}`} style={styles.tile}>
+            <Text
+              variant="title"
+              numberOfLines={1}
+              style={[styles.value, { color: item.tone === 'alert' ? theme.error : theme.text }]}
+            >
+              {item.value}
+            </Text>
+            <Text variant="caption" numberOfLines={1} style={{ color: theme.muted }}>
+              {item.label}
+            </Text>
+          </View>
+        </Fragment>
       ))}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', gap: tokens.space[2] },
+  row: {
+    flexDirection: 'row',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: tokens.radius.lg,
+    borderCurve: 'continuous',
+  },
+  rule: { width: StyleSheet.hairlineWidth },
   tile: {
     flex: 1,
     gap: 2,
     paddingVertical: tokens.space[3],
-    paddingHorizontal: tokens.space[3],
-    boxShadow: tokens.shadow.card,
-    borderRadius: tokens.radius.lg,
-    borderCurve: 'continuous',
+    paddingHorizontal: tokens.space[4],
   },
   value: { fontVariant: ['tabular-nums'] },
 });

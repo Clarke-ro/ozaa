@@ -233,6 +233,25 @@ export const tokens = {
     "color": "#D24000 for actions, black for navigation, grey500 for inactive"
   },
   "touchTarget": 44,
+  "owner": {
+    "use": "Owner app layout. Breakpoints are window widths in px.",
+    "wideFrom": 840,
+    "tabletFrom": 768,
+    "desktopFrom": 1200,
+    "sidebar": 256,
+    "rail": 72,
+    "topBar": 64,
+    "tabBar": 56,
+    "page": {
+      "form": 880,
+      "wide": 1280
+    },
+    "statusEdge": 4,
+    "micro": {
+      "size": 11,
+      "line": 14
+    }
+  },
   "logo": {
     "shape": "scan frame: white rounded square with four QR corner marks and a fork and knife cut out, on an orange #FC5205 circle",
     "files": "design/logo/",

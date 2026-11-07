@@ -4,6 +4,84 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-07 · Owner app redesign, part 2
+
+**What we built**
+
+- **Today** is one column of sections that sit straight on the page, the same on phone, tablet and computer. There are no boxes and no side columns. Thin lines split the sections, and each section has its own shape.
+- **Orders** and **Calls** are flatter. **Floor** uses the whole page, and a table's details open in a sheet.
+- Each screen has at most one filled button.
+
+**How it works**
+
+```
+Today (one column, full page width)
+├ Sales today     the big number, then "14 orders today  40 visitors ..."
+├ Needs you       alert bars with a coloured edge, or "all clear"
+├ Live orders     "2 New  1 Cooking  3 Ready", late warnings, ruled tickets
+├ Finish setup    progress bar + Continue link (owners, until done)
+└ Shortcuts       a line of small pills
+```
+
+The figure lines wrap like a sentence, so they never form columns. A figure, alert or ticket opens its page only when your role may open it; otherwise it is plain text. `todayFigures()` picks the figures and `kitchenFlow()` counts the stages. Pending orders and waiter calls are left out of the figures because Live orders and Needs you already show them.
+
+**Files to look at**
+
+- `dashboard/DashboardScreen.tsx`: the order of the sections
+- `dashboard/Band.tsx`, `InlineFigure.tsx`: the section shape and the number-plus-words phrase
+- `dashboard/todayFigures.ts`, `kitchenFlow.ts` and their tests
+- `floor/TableDetail.tsx`, `floor/useFloorActions.ts`
+
+**New idea: idempotency keys**
+
+When the Floor records cash, it sends a key with the request. If the network drops the answer and you tap again, the same key goes with it, and the server knows it is the same payment. `TableDetail` keeps one key per bill and amount, so cash is never recorded twice.
+
+**Try it yourself**
+
+In `NeedsYouBar.tsx`, change `SHOWN` from 4 to 2 and reload. Watch how much higher Live orders moves.
+
+---
+
+## 2026-11-07 · Owner app redesign, part 1: the shell, the cards and Today
+
+**What we built**
+
+The owner app no longer looks like a phone app stretched onto a computer.
+
+- A **black sidebar** with the Ozaa mark, your plan and location. A small orange number shows orders waiting for the kitchen and open waiter calls.
+- A **top bar** on every page with a big title, the page's one action and the notifications bell.
+- **Flat cards** with a thin grey line around them instead of shadows.
+- **Today** got a first redesign here. Part 2 (above) replaced it with one column of cards.
+
+**How it works**
+
+```
+OwnerChrome ─┬─ Sidebar (always the dark theme)
+             └─ page ─ OwnerPage: top bar + scroll area, width "form" (880) or "wide" (1280)
+                         └─ Panel ─ PanelRow, PanelRow, PanelRow   (one box, lines between rows)
+```
+
+Every size lives in `design/tokens.json` under `owner`, and `useOwnerLayout()` reads it, so every screen switches layout at the same widths.
+
+**Files to look at**
+
+- `src/features/owner/chrome/`: `layout.ts`, `Sidebar.tsx`, `OwnerPage.tsx`, `NotificationBell.tsx`, `useNavCounts.ts`
+- `src/features/owner/kit/`: `Panel.tsx`, `PanelRow.tsx`, `MetricStrip.tsx`
+
+**New idea: nesting a theme**
+
+`Sidebar` wraps itself in `<ThemeProvider theme={ozaaOwnerDarkTheme}>`. Every component inside it that calls `useTheme()` gets the dark colours, so the sidebar needs no special colours of its own.
+
+**Also fixed**
+
+Any role could open an owner page that wasn't listed in the nav. Now those pages are closed, apart from More and Help. The fix has a test in `nav.test.ts`. Today only links to pages you're allowed to open.
+
+**Try it yourself**
+
+Change `"sidebar": 256` in `design/tokens.json` to `300`, run `npm run gen:tokens`, and reload.
+
+---
+
 ## 2026-11-03 · A hygiene pass: what the app remembers, and when
 
 **What we built**

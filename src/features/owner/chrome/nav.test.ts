@@ -1,4 +1,4 @@
-import { isTabRoot, moreGroups, navFor, navGroups, tabsFor } from './nav';
+import { canOpen, isTabRoot, moreGroups, navFor, navGroups, tabsFor } from './nav';
 
 test('kitchen only sees the order tickets', () => {
   expect(navFor('kitchen').map((item) => item.id)).toEqual(['orders']);
@@ -166,5 +166,22 @@ describe('sidebar groups', () => {
       expect(new Set(ids).size).toBe(ids.length);
       expect(ids.length).toBe(navFor(role).length);
     }
+  });
+});
+
+describe('canOpen', () => {
+  it('lets a role open the pages its nav lists, and nested pages under them', () => {
+    expect(canOpen('kitchen', '/owner/orders')).toBe(true);
+    expect(canOpen('kitchen', '/owner/orders/abc')).toBe(true);
+    expect(canOpen('kitchen', '/owner/menu')).toBe(false);
+  });
+
+  it('keeps More and Help open to every role', () => {
+    expect(canOpen('kitchen', '/owner/more')).toBe(true);
+    expect(canOpen('staff_scanner', '/owner/help')).toBe(true);
+  });
+
+  it('blocks owner pages the nav does not know about', () => {
+    expect(canOpen('waiter', '/owner/secret')).toBe(false);
   });
 });

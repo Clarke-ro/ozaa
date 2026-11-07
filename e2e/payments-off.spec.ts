@@ -85,7 +85,8 @@ test('owner: orders, floor, calls and insights work with no payment cards', asyn
     .getByRole('button', { name: /^Floor/ })
     .first()
     .click();
-  await expect(page.getByText(/^Bill \(\d+\)$/)).toBeVisible({ timeout: 15_000 });
+  // The Bill chip carries its count, read out as "Bill, N".
+  await expect(page.getByRole('tab', { name: /^Bill, \d+$/ })).toBeVisible({ timeout: 15_000 });
   await noPayWords(page);
   await page.screenshot({ path: 'test-results/payments-off-owner-floor.png' });
 
