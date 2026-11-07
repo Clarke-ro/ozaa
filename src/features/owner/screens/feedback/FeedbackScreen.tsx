@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, TextInput, View, useWindowDimensions } from 'react-native';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Inbox, Search, Shield, X } from 'lucide-react-native';
@@ -20,13 +20,14 @@ type Tab = 'new' | 'archived' | 'ai';
 export function FeedbackScreen() {
   const theme = useTheme();
   const { t } = useTranslation();
+  const { width } = useWindowDimensions();
+  const twoCol = width >= 920;
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const client = useQueryClient();
   const [tab, setTab] = useState<Tab>('new');
   const [search, setSearch] = useState('');
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    // "2 hours ago" only needs to move once a minute.
     const id = setInterval(() => setNow(Date.now()), 60_000);
     return () => clearInterval(id);
   }, []);
@@ -40,10 +41,8 @@ export function FeedbackScreen() {
         search: query || undefined,
       }),
     enabled: Boolean(venueId) && tab !== 'ai',
-    // Keep the last results on screen while the next search loads, so the list doesn't flash.
     placeholderData: keepPreviousData,
   });
-  // The count on the New tab, independent of the search box.
   const unread = useQuery({
     queryKey: [...ownerKeys.feedback(venueId), 'new', ''],
     queryFn: () => api.ownerListFeedback(venueId, { state: 'new' }),
@@ -53,7 +52,6 @@ export function FeedbackScreen() {
   const archive = useMutation({
     mutationFn: ({ id, archived }: { id: string; archived: boolean }) =>
       api.ownerArchiveFeedback(venueId, id, { archived }),
-    // No confirmation: an archived note comes back with one tap from the Archived tab.
     onSuccess: (_data, { archived }) => {
       void client.invalidateQueries({ queryKey: ownerKeys.feedback(venueId) });
       toast.success(archived ? t('ownerFeedback.archived') : t('ownerFeedback.restored'));
@@ -78,35 +76,37 @@ export function FeedbackScreen() {
         <AskCravinsAiScreen venueId={venueId} />
       ) : (
         <>
-          <View
-            style={[styles.search, { borderColor: theme.line, backgroundColor: theme.surface }]}
-          >
-            <Search size={18} color={theme.muted} />
-            <TextInput
-              value={search}
-              onChangeText={setSearch}
-              placeholder={t('ownerFeedback.search')}
-              placeholderTextColor={theme.meta}
-              accessibilityLabel={t('ownerFeedback.search')}
-              returnKeyType="search"
-              style={[styles.input, { color: theme.text }]}
-            />
-            {search ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={t('ownerFeedback.clear')}
-                onPress={() => setSearch('')}
-                style={styles.clear}
-              >
-                <X size={18} color={theme.muted} />
-              </Pressable>
-            ) : null}
-          </View>
-          <View style={styles.note}>
-            <Shield size={14} color={theme.muted} />
-            <Text variant="caption" style={{ color: theme.muted, flex: 1 }}>
-              {t('ownerFeedback.delay')}
-            </Text>
+          <View style={[styles.toolbar, twoCol && styles.toolbarWide]}>
+            <View
+              style={[styles.search, { borderColor: theme.line, backgroundColor: theme.surface }]}
+            >
+              <Search size={18} color={theme.muted} />
+              <TextInput
+                value={search}
+                onChangeText={setSearch}
+                placeholder={t('ownerFeedback.search')}
+                placeholderTextColor={theme.meta}
+                accessibilityLabel={t('ownerFeedback.search')}
+                returnKeyType="search"
+                style={[styles.input, { color: theme.text }]}
+              />
+              {search ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={t('ownerFeedback.clear')}
+                  onPress={() => setSearch('')}
+                  style={styles.clear}
+                >
+                  <X size={18} color={theme.muted} />
+                </Pressable>
+              ) : null}
+            </View>
+            <View style={styles.note}>
+              <Shield size={14} color={theme.muted} />
+              <Text variant="caption" style={{ color: theme.muted }}>
+                {t('ownerFeedback.delay')}
+              </Text>
+            </View>
           </View>
           <DeskWait
             loading={list.isLoading}
@@ -126,15 +126,16 @@ export function FeedbackScreen() {
                 description={query ? t('ownerFeedback.noMatchBody') : t('ownerFeedback.emptyBody')}
               />
             ) : (
-              <View style={styles.list}>
+              <View style={[styles.list, twoCol && styles.grid]}>
                 {items.map((item) => (
-                  <FeedbackCard
-                    now={now}
-                    key={item.id}
-                    item={item}
-                    busy={archive.isPending && archive.variables?.id === item.id}
-                    onArchive={(archived) => archive.mutate({ id: item.id, archived })}
-                  />
+                  <View key={item.id} style={twoCol ? styles.cell : undefined}>
+                    <FeedbackCard
+                      now={now}
+                      item={item}
+                      busy={archive.isPending && archive.variables?.id === item.id}
+                      onArchive={(archived) => archive.mutate({ id: item.id, archived })}
+                    />
+                  </View>
                 ))}
               </View>
             )}
@@ -146,16 +147,24 @@ export function FeedbackScreen() {
 }
 
 const styles = StyleSheet.create({
+  toolbar: { gap: tokens.space[2] },
+  toolbarWide: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: tokens.space[4],
+  },
   search: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: tokens.space[2],
-    minHeight: 48,
+    minHeight: 44,
     paddingLeft: tokens.space[3],
     borderWidth: 1,
     borderRadius: tokens.radius.md,
   },
-  input: { flex: 1, minHeight: 46, fontFamily: 'Inter_400', fontSize: 16 },
+  input: { flex: 1, minHeight: 42, fontFamily: 'Inter_400', fontSize: 15 },
   clear: {
     width: tokens.touchTarget,
     height: tokens.touchTarget,
@@ -164,4 +173,6 @@ const styles = StyleSheet.create({
   },
   note: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
   list: { gap: tokens.space[3] },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start' },
+  cell: { flexBasis: '48.5%', flexGrow: 1 },
 });

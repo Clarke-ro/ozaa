@@ -1163,11 +1163,62 @@
   },
   "ownerFloor": {
     "table": "Table",
+    "tableCode": "Table {{code}}",
+    "selectTable": "Select a table to view its bill and actions.",
+    "guestRequested": "Requested: {{reason}}",
+    "filter": {
+      "all": "All ({{count}})",
+      "calls": "Calls ({{count}})",
+      "paying": "Bill ({{count}})",
+      "active": "Occupied ({{count}})",
+      "free": "Free ({{count}})"
+    },
     "legend": {
       "free": "Free",
       "occupied": "Occupied",
       "paying": "Bill",
       "calling": "Calling"
+    }
+  },
+  "ownerShell": {
+    "prototype": "Interactive preview",
+    "roadmap": "Planned capabilities",
+    "phase3": "Phase 3",
+    "pos": {
+      "billTotal": "Counter total",
+      "paidCash": "Marked paid in Cash",
+      "paidMomo": "Marked paid in MoMo",
+      "takeCash": "Cash",
+      "promptMomo": "MoMo QR",
+      "jollof": "Jollof Rice & Chicken",
+      "banku": "Banku & Grilled Tilapia",
+      "sobolo": "Chilled Sobolo (500ml)",
+      "kelewele": "Spicy Kelewele"
+    },
+    "stock": {
+      "inStock": "In stock",
+      "lowStock": "Low stock",
+      "soldOut": "Sold out (86)",
+      "remaining": "{{qty}} left",
+      "auto86": "Auto-86 hides sold-out dishes from guest menus automatically.",
+      "rice": "Perfumed Rice (50kg bag)",
+      "tilapia": "Fresh Lake Tilapia",
+      "plantain": "Ripe Plantain",
+      "sobolo": "Ginger & Hibiscus (Sobolo)"
+    },
+    "ai": {
+      "tableGuest": "Table 4",
+      "waiter": "Cravins AI",
+      "enQuery": "What is your best spicy dish?",
+      "enReply": "Mama's Special Waakye with spicy shito and grilled goat is our top seller. Would you like to add fried plantain (kelewele) for GH₵20?",
+      "twiQuery": "Aduane bɛn na ɛyɛ dɛ sen biara?",
+      "twiReply": "Mama Waakye a ɛwɔ shito ne aponkye nam no na nnipa ani gye ho paa. Wopɛ sɛ yɛde kelewele ka ho ma wo?",
+      "gaQuery": "Mɛni niyenii ŋɔɔ fe fɛɛ?",
+      "gaReply": "Waakye kɛ shito kɛ to loonɛ ŋɔɔ pam! Ani obaasumɔ ni wɔfee kelewele kɛfata he?"
+    },
+    "marketing": {
+      "audience": "Opt-in audience: 42 guests",
+      "sampleSms": "Weekend Treat at Mama's Kitchen! Show this message at your table to enjoy a complimentary chilled Sobolo with any main dish. Reply STOP to opt out."
     }
   },
   "ownerLoyalty": {

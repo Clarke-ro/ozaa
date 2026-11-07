@@ -29,11 +29,10 @@ export function PosShell() {
   const [paid, setPaid] = useState(false);
 
   const menu = [
-    // Sample prices in pesewas, like every amount in the app.
-    { id: 'jollof', name: 'Jollof Rice & Chicken', price: pesewas(6500) },
-    { id: 'banku', name: 'Banku & Grilled Tilapia', price: pesewas(7500) },
-    { id: 'sobolo', name: 'Chilled Sobolo (500ml)', price: pesewas(1500) },
-    { id: 'kelewele', name: 'Spicy Kelewele', price: pesewas(2000) },
+    { id: 'jollof', name: t('ownerShell.pos.jollof'), price: pesewas(6500) },
+    { id: 'banku', name: t('ownerShell.pos.banku'), price: pesewas(7500) },
+    { id: 'sobolo', name: t('ownerShell.pos.sobolo'), price: pesewas(1500) },
+    { id: 'kelewele', name: t('ownerShell.pos.kelewele'), price: pesewas(2000) },
   ];
 
   const total = sumPesewas(
@@ -49,9 +48,6 @@ export function PosShell() {
 
   const preview = (
     <View style={styles.protoContainer}>
-      <Text variant="caption" style={{ color: theme.meta, marginBottom: 4 }}>
-        TAP DISHES TO ADD TO COUNTER TICKET:
-      </Text>
       <View style={styles.dishGrid}>
         {menu.map((dish) => {
           const isSelected = selectedItems.includes(dish.id);
@@ -81,10 +77,9 @@ export function PosShell() {
         })}
       </View>
 
-      {/* Ticket summary bar */}
       <View style={styles.ticketSummaryBox}>
         <View style={styles.ticketRow}>
-          <Text variant="body-strong">Counter Bill Total:</Text>
+          <Text variant="body-strong">{t('ownerShell.pos.billTotal')}</Text>
           <Text variant="display-m" style={styles.ticketTotalText}>
             {formatMoney(total, DEFAULT_CURRENCY)}
           </Text>
@@ -94,15 +89,16 @@ export function PosShell() {
           <View style={styles.paidBadge}>
             <CheckCircle2 size={16} color={theme.success} />
             <Text variant="caption" style={{ color: theme.success, fontWeight: '700' }}>
-              Order marked paid in {tenderMethod === 'cash' ? 'Cash' : 'MoMo'}. Sent to kitchen
-              tickets.
+              {tenderMethod === 'cash'
+                ? t('ownerShell.pos.paidCash')
+                : t('ownerShell.pos.paidMomo')}
             </Text>
           </View>
         ) : (
           <View style={styles.tenderActions}>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Mark Cash"
+              accessibilityLabel={t('ownerShell.pos.takeCash')}
               onPress={() => {
                 setTenderMethod('cash');
                 setPaid(true);
@@ -111,13 +107,13 @@ export function PosShell() {
             >
               <Wallet size={16} color={theme.white} />
               <Text variant="caption" style={{ color: theme.white, fontWeight: '700' }}>
-                Take Cash
+                {t('ownerShell.pos.takeCash')}
               </Text>
             </Pressable>
 
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="MoMo QR"
+              accessibilityLabel={t('ownerShell.pos.promptMomo')}
               onPress={() => {
                 setTenderMethod('momo');
                 setPaid(true);
@@ -126,7 +122,7 @@ export function PosShell() {
             >
               <Smartphone size={16} color={theme.onFill} />
               <Text variant="caption" style={{ color: theme.onFill, fontWeight: '700' }}>
-                Prompt MoMo
+                {t('ownerShell.pos.promptMomo')}
               </Text>
             </Pressable>
           </View>
@@ -138,10 +134,9 @@ export function PosShell() {
   return (
     <ShellScreen
       title={t('owner.pos')}
-      body={t('owner.shellPos')}
       next={[t('owner.posNext1'), t('owner.posNext2'), t('owner.posNext3')]}
       icon={Receipt}
-      badge="COMING IN PHASE 3"
+      badge={t('ownerShell.phase3')}
       preview={preview}
     />
   );
@@ -154,38 +149,40 @@ export function StockShell() {
 
   const inventory = [
     {
-      name: 'Perfumed Rice (50kg bag)',
+      name: t('ownerShell.stock.rice'),
       quantity: '18.5 kg',
-      status: 'In Stock',
+      status: t('ownerShell.stock.inStock'),
       tone: 'success' as const,
     },
     {
-      name: 'Fresh Lake Tilapia',
+      name: t('ownerShell.stock.tilapia'),
       quantity: '4 pcs',
-      status: 'Low Stock',
+      status: t('ownerShell.stock.lowStock'),
       tone: 'waiting' as const,
     },
-    { name: 'Ripe Plantain', quantity: '0 pcs', status: 'Sold Out (86)', tone: 'error' as const },
     {
-      name: 'Ginger & Hibiscus (Sobolo)',
-      quantity: '12 litres',
-      status: 'In Stock',
+      name: t('ownerShell.stock.plantain'),
+      quantity: '0 pcs',
+      status: t('ownerShell.stock.soldOut'),
+      tone: 'error' as const,
+    },
+    {
+      name: t('ownerShell.stock.sobolo'),
+      quantity: '12 L',
+      status: t('ownerShell.stock.inStock'),
       tone: 'success' as const,
     },
   ];
 
   const preview = (
     <View style={styles.protoContainer}>
-      <Text variant="caption" style={{ color: theme.meta, marginBottom: 4 }}>
-        REAL-TIME INGREDIENT & RECIPE WATCHER:
-      </Text>
       <View style={styles.stockList}>
         {inventory.map((item) => (
           <View key={item.name} style={styles.stockItemRow}>
             <View style={styles.stockItemInfo}>
               <Text variant="body-strong">{item.name}</Text>
               <Text variant="caption" style={{ color: theme.meta }}>
-                Remaining: {item.quantity}
+                {t('ownerShell.stock.remaining', { qty: item.quantity })}
               </Text>
             </View>
             <StatusPill tone={item.tone} label={item.status} boxed />
@@ -196,8 +193,7 @@ export function StockShell() {
       <View style={styles.auto86Note}>
         <AlertTriangle size={16} color={theme.warning} />
         <Text variant="caption" style={{ color: theme.warning, flex: 1 }}>
-          Auto-86 Rule: When Ripe Plantain hit 0 pcs, Kelewele was instantly hidden from guest table
-          menus.
+          {t('ownerShell.stock.auto86')}
         </Text>
       </View>
     </View>
@@ -206,10 +202,9 @@ export function StockShell() {
   return (
     <ShellScreen
       title={t('owner.stock')}
-      body={t('owner.shellStock')}
       next={[t('owner.stockNext1'), t('owner.stockNext2'), t('owner.stockNext3')]}
       icon={Store}
-      badge="COMING IN PHASE 3"
+      badge={t('ownerShell.phase3')}
       preview={preview}
     />
   );
@@ -223,18 +218,16 @@ export function AiShell() {
 
   const dialogues = {
     en: {
-      query: 'What is your best spicy dish?',
-      reply:
-        "Mama's Special Waakye with spicy shito and grilled goat is our top seller. Would you like to add fried plantain (kelewele) for GH₵20?",
+      query: t('ownerShell.ai.enQuery'),
+      reply: t('ownerShell.ai.enReply'),
     },
     twi: {
-      query: 'Aduane bɛn na ɛyɛ dɛ sen biara?',
-      reply:
-        'Mama Waakye a ɛwɔ shito ne aponkye nam no na nnipa ani gye ho paa. Wopɛ sɛ yɛde kelewele ka ho ma wo?',
+      query: t('ownerShell.ai.twiQuery'),
+      reply: t('ownerShell.ai.twiReply'),
     },
     ga: {
-      query: 'Mɛni niyenii ŋɔɔ fe fɛɛ?',
-      reply: 'Waakye kɛ shito kɛ to loonɛ ŋɔɔ pam! Ani obaasumɔ ni wɔfee kelewele kɛfata he?',
+      query: t('ownerShell.ai.gaQuery'),
+      reply: t('ownerShell.ai.gaReply'),
     },
   };
 
@@ -243,9 +236,6 @@ export function AiShell() {
   const preview = (
     <View style={styles.protoContainer}>
       <View style={styles.langBar}>
-        <Text variant="caption" style={{ color: theme.meta }}>
-          SELECT PREVIEW LANGUAGE:
-        </Text>
         <View style={styles.langPills}>
           {(['en', 'twi', 'ga'] as const).map((l) => (
             <Pressable
@@ -274,14 +264,13 @@ export function AiShell() {
         </View>
       </View>
 
-      {/* Chat Dialogue Mockup */}
       <View style={styles.chatFrame}>
         <View style={styles.chatGuestBubble}>
           <Text variant="body" style={styles.chatGuestText}>
             {currentChat.query}
           </Text>
           <Text variant="caption" style={styles.chatTimestamp}>
-            Table 4 · Guest
+            {t('ownerShell.ai.tableGuest')}
           </Text>
         </View>
 
@@ -289,7 +278,7 @@ export function AiShell() {
           <View style={styles.aiHeaderRow}>
             <Bot size={14} color={theme.ink} />
             <Text variant="caption" style={{ color: theme.ink, fontWeight: '700' }}>
-              Cravins AI Waiter
+              {t('ownerShell.ai.waiter')}
             </Text>
           </View>
           <Text variant="body" style={styles.chatAiText}>
@@ -303,10 +292,9 @@ export function AiShell() {
   return (
     <ShellScreen
       title={t('owner.ai')}
-      body={t('owner.shellAi')}
       next={[t('owner.aiNext1'), t('owner.aiNext2'), t('owner.aiNext3')]}
       icon={Bot}
-      badge="COMING IN PHASE 3"
+      badge={t('ownerShell.phase3')}
       preview={preview}
     />
   );
@@ -321,25 +309,13 @@ export function MarketingShell() {
     <View style={styles.protoContainer}>
       <View style={styles.audienceNotice}>
         <Megaphone size={16} color={theme.ink} />
-        <View style={{ flex: 1 }}>
-          <Text variant="body-strong">Active Opt-In Audience: 42 Guests</Text>
-          <Text variant="caption" style={{ color: theme.meta }}>
-            Only guests who separately checked the Act 843 marketing consent box.
-          </Text>
-        </View>
+        <Text variant="body-strong" style={{ flex: 1 }}>
+          {t('ownerShell.marketing.audience')}
+        </Text>
       </View>
 
-      <View style={styles.broadcastMessagePreview}>
-        <Text variant="caption" style={{ color: theme.meta, marginBottom: 4 }}>
-          CAMPAIGN SMS & WHATSAPP PREVIEW:
-        </Text>
-        <View style={styles.smsCard}>
-          <Text variant="body">
-            {
-              "Weekend Treat at Mama's Kitchen! Show this text to your waiter at Table QR to enjoy a complimentary chilled Sobolo with any main dish. Reply STOP to opt out."
-            }
-          </Text>
-        </View>
+      <View style={styles.smsCard}>
+        <Text variant="body">{t('ownerShell.marketing.sampleSms')}</Text>
       </View>
     </View>
   );
@@ -347,10 +323,9 @@ export function MarketingShell() {
   return (
     <ShellScreen
       title={t('owner.marketing')}
-      body={t('owner.shellMarketing')}
       next={[t('owner.marketNext1'), t('owner.marketNext2'), t('owner.marketNext3')]}
       icon={Megaphone}
-      badge="COMING IN PHASE 3"
+      badge={t('ownerShell.phase3')}
       preview={preview}
     />
   );
@@ -439,7 +414,7 @@ const useStyles = makeStyles((theme) => ({
   langBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
   },
   langPills: {
     flexDirection: 'row',
@@ -502,9 +477,6 @@ const useStyles = makeStyles((theme) => ({
     borderRadius: tokens.radius.md,
     borderWidth: 1,
     borderColor: theme.tint,
-  },
-  broadcastMessagePreview: {
-    gap: tokens.space[1],
   },
   smsCard: {
     backgroundColor: theme.wash,

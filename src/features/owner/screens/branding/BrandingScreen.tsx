@@ -19,7 +19,7 @@ import { menuStyleOf } from '@/lib/menuStyle';
 type Tab = 'look' | 'words' | 'buttons' | 'preview';
 
 // From this width the guest preview sits beside the editor, so it needs no tab of its own.
-const SIDE_BY_SIDE = 1000;
+const SIDE_BY_SIDE = 900;
 
 /**
  * How the guest page looks, one topic at a time: Look (photos, colour, font), Words, Buttons,
