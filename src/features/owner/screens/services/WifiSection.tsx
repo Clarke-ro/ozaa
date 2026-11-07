@@ -21,7 +21,7 @@ export function WifiSection({
   const open = value.security === 'OPEN' || value.security === 'nopass';
   const options = SECURITY.includes(value.security) ? SECURITY : [value.security, ...SECURITY];
   return (
-    <Section title={t('ownerServices.wifi')} note={t('ownerServices.wifiNote')}>
+    <Section title={t('ownerServices.wifi')}>
       <InputRow
         label={t('ownerServices.network')}
         value={value.ssid}
@@ -54,7 +54,6 @@ export function WifiSection({
       </SectionBody>
       <SwitchRow
         label={t('ownerServices.hidden')}
-        hint={t('ownerServices.hiddenHint')}
         value={value.hidden}
         onChange={(v) => onChange('hidden', v)}
       />

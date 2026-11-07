@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Crypto from 'expo-crypto';
 import { useTranslation } from 'react-i18next';
@@ -20,6 +20,8 @@ type Filter = 'all' | 'reply';
 export function ReviewsScreen() {
   const theme = useTheme();
   const { t } = useTranslation();
+  const { width } = useWindowDimensions();
+  const twoCol = width >= 920;
   const client = useQueryClient();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const [filter, setFilter] = useState<Filter>('all');
@@ -54,31 +56,37 @@ export function ReviewsScreen() {
         error={reviews.isError}
         onRetry={() => void reviews.refetch()}
       >
-        {average != null ? (
-          <View
-            style={styles.summary}
-            accessible
-            accessibilityLabel={t('ownerReviews.summaryA11y', {
-              avg: average.toFixed(1),
-              count: all.length,
-            })}
-          >
-            <Star size={22} color={theme.ink} fill={theme.ink} />
-            <Text variant="display-m">{average.toFixed(1)}</Text>
-            <Text variant="body" style={{ color: theme.muted }}>
-              {t('ownerReviews.count', { count: all.length })}
-            </Text>
+        <View style={[styles.toolbar, twoCol && styles.toolbarWide]}>
+          {average != null ? (
+            <View
+              style={styles.summary}
+              accessible
+              accessibilityLabel={t('ownerReviews.summaryA11y', {
+                avg: average.toFixed(1),
+                count: all.length,
+              })}
+            >
+              <Star size={22} color={theme.ink} fill={theme.ink} />
+              <Text variant="display-m">{average.toFixed(1)}</Text>
+              <Text variant="body" style={{ color: theme.muted }}>
+                {t('ownerReviews.count', { count: all.length })}
+              </Text>
+            </View>
+          ) : (
+            <View />
+          )}
+          <View style={twoCol ? styles.segmentWrap : undefined}>
+            <Segmented<Filter>
+              label={t('ownerReviews.show')}
+              value={filter}
+              onChange={setFilter}
+              options={[
+                { id: 'all', label: t('ownerReviews.all') },
+                { id: 'reply', label: t('ownerReviews.needsReply', { count: open.length }) },
+              ]}
+            />
           </View>
-        ) : null}
-        <Segmented<Filter>
-          label={t('ownerReviews.show')}
-          value={filter}
-          onChange={setFilter}
-          options={[
-            { id: 'all', label: t('ownerReviews.all') },
-            { id: 'reply', label: t('ownerReviews.needsReply', { count: open.length }) },
-          ]}
-        />
+        </View>
         {shown.length === 0 ? (
           <EmptyCard
             icon={Star}
@@ -86,14 +94,15 @@ export function ReviewsScreen() {
             description={t('ownerReviews.emptyBody')}
           />
         ) : (
-          <View style={styles.list}>
+          <View style={[styles.list, twoCol && styles.grid]}>
             {shown.map((review) => (
-              <ReviewCard
-                key={review.id}
-                review={review}
-                sending={reply.isPending && reply.variables?.id === review.id}
-                onReply={(text) => reply.mutate({ id: review.id, text })}
-              />
+              <View key={review.id} style={twoCol ? styles.cell : undefined}>
+                <ReviewCard
+                  review={review}
+                  sending={reply.isPending && reply.variables?.id === review.id}
+                  onReply={(text) => reply.mutate({ id: review.id, text })}
+                />
+              </View>
             ))}
           </View>
         )}
@@ -103,6 +112,16 @@ export function ReviewsScreen() {
 }
 
 const styles = StyleSheet.create({
+  toolbar: { gap: tokens.space[3] },
+  toolbarWide: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: tokens.space[4],
+  },
+  segmentWrap: { minWidth: 280 },
   summary: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
   list: { gap: tokens.space[3] },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start' },
+  cell: { flexBasis: '48.5%', flexGrow: 1 },
 });

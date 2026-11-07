@@ -22,19 +22,19 @@ import { isTabRoot } from './nav';
 // Matches OwnerChrome: from this width the sidebar replaces the tab bar.
 const WIDE = 840;
 
-// 16 pt margins on phones, 24 on tablets and up (HIG layout margins).
+// 16 pt margins on phones, 24 on tablets, 32 on wide desktop monitors.
 export function useGutter() {
   const { width } = useWindowDimensions();
+  if (width >= 1120) return tokens.space[8];
   return width >= 768 ? tokens.space[6] : tokens.space[4];
 }
 
 /**
  * Every owner screen sits in this: safe scroll area, back button on detail screens,
- * the title, an optional line under it, and one optional action on the right.
+ * the title, and one optional action on the right.
  */
 export function OwnerPage({
   title,
-  subtitle,
   action,
   footer,
   children,
@@ -50,48 +50,49 @@ export function OwnerPage({
   const theme = useTheme();
   const gutter = useGutter();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const wide = width >= WIDE;
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={[styles.fill, { backgroundColor: theme.bg }]}
     >
-      {/* Every page puts Back, its title and its one action in the header row. Today has its own panel. */}
-      {
-        <View
-          style={[
-            styles.bar,
-            {
-              paddingTop: insets.top + tokens.space[2],
-              paddingHorizontal: gutter,
-              borderBottomColor: theme.line,
-              backgroundColor: theme.surface,
-            },
-          ]}
-        >
-          <View style={styles.barInner}>
-            <BackButton />
-            <Text
-              variant="title"
-              accessibilityRole="header"
-              numberOfLines={1}
-              style={styles.barTitle}
-            >
-              {title}
-            </Text>
-            {action ? <View style={styles.action}>{action}</View> : null}
-          </View>
+      <View
+        style={[
+          styles.bar,
+          {
+            paddingTop: wide ? tokens.space[3] : insets.top + tokens.space[2],
+            paddingBottom: wide ? tokens.space[3] : tokens.space[2],
+            paddingHorizontal: gutter,
+            borderBottomColor: theme.line,
+            backgroundColor: theme.surface,
+          },
+        ]}
+      >
+        <View style={styles.barInner}>
+          <BackButton />
+          <Text
+            variant="title"
+            accessibilityRole="header"
+            numberOfLines={1}
+            style={styles.barTitle}
+          >
+            {title}
+          </Text>
+          {action ? <View style={styles.action}>{action}</View> : null}
         </View>
-      }
+      </View>
       <ScrollView
-        contentContainerStyle={[styles.page, { paddingHorizontal: gutter }]}
+        contentContainerStyle={[
+          styles.page,
+          {
+            paddingHorizontal: gutter,
+            paddingTop: wide ? tokens.space[6] : tokens.space[4],
+          },
+        ]}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
       >
-        {subtitle ? (
-          <Text variant="body" style={{ color: theme.muted }}>
-            {subtitle}
-          </Text>
-        ) : null}
         {children}
       </ScrollView>
       {footer}
@@ -188,14 +189,12 @@ export function DeskWait({
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   page: {
-    paddingTop: tokens.space[4],
     paddingBottom: tokens.space[16] + tokens.space[8],
-    gap: tokens.space[4],
+    gap: tokens.space[5],
     width: '100%',
-    maxWidth: 880,
+    maxWidth: 1280,
     alignSelf: 'center',
   },
-  // Sits in front of the title on the same line, so detail screens lose no height to it.
   back: {
     width: 40,
     height: 40,
@@ -204,19 +203,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginVertical: 2,
   },
-  bar: { borderBottomWidth: StyleSheet.hairlineWidth, paddingBottom: tokens.space[2] },
+  bar: { borderBottomWidth: 1 },
   barInner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: tokens.space[2],
+    gap: tokens.space[3],
     minHeight: 44,
     width: '100%',
-    maxWidth: 880,
+    maxWidth: 1280,
     alignSelf: 'center',
   },
   barTitle: { flex: 1 },
-  headRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
-  title: { flex: 1 },
   action: { flexShrink: 0 },
   wait: { gap: tokens.space[3] },
   error: {

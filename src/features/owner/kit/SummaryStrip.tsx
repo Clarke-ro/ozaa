@@ -39,12 +39,13 @@ export function SummaryStrip({ items }: { items: readonly SummaryItem[] }) {
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', gap: tokens.space[2] },
+  row: { flexDirection: 'row', gap: tokens.space[3] },
   tile: {
     flex: 1,
     gap: 2,
     paddingVertical: tokens.space[3],
-    paddingHorizontal: tokens.space[3],
+    paddingHorizontal: tokens.space[4],
+    borderWidth: 1,
     boxShadow: tokens.shadow.card,
     borderRadius: tokens.radius.lg,
     borderCurve: 'continuous',

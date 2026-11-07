@@ -1,7 +1,9 @@
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
 import { useOwnerSession } from '@/features/session';
+import { tokens } from '@/theme/tokens';
 import { DeskWait, OwnerPage } from '../chrome/OwnerPage';
 import { ownerKeys } from '../data/keys';
 import { useDraft } from '../data/useDraft';
@@ -19,9 +21,11 @@ const KEYBOARD: Partial<Record<Key, 'phone-pad' | 'email-address' | 'url'>> = {
   website: 'url',
 };
 
-/** Where guests can follow or reach the venue. Shown in the footer of the guest page. */
+/** Where guests can follow or reach the venue. Side by side on desktop. */
 export function SocialsScreen() {
   const { t } = useTranslation();
+  const { width } = useWindowDimensions();
+  const twoCol = width >= 920;
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const venue = useQuery({
     queryKey: ownerKeys.venue(venueId),
@@ -41,7 +45,6 @@ export function SocialsScreen() {
     const links = Object.fromEntries(
       Object.entries(draft.value).map(([key, text]) => [key, text.trim() || null]),
     );
-    // Reviews are asked for the same way from every guest, so no Google link or star filter is kept here.
     save.mutate({
       googleReviewUrl: null,
       socials: { ...socials, ...links, googleReviewUrl: null },
@@ -78,11 +81,21 @@ export function SocialsScreen() {
         error={venue.isError}
         onRetry={() => void venue.refetch()}
       >
-        <Section title={t('ownerSocials.profiles')}>{PROFILES.map(row)}</Section>
-        <Section title={t('ownerSocials.contact')} note={t('ownerSocials.contactNote')}>
-          {CONTACT.map(row)}
-        </Section>
+        <View style={[styles.stack, twoCol && styles.split]}>
+          <View style={twoCol ? styles.col : undefined}>
+            <Section title={t('ownerSocials.profiles')}>{PROFILES.map(row)}</Section>
+          </View>
+          <View style={twoCol ? styles.col : undefined}>
+            <Section title={t('ownerSocials.contact')}>{CONTACT.map(row)}</Section>
+          </View>
+        </View>
       </DeskWait>
     </OwnerPage>
   );
 }
+
+const styles = StyleSheet.create({
+  stack: { gap: tokens.space[5] },
+  split: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.space[5] },
+  col: { flex: 1, minWidth: 0 },
+});

@@ -1,6 +1,6 @@
 import { makeStyles } from '@/ui/makeStyles';
 import { useState } from 'react';
-import { Platform, Pressable, Share, TextInput, View } from 'react-native';
+import { Platform, Pressable, Share, TextInput, View, useWindowDimensions } from 'react-native';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -21,6 +21,8 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
   const theme = useTheme();
   const { t } = useTranslation();
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const twoCol = width >= 920;
 
   const [search, setSearch] = useState('');
   const [wantsOffersOnly, setWantsOffersOnly] = useState(false);
@@ -35,7 +37,6 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
         wantsOffers: wantsOffersOnly ? true : undefined,
       }),
     enabled: Boolean(venueId),
-    // Keep the last results on screen while the next search loads, so the list doesn't flash.
     placeholderData: keepPreviousData,
   });
 
@@ -77,7 +78,6 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
       onRetry={() => void customersQuery.refetch()}
     >
       <View style={styles.stack}>
-        {/* Search & Marketing Filter Controls */}
         <View style={styles.controlsBar}>
           <View style={styles.searchBox}>
             <Search size={18} color={theme.meta} />
@@ -100,33 +100,28 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
             ) : null}
           </View>
 
+          <View
+            style={[styles.filterPill, { backgroundColor: theme.surface, borderColor: theme.line }]}
+          >
+            <Text variant="caption" style={{ fontWeight: '600' }}>
+              {t('ownerMembers.optInTitle')}
+            </Text>
+            <Toggle
+              value={wantsOffersOnly}
+              onChange={(val) => setWantsOffersOnly(val)}
+              label={t('ownerMembers.optInFilter')}
+            />
+          </View>
+
           <Button
             label={t('ownerMembers.export')}
             tone="secondary"
+            size="md"
             onPress={handleExportCsv}
             disabled={items.length === 0}
           />
         </View>
 
-        {/* Marketing Filter Toggle Strip */}
-        <View
-          style={[styles.filterStrip, { backgroundColor: theme.wash, borderColor: theme.line }]}
-        >
-          <View style={styles.filterTextCol}>
-            <Text variant="body-strong">{t('ownerMembers.optInTitle')}</Text>
-            <Text variant="caption" style={{ color: theme.meta }}>
-              {t('ownerMembers.optInBody')}
-            </Text>
-          </View>
-
-          <Toggle
-            value={wantsOffersOnly}
-            onChange={(val) => setWantsOffersOnly(val)}
-            label={t('ownerMembers.optInFilter')}
-          />
-        </View>
-
-        {/* Customer Count Header */}
         <SectionLabel title={t('ownerMembers.count', { count: totalCount })} caps />
 
         {items.length === 0 ? (
@@ -136,69 +131,68 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
             description={search ? t('ownerMembers.noMatchBody') : t('ownerMembers.emptyBody')}
           />
         ) : (
-          <View style={styles.customersList}>
+          <View style={[styles.customersList, twoCol && styles.customersGrid]}>
             {items.map((cust) => {
               const displayName = cust.name || cust.phoneMasked;
               return (
-                <Pressable
-                  key={cust.id}
-                  accessibilityRole="button"
-                  accessibilityLabel={displayName}
-                  onPress={() => setSelectedCustomer(cust)}
-                  style={[styles.customerCard, { borderColor: theme.line }]}
-                >
-                  <View style={styles.customerMainRow}>
-                    <View style={styles.customerAvatar}>
-                      <Text variant="body-strong" style={{ color: theme.fill }}>
-                        {displayName.slice(0, 2).toUpperCase()}
-                      </Text>
-                    </View>
-
-                    <View style={styles.customerMeta}>
-                      <View style={styles.nameBadgeRow}>
-                        <Text variant="title" style={styles.nameText}>
-                          {displayName}
-                        </Text>
-                        {cust.rewardsAvailable > 0 ? (
-                          <View style={[styles.readyPill, { backgroundColor: theme.warningTint }]}>
-                            <Sparkles size={12} color={theme.warning} />
-                            <Text
-                              variant="caption"
-                              style={{ color: theme.warning, fontWeight: '700' }}
-                            >
-                              {t('ownerMembers.rewardsReady', { count: cust.rewardsAvailable })}
-                            </Text>
-                          </View>
-                        ) : null}
-                      </View>
-
-                      <Text variant="caption" style={{ color: theme.meta }}>
-                        {t('ownerMembers.lastVisit', {
-                          phone: cust.phoneMasked,
-                          date: new Date(cust.lastStampAt).toLocaleDateString(),
-                        })}
-                      </Text>
-                    </View>
-
-                    {/* Stamp counter badge */}
-                    <View style={styles.stampBadgeCol}>
-                      <View style={[styles.stampPill, { backgroundColor: theme.fill }]}>
-                        <Award size={14} color={theme.onFill} />
-                        <Text variant="caption" style={{ color: theme.onFill, fontWeight: '800' }}>
-                          {t('ownerMembers.stamps', { count: cust.stamps })}
+                <View key={cust.id} style={twoCol ? styles.customerCell : undefined}>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={displayName}
+                    onPress={() => setSelectedCustomer(cust)}
+                    style={[styles.customerCard, { borderColor: theme.line }]}
+                  >
+                    <View style={styles.customerMainRow}>
+                      <View style={styles.customerAvatar}>
+                        <Text variant="body-strong" style={{ color: theme.fill }}>
+                          {displayName.slice(0, 2).toUpperCase()}
                         </Text>
                       </View>
-                    </View>
 
-                    <ChevronRight size={18} color={theme.meta} />
-                  </View>
-                </Pressable>
+                      <View style={styles.customerMeta}>
+                        <View style={styles.nameBadgeRow}>
+                          <Text variant="title" style={styles.nameText}>
+                            {displayName}
+                          </Text>
+                          {cust.rewardsAvailable > 0 ? (
+                            <View style={[styles.readyPill, { backgroundColor: theme.warningTint }]}>
+                              <Sparkles size={12} color={theme.warning} />
+                              <Text
+                                variant="caption"
+                                style={{ color: theme.warning, fontWeight: '700' }}
+                              >
+                                {t('ownerMembers.rewardsReady', { count: cust.rewardsAvailable })}
+                              </Text>
+                            </View>
+                          ) : null}
+                        </View>
+
+                        <Text variant="caption" style={{ color: theme.meta }}>
+                          {t('ownerMembers.lastVisit', {
+                            phone: cust.phoneMasked,
+                            date: new Date(cust.lastStampAt).toLocaleDateString(),
+                          })}
+                        </Text>
+                      </View>
+
+                      <View style={styles.stampBadgeCol}>
+                        <View style={[styles.stampPill, { backgroundColor: theme.fill }]}>
+                          <Award size={14} color={theme.onFill} />
+                          <Text variant="caption" style={{ color: theme.onFill, fontWeight: '800' }}>
+                            {t('ownerMembers.stamps', { count: cust.stamps })}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <ChevronRight size={18} color={theme.meta} />
+                    </View>
+                  </Pressable>
+                </View>
               );
             })}
           </View>
         )}
 
-        {/* Customer Detail & Manual Action Modal */}
         <ModalSheet
           visible={Boolean(selectedCustomer)}
           onClose={() => setSelectedCustomer(null)}
@@ -234,7 +228,6 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
                 </View>
               </View>
 
-              {/* Marketing Opt-In Status */}
               <View style={[styles.optInNotice, { borderColor: theme.line }]}>
                 <Text variant="body-strong">{t('ownerMembers.marketingStatus')}</Text>
                 <Text
@@ -247,8 +240,6 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
                 </Text>
               </View>
 
-              {/* Stamps and rewards go through Scan, which takes the guest's card code or their
-                  full phone number. This list only has the masked number, which can't find a card. */}
               <View style={styles.manualActions}>
                 <Button
                   label={t('ownerMembers.stampAtScan')}
@@ -277,13 +268,13 @@ const useStyles = makeStyles((theme) => ({
   },
   searchBox: {
     flex: 1,
-    minWidth: 240,
+    minWidth: 220,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: theme.surface,
     borderWidth: 1,
     borderColor: theme.line,
-    borderRadius: tokens.radius.full,
+    borderRadius: tokens.radius.md,
     paddingHorizontal: tokens.space[3],
     height: 44,
     gap: tokens.space[2],
@@ -292,27 +283,33 @@ const useStyles = makeStyles((theme) => ({
     flex: 1,
     fontSize: 14,
   },
-  filterStrip: {
+  filterPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: tokens.space[3],
+    height: 44,
+    paddingHorizontal: tokens.space[3],
     borderRadius: tokens.radius.md,
     borderWidth: 1,
-    gap: tokens.space[3],
-  },
-  filterTextCol: {
-    flex: 1,
-    gap: 2,
+    gap: tokens.space[2],
   },
   customersList: {
-    gap: tokens.space[2],
+    gap: tokens.space[3],
+  },
+  customersGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'flex-start',
+  },
+  customerCell: {
+    flexBasis: '48.5%',
+    flexGrow: 1,
   },
   customerCard: {
     padding: tokens.space[3],
-    borderRadius: tokens.radius.md,
+    borderRadius: tokens.radius.lg,
     borderWidth: 1,
     backgroundColor: theme.surface,
+    boxShadow: tokens.shadow.card,
   },
   customerMainRow: {
     flexDirection: 'row',

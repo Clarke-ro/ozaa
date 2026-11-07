@@ -1,24 +1,22 @@
 import { makeStyles } from '@/ui/makeStyles';
 import type { ReactNode } from 'react';
-import { View } from 'react-native';
+import { View, useWindowDimensions } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { CheckCircle2, type LucideIcon } from 'lucide-react-native';
+import { type LucideIcon } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
 import { OwnerPage } from '../chrome/OwnerPage';
 import { DeskCard, IconTile, SectionLabel } from '../kit';
 
 export function ShellScreen({
   title,
-  body,
   next,
   preview,
   icon: Icon,
   badge,
 }: {
   title: string;
-  body: string;
+  body?: string;
   next: string[];
   preview?: ReactNode;
   icon?: LucideIcon;
@@ -26,68 +24,60 @@ export function ShellScreen({
 }) {
   const styles = useStyles();
   const { t } = useTranslation();
-  const theme = useTheme();
+  const { width } = useWindowDimensions();
+  const wide = width >= 920;
 
   return (
-    <OwnerPage title={title} subtitle={body}>
-      {/* Product Prototype Preview */}
-      {preview ? (
-        <DeskCard style={styles.previewContainer}>
-          <View style={styles.previewHeader}>
-            <View style={styles.previewTitleRow}>
-              {Icon ? <IconTile icon={Icon} tone="tint" size={36} /> : null}
-              <View>
-                <Text variant="title">Interactive Prototype</Text>
-                <Text variant="caption" style={{ color: theme.meta }}>
-                  Product preview & upcoming workflow
+    <OwnerPage title={title}>
+      <View style={[styles.stack, wide && styles.split]}>
+        {preview ? (
+          <DeskCard style={[styles.previewContainer, wide && styles.mainCol]}>
+            <View style={styles.previewHeader}>
+              <View style={styles.previewTitleRow}>
+                {Icon ? <IconTile icon={Icon} tone="tint" size={36} /> : null}
+                <Text variant="title">{t('ownerShell.prototype')}</Text>
+              </View>
+              <View style={styles.phaseBadge}>
+                <Text variant="caption" style={styles.phaseText}>
+                  {badge ?? t('owner.notYet')}
                 </Text>
               </View>
             </View>
-            <View style={styles.phaseBadge}>
-              <Text variant="caption" style={styles.phaseText}>
-                {badge ?? t('owner.notYet')}
-              </Text>
-            </View>
+
+            <View style={styles.previewSlot}>{preview}</View>
+          </DeskCard>
+        ) : null}
+
+        <DeskCard style={[styles.roadmapCard, wide && styles.sideCol]}>
+          <SectionLabel title={t('ownerShell.roadmap')} caps />
+
+          <View style={styles.stepsList}>
+            {next.map((line, idx) => (
+              <View key={line} style={styles.stepItem}>
+                <View style={styles.stepNumberCircle}>
+                  <Text variant="caption" style={styles.stepNumberText}>
+                    {idx + 1}
+                  </Text>
+                </View>
+                <View style={styles.stepTextWrapper}>
+                  <Text variant="body-strong">{line}</Text>
+                </View>
+              </View>
+            ))}
           </View>
-
-          <View style={styles.previewSlot}>{preview}</View>
         </DeskCard>
-      ) : null}
-
-      {/* Roadmap & Next Steps Checklist */}
-      <DeskCard style={styles.roadmapCard}>
-        <SectionLabel title="SPECIFICATION ROADMAP" caps />
-
-        <View style={styles.stepsList}>
-          {next.map((line, idx) => (
-            <View key={line} style={styles.stepItem}>
-              <View style={styles.stepNumberCircle}>
-                <Text variant="caption" style={styles.stepNumberText}>
-                  {idx + 1}
-                </Text>
-              </View>
-              <View style={styles.stepTextWrapper}>
-                <Text variant="body-strong">{line}</Text>
-              </View>
-            </View>
-          ))}
-        </View>
-
-        <View style={styles.releaseNotice}>
-          <CheckCircle2 size={16} color={theme.success} />
-          <Text variant="caption" style={{ color: theme.success, fontWeight: '600' }}>
-            Aligned with Cravins Phase 3 roadmap specifications and restaurant feedback.
-          </Text>
-        </View>
-      </DeskCard>
+      </View>
     </OwnerPage>
   );
 }
 
 const useStyles = makeStyles((theme) => ({
+  stack: { gap: tokens.space[4] },
+  split: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.space[5] },
+  mainCol: { flex: 1.3, minWidth: 0 },
+  sideCol: { flex: 1, minWidth: 0 },
   previewContainer: {
     gap: tokens.space[3],
-    marginBottom: tokens.space[3],
   },
   previewHeader: {
     flexDirection: 'row',
@@ -141,14 +131,5 @@ const useStyles = makeStyles((theme) => ({
   },
   stepTextWrapper: {
     flex: 1,
-  },
-  releaseNotice: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    padding: tokens.space[2],
-    backgroundColor: theme.successTint,
-    borderRadius: tokens.radius.sm,
-    marginTop: tokens.space[1],
   },
 }));

@@ -19,8 +19,9 @@ export function DeskCard({
 }) {
   const theme = useTheme();
   const look: ViewStyle = {
-    borderColor: tone === 'selected' ? theme.fill : theme.error,
-    borderWidth: tone === 'selected' || tone === 'alert' ? 1.5 : 0,
+    borderColor:
+      tone === 'selected' ? theme.fill : tone === 'alert' ? theme.error : theme.line,
+    borderWidth: tone === 'selected' || tone === 'alert' ? 1.5 : 1,
     backgroundColor: tone === 'wash' ? theme.wash : theme.surface,
     boxShadow: tone === 'wash' ? undefined : tokens.shadow.card,
   };
@@ -43,5 +44,10 @@ export function DeskCard({
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: tokens.radius.lg, padding: tokens.space[4], gap: tokens.space[3] },
+  card: {
+    borderRadius: tokens.radius.lg,
+    borderCurve: 'continuous',
+    padding: tokens.space[4],
+    gap: tokens.space[3],
+  },
 });
