@@ -1,4 +1,4 @@
-/* Ozaa landing page. Every colour, radius, shadow and spacing value is a token here;
+/* Cravins landing page. Every colour, radius, shadow and spacing value is a token here;
    components only use the tokens. */
 :root {
   /* Colours */
@@ -712,7 +712,7 @@ a {
   text-align: center;
   text-wrap: balance;
 }
-/* A real code: it opens the sample table, so a visitor can try Ozaa on their own phone. */
+/* A real code: it opens the sample table, so a visitor can try Cravins on their own phone. */
 .qr-card {
   display: flex;
   align-items: center;
@@ -748,7 +748,7 @@ a {
   width: 100%;
   height: auto;
 }
-/* The Ozaa mark in the middle, ringed in white so the scanner sees a clean edge. */
+/* The Cravins mark in the middle, ringed in white so the scanner sees a clean edge. */
 .qr-logo {
   position: absolute;
   top: 50%;
@@ -1047,7 +1047,7 @@ a {
   }
 }
 
-/* Why Ozaa */
+/* Why Cravins */
 .why {
   padding: 110px var(--side);
   background: linear-gradient(var(--sky), var(--cream));
@@ -1193,7 +1193,7 @@ a {
 }
 
 /* Footer: the hero's brown gradient. A big ask with two buttons, then the brand beside four
-   link columns, a legal line, and OZAA huge and faint, sunk into the bottom edge. */
+   link columns, a legal line, and CRAVINS huge and faint, sunk into the bottom edge. */
 .footer {
   position: relative;
   overflow: hidden;

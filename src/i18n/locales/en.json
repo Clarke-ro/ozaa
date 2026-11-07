@@ -1,7 +1,7 @@
 {
   "landing": {
     "title": "Scan the code on your table",
-    "body": "Ozaa opens that restaurant's page in your browser. No app to install, and no account.",
+    "body": "Cravins opens that restaurant's page in your browser. No app to install, and no account.",
     "sample": "Open Mama's Kitchen",
     "owner": "I'm an owner"
   },
@@ -13,7 +13,7 @@
   "home": {
     "stories": "Guests are saying",
     "sample": "Sample videos",
-    "powered": "Powered by Ozaa",
+    "powered": "Powered by Cravins",
     "table": "Table {{code}}",
     "language": "English",
     "chooseLanguage": "Language",
@@ -292,7 +292,7 @@
     },
     "howToEarn": "How to earn",
     "earnStampVisit": "1 stamp per paid order",
-    "earnStampVisitSub": "Added automatically when you pay with Ozaa",
+    "earnStampVisitSub": "Added automatically when you pay with Cravins",
     "earnPointsSpend": "{{points}} pts per {{spend}}",
     "earnPointsSpendSub": "Added automatically from your paid bill",
     "earnGame": "Score {{score}}+ in Play while you wait",
@@ -511,7 +511,7 @@
     "marketNext2": "Keep that consent separate from joining the loyalty card.",
     "marketNext3": "WhatsApp and SMS wait until a provider is chosen.",
     "colour": "Venue colour",
-    "colourClose": "This colour is very close to Ozaa orange. Guests may think the page belongs to Ozaa.",
+    "colourClose": "This colour is very close to Cravins orange. Guests may think the page belongs to Cravins.",
     "contrast": "Button text {{button}}:1. Links on white {{ink}}:1.",
     "preview": "Preview",
     "description": "Description",
@@ -620,7 +620,7 @@
       "customers": "People on your loyalty card",
       "promos": "Codes and discounts",
       "integrations": "Payments and connected apps",
-      "billing": "Your Ozaa plan",
+      "billing": "Your Cravins plan",
       "ordering": "Pickup and delivery from your menu link",
       "sales": "Money, orders and top dishes"
     },
@@ -630,7 +630,7 @@
     "alertBills_other": "{{count}} tables are waiting to pay.",
     "businessName": "Business name",
     "notifications": "Notifications",
-    "loginBrand": "Ozaa restaurant management",
+    "loginBrand": "Cravins restaurant management",
     "loginLead": "Sign in to see your orders, kitchen tickets and floor.",
     "codeLead": "Enter the 6-digit code we sent to your phone.",
     "changeNumber": "Change number",
@@ -682,7 +682,7 @@
       "replace": "Replace photo",
       "remove": "Remove photo",
       "uploading": "Uploading…",
-      "unsupported": "Adding photos from a phone comes in a later update. Use Ozaa on a computer for now.",
+      "unsupported": "Adding photos from a phone comes in a later update. Use Cravins on a computer for now.",
       "type": "Use a JPG, PNG or WebP photo.",
       "size": "That photo is over 8 MB. Choose a smaller one.",
       "failed": "The photo did not upload. Check the connection and try again."
@@ -778,8 +778,8 @@
     "printAll_other": "Print all {{count}}",
     "share": "Share link",
     "download": "Download QR",
-    "printOnWeb": "To print or download cards, open Ozaa on a computer.",
-    "popupBlocked": "The browser blocked the print window. Allow pop-ups for Ozaa and try again.",
+    "printOnWeb": "To print or download cards, open Cravins on a computer.",
+    "popupBlocked": "The browser blocked the print window. Allow pop-ups for Cravins and try again.",
     "copied": "Link copied",
     "shareFailed": "Could not share. Copy the link from the list instead.",
     "count_one": "1 table",
@@ -1044,7 +1044,7 @@
     "hexError": "Use a 6-digit colour code, like #D24000.",
     "font": "Heading font",
     "fonts": {
-      "ozaa": "Modern",
+      "cravins": "Modern",
       "serif": "Classic",
       "bold": "Bold"
     },
@@ -1098,7 +1098,7 @@
     }
   },
   "ownerPages": {
-    "businessLead": "Your business name and every location you run on Ozaa.",
+    "businessLead": "Your business name and every location you run on Cravins.",
     "socialsTitle": "Social links",
     "socialsLead": "Where guests can follow you or get in touch. Shown at the bottom of your page.",
     "linksLead": "Extra buttons on your guest page, such as bookings or a playlist.",
@@ -1159,7 +1159,7 @@
     "appearance": "Appearance",
     "appearanceValue": "Follows your phone",
     "chime": "Sound for new orders",
-    "chimeHint": "A short chime when an order or a waiter call comes in, while Ozaa is open."
+    "chimeHint": "A short chime when an order or a waiter call comes in, while Cravins is open."
   },
   "ownerFloor": {
     "table": "Table",
@@ -1407,7 +1407,7 @@
   },
   "ownerPayments": {
     "payoutTitle": "Payouts go to",
-    "fee": "Ozaa fee: {{percent}}% of each payment.",
+    "fee": "Cravins fee: {{percent}}% of each payment.",
     "payoutType": {
       "bank": "Bank",
       "momo": "Mobile money"
@@ -1607,7 +1607,7 @@
   "ownerScan": {
     "title": "Scan & stamp",
     "aim": "Fit the guest's QR code inside the corners",
-    "webTitle": "Scan with the Ozaa app",
+    "webTitle": "Scan with the Cravins app",
     "webBody": "Camera scanning works in the app on a phone. On a computer, type the code under the guest's QR card below.",
     "permissionTitle": "Camera access needed",
     "permissionBody": "Allow the camera to scan guest loyalty cards.",
@@ -1683,7 +1683,7 @@
     "search": "Search by diner phone or name",
     "clearSearch": "Clear search",
     "export": "Export CSV",
-    "exportTitle": "Ozaa loyalty members",
+    "exportTitle": "Cravins loyalty members",
     "optInTitle": "Marketing opt-in (Act 843)",
     "optInBody": "Show only customers who agreed to receive SMS offers.",
     "optInFilter": "Filter by opt-in",
@@ -1708,7 +1708,7 @@
     "stampAtScan": "Stamp or redeem at Scan"
   },
   "ownerAi": {
-    "title": "Ozaa feedback assistant",
+    "title": "Cravins feedback assistant",
     "lead": "Answers come only from this venue's guest notes.",
     "welcome": "Ask me about your guest feedback: repeat complaints, popular dishes or service speed.",
     "suggestLoved": "What do diners love most about our dishes?",
@@ -1750,7 +1750,7 @@
     "yourPlan": "Current plan",
     "notLive": "Billing isn’t live yet. You won’t be charged.",
     "perMonth": "{{price}} a month",
-    "placeholder": "These are placeholder prices from the Ozaa pricing page.",
+    "placeholder": "These are placeholder prices from the Cravins pricing page.",
     "included": "included",
     "notIncluded": "not included"
   },

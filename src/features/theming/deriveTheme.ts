@@ -5,7 +5,7 @@ const WHITE = '#FFFFFF';
 const AA = 4.5;
 
 /** Bright orange is the logo. The deeper orange is what white text sits on. */
-export const OZAA = {
+export const CRAVINS = {
   brand: '#FC5205',
   primary: '#D24000',
   hover: '#BA3800',
@@ -22,20 +22,20 @@ export type DerivedTheme = {
   tint: string;
   badgeInk: string;
   isDefault: boolean;
-  tooCloseToOzaa: boolean;
+  tooCloseToCravins: boolean;
   notes: string[];
-  ozaaDistance: number;
+  cravinsDistance: number;
   ratios: { buttonText: number; inkOnWhite: number; badge: number; whiteOnAccent: number };
 };
 
 const round2 = (value: number) => Number(value.toFixed(2));
 
 function derived(
-  input: Omit<DerivedTheme, 'ratios' | 'tooCloseToOzaa'> & { whiteOnAccent: number },
+  input: Omit<DerivedTheme, 'ratios' | 'tooCloseToCravins'> & { whiteOnAccent: number },
 ): DerivedTheme {
   return {
     ...input,
-    tooCloseToOzaa: !input.isDefault && input.ozaaDistance < 20,
+    tooCloseToCravins: !input.isDefault && input.cravinsDistance < 20,
     ratios: {
       buttonText: round2(contrast(input.onAccent, input.fill)),
       inkOnWhite: round2(contrast(input.ink, WHITE)),
@@ -45,21 +45,21 @@ function derived(
   };
 }
 
-/** No venue colour yet uses Ozaa's tuned orange, not the generic darkening loop. */
+/** No venue colour yet uses Cravins's tuned orange, not the generic darkening loop. */
 export function deriveTheme(accent?: string | null): DerivedTheme {
   if (!accent) {
     return derived({
-      accent: OZAA.primary,
-      fill: OZAA.primary,
+      accent: CRAVINS.primary,
+      fill: CRAVINS.primary,
       onAccent: WHITE,
-      pressed: OZAA.pressed,
-      ink: OZAA.primary,
-      tint: OZAA.tint,
-      badgeInk: OZAA.hover,
+      pressed: CRAVINS.pressed,
+      ink: CRAVINS.primary,
+      tint: CRAVINS.tint,
+      badgeInk: CRAVINS.hover,
       isDefault: true,
       notes: [],
-      ozaaDistance: 0,
-      whiteOnAccent: contrast(WHITE, OZAA.primary),
+      cravinsDistance: 0,
+      whiteOnAccent: contrast(WHITE, CRAVINS.primary),
     });
   }
 
@@ -93,10 +93,10 @@ export function deriveTheme(accent?: string | null): DerivedTheme {
   const tint = mix(colour, WHITE, 0.86);
   const badgeInk = darkenUntil(ink, tint, AA);
   const pressed = onAccent === WHITE ? mix(fill, '#000000', 0.14) : mix(fill, '#000000', 0.08);
-  const ozaaDistance = Math.min(deltaE(colour, OZAA.primary), deltaE(colour, OZAA.brand));
-  if (ozaaDistance < 20) {
+  const cravinsDistance = Math.min(deltaE(colour, CRAVINS.primary), deltaE(colour, CRAVINS.brand));
+  if (cravinsDistance < 20) {
     notes.push(
-      `${colour} is very close to Ozaa orange, so guests may not tell your buttons from ours. A deeper or different colour will stand out more.`,
+      `${colour} is very close to Cravins orange, so guests may not tell your buttons from ours. A deeper or different colour will stand out more.`,
     );
   }
 
@@ -110,7 +110,7 @@ export function deriveTheme(accent?: string | null): DerivedTheme {
     badgeInk,
     isDefault: false,
     notes,
-    ozaaDistance: Number(ozaaDistance.toFixed(1)),
+    cravinsDistance: Number(cravinsDistance.toFixed(1)),
     whiteOnAccent: whiteOn,
   });
 }

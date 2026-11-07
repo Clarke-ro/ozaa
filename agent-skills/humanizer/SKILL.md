@@ -13,7 +13,7 @@ metadata:
 Source: https://github.com/blader/humanizer
 License: MIT (c) 2025 Siqi Chen
 Commit: 0ef9fe5
-Copied: 2026-10-31 for the Ozaa build kit. Text unchanged below this header.
+Copied: 2026-10-31 for the Cravins build kit. Text unchanged below this header.
 -->
 
 # Humanizer: remove AI writing patterns

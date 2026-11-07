@@ -38,7 +38,7 @@ src/
 Misplaced or inconsistent:
 
 - **Two component kits.** `src/ui/` (guest and shared) and `src/features/owner/kit/` (owner). Some owner kit parts are generic (`ConfirmDialog`, `ModalSheet`, `Toast`, `Toggle`, `Segmented`, `Field`). See "Needs decision" D1.
-- **Owner screens are split between `screens/<name>/` folders and loose files** (`FloorScreen.tsx`, `MoreScreen.tsx`, `ScanStampScreen.tsx`, `SocialsScreen.tsx`, `LoyaltyCustomersScreen.tsx`, `AskOzaaAiScreen.tsx`, `ShellScreen.tsx`, `productShells.tsx`). Medium.
+- **Owner screens are split between `screens/<name>/` folders and loose files** (`FloorScreen.tsx`, `MoreScreen.tsx`, `ScanStampScreen.tsx`, `SocialsScreen.tsx`, `LoyaltyCustomersScreen.tsx`, `AskCravinsAiScreen.tsx`, `ShellScreen.tsx`, `productShells.tsx`). Medium.
 - `owner/OwnerLogin.tsx` and `owner/OwnerLoyalty.tsx` sit at the feature root, not under `screens/`. Low.
 - **Barrel renames** hide the real name: `ServicesScreen as ServicesDeskScreen`, `ReviewsScreen as ReviewsDeskScreen`, `LinksScreen as CustomLinksScreen`, `FilterChips as ChipRow`. Searching for a screen's name misses its route. Low.
 - Route groups `(guest)/(owner)/(auth)` don't exist. URLs wouldn't change, but it touches every route. See D2.
@@ -94,8 +94,8 @@ No unused files beyond those two. The dependencies `src/` never imports (`expo-l
 
 - **Colours:** `#fff` and `#52525B` on the landing page, `+not-found` and dev routes. `#E4E4E7` and `rgba(255,255,255,0.92)` in `GameScreen`. `#000` `shadowColor` in 6 files. `#FFFFFF` QR pad in `WalletCard`. `IconButton` light tint. Scrims (section 5). The Branding and table-card swatch hexes are data (palette choices), so they can stay as named constants. The `tablePdf` and `WalletCard` SVG/HTML strings are print output, so they stay too.
 - **Sizes:** 317 raw numbers in style props (`fontSize`, `padding`, `gap`, `borderRadius`…). Most sit on the token scale (16, 12, 20, 24, 999). Some don't (14, 11, 6, 10). Swapping the on-scale ones changes nothing. Swapping the off-scale ones moves pixels against the approved renders. See D4.
-- **Copy not in i18n:** `AskOzaaAiScreen` (placeholder, button), `LoyaltyCustomersScreen` (5 labels incl. "Export CSV", "Redeem Reward Free Dish"), `productShells.tsx` and `ShellScreen.tsx` (demo text, "SPECIFICATION ROADMAP"), `kit/ConfirmDialog` ("Dismiss dialog"), `kit/ModalSheet` ("Close", "Close overlay"), `OwnerLogin` ("Change phone"), `GameScreen` ("Align"). Medium.
-- **URLs:** `https://ozaa.app` fallback in `venue/HomeScreen.tsx`. Low.
+- **Copy not in i18n:** `AskCravinsAiScreen` (placeholder, button), `LoyaltyCustomersScreen` (5 labels incl. "Export CSV", "Redeem Reward Free Dish"), `productShells.tsx` and `ShellScreen.tsx` (demo text, "SPECIFICATION ROADMAP"), `kit/ConfirmDialog` ("Dismiss dialog"), `kit/ModalSheet` ("Close", "Close overlay"), `OwnerLogin` ("Change phone"), `GameScreen` ("Align"). Medium.
+- **URLs:** `https://cravins.app` fallback in `venue/HomeScreen.tsx`. Low.
 - **Magic numbers:** game `minScore ?? 15` and `durationMs: 15000`; `stamps < 10` (B5); toast offset `insets.top + 60`. Low.
 - **Money:** `productShells.tsx` POS demo prices in cedis as floats (`price: 65`), against the pesewas rule. See D5.
 
@@ -150,7 +150,7 @@ The bundle is flat. The deletions were small, and the new strings and hooks weig
 | Dead code (section 6)                                       | Deleted                                                                                                          | `chore`                |
 | Hex colours on landing, not-found and game                  | Fixed where a theme value matched exactly                                                                        | `style`                |
 | English in owner sign-in, members list, sheets, dialogs     | Moved to `en.json`                                                                                               | `fix(i18n)`            |
-| `https://ozaa.app` in screens, no-op `serviceHref`          | Fixed (`EXPO_PUBLIC_SITE_URL`)                                                                                   | `refactor(venue)`      |
+| `https://cravins.app` in screens, no-op `serviceHref`          | Fixed (`EXPO_PUBLIC_SITE_URL`)                                                                                   | `refactor(venue)`      |
 | Lint warning, Prettier drift                                | Fixed                                                                                                            | `chore(i18n)`, `style` |
 
 Not done, and why: the two kits stay separate (D1), there are no route groups (D2), the mock stays in every bundle (D8), and long owner lists aren't virtualised (that waits on server pagination).

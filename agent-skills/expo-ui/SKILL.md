@@ -8,7 +8,7 @@ allowed-tools: "Bash(node *expo-ui/scripts/list-components.js *)"
 Source: https://github.com/expo/skills/tree/main/plugins/expo/skills/expo-ui
 License: MIT (c) 650 Industries, Inc. (Expo)
 Commit: 05754e7
-Copied: 2026-10-31 for the Ozaa build kit. Text unchanged below this header.
+Copied: 2026-10-31 for the Cravins build kit. Text unchanged below this header.
 -->
 
 # Expo UI (`@expo/ui`)

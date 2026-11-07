@@ -44,7 +44,7 @@ export function Sidebar() {
         {collapsed ? null : (
           <View style={styles.brand}>
             <Text variant="display-m" accessibilityRole="header">
-              Ozaa
+              Cravins
             </Text>
             <PlanBadge />
           </View>

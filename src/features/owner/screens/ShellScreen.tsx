@@ -76,7 +76,7 @@ export function ShellScreen({
         <View style={styles.releaseNotice}>
           <CheckCircle2 size={16} color={theme.success} />
           <Text variant="caption" style={{ color: theme.success, fontWeight: '600' }}>
-            Aligned with Ozaa Phase 3 roadmap specifications and restaurant feedback.
+            Aligned with Cravins Phase 3 roadmap specifications and restaurant feedback.
           </Text>
         </View>
       </DeskCard>

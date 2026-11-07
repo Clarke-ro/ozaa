@@ -2,7 +2,7 @@ import { Redirect, Stack, usePathname } from 'expo-router';
 import { useColorScheme } from 'react-native';
 import { useOwnerSession } from '@/features/session';
 import { OwnerChrome } from '@/features/owner';
-import { ozaaOwnerDarkTheme, ozaaOwnerTheme, ThemeProvider } from '@/ui/theme';
+import { cravinsOwnerDarkTheme, cravinsOwnerTheme, ThemeProvider } from '@/ui/theme';
 
 export default function OwnerLayout() {
   const token = useOwnerSession((state) => state.accessToken);
@@ -10,7 +10,7 @@ export default function OwnerLayout() {
   const role = useOwnerSession((state) => state.role);
   const path = usePathname();
   // The owner app follows the phone's light or dark setting. Guest pages stay light.
-  const theme = useColorScheme() === 'dark' ? ozaaOwnerDarkTheme : ozaaOwnerTheme;
+  const theme = useColorScheme() === 'dark' ? cravinsOwnerDarkTheme : cravinsOwnerTheme;
   const login = path === '/owner/login';
   if (!hydrated) return null;
   if (!token && !login) return <Redirect href="/owner/login" />;

@@ -2,7 +2,7 @@
  * Plans and prices for /pricing. These are PLACEHOLDERS: Clarke hasn't set real prices.
  * Change the numbers (and set `placeholder: false`) when they are decided.
  * Prices are whole amounts per month; yearly shows the monthly equivalent when paid yearly.
- * Ozaa doesn't take money from guests in this build, so no plan lists anything like that.
+ * Cravins doesn't take money from guests in this build, so no plan lists anything like that.
  */
 export const pricing = {
   placeholder: true,
@@ -18,7 +18,7 @@ export const pricing = {
     {
       id: "free",
       name: "Free",
-      blurb: "Try Ozaa at a few tables.",
+      blurb: "Try Cravins at a few tables.",
       monthly: 0,
       yearly: 0,
       features: [

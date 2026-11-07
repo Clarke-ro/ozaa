@@ -16,7 +16,7 @@ description: >-
 Source: https://github.com/Leonxlnx/taste-skill/tree/main/skills/taste-skill
 License: MIT (c) 2026 Leonxlnx
 Commit: 12af471
-Copied: 2026-10-31 for the Ozaa build kit. Text unchanged below this header. Images omitted.
+Copied: 2026-10-31 for the Cravins build kit. Text unchanged below this header. Images omitted.
 -->
 
 # tasteskill v2

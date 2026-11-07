@@ -83,7 +83,7 @@ export function generateTableCardHtml(
           <div class="table-badge">${label}</div>
           <div class="qr-box">${qr}</div>
           <div class="cta">${settings.ctaText}</div>
-          <div class="footer-note">Powered by Ozaa</div>
+          <div class="footer-note">Powered by Cravins</div>
         </div>
       </div>
       `;

@@ -17,9 +17,9 @@ export default function LandingScreen() {
       <View style={styles.page}>
         <Image
           source={require('../../assets/images/icon.png')}
-          alt="Ozaa"
+          alt="Cravins"
           style={styles.logo}
-          accessibilityLabel="Ozaa"
+          accessibilityLabel="Cravins"
         />
         <Text variant="display-l" style={styles.title}>
           {t('landing.title')}

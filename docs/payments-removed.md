@@ -1,6 +1,6 @@
 # Payments are off in this build
 
-On 2026-11-03 we took payments out of the active build so Ozaa can launch with ordering, waiter calls and table QR codes first. No payment code is lost:
+On 2026-11-03 we took payments out of the active build so Cravins can launch with ordering, waiter calls and table QR codes first. No payment code is lost:
 
 - **`feature/payments-v1`** (pushed to GitHub, at commit `be55dcb`) holds the full payment build: the guest Pay screen, the owner Payments screen, the payout setup step, and the Paystack sandbox server.
 - On `main`, payment screens are **hidden behind a flag**, not deleted. Only the Paystack server and its signature helper were removed, because they can't run without a secret key.
@@ -58,7 +58,7 @@ The logic is in `deriveFloor` (`src/features/owner/floor/floorStatus.ts`) and `s
 - `server/index.mjs`, `server/README.md`: the Paystack sandbox. It refuses to start without `PAYSTACK_SECRET_KEY`.
 - `src/lib/paystackSignature.ts` and its test: only the server needed them.
 
-`PAYSTACK_SECRET_KEY` was only ever commented out in `.env.example`, and the app never read it. No npm package was payment-only (Ozaa calls Paystack over plain HTTP from the server), so `package.json` is unchanged.
+`PAYSTACK_SECRET_KEY` was only ever commented out in `.env.example`, and the app never read it. No npm package was payment-only (Cravins calls Paystack over plain HTTP from the server), so `package.json` is unchanged.
 
 ## Left in place, unused
 
@@ -68,7 +68,7 @@ The logic is in `deriveFloor` (`src/features/owner/floor/floorStatus.ts`) and `s
 
 ## Known side effects
 
-- **Loyalty stamps** are added automatically only when a payment succeeds (`paid_visit` in `src/mocks/mockClient.ts`). With payments off, staff add stamps by scanning the guest's card (Owner → Scan and stamp). The guest loyalty copy still says "Added automatically when you pay with Ozaa". We left loyalty unchanged on purpose; decide this before launch.
+- **Loyalty stamps** are added automatically only when a payment succeeds (`paid_visit` in `src/mocks/mockClient.ts`). With payments off, staff add stamps by scanning the guest's card (Owner → Scan and stamp). The guest loyalty copy still says "Added automatically when you pay with Cravins". We left loyalty unchanged on purpose; decide this before launch.
 - **Copy changed** in `en.json`: "Waiting to pay" became "Waiting for the bill", the floor filter is "Bill", the notifications empty text no longer mentions payments, and the Insights hint no longer mentions sales. Other languages fall back to English for the new keys (`status.payAtCounter`, `owner.billSettled`, `ownerTables.ctaNoPay`) but still carry their old "waiting to pay" translations.
 
 ## Bringing payments back

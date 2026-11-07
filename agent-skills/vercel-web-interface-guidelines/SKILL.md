@@ -6,7 +6,7 @@ argument-hint: <file-or-pattern>
 Source: https://github.com/vercel-labs/web-interface-guidelines (command.md)
 License: MIT (c) 2025 Vercel Labs
 Commit: 434b7f9
-Copied: 2026-10-31 for the Ozaa build kit. Text unchanged below this header.
+Copied: 2026-10-31 for the Cravins build kit. Text unchanged below this header.
 -->
 
 # Web Interface Guidelines

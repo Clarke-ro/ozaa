@@ -7,7 +7,7 @@ license: MIT
 Source: https://github.com/expo/skills/tree/main/plugins/expo/skills/expo-dev-client
 License: MIT (c) 650 Industries, Inc. (Expo)
 Commit: 05754e7
-Copied: 2026-10-31 for the Ozaa build kit. Text unchanged below this header.
+Copied: 2026-10-31 for the Cravins build kit. Text unchanged below this header.
 -->
 
 Use EAS Build to create development clients for testing native code changes on physical devices. Use this for creating custom Expo Go clients for testing branches of your app.

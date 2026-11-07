@@ -12,7 +12,7 @@ import { useTheme } from '@/ui/theme';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
 import { DeskTabs, EmptyCard, toast } from '../../kit';
-import { AskOzaaAiScreen } from '../AskOzaaAiScreen';
+import { AskCravinsAiScreen } from '../AskCravinsAiScreen';
 import { FeedbackCard } from './FeedbackCard';
 
 type Tab = 'new' | 'archived' | 'ai';
@@ -75,7 +75,7 @@ export function FeedbackScreen() {
         ]}
       />
       {tab === 'ai' ? (
-        <AskOzaaAiScreen venueId={venueId} />
+        <AskCravinsAiScreen venueId={venueId} />
       ) : (
         <>
           <View

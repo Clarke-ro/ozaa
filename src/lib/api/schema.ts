@@ -100,7 +100,7 @@ export interface paths {
         put?: never;
         /**
          * Start a guest session after a QR scan. No account and no personal data.
-         * @description The QR code holds `https://ozaa.app/{venueSlug}/t/{tableCode}`. The web app calls this on load.
+         * @description The QR code holds `https://cravins.app/{venueSlug}/t/{tableCode}`. The web app calls this on load.
          */
         post: operations["createGuestSession"];
         delete?: never;
@@ -240,7 +240,7 @@ export interface paths {
         /**
          * Start a MoMo or card payment for a bill quote.
          * @description The server calls Paystack with its secret key and the venue's subaccount (split payment),
-         *     so the money settles to the venue and Ozaa's fee comes off automatically. Ozaa never holds funds.
+         *     so the money settles to the venue and Cravins's fee comes off automatically. Cravins never holds funds.
          *     MoMo returns `pay_offline`: show `displayText` and poll `GET /payments/{reference}`.
          *     The guest has 180 seconds to approve on their phone (network limit).
          *     Card returns `open_url` with a Paystack checkout URL (open it in a browser tab or WebView).
@@ -648,7 +648,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Printable QR sticker for one table (Ozaa logo in the middle, table number under it). */
+        /** Printable QR sticker for one table (Cravins logo in the middle, table number under it). */
         get: operations["ownerGetTableQr"];
         put?: never;
         post?: never;
@@ -1235,7 +1235,7 @@ export interface components {
         Problem: {
             /**
              * Format: uri-reference
-             * @example https://ozaa.app/problems/item-sold-out
+             * @example https://cravins.app/problems/item-sold-out
              */
             type: string;
             /** @example Item sold out */
@@ -1350,10 +1350,10 @@ export interface components {
          */
         ServiceSection: "table" | "rewards" | "fun" | "more";
         /**
-         * @description ozaa Unbounded+Inter, serif Noto Serif+Inter, bold Montserrat+Inter.
+         * @description cravins Unbounded+Inter, serif Noto Serif+Inter, bold Montserrat+Inter.
          * @enum {string}
          */
-        FontPair: "ozaa" | "serif" | "bold";
+        FontPair: "cravins" | "serif" | "bold";
         OpeningHours: {
             /** @example Africa/Accra */
             timezone: string;
@@ -1379,7 +1379,7 @@ export interface components {
             tint: components["schemas"]["HexColor"];
             badgeInk: components["schemas"]["HexColor"];
             notes: string[];
-            ozaaDistance: number;
+            cravinsDistance: number;
             ratios: {
                 buttonText: number;
                 inkOnWhite: number;
@@ -1387,7 +1387,7 @@ export interface components {
             };
         };
         VenueTheme: {
-            /** @description Null means the Ozaa default orange. */
+            /** @description Null means the Cravins default orange. */
             accent: components["schemas"]["HexColor"] | null;
             fontPair: components["schemas"]["FontPair"];
             derived: components["schemas"]["DerivedTheme"];
@@ -1572,7 +1572,7 @@ export interface components {
             label?: string;
             /**
              * Format: uri
-             * @example https://ozaa.app/mamas-kitchen/t/12
+             * @example https://cravins.app/mamas-kitchen/t/12
              */
             qrUrl?: string;
         };
@@ -2065,8 +2065,8 @@ export interface components {
             /** @example **** 4567 */
             accountMasked: string;
             verified: boolean;
-            /** @description Ozaa's share taken by the Paystack split. Set by Ozaa, read-only here. */
-            ozaaFeePercent: number;
+            /** @description Cravins's share taken by the Paystack split. Set by Cravins, read-only here. */
+            cravinsFeePercent: number;
         };
         /**
          * @description Sample venues use GHS. Amount fields are minor units (pesewas, kobo, cents) except XOF, which is the whole franc.
@@ -2323,7 +2323,7 @@ export interface components {
             name: string;
             ownerId: string;
             /**
-             * @description The Ozaa plan this business is on. Matches the plan ids on the pricing page. Billing is not live yet, so this is read-only.
+             * @description The Cravins plan this business is on. Matches the plan ids on the pricing page. Billing is not live yet, so this is read-only.
              * @enum {string}
              */
             plan: "free" | "pro" | "business";

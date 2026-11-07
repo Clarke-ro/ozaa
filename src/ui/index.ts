@@ -6,7 +6,7 @@ export { ErrorState, LoadingState } from './states';
 export { Text } from './Text';
 export {
   ThemeProvider,
-  ozaaTheme,
+  cravinsTheme,
   themeFromAccent,
   useTheme,
   type FontPair,
