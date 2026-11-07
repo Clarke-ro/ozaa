@@ -38,7 +38,7 @@ export function PhonePreview({
 }) {
   const style = menuStyleOf(venue.menuStyle);
   const font = venue.theme.fontPair;
-  const fontPair: FontPair = font === 'serif' || font === 'bold' ? font : 'ozaa';
+  const fontPair: FontPair = font === 'serif' || font === 'bold' ? font : 'cravins';
   // "Follow phone" previews as light; the owner can switch to Dark to see that version.
   const scheme = style.colorScheme === 'dark' ? 'dark' : 'light';
   const theme = themeFromAccent(venue.theme.accent, fontPair, scheme);

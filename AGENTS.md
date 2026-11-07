@@ -1,9 +1,9 @@
-# AGENTS.md: instructions for every coding agent on the Ozaa repo
+# AGENTS.md: instructions for every coding agent on the Cravins repo
 
 Copy this file to the repo root in step 0.1 and keep it current. Expo's own rules are in `agent-skills/expo-agents-md/AGENTS.md`. Follow those too. Where they clash, this file wins.
 
 ## Who you are working for
-Clarke is building Ozaa, a QR table app for restaurants in Ghana. He is a **beginner** who is learning from this code. Write code he can read, explain what you did in plain words, and keep `LEARNING.md` up to date for him.
+Clarke is building Cravins, a QR table app for restaurants in Ghana. He is a **beginner** who is learning from this code. Write code he can read, explain what you did in plain words, and keep `LEARNING.md` up to date for him.
 
 ## Read first, every session
 1. `BUILD.md`: what we're building, the order, the rules, and the checklist. Find the first unticked box in section 13. That is your task.
@@ -37,11 +37,11 @@ Clarke is building Ozaa, a QR table app for restaurants in Ghana. He is a **begi
 1. **Frontend first.** Build the UI on the mock API (`EXPO_PUBLIC_API_MODE=mock`). Do not write backend code until Clarke approves the UI at the gate in BUILD.md Phase 4. The one exception is the Paystack sandbox slice in Phase 2b.
 2. **Keep to the contract.** Use only endpoints and fields in `api/openapi.yaml`. If you need a change, make it in its own PR first: lint it, regenerate types, update fixtures. Never hand-edit `src/lib/api/schema.ts`.
 3. **Match the renders.** Every screen has a render in `design/renders/` (mapping in BUILD.md section 6). Take a screenshot of your build at 390×844 for each sample venue and compare it with the render before calling it done. Attach both to the PR.
-4. **Never mention TakeOrder.** Not in code, comments, copy, commits, docs or file names. The product is Ozaa. (Also never use "ScanChop", an old working name.)
+4. **Never mention TakeOrder.** Not in code, comments, copy, commits, docs or file names. The product is Cravins. (Also never use "ScanChop", an old working name.)
 5. **Money:**
    - Integer pesewas only, and the server total wins.
    - Only a `succeeded` payment counts.
-   - Ozaa never holds funds. Each restaurant connects its own Paystack keys; money goes straight to its account (BUILD.md section 4, changed 2026-11-03). A venue's secret key is stored encrypted on the server only.
+   - Cravins never holds funds. Each restaurant connects its own Paystack keys; money goes straight to its account (BUILD.md section 4, changed 2026-11-03). A venue's secret key is stored encrypted on the server only.
    - **The Paystack secret key lives only on the server.** It never goes in the app, in `EXPO_PUBLIC_*` or in git.
    - Sandbox (test) keys only until Clarke says otherwise.
 6. **Privacy (Act 843):**
@@ -83,7 +83,7 @@ Keep each entry under about 300 words.
 ## Ask Clarke (do not guess)
 Stop and ask, or build behind a default and say so in the PR, for:
 - Anything in BUILD.md section 17:
-  - Paystack fee bearer and Ozaa's own fee
+  - Paystack fee bearer and Cravins's own fee
   - the legal checks (PSP licence and DPC registration)
   - SMS/OTP and hosting providers
   - domains and trademark

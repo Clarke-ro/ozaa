@@ -18,10 +18,10 @@ for (const f of ['theme.js', 'venues.js', 'data.js']) {
   vm.runInContext(fs.readFileSync(path.join(proto, f), 'utf8'), sandbox, { filename: f });
 }
 const W = sandbox.window;
-const { deriveTheme } = W.OzaaTheme;
+const { deriveTheme } = W.CravinsTheme;
 
 // Mock media lives under this fake host. The mock layer maps it to bundled files.
-const MEDIA = 'https://mock.ozaa.app/media/';
+const MEDIA = 'https://mock.cravins.app/media/';
 const img = (p, w = 800, h = 600, alt = '') => ({ url: MEDIA + p, width: w, height: h, alt });
 // Two close-up crops of each dish photo (img/<dish>-2.jpg, -3.jpg) stand in for extra photos.
 const closeUps = (p, alt) =>
@@ -51,7 +51,7 @@ for (const [key, v] of Object.entries(W.VENUES)) {
   const t = deriveTheme(v.accent);
   const derived = {
     fill: t.fill, onAccent: t.onAccent, pressed: t.pressed, ink: t.ink, tint: t.tint, badgeInk: t.badgeInk,
-    notes: t.notes, ozaaDistance: t.ozaaDistance,
+    notes: t.notes, cravinsDistance: t.cravinsDistance,
     ratios: { buttonText: t.ratios.buttonText, inkOnWhite: t.ratios.inkOnWhite, badge: t.ratios.badge },
   };
   const day = [{ opens: '09:00', closes: hoursUntil[key] }];

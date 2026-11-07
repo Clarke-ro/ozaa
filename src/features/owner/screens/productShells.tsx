@@ -289,7 +289,7 @@ export function AiShell() {
           <View style={styles.aiHeaderRow}>
             <Bot size={14} color={theme.ink} />
             <Text variant="caption" style={{ color: theme.ink, fontWeight: '700' }}>
-              Ozaa AI Waiter
+              Cravins AI Waiter
             </Text>
           </View>
           <Text variant="body" style={styles.chatAiText}>

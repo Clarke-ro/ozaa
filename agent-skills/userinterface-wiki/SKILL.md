@@ -10,7 +10,7 @@ metadata:
 Source: https://github.com/raphaelsalaja/userinterface-wiki/tree/main/skills
 License: MIT (c) 2026 Raphael Salaja
 Commit: 256a954
-Copied: 2026-10-31 for the Ozaa build kit. Text unchanged below this header.
+Copied: 2026-10-31 for the Cravins build kit. Text unchanged below this header.
 -->
 
 # User Interface Wiki

@@ -6,10 +6,10 @@ description: Small interface details that make an app feel finished (inputs, typ
 Source: https://github.com/raunofreiberg/interfaces (README "Web Interface Guidelines", commit 81f523a, 2023-06-06)
 Author: Rauno Freiberg
 License: none published, so this is a SUMMARY in our own words, not a copy. Read the original at the link.
-How Ozaa adapts it: rules written for the web are mapped to React Native where they apply.
+How Cravins adapts it: rules written for the web are mapped to React Native where they apply.
 -->
 
-# Rauno's interface details, summarized for Ozaa
+# Rauno's interface details, summarized for Cravins
 
 ## Inputs and forms
 - Tapping a label focuses its field. Use the right keyboard: `keyboardType="phone-pad"` for MoMo numbers, `email-address` for email.
@@ -24,7 +24,7 @@ How Ozaa adapts it: rules written for the web are mapped to React Native where t
 - Never use weights under 400. Medium headings look best at 500 to 600.
 - Do not change weight on press or selection; it shifts the layout.
 - Use tabular figures for prices, totals, timers and scores (`fontVariant: ['tabular-nums']`).
-- Subset fonts to the languages you ship (Ozaa: Latin plus ɛ ɔ ŋ ɖ ƒ ʋ ɣ and ₵).
+- Subset fonts to the languages you ship (Cravins: Latin plus ɛ ɔ ŋ ɖ ƒ ʋ ɣ and ₵).
 - Inputs on web are at least 16 px so iOS Safari does not zoom.
 
 ## Motion

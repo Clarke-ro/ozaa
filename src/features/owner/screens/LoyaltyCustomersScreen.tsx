@@ -58,7 +58,7 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.setAttribute('href', url);
-      link.setAttribute('download', `ozaa-loyalty-members-${venueId}.csv`);
+      link.setAttribute('download', `cravins-loyalty-members-${venueId}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

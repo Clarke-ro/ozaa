@@ -1,8 +1,8 @@
-# Gap table: ozaa vs the MenuRite reference
+# Gap table: cravins vs the MenuRite reference
 
 **Date:** 2026-11-03. **Phase 0 audit, no code changed.**
 
-MenuRite (18 screenshots in `Downloads/menurite-dashboard`) is a layout and feature reference only. Nothing from its branding, text or code goes into Ozaa.
+MenuRite (18 screenshots in `Downloads/menurite-dashboard`) is a layout and feature reference only. Nothing from its branding, text or code goes into Cravins.
 
 Key: **Full** = done, nothing to build. **Partial** = some of it exists, fill the gap. **None** = new work. **Blocked** = needs a decision from Clarke before any code (see the last section).
 
@@ -41,7 +41,7 @@ Key: **Full** = done, nothing to build. **Partial** = some of it exists, fill th
 | Business info | Full | `screens/business/BusinessScreen.tsx` | — |
 | Integrations page | None | `screens/payments/PaymentsScreen.tsx` (ledger), `PayoutAccount` setup | New page. Blocked on payments decision. |
 | Staff | Full | `screens/staff/` | — |
-| Billing (Ozaa plan) | None | — | No plans exist. Plan badge and Billing need you to define plans (section 17 territory). |
+| Billing (Cravins plan) | None | — | No plans exist. Plan badge and Billing need you to define plans (section 17 territory). |
 | Account | Full | `screens/settings/SettingsScreen.tsx`, `DeleteAccountSheet.tsx` | — |
 | Loading / empty / error states | Partial | `DeskWait`, `EmptyCard`, retry buttons on most screens (see `docs/owner-audit.md`) | Check each new screen. |
 | Responsive to tablet | Partial | `useWindowDimensions` breakpoints in `OwnerChrome` and `OrdersScreen` (two-up at 900 px) | Check the new layouts at 768 px. |
@@ -66,7 +66,7 @@ The owner app and the web dashboard are **the same code** (`src/app/owner/*`, on
 
 | Feature | Status | Where / what's missing |
 |---|---|---|
-| Shareable menu link `ozaa.app/<slug>` | Partial | `/[venue]` already opens the guest home without a table (`src/app/[venue]/index.tsx`). It isn't presented to owners as "your menu link", and ordering needs a table session today (`/[venue]/t/[table]` makes the guest session). |
+| Shareable menu link `cravins.app/<slug>` | Partial | `/[venue]` already opens the guest home without a table (`src/app/[venue]/index.tsx`). It isn't presented to owners as "your menu link", and ordering needs a table session today (`/[venue]/t/[table]` makes the guest session). |
 | Pickup / delivery choice | None | Contract: order `source` + guest session without a table. |
 | Name, phone, address form | None | **Blocked:** AGENTS.md rule 6 says no personal data in a guest session. |
 | Table QR flow unchanged | Full | Keep as is. |
@@ -80,7 +80,7 @@ The owner app and the web dashboard are **the same code** (`src/app/owner/*`, on
 | Feature | Status | Notes |
 |---|---|---|
 | Restore `feature/payments-v1` | Partial | The branch is fully merged into `main` already. Only `server/index.mjs`, `server/README.md` and `src/lib/paystackSignature.ts` (+ test) were deleted after. Restore with `git checkout origin/feature/payments-v1 -- server src/lib/paystackSignature.ts src/lib/paystackSignature.test.ts`. All screens are still on `main` behind `PAYMENTS_ENABLED`. |
-| That server's model | Conflict | It uses **one** Ozaa secret key (`PAYSTACK_SECRET_KEY`) and split payments to the venue's subaccount, as BUILD.md section 4 decided. The brief asks for the opposite: each restaurant pastes its own keys. |
+| That server's model | Conflict | It uses **one** Cravins secret key (`PAYSTACK_SECRET_KEY`) and split payments to the venue's subaccount, as BUILD.md section 4 decided. The brief asks for the opposite: each restaurant pastes its own keys. |
 | Owner pastes own public + secret keys, test/live toggle, "test connection" | None | **Blocked**, see below. |
 | Secret keys stored encrypted on the backend | None | Needs the real backend (Phase 5) and a key-management choice. |
 | Webhook with signature check | Partial | `paystackSignature.ts` on the branch does HMAC-SHA512. With per-venue keys, the server must check each webhook with **that venue's** secret, so the webhook URL needs the venue in it. |
@@ -102,11 +102,11 @@ The owner app and the web dashboard are **the same code** (`src/app/owner/*`, on
 
 These parts of the brief go against AGENTS.md or a settled decision in BUILD.md section 4. I haven't built anything for them. Each needs a yes or no from you.
 
-1. **Per-restaurant Paystack keys instead of split payments.** BUILD.md section 4 says split payments to the venue's subaccount, with Ozaa's fee in the split. The brief says each restaurant pastes its own keys and Ozaa takes nothing. That is a reversal of a settled decision, and it means Ozaa stores other businesses' live secret keys. That is a bigger security job: encryption at rest, a key-management service, rotation, and a breach would expose every venue. It may also change the PSP licence question in section 17. The subaccount model needs no secret from the venue at all. **Which model do you want?**
+1. **Per-restaurant Paystack keys instead of split payments.** BUILD.md section 4 says split payments to the venue's subaccount, with Cravins's fee in the split. The brief says each restaurant pastes its own keys and Cravins takes nothing. That is a reversal of a settled decision, and it means Cravins stores other businesses' live secret keys. That is a bigger security job: encryption at rest, a key-management service, rotation, and a breach would expose every venue. It may also change the PSP licence question in section 17. The subaccount model needs no secret from the venue at all. **Which model do you want?**
 2. **Backend before the UI gate.** Encrypted key storage, webhooks, push alerts and "one change shows in both" with a real database are all Phase 5 work. AGENTS.md rule 1 allows backend code only after your written yes at the UI approval gate (the only exception is the Paystack sandbox slice). **Is this brief that yes, or should I build all of it on the mock first?**
 3. **Guest name, phone and address on online orders.** AGENTS.md rule 6 (Act 843) says no personal data in a guest session. Pickup and delivery can't work without a phone number. If you say yes, I'll keep it on the order only (not the session), show a short notice saying why we ask, never log it, and keep the email field out (MenuRite asks for email; we don't need it). **OK to collect name and phone (and address for delivery) on link orders only?**
 4. **Contract changes that change meaning:** order `source`, a guest session without a table, item `status` with "hidden", sale price, stock, min/max, store notice, publish flag, menu style fields, payment `method`, venue online-ordering settings, and possibly an "accepted" order state. Rule 2 says each goes in its own PR first. **OK to make these, one contract PR per feature?**
-5. **Plans and Billing.** The sidebar wants a plan badge and a Billing page, but Ozaa has no plans. **Hide both for now, or tell me the plans?**
+5. **Plans and Billing.** The sidebar wants a plan badge and a Billing page, but Cravins has no plans. **Hide both for now, or tell me the plans?**
 6. **Guest dark mode.** Guest pages are light only by design. Adding dark mode touches every guest screen and the venue contrast rules in `deriveTheme`. **Worth doing now, or later?**
 7. **New packages:** `expo-audio` (sound alerts) and later `expo-notifications` (push). Both are native-side and don't touch the guest web bundle, so the 50 KB rule isn't hit, but I'm noting them.
 

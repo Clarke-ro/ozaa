@@ -1,4 +1,4 @@
-"""Ozaa scan-frame logo generator.
+"""Cravins scan-frame logo generator.
 
 The mark is a white rounded square (a QR "scan frame") with four corner marks
 and a fork and knife cut out of it, sitting on an orange #FC5205 circle.
@@ -72,24 +72,24 @@ if __name__ == '__main__':
     os.makedirs(os.path.join(HERE, 'svg'), exist_ok=True)
     for tier in TIERS:
         sfx = '' if tier == 'full' else f'-{tier}'
-        write(f'ozaa-icon{sfx}.svg', icon(tier))                              # orange circle, white mark
-        write(f'ozaa-icon-black{sfx}.svg', icon(tier, bg=INK))                # mono dark
-        write(f'ozaa-icon-white{sfx}.svg', icon(tier, bg=WHITE, fg=OR))       # for dark/orange backgrounds
-        write(f'ozaa-mark-mono{sfx}.svg', icon(tier, fg=INK, shape='none'))    # single colour glyph, no circle
-    write('ozaa-app-icon-square.svg', icon('full', shape='square'))            # iOS + store (OS rounds corners)
-    write('ozaa-adaptive-foreground.svg', adaptive_fg('full'))
-    write('ozaa-adaptive-monochrome.svg', adaptive_fg('full', fg='#000000'))   # Android 13 themed icon
-    write('ozaa-adaptive-background.svg', svg(f'<rect width="512" height="512" fill="{OR}"/>'))
+        write(f'cravins-icon{sfx}.svg', icon(tier))                              # orange circle, white mark
+        write(f'cravins-icon-black{sfx}.svg', icon(tier, bg=INK))                # mono dark
+        write(f'cravins-icon-white{sfx}.svg', icon(tier, bg=WHITE, fg=OR))       # for dark/orange backgrounds
+        write(f'cravins-mark-mono{sfx}.svg', icon(tier, fg=INK, shape='none'))    # single colour glyph, no circle
+    write('cravins-app-icon-square.svg', icon('full', shape='square'))            # iOS + store (OS rounds corners)
+    write('cravins-adaptive-foreground.svg', adaptive_fg('full'))
+    write('cravins-adaptive-monochrome.svg', adaptive_fg('full', fg='#000000'))   # Android 13 themed icon
+    write('cravins-adaptive-background.svg', svg(f'<rect width="512" height="512" fill="{OR}"/>'))
     print('svg written')
 
-# ---- Lockups: icon + "ozaa" wordmark (Unbounded 700 outlined to a path) ----
+# ---- Lockups: icon + "cravins" wordmark (Unbounded 700 outlined to a path) ----
 def lockups():
     import json
     wm = json.load(open(os.path.join(HERE, 'wordmark_path.json'))); W = round(wm['w'] + 190)
     def inner(s, x, y, size):
         return s.replace('viewBox="0 0 512 512" width="512" height="512"', f'x="{x}" y="{y}" width="{size}" height="{size}" viewBox="0 0 512 512"', 1)
-    for name, ic, ink in [('ozaa-lockup', icon('full'), INK), ('ozaa-lockup-mono', icon('full', bg=INK), INK),
-                          ('ozaa-lockup-on-dark', icon('full'), WHITE)]:
+    for name, ic, ink in [('cravins-lockup', icon('full'), INK), ('cravins-lockup-mono', icon('full', bg=INK), INK),
+                          ('cravins-lockup-on-dark', icon('full'), WHITE)]:
         write(f'{name}.svg', f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} 140" width="{W}" height="140">'
               f'{inner(ic, 10, 10, 120)}<g transform="translate(152,98)"><path d="{wm["d"]}" fill="{ink}"/></g></svg>')
 

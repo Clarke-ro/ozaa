@@ -6,7 +6,7 @@ description: This skill encodes Emil Kowalski's philosophy on UI polish, compone
 Source: https://github.com/emilkowalski/skill/tree/main/skills/emil-design-eng
 License: MIT (c) 2026 Emil Kowalski
 Commit: a81dbca
-Copied: 2026-10-31 for the Ozaa build kit. Text unchanged below this header.
+Copied: 2026-10-31 for the Cravins build kit. Text unchanged below this header.
 -->
 
 # Design Engineering

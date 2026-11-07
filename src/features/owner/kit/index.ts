@@ -8,7 +8,7 @@ export { EmptyCard } from './EmptyCard';
 export { Field } from './Field';
 export { IconTile } from './IconTile';
 export { ModalSheet } from './ModalSheet';
-export { OzaaMark } from './OzaaMark';
+export { CravinsMark } from './CravinsMark';
 export { SectionLabel } from './SectionLabel';
 export { StatTile } from './StatTile';
 export { StatusPill, type PillTone } from './StatusPill';

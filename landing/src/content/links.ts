@@ -1,5 +1,5 @@
 /**
- * Where "Get Ozaa" goes: the Ozaa web app (the Expo app's web build). Set PUBLIC_APP_URL when
+ * Where "Get Cravins" goes: the Cravins web app (the Expo app's web build). Set PUBLIC_APP_URL when
  * building the site, e.g. PUBLIC_APP_URL=https://app.example.com npm run build. Until the app
  * is hosted it points at the local Expo web server.
  */

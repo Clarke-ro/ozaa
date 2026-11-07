@@ -6,7 +6,7 @@ description: Create or update a DESIGN.md from an existing product repository or
 Source: https://github.com/ibelick/ui-skills/tree/main/skills/create-design-md
 License: MIT (c) 2026 Julien Thibeaut
 Commit: b88b130
-Copied: 2026-10-31 for the Ozaa build kit. Text unchanged below this header.
+Copied: 2026-10-31 for the Cravins build kit. Text unchanged below this header.
 -->
 
 # Create DESIGN.md

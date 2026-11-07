@@ -1,4 +1,4 @@
-# Learning Ozaa
+# Learning Cravins
 
 Plain notes for Clarke. Newest at the top.
 
@@ -45,7 +45,7 @@ Run `PUBLIC_APP_URL=https://example.com npm run build`, then open `dist/index.ht
 
 **What we built**
 
-A one-page site that explains Ozaa to a restaurant owner. Guests scan a QR code on the table. The menu, the waiter, and the bill open in the phone browser. The first launch is in Africa, and the product is for restaurants anywhere.
+A one-page site that explains Cravins to a restaurant owner. Guests scan a QR code on the table. The menu, the waiter, and the bill open in the phone browser. The first launch is in Africa, and the product is for restaurants anywhere.
 
 **How it works**
 

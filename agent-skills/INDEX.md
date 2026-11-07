@@ -1,4 +1,4 @@
-# Agent skills for building Ozaa
+# Agent skills for building Cravins
 
 Collected 31 Oct 2026. Each folder holds a `SKILL.md`. Most are **copied** word for word from their public repo, with a header comment giving the source URL, license and commit. One is **summarized** because its repo has no license. To use a skill, read its `SKILL.md` before you start the task it covers. The task table below says when.
 
@@ -13,7 +13,7 @@ Folder names carry a prefix for their source (`pstack-`, `expo-`, `vercel-` ...)
 | Order and payment flows | `pstack-statechart` (model the Order, Payment and Waiter-call state machines from BUILD.md section 9 and draw them in Mermaid), `pstack-principle-type-system-discipline` (make illegal states impossible to write) |
 | Logic with rules | `pstack-tdd` for bill totals and splits, tips, loyalty stamps, game stamp rule, theme contrast (deriveTheme), payment state, phone normalisation, opening hours. `pstack-principle-test-behavior-not-implementation` |
 | Building screens | `expo-router`, `expo-project-structure`, `expo-design-system`, `expo-native-ui`, `expo-data-fetching`, `vercel-react-native-skills`, `callstack-react-native-best-practices`, `vercel-composition-patterns`, `pstack-typescript-best-practices` |
-| Making it look designed, not generated | `apple-design-rn` (type scale, spacing, touch targets, dark mode, a11y for this Expo app), `no-slop-ui`, `taste-skill`, `anthropic-frontend-design`, `impeccable`, `emil-design-eng`, `ui-skills-baseline-ui`, `rauno-interfaces`, `userinterface-wiki`. Ozaa's own rules in `design/brand.md` always win over any of these. |
+| Making it look designed, not generated | `apple-design-rn` (type scale, spacing, touch targets, dark mode, a11y for this Expo app), `no-slop-ui`, `taste-skill`, `anthropic-frontend-design`, `impeccable`, `emil-design-eng`, `ui-skills-baseline-ui`, `rauno-interfaces`, `userinterface-wiki`. Cravins's own rules in `design/brand.md` always win over any of these. |
 | Motion | `expo-animation` / `emil-animate-expo` (same text, two sources), `ui-skills-fixing-motion-performance` |
 | Web build (guest app runs in a browser) | `emil-mobile-native`, `vercel-web-interface-guidelines`, `vercel-web-design-guidelines`, `vercel-react-best-practices`, `expo-dom` (only if a web-only widget is needed) |
 | Accessibility | `ui-skills-fixing-accessibility` plus the a11y rules in BUILD.md |
@@ -31,7 +31,7 @@ Folder names carry a prefix for their source (`pstack-`, `expo-`, `vercel-` ...)
 ### pstack (Cursor plugins, by Lauren Tan, @poteto)
 Source: https://github.com/cursor/plugins/tree/main/pstack (commit 4dd1d05, 29 Oct 2026, plugin version 0.15.36). License: MIT © 2026 Lauren Tan. All **copied**. Text matched the pstack skills installed in Grok Bot. The `statechart/scripts/` folder (4 MB of TLA+ tools) was left out. To run the checker, install pstack in Cursor (it ships the scripts) or fetch them from the source URL; drawing the Mermaid chart by hand works without them.
 
-| Folder | What it does | When to apply in Ozaa |
+| Folder | What it does | When to apply in Cravins |
 |---|---|---|
 | pstack-poteto-mode | The working style: short detailed answers, careful subagents, plain prose, simple code, verified work. Loads the other principles. | Always on. |
 | pstack-architect | Sketch types, function signatures and module layout before code, then stay in the loop. | Before every feature in BUILD.md section 12. Put the sketch in the PR description. |
@@ -46,7 +46,7 @@ Source: https://github.com/cursor/plugins/tree/main/pstack (commit 4dd1d05, 29 O
 | pstack-unslop | Cut AI tells from writing. | All UI copy, LEARNING.md, PR text, docs. |
 | pstack-statechart | Check a TLA+ model of a flow and draw it as a Mermaid statechart. | Order, Payment and Waiter-call state machines (BUILD.md section 9). |
 | pstack-show-me-your-work | Decision log (TSV) for long unattended work. | Long agent runs; commit it in `docs/decisions.tsv`. |
-| pstack-create-verification-skill | Make a project skill that drives the app the way a user does. | Phase 0: create `.cursor/skills/verify-ozaa/` that opens the web build at 390x844 and screenshots each route. |
+| pstack-create-verification-skill | Make a project skill that drives the app the way a user does. | Phase 0: create `.cursor/skills/verify-cravins/` that opens the web build at 390x844 and screenshots each route. |
 | pstack-typescript-best-practices | TypeScript rules. | Every .ts/.tsx file. |
 | pstack-technical-writing | Layered writing standard for docs. | BUILD notes, README, LEARNING.md. |
 | pstack-principle-prove-it-works | Check the real thing, not a proxy. | Before calling a task done: screenshot vs render, test run, real response. |
@@ -109,7 +109,7 @@ Source: https://github.com/callstackincubator/agent-skills. **Copied** (images i
 ### Design taste and anti-slop UI
 | Folder | Source and license | Copied or summary | When to apply |
 |---|---|---|---|
-| anthropic-frontend-design | https://github.com/anthropics/skills/tree/main/skills/frontend-design, Apache-2.0 | Copied | New screens; pick a clear direction. Ozaa's direction is already set in brand.md, so use it for craft, not for new styles. |
+| anthropic-frontend-design | https://github.com/anthropics/skills/tree/main/skills/frontend-design, Apache-2.0 | Copied | New screens; pick a clear direction. Cravins's direction is already set in brand.md, so use it for craft, not for new styles. |
 | impeccable | https://github.com/pbakaus/impeccable, Apache-2.0 (NOTICE.md kept) | Copied | Critique, audit and polish passes. |
 | taste-skill | https://github.com/Leonxlnx/taste-skill, MIT © 2026 Leonxlnx (https://tasteskill.dev, post: https://x.com/aiedge_/status/2070016711341040054) | Copied | Avoid generic AI looks (stacked labels, rows of icon cards, soft gradients, glows). |
 | no-slop-ui | https://github.com/LeoStehlik/no-slop-ui, MIT © 2026 Leo Stehlik | Copied | Build and review UI for a restrained, human-designed look. |
@@ -121,7 +121,7 @@ Source: https://github.com/callstackincubator/agent-skills. **Copied** (images i
 Found on X while collecting: https://x.com/JustARedditNerd/status/2048607769776042312 (Impeccable, Taste, UI Wiki, frontend-design, web design guidelines), https://x.com/colderoshay/status/2066930925573898433 (taste.md, UI wiki, Emil's skill, ibelick), https://x.com/zentalksai/status/2059246648161685660 (frontend-design), https://x.com/lorden_eth/status/2107440745561178275 (taste-skill, no-slop-ui and more), https://x.com/DataChaz/status/2039637735523409977 (awesome-design-md).
 
 ### Apple-grade design for this app
-Lives outside this folder, at `.cursor/skills/apple-design-rn/SKILL.md`, so Cursor and Claude Code load it on their own. Written for Ozaa in our own words. Ideas adapted from https://github.com/twostraws/swiftui-agent-skill (MIT © 2026 Paul Hudson); https://github.com/dickwu/apple-design-skill (no license) is linked, not copied.
+Lives outside this folder, at `.cursor/skills/apple-design-rn/SKILL.md`, so Cursor and Claude Code load it on their own. Written for Cravins in our own words. Ideas adapted from https://github.com/twostraws/swiftui-agent-skill (MIT © 2026 Paul Hudson); https://github.com/dickwu/apple-design-skill (no license) is linked, not copied.
 
 | Skill | When to apply |
 |---|---|
@@ -152,7 +152,7 @@ Rankings and lists seen on X: https://x.com/yijidini/status/2091030904739430531 
 ## 3. Considered and left out
 - dmmulroy/anti-slop, brianlovin deslop, desloppify, thermo-nuclear, Netxeo, design-guide, avoid-ai-design, miqdadbadjuber/anti-slop: they cover the same ground as the copied skills above. Not copied, to keep the kit small.
 - shadcn/ui skills: web component libraries, not used in a React Native app.
-- awesome-design-md: a list of DESIGN.md files from other brands. Ozaa has its own `design/brand.md`.
+- awesome-design-md: a list of DESIGN.md files from other brands. Cravins has its own `design/brand.md`.
 
 ## 4. Order of precedence when skills disagree
 1. Clarke's decisions in BUILD.md and `design/brand.md`.
