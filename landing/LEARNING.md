@@ -4,6 +4,43 @@ Plain notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-07 · Compact single-tier footer inspired by Yolé
+
+**What we built**
+
+The landing site footer now uses a compact, single-tier layout inspired by Yolé in Cravins' warm espresso palette:
+- **Left**: light logo lockup, tagline, and monochrome rounded-square social badges.
+- **Middle**: Product, Resources, and Support link columns with crisp title-case headings.
+- **Right**: CTA column (`Ready to upgrade your tables?`) with two side-by-side pills—an outlined glassy `Try a sample table` pill and a filled orange `Get started free` pill—plus a short lead line below.
+- **Bottom bar**: a full-width horizontal divider with copyright on the left and underlined, pipe-separated legal links (`Terms | Privacy | Cookies | Cookie settings`) on the right.
+
+**How it works**
+
+CSS Grid lays out all five columns in one row on desktop, then folds cleanly on tablets and phones:
+
+```
+Desktop (>1080px):  [Brand + Socials] [Product] [Resources] [Support] [CTA Pills + Lead]
+Tablet (≤1080px):   [Brand + Socials (full row)] → [Product] [Resources] [Support] → [CTA (full row)]
+Phone (≤640px):     [Brand + Socials] → 2-column link grid → [CTA] → stacked bottom bar
+```
+
+The pipe dividers between the legal links are drawn in CSS with `.footer-legal li + li::before`, so screen readers don't read out vertical bar characters.
+
+**Files to look at**
+
+- `src/components/Footer.astro`: the five-column grid and bottom legal bar.
+- `src/styles/global.css`: the `.footer`, `.footer-grid`, `.social`, and `.footer-legal` rules.
+
+**New idea: `li + li::before` for visual separators**
+
+Putting `|` characters in HTML makes screen readers announce "vertical line" between every link. Using CSS `li + li::before` draws a 1 px bar before every item *except* the first one, keeping the HTML clean and accessible.
+
+**Try it yourself**
+
+In `src/styles/global.css`, change `grid-template-columns` on `.footer-grid` or tweak the `margin: 0 14px` on `.footer-legal li + li::before` to see the spacing update live.
+
+---
+
 ## 2026-11-07 · Frosted glass header
 
 **What we built**

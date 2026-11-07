@@ -1,35 +1,15 @@
 ---
 import { footer, routes } from "../content/page";
-import Icon from "./Icon.astro";
 import SocialIcon from "./SocialIcon.astro";
 
 const year = new Date().getFullYear();
 ---
 
 <footer class="footer">
-  {/* The last ask: a big heading on the left, the two ways in on the right. */}
-  <div class="footer-cta">
-    <div class="footer-cta-text">
-      <h2 class="reveal">{footer.cta}</h2>
-      <p>{footer.lead}</p>
-    </div>
-    <div class="footer-cta-buttons">
-      <a class="pill pill--orange pill--lg" href={routes.start}>{footer.ctaButton}</a>
-      <a class="pill pill--glass pill--lg" href={routes.demo}>
-        {footer.secondButton}
-        <Icon name="arrow" size={18} />
-      </a>
-    </div>
-  </div>
-
   <div class="footer-grid">
     <div class="footer-brand">
       <a href={routes.home} aria-label="Cravins home">
-        {/* White lettering on the brown; the dark logo inside the light card on phones. */}
-        <picture>
-          <source media="(max-width: 640px)" srcset="/logo/cravins-lockup.svg" />
-          <img src="/logo/cravins-lockup-light.svg" alt="" width="451" height="140" />
-        </picture>
+        <img src="/logo/cravins-lockup-light.svg" alt="" width="451" height="140" />
       </a>
       <p>{footer.tagline}</p>
       <div class="footer-social">
@@ -45,6 +25,7 @@ const year = new Date().getFullYear();
         </ul>
       </div>
     </div>
+
     {
       footer.columns.map((column) => (
         <nav class="footer-column" aria-label={column.heading}>
@@ -59,10 +40,28 @@ const year = new Date().getFullYear();
         </nav>
       ))
     }
-    <nav class="footer-column footer-column--legal" aria-label={footer.legalHeading}>
-      <h3>{footer.legalHeading}</h3>
-      <ul>
-        {footer.legal.map((item) => <li><a href={item.href}>{item.label}</a></li>)}
+
+    <div class="footer-column footer-column--cta">
+      <h3>{footer.cta}</h3>
+      <div class="footer-cta-buttons">
+        <a class="pill pill--glass" href={routes.demo}>{footer.secondButton}</a>
+        <a class="pill pill--orange" href={routes.start}>{footer.ctaButton}</a>
+      </div>
+      <p class="footer-cta-lead">{footer.lead}</p>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <p>© {year} Cravins. {footer.rights}</p>
+    <nav aria-label={footer.legalHeading}>
+      <ul class="footer-legal">
+        {
+          footer.legal.map((item) => (
+            <li>
+              <a href={item.href}>{item.label}</a>
+            </li>
+          ))
+        }
         <li>
           <button class="link-button" type="button" data-cookie-settings>
             {footer.cookieSettings}
@@ -71,12 +70,4 @@ const year = new Date().getFullYear();
       </ul>
     </nav>
   </div>
-
-  <div class="footer-bottom">
-    <p>© {year} cravins. {footer.rights}</p>
-  </div>
-
-  {/* The name, huge and faint, sunk into the footer's bottom edge. Drawn by CSS from data-word,
-      so it is decoration only: screen readers and contrast checks skip it. */}
-  <div class="footer-watermark" aria-hidden="true" data-word={footer.watermark}></div>
 </footer>
