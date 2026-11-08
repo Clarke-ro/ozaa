@@ -4,10 +4,12 @@ import { Check, CircleCheck, Minus, Plus, Receipt, Smartphone } from 'lucide-rea
 import * as Crypto from 'expo-crypto';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { Redirect } from 'expo-router';
 import { api } from '@/lib/api';
 import { env } from '@/lib/env';
 import { asGhanaPhone, countryForVenue, parsePhone } from '@/lib/phone';
 import { DEFAULT_CURRENCY, formatMoney } from '@/lib/money';
+import { canPayOnline } from '@/lib/payments';
 import { useVenue } from '@/features/venue';
 import { pesewas } from '@/lib/brand';
 import { useGuestSession } from '@/features/session';
@@ -74,7 +76,9 @@ export function PayScreen({ slug }: { slug: string }) {
   }, [client, payment.data, t]);
 
   // On phones the saved visit takes a moment to load; don't flash "nothing to pay" meanwhile.
-  if (!hydrated) return <LoadingState />;
+  if (!hydrated || venue.isLoading) return <LoadingState />;
+  // No Paystack connected: this venue takes payment in person, so an old Pay link lands on the order.
+  if (venue.data && !canPayOnline(venue.data)) return <Redirect href={`/${slug}/status`} />;
   if (!orderId) {
     return (
       <SafeScreen>
@@ -325,9 +329,11 @@ export function PayScreen({ slug }: { slug: string }) {
                 );
               }}
             />
-            <Text variant="caption" style={[styles.center, { color: theme.meta }]}>
-              {t('pay.test')}
-            </Text>
+            {venue.data?.payMethods?.testMode ? (
+              <Text variant="caption" style={[styles.center, { color: theme.meta }]}>
+                {t('pay.test')}
+              </Text>
+            ) : null}
           </>
         ) : null}
       </ScrollView>

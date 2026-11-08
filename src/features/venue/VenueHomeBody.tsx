@@ -7,6 +7,7 @@ import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { VenueImage } from '@/ui/VenueImage';
 import { fontFamily, useTheme } from '@/ui/theme';
+import { canPayOnline } from '@/lib/payments';
 import { ServiceGrid } from './ServiceGrid';
 import { VenueIntro } from './VenueIntro';
 
@@ -139,7 +140,12 @@ export function VenueHomeBody({
         <VenueIntro venue={venue} />
       </View>
       {children}
-      <ServiceGrid slug={venue.slug} services={venue.services} onOpen={onOpen} />
+      <ServiceGrid
+        slug={venue.slug}
+        services={venue.services}
+        payOnline={canPayOnline(venue)}
+        onOpen={onOpen}
+      />
       <View style={styles.powered}>
         <Text variant="caption" style={{ color: theme.meta }}>
           {t('home.powered')}

@@ -608,6 +608,11 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
         const quote = world.quotes.get(body.quoteId);
         if (!quote || quote.expiresAt < now())
           throw new ApiError(409, 'quote_expired', 'That bill changed. Ask for a new total.');
+        // Online payment goes through the venue's own Paystack, so no keys means no online pay.
+        const paystack =
+          world.paymentSettings[findOrder(world, quote.orderId).order.venueId]?.paystack ?? null;
+        if (!paystack)
+          throw new ApiError(409, 'online_pay_off', 'This venue takes payment in person.');
         const reference = nextId(world, 'pay');
         const createdAt = new Date(now()).toISOString();
         const payment: Payment = {
@@ -627,7 +632,7 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
           approveBy: body.method === 'momo' ? new Date(now() + 180_000).toISOString() : null,
           createdAt,
           paidAt: null,
-          testMode: true,
+          testMode: paystack.mode === 'test',
         };
         world.payments.set(reference, { payment, phone: body.momo?.phone ?? '', applied: false });
         return payment;

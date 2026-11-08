@@ -4,10 +4,10 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { ClipboardList } from 'lucide-react-native';
 import { api } from '@/lib/api';
-import { PAYMENTS_ENABLED } from '@/lib/features';
 import { useGuestSession } from '@/features/session';
 import { useVenue } from '@/features/venue';
 import { DEFAULT_CURRENCY } from '@/lib/money';
+import { canPayOnline } from '@/lib/payments';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
 import { PageHeader } from '@/ui/PageHeader';
@@ -60,6 +60,9 @@ export function StatusScreen({ slug }: { slug: string }) {
   const o = order.data;
   const unpaid = o.paymentStatus === 'unpaid' || o.paymentStatus === 'part_paid';
   const fromLink = o.source === 'pickup' || o.source === 'delivery';
+  const payOnline = canPayOnline(venue.data);
+  // Staff can mark an order paid at any venue, so a paid order says so even without online pay.
+  const showPaid = payOnline || o.paymentStatus !== 'unpaid';
   const card = [styles.card, { backgroundColor: theme.surface }];
 
   return (
@@ -125,7 +128,7 @@ export function StatusScreen({ slug }: { slug: string }) {
             </Text>
             <PriceText amount={o.totalPesewas} currency={currency} size="title" />
           </View>
-          {PAYMENTS_ENABLED ? (
+          {showPaid ? (
             <Text variant="caption" style={{ color: unpaid ? theme.muted : theme.success }}>
               {t(`status.paid.${o.paymentStatus}`)}
             </Text>
@@ -141,7 +144,8 @@ export function StatusScreen({ slug }: { slug: string }) {
         </View>
 
         <View style={styles.actions}>
-          {PAYMENTS_ENABLED && unpaid ? (
+          {/* In-app Pay is for a table's bill; pickup and delivery pay on collection. */}
+          {payOnline && unpaid && !fromLink ? (
             <Button label={t('status.pay')} onPress={() => router.push(`/${slug}/pay`)} />
           ) : null}
           <View style={styles.pair}>
