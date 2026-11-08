@@ -978,18 +978,18 @@ Put a dish on sale, create an order for it, then open Sales. Discounts given goe
 
 **Settings → Integrations** now has two parts.
 
-- **Paystack (card and MoMo):** steps for finding your keys in the Paystack dashboard, a Test/Live choice (Live stays off for now), and boxes for your public and secret key. When you connect, Ozaa checks the keys. After that you only ever see the last 4 characters of the secret key. **Test connection** checks the keys still work, and **Disconnect** removes them.
+- **Paystack (card and MoMo):** steps for finding your keys in the Paystack dashboard, a Test/Live choice (Live stays off for now), and boxes for your public and secret key. When you connect, Cravins checks the keys. After that you only ever see the last 4 characters of the secret key. **Test connection** checks the keys still work, and **Disconnect** removes them.
 - **Pay in person:** switches for cash, card machine, bank transfer and MoMo to your own number, with the details guests need.
 
 **How it works**
 
 ```
-you type the secret key → it goes once to Ozaa's server → stored encrypted (server, later)
+you type the secret key → it goes once to Cravins's server → stored encrypted (server, later)
 the app gets back only: mode, public key, "••••9876", the date
 guests get only: can I pay online? test mode? cash? MoMo number?
 ```
 
-Money goes straight from the guest to **your** Paystack account. Ozaa never holds it.
+Money goes straight from the guest to **your** Paystack account. Cravins never holds it.
 
 **Files to look at**
 
