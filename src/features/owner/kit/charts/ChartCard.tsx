@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
+import { cardStyle } from '../cardStyle';
 
 export type TableRow = { label: string; value: string };
 
@@ -34,10 +35,10 @@ export function ChartCard({
   const [table, setTable] = useState(false);
   const hasData = !empty;
   return (
-    <View style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.line }]}>
+    <View style={[styles.card, cardStyle(theme)]}>
       <View style={styles.head}>
         <View style={styles.flex}>
-          <Text variant="body-strong" accessibilityRole="header" style={{ color: theme.muted }}>
+          <Text variant="title" accessibilityRole="header">
             {title}
           </Text>
           {figure ? (
@@ -106,13 +107,7 @@ export function ChartCard({
 }
 
 const styles = StyleSheet.create({
-  card: {
-    gap: tokens.space[4],
-    padding: tokens.space[4],
-    boxShadow: tokens.shadow.card,
-    borderRadius: tokens.radius.lg,
-    borderCurve: 'continuous',
-  },
+  card: { gap: tokens.space[4], padding: tokens.space[5] },
   head: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.space[3] },
   flex: { flex: 1 },
   figure: { fontVariant: ['tabular-nums'], marginTop: 2 },

@@ -1,27 +1,29 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { BellOff } from 'lucide-react-native';
+import { BellOff, BellRing, Footprints, Timer } from 'lucide-react-native';
 import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
+import { useOwnerLayout } from '../../chrome/layout';
 import { averageResponseMinutes } from '../../desk/ops';
-import { DeskTabs, EmptyCard } from '../../kit';
-import { SummaryStrip } from '../../kit/SummaryStrip';
-import { CallCard } from './CallCard';
+import { DeskTabs, EmptyCard, MetricStrip } from '../../kit';
+import { CallRow } from './CallRow';
 import { useWaiterCalls } from './useWaiterCalls';
 
 type Tab = 'active' | 'history';
 
 // Waits only need to move once every half minute.
 const TICK_MS = 30_000;
+// Past this text size three numbers no longer fit side by side on a phone, so they stack.
+const STACK_AT = 1.3;
 
 /** Guests asking for a waiter. "On my way" tells the guest someone is coming; "Done" closes the call. */
 export function CallsScreen() {
   const { t } = useTranslation();
-  const { width } = useWindowDimensions();
-  const twoUp = width >= 880;
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
+  const { wide } = useOwnerLayout();
+  const { fontScale } = useWindowDimensions();
   const [tab, setTab] = useState<Tab>('active');
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -38,18 +40,29 @@ export function CallsScreen() {
   const avg = averageResponseMinutes(all);
 
   return (
-    <OwnerPage title={t('owner.calls')}>
-      <SummaryStrip
-        items={[
+    <OwnerPage title={t('owner.calls')} width="wide">
+      <MetricStrip
+        columns={wide || fontScale <= STACK_AT ? 3 : 1}
+        metrics={[
           {
+            key: 'waiting',
             label: t('ownerCalls.status.open'),
             value: String(waiting),
-            tone: waiting > 0 ? 'alert' : undefined,
+            icon: BellRing,
+            alert: waiting > 0,
+            note: waiting > 0 ? t('ownerCalls.answerSoon') : undefined,
           },
-          { label: t('ownerCalls.status.acknowledged'), value: String(active.length - waiting) },
           {
+            key: 'coming',
+            label: t('ownerCalls.status.acknowledged'),
+            value: String(active.length - waiting),
+            icon: Footprints,
+          },
+          {
+            key: 'avg',
             label: t('ownerCalls.avgShort'),
             value: avg == null ? '–' : t('ownerCalls.minutes', { count: avg }),
+            icon: Timer,
           },
         ]}
       />
@@ -73,17 +86,16 @@ export function CallsScreen() {
             description={t('ownerCalls.emptyBody')}
           />
         ) : (
-          <View style={[styles.list, twoUp && styles.grid]}>
+          <View style={styles.list}>
             {shown.map((call) => (
-              <View key={call.id} style={twoUp ? styles.cell : undefined}>
-                <CallCard
-                  call={call}
-                  now={now}
-                  busy={update.isPending && update.variables?.id === call.id}
-                  onAcknowledge={() => update.mutate({ id: call.id, status: 'acknowledged' })}
-                  onResolve={() => update.mutate({ id: call.id, status: 'resolved' })}
-                />
-              </View>
+              <CallRow
+                key={call.id}
+                call={call}
+                now={now}
+                busy={update.isPending && update.variables?.id === call.id}
+                onAcknowledge={() => update.mutate({ id: call.id, status: 'acknowledged' })}
+                onResolve={() => update.mutate({ id: call.id, status: 'resolved' })}
+              />
             ))}
           </View>
         )}
@@ -92,8 +104,4 @@ export function CallsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  list: { gap: tokens.space[3] },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start' },
-  cell: { flexBasis: '48.5%', flexGrow: 1 },
-});
+const styles = StyleSheet.create({ list: { gap: tokens.space[2] } });

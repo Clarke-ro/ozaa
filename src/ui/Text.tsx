@@ -1,8 +1,8 @@
 import { StyleSheet, Text as NativeText, type TextProps, type TextStyle } from 'react-native';
 import { tokens } from '@/theme/tokens';
-import { useTheme } from './theme';
+import { useTheme, type TextVariant } from './theme';
 
-type Variant = 'display-l' | 'display-m' | 'title' | 'body' | 'body-strong' | 'caption' | 'button';
+type Variant = TextVariant;
 
 const VARIANT: Record<Variant, TextStyle> = {
   'display-l': {
@@ -42,11 +42,14 @@ export function Text({
   const flat = StyleSheet.flatten(style) ?? {};
   const asked = display ? null : weightFamily(flat.fontWeight);
   const { fontWeight: _dropped, ...own } = flat;
+  // A theme can carry its own scale (the owner app does); otherwise the brand scale applies.
+  const scale = theme.type?.[variant];
   return (
     <NativeText
       {...rest}
       style={[
         VARIANT[variant],
+        scale && { fontSize: scale.size, lineHeight: scale.line },
         {
           color: theme.text,
           fontFamily: display ? theme.displayFont : (asked ?? (strong ? 'Inter_600' : 'Inter_400')),

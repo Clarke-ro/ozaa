@@ -29,7 +29,7 @@ export function PlanBadge() {
         maxFontSizeMultiplier={1.4}
         style={[styles.label, { color: theme.text }]}
       >
-        {plan.name}
+        {plan.name.toUpperCase()}
       </Text>
     </View>
   );
@@ -42,5 +42,10 @@ const styles = StyleSheet.create({
     borderRadius: tokens.radius.sm,
     borderWidth: StyleSheet.hairlineWidth,
   },
-  label: { fontFamily: 'Inter_600', fontSize: 12, lineHeight: 16 },
+  label: {
+    fontFamily: 'Inter_600',
+    fontSize: tokens.owner.micro.size,
+    lineHeight: tokens.owner.micro.line,
+    letterSpacing: 0.3,
+  },
 });

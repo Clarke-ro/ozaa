@@ -64,10 +64,10 @@ export function StatTile({
   const look = [
     styles.tile,
     {
+      // Flat card with a thin border; an alert gets a red edge so it still stands out.
       borderColor: alert ? theme.error : theme.line,
-      borderWidth: alert ? 1.5 : 1,
+      borderWidth: alert ? 1.5 : StyleSheet.hairlineWidth,
       backgroundColor: theme.surface,
-      boxShadow: tokens.shadow.card,
     },
   ];
   if (!onPress) return <View style={look}>{body}</View>;

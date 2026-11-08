@@ -1,63 +1,109 @@
 import { useState } from 'react';
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { MenuCategory } from '@/lib/api/types';
 import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
-import { ConfirmDialog, SectionLabel } from '../../kit';
+import { Text } from '@/ui/Text';
+import { useTheme } from '@/ui/theme';
+import { useOwnerLayout } from '../../chrome/layout';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
+import { ConfirmDialog, SectionLabel } from '../../kit';
+import { DragList } from '../../kit/DragList';
+import { AddDashed } from './AddDashed';
+import { CategoryRow } from './CategoryRow';
+import { LiveMenuCard } from './LiveMenuCard';
 import { SectionEditor } from './SectionEditor';
-import { SectionsList } from './SectionsList';
 import { useMenuDesk } from './useMenuDesk';
 
 const KINDS = ['food', 'drinks'] as const;
 type Kind = (typeof KINDS)[number];
+// Every card is one height, so DragList can map a drag distance to a position.
+const ROW = tokens.space[16] + tokens.space[1];
+const RAIL = tokens.space[16] * 4 + tokens.space[6];
 
-/** Menu sections on their own page: food and drinks, in guest order, with add, edit, move and delete. */
+/**
+ * Menu sections, food then drinks, each as a white card in guest order: the name and its dish
+ * count, the ⋮ menu (edit, move, delete) and a handle to drag it. A dashed box at the end of
+ * each list adds a section. Wide screens show the live menu card on the right.
+ */
 export function CategoriesScreen() {
   const { t } = useTranslation();
-  const { width } = useWindowDimensions();
-  const twoCol = width >= 900;
+  const theme = useTheme();
+  const { wide } = useOwnerLayout();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const desk = useMenuDesk(venueId);
+  // undefined = closed; null = a new section of `newKind`.
   const [editing, setEditing] = useState<MenuCategory | null | undefined>(undefined);
   const [newKind, setNewKind] = useState<Kind>('food');
   const [deleting, setDeleting] = useState<MenuCategory | null>(null);
 
   const items = desk.menu.data?.items ?? [];
   const dishCount = (id: string) => items.filter((item) => item.categoryId === id).length;
+  const slug = desk.venue.data?.slug;
+
+  const lists = KINDS.map((kind) => {
+    const sections = desk.sectionsOf(kind);
+    return (
+      <View key={kind} style={styles.group}>
+        <SectionLabel title={t(`ownerMenu.${kind}`)} caps />
+        {sections.length > 0 ? (
+          <DragList
+            items={sections.map((s) => ({ key: s.id, label: s.name.en, section: s }))}
+            rowHeight={ROW}
+            handle="move"
+            onOrder={(orderedIds) => desk.reorderSections.mutate({ kind, orderedIds })}
+            renderRow={({ section }, index) => (
+              <CategoryRow
+                section={section}
+                count={dishCount(section.id)}
+                first={index === 0}
+                last={index === sections.length - 1}
+                busy={desk.move.isPending || desk.reorderSections.isPending}
+                onMove={(direction) => desk.move.mutate({ id: section.id, direction, kind })}
+                onEdit={() => setEditing(section)}
+                onDelete={() => setDeleting(section)}
+              />
+            )}
+          />
+        ) : null}
+        <Text variant="caption" style={[styles.count, { color: theme.muted }]}>
+          {t('ownerMenu.sectionCount', { count: sections.length })}
+        </Text>
+        <AddDashed
+          label={t(kind === 'food' ? 'ownerMenu.addFoodSection' : 'ownerMenu.addDrinksSection')}
+          onPress={() => {
+            setNewKind(kind);
+            setEditing(null);
+          }}
+        />
+      </View>
+    );
+  });
 
   return (
-    <OwnerPage title={t('owner.categories')}>
+    <OwnerPage title={t('owner.categories')} subtitle={t('ownerMenu.categoriesLead')}>
       <DeskWait
         loading={desk.menu.isLoading || desk.venue.isLoading}
         error={desk.menu.isError || desk.venue.isError}
         onRetry={() => void desk.menu.refetch()}
       >
-        <View style={[styles.stack, twoCol && styles.split]}>
-          {KINDS.map((kind) => {
-            const sections = desk.sectionsOf(kind);
-            return (
-              <View key={kind} style={[styles.group, twoCol && styles.col]}>
-                <SectionLabel title={t(`ownerMenu.${kind}`)} caps />
-                <SectionsList
-                  sections={sections}
-                  counts={Object.fromEntries(sections.map((s) => [s.id, dishCount(s.id)]))}
-                  busy={desk.move.isPending}
-                  onMove={(id, direction) => desk.move.mutate({ id, direction, kind })}
-                  onEdit={setEditing}
-                  onDelete={setDeleting}
-                  onAdd={() => {
-                    setNewKind(kind);
-                    setEditing(null);
-                  }}
-                />
-              </View>
-            );
-          })}
+        <View style={wide ? styles.split : undefined}>
+          <View style={[styles.main, wide && styles.mainWide]}>
+            {lists}
+            <Text variant="caption" style={{ color: theme.muted }}>
+              {t('ownerMenu.dragHint')}
+            </Text>
+          </View>
+          {wide && slug ? (
+            <View style={styles.rail}>
+              <LiveMenuCard slug={slug} />
+            </View>
+          ) : null}
         </View>
       </DeskWait>
 
+      {/* Keyed per section so the form starts fresh and a background refresh never wipes typing. */}
       {editing !== undefined ? (
         <SectionEditor
           key={editing?.id ?? `new-${newKind}`}
@@ -95,8 +141,10 @@ export function CategoriesScreen() {
 }
 
 const styles = StyleSheet.create({
-  stack: { gap: tokens.space[5] },
-  split: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.space[5] },
-  col: { flex: 1, minWidth: 0 },
-  group: { gap: tokens.space[2] },
+  split: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.space[6] },
+  main: { gap: tokens.space[6] },
+  mainWide: { flex: 1, minWidth: 0 },
+  group: { gap: tokens.space[3] },
+  count: { alignSelf: 'flex-end' },
+  rail: { width: RAIL },
 });

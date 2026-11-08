@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useTranslation } from 'react-i18next';
@@ -9,18 +9,16 @@ import { tokens } from '@/theme/tokens';
 import { useTheme } from '@/ui/theme';
 import { useOwnerSession } from '@/features/session';
 import { EmptyCard, ToastHost } from '../kit';
-import { NavRow, useGoTo } from './NavRow';
 import { useArrivalChime } from '../data/useArrivalChime';
+import { useOwnerLayout } from './layout';
+import { NavRow, useGoTo } from './NavRow';
 import { Sidebar } from './Sidebar';
 import { canOpen, isCurrent, tabsFor } from './nav';
+import { useNavCounts } from './useNavCounts';
 
-// Below this width the sidebar would squeeze the page, so phones and small tablets get a tab bar.
-const WIDE = 840;
-const TAB_BAR_HEIGHT = 56;
-
+/** Wide screens get the sidebar; phones and small tablets get a tab bar so the page keeps its width. */
 export function OwnerChrome({ children }: { children: ReactNode }) {
-  const { width } = useWindowDimensions();
-  const wide = width >= WIDE;
+  const { wide } = useOwnerLayout();
   const insets = useSafeAreaInsets();
   const theme = useTheme();
   const role = useOwnerSession((state) => state.role) ?? 'waiter';
@@ -28,7 +26,7 @@ export function OwnerChrome({ children }: { children: ReactNode }) {
   useArrivalChime();
   const tabBarSpace = wide
     ? tokens.space[6]
-    : TAB_BAR_HEIGHT + Math.max(insets.bottom, tokens.space[2]) + tokens.space[3];
+    : tokens.owner.tabBar + Math.max(insets.bottom, tokens.space[2]) + tokens.space[3];
 
   return (
     <View
@@ -49,6 +47,7 @@ function TabBar() {
   const insets = useSafeAreaInsets();
   const role = useOwnerSession((state) => state.role) ?? 'waiter';
   const path = usePathname();
+  const counts = useNavCounts();
   return (
     <View
       accessibilityRole="tablist"
@@ -68,6 +67,7 @@ function TabBar() {
           href={item.href}
           current={isCurrent(path, item.href)}
           label={t(`owner.${item.id}`)}
+          count={counts[item.id]}
           compact
         />
       ))}
@@ -101,16 +101,6 @@ function Blocked() {
 const styles = StyleSheet.create({
   shell: { flex: 1 },
   main: { flex: 1 },
-  top: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: tokens.space[3],
-    paddingHorizontal: tokens.space[4],
-    paddingBottom: tokens.space[2],
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  word: { fontSize: 20, lineHeight: 26 },
   bar: {
     flexDirection: 'row',
     borderTopWidth: StyleSheet.hairlineWidth,

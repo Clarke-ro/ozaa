@@ -30,6 +30,7 @@ export function SidebarFooter({ collapsed }: { collapsed: boolean }) {
       />
       <FooterRow
         icon={UserRound}
+        initial={firstName ? firstName.charAt(0).toUpperCase() : undefined}
         label={firstName || t('ownerChrome.profile')}
         detail={t(`ownerSettings.roles.${role}`)}
         collapsed={collapsed}
@@ -58,12 +59,15 @@ export function SidebarFooter({ collapsed }: { collapsed: boolean }) {
 
 function FooterRow({
   icon: Icon,
+  initial,
   label,
   detail,
   collapsed,
   onPress,
 }: {
   icon: LucideIcon;
+  /** Shown in a round chip instead of the icon, for the signed-in person. */
+  initial?: string;
   label: string;
   detail?: string;
   collapsed: boolean;
@@ -75,12 +79,28 @@ function FooterRow({
       accessibilityRole="button"
       accessibilityLabel={detail ? `${label}, ${detail}` : label}
       onPress={onPress}
-      style={({ pressed }) => [styles.row, collapsed && styles.rail, pressed && { opacity: 0.7 }]}
+      style={({ pressed }) => [
+        styles.row,
+        collapsed && styles.rail,
+        pressed && { backgroundColor: theme.wash },
+      ]}
     >
-      <Icon size={20} color={theme.muted} />
+      {initial ? (
+        <View style={[styles.avatar, { backgroundColor: theme.tint }]}>
+          <Text variant="body-strong" style={{ color: theme.badgeInk }}>
+            {initial}
+          </Text>
+        </View>
+      ) : (
+        <Icon size={20} color={theme.muted} />
+      )}
       {collapsed ? null : (
         <View style={styles.text}>
-          <Text variant="body" numberOfLines={1} style={{ color: theme.text }}>
+          <Text
+            variant={initial ? 'body-strong' : 'body'}
+            numberOfLines={1}
+            style={[styles.label, { color: initial ? theme.text : theme.muted }]}
+          >
             {label}
           </Text>
           {detail ? (
@@ -94,6 +114,8 @@ function FooterRow({
   );
 }
 
+const AVATAR = tokens.space[8];
+
 const styles = StyleSheet.create({
   foot: {
     borderTopWidth: StyleSheet.hairlineWidth,
@@ -106,9 +128,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: tokens.space[3],
-    paddingHorizontal: tokens.space[2],
+    paddingHorizontal: tokens.space[3],
     borderRadius: tokens.radius.sm,
   },
   rail: { justifyContent: 'center', paddingHorizontal: 0 },
+  avatar: {
+    width: AVATAR,
+    height: AVATAR,
+    borderRadius: tokens.radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   text: { flex: 1 },
+  label: { fontSize: tokens.owner.type.nav.size, lineHeight: tokens.owner.type.nav.line },
 });

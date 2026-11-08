@@ -413,7 +413,6 @@
     "madeUp": "You made {{amount}} today, {{percent}}% more than last Saturday.",
     "madeDown": "You made {{amount}} today, {{percent}}% less than last Saturday.",
     "openTables": "Open tables",
-    "liveOrders": "Live orders",
     "waiterCalls": "Waiter calls",
     "rating": "Rating",
     "noRating": "No ratings yet",
@@ -693,20 +692,21 @@
     "save": "Save"
   },
   "ownerDash": {
-    "greeting": "Hello, {{name}}",
-    "salesToday": "Sales today",
-    "needsYou": "Needs you now",
-    "allClear": "Nothing needs you right now.",
-    "quick": {
-      "scan": "Scan card",
-      "tables": "QR codes",
-      "menu": "Edit menu",
-      "feedback": "Feedback"
+    "greet": {
+      "morning": "Good morning, {{name}}",
+      "afternoon": "Good afternoon, {{name}}",
+      "evening": "Good evening, {{name}}"
     },
-    "seeAll": "See all",
-    "noLiveOrders": "No open orders right now.",
-    "items_one": "{{count}} item",
-    "items_other": "{{count}} items",
+    "greetPlain": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "howToday": "Here's how {{venue}} is doing today",
+    "salesToday": "Sales today",
+    "viewSales": "View sales",
+    "viewOrders": "View orders",
+    "quickActions": "Quick actions",
     "trends": "Trends",
     "tiles": {
       "scans": "Table scans",
@@ -737,19 +737,11 @@
     },
     "callsA11y_one": "1 waiter call waiting",
     "callsA11y_other": "{{count}} waiter calls waiting",
-    "notes": {
-      "orders": "In the kitchen now",
-      "tables": "Seated now",
-      "callsWaiting": "Needs someone now",
-      "callsQuiet": "All quiet",
-      "ordersToday": "Since midnight",
-      "pendingWaiting": "Waiting for the kitchen",
-      "pendingClear": "Kitchen is up to date",
-      "visitors": "From scans and links"
-    },
     "setup": {
       "title": "Complete your setup",
-      "percent": "{{percent}}% done",
+      "badge": "{{percent}}%",
+      "done": "done",
+      "todo": "not done yet",
       "steps": {
         "details": "Add your description and location",
         "look": "Add your logo",
@@ -761,8 +753,9 @@
     },
     "stats": {
       "ordersToday": "Orders today",
-      "pending": "Pending",
-      "visitors": "Visitors today"
+      "pending": "Pending orders",
+      "visitors": "Visitors today",
+      "tables": "Tables seated"
     }
   },
   "ownerTables": {
@@ -862,6 +855,16 @@
     "deleteSection": "Delete {{name}}",
     "moveUp": "Move {{name}} up",
     "moveDown": "Move {{name}} down",
+    "categoriesLead": "Add, edit, hide and arrange the sections of your menu.",
+    "dragHint": "Drag a section by its handle to change the order. Hidden sections stay in the list, but guests don't see them.",
+    "sectionCount_one": "1 section",
+    "sectionCount_other": "{{count}} sections",
+    "addFoodSection": "Add a food section",
+    "addDrinksSection": "Add a drinks section",
+    "sectionActions": "More for {{name}}",
+    "edit": "Edit",
+    "moveUpShort": "Move up",
+    "moveDownShort": "Move down",
     "hidden": "Hidden",
     "dishCount_one": "1 dish",
     "dishCount_other": "{{count}} dishes",
@@ -1164,15 +1167,21 @@
   },
   "ownerFloor": {
     "table": "Table",
-    "tableCode": "Table {{code}}",
-    "selectTable": "Select a table to view its bill and actions.",
-    "guestRequested": "Requested: {{reason}}",
+    "tableName": "Table {{name}}",
+    "orderNumber": "Order #{{number}}",
+    "due": "Amount due",
+    "callNotice": "Guest call: {{reason}}",
+    "billHeading": "On the bill",
+    "qty_one": "{{count}}×",
+    "qty_other": "{{count}}×",
+    "noMatch": "No tables in this group right now.",
     "filter": {
-      "all": "All ({{count}})",
-      "calls": "Calls ({{count}})",
-      "paying": "Bill ({{count}})",
-      "active": "Occupied ({{count}})",
-      "free": "Free ({{count}})"
+      "label": "Show tables",
+      "all": "All",
+      "calls": "Calls",
+      "paying": "Bill",
+      "active": "Active",
+      "free": "Free"
     },
     "legend": {
       "free": "Free",
@@ -1326,12 +1335,17 @@
     "showChart": "Chart"
   },
   "ownerInsights": {
+    "lead": "Who visited, what sold and when it got busy.",
     "range": {
       "today": "Today",
-      "7d": "7 days",
-      "30d": "30 days",
-      "90d": "90 days"
+      "7d": "Last 7 days",
+      "30d": "Last 30 days",
+      "90d": "Last 90 days"
     },
+    "feedbackCount": "Feedback notes",
+    "dishHead": "Dish",
+    "soldHead": "Sold",
+    "salesHead": "Sales",
     "sales": "Sales",
     "topDishes": "Top dishes",
     "sold_one": "1 sold",
@@ -1396,7 +1410,8 @@
     "waitedHours": "{{count}} h",
     "justNow": "Just now",
     "waitedLabel": "Waiting {{count}} min",
-    "stage": "{{label}}, {{count}} orders",
+    "stage_one": "{{label}}, {{count}} order",
+    "stage_other": "{{label}}, {{count}} orders",
     "items_one": "{{count}} item",
     "items_other": "{{count}} items",
     "openCalls_one": "{{count}} table waiting for you",
@@ -1465,6 +1480,7 @@
     "avgA11y_one": "Average pick-up time 1 minute",
     "avgA11y_other": "Average pick-up time {{count}} minutes",
     "avgShort": "Avg pick-up",
+    "answerSoon": "Guests are waiting",
     "minutes_one": "1 min",
     "minutes_other": "{{count}} min",
     "waited_one": "waiting 1 min",
@@ -1797,6 +1813,7 @@
     "browse": "Browse the menu"
   },
   "ownerChrome": {
+    "brand": "Cravins",
     "collapse": "Collapse sidebar",
     "expand": "Expand sidebar",
     "help": "Help",
@@ -1953,6 +1970,8 @@
     "orders_one": "{{count}} order",
     "orders_other": "{{count}} orders",
     "topItems": "Top dishes",
+    "dishHead": "Dish",
+    "valueHead": "Order value",
     "empty": "No orders in these dates yet.",
     "paid": "How it was paid",
     "paidOnline": "Paid online",

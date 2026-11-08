@@ -183,9 +183,13 @@ export function isCurrent(pathname: string, href: string): boolean {
   return matches(pathname, href);
 }
 
+// Pages every signed-in person may open: the More list and the Help page.
+const OPEN_TO_ALL = ['/owner/more', '/owner/help'];
+
 export function canOpen(role: StaffRole, pathname: string): boolean {
-  if (pathname === '/owner/more') return true;
+  if (OPEN_TO_ALL.includes(pathname)) return true;
   const item = OWNER_NAV.find((entry) => matches(pathname, entry.href));
-  if (!item) return true;
+  // A page missing from OWNER_NAV stays closed until someone decides who may see it.
+  if (!item) return false;
   return item.roles.includes(role);
 }

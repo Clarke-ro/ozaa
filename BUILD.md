@@ -2,6 +2,8 @@
 
 This is the master document for the coding agent. Read it all once, then follow the checklist in section 13. If something here conflicts with a render in `design/renders/`, the render wins for layout and this file wins for rules. Section 17 lists what to ask Clarke.
 
+**Owner app layout (Clarke, 2026-11-07):** the owner app follows the MenuRite dashboard's layout with Cravins's colours, type, icons and words (`design/reference/menurite-comparison.md`). For owner screens, that layout plus Clarke's written approval of the screenshots replaces the owner renders in `design/renders/`. Guest screens still match their renders.
+
 Contents:
 
 1. What Cravins is

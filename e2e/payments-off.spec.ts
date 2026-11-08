@@ -71,9 +71,7 @@ async function signInAsOwner(page: Page) {
 test('owner: orders, floor, calls and insights work with no payment cards', async ({ page }) => {
   const errors = watchErrors(page);
   await signInAsOwner(page);
-  await expect(page.getByText('Live orders').first()).toBeVisible({ timeout: 15_000 });
-  // The seeded water call on table 4 reaches "Needs you" with no payment feed behind it.
-  await expect(page.getByText('Table 4: Water').first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText('Pending orders').first()).toBeVisible({ timeout: 15_000 });
   await noPayWords(page);
   await page.screenshot({ path: 'test-results/payments-off-owner-today.png' });
 
@@ -85,12 +83,15 @@ test('owner: orders, floor, calls and insights work with no payment cards', asyn
     .getByRole('button', { name: /^Floor/ })
     .first()
     .click();
-  await expect(page.getByText(/^Bill \(\d+\)$/)).toBeVisible({ timeout: 15_000 });
+  // The Bill chip carries its count, read out as "Bill, N".
+  await expect(page.getByRole('tab', { name: /^Bill, \d+$/ })).toBeVisible({ timeout: 15_000 });
   await noPayWords(page);
   await page.screenshot({ path: 'test-results/payments-off-owner-floor.png' });
 
   await page.getByRole('tab', { name: 'Orders', exact: true }).click();
   await expect(page.getByText(/^(Not paid|Part paid|Paid)$/)).toHaveCount(0);
+  // The seeded water call on table 4 shows on Orders with no payment feed behind it.
+  await expect(page.getByText('Water', { exact: true }).first()).toBeVisible({ timeout: 15_000 });
   await page.screenshot({ path: 'test-results/payments-off-owner-orders.png' });
 
   await page.getByRole('tab', { name: 'More', exact: true }).click();

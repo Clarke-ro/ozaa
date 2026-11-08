@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'rea
 import { tokens } from '@/theme/tokens';
 import { useTheme } from '@/ui/theme';
 
-/** The bordered white card every owner screen uses (render: owner-reviews, owner-dashboard). */
+/** The flat bordered card owner screens use for one item. For lists, prefer Panel with PanelRows. */
 export function DeskCard({
   children,
   onPress,
@@ -18,12 +18,12 @@ export function DeskCard({
   style?: StyleProp<ViewStyle>;
 }) {
   const theme = useTheme();
+  // Flat with a thin border. Selected and alert swap the border for a stronger coloured one.
+  const strong = tone === 'selected' || tone === 'alert';
   const look: ViewStyle = {
-    borderColor:
-      tone === 'selected' ? theme.fill : tone === 'alert' ? theme.error : theme.line,
-    borderWidth: tone === 'selected' || tone === 'alert' ? 1.5 : 1,
+    borderColor: tone === 'selected' ? theme.fill : tone === 'alert' ? theme.error : theme.line,
+    borderWidth: strong ? 1.5 : tone === 'wash' ? 0 : StyleSheet.hairlineWidth,
     backgroundColor: tone === 'wash' ? theme.wash : theme.surface,
-    boxShadow: tone === 'wash' ? undefined : tokens.shadow.card,
   };
   if (!onPress) return <View style={[styles.card, look, style]}>{children}</View>;
   return (

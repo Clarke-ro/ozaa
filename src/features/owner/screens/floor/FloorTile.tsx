@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Armchair, Bell, Receipt, Users, type LucideIcon } from 'lucide-react-native';
@@ -7,8 +8,7 @@ import { FLOOR_TONES, type FloorTone } from '@/theme/palette';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
-
-export type FloorStatus = 'free' | 'seated' | 'ordered' | 'waiting_to_pay' | 'needs_waiter';
+import type { FloorStatus } from '../../floor/floorStatus';
 
 // Four colour families: empty, occupied, paying, and calling for a waiter.
 export const TONE_OF: Record<FloorStatus, FloorTone> = {
@@ -34,6 +34,7 @@ export const STATUS_LABEL: Record<FloorStatus, string> = {
   needs_waiter: 'owner.needsWaiter',
 };
 
+/** One table on the floor: a flat tile with a coloured top strip, the code, an icon and a word. */
 export function FloorTile({
   code,
   label,
@@ -53,6 +54,7 @@ export function FloorTile({
 }) {
   const theme = useTheme();
   const { t } = useTranslation();
+  const [hovered, setHovered] = useState(false);
   const tone = TONE_OF[status];
   const look = FLOOR_TONES[theme.scheme][tone];
   const Icon = ICON[tone];
@@ -62,29 +64,29 @@ export function FloorTile({
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ selected }}
-      accessibilityLabel={[`${t('ownerFloor.table')} ${label ?? code}`, word, bill]
+      accessibilityLabel={[t('ownerFloor.tableName', { name: label ?? code }), word, bill]
         .filter(Boolean)
         .join(', ')}
       onPress={onPress}
+      onHoverIn={() => setHovered(true)}
+      onHoverOut={() => setHovered(false)}
       style={({ pressed }) => [
         styles.tile,
         {
-          backgroundColor: theme.surface,
-          // Clean white card; tables that need someone (calling, paying) keep a coloured edge.
-          borderColor: selected ? theme.text : look.edge,
-          borderWidth: selected ? 2 : tone === 'calling' || tone === 'paying' ? 1.5 : 0,
+          backgroundColor: pressed || hovered ? theme.wash : theme.surface,
+          borderColor: selected ? theme.text : theme.line,
         },
-        pressed && styles.pressed,
+        selected && styles.selected,
       ]}
     >
       {/* The status colour is a strip, not the whole tile: calm to scan, still quick to read. */}
       <View style={[styles.strip, { backgroundColor: look.edge }]} />
-      <Text variant="display-m" style={{ color: theme.text }}>
+      <Text variant="display-m" numberOfLines={1} style={{ color: theme.text }}>
         {code}
       </Text>
       <View>
         <View style={styles.state}>
-          <Icon size={14} color={look.ink} strokeWidth={2.4} />
+          <Icon size={16} color={look.ink} strokeWidth={2.4} />
           <Text variant="caption" numberOfLines={1} style={[styles.word, { color: look.ink }]}>
             {word}
           </Text>
@@ -92,7 +94,7 @@ export function FloorTile({
         <Text
           variant="caption"
           numberOfLines={1}
-          style={{ color: theme.muted, opacity: bill ? 1 : 0 }}
+          style={[styles.bill, { color: theme.muted, opacity: bill ? 1 : 0 }]}
         >
           {bill ?? ' '}
         </Text>
@@ -101,19 +103,31 @@ export function FloorTile({
   );
 }
 
+// Room for the code plus two caption lines (status, bill), so every tile in a row is the same
+// height whether or not it has a bill. Two touch targets plus a gap comes to 104 px.
+const TILE_MIN_HEIGHT = tokens.touchTarget * 2 + tokens.space[4];
+const SELECTED_BORDER = 2;
+
 const styles = StyleSheet.create({
   tile: {
-    minHeight: 104,
+    minHeight: TILE_MIN_HEIGHT,
     padding: tokens.space[3],
-    paddingTop: tokens.space[3] + 4,
-    borderRadius: tokens.radius.lg,
+    paddingTop: tokens.space[3] + tokens.owner.statusEdge,
+    borderRadius: tokens.radius.md,
     borderCurve: 'continuous',
+    borderWidth: StyleSheet.hairlineWidth,
     justifyContent: 'space-between',
     overflow: 'hidden',
-    boxShadow: tokens.shadow.card,
   },
-  strip: { position: 'absolute', top: 0, left: 0, right: 0, height: 4 },
-  pressed: { transform: [{ scale: 0.97 }] },
+  selected: { borderWidth: SELECTED_BORDER },
+  strip: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: tokens.owner.statusEdge,
+  },
   state: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[1] },
   word: { fontFamily: fontFamily.strong, flexShrink: 1 },
+  bill: { fontVariant: ['tabular-nums'] },
 });
