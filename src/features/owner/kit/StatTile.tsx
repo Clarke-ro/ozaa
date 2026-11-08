@@ -6,9 +6,7 @@ import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 
 /**
- * A metric card: label top left, icon in a circle top right, the number, and one short line under it.
- * `trend` colours that line and adds an arrow, so up and down never rest on colour alone.
- * Tapping opens the screen behind the number.
+ * A metric card: label top left, icon in a subtle badge top right, the number, and an optional short line under it.
  */
 export function StatTile({
   label,
@@ -36,12 +34,17 @@ export function StatTile({
   const body = (
     <>
       <View style={styles.head}>
-        <Text variant="body" style={[styles.label, { color: theme.muted }]} numberOfLines={2}>
+        <Text variant="caption" style={[styles.label, { color: theme.muted }]} numberOfLines={2}>
           {label}
         </Text>
         {Icon ? (
-          <View style={styles.icon}>
-            <Icon size={18} color={alert ? theme.error : theme.ink} />
+          <View
+            style={[
+              styles.icon,
+              { backgroundColor: alert ? theme.errorTint : theme.wash },
+            ]}
+          >
+            <Icon size={16} color={alert ? theme.error : theme.ink} />
           </View>
         ) : null}
       </View>
@@ -75,7 +78,7 @@ export function StatTile({
       onPress={onPress}
       style={({ pressed }) => [
         look,
-        pressed && { backgroundColor: theme.wash, transform: [{ scale: 0.98 }] },
+        pressed && { backgroundColor: theme.wash, transform: [{ scale: 0.99 }] },
       ]}
     >
       {body}
@@ -85,19 +88,19 @@ export function StatTile({
 
 const styles = StyleSheet.create({
   tile: {
-    gap: tokens.space[3],
+    gap: tokens.space[2],
     padding: tokens.space[4],
     borderRadius: tokens.radius.lg,
     borderCurve: 'continuous',
-    minHeight: 120,
+    minHeight: 100,
     justifyContent: 'space-between',
   },
-  head: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.space[2] },
-  label: { flex: 1 },
+  head: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
+  label: { flex: 1, fontFamily: 'Inter_500' },
   icon: {
     width: 32,
     height: 32,
-    borderRadius: 16,
+    borderRadius: tokens.radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },

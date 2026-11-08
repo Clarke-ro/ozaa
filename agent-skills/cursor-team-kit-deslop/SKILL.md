@@ -6,7 +6,7 @@ description: Remove AI-generated code slop and clean up code style
 Source: https://github.com/cursor/plugins/tree/main/cursor-team-kit/skills/deslop
 License: MIT (c) 2026 Cursor
 Commit: 4dd1d05
-Copied: 2026-10-31 for the Ozaa build kit. Text unchanged below this header.
+Copied: 2026-10-31 for the Cravins build kit. Text unchanged below this header.
 -->
 
 # Remove AI code slop

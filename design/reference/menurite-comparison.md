@@ -1,9 +1,9 @@
-# Owner app: MenuRite layout, Ozaa look
+# Owner app: MenuRite layout, Cravins look
 
 Clarke asked (2026-11-07) for the owner app to follow the layout of the MenuRite dashboard.
 Screenshots of their pages are in `shots/menurite/` (gitignored, never committed).
 
-We take their **layout and structure**. We keep Ozaa's colours, type, icons, copy and logo
+We take their **layout and structure**. We keep Cravins's colours, type, icons, copy and logo
 (`design/brand.md`). We copy none of their assets or wording.
 
 ## What their layout does
@@ -32,7 +32,7 @@ We take their **layout and structure**. We keep Ozaa's colours, type, icons, cop
 | Staff, Billing, settings | Staff, Payments, settings | Title and subtitle, one white card per section |
 | Menu (live preview + side panel) | Menu | Leave for later; it is a much bigger change |
 | (none) | Floor, Calls | Same page header and cards; table tiles stay |
-| Customers, Promos, Delivery | (none) | Not in Ozaa; not built |
+| Customers, Promos, Delivery | (none) | Not in Cravins; not built |
 
 ## Today, in their Home order
 
@@ -53,7 +53,7 @@ Items 4 and 5 are ours; MenuRite has nothing like them.
 1. **Sidebar colour.** Part 1 made the sidebar black. Theirs is light. Decided: switch to light.
 2. **Side-by-side cards.** Today had no two-column layouts. Their stats row and tile grid put
    cards side by side. Decided: allowed for the stats row and Quick actions only.
-3. **Button colour.** Their main buttons are black. Decided: Ozaa's one filled button per screen
+3. **Button colour.** Their main buttons are black. Decided: Cravins's one filled button per screen
    stays orange; black is used only for the Sales today card.
 4. **Renders.** Decided: for owner screens, MenuRite's layout plus Clarke's screenshot approval
    replaces `design/renders/`. Noted at the top of BUILD.md.

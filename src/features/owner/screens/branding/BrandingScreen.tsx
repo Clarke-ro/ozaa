@@ -19,7 +19,7 @@ import { menuStyleOf } from '@/lib/menuStyle';
 type Tab = 'look' | 'words' | 'buttons' | 'preview';
 
 // From this width the guest preview sits beside the editor, so it needs no tab of its own.
-const SIDE_BY_SIDE = 1000;
+const SIDE_BY_SIDE = 900;
 
 /**
  * How the guest page looks, one topic at a time: Look (photos, colour, font), Words, Buttons,
@@ -40,7 +40,7 @@ export function BrandingScreen() {
   const v = venue.data;
   const draft = useDraft({
     accent: v?.theme.accent ?? tokens.color.primary.hex,
-    font: (v?.theme.fontPair ?? 'ozaa') as FontPair,
+    font: (v?.theme.fontPair ?? 'cravins') as FontPair,
     name: v?.name ?? '',
     tagline: v?.tagline ?? '',
     description: v?.description?.en ?? '',

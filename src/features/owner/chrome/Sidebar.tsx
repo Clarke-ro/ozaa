@@ -8,7 +8,7 @@ import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
 import { useOwnerSession } from '@/features/session';
-import { OzaaMark } from '../kit/OzaaMark';
+import { CravinsMark } from '../kit/CravinsMark';
 import { LocationSwitcher } from './LocationSwitcher';
 import { NavRow } from './NavRow';
 import { PlanBadge } from './PlanBadge';
@@ -49,7 +49,7 @@ export function Sidebar() {
       <View style={[styles.head, collapsed && styles.headRail]}>
         {collapsed ? null : (
           <View style={styles.brand}>
-            <OzaaMark size={MARK} />
+            <CravinsMark size={MARK} />
             <Text variant="title" accessibilityRole="header" style={styles.word}>
               {t('ownerChrome.brand')}
             </Text>

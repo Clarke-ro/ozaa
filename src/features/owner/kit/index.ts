@@ -9,7 +9,7 @@ export { Field } from './Field';
 export { IconTile } from './IconTile';
 export { MetricStrip, type Metric } from './MetricStrip';
 export { ModalSheet } from './ModalSheet';
-export { OzaaMark } from './OzaaMark';
+export { CravinsMark } from './CravinsMark';
 export { Panel } from './Panel';
 export { PanelRow } from './PanelRow';
 export { SectionLabel } from './SectionLabel';

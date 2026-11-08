@@ -1,8 +1,8 @@
-# Ozaa
+# Cravins
 
-Ozaa is a QR code table app for restaurants in Ghana, starting in Accra. A guest scans the code on the table and gets that venue's page in the phone browser. They can read the menu, call the waiter, pay with MoMo or card, collect stamps, leave a review, and play a short game while the food is on the way.
+Cravins is a QR code table app for restaurants in Ghana, starting in Accra. A guest scans the code on the table and gets that venue's page in the phone browser. They can read the menu, call the waiter, pay with MoMo or card, collect stamps, leave a review, and play a short game while the food is on the way.
 
-The owner uses the same app to watch orders, switch services on and off, and moderate video reviews. Money is settled to the venue by Paystack. Ozaa does not hold it.
+The owner uses the same app to watch orders, switch services on and off, and moderate video reviews. Money is settled to the venue by Paystack. Cravins does not hold it.
 
 ## Where to start
 

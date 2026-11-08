@@ -3,7 +3,7 @@ import { deriveTheme, type DerivedTheme } from '@/features/theming';
 import { NEUTRALS, type Scheme } from '@/theme/palette';
 import { tokens } from '@/theme/tokens';
 
-export type FontPair = 'ozaa' | 'serif' | 'bold';
+export type FontPair = 'cravins' | 'serif' | 'bold';
 export type { Scheme };
 
 export type TextVariant =
@@ -52,14 +52,14 @@ export type Theme = {
 
 /** The heading font each font pair loads. Branding shows these as the choices. */
 export const DISPLAY: Record<FontPair, string> = {
-  ozaa: 'Unbounded_700',
+  cravins: 'Unbounded_700',
   serif: 'NotoSerif_700',
   bold: 'Montserrat_800',
 };
 
 export function themeFromAccent(
   accent: string | null | undefined,
-  fontPair: FontPair = 'ozaa',
+  fontPair: FontPair = 'cravins',
   scheme: Scheme = 'light',
 ): Theme {
   const derived = deriveTheme(accent);
@@ -95,11 +95,11 @@ export function themeFromAccent(
   };
 }
 
-export const ozaaTheme = themeFromAccent(null, 'ozaa');
-export const ozaaDarkTheme = themeFromAccent(null, 'ozaa', 'dark');
+export const cravinsTheme = themeFromAccent(null, 'cravins');
+export const cravinsDarkTheme = themeFromAccent(null, 'cravins', 'dark');
 
 /**
- * The owner app: same Ozaa colours, but pages sit on the canvas grey so white cards stand out.
+ * The owner app: same Cravins colours, but pages sit on the canvas grey so white cards stand out.
  * Its type follows the MenuRite dashboard (Clarke, 2026-11-07): Inter everywhere, numbers
  * included, on a smaller scale (tokens.owner.type). Guest pages keep a white background and
  * the brand scale (brand.md sections 2 and 3).
@@ -115,10 +115,10 @@ const OWNER_TYPE: TypeScale = {
   button: o.button,
 };
 const owner = { type: OWNER_TYPE, displayFont: 'Inter_600' };
-export const ozaaOwnerTheme: Theme = { ...ozaaTheme, ...owner, bg: NEUTRALS.light.canvas };
-export const ozaaOwnerDarkTheme: Theme = { ...ozaaDarkTheme, ...owner, bg: NEUTRALS.dark.canvas };
+export const cravinsOwnerTheme: Theme = { ...cravinsTheme, ...owner, bg: NEUTRALS.light.canvas };
+export const cravinsOwnerDarkTheme: Theme = { ...cravinsDarkTheme, ...owner, bg: NEUTRALS.dark.canvas };
 
-const ThemeContext = createContext<Theme>(ozaaTheme);
+const ThemeContext = createContext<Theme>(cravinsTheme);
 
 export function ThemeProvider({ theme, children }: { theme: Theme; children: ReactNode }) {
   return <ThemeContext.Provider value={theme}>{children}</ThemeContext.Provider>;

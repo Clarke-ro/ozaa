@@ -23,7 +23,7 @@ export function MenuStyleSection({
 }) {
   const { t } = useTranslation();
   return (
-    <Section title={t('ownerBranding.menuStyle.title')} note={t('ownerBranding.menuStyle.note')}>
+    <Section title={t('ownerBranding.menuStyle.title')}>
       <SectionBody>
         <View style={styles.stack}>
           <Text variant="body-strong">{t('ownerBranding.menuStyle.sort')}</Text>

@@ -16,7 +16,7 @@ export default function VenueLayout() {
   const slug = parsed.success ? parsed.data : '';
   const venue = useVenue(slug);
   const font = venue.data?.theme.fontPair;
-  const fontPair: FontPair = font === 'serif' || font === 'bold' || font === 'ozaa' ? font : 'ozaa';
+  const fontPair: FontPair = font === 'serif' || font === 'bold' || font === 'cravins' ? font : 'cravins';
   const phone = useColorScheme();
   // Light unless the venue chose dark, or chose auto and the guest's phone is dark.
   const scheme = guestScheme(menuStyleOf(venue.data?.menuStyle).colorScheme, phone);

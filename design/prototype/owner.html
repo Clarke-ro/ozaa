@@ -1,9 +1,9 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Ozaa for restaurants: video reviews</title>
+<title>Cravins for restaurants: video reviews</title>
 <link rel="stylesheet" href="base.css"><link rel="stylesheet" href="app.css">
 <style>
-/* Ozaa chrome: always Ozaa orange, never the venue colour */
+/* Cravins chrome: always Cravins orange, never the venue colour */
 :root{--accent:#D24000;--on-accent:#fff;--accent-ink:#D24000;--accent-tint:#FFF1EA;--badge-ink:#BA3800;--accent-pressed:#A33000;--display:Unbounded}
 .otop{position:absolute;top:0;left:0;right:0;height:112px;padding:54px 16px 0;background:#fff;display:flex;align-items:center;gap:10px;z-index:40}
 .otop b{font-size:17px;line-height:22px}.otop .meta{line-height:16px}
@@ -41,7 +41,7 @@
 <script>
 const v = VENUES.mamas, app = document.getElementById('app');
 document.getElementById('sb').innerHTML = statusBar(true);
-const head = (title, sub) => `<div class="otop"><img src="img/ozaa-icon-small.svg" width="32" height="32" alt="Ozaa"><div style="flex:1"><b>${title}</b><div class="meta">${sub}</div></div><span class="iconbtn" style="border:1px solid var(--g200)">${icon('settings', 20)}</span></div>`;
+const head = (title, sub) => `<div class="otop"><img src="img/cravins-icon-small.svg" width="32" height="32" alt="Cravins"><div style="flex:1"><b>${title}</b><div class="meta">${sub}</div></div><span class="iconbtn" style="border:1px solid var(--g200)">${icon('settings', 20)}</span></div>`;
 const nav = on => `<div class="nav">${[['home','Today'],['receipt','Orders'],['video','Reviews'],['book','Menu'],['settings','Settings']].map(([i,l]) => `<div class="${l === on ? 'on' : ''}">${icon(i, 22)}${l}</div>`).join('')}</div>`;
 const stars = n => `<span class="st2">${[0,1,2,3,4].map(i => icon('star', 13, 1.5, i < n ? '#111' : '#D4D4D8').replace('fill="none"', `fill="${i < n ? '#111' : '#D4D4D8'}"`)).join('')}</span>`;
 const PENDING = [
@@ -50,7 +50,7 @@ const PENDING = [
   { s: { name: 'Abena', stars: 3, poster: 'img/story-akua.jpg', quote: 'Food was good but we waited 40 minutes.' }, d: '0:27', when: 'Yesterday', dish: 'Waakye special', note: 'Mentions a long wait. Reply in private?' },
 ];
 function reviews() {
-  return head('Video reviews', `${v.name} · Ozaa for restaurants`) +
+  return head('Video reviews', `${v.name} · Cravins for restaurants`) +
   `<div class="otabs"><span class="on">To check<i>3</i></span><span>Featured · 5</span><span>Hidden · 1</span></div>
   <div class="screen" style="padding:160px 16px 100px">
   <p class="cap">Guests only appear here if they agreed to be featured. Featured videos show as story circles on your guest page.</p>

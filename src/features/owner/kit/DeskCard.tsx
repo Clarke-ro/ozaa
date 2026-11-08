@@ -44,5 +44,10 @@ export function DeskCard({
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: tokens.radius.lg, padding: tokens.space[4], gap: tokens.space[3] },
+  card: {
+    borderRadius: tokens.radius.lg,
+    borderCurve: 'continuous',
+    padding: tokens.space[4],
+    gap: tokens.space[3],
+  },
 });

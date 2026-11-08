@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { StyleSheet, TextInput, View, useWindowDimensions } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
@@ -11,6 +11,7 @@ import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
 import { useOwnerSession } from '@/features/session';
 import { OwnerPage, useGutter } from '../chrome/OwnerPage';
+import { DeskCard } from '../kit';
 import { ScanProblem, ScanResult } from './scan/ScanResult';
 import { ScanViewfinder } from './scan/ScanViewfinder';
 import { ownerKeys } from '../data/keys';
@@ -20,9 +21,10 @@ export function ScanStampScreen() {
   const { t } = useTranslation();
   const theme = useTheme();
   const gutter = useGutter();
+  const { width } = useWindowDimensions();
+  const wide = width >= 900;
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const client = useQueryClient();
-  // The owner's own target. Until it loads, the result card shows the count without "N more".
   const program = useQuery({
     queryKey: ownerKeys.loyalty(venueId),
     queryFn: () => api.ownerGetLoyalty(venueId),
@@ -58,49 +60,53 @@ export function ScanStampScreen() {
 
   return (
     <OwnerPage title={t('ownerScan.title')}>
-      <View style={styles.stack}>
-        <ScanViewfinder gutter={gutter} onScanned={send} />
+      <View style={[styles.stack, wide && styles.split]}>
+        <View style={wide ? styles.viewfinderCol : undefined}>
+          <ScanViewfinder gutter={gutter} onScanned={send} />
+        </View>
 
-        {result ? (
-          <ScanResult
-            result={result}
-            target={program.data?.stampsRequired}
-            busy={scan.isPending}
-            onRedeem={() => scanned && scan.mutate({ qr: scanned, action: 'redeem' })}
-            onClose={() => setResult(null)}
-          />
-        ) : null}
-        {problem ? <ScanProblem message={problem} onClose={() => setProblem(null)} /> : null}
+        <View style={[styles.sideCol, wide && styles.sideColWide]}>
+          <DeskCard style={styles.manualCard}>
+            <Text variant="caption" style={{ color: theme.meta, fontFamily: fontFamily.strong }}>
+              {t('ownerScan.typeCode')}
+            </Text>
+            <View style={styles.row}>
+              <TextInput
+                accessibilityLabel={t('ownerScan.codeLabel')}
+                autoCapitalize="characters"
+                autoCorrect={false}
+                returnKeyType="done"
+                value={code}
+                onChangeText={setCode}
+                onSubmitEditing={() => send(code)}
+                placeholder={t('ownerScan.codeHint')}
+                placeholderTextColor={theme.meta}
+                style={[
+                  styles.input,
+                  { borderColor: theme.line, color: theme.text, backgroundColor: theme.bg },
+                ]}
+              />
+              <Button
+                label={t('ownerScan.addStamp')}
+                tone="primary"
+                size="md"
+                onPress={() => send(code)}
+                loading={scan.isPending}
+                disabled={!code.trim()}
+              />
+            </View>
+          </DeskCard>
 
-        <View style={styles.manual}>
-          <Text variant="caption" style={{ color: theme.meta, fontFamily: fontFamily.strong }}>
-            {t('ownerScan.typeCode')}
-          </Text>
-          <View style={styles.row}>
-            <TextInput
-              accessibilityLabel={t('ownerScan.codeLabel')}
-              autoCapitalize="characters"
-              autoCorrect={false}
-              returnKeyType="done"
-              value={code}
-              onChangeText={setCode}
-              onSubmitEditing={() => send(code)}
-              placeholder={t('ownerScan.codeHint')}
-              placeholderTextColor={theme.meta}
-              style={[
-                styles.input,
-                { borderColor: theme.line, color: theme.text, backgroundColor: theme.surface },
-              ]}
+          {result ? (
+            <ScanResult
+              result={result}
+              target={program.data?.stampsRequired}
+              busy={scan.isPending}
+              onRedeem={() => scanned && scan.mutate({ qr: scanned, action: 'redeem' })}
+              onClose={() => setResult(null)}
             />
-            <Button
-              label={t('ownerScan.addStamp')}
-              tone="primary"
-              size="md"
-              onPress={() => send(code)}
-              loading={scan.isPending}
-              disabled={!code.trim()}
-            />
-          </View>
+          ) : null}
+          {problem ? <ScanProblem message={problem} onClose={() => setProblem(null)} /> : null}
         </View>
       </View>
     </OwnerPage>
@@ -109,12 +115,16 @@ export function ScanStampScreen() {
 
 const styles = StyleSheet.create({
   stack: { gap: tokens.space[5] },
-  manual: { gap: tokens.space[2] },
+  split: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.space[6] },
+  viewfinderCol: { flex: 1, minWidth: 0 },
+  sideCol: { gap: tokens.space[4] },
+  sideColWide: { width: 380 },
+  manualCard: { gap: tokens.space[3] },
   row: { flexDirection: 'row', gap: tokens.space[2] },
   input: {
     flex: 1,
     minHeight: tokens.touchTarget,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
     borderRadius: tokens.radius.md,
     paddingHorizontal: tokens.space[3],
     fontFamily: fontFamily.regular,

@@ -73,7 +73,7 @@ function lab(hex: string): [number, number, number] {
   return [116 * pivot(y) - 16, 500 * (pivot(x) - pivot(y)), 200 * (pivot(y) - pivot(z))];
 }
 
-/** CIE76 distance. Customise warns when this is under 20 from Ozaa orange. */
+/** CIE76 distance. Customise warns when this is under 20 from Cravins orange. */
 export function deltaE(left: string, right: string): number {
   const a = lab(left);
   const b = lab(right);

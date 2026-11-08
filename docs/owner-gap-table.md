@@ -1,7 +1,7 @@
 # Owner (Seller) Side & Web Landing Page — Phase 0 Audit & Gap Analysis
 
 **Date:** 2026-10-31  
-**Project:** Ozaa (QR Table App for Ghana)  
+**Project:** Cravins (QR Table App for Ghana)  
 **Author:** Pair programming with Clarke  
 **Status:** Phase 0 Complete — Under Review (No feature code implemented until approved)
 
@@ -11,7 +11,7 @@
 
 | Layer | Detected Technology & Version | Location / Configuration |
 |---|---|---|
-| **App Name** | **Ozaa** (Never TakeOrder or ScanChop) | `app.config.ts`, `package.json`, `design/brand.md` |
+| **App Name** | **Cravins** (Never TakeOrder or ScanChop) | `app.config.ts`, `package.json`, `design/brand.md` |
 | **Expo SDK** | **Expo SDK ~58.0.22** (React Native `0.88.1`, React `19.3.0`, New Architecture enabled) | `package.json`, `app.config.ts` |
 | **Router / Navigation** | **Expo Router ~58.0.29** (File-based routing in `src/app/`, single-page Metro web output) | `src/app/_layout.tsx`, `src/app/owner/_layout.tsx`, `src/features/owner/chrome/` |
 | **State Layer** | **Zustand ^5.0.16** (Client session, cart, active order), `@tanstack/react-query ^5.105.0` (Server cache) | `src/features/session/`, `src/features/cart/`, `src/lib/api/` |
@@ -21,7 +21,7 @@
 | **Storage** | Media uploads via presigned URLs (`/owner/venues/{venueId}/media`). Upload slots: banner, logo, dish photos. | `api/openapi.yaml`, `src/mocks/media.ts` |
 | **i18n** | `i18next ^24.2.2`, `react-i18next ^15.4.1`, `expo-localization ^17.0.7`. Locales: `en`, stubbed `tw`, `ga`, `ee`, `fr`. | `src/i18n/`, `src/i18n/locales/en.json` |
 | **Theme & Design Tokens** | Custom design system generated from `design/tokens.json`. Base: Black (`#111111`) & White (`#FFFFFF`). Brand Orange: `#FC5205` (large surfaces/logo), Deep Orange: `#D24000` (buttons/icons/links with text). Dynamic contrast engine (`deriveTheme.ts`). | `src/theme/tokens.ts`, `src/features/theming/deriveTheme.ts`, `src/ui/theme.tsx` |
-| **Component Library** | Custom UI library in `src/ui/` (`Button`, `Text`, `Screen`, `SafeScreen`, `VenueImage`) and shared owner desk kit in `src/features/owner/kit/` (`DeskCard`, `StatTile`, `BigStat`, `StatusPill`, `Toggle`, `DeskTabs`, `Field`, `CodeTile`, `IconTile`, `ChipRow`, `QuickAction`, `SectionLabel`, `OzaaMark`). | `src/ui/`, `src/features/owner/kit/` |
+| **Component Library** | Custom UI library in `src/ui/` (`Button`, `Text`, `Screen`, `SafeScreen`, `VenueImage`) and shared owner desk kit in `src/features/owner/kit/` (`DeskCard`, `StatTile`, `BigStat`, `StatusPill`, `Toggle`, `DeskTabs`, `Field`, `CodeTile`, `IconTile`, `ChipRow`, `QuickAction`, `SectionLabel`, `CravinsMark`). | `src/ui/`, `src/features/owner/kit/` |
 | **Landing Page Stack** | **Astro 5.16.8** (Static Site Generation), Tailwind CSS 4.1.18, Lucide React icons, Inter & Unbounded webfonts. | `landing/package.json`, `landing/astro.config.mjs`, `landing/src/` |
 
 ---
@@ -81,7 +81,7 @@ Status legend:
 
 | # | Feature | Screen / Route | Status | What Exists in Repo | What Is Needed | Required Data Changes | Effort |
 |---|---|---|:---:|---|---|---|:---:|
-| **1** | **Feedback Inbox** | `/owner/feedback`<br>`/owner/feedback/ai` | 🔴 Missing | Guest `POST /feedback` endpoint exists in API schema. | - Full inbox screen with On/Off switch for feedback box<br>- Dismissible 4-card setup checklist<br>- "Make things right" toggle (contact unhappy diners)<br>- Search, New / Archived tabs, item count<br>- Item card: sentiment chip, date, text, photo, contact, swipe/button to archive<br>- Anonymity visibility delay enforcement<br>- AI assistant screen ("Ask Ozaa") with 4 prompt chips and chat grounded on feedback | - Add `FeedbackItem` schema (`id`, `venueId`, `sentiment`, `score`, `text`, `photoUrl`, `contactPhone`, `archived`, `visibleAfter`, `createdAt`)<br>- Add endpoints `GET /owner/venues/{venueId}/feedback`, `PATCH .../archive`, `POST .../ask`<br>- Add fixtures and mock handlers in `src/mocks/` | **L** |
+| **1** | **Feedback Inbox** | `/owner/feedback`<br>`/owner/feedback/ai` | 🔴 Missing | Guest `POST /feedback` endpoint exists in API schema. | - Full inbox screen with On/Off switch for feedback box<br>- Dismissible 4-card setup checklist<br>- "Make things right" toggle (contact unhappy diners)<br>- Search, New / Archived tabs, item count<br>- Item card: sentiment chip, date, text, photo, contact, swipe/button to archive<br>- Anonymity visibility delay enforcement<br>- AI assistant screen ("Ask Cravins") with 4 prompt chips and chat grounded on feedback | - Add `FeedbackItem` schema (`id`, `venueId`, `sentiment`, `score`, `text`, `photoUrl`, `contactPhone`, `archived`, `visibleAfter`, `createdAt`)<br>- Add endpoints `GET /owner/venues/{venueId}/feedback`, `PATCH .../archive`, `POST .../ask`<br>- Add fixtures and mock handlers in `src/mocks/` | **L** |
 | **2** | **Venue Page Design** | `/owner/branding` | 🟡 Skeleton | `BrandingScreen.tsx` supports accent color presets + hex, venue name, description, banner & logo upload, and a live phone mockup. | - Fallback title logic (`title` falling back to business name)<br>- Tagline input<br>- Button tint radio: Auto / Light / Dark with WCAG AA validation<br>- 3–4 style presets with font/card preview samples<br>- Drag-to-reorder for landing page action buttons<br>- Responsive preview: bottom sheet on phone, side column on desktop<br>- QR preview code | - Add `tagline`, `buttonTint`, `stylePreset`, `buttonOrder` to `VenueTheme` / `VenueSettings`<br>- Add update endpoint support | **M** |
 | **3** | **Loyalty Hub & Operations** | `/owner/loyalty`<br>`/owner/loyalty/pass`<br>`/owner/loyalty/stamp-card`<br>`/owner/loyalty/customers`<br>`/owner/loyalty/analytics`<br>`/owner/loyalty/scan` | 🟡 Skeleton | `OwnerLoyalty.tsx` & `OwnerLoyaltySetup.tsx` have stamps vs points toggle and manual 6-character claim code entry. | - Hub screen to choose Rewards Pass vs Stamp Card (with irreversible stamp card warning confirm)<br>- Rewards Pass designer: colours, logo, lock-screen proximity message (≤60 chars), 4 automations (welcome, birthday, win-back, review ask)<br>- Stamp Card designer: reward name, stamps required (default 10), 2nd tier, cooldown (none, 1h, 4h, 1d), lockscreen message<br>- Loyalty analytics: 7/30/90d range, tappable KPI cards, 3 trend charts<br>- Customers desk: list sorted by last stamp, "wants offers" filter, CSV export, customer history modal, manual stamp/redeem<br>- Camera Scan & Stamp: live QR scanner with instant +1 stamp and cooldown enforcement | - Expand `LoyaltyProgram` in `openapi.yaml` with `cooldown`, `lockscreenMessage`, `automations`<br>- Add `customers` query with `wantsOffers` & `lastStampAt`<br>- Add `loyaltyAnalytics` endpoint / mock aggregation<br>- Implement cooldown validation rule in server/mock | **L** |
 | **4** | **Reviews & Social Links** | `/owner/reviews`<br>`/owner/socials` | 🟡 Skeleton | `ReviewsDeskScreen.tsx` handles video review moderation and written review replies. | - Google Review URL input with validation and "how to find" helper sheet<br>- Star rating gate: set min stars (e.g. 4–5★) to route to Google, lower to private feedback<br>- Social profiles manager: Instagram, Facebook, TikTok, TripAdvisor, WhatsApp, X, phone, email, website<br>- Toggle on/off and reorder per link<br>- Instant guest page reflection | - Add `socials` entity to `VenueSettings` (`googleReviewUrl`, `googleReviewMinStars`, `instagram`, `facebook`, `tiktok`, `tripadvisor`, `whatsapp`, etc.)<br>- Add update endpoints and fixture storage | **M** |
@@ -127,7 +127,7 @@ Status legend:
 ### C. Missing Routes / 404 Risks
 Currently, all `router.push` calls navigate to registered files in `src/app/owner/`. However, the following required target routes are currently **missing** (would 404 if linked):
 - `/owner/feedback` (Feedback inbox)
-- `/owner/feedback/ai` (Ask Ozaa feedback assistant)
+- `/owner/feedback/ai` (Ask Cravins feedback assistant)
 - `/owner/loyalty/pass` (Rewards pass editor)
 - `/owner/loyalty/stamp-card` (Stamp card setup)
 - `/owner/loyalty/customers` (Enrolled customer list)
@@ -180,7 +180,7 @@ Currently, `phoneNav()` in `nav.ts` renders:
 1. **Home / Analytics** (`/owner`): Sales KPIs, cards enrolled, active diners, scans/views, feedback sentiment summary chart, and quick operational alerts.
 2. **Menu** (`/owner/menu`): Full menu builder, category schedules, dish descriptions, photos, allergens, modifier groups, and 86 availability switches.
 3. **Loyalty** (`/owner/loyalty`): Hub (Rewards pass + Stamp card), enrolled customers list, analytics charts, and camera scan & stamp trigger.
-4. **Feedback** (`/owner/feedback`): Suggestion box inbox, sentiment chips, anonymity visibility delay, search, archive, and "Ask Ozaa" AI assistant.
+4. **Feedback** (`/owner/feedback`): Suggestion box inbox, sentiment chips, anonymity visibility delay, search, archive, and "Ask Cravins" AI assistant.
 5. **More** (`/owner/more`): Clean grouped hub containing:
    - **Live Floor Operations:** Live Floor Map (`/owner/floor`), Kitchen Orders (`/owner/orders`), Waiter Calls Queue (`/owner/calls`), Payments & Cashier (`/owner/payments`).
    - **Guest Page & Extras:** Venue Page Design (`/owner/branding`), Google Reviews & Socials (`/owner/socials`), Wi-Fi & Table Services (`/owner/services`), Custom Links (`/owner/links`), Table QR & Print Cards (`/owner/tables`).
@@ -188,7 +188,7 @@ Currently, `phoneNav()` in `nav.ts` renders:
 
 #### C. Wide Screen Desktop / Tablet Sidebar (≥840px)
 Organized into clear semantic sections:
-- **Header:** Ozaa Wordmark + Location Switcher
+- **Header:** Cravins Wordmark + Location Switcher
 - **MY VENUE PAGE:**
   - 🎨 Design & Branding (`/owner/branding`)
   - 🎁 Loyalty Program (`/owner/loyalty`)
@@ -252,7 +252,7 @@ All API changes will be backwards-compatible additions to `api/openapi.yaml`, fo
 
 ### Target Landing Page Section Order & Specifications
 Per the project requirements, the landing page will match this exact 13-section sequence:
-1. **Sticky Top Nav:** Brand logo ("Ozaa"), Links: Features, Pricing, FAQ, Sign In, Primary CTA ("Start free"). Mobile slide-out drawer.
+1. **Sticky Top Nav:** Brand logo ("Cravins"), Links: Features, Pricing, FAQ, Sign In, Primary CTA ("Start free"). Mobile slide-out drawer.
 2. **Hero Section:** One-line promise (independents turning walk-ins into regulars in Ghana), punchy subline, 2 CTAs ("Start free" + "Book demo"), and latest iPhone mockup displaying the table landing page.
 3. **Demo Video & 3 Check Bullets:** "Menus, rewards, Wi-Fi and feedback from one tap at the table" with interactive preview video frame and 3 bullet highlights (Instant photo menu, Apple/Google wallet rewards, Google reviews).
 4. **Interactive "Try It" Live Preview:** Diner can type their restaurant name or cuisine, choose a brand colour, and immediately preview their generated mobile table page.
@@ -290,7 +290,7 @@ Per instructions, **Phase 0 is complete with this audit**. No feature code will 
 
 | Reference Feature Domain | Phase 0 Status | Phase 10 Final Status | Implementation Files |
 |---|:---:|:---:|---|
-| **1. Feedback Inbox & AI** | 🔴 Missing | 🟢 **Complete** | `FeedbackInboxScreen.tsx`, `AskOzaaAiScreen.tsx`, `src/app/owner/feedback.tsx`, `src/app/owner/ai.tsx` |
+| **1. Feedback Inbox & AI** | 🔴 Missing | 🟢 **Complete** | `FeedbackInboxScreen.tsx`, `AskCravinsAiScreen.tsx`, `src/app/owner/feedback.tsx`, `src/app/owner/ai.tsx` |
 | **2. Venue Page Design** | 🟡 Skeleton | 🟢 **Complete** | `BrandingScreen.tsx`, `src/app/owner/branding.tsx` |
 | **3. Loyalty Hub & Scanner** | 🟡 Skeleton | 🟢 **Complete** | `LoyaltyHubScreen.tsx`, `LoyaltyCustomersScreen.tsx`, `LoyaltyAnalyticsScreen.tsx`, `ScanStampScreen.tsx`, `DevicesScreen.tsx`, `src/app/owner/loyalty.tsx`, `src/app/owner/scan.tsx`, `src/app/owner/devices.tsx` |
 | **4. Reviews & Socials** | 🟡 Skeleton | 🟢 **Complete** | `SocialsScreen.tsx`, `ReviewsDeskScreen.tsx`, `src/app/owner/socials.tsx`, `src/app/owner/reviews.tsx` |

@@ -7,7 +7,7 @@ import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
 import { useOwnerSession } from '@/features/session';
-import { OzaaMark } from '../kit/OzaaMark';
+import { CravinsMark } from '../kit/CravinsMark';
 import { isTabRoot } from './nav';
 import { NotificationBell } from './NotificationBell';
 import { PlanBadge } from './PlanBadge';
@@ -17,7 +17,7 @@ const MARK = tokens.space[6];
 const BACK = tokens.space[10];
 
 /**
- * Phones only: a slim bar above the page. Tab roots show the Ozaa mark and plan; detail screens
+ * Phones only: a slim bar above the page. Tab roots show the Cravins mark and plan; detail screens
  * show Back instead, so the way out is always in the same corner. The bell sits on the right.
  */
 export function PhoneBar({ bell }: { bell: boolean }) {
@@ -42,7 +42,7 @@ export function PhoneBar({ bell }: { bell: boolean }) {
     >
       {root ? (
         <View style={styles.brand}>
-          <OzaaMark size={MARK} />
+          <CravinsMark size={MARK} />
           <Text variant="body-strong" style={styles.word}>
             {t('ownerChrome.brand')}
           </Text>

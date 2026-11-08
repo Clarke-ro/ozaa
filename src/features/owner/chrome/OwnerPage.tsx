@@ -19,7 +19,7 @@ export function useGutter() {
  * Every owner screen sits in this. The page starts with its own header (a bold title, a grey
  * line under it, the screen's one action and the bell on the right), then the content, in one
  * centred column on the page colour. Wide screens have no bar above it; the sidebar does that
- * job. Phones get a slim bar with the Ozaa mark (or Back on detail screens) and the bell.
+ * job. Phones get a slim bar with the Cravins mark (or Back on detail screens) and the bell.
  * `width="form"` keeps settings and Today at a readable width; `wide` is for long lists.
  */
 export function OwnerPage({

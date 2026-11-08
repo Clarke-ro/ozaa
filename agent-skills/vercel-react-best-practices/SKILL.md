@@ -10,7 +10,7 @@ metadata:
 Source: https://github.com/vercel-labs/agent-skills/tree/main/skills/react-best-practices
 License: MIT (declared in the repo README License section and in SKILL.md frontmatter; no LICENSE file in repo)
 Commit: 1a2c79d
-Copied: 2026-10-31 for the Ozaa build kit. Text unchanged below this header.
+Copied: 2026-10-31 for the Cravins build kit. Text unchanged below this header.
 -->
 
 # Vercel React Best Practices

@@ -106,7 +106,7 @@ export function PaymentsScreen() {
               />
             </View>
             <Text variant="caption" style={{ color: theme.meta }}>
-              {t('ownerPayments.fee', { percent: p.ozaaFeePercent.toLocaleString(i18n.language) })}
+              {t('ownerPayments.fee', { percent: p.cravinsFeePercent.toLocaleString(i18n.language) })}
             </Text>
           </View>
         ) : null}
