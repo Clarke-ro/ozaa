@@ -21,7 +21,7 @@ interface ChatMessage {
   suggestions?: string[];
 }
 
-export function AskOzaaAiScreen({ venueId }: { venueId: string }) {
+export function AskCravinsAiScreen({ venueId }: { venueId: string }) {
   const styles = useStyles();
   const theme = useTheme();
   const { t } = useTranslation();

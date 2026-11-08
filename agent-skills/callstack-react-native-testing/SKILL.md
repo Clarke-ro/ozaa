@@ -13,7 +13,7 @@ description: >
 Source: https://github.com/callstackincubator/agent-skills/tree/main/plugins/vendored/.agents/skills/react-native-testing
 License: MIT (c) 2026 Callstack Incubator (vendored in that repo)
 Commit: 59e9d17
-Copied: 2026-10-31 for the Ozaa build kit. Text unchanged below this header.
+Copied: 2026-10-31 for the Cravins build kit. Text unchanged below this header.
 -->
 
 # RNTL Test Writing Guide

@@ -37,7 +37,7 @@ module.exports = defineConfig([
         'error',
         {
           selector: 'Literal[value=/TakeOrder|ScanChop/i]',
-          message: 'The product is called Ozaa.',
+          message: 'The product is called Cravins.',
         },
       ],
     },

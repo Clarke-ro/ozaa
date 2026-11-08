@@ -27,19 +27,19 @@ export function ScanViewfinder({
   const theme = useTheme();
   const { width } = useWindowDimensions();
   const [permission, requestPermission] = useCameraPermissions();
-  // Nearly edge to edge: the page gutter is the only side margin; the code field sits below.
-  const frameWidth = width - gutter * 2;
-  const frameHeight = frameWidth / RATIO;
-  const target = frameWidth * TARGET_SHARE;
   const web = Platform.OS === 'web';
   const live = !web && permission?.granted;
+  // Nearly edge to edge on phones; capped on desktop/web so it fits cleanly in a split column.
+  const frameWidth = Math.min(width - gutter * 2, 420);
+  const frameHeight = web ? 320 : frameWidth / RATIO;
+  const target = frameWidth * TARGET_SHARE;
 
   return (
     <View
       style={[
         styles.frame,
         {
-          width: frameWidth,
+          width: web ? '100%' : frameWidth,
           height: frameHeight,
           borderColor: theme.line,
           backgroundColor: live ? theme.black : theme.surface,

@@ -2,7 +2,7 @@ import { createContext, useContext, type ReactNode } from 'react';
 import { deriveTheme, type DerivedTheme } from '@/features/theming';
 import { NEUTRALS, type Scheme } from '@/theme/palette';
 
-export type FontPair = 'ozaa' | 'serif' | 'bold';
+export type FontPair = 'cravins' | 'serif' | 'bold';
 export type { Scheme };
 
 /**
@@ -43,14 +43,14 @@ export type Theme = {
 
 /** The heading font each font pair loads. Branding shows these as the choices. */
 export const DISPLAY: Record<FontPair, string> = {
-  ozaa: 'Unbounded_700',
+  cravins: 'Unbounded_700',
   serif: 'NotoSerif_700',
   bold: 'Montserrat_800',
 };
 
 export function themeFromAccent(
   accent: string | null | undefined,
-  fontPair: FontPair = 'ozaa',
+  fontPair: FontPair = 'cravins',
   scheme: Scheme = 'light',
 ): Theme {
   const derived = deriveTheme(accent);
@@ -86,17 +86,17 @@ export function themeFromAccent(
   };
 }
 
-export const ozaaTheme = themeFromAccent(null, 'ozaa');
-export const ozaaDarkTheme = themeFromAccent(null, 'ozaa', 'dark');
+export const cravinsTheme = themeFromAccent(null, 'cravins');
+export const cravinsDarkTheme = themeFromAccent(null, 'cravins', 'dark');
 
 /**
- * The owner app: same Ozaa colours, but pages sit on the canvas grey so white cards stand out.
+ * The owner app: same Cravins colours, but pages sit on the canvas grey so white cards stand out.
  * Guest pages keep a white background (brand.md section 2).
  */
-export const ozaaOwnerTheme: Theme = { ...ozaaTheme, bg: NEUTRALS.light.canvas };
-export const ozaaOwnerDarkTheme: Theme = { ...ozaaDarkTheme, bg: NEUTRALS.dark.canvas };
+export const cravinsOwnerTheme: Theme = { ...cravinsTheme, bg: NEUTRALS.light.canvas };
+export const cravinsOwnerDarkTheme: Theme = { ...cravinsDarkTheme, bg: NEUTRALS.dark.canvas };
 
-const ThemeContext = createContext<Theme>(ozaaTheme);
+const ThemeContext = createContext<Theme>(cravinsTheme);
 
 export function ThemeProvider({ theme, children }: { theme: Theme; children: ReactNode }) {
   return <ThemeContext.Provider value={theme}>{children}</ThemeContext.Provider>;

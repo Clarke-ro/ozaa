@@ -1,7 +1,7 @@
 {
   "landing": {
     "title": "Scan the code on your table",
-    "body": "Ozaa opens that restaurant's page in your browser. No app to install, and no account.",
+    "body": "Cravins opens that restaurant's page in your browser. No app to install, and no account.",
     "sample": "Open Mama's Kitchen",
     "owner": "I'm an owner"
   },
@@ -13,7 +13,7 @@
   "home": {
     "stories": "Guests are saying",
     "sample": "Sample videos",
-    "powered": "Powered by Ozaa",
+    "powered": "Powered by Cravins",
     "table": "Table {{code}}",
     "language": "English",
     "chooseLanguage": "Language",
@@ -292,7 +292,7 @@
     },
     "howToEarn": "How to earn",
     "earnStampVisit": "1 stamp per paid order",
-    "earnStampVisitSub": "Added automatically when you pay with Ozaa",
+    "earnStampVisitSub": "Added automatically when you pay with Cravins",
     "earnPointsSpend": "{{points}} pts per {{spend}}",
     "earnPointsSpendSub": "Added automatically from your paid bill",
     "earnGame": "Score {{score}}+ in Play while you wait",
@@ -511,7 +511,7 @@
     "marketNext2": "Keep that consent separate from joining the loyalty card.",
     "marketNext3": "WhatsApp and SMS wait until a provider is chosen.",
     "colour": "Venue colour",
-    "colourClose": "This colour is very close to Ozaa orange. Guests may think the page belongs to Ozaa.",
+    "colourClose": "This colour is very close to Cravins orange. Guests may think the page belongs to Cravins.",
     "contrast": "Button text {{button}}:1. Links on white {{ink}}:1.",
     "preview": "Preview",
     "description": "Description",
@@ -620,7 +620,7 @@
       "customers": "People on your loyalty card",
       "promos": "Codes and discounts",
       "integrations": "Payments and connected apps",
-      "billing": "Your Ozaa plan",
+      "billing": "Your Cravins plan",
       "ordering": "Pickup and delivery from your menu link",
       "sales": "Money, orders and top dishes"
     },
@@ -630,7 +630,7 @@
     "alertBills_other": "{{count}} tables are waiting to pay.",
     "businessName": "Business name",
     "notifications": "Notifications",
-    "loginBrand": "Ozaa restaurant management",
+    "loginBrand": "Cravins restaurant management",
     "loginLead": "Sign in to see your orders, kitchen tickets and floor.",
     "codeLead": "Enter the 6-digit code we sent to your phone.",
     "changeNumber": "Change number",
@@ -683,7 +683,7 @@
       "replace": "Replace photo",
       "remove": "Remove photo",
       "uploading": "Uploading…",
-      "unsupported": "Adding photos from a phone comes in a later update. Use Ozaa on a computer for now.",
+      "unsupported": "Adding photos from a phone comes in a later update. Use Cravins on a computer for now.",
       "type": "Use a JPG, PNG or WebP photo.",
       "size": "That photo is over 8 MB. Choose a smaller one.",
       "failed": "The photo did not upload. Check the connection and try again."
@@ -779,8 +779,8 @@
     "printAll_other": "Print all {{count}}",
     "share": "Share link",
     "download": "Download QR",
-    "printOnWeb": "To print or download cards, open Ozaa on a computer.",
-    "popupBlocked": "The browser blocked the print window. Allow pop-ups for Ozaa and try again.",
+    "printOnWeb": "To print or download cards, open Cravins on a computer.",
+    "popupBlocked": "The browser blocked the print window. Allow pop-ups for Cravins and try again.",
     "copied": "Link copied",
     "shareFailed": "Could not share. Copy the link from the list instead.",
     "count_one": "1 table",
@@ -1045,7 +1045,7 @@
     "hexError": "Use a 6-digit colour code, like #D24000.",
     "font": "Heading font",
     "fonts": {
-      "ozaa": "Modern",
+      "cravins": "Modern",
       "serif": "Classic",
       "bold": "Bold"
     },
@@ -1099,7 +1099,7 @@
     }
   },
   "ownerPages": {
-    "businessLead": "Your business name and every location you run on Ozaa.",
+    "businessLead": "Your business name and every location you run on Cravins.",
     "socialsTitle": "Social links",
     "socialsLead": "Where guests can follow you or get in touch. Shown at the bottom of your page.",
     "linksLead": "Extra buttons on your guest page, such as bookings or a playlist.",
@@ -1160,15 +1160,66 @@
     "appearance": "Appearance",
     "appearanceValue": "Follows your phone",
     "chime": "Sound for new orders",
-    "chimeHint": "A short chime when an order or a waiter call comes in, while Ozaa is open."
+    "chimeHint": "A short chime when an order or a waiter call comes in, while Cravins is open."
   },
   "ownerFloor": {
     "table": "Table",
+    "tableCode": "Table {{code}}",
+    "selectTable": "Select a table to view its bill and actions.",
+    "guestRequested": "Requested: {{reason}}",
+    "filter": {
+      "all": "All ({{count}})",
+      "calls": "Calls ({{count}})",
+      "paying": "Bill ({{count}})",
+      "active": "Occupied ({{count}})",
+      "free": "Free ({{count}})"
+    },
     "legend": {
       "free": "Free",
       "occupied": "Occupied",
       "paying": "Bill",
       "calling": "Calling"
+    }
+  },
+  "ownerShell": {
+    "prototype": "Interactive preview",
+    "roadmap": "Planned capabilities",
+    "phase3": "Phase 3",
+    "pos": {
+      "billTotal": "Counter total",
+      "paidCash": "Marked paid in Cash",
+      "paidMomo": "Marked paid in MoMo",
+      "takeCash": "Cash",
+      "promptMomo": "MoMo QR",
+      "jollof": "Jollof Rice & Chicken",
+      "banku": "Banku & Grilled Tilapia",
+      "sobolo": "Chilled Sobolo (500ml)",
+      "kelewele": "Spicy Kelewele"
+    },
+    "stock": {
+      "inStock": "In stock",
+      "lowStock": "Low stock",
+      "soldOut": "Sold out (86)",
+      "remaining": "{{qty}} left",
+      "auto86": "Auto-86 hides sold-out dishes from guest menus automatically.",
+      "rice": "Perfumed Rice (50kg bag)",
+      "tilapia": "Fresh Lake Tilapia",
+      "plantain": "Ripe Plantain",
+      "sobolo": "Ginger & Hibiscus (Sobolo)"
+    },
+    "ai": {
+      "tableGuest": "Table 4",
+      "waiter": "Cravins AI",
+      "enQuery": "What is your best spicy dish?",
+      "enReply": "Mama's Special Waakye with spicy shito and grilled goat is our top seller. Would you like to add fried plantain (kelewele) for GH₵20?",
+      "twiQuery": "Aduane bɛn na ɛyɛ dɛ sen biara?",
+      "twiReply": "Mama Waakye a ɛwɔ shito ne aponkye nam no na nnipa ani gye ho paa. Wopɛ sɛ yɛde kelewele ka ho ma wo?",
+      "gaQuery": "Mɛni niyenii ŋɔɔ fe fɛɛ?",
+      "gaReply": "Waakye kɛ shito kɛ to loonɛ ŋɔɔ pam! Ani obaasumɔ ni wɔfee kelewele kɛfata he?"
+    },
+    "marketing": {
+      "audience": "Opt-in audience: 42 guests",
+      "sampleSms": "Weekend Treat at Mama's Kitchen! Show this message at your table to enjoy a complimentary chilled Sobolo with any main dish. Reply STOP to opt out."
     }
   },
   "ownerLoyalty": {
@@ -1422,7 +1473,7 @@
   },
   "ownerPayments": {
     "payoutTitle": "Payouts go to",
-    "fee": "Ozaa fee: {{percent}}% of each payment.",
+    "fee": "Cravins fee: {{percent}}% of each payment.",
     "payoutType": {
       "bank": "Bank",
       "momo": "Mobile money"
@@ -1622,7 +1673,7 @@
   "ownerScan": {
     "title": "Scan & stamp",
     "aim": "Fit the guest's QR code inside the corners",
-    "webTitle": "Scan with the Ozaa app",
+    "webTitle": "Scan with the Cravins app",
     "webBody": "Camera scanning works in the app on a phone. On a computer, type the code under the guest's QR card below.",
     "permissionTitle": "Camera access needed",
     "permissionBody": "Allow the camera to scan guest loyalty cards.",
@@ -1698,7 +1749,7 @@
     "search": "Search by diner phone or name",
     "clearSearch": "Clear search",
     "export": "Export CSV",
-    "exportTitle": "Ozaa loyalty members",
+    "exportTitle": "Cravins loyalty members",
     "optInTitle": "Marketing opt-in (Act 843)",
     "optInBody": "Show only customers who agreed to receive SMS offers.",
     "optInFilter": "Filter by opt-in",
@@ -1723,7 +1774,7 @@
     "stampAtScan": "Stamp or redeem at Scan"
   },
   "ownerAi": {
-    "title": "Ozaa feedback assistant",
+    "title": "Cravins feedback assistant",
     "lead": "Answers come only from this venue's guest notes.",
     "welcome": "Ask me about your guest feedback: repeat complaints, popular dishes or service speed.",
     "suggestLoved": "What do diners love most about our dishes?",
@@ -1755,7 +1806,7 @@
   "ownerSoon": {
     "title": "Coming soon",
     "promos": "Soon you can make promo codes and discounts for your menu.",
-    "help": "Help articles are on their way. For now, ask the person who set up Ozaa for you.",
+    "help": "Help articles are on their way. For now, ask the person who set up Cravins for you.",
     "back": "Back to Today"
   },
   "ownerBilling": {
@@ -1764,7 +1815,7 @@
     "yourPlan": "Current plan",
     "notLive": "Billing isn’t live yet. You won’t be charged.",
     "perMonth": "{{price}} a month",
-    "placeholder": "These are placeholder prices from the Ozaa pricing page.",
+    "placeholder": "These are placeholder prices from the Cravins pricing page.",
     "included": "included",
     "notIncluded": "not included"
   },
@@ -1909,7 +1960,7 @@
     "unpaid": "Not paid yet"
   },
   "ownerPay": {
-    "lead": "How guests pay you. Online payments go straight to your own Paystack account; Ozaa never holds your money.",
+    "lead": "How guests pay you. Online payments go straight to your own Paystack account; Cravins never holds your money.",
     "paystack": "Paystack (card and MoMo)",
     "ownAccount": "Your own Paystack account. Guests pay by card or MoMo (MTN, Telecel, AirtelTigo) and the money goes to you.",
     "whereTitle": "Where to find your keys",
@@ -1921,10 +1972,10 @@
     "testMode": "Test",
     "liveMode": "Live",
     "testHint": "Test keys take pretend payments, so you can try everything safely.",
-    "liveOff": "Live payments are switched off while Ozaa is being tested. Use your test keys for now.",
+    "liveOff": "Live payments are switched off while Cravins is being tested. Use your test keys for now.",
     "publicKey": "Public key",
     "secretKey": "Secret key",
-    "secretHint": "Sent once to Ozaa’s server, kept encrypted, and never shown again.",
+    "secretHint": "Sent once to Cravins’s server, kept encrypted, and never shown again.",
     "connect": "Connect Paystack",
     "connected": "Paystack connected",
     "isConnected": "Connected since {{date}}",

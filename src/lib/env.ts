@@ -9,7 +9,7 @@ const schema = z.object({
   EXPO_PUBLIC_MOCK_FAIL_RATE: z._default(z.coerce.number().check(z.gte(0), z.lte(1)), 0),
   EXPO_PUBLIC_MOCK_FAST: z._default(z.enum(['0', '1']), '0'),
   /** Where guest links point when the app is not running on a web page (native share). */
-  EXPO_PUBLIC_SITE_URL: z._default(z.string().check(z.url()), 'https://ozaa.app'),
+  EXPO_PUBLIC_SITE_URL: z._default(z.string().check(z.url()), 'https://cravins.app'),
 });
 
 export type Env = z.infer<typeof schema> & { live: string[] };

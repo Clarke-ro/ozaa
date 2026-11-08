@@ -1,4 +1,4 @@
-# Learning Ozaa
+# Learning Cravins
 
 Plain-language notes for Clarke, one entry per feature, newest at the top. Written with `pstack-teach` and checked with `pstack-unslop`.
 

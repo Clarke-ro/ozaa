@@ -8,9 +8,9 @@ These terms are a placeholder. Replace this file with your real terms before lau
 
 ## 1. Who we are
 
-Ozaa provides a table QR service for restaurants: a menu guests open on their phone, table ordering, waiter calls, loyalty and feedback.
+Cravins provides a table QR service for restaurants: a menu guests open on their phone, table ordering, waiter calls, loyalty and feedback.
 
-## 2. Using Ozaa
+## 2. Using Cravins
 
 ### For restaurants
 
@@ -34,4 +34,4 @@ Explain how these terms can change, and how either side can stop using the servi
 
 ## 6. Contact
 
-Say how to reach Ozaa about these terms.
+Say how to reach Cravins about these terms.

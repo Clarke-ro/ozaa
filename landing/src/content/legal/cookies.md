@@ -26,4 +26,4 @@ Use "Cookie settings" at the bottom of any page to change your choice at any tim
 
 ## 4. Contact
 
-Say how to reach Ozaa about cookies.
+Say how to reach Cravins about cookies.

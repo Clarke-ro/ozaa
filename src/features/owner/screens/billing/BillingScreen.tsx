@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Check, Minus } from 'lucide-react-native';
@@ -11,31 +11,36 @@ import { ownerKeys } from '../../data/keys';
 import { DeskCard, StatusPill } from '../../kit';
 import { PLANS, PLANS_ARE_PLACEHOLDERS, monthlyPrice, type PlanInfo } from './plans';
 
-/** The owner's plan and the others on offer, read from the pricing page. Nothing to buy yet. */
+/** The owner's plan and the others on offer, side by side on wide screens. */
 export function BillingScreen() {
   const { t } = useTranslation();
   const theme = useTheme();
+  const { width } = useWindowDimensions();
+  const threeCol = width >= 900;
   const business = useQuery({
     queryKey: ownerKeys.business(),
     queryFn: () => api.ownerGetBusiness(),
   });
 
   return (
-    <OwnerPage title={t('ownerBilling.title')} subtitle={t('ownerBilling.notLive')}>
+    <OwnerPage title={t('ownerBilling.title')}>
       <DeskWait
         loading={business.isPending}
         error={business.isError}
         onRetry={() => void business.refetch()}
       >
         {business.data ? (
-          <View style={styles.list}>
-            {PLANS.map((plan) => (
-              <PlanCard
-                key={plan.id}
-                plan={plan}
-                current={plan.id === business.data.business.plan}
-              />
-            ))}
+          <View style={styles.stack}>
+            <View style={[styles.list, threeCol && styles.row]}>
+              {PLANS.map((plan) => (
+                <View key={plan.id} style={threeCol ? styles.col : undefined}>
+                  <PlanCard
+                    plan={plan}
+                    current={plan.id === business.data.business.plan}
+                  />
+                </View>
+              ))}
+            </View>
             {PLANS_ARE_PLACEHOLDERS ? (
               <Text variant="caption" style={{ color: theme.meta }}>
                 {t('ownerBilling.placeholder')}
@@ -51,11 +56,13 @@ export function BillingScreen() {
 function PlanCard({ plan, current }: { plan: PlanInfo; current: boolean }) {
   const { t } = useTranslation();
   const theme = useTheme();
-  // The Free plan's name already says the price.
   const price =
     plan.monthly === 0 ? null : t('ownerBilling.perMonth', { price: monthlyPrice(plan) });
   return (
-    <DeskCard style={[styles.card, current && { borderColor: theme.ink }]}>
+    <DeskCard
+      tone={current ? 'selected' : 'plain'}
+      style={[styles.card, current && { borderColor: theme.ink }]}
+    >
       <View style={styles.head}>
         <View style={styles.name}>
           <Text variant="title">{plan.name}</Text>
@@ -92,8 +99,11 @@ function PlanCard({ plan, current }: { plan: PlanInfo; current: boolean }) {
 }
 
 const styles = StyleSheet.create({
+  stack: { gap: tokens.space[3] },
   list: { gap: tokens.space[3] },
-  card: { gap: tokens.space[3] },
+  row: { flexDirection: 'row', alignItems: 'stretch', gap: tokens.space[4] },
+  col: { flex: 1, minWidth: 0 },
+  card: { flex: 1, gap: tokens.space[3] },
   head: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.space[3] },
   name: { flex: 1, gap: 2 },
   features: { gap: tokens.space[2] },

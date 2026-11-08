@@ -16,7 +16,7 @@ import { pausePollingInBackground } from '@/lib/queryLifecycle';
 import { shouldPersistQuery } from '@/lib/queryPersist';
 import { GestureRoot } from '@/ui/GestureRoot';
 import { useAppFonts } from '@/theme/fonts';
-import { ThemeProvider, ozaaTheme } from '@/ui/theme';
+import { ThemeProvider, cravinsTheme } from '@/ui/theme';
 
 // expo-router shows this in place of any screen that throws while rendering.
 export { AppErrorBoundary as ErrorBoundary } from '@/ui/AppErrorBoundary';
@@ -72,7 +72,7 @@ export default function RootLayout() {
         <DirectionFrame>
           <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
             <SafeAreaProvider>
-              <ThemeProvider theme={ozaaTheme}>
+              <ThemeProvider theme={cravinsTheme}>
                 {/* Guest pages are always light; the owner chrome sets its own style. */}
                 <StatusBar style="dark" />
                 <Stack screenOptions={{ headerShown: false }} />

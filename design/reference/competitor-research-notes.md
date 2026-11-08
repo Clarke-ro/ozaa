@@ -1,4 +1,4 @@
-# Ozaa competitor research: raw notes (30 Oct 2026, written when the working name was ScanChop)
+# Cravins competitor research: raw notes (30 Oct 2026, written when the working name was ScanChop)
 Status codes: see urlcheck.txt (403 = bot-block on curl, pages read fine via fetch).
 
 ## QR menu / order & pay

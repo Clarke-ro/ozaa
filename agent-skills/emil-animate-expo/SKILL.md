@@ -6,7 +6,7 @@ description: Build animations in React Native and Expo, making the decisions in 
 Source: https://github.com/emilkowalski/skill/tree/main/skills/animate-expo
 License: MIT (c) 2026 Emil Kowalski
 Commit: a81dbca
-Copied: 2026-10-31 for the Ozaa build kit. Text unchanged below this header.
+Copied: 2026-10-31 for the Cravins build kit. Text unchanged below this header.
 -->
 
 # Building Animations in Expo

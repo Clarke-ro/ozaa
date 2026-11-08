@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
-  title: Ozaa API
+  title: Cravins API
   version: 0.1.0
-  summary: The fixed contract between the Ozaa app (guest web + owner app) and the Ozaa server.
+  summary: The fixed contract between the Cravins app (guest web + owner app) and the Cravins server.
   description: |
     The frontend is built first against a mock that follows this file exactly.
     The real server is built later to the same file. Change this file only in its own PR,
@@ -18,7 +18,7 @@ info:
     - Payment secrets (Paystack secret key) live only on the server. The app never sees them.
     - Guests never hold an account. A guest session is created from the QR code (venue slug + table code).
 servers:
-  - url: https://api.ozaa.app/v1
+  - url: https://api.cravins.app/v1
     description: Production (not live yet)
   - url: http://localhost:4000/v1
     description: Local server (Phase 5 and later)
@@ -153,7 +153,7 @@ paths:
       tags: [guest-session]
       operationId: createGuestSession
       summary: Start a guest session after a QR scan. No account and no personal data.
-      description: The QR code holds `https://ozaa.app/{venueSlug}/t/{tableCode}`. The web app calls this on load.
+      description: The QR code holds `https://cravins.app/{venueSlug}/t/{tableCode}`. The web app calls this on load.
       requestBody:
         required: true
         content:
@@ -310,7 +310,7 @@ paths:
       summary: Start a MoMo or card payment for a bill quote.
       description: |
         The server calls Paystack with its secret key and the venue's subaccount (split payment),
-        so the money settles to the venue and Ozaa's fee comes off automatically. Ozaa never holds funds.
+        so the money settles to the venue and Cravins's fee comes off automatically. Cravins never holds funds.
         MoMo returns `pay_offline`: show `displayText` and poll `GET /payments/{reference}`.
         The guest has 180 seconds to approve on their phone (network limit).
         Card returns `open_url` with a Paystack checkout URL (open it in a browser tab or WebView).
@@ -912,7 +912,7 @@ paths:
       tags: [owner-tables]
       operationId: ownerGetTableQr
       security: [{ ownerAuth: [] }]
-      summary: Printable QR sticker for one table (Ozaa logo in the middle, table number under it).
+      summary: Printable QR sticker for one table (Cravins logo in the middle, table number under it).
       parameters:
         - { $ref: '#/components/parameters/VenueId' }
         - { $ref: '#/components/parameters/TableId' }
@@ -1065,10 +1065,10 @@ paths:
       security: [{ ownerAuth: [] }]
       summary: "Connect the venue's own Paystack account with its public and secret keys. The server checks them with Paystack first."
       description: |
-        Money goes straight to the venue's Paystack account; Ozaa never holds it. The secret key is
+        Money goes straight to the venue's Paystack account; Cravins never holds it. The secret key is
         stored encrypted on the server only. It is never returned, logged or sent to an app.
         Fails with paystack_keys_invalid (Paystack refused them), paystack_mode_mismatch (test keys
-        in live mode or the reverse) or live_not_enabled (Ozaa takes test keys only for now).
+        in live mode or the reverse) or live_not_enabled (Cravins takes test keys only for now).
       parameters: [{ $ref: '#/components/parameters/VenueId' }]
       requestBody:
         required: true
@@ -1905,7 +1905,7 @@ components:
       in: path
       name: reference
       required: true
-      schema: { type: string, description: Paystack transaction reference made by the Ozaa server. }
+      schema: { type: string, description: Paystack transaction reference made by the Cravins server. }
     WaiterCallId:
       in: path
       name: waiterCallId
@@ -1965,7 +1965,7 @@ components:
       type: object
       required: [type, title, status]
       properties:
-        type: { type: string, format: uri-reference, example: 'https://ozaa.app/problems/item-sold-out' }
+        type: { type: string, format: uri-reference, example: 'https://cravins.app/problems/item-sold-out' }
         title: { type: string, example: Item sold out }
         status: { type: integer }
         detail: { type: string, description: Safe to show to the user. Written in plain words. }
@@ -2084,8 +2084,8 @@ components:
       description: table "At your table", rewards "Rewards", fun "Fun while you wait", more "More".
     FontPair:
       type: string
-      enum: [ozaa, serif, bold]
-      description: ozaa Unbounded+Inter, serif Noto Serif+Inter, bold Montserrat+Inter.
+      enum: [cravins, serif, bold]
+      description: cravins Unbounded+Inter, serif Noto Serif+Inter, bold Montserrat+Inter.
     OpeningHours:
       type: object
       required: [timezone, weekly]
@@ -2115,7 +2115,7 @@ components:
     DerivedTheme:
       type: object
       description: Output of deriveTheme (design/prototype/theme.js). The app works it out locally for previews; the server value wins.
-      required: [fill, onAccent, pressed, ink, tint, badgeInk, notes, ozaaDistance, ratios]
+      required: [fill, onAccent, pressed, ink, tint, badgeInk, notes, cravinsDistance, ratios]
       properties:
         fill: { $ref: '#/components/schemas/HexColor' }
         onAccent: { $ref: '#/components/schemas/HexColor' }
@@ -2124,7 +2124,7 @@ components:
         tint: { $ref: '#/components/schemas/HexColor' }
         badgeInk: { $ref: '#/components/schemas/HexColor' }
         notes: { type: array, items: { type: string } }
-        ozaaDistance: { type: number }
+        cravinsDistance: { type: number }
         ratios:
           type: object
           required: [buttonText, inkOnWhite, badge]
@@ -2137,7 +2137,7 @@ components:
       required: [accent, fontPair, derived]
       properties:
         accent:
-          description: Null means the Ozaa default orange.
+          description: Null means the Cravins default orange.
           oneOf: [{ $ref: '#/components/schemas/HexColor' }, { type: 'null' }]
         fontPair: { $ref: '#/components/schemas/FontPair' }
         derived: { $ref: '#/components/schemas/DerivedTheme' }
@@ -2322,7 +2322,7 @@ components:
         id: { type: string }
         code: { type: string, example: '12' }
         label: { type: string, example: Table 12 }
-        qrUrl: { type: string, format: uri, example: 'https://ozaa.app/mamas-kitchen/t/12' }
+        qrUrl: { type: string, format: uri, example: 'https://cravins.app/mamas-kitchen/t/12' }
 
     Dietary:
       type: string
@@ -2958,13 +2958,13 @@ components:
                 phone: { $ref: '#/components/schemas/GhanaPhone' }
     PayoutAccount:
       type: object
-      required: [businessName, settlementType, accountMasked, verified, ozaaFeePercent]
+      required: [businessName, settlementType, accountMasked, verified, cravinsFeePercent]
       properties:
         businessName: { type: string }
         settlementType: { type: string, enum: [bank, momo] }
         accountMasked: { type: string, example: '**** 4567' }
         verified: { type: boolean }
-        ozaaFeePercent: { type: number, description: 'Ozaa''s share taken by the Paystack split. Set by Ozaa, read-only here.' }
+        cravinsFeePercent: { type: number, description: 'Cravins''s share taken by the Paystack split. Set by Cravins, read-only here.' }
 
     Currency:
       type: string
@@ -3286,7 +3286,7 @@ components:
         plan:
           type: string
           enum: [free, pro, business]
-          description: The Ozaa plan this business is on. Matches the plan ids on the pricing page. Billing is not live yet, so this is read-only.
+          description: The Cravins plan this business is on. Matches the plan ids on the pricing page. Billing is not live yet, so this is read-only.
     Location:
       type: object
       required: [id, businessId, slug, name, country, currency]

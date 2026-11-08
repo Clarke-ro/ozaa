@@ -9,7 +9,7 @@ import { hapticSelection } from '@/lib/haptics';
 import type { TableCardTemplate } from '@/features/tables';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
-import { ozaaTheme, ThemeProvider, useTheme } from '@/ui/theme';
+import { cravinsTheme, ThemeProvider, useTheme } from '@/ui/theme';
 import { Segmented } from '../../kit';
 import { QR_PAPER } from '@/theme/palette';
 
@@ -100,7 +100,7 @@ export function TableCardPreview({
 }) {
   const label = table.label ?? `Table ${table.code}`;
   return (
-    <ThemeProvider theme={ozaaTheme}>
+    <ThemeProvider theme={cravinsTheme}>
       <View
         style={styles.stage}
         accessible
@@ -125,7 +125,7 @@ export function TableCardPreview({
               </Text>
             </View>
             <QrMark url={table.qrUrl ?? ''} />
-            <Text variant="caption" style={[styles.center, { color: ozaaTheme.muted }]}>
+            <Text variant="caption" style={[styles.center, { color: cravinsTheme.muted }]}>
               {cta}
             </Text>
           </View>
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: tokens.space[4],
     borderRadius: tokens.radius.md,
-    backgroundColor: ozaaTheme.wash,
+    backgroundColor: cravinsTheme.wash,
   },
   card: {
     width: '86%',
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
     backgroundColor: QR_PAPER,
     borderRadius: tokens.radius.lg,
     borderWidth: 1,
-    borderColor: ozaaTheme.line,
+    borderColor: cravinsTheme.line,
     overflow: 'hidden',
   },
   sticker: { borderRadius: 150, maxWidth: 260 },

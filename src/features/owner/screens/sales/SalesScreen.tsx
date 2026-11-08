@@ -69,7 +69,7 @@ export function SalesScreen() {
   };
 
   return (
-    <OwnerPage title={t('owner.sales')} subtitle={t('ownerSales.lead')}>
+    <OwnerPage title={t('owner.sales')}>
       <FilterChips<OrderRange>
         label={t('ownerOrders.range.label')}
         value={range}
@@ -86,36 +86,20 @@ export function SalesScreen() {
             <View style={styles.grid}>
               {(
                 [
-                  ['value', money(r.valuePesewas), t('ownerSales.notes.value'), Wallet],
-                  ['orders', String(r.orderCount), t('ownerSales.notes.orders'), ClipboardList],
-                  [
-                    'completed',
-                    String(r.byStatus.served),
-                    t('ownerSales.notes.completed'),
-                    CircleCheck,
-                  ],
+                  ['value', money(r.valuePesewas), Wallet],
+                  ['orders', String(r.orderCount), ClipboardList],
+                  ['completed', String(r.byStatus.served), CircleCheck],
                   [
                     'inProgress',
                     String(r.byStatus.received + r.byStatus.preparing + r.byStatus.ready),
-                    t('ownerSales.notes.inProgress'),
                     Hourglass,
                   ],
-                  ['cancelled', String(r.byStatus.cancelled), t('ownerSales.notes.cancelled'), Ban],
-                  [
-                    'discounts',
-                    money(r.discountsPesewas),
-                    t('ownerSales.notes.discounts'),
-                    TicketPercent,
-                  ],
+                  ['cancelled', String(r.byStatus.cancelled), Ban],
+                  ['discounts', money(r.discountsPesewas), TicketPercent],
                 ] as const
-              ).map(([key, value, note, icon]) => (
+              ).map(([key, value, icon]) => (
                 <View key={key} style={{ flexBasis: basis, flexGrow: 1 }}>
-                  <StatTile
-                    label={t(`ownerSales.stats.${key}`)}
-                    value={value}
-                    note={note}
-                    icon={icon}
-                  />
+                  <StatTile label={t(`ownerSales.stats.${key}`)} value={value} icon={icon} />
                 </View>
               ))}
             </View>

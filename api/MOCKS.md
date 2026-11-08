@@ -28,7 +28,7 @@ src/lib/api/http.ts        createHttpClient({ baseUrl, getToken }) using openapi
 src/lib/api/index.ts       export const api = env.API_MODE === 'mock' ? createMockClient() : createHttpClient(...)
 src/mocks/mockClient.ts    createMockClient({ latencyMs, failRate, now })
 src/mocks/db.ts            in-memory tables seeded from fixtures (deep-cloned so tests are isolated)
-src/mocks/media.ts         maps https://mock.ozaa.app/media/... to bundled files
+src/mocks/media.ts         maps https://mock.cravins.app/media/... to bundled files
 src/mocks/fixtures/*.json  copied from api/fixtures by scripts/copy-fixtures.mjs (don't edit the copies)
 ```
 
@@ -41,7 +41,7 @@ Rules:
 - Time comes from an injectable `now()`, so tests can move the clock.
 
 ## Media
-Fixture URLs look like `https://mock.ozaa.app/media/img/jollof.jpg` and `https://mock.ozaa.app/media/review-ama.mp4`.
+Fixture URLs look like `https://mock.cravins.app/media/img/jollof.jpg` and `https://mock.cravins.app/media/review-ama.mp4`.
 - `src/mocks/media.ts` holds one map from the path after `/media/` to a `require('../../assets/sample/...')`.
 - Copy the files from `design/prototype/img/` and `design/prototype/media/`, skipping the two logo SVGs.
 - `<VenueImage>` and `<StoryVideo>` resolve URLs through `resolveMedia(url)`, which returns the bundled asset in mock mode and the URL itself in http mode.

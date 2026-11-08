@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { BellOff } from 'lucide-react-native';
 import { useOwnerSession } from '@/features/session';
@@ -19,6 +19,8 @@ const TICK_MS = 30_000;
 /** Guests asking for a waiter. "On my way" tells the guest someone is coming; "Done" closes the call. */
 export function CallsScreen() {
   const { t } = useTranslation();
+  const { width } = useWindowDimensions();
+  const twoUp = width >= 880;
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const [tab, setTab] = useState<Tab>('active');
   const [now, setNow] = useState(() => Date.now());
@@ -71,16 +73,17 @@ export function CallsScreen() {
             description={t('ownerCalls.emptyBody')}
           />
         ) : (
-          <View style={styles.list}>
+          <View style={[styles.list, twoUp && styles.grid]}>
             {shown.map((call) => (
-              <CallCard
-                key={call.id}
-                call={call}
-                now={now}
-                busy={update.isPending && update.variables?.id === call.id}
-                onAcknowledge={() => update.mutate({ id: call.id, status: 'acknowledged' })}
-                onResolve={() => update.mutate({ id: call.id, status: 'resolved' })}
-              />
+              <View key={call.id} style={twoUp ? styles.cell : undefined}>
+                <CallCard
+                  call={call}
+                  now={now}
+                  busy={update.isPending && update.variables?.id === call.id}
+                  onAcknowledge={() => update.mutate({ id: call.id, status: 'acknowledged' })}
+                  onResolve={() => update.mutate({ id: call.id, status: 'resolved' })}
+                />
+              </View>
             ))}
           </View>
         )}
@@ -89,4 +92,8 @@ export function CallsScreen() {
   );
 }
 
-const styles = StyleSheet.create({ list: { gap: tokens.space[3] } });
+const styles = StyleSheet.create({
+  list: { gap: tokens.space[3] },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start' },
+  cell: { flexBasis: '48.5%', flexGrow: 1 },
+});

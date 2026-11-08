@@ -58,7 +58,7 @@ No route 404s. Structural problems:
 | Area | Status | Problem |
 | --- | --- | --- |
 | Theme | Skeleton | `src/ui/theme.tsx` has one light palette. **No dark mode at all.** 335 hard-coded hex values in owner files, many off-brand (`#E5E7EB`, `#DC2626`, `#16A34A`, `#F59E0B`). `theme.white` doubles as page background and as text on filled buttons. |
-| Type | Skeleton | `Inter_700` is used (wordmark, chips) but never loaded, so the "Ozaa" wordmark renders in a serif fallback. ~60 inline `fontSize` and `fontWeight` overrides instead of variants; synthetic bold on web. |
+| Type | Skeleton | `Inter_700` is used (wordmark, chips) but never loaded, so the "Cravins" wordmark renders in a serif fallback. ~60 inline `fontSize` and `fontWeight` overrides instead of variants; synthetic bold on web. |
 | Spacing | Skeleton | Mix of tokens and literals (6, 10, 14, 18, 128). |
 | Shared components | Skeleton | `kit/` covers card, row, toggle, sheet, confirm, stat, tabs. Missing: toast, inline error state, list skeleton, screen header with back. `DeskCard` and `ListRow` render as buttons inside other buttons. |
 | Data layer | Complete | `src/lib/api` is typed from the OpenAPI contract and every screen goes through it. Query keys are inconsistent strings; a few screens never invalidate after a save. |
@@ -194,7 +194,7 @@ Clarke's decisions and requests, and what changed:
 | Remove the review part of Social links | Google review link and star gating removed from the owner screen; saving clears any saved Google link. The contract still describes the 4–5★ rule (`createReview` summary); updating it is a separate contract PR. |
 | Remove video reviews | Guest record and story pages, their screens and the "Guests are saying" row are gone. Owner Reviews is now written reviews only: average, All / Needs reply, reply on each. Video endpoints remain in the contract, client and mock for a separate contract PR. |
 | Full-screen Add dish | New `DishEditor`: full screen on phones, Save pinned at the bottom, sections for basics, section, diet, allergens, add-ons. |
-| Page titles in the header | The Ozaa + location bar shows on Today only. Other pages put Back, the title and their one action in a pinned header. Page subtitles removed. |
+| Page titles in the header | The Cravins + location bar shows on Today only. Other pages put Back, the title and their one action in a pinned header. Page subtitles removed. |
 | Floor cards | Colour per status family (free green, occupied blue, paying amber, calling red) with a fine grain, an icon and a word on every card, and a legend. Contrast tested. |
 | Loyalty too cumbersome | Three short sections (stamp card, between stamps, treats), live stamp preview, Save bar. Wallet-pass design and the review-reward automation removed from the screen; saved values are kept. |
 | Guest page info too big | Compact intro: smaller name and description (2 lines, More), hours and location as chips, location opens maps, real logo shown when set. Section headings smaller. |

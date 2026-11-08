@@ -9,7 +9,7 @@ metadata:
 Source: https://github.com/hardikpandya/stop-slop
 License: MIT (c) 2025 Hardik Pandya
 Commit: 8da1f03
-Copied: 2026-10-31 for the Ozaa build kit. Text unchanged below this header.
+Copied: 2026-10-31 for the Cravins build kit. Text unchanged below this header.
 -->
 
 # Stop Slop

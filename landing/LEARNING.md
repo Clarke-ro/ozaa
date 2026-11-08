@@ -1,6 +1,77 @@
-# Learning Ozaa
+# Learning Cravins
 
 Plain notes for Clarke. Newest at the top.
+
+---
+
+## 2026-11-07 · Compact single-tier footer inspired by Yolé
+
+**What we built**
+
+The landing site footer now uses a compact, single-tier layout inspired by Yolé in Cravins' warm espresso palette:
+- **Left**: light logo lockup, tagline, and monochrome rounded-square social badges.
+- **Middle**: Product, Resources, and Support link columns with crisp title-case headings.
+- **Right**: CTA column (`Ready to upgrade your tables?`) with two side-by-side pills—an outlined glassy `Try a sample table` pill and a filled orange `Get started free` pill—plus a short lead line below.
+- **Bottom bar**: a full-width horizontal divider with copyright on the left and underlined, pipe-separated legal links (`Terms | Privacy | Cookies | Cookie settings`) on the right.
+
+**How it works**
+
+CSS Grid lays out all five columns in one row on desktop, then folds cleanly on tablets and phones:
+
+```
+Desktop (>1080px):  [Brand + Socials] [Product] [Resources] [Support] [CTA Pills + Lead]
+Tablet (≤1080px):   [Brand + Socials (full row)] → [Product] [Resources] [Support] → [CTA (full row)]
+Phone (≤640px):     [Brand + Socials] → 2-column link grid → [CTA] → stacked bottom bar
+```
+
+The pipe dividers between the legal links are drawn in CSS with `.footer-legal li + li::before`, so screen readers don't read out vertical bar characters.
+
+**Files to look at**
+
+- `src/components/Footer.astro`: the five-column grid and bottom legal bar.
+- `src/styles/global.css`: the `.footer`, `.footer-grid`, `.social`, and `.footer-legal` rules.
+
+**New idea: `li + li::before` for visual separators**
+
+Putting `|` characters in HTML makes screen readers announce "vertical line" between every link. Using CSS `li + li::before` draws a 1 px bar before every item *except* the first one, keeping the HTML clean and accessible.
+
+**Try it yourself**
+
+In `src/styles/global.css`, change `grid-template-columns` on `.footer-grid` or tweak the `margin: 0 14px` on `.footer-legal li + li::before` to see the spacing update live.
+
+---
+
+## 2026-11-07 · Frosted glass header
+
+**What we built**
+
+The landing site's top bar is now a full-width frosted glass strip pinned to the top of the screen, inspired by the Yolé header. It uses the light logo, warm white links, a glassy outlined "Log in" pill, and the filled orange "Get started" pill, with a thin bottom hair-line.
+
+**How it works**
+
+CSS blurs whatever scrolls behind the bar in real time:
+
+```
+page content scrolls under <header>
+   ├─ background: rgba(55, 24, 8, 0.72) tints the bar warm espresso
+   ├─ backdrop-filter: blur(22px) saturate(160%) frosts the pixels behind it
+   └─ border-bottom: 1px solid rgba(255, 255, 255, 0.22) draws the bottom hair-line
+```
+
+Because the bar is `position: fixed` and 72% opaque, white links stay readable at over 5:1 contrast even when a white card scrolls underneath.
+
+**Files to look at**
+
+- `src/components/Navbar.astro`: switches the logo to `cravins-lockup-light.svg` and the "Log in" button to `pill--glass`.
+- `src/styles/global.css`: the `--nav-glass` tokens and the `.navbar` rules.
+
+**New idea: `backdrop-filter` vs `filter`**
+
+`filter: blur()` blurs the element itself (including its text). `backdrop-filter: blur()` blurs only what sits *behind* the element, as long as the element's background is partly see-through (`rgba`).
+
+**Try it yourself**
+
+In `src/styles/global.css`, change `blur(22px)` on `.navbar` to `blur(4px)`, then scroll the home page. You'll see the headings and cards behind the bar turn almost sharp instead of frosted.
 
 ---
 
@@ -45,7 +116,7 @@ Run `PUBLIC_APP_URL=https://example.com npm run build`, then open `dist/index.ht
 
 **What we built**
 
-A one-page site that explains Ozaa to a restaurant owner. Guests scan a QR code on the table. The menu, the waiter, and the bill open in the phone browser. The first launch is in Africa, and the product is for restaurants anywhere.
+A one-page site that explains Cravins to a restaurant owner. Guests scan a QR code on the table. The menu, the waiter, and the bill open in the phone browser. The first launch is in Africa, and the product is for restaurants anywhere.
 
 **How it works**
 

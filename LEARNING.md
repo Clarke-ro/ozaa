@@ -1,4 +1,4 @@
-# Learning Ozaa
+# Learning Cravins
 
 Plain-language notes for Clarke. Newest at the top.
 
@@ -164,12 +164,12 @@ Open `src/theme/palette.ts` and change dark `surface` to `'#2A2A2E'`. Run `npm t
 
 **What we built**
 
-We brought the entire Ozaa owner side and marketing landing page to production completeness:
+We brought the entire Cravins owner side and marketing landing page to production completeness:
 
 1. **Menu Builder & Table Print**: Custom category schedules, 14 standard allergen tags, modifier choices, sequential table codes, and printable vector table tent cards.
 2. **Venue Design & Reviews**: Star gating (4–5★ to Google, 1–3★ to private feedback), custom links with scheduling, Wi-Fi QR connect strings, and brand customizer.
 3. **Loyalty Hub & Camera Scanner**: Digital stamp cards with anti-fraud cooldown timers, customer roster with Act 843 filters, camera reticle scanner, and paired handheld devices.
-4. **Feedback Inbox & AI**: Private guest inbox with anonymity delays, sentiment badges, and conversational "Ask Ozaa" feedback assistant.
+4. **Feedback Inbox & AI**: Private guest inbox with anonymity delays, sentiment badges, and conversational "Ask Cravins" feedback assistant.
 5. **Business & Multi-Location**: Multi-branch manager, global location switcher scoping all screens, team roles (Manager, Waiter, Kitchen, Viewer, Scanner), and Act 843 typed account deletion.
 6. **13-Section Web Landing Page**: Sticky nav, hero with iPhone 16 Pro mockup, interactive live try-it preview, replaces strip, pain points, alternating feature deep dives, pricing with monthly/annual toggle, FAQ accordion, CTA band, and lead demo modal.
 
@@ -201,7 +201,7 @@ Open `http://localhost:4321/` in your browser to test the interactive preview on
 
 **What we built**
 
-A complete overhaul of the Ozaa Owner App from bare text rows into a high-fidelity, polished management dashboard across all 15 screens. We created a shared owner kit (`DeskCard`, `StatTile`, `BigStat`, `StatusPill`, `Toggle`, `DeskTabs`, `IconTile`, `CodeTile`, `ChipRow`) matching Ozaa brand tokens.
+A complete overhaul of the Cravins Owner App from bare text rows into a high-fidelity, polished management dashboard across all 15 screens. We created a shared owner kit (`DeskCard`, `StatTile`, `BigStat`, `StatusPill`, `Toggle`, `DeskTabs`, `IconTile`, `CodeTile`, `ChipRow`) matching Cravins brand tokens.
 
 Every screen now has full features:
 
@@ -213,7 +213,7 @@ Every screen now has full features:
 - **Services**: Grouped toggles (`AT YOUR TABLE`, `REWARDS`, `FUN WHILE YOU WAIT`), game score stepper, and Wi-Fi credentials.
 - **Reviews**: Video moderation queue with video thumbnails, star ratings, story featuring, and written review private replies.
 - **Payments**: Payout account verification, transaction list with MoMo/Card/Cash filter chips, and instant refunds.
-- **Tables & QR**: Table tent card / sticker visualizer with Ozaa logo, print action, and batch table creator.
+- **Tables & QR**: Table tent card / sticker visualizer with Cravins logo, print action, and batch table creator.
 - **Branding**: Live phone preview, palette presets, live WCAG contrast checker, and photo uploads.
 - **Staff**: Team member cards, role tags, and phone-based invites.
 - **Insights**: Range tabs, sales bar chart, top selling items, and peak service hours.
@@ -223,10 +223,10 @@ Every screen now has full features:
 **How it works**
 
 ```
-Ozaa Tokens (tokens.json) → Owner Kit (DeskCard, StatTile, StatusPill...) → 15 High-Fidelity Owner Screens
+Cravins Tokens (tokens.json) → Owner Kit (DeskCard, StatTile, StatusPill...) → 15 High-Fidelity Owner Screens
 ```
 
-All owner screens adhere strictly to the Ozaa brand rules: clean white cards, black text, Unbounded for big money numbers, and `#D24000` orange strictly on buttons, active icons, and small status words.
+All owner screens adhere strictly to the Cravins brand rules: clean white cards, black text, Unbounded for big money numbers, and `#D24000` orange strictly on buttons, active icons, and small status words.
 
 **Files to look at**
 
@@ -248,7 +248,7 @@ Open `http://localhost:8081/owner` in your browser (or scan the Expo Go tunnel Q
 
 **What we built**
 
-The venue side of Ozaa. After a phone code, the owner sees today's money, the floor, kitchen tickets, waiter calls, the menu, loyalty, and the rest of the tools. On a phone the links sit on the bottom. On a tablet they sit in a sidebar.
+The venue side of Cravins. After a phone code, the owner sees today's money, the floor, kitchen tickets, waiter calls, the menu, loyalty, and the rest of the tools. On a phone the links sit on the bottom. On a tablet they sit in a sidebar.
 
 **How it works**
 
@@ -280,7 +280,7 @@ In `floorStatus.ts`, make a resolved waiter call keep the table on "needs a wait
 
 **What we built**
 
-A venue-branded wallet card (`WalletCard.tsx`) with the Ozaa scan-frame watermark, Bronze/Silver/Gold tiers, stamps or spend points, a rewards catalogue, and an owner Loyalty screen (`OwnerLoyalty.tsx`) to set up the programme and confirm guest claim codes.
+A venue-branded wallet card (`WalletCard.tsx`) with the Cravins scan-frame watermark, Bronze/Silver/Gold tiers, stamps or spend points, a rewards catalogue, and an owner Loyalty screen (`OwnerLoyalty.tsx`) to set up the programme and confirm guest claim codes.
 
 **How it works**
 
@@ -369,7 +369,7 @@ Open Mama's Kitchen, tap Language, and see French and Arabic marked Coming soon.
 
 **What we built**
 
-The phone and web app shell. It loads the fonts, the Ozaa colours, and a fake server so we can click through Mama's Kitchen before a real server exists.
+The phone and web app shell. It loads the fonts, the Cravins colours, and a fake server so we can click through Mama's Kitchen before a real server exists.
 
 **How it works**
 
@@ -433,7 +433,7 @@ In `src/features/pay/quoteBill.test.ts`, change the 3-way split example and run 
 
 **What we built**
 
-On a wide screen the owner sidebar now has three groups: Main, Sales and Settings. It shows your plan next to the Ozaa name, and it can fold down to a thin strip of icons. Help, your profile and Sign out sit at the bottom. Pages that aren't built yet (Categories, Store notice, Promos, Integrations, Help) open a short "Coming soon" page.
+On a wide screen the owner sidebar now has three groups: Main, Sales and Settings. It shows your plan next to the Cravins name, and it can fold down to a thin strip of icons. Help, your profile and Sign out sit at the bottom. Pages that aren't built yet (Categories, Store notice, Promos, Integrations, Help) open a short "Coming soon" page.
 
 **How it works**
 
@@ -592,7 +592,7 @@ Add a section called "Desserts" on the Categories page, then open Menu → Secti
 
 **What we built**
 
-The "QR codes and links" page now starts with your menu link (`https://ozaa.app/<your-slug>`) and buttons to copy it, share it, or download it as a QR code. Under that is a short piece of code you can paste into your own website to show the menu there. The table QR codes are below, as before.
+The "QR codes and links" page now starts with your menu link (`https://cravins.app/<your-slug>`) and buttons to copy it, share it, or download it as a QR code. Under that is a short piece of code you can paste into your own website to show the menu there. The table QR codes are below, as before.
 
 **How it works**
 
@@ -978,18 +978,18 @@ Put a dish on sale, create an order for it, then open Sales. Discounts given goe
 
 **Settings → Integrations** now has two parts.
 
-- **Paystack (card and MoMo):** steps for finding your keys in the Paystack dashboard, a Test/Live choice (Live stays off for now), and boxes for your public and secret key. When you connect, Ozaa checks the keys. After that you only ever see the last 4 characters of the secret key. **Test connection** checks the keys still work, and **Disconnect** removes them.
+- **Paystack (card and MoMo):** steps for finding your keys in the Paystack dashboard, a Test/Live choice (Live stays off for now), and boxes for your public and secret key. When you connect, Cravins checks the keys. After that you only ever see the last 4 characters of the secret key. **Test connection** checks the keys still work, and **Disconnect** removes them.
 - **Pay in person:** switches for cash, card machine, bank transfer and MoMo to your own number, with the details guests need.
 
 **How it works**
 
 ```
-you type the secret key → it goes once to Ozaa's server → stored encrypted (server, later)
+you type the secret key → it goes once to Cravins's server → stored encrypted (server, later)
 the app gets back only: mode, public key, "••••9876", the date
 guests get only: can I pay online? test mode? cash? MoMo number?
 ```
 
-Money goes straight from the guest to **your** Paystack account. Ozaa never holds it.
+Money goes straight from the guest to **your** Paystack account. Cravins never holds it.
 
 **Files to look at**
 

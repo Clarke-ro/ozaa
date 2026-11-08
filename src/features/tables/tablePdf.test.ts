@@ -3,7 +3,7 @@ import type { Table } from '@/lib/api/types';
 
 describe('generateTableCardHtml', () => {
   const tables: Table[] = [
-    { id: 'tbl_1', code: '4', label: 'Table 4', qrUrl: 'https://ozaa.app/mamas-kitchen/t/4' },
+    { id: 'tbl_1', code: '4', label: 'Table 4', qrUrl: 'https://cravins.app/mamas-kitchen/t/4' },
   ];
 
   test('generates valid HTML document with venue and table code', () => {
@@ -22,7 +22,7 @@ describe('generateTableCardHtml', () => {
 
 test('names are escaped so a venue or table name cannot break the printed page', () => {
   const html = generateTableCardHtml(
-    [{ id: 't1', code: '1', label: 'Bar <VIP>', qrUrl: 'https://ozaa.app/x/t/1' }],
+    [{ id: 't1', code: '1', label: 'Bar <VIP>', qrUrl: 'https://cravins.app/x/t/1' }],
     { template: 'sticker', accentColor: '#D24000', ctaText: 'Scan & order' },
     "Mama's <Kitchen>",
   );
