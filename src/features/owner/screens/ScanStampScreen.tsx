@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, TextInput, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, TextInput, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
@@ -21,9 +21,7 @@ export function ScanStampScreen() {
   const { t } = useTranslation();
   const theme = useTheme();
   const gutter = useGutter();
-  const { width } = useWindowDimensions();
-  const wide = width >= 900;
-  const venueId = useOwnerSession((state) => state.venueId) ?? '';
+    const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const client = useQueryClient();
   const program = useQuery({
     queryKey: ownerKeys.loyalty(venueId),
@@ -60,12 +58,12 @@ export function ScanStampScreen() {
 
   return (
     <OwnerPage title={t('ownerScan.title')}>
-      <View style={[styles.stack, wide && styles.split]}>
-        <View style={wide ? styles.viewfinderCol : undefined}>
+      <View style={styles.stack}>
+        <View>
           <ScanViewfinder gutter={gutter} onScanned={send} />
         </View>
 
-        <View style={[styles.sideCol, wide && styles.sideColWide]}>
+        <View style={styles.sideCol}>
           <DeskCard style={styles.manualCard}>
             <Text variant="caption" style={{ color: theme.meta, fontFamily: fontFamily.strong }}>
               {t('ownerScan.typeCode')}
@@ -115,10 +113,7 @@ export function ScanStampScreen() {
 
 const styles = StyleSheet.create({
   stack: { gap: tokens.space[5] },
-  split: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.space[6] },
-  viewfinderCol: { flex: 1, minWidth: 0 },
   sideCol: { gap: tokens.space[4] },
-  sideColWide: { width: 380 },
   manualCard: { gap: tokens.space[3] },
   row: { flexDirection: 'row', gap: tokens.space[2] },
   input: {

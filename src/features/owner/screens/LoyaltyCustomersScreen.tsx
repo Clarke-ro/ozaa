@@ -1,6 +1,6 @@
 import { makeStyles } from '@/ui/makeStyles';
 import { useState } from 'react';
-import { Platform, Pressable, Share, TextInput, View, useWindowDimensions } from 'react-native';
+import { Platform, Pressable, Share, TextInput, View } from 'react-native';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -21,9 +21,7 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
   const theme = useTheme();
   const { t } = useTranslation();
   const router = useRouter();
-  const { width } = useWindowDimensions();
-  const twoCol = width >= 920;
-
+  
   const [search, setSearch] = useState('');
   const [wantsOffersOnly, setWantsOffersOnly] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<LoyaltyCustomerSummary | null>(null);
@@ -131,11 +129,11 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
             description={search ? t('ownerMembers.noMatchBody') : t('ownerMembers.emptyBody')}
           />
         ) : (
-          <View style={[styles.customersList, twoCol && styles.customersGrid]}>
+          <View style={styles.customersList}>
             {items.map((cust) => {
               const displayName = cust.name || cust.phoneMasked;
               return (
-                <View key={cust.id} style={twoCol ? styles.customerCell : undefined}>
+                <View key={cust.id}>
                   <Pressable
                     accessibilityRole="button"
                     accessibilityLabel={displayName}

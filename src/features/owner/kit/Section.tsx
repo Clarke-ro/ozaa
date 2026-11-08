@@ -3,10 +3,12 @@ import { StyleSheet, View } from 'react-native';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
+import { cardStyle } from './cardStyle';
 
 /**
- * One group of settings: a short caps title, rows in an inset card split by hairlines,
- * and an optional one-line note under it. The iOS Settings pattern.
+ * One group of settings as a white card: a bold title (with an optional small control on its
+ * right) inside the top of the card, then the rows split by hairlines, and an optional one-line
+ * note under the card. Every settings page uses it, so they all read the same.
  */
 export function Section({
   title,
@@ -25,23 +27,19 @@ export function Section({
   const rows = Children.toArray(children).filter(isValidElement);
   return (
     <View style={styles.wrap}>
-      {title || action ? (
-        <View style={styles.head}>
-          {title ? (
-            <Text
-              variant="caption"
-              accessibilityRole="header"
-              style={[styles.title, { color: theme.muted }]}
-            >
-              {title.toUpperCase()}
-            </Text>
-          ) : (
-            <View />
-          )}
-          {action}
-        </View>
-      ) : null}
-      <View style={[styles.card, { borderColor: theme.line, backgroundColor: theme.surface }]}>
+      <View style={[styles.card, cardStyle(theme)]}>
+        {title || action ? (
+          <View style={styles.head}>
+            {title ? (
+              <Text variant="title" accessibilityRole="header" style={styles.title}>
+                {title}
+              </Text>
+            ) : (
+              <View />
+            )}
+            {action}
+          </View>
+        ) : null}
         {rows.map((row, index) => (
           <Fragment key={row.key ?? index}>
             {index > 0 ? <View style={[styles.rule, { backgroundColor: theme.line }]} /> : null}
@@ -60,20 +58,17 @@ export function Section({
 
 const styles = StyleSheet.create({
   wrap: { gap: tokens.space[2] },
+  card: { overflow: 'hidden' },
   head: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    minHeight: 20,
-    paddingHorizontal: tokens.space[1],
+    gap: tokens.space[3],
+    paddingHorizontal: tokens.space[4],
+    paddingTop: tokens.space[4],
+    paddingBottom: tokens.space[1],
   },
-  title: { fontFamily: 'Inter_600', letterSpacing: 0.8 },
-  card: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: tokens.radius.lg,
-    borderCurve: 'continuous',
-    overflow: 'hidden',
-  },
+  title: { flexShrink: 1 },
   rule: { height: StyleSheet.hairlineWidth, marginLeft: tokens.space[4] },
   note: { paddingHorizontal: tokens.space[1] },
 });

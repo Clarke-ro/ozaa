@@ -1,6 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
@@ -17,9 +17,7 @@ import { LocationEditor } from './LocationEditor';
 
 export function BusinessScreen() {
   const { t } = useTranslation();
-  const { width } = useWindowDimensions();
-  const twoCol = width >= 900;
-  const client = useQueryClient();
+    const client = useQueryClient();
   const venueId = useOwnerSession((state) => state.venueId);
   const switchVenue = useOwnerSession((state) => state.switchVenue);
   const data = useQuery({ queryKey: ownerKeys.business(), queryFn: () => api.ownerGetBusiness() });
@@ -69,9 +67,9 @@ export function BusinessScreen() {
           <Text variant="body-strong" style={styles.label}>
             {t('ownerBusiness.locationsLabel')}
           </Text>
-          <View style={[styles.list, twoCol && styles.grid]}>
+          <View style={styles.list}>
             {locations.map((location) => (
-              <View key={location.id} style={twoCol ? styles.cell : undefined}>
+              <View key={location.id}>
                 <LocationCard
                   location={location}
                   active={location.id === venueId}
@@ -83,7 +81,7 @@ export function BusinessScreen() {
                 />
               </View>
             ))}
-            <View style={twoCol ? styles.cell : undefined}>
+            <View>
               <AddLocationCard onPress={() => setEditing(null)} />
             </View>
           </View>
@@ -103,7 +101,5 @@ export function BusinessScreen() {
 const styles = StyleSheet.create({
   stack: { gap: tokens.space[3] },
   list: { gap: tokens.space[3] },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'stretch' },
-  cell: { flexBasis: '48.5%', flexGrow: 1 },
   label: { fontSize: tokens.type.caption.size + 1 },
 });

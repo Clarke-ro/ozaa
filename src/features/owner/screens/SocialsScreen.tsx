@@ -1,4 +1,4 @@
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
@@ -24,9 +24,7 @@ const KEYBOARD: Partial<Record<Key, 'phone-pad' | 'email-address' | 'url'>> = {
 /** Where guests can follow or reach the venue. Side by side on desktop. */
 export function SocialsScreen() {
   const { t } = useTranslation();
-  const { width } = useWindowDimensions();
-  const twoCol = width >= 920;
-  const venueId = useOwnerSession((state) => state.venueId) ?? '';
+    const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const venue = useQuery({
     queryKey: ownerKeys.venue(venueId),
     queryFn: () => api.ownerGetVenue(venueId),
@@ -81,11 +79,11 @@ export function SocialsScreen() {
         error={venue.isError}
         onRetry={() => void venue.refetch()}
       >
-        <View style={[styles.stack, twoCol && styles.split]}>
-          <View style={twoCol ? styles.col : undefined}>
+        <View style={styles.stack}>
+          <View>
             <Section title={t('ownerSocials.profiles')}>{PROFILES.map(row)}</Section>
           </View>
-          <View style={twoCol ? styles.col : undefined}>
+          <View>
             <Section title={t('ownerSocials.contact')}>{CONTACT.map(row)}</Section>
           </View>
         </View>
@@ -96,6 +94,4 @@ export function SocialsScreen() {
 
 const styles = StyleSheet.create({
   stack: { gap: tokens.space[5] },
-  split: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.space[5] },
-  col: { flex: 1, minWidth: 0 },
 });
