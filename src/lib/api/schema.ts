@@ -757,10 +757,10 @@ export interface paths {
         get?: never;
         /**
          * Connect the venue's own Paystack account with its public and secret keys. The server checks them with Paystack first.
-         * @description Money goes straight to the venue's Paystack account; Ozaa never holds it. The secret key is
+         * @description Money goes straight to the venue's Paystack account; Cravins never holds it. The secret key is
          *     stored encrypted on the server only. It is never returned, logged or sent to an app.
          *     Fails with paystack_keys_invalid (Paystack refused them), paystack_mode_mismatch (test keys
-         *     in live mode or the reverse) or live_not_enabled (Ozaa takes test keys only for now).
+         *     in live mode or the reverse) or live_not_enabled (Cravins takes test keys only for now).
          */
         put: operations["ownerConnectPaystack"];
         post?: never;
