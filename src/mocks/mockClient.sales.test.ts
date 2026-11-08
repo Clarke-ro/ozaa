@@ -27,3 +27,23 @@ test('a date range with no orders is all zeros', async () => {
   expect(empty.days).toEqual([]);
   expect(empty.topItems).toEqual([]);
 });
+
+test('marking an order paid in person moves its value from unpaid to in person', async () => {
+  const { api } = await signedInMock();
+  const { id } = await api.getVenue('mamas-kitchen');
+  const dish = (await api.getMenu('mamas-kitchen')).items[0]!;
+  const order = await api.ownerCreateOrder(
+    id,
+    { clientOrderId: crypto.randomUUID(), lines: [{ menuItemId: dish.id, quantity: 1 }] },
+    { idempotencyKey: 'sales-pay-1' },
+  );
+  const before = (await api.ownerGetSales(id)).payments;
+  await api.ownerRecordManualPayment(
+    order.id,
+    { method: 'cash' },
+    { idempotencyKey: 'sales-pay-2' },
+  );
+  const after = (await api.ownerGetSales(id)).payments;
+  expect(after.inPersonPesewas - before.inPersonPesewas).toBe(order.totalPesewas);
+  expect(before.unpaidPesewas - after.unpaidPesewas).toBe(order.totalPesewas);
+});
