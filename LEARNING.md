@@ -7,7 +7,7 @@ Plain-language notes for Clarke. Newest at the top.
 ## 2026-11-08 · A clearer Setup, with Skip on payments
 
 **What we built**
-Setup is easier to follow. Each step asks one question and says why it matters. Wi-Fi and online payments can be skipped, and the end screen shows what you set up.
+Setup is easier to follow. It opens on its own, with no tab bar or sidebar, just Close. Each step asks one question, each field sits on its own card, Wi-Fi and online payments can be skipped, and the end screen shows what you set up.
 
 **How it works**
 ```
@@ -20,7 +20,8 @@ Venue → Tables → Wi-Fi (Skip) → How guests pay (Connect Paystack, or Skip 
 
 **Files to look at**
 - `src/features/owner/screens/setup/setupFlow.ts` and its test: the buttons and the summary.
-- `SetupScreen.tsx`: the steps. `SetupFooter.tsx`: the bar. `SetupDone.tsx`: the end screen.
+- `SetupScreen.tsx`: the steps. `SetupFrame.tsx`: the page with Close. `SetupFooter.tsx`: the bar. `SetupDone.tsx`: the end screen.
+- `src/features/owner/chrome/nav.ts` (`isFocused`): pages shown without the tab bar or sidebar.
 - `e2e/owner-setup.spec.ts`: skip Wi-Fi and payments, then check the summary.
 
 **New idea: one primary action per step**

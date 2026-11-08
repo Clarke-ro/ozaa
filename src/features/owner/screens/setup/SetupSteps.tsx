@@ -33,7 +33,10 @@ export function SetupSteps({ current }: { current: number }) {
               <View
                 style={[
                   styles.line,
-                  { backgroundColor: index === 0 ? 'transparent' : reached ? theme.fill : theme.line },
+                  {
+                    backgroundColor:
+                      index === 0 ? 'transparent' : reached ? theme.fill : theme.line,
+                  },
                 ]}
               />
               <View
@@ -50,7 +53,10 @@ export function SetupSteps({ current }: { current: number }) {
                 ) : (
                   <Text
                     variant="caption"
-                    style={{ color: on ? theme.onFill : theme.muted, fontFamily: fontFamily.strong }}
+                    style={{
+                      color: on ? theme.onFill : theme.muted,
+                      fontFamily: fontFamily.strong,
+                    }}
                   >
                     {index + 1}
                   </Text>
@@ -84,7 +90,7 @@ export function SetupSteps({ current }: { current: number }) {
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', paddingVertical: tokens.space[2] },
+  row: { flexDirection: 'row' },
   item: { flex: 1, alignItems: 'center', gap: tokens.space[1] },
   markRow: { flexDirection: 'row', alignItems: 'center', alignSelf: 'stretch' },
   line: { flex: 1, height: 2 },

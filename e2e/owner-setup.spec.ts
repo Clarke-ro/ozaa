@@ -15,6 +15,9 @@ test('owner setup: skip Wi-Fi and payments, then see what was set up', async ({ 
   await page.getByRole('button', { name: /^Setup/ }).first().click();
 
   await expect(page.getByText('What is your venue called?')).toBeVisible({ timeout: 15_000 });
+  // Setup stands alone: no tab bar to wander off into.
+  await expect(page.getByRole('tab', { name: 'More', exact: true })).toHaveCount(0);
+  await page.screenshot({ path: 'test-results/setup-venue.png' });
   await page.getByRole('button', { name: 'Next', exact: true }).click();
   await expect(page.getByText('How many tables?')).toBeVisible({ timeout: 15_000 });
   await page.getByRole('button', { name: 'Next', exact: true }).click();

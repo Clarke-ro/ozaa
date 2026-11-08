@@ -3,20 +3,22 @@ import { StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { CircleCheck } from 'lucide-react-native';
 import { api } from '@/lib/api';
 import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
-import { fontFamily, useTheme } from '@/ui/theme';
-import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
+import { useTheme } from '@/ui/theme';
+import { DeskWait } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
 import { Field, cardStyle, toast } from '../../kit';
 import { planTables } from '../tables/planTables';
 import { WifiSection, type WifiForm } from '../services/WifiSection';
+import { PaymentsStep } from './PaymentsStep';
 import { SetupDone } from './SetupDone';
 import { SetupFooter } from './SetupFooter';
+import { SetupFrame } from './SetupFrame';
 import { SetupSteps } from './SetupSteps';
+import { TablesStep } from './TablesStep';
 import { STEPS, footerFor, setupSummary, type Step } from './setupFlow';
 
 /**
@@ -120,16 +122,17 @@ export function SetupScreen() {
       paystack,
     });
     return (
-      <OwnerPage title={t('owner.setup')}>
+      <SetupFrame>
         <SetupDone rows={rows} onEdit={(target) => setStep(STEPS.indexOf(target))} />
-      </OwnerPage>
+      </SetupFrame>
     );
   }
 
   const footer = footerFor(current, paystack);
+  // Each field sits on its own card; the question above them is the step's only heading.
+  const card = [cardStyle(theme), styles.card];
   return (
-    <OwnerPage
-      title={t('owner.setup')}
+    <SetupFrame
       footer={
         <SetupFooter
           footer={footer}
@@ -142,104 +145,66 @@ export function SetupScreen() {
         />
       }
     >
-      <SetupSteps current={step} />
+      <View style={card}>
+        <SetupSteps current={step} />
+      </View>
       <DeskWait
         loading={venue.isLoading}
         error={venue.isError}
         onRetry={() => void venue.refetch()}
       >
-        <View style={[styles.card, cardStyle(theme)]}>
-          <View style={styles.head}>
-            <Text variant="caption" style={{ color: theme.muted, fontFamily: fontFamily.strong }}>
-              {t('ownerSetup.progress', { step: step + 1, total: STEPS.length })}
-            </Text>
-            <Text variant="display-m" accessibilityRole="header">
-              {t(`ownerSetup.title.${current}`)}
-            </Text>
-            <Text variant="body" style={{ color: theme.muted }}>
-              {t(`ownerSetup.lead.${current}`)}
-            </Text>
-          </View>
+        <View style={styles.stack}>
+          <Text variant="display-m" accessibilityRole="header" style={styles.question}>
+            {t(`ownerSetup.title.${current}`)}
+          </Text>
 
           {current === 'venue' ? (
             <>
-              <Field
-                label={t('ownerSetup.venueName')}
-                value={venueName}
-                onChangeText={setName}
-                error={err ?? undefined}
-              />
-              <Field
-                label={t('ownerSetup.place')}
-                value={venuePlace}
-                onChangeText={setPlace}
-                placeholder={t('ownerSetup.placeHint')}
-              />
+              <View style={card}>
+                <Field
+                  label={t('ownerSetup.venueName')}
+                  value={venueName}
+                  onChangeText={setName}
+                  error={err ?? undefined}
+                />
+              </View>
+              <View style={card}>
+                <Field
+                  label={t('ownerSetup.place')}
+                  value={venuePlace}
+                  onChangeText={setPlace}
+                  placeholder={t('ownerSetup.placeHint')}
+                />
+              </View>
             </>
           ) : null}
 
           {current === 'tables' ? (
-            <>
-              <View style={styles.row}>
-                <Field
-                  label={t('ownerTables.from')}
-                  value={from}
-                  onChangeText={setFrom}
-                  keyboardType="number-pad"
-                />
-                <Field
-                  label={t('ownerTables.to')}
-                  value={to}
-                  onChangeText={setTo}
-                  keyboardType="number-pad"
-                />
-              </View>
-              <Text variant="caption" style={{ color: err ? theme.error : theme.muted }}>
-                {err ??
-                  (plan.codes.length
-                    ? t('ownerTables.willCreate', {
-                        count: plan.codes.length,
-                        first: plan.codes[0],
-                        last: plan.codes.at(-1),
-                      })
-                    : t('ownerSetup.tablesExist', { count: existing.length }))}
-              </Text>
-            </>
-          ) : null}
-
-          {current === 'wifi' ? (
-            <WifiSection
-              bare
-              value={wifi}
-              onChange={(k, val) => setWifi({ ...wifi, [k]: val })}
+            <TablesStep
+              from={from}
+              to={to}
+              onFrom={setFrom}
+              onTo={setTo}
+              plan={plan}
+              existing={existing.length}
+              error={err}
+              card={card}
             />
           ) : null}
 
-          {current === 'payments' && paystack ? (
-            <View style={[styles.note, { backgroundColor: theme.wash }]}>
-              <CircleCheck size={20} color={theme.success} />
-              <Text variant="body" style={styles.flex}>
-                {t('ownerSetup.connectedNote')}
-              </Text>
-            </View>
+          {current === 'wifi' ? (
+            <WifiSection bare value={wifi} onChange={(k, val) => setWifi({ ...wifi, [k]: val })} />
           ) : null}
+
+          {current === 'payments' ? <PaymentsStep paystack={paystack} /> : null}
         </View>
       </DeskWait>
-    </OwnerPage>
+    </SetupFrame>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { gap: tokens.space[5], padding: tokens.space[5] },
-  head: { gap: tokens.space[1] },
-  row: { flexDirection: 'row', gap: tokens.space[3] },
-  note: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[3],
-    padding: tokens.space[3],
-    borderRadius: tokens.radius.md,
-    borderCurve: 'continuous',
-  },
-  flex: { flex: 1 },
+  card: { padding: tokens.space[4] },
+  stack: { gap: tokens.space[3] },
+  question: { marginTop: tokens.space[2], marginBottom: tokens.space[1] },
 });

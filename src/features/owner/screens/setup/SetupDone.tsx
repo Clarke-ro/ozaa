@@ -7,13 +7,18 @@ import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { useOwnerLayout } from '../../chrome/layout';
-import { LinkRow, Section } from '../../kit';
+import { LinkRow, cardStyle } from '../../kit';
 import type { Step, SummaryRow } from './setupFlow';
 
-const ICON: Record<Step, LucideIcon> = { venue: Store, tables: QrCode, wifi: Wifi, payments: CreditCard };
+const ICON: Record<Step, LucideIcon> = {
+  venue: Store,
+  tables: QrCode,
+  wifi: Wifi,
+  payments: CreditCard,
+};
 
 /**
- * "You're ready": what was set up, one row per step. Tapping a row goes back to that step, so
+ * "You're ready": what was set up, one card per step. Tapping a card goes back to that step, so
  * nothing is final. Then the next real job: print the table QR codes.
  */
 export function SetupDone({ rows, onEdit }: { rows: SummaryRow[]; onEdit: (step: Step) => void }) {
@@ -42,21 +47,19 @@ export function SetupDone({ rows, onEdit }: { rows: SummaryRow[]; onEdit: (step:
         <Text variant="display-m" accessibilityRole="header">
           {t('ownerSetup.doneTitle')}
         </Text>
-        <Text variant="body" style={{ color: theme.muted }}>
-          {t('ownerSetup.doneLead')}
-        </Text>
       </View>
-      <Section>
+      <View style={styles.cards}>
         {rows.map((row) => (
-          <LinkRow
-            key={row.step}
-            icon={ICON[row.step]}
-            label={t(`ownerSetup.steps.${row.step}`)}
-            value={value(row)}
-            onPress={() => onEdit(row.step)}
-          />
+          <View key={row.step} style={[cardStyle(theme), styles.card]}>
+            <LinkRow
+              icon={ICON[row.step]}
+              label={t(`ownerSetup.steps.${row.step}`)}
+              value={value(row)}
+              onPress={() => onEdit(row.step)}
+            />
+          </View>
         ))}
-      </Section>
+      </View>
       <View style={[styles.actions, wide && styles.actionsWide]}>
         <Button label={t('ownerSetup.printQr')} onPress={() => router.push('/owner/tables')} />
         <Button
@@ -72,6 +75,9 @@ export function SetupDone({ rows, onEdit }: { rows: SummaryRow[]; onEdit: (step:
 const styles = StyleSheet.create({
   stack: { gap: tokens.space[6] },
   head: { gap: tokens.space[2] },
+  cards: { gap: tokens.space[3] },
+  // The row brings its own padding; the card clips its pressed colour to the rounded corners.
+  card: { overflow: 'hidden' },
   actions: { gap: tokens.space[2] },
   actionsWide: { flexDirection: 'row', alignItems: 'center' },
 });

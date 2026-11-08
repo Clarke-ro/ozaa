@@ -39,7 +39,7 @@ export function SetupFooter({
         { borderTopColor: theme.line, backgroundColor: theme.surface, paddingHorizontal: gutter },
       ]}
     >
-      <View style={[styles.inner, { maxWidth: tokens.owner.page.form }]}>
+      <View style={[styles.inner, { maxWidth: tokens.owner.page.setup }]}>
         {footer.back ? (
           <Button label={t('owner.back')} tone="ghost" size="md" onPress={onBack} />
         ) : null}
