@@ -15,6 +15,9 @@ import { EmptyCard } from '../../kit';
 import { Button } from '@/ui/Button';
 import { ORDER_RANGES, orderRange, type OrderRange } from '../../desk/orderRange';
 import { CreateOrderSheet } from './CreateOrderSheet';
+import { MarkPaidSheet, inPersonMethods } from './MarkPaidSheet';
+import type { Order } from '@/lib/api/types';
+import { guestKeys } from '@/lib/queryKeys';
 import { OpenCalls } from './OpenCalls';
 import { OrderCard } from './OrderCard';
 import { useOrderMove } from './useOrderMove';
@@ -35,6 +38,7 @@ export function OrdersScreen() {
   const [picked, setPicked] = useState<OrderView | null>(null);
   const [range, setRange] = useState<OrderRange>('all');
   const [creating, setCreating] = useState(false);
+  const [paying, setPaying] = useState<Order | null>(null);
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), TICK_MS);
@@ -57,6 +61,13 @@ export function OrdersScreen() {
     refetchInterval: 5000,
   });
   const canCreate = role === 'owner' || role === 'manager' || role === 'waiter';
+  // What guests can pay with is on the public venue, so waiters can read it too (no keys in it).
+  const slug = venue.data?.slug ?? '';
+  const publicVenue = useQuery({
+    queryKey: guestKeys.venue(slug),
+    queryFn: () => api.getVenue(slug),
+    enabled: Boolean(slug),
+  });
 
   const move = useOrderMove(venueId, role);
 
@@ -126,12 +137,22 @@ export function OrdersScreen() {
                   next={move.label(order)}
                   busy={move.busy(order)}
                   onNext={() => move.run(order)}
+                  onMarkPaid={canCreate ? () => setPaying(order) : undefined}
                 />
               </View>
             ))}
           </View>
         )}
       </DeskWait>
+      {paying && venue.data ? (
+        <MarkPaidSheet
+          order={paying}
+          venueId={venueId}
+          methods={inPersonMethods(publicVenue.data?.payMethods)}
+          currency={venue.data.currency}
+          onClose={() => setPaying(null)}
+        />
+      ) : null}
       {creating && venue.data ? (
         <CreateOrderSheet
           venueId={venueId}
