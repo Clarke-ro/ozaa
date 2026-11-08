@@ -1,4 +1,4 @@
-# Ozaa marketing site
+# Cravins marketing site
 
 This folder is the marketing site. It is separate from the guest and owner app.
 
@@ -58,7 +58,7 @@ PUBLIC_APP_URL=https://app.example.com PUBLIC_CONTACT_ENDPOINT=https://formspree
 
 ## Cookies
 
-The banner stores the visitor's choice in `localStorage` under `ozaa-cookies`. Nothing optional runs yet; when analytics or marketing scripts are added, load them only if that choice allows it. "Cookie settings" in the footer reopens the banner.
+The banner stores the visitor's choice in `localStorage` under `cravins-cookies`. Nothing optional runs yet; when analytics or marketing scripts are added, load them only if that choice allows it. "Cookie settings" in the footer reopens the banner.
 
 ## Sample screens
 

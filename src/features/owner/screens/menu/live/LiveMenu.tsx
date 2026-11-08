@@ -6,8 +6,8 @@ import { MenuRail } from './MenuRail';
 import { PhonePreview, type PreviewActions } from './PhonePreview';
 import { ReorderSheet } from './ReorderSheet';
 
-// Phone (390) + rail (320) + gaps fit side by side from here; below it the rail goes underneath.
-const SIDE_BY_SIDE = 1100;
+// Phone (390) + rail (360) + gaps fit side by side from here; below it the rail goes underneath.
+const SIDE_BY_SIDE = 920;
 
 /** The menu as guests see it, editable in place, with the link, publish and style beside it. */
 export function LiveMenu({
@@ -67,5 +67,5 @@ const styles = StyleSheet.create({
   wrap: { gap: tokens.space[6] },
   row: { flexDirection: 'row', alignItems: 'flex-start' },
   phoneCol: { flex: 1 },
-  railCol: { width: 320 },
+  railCol: { width: 360 },
 });

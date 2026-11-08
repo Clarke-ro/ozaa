@@ -161,7 +161,7 @@ function tablesFor(slug: string, code: string): Table[] {
     id: `tbl_${slug}_${item}`,
     code: item,
     label: `Table ${item}`,
-    qrUrl: `https://ozaa.app/${slug}/t/${item}`,
+    qrUrl: `https://cravins.app/${slug}/t/${item}`,
   }));
 }
 
@@ -458,8 +458,8 @@ export function createWorld(now: number): World {
       settlementType: 'momo',
       accountMasked: '024 *** 0001',
       verified: true,
-      // Clarke has not set Ozaa's fee yet. The sample shows 0 until he does.
-      ozaaFeePercent: 0,
+      // Clarke has not set Cravins's fee yet. The sample shows 0 until he does.
+      cravinsFeePercent: 0,
     };
     const sample = orders.find((item) => item.order.venueId === venue.id)?.order.tableCode ?? '1';
     tables[venue.id] = tablesFor(venue.slug, sample);

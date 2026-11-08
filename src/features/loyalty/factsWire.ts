@@ -100,7 +100,7 @@ export function walletFromWire(input: unknown, now: string, venueSlug: string): 
       left,
     },
     cardNumber: cardNumber(member.id),
-    qrPayload: `ozaa://loyalty/${venueSlug}/${member.id}`,
+    qrPayload: `cravins://loyalty/${venueSlug}/${member.id}`,
     catalogue: programme.rewards.map((reward) => ({
       id: reward.id,
       title: reward.title,

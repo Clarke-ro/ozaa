@@ -7,7 +7,7 @@ license: MIT
 Source: https://github.com/callstackincubator/agent-skills/tree/main/skills/react-native-best-practices
 License: MIT (c) 2026 Callstack Incubator
 Commit: 59e9d17
-Copied: 2026-10-31 for the Ozaa build kit. Text unchanged below this header. Images omitted.
+Copied: 2026-10-31 for the Cravins build kit. Text unchanged below this header. Images omitted.
 -->
 
 # React Native Best Practices

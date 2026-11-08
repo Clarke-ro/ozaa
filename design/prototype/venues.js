@@ -1,6 +1,6 @@
 // Sample venue data. In production this comes from the venue's settings.
 window.FONT_PAIRS = {
-  ozaa:    { label: 'Ozaa (Unbounded + Inter)', display: 'Unbounded', weight: 700 },
+  cravins:    { label: 'Cravins (Unbounded + Inter)', display: 'Unbounded', weight: 700 },
   serif:   { label: 'Classic (Noto Serif + Inter)', display: 'Noto Serif', weight: 700 },
   bold:    { label: 'Bold (Montserrat + Inter)', display: 'Montserrat', weight: 800 },
 };
@@ -29,7 +29,7 @@ window.VENUES = {
       { n: 'Kelewele bites', d: 'A small bowl of spicy plantain to go with your coffee.', p: 18, img: 'img/kelewele.jpg' },
     ] },
   akos: {
-    name: 'Auntie Akos Chop Bar', initials: 'AA', accent: '#FFC21A', font: 'ozaa',
+    name: 'Auntie Akos Chop Bar', initials: 'AA', accent: '#FFC21A', font: 'cravins',
     banner: 'img/banner-akos.jpg', about: 'Fufu pounded to order and soups from the big pots. Come hungry.',
     place: 'Kaneshie Market Road, Accra', open: 'Open now', until: 'until 9 PM', lang: 'TWI',
     cats: ['Fufu', 'Banku', 'Rice', 'Drinks'],

@@ -3,7 +3,7 @@ Source: https://raw.githubusercontent.com/expo/expo/main/packages/create-expo/te
 Docs: https://docs.expo.dev/agents/
 License: MIT, © 650 Industries, Inc. (expo/expo repository)
 Copied 2026-10-31. Text unchanged. This is the AGENTS.md that create-expo-app ships with new projects.
-Ozaa note: merge these rules into the app repo's root AGENTS.md (see the kit's AGENTS.md).
+Cravins note: merge these rules into the app repo's root AGENTS.md (see the kit's AGENTS.md).
 -->
 
 This is an Expo/React Native mobile application. Prioritize mobile-first patterns, performance, and cross-platform compatibility.

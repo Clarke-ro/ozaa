@@ -148,7 +148,7 @@ function themeOf(accent: string | null, fontPair: VenueTheme['fontPair']): Venue
       tint: derived.tint,
       badgeInk: derived.badgeInk,
       notes: derived.notes,
-      ozaaDistance: derived.ozaaDistance,
+      cravinsDistance: derived.cravinsDistance,
       ratios: {
         buttonText: derived.ratios.buttonText,
         inkOnWhite: derived.ratios.inkOnWhite,
@@ -495,7 +495,7 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
               id: `tbl_${tableCode}`,
               code: tableCode,
               label: `Table ${tableCode}`,
-              qrUrl: `https://ozaa.app/${venue.slug}/t/${tableCode}`,
+              qrUrl: `https://cravins.app/${venue.slug}/t/${tableCode}`,
             }
           : undefined);
       return {
@@ -623,7 +623,7 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
           displayText:
             body.method === 'momo' ? 'Check your phone and enter your PIN to approve.' : undefined,
           authorizationUrl:
-            body.method === 'card' ? `https://mock.ozaa.app/checkout/${reference}` : undefined,
+            body.method === 'card' ? `https://mock.cravins.app/checkout/${reference}` : undefined,
           approveBy: body.method === 'momo' ? new Date(now() + 180_000).toISOString() : null,
           createdAt,
           paidAt: null,
@@ -874,7 +874,7 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       const mediaId = nextId(world, 'med');
       return {
         mediaId,
-        uploadUrl: `https://mock.ozaa.app/upload/${mediaId}`,
+        uploadUrl: `https://mock.cravins.app/upload/${mediaId}`,
         expiresAt: new Date(now() + 15 * 60_000).toISOString(),
       };
     },
@@ -1023,7 +1023,7 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
         id: `tbl_${venue.slug}_${code}`,
         code,
         label: `Table ${code}`,
-        qrUrl: `https://ozaa.app/${venue.slug}/t/${code}`,
+        qrUrl: `https://cravins.app/${venue.slug}/t/${code}`,
       }));
       world.tables[venueId] = [...(world.tables[venueId] ?? []), ...created];
       return { items: created };
@@ -1258,7 +1258,7 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
         settlementType: body.settlement.type,
         accountMasked: masked,
         verified: false,
-        ozaaFeePercent: world.payouts[venueId]?.ozaaFeePercent ?? 0,
+        cravinsFeePercent: world.payouts[venueId]?.cravinsFeePercent ?? 0,
       };
       world.payouts[venueId] = account;
       return account;

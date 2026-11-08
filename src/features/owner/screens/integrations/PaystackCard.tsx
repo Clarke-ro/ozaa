@@ -27,7 +27,7 @@ import {
 const PAYSTACK_KEYS_URL = 'https://dashboard.paystack.com/#/settings/developers';
 
 /**
- * The venue's own Paystack account. Money goes straight to it; Ozaa never holds it. The secret
+ * The venue's own Paystack account. Money goes straight to it; Cravins never holds it. The secret
  * key is typed here once, sent to the server to be checked and stored encrypted, then cleared:
  * it is never kept on this device or shown again (only its last 4 characters).
  */

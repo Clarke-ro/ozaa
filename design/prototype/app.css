@@ -1,4 +1,4 @@
-/* Ozaa v5 guest app. Black and white base, venue accent (or Ozaa orange) for icons, rings and the one filled button. */
+/* Cravins v5 guest app. Black and white base, venue accent (or Cravins orange) for icons, rings and the one filled button. */
 .screen{position:absolute;inset:0;overflow-y:auto;scrollbar-width:none;padding-bottom:120px;background:#fff}
 .screen::-webkit-scrollbar{display:none}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
@@ -62,107 +62,125 @@ export function useProgramEditor(venueId: string, program: LoyaltyProgram | unde
   return { draft, showErrors, saveBar };
 }
 
-/** The stamp card rules, in three short sections. */
+/** The stamp card rules, with live preview beside the form on wide screens. */
 export function ProgramForm({ editor }: { editor: ReturnType<typeof useProgramEditor> }) {
   const theme = useTheme();
   const { t } = useTranslation();
+  const { width } = useWindowDimensions();
+  const wide = width >= 920;
   const { draft, showErrors } = editor;
   const f = draft.value;
   const missingReward = showErrors && f.enabled && !f.reward.trim();
 
   return (
-    <View style={styles.stack}>
-      <Section title={t('ownerLoyalty.card')}>
-        <SwitchRow
-          label={t('ownerLoyalty.on')}
-          hint={t('ownerLoyalty.onHint')}
-          value={f.enabled}
-          onChange={(v) => draft.set('enabled', v)}
-        />
-        <InputRow
-          label={t('ownerLoyalty.reward')}
-          value={f.reward}
-          onChangeText={(v) => draft.set('reward', v)}
-          placeholder={t('ownerLoyalty.rewardHint')}
-          error={missingReward ? t('ownerLoyalty.rewardMissing') : undefined}
-        />
-        <SectionBody>
-          <View style={styles.row}>
-            <Text variant="body" style={styles.flex}>
-              {t('ownerLoyalty.stamps')}
-            </Text>
-            <Stepper
-              label={t('ownerLoyalty.stamps')}
-              value={f.stamps}
-              min={STAMPS.min}
-              max={STAMPS.max}
-              onChange={(n) => draft.set('stamps', n)}
-            />
-          </View>
-        </SectionBody>
-        <TreatToggle
-          label={t('ownerLoyalty.halfway')}
-          value={f.halfway}
-          onChange={(v) => draft.set('halfway', v)}
-        />
-        <SectionBody>
-          <StampPreview stamps={f.stamps} reward={f.reward} />
-        </SectionBody>
-      </Section>
-
-      <Section title={t('ownerLoyalty.gap')} note={t('ownerLoyalty.gapNote')}>
-        <SectionBody>
-          <Segmented<Cooldown>
-            label={t('ownerLoyalty.gap')}
-            value={f.cooldown}
-            onChange={(v) => draft.set('cooldown', v)}
-            options={(['none', '1h', '4h', '1d'] as const).map((id) => ({
-              id,
-              label: t(`ownerLoyalty.cooldown.${id}`),
-            }))}
+    <View style={[styles.stack, wide && styles.split]}>
+      <View style={[styles.stack, wide && styles.mainCol]}>
+        <Section title={t('ownerLoyalty.card')}>
+          <SwitchRow
+            label={t('ownerLoyalty.on')}
+            value={f.enabled}
+            onChange={(v) => draft.set('enabled', v)}
           />
-        </SectionBody>
-      </Section>
-
-      <Section title={t('ownerLoyalty.treats')} note={t('ownerLoyalty.treatsNote')}>
-        <TreatToggle
-          label={t('ownerLoyalty.welcome')}
-          value={f.welcome}
-          onChange={(v) => draft.set('welcome', v)}
-        />
-        <TreatToggle
-          label={t('ownerLoyalty.birthday')}
-          value={f.birthday}
-          onChange={(v) => draft.set('birthday', v)}
-        />
-        <TreatToggle
-          label={t('ownerLoyalty.winback')}
-          value={f.winback}
-          onChange={(v) => draft.set('winback', v)}
-        />
-        {f.winback.trim() ? (
+          <InputRow
+            label={t('ownerLoyalty.reward')}
+            value={f.reward}
+            onChangeText={(v) => draft.set('reward', v)}
+            placeholder={t('ownerLoyalty.rewardHint')}
+            error={missingReward ? t('ownerLoyalty.rewardMissing') : undefined}
+          />
           <SectionBody>
             <View style={styles.row}>
-              <Text variant="body" style={[styles.flex, { color: theme.muted }]}>
-                {t('ownerLoyalty.winbackAfter', { count: f.winbackDays })}
+              <Text variant="body" style={styles.flex}>
+                {t('ownerLoyalty.stamps')}
               </Text>
               <Stepper
-                label={t('ownerLoyalty.winbackDays')}
-                value={f.winbackDays}
-                min={WINBACK_DAYS.min}
-                max={WINBACK_DAYS.max}
-                onChange={(n) => draft.set('winbackDays', n)}
+                label={t('ownerLoyalty.stamps')}
+                value={f.stamps}
+                min={STAMPS.min}
+                max={STAMPS.max}
+                onChange={(n) => draft.set('stamps', n)}
               />
             </View>
           </SectionBody>
-        ) : null}
-      </Section>
+          <TreatToggle
+            label={t('ownerLoyalty.halfway')}
+            value={f.halfway}
+            onChange={(v) => draft.set('halfway', v)}
+          />
+          {!wide ? (
+            <SectionBody>
+              <StampPreview stamps={f.stamps} reward={f.reward} />
+            </SectionBody>
+          ) : null}
+        </Section>
+
+        <Section title={t('ownerLoyalty.gap')}>
+          <SectionBody>
+            <Segmented<Cooldown>
+              label={t('ownerLoyalty.gap')}
+              value={f.cooldown}
+              onChange={(v) => draft.set('cooldown', v)}
+              options={(['none', '1h', '4h', '1d'] as const).map((id) => ({
+                id,
+                label: t(`ownerLoyalty.cooldown.${id}`),
+              }))}
+            />
+          </SectionBody>
+        </Section>
+
+        <Section title={t('ownerLoyalty.treats')}>
+          <TreatToggle
+            label={t('ownerLoyalty.welcome')}
+            value={f.welcome}
+            onChange={(v) => draft.set('welcome', v)}
+          />
+          <TreatToggle
+            label={t('ownerLoyalty.birthday')}
+            value={f.birthday}
+            onChange={(v) => draft.set('birthday', v)}
+          />
+          <TreatToggle
+            label={t('ownerLoyalty.winback')}
+            value={f.winback}
+            onChange={(v) => draft.set('winback', v)}
+          />
+          {f.winback.trim() ? (
+            <SectionBody>
+              <View style={styles.row}>
+                <Text variant="body" style={[styles.flex, { color: theme.muted }]}>
+                  {t('ownerLoyalty.winbackAfter', { count: f.winbackDays })}
+                </Text>
+                <Stepper
+                  label={t('ownerLoyalty.winbackDays')}
+                  value={f.winbackDays}
+                  min={WINBACK_DAYS.min}
+                  max={WINBACK_DAYS.max}
+                  onChange={(n) => draft.set('winbackDays', n)}
+                />
+              </View>
+            </SectionBody>
+          ) : null}
+        </Section>
+      </View>
+
+      {wide ? (
+        <View style={styles.previewCol}>
+          <Section title={t('ownerNotice.preview')}>
+            <SectionBody>
+              <StampPreview stamps={f.stamps} reward={f.reward} />
+            </SectionBody>
+          </Section>
+        </View>
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   stack: { gap: tokens.space[5] },
+  split: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.space[6] },
+  mainCol: { flex: 1, minWidth: 0 },
+  previewCol: { width: 360 },
   row: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
   flex: { flex: 1 },
 });

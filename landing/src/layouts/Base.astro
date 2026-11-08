@@ -30,7 +30,7 @@ const {
   noindex = false,
 } = Astro.props;
 
-const fullTitle = title ? `${title} | Ozaa` : site.title;
+const fullTitle = title ? `${title} | Cravins` : site.title;
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
 const imageUrl = new URL(image, Astro.site).href;
 const jsonLd = {
@@ -54,7 +54,7 @@ const jsonLd = {
     {noindex ? <meta name="robots" content="noindex" /> : null}
     <link rel="canonical" href={canonical} />
     <meta property="og:type" content={type} />
-    <meta property="og:site_name" content="Ozaa" />
+    <meta property="og:site_name" content="Cravins" />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:image" content={imageUrl} />
@@ -69,7 +69,7 @@ const jsonLd = {
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <link rel="alternate" type="application/rss+xml" title="Ozaa blog" href="/rss.xml" />
+    <link rel="alternate" type="application/rss+xml" title="Cravins blog" href="/rss.xml" />
     <link rel="sitemap" href="/sitemap.xml" />
     <link rel="preload" href="/fonts/Inter-600.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/Inter-400.woff2" as="font" type="font/woff2" crossorigin />

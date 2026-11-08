@@ -19,8 +19,8 @@ import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
 import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
-import { ozaaTheme, ThemeProvider, useTheme } from '@/ui/theme';
-import { DeskCard, OzaaMark } from './kit';
+import { cravinsTheme, ThemeProvider, useTheme } from '@/ui/theme';
+import { DeskCard, CravinsMark } from './kit';
 import { SHADOW_INK } from '@/theme/palette';
 
 const SAMPLES = [
@@ -91,7 +91,7 @@ export function OwnerLogin() {
   };
 
   return (
-    <ThemeProvider theme={ozaaTheme}>
+    <ThemeProvider theme={cravinsTheme}>
       <SafeScreen>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -106,9 +106,9 @@ export function OwnerLogin() {
           >
             <Pressable style={styles.touchableDismissArea} onPress={dismissKeyboard}>
               <DeskCard style={styles.authCard}>
-                {/* Ozaa brand lockup */}
+                {/* Cravins brand lockup */}
                 <View style={styles.brandLockup}>
-                  <OzaaMark size={44} />
+                  <CravinsMark size={44} />
                   <Text variant="caption" style={styles.brandLabel}>
                     {t('owner.loginBrand')}
                   </Text>

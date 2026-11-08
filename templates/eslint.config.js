@@ -1,4 +1,4 @@
-// Expo's flat config plus a few Ozaa rules. Run with: npx expo lint
+// Expo's flat config plus a few Cravins rules. Run with: npx expo lint
 const { defineConfig } = require('eslint/config');
 const expoConfig = require('eslint-config-expo/flat');
 
@@ -19,7 +19,7 @@ module.exports = defineConfig([
       }],
       'no-restricted-syntax': ['error', {
         selector: "Literal[value=/TakeOrder|ScanChop/i]",
-        message: 'The product is called Ozaa.',
+        message: 'The product is called Cravins.',
       }],
     },
   },

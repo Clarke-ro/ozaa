@@ -72,7 +72,7 @@ export const useGuestSession = create<GuestSessionState>()(
       },
     }),
     {
-      name: 'ozaa-guest-visit',
+      name: 'cravins-guest-visit',
       storage: createJSONStorage(() => ownerSessionStorage),
       partialize: ({ token, slug, tableCode, orderId, loyaltyToken }) => ({
         token,
@@ -112,7 +112,7 @@ export const useOwnerSession = create<OwnerSessionState>()(
       },
     }),
     {
-      name: 'ozaa-owner-session',
+      name: 'cravins-owner-session',
       storage: createJSONStorage(() => ownerSessionStorage),
       partialize: ({ accessToken, refreshToken, venueId, role, firstName }) => ({
         accessToken,

@@ -9,8 +9,8 @@ test('Mama’s Kitchen keeps white text on the brick colour', () => {
   expect(theme.pressed).toBe('#9C3A24');
   expect(theme.tint).toBe('#F5E5E1');
   expect(theme.badgeInk).toBe('#B5432A');
-  expect(theme.tooCloseToOzaa).toBe(false);
-  expect(theme.ozaaDistance).toBe(24.2);
+  expect(theme.tooCloseToCravins).toBe(false);
+  expect(theme.cravinsDistance).toBe(24.2);
 });
 
 test('Bean There keeps white text on the green', () => {
@@ -29,17 +29,17 @@ test('Auntie Akos yellow falls back to dark text and darker ink', () => {
   expect(theme.ratios.inkOnWhite).toBe(4.54);
   expect(theme.badgeInk).toBe('#8E6C0E');
   expect(theme.ratios.badge).toBe(4.53);
-  expect(theme.tooCloseToOzaa).toBe(false);
+  expect(theme.tooCloseToCravins).toBe(false);
 });
 
-test('Ozaa orange carries white text and warns when a venue copies it', () => {
+test('Cravins orange carries white text and warns when a venue copies it', () => {
   const own = deriveTheme('#D24000');
   expect(own.onAccent).toBe('#FFFFFF');
   expect(own.ratios.buttonText).toBeGreaterThanOrEqual(4.5);
-  expect(own.tooCloseToOzaa).toBe(true);
+  expect(own.tooCloseToCravins).toBe(true);
   expect(deriveTheme().isDefault).toBe(true);
   expect(deriveTheme().ratios.buttonText).toBeGreaterThanOrEqual(4.5);
-  expect(deriveTheme().tooCloseToOzaa).toBe(false);
+  expect(deriveTheme().tooCloseToCravins).toBe(false);
 });
 
 test('every pair stays at 4.5:1 across 500 colours', () => {

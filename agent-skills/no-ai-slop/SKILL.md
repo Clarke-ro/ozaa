@@ -6,7 +6,7 @@ description: Edit drafts into sharper, more human writing while preserving the w
 Source: https://github.com/petergyang/no-ai-slop/tree/main/skills/no-ai-slop
 License: MIT (c) 2026 Peter Yang
 Commit: 000650b
-Copied: 2026-10-31 for the Ozaa build kit. Text unchanged below this header.
+Copied: 2026-10-31 for the Cravins build kit. Text unchanged below this header.
 -->
 
 # No AI slop

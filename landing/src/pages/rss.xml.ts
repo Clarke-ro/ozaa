@@ -23,7 +23,7 @@ export const GET: APIRoute = async ({ site }) => {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
   <channel>
-    <title>Ozaa blog</title>
+    <title>Cravins blog</title>
     <link>${new URL("/blog", base).href}</link>
     <description>${escape(blogPage.description)}</description>
     <language>en</language>
