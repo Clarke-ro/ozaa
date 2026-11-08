@@ -7,7 +7,7 @@ license: Complete terms in LICENSE.txt
 Source: https://github.com/anthropics/skills/tree/main/skills/frontend-design
 License: Apache-2.0 (LICENSE.txt in skill folder)
 Commit: ca45fc4
-Copied: 2026-10-31 for the Ozaa build kit. Text unchanged below this header.
+Copied: 2026-10-31 for the Cravins build kit. Text unchanged below this header.
 -->
 
 # Frontend Design

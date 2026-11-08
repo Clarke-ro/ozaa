@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Smartphone } from 'lucide-react-native';
@@ -17,6 +17,8 @@ import { ownerKeys } from '../../data/keys';
 /** Phones and tablets that can scan loyalty cards, each with when it was last used. */
 export function DevicesScreen() {
   const { t } = useTranslation();
+  const { width } = useWindowDimensions();
+  const twoCol = width >= 900;
   const client = useQueryClient();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const key = ownerKeys.devices(venueId);
@@ -28,7 +30,6 @@ export function DevicesScreen() {
   const [pairing, setPairing] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    // "Active now" and "seen 5 minutes ago" only need to move once a minute.
     const id = setInterval(() => setNow(Date.now()), 60_000);
     return () => clearInterval(id);
   }, []);
@@ -74,9 +75,13 @@ export function DevicesScreen() {
         ) : (
           <View style={styles.stack}>
             <SectionLabel title={t('ownerDevices.list', { count: items.length })} caps />
-            {items.map((d) => (
-              <DeviceCard key={d.id} device={d} now={now} onRemove={() => setRemoving(d)} />
-            ))}
+            <View style={[styles.list, twoCol && styles.grid]}>
+              {items.map((d) => (
+                <View key={d.id} style={twoCol ? styles.cell : undefined}>
+                  <DeviceCard device={d} now={now} onRemove={() => setRemoving(d)} />
+                </View>
+              ))}
+            </View>
           </View>
         )}
       </DeskWait>
@@ -95,4 +100,9 @@ export function DevicesScreen() {
   );
 }
 
-const styles = StyleSheet.create({ stack: { gap: tokens.space[3] } });
+const styles = StyleSheet.create({
+  stack: { gap: tokens.space[3] },
+  list: { gap: tokens.space[3] },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start' },
+  cell: { flexBasis: '48.5%', flexGrow: 1 },
+});

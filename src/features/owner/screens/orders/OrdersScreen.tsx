@@ -86,22 +86,24 @@ export function OrdersScreen() {
       }
     >
       <OpenCalls now={now} />
-      <FilterChips<OrderView>
-        label={t('owner.orders')}
-        value={tab}
-        onChange={setPicked}
-        items={ORDER_VIEWS.map((id) => ({
-          id,
-          label: t(`ownerOrders.tabs.${id}`),
-          count: counts[id],
-        }))}
-      />
-      <FilterChips<OrderRange>
-        label={t('ownerOrders.range.label')}
-        value={range}
-        onChange={setRange}
-        items={ORDER_RANGES.map((id) => ({ id, label: t(`ownerOrders.range.${id}`) }))}
-      />
+      <View style={[styles.toolbar, twoUp && styles.toolbarWide]}>
+        <FilterChips<OrderView>
+          label={t('owner.orders')}
+          value={tab}
+          onChange={setPicked}
+          items={ORDER_VIEWS.map((id) => ({
+            id,
+            label: t(`ownerOrders.tabs.${id}`),
+            count: counts[id],
+          }))}
+        />
+        <FilterChips<OrderRange>
+          label={t('ownerOrders.range.label')}
+          value={range}
+          onChange={setRange}
+          items={ORDER_RANGES.map((id) => ({ id, label: t(`ownerOrders.range.${id}`) }))}
+        />
+      </View>
       <DeskWait
         loading={orders.isLoading}
         error={orders.isError}
@@ -143,7 +145,15 @@ export function OrdersScreen() {
 }
 
 const styles = StyleSheet.create({
+  toolbar: { gap: tokens.space[2] },
+  toolbarWide: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: tokens.space[3],
+  },
   list: { gap: tokens.space[3] },
   grid: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start' },
-  half: { flexBasis: '48%', flexGrow: 1 },
+  half: { flexBasis: '48.5%', flexGrow: 1 },
 });

@@ -3,7 +3,7 @@
 @font-face{font-family:Inter;src:url(fonts/Inter-600.woff2);font-weight:600;font-display:swap}
 @font-face{font-family:Montserrat;src:url(fonts/Montserrat-800.woff2);font-weight:800;font-display:swap}
 @font-face{font-family:"Noto Serif";src:url(fonts/NotoSerif-700.woff2);font-weight:700;font-display:swap}
-:root{--black:#111111;--white:#fff;--g600:#52525B;--g500:#71717A;--g200:#E4E4E7;--g100:#F4F4F5;--ozaa:#D24000;--ozaa-brand:#FC5205;--ozaa-hover:#BA3800;--ozaa-pressed:#A33000;--ozaa-tint:#FFF1EA;--success:#15803D;--error:#B91C1C;
+:root{--black:#111111;--white:#fff;--g600:#52525B;--g500:#71717A;--g200:#E4E4E7;--g100:#F4F4F5;--cravins:#D24000;--cravins-brand:#FC5205;--cravins-hover:#BA3800;--cravins-pressed:#A33000;--cravins-tint:#FFF1EA;--success:#15803D;--error:#B91C1C;
 --accent:#D24000;--on-accent:#fff;--accent-ink:#D24000;--accent-tint:#FFF1EA;--badge-ink:#BA3800;--accent-pressed:#A33000;--display:Unbounded;--display-weight:700}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{width:390px;height:844px;overflow:hidden;background:#fff}

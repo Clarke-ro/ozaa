@@ -1,4 +1,4 @@
-/** The venue's public menu link, for Instagram, TikTok and WhatsApp bios: https://ozaa.app/<slug>. */
+/** The venue's public menu link, for Instagram, TikTok and WhatsApp bios: https://cravins.app/<slug>. */
 export function menuLink(siteUrl: string, slug: string): string {
   return `${siteUrl.replace(/\/+$/, '')}/${slug}`;
 }

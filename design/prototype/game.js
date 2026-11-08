@@ -4,7 +4,7 @@
 window.PlateStack = (function () {
   const W = 358, H = 380, PH = 22, BASE = 210;
   let raf = 0, g = null, cfg = null, vk = '', venue = null, opts = {};
-  const key = k => 'ozaa:' + vk + ':' + k;
+  const key = k => 'cravins:' + vk + ':' + k;
   const load = (k, d) => { try { return JSON.parse(localStorage.getItem(key(k))) ?? d; } catch { return d; } };
   const save = (k, v) => { try { localStorage.setItem(key(k), JSON.stringify(v)); } catch {} };
   const SAMPLE = [{ n: 'Kwame', s: 23, sample: 1 }, { n: 'Ama', s: 19, sample: 1 }, { n: 'Yaw', s: 16, sample: 1 }, { n: 'Esi', s: 12, sample: 1 }, { n: 'Kojo', s: 9, sample: 1 }];

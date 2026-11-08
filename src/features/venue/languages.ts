@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { applyTextDirection } from '@/i18n/direction';
 import i18n from '@/i18n';
 
-export const LANGUAGE_KEY = 'ozaa:language';
+export const LANGUAGE_KEY = 'cravins:language';
 
 /**
  * Global list. Add a language by appending a row and a locale file.

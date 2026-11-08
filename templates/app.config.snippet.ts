@@ -3,16 +3,16 @@
 import type { ExpoConfig } from 'expo/config';
 
 const config: ExpoConfig = {
-  name: 'Ozaa',
-  slug: 'ozaa',
-  scheme: 'ozaa',
+  name: 'Cravins',
+  slug: 'cravins',
+  scheme: 'cravins',
   orientation: 'portrait',
   icon: './assets/images/icon.png',
   userInterfaceStyle: 'light',
-  // app.ozaa.* bundle ids are placeholders until Clarke owns ozaa.app. Change them before the first store build.
-  ios: { supportsTablet: false, bundleIdentifier: 'app.ozaa.owner' },
+  // app.cravins.* bundle ids are placeholders until Clarke owns cravins.app. Change them before the first store build.
+  ios: { supportsTablet: false, bundleIdentifier: 'app.cravins.owner' },
   android: {
-    package: 'app.ozaa.owner',
+    package: 'app.cravins.owner',
     adaptiveIcon: {
       foregroundImage: './assets/images/adaptive-icon-foreground.png',
       backgroundImage: './assets/images/adaptive-icon-background.png',
@@ -26,7 +26,7 @@ const config: ExpoConfig = {
     ['expo-splash-screen', { image: './assets/images/splash-icon.png', imageWidth: 200, backgroundColor: '#FFFFFF' }],
     'expo-font',
     'expo-secure-store',
-    ['expo-camera', { cameraPermission: 'Ozaa uses the camera to record your video review.', microphonePermission: 'Ozaa records sound with your video review.' }],
+    ['expo-camera', { cameraPermission: 'Cravins uses the camera to record your video review.', microphonePermission: 'Cravins records sound with your video review.' }],
   ],
   experiments: { typedRoutes: true },
 };

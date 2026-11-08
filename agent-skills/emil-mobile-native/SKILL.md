@@ -6,7 +6,7 @@ description: Make a web app feel native on a phone — the small CSS and meta-ta
 Source: https://github.com/emilkowalski/skill/tree/main/skills/mobile-native
 License: MIT (c) 2026 Emil Kowalski
 Commit: a81dbca
-Copied: 2026-10-31 for the Ozaa build kit. Text unchanged below this header.
+Copied: 2026-10-31 for the Cravins build kit. Text unchanged below this header.
 -->
 
 # Feeling Native On Mobile

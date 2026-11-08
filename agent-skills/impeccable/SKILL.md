@@ -8,7 +8,7 @@ license: Apache 2.0
 Source: https://github.com/pbakaus/impeccable (.cursor/skills/impeccable)
 License: Apache-2.0 (c) Paul Bakaus, see NOTICE
 Commit: 2f97a85
-Copied: 2026-10-31 for the Ozaa build kit. Text unchanged below this header.
+Copied: 2026-10-31 for the Cravins build kit. Text unchanged below this header.
 -->
 
 This skill gives you the tools and permission to make design that earns the name out-of-distribution craft. Work as an award-winning design director would: production-grade code, a clear POV, a deep grasp of what the client and its users need, and exceptional craft.

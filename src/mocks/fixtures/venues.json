@@ -68,7 +68,7 @@
         "tint": "#F5E5E1",
         "badgeInk": "#B5432A",
         "notes": [],
-        "ozaaDistance": 24.2,
+        "cravinsDistance": 24.2,
         "ratios": {
           "buttonText": 5.52,
           "inkOnWhite": 5.52,
@@ -77,7 +77,7 @@
       }
     },
     "banner": {
-      "url": "https://mock.ozaa.app/media/img/banner-mamas.jpg",
+      "url": "https://mock.cravins.app/media/img/banner-mamas.jpg",
       "width": 1170,
       "height": 720,
       "alt": "Mama's Kitchen"
@@ -235,7 +235,7 @@
         "tint": "#E0E8E4",
         "badgeInk": "#1F5C3F",
         "notes": [],
-        "ozaaDistance": 97.1,
+        "cravinsDistance": 97.1,
         "ratios": {
           "buttonText": 7.89,
           "inkOnWhite": 7.89,
@@ -244,7 +244,7 @@
       }
     },
     "banner": {
-      "url": "https://mock.ozaa.app/media/img/banner-bean.jpg",
+      "url": "https://mock.cravins.app/media/img/banner-bean.jpg",
       "width": 1170,
       "height": 720,
       "alt": "Bean There"
@@ -372,7 +372,7 @@
     },
     "theme": {
       "accent": "#FFC21A",
-      "fontPair": "ozaa",
+      "fontPair": "cravins",
       "derived": {
         "fill": "#FFC21A",
         "onAccent": "#111111",
@@ -384,7 +384,7 @@
           "White text on #FFC21A is 1.62:1, so buttons use dark text (11.67:1).",
           "#FFC21A on white is 1.62:1, so icons and links use #94710F (4.54:1)."
         ],
-        "ozaaDistance": 59.2,
+        "cravinsDistance": 59.2,
         "ratios": {
           "buttonText": 11.67,
           "inkOnWhite": 4.54,
@@ -393,7 +393,7 @@
       }
     },
     "banner": {
-      "url": "https://mock.ozaa.app/media/img/banner-akos.jpg",
+      "url": "https://mock.cravins.app/media/img/banner-akos.jpg",
       "width": 1170,
       "height": 720,
       "alt": "Auntie Akos Chop Bar"

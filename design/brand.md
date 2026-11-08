@@ -1,4 +1,4 @@
-# Ozaa brand rules (v5.1, 31 Oct 2026)
+# Cravins brand rules (v5.1, 31 Oct 2026)
 
 A summary of the brand Page for the coding agent. The numbers are in `tokens.json`. The screens are in `renders/`, and the working HTML prototype is in `prototype/`. Where this file and a render disagree, the render wins for layout and this file wins for rules. Ask Clarke if both seem wrong.
 
@@ -9,8 +9,8 @@ A summary of the brand Page for the coding agent. The numbers are in `tokens.jso
   - **full** for 64 px and up
   - **small** for 33 to 63 px: thicker, shorter corner marks and bolder utensils
   - **micro** for 32 px and below: no corner marks, a bigger square and fat utensils. This is what keeps the favicon and tab icon clean.
-- Never redraw the logo by hand, recolour it, add effects or put it on a busy photo. On dark backgrounds use `ozaa-lockup-on-dark`.
-- Variants in `logo/svg/`: icon (orange), black, white (an orange mark on a white disc), mono glyph (no circle), lockups (icon plus "ozaa" wordmark in Unbounded), and the Android adaptive foreground, background and monochrome layers.
+- Never redraw the logo by hand, recolour it, add effects or put it on a busy photo. On dark backgrounds use `cravins-lockup-on-dark`.
+- Variants in `logo/svg/`: icon (orange), black, white (an orange mark on a white disc), mono glyph (no circle), lockups (icon plus "cravins" wordmark in Unbounded), and the Android adaptive foreground, background and monochrome layers.
 - Expo files ready to use are in `logo/expo/`: `icon.png` (1024, opaque), `adaptive-icon-foreground.png`, `adaptive-icon-background.png`, `adaptive-icon-monochrome.png`, `splash-icon.png`, `favicon.png` (48), `favicon.ico`.
 - `logo/preview.png` shows every size side by side.
 
@@ -19,7 +19,7 @@ A summary of the brand Page for the coding agent. The numbers are in `tokens.jso
 | Token                     | Hex                                   | Use                                                                       |
 | ------------------------- | ------------------------------------- | ------------------------------------------------------------------------- |
 | brand                     | #FC5205                               | The logo only                                                             |
-| primary                   | #D24000                               | Ozaa buttons, icons, radio dots, focus rings (white text on it passes AA) |
+| primary                   | #D24000                               | Cravins buttons, icons, radio dots, focus rings (white text on it passes AA) |
 | hover                     | #BA3800                               | Hover on web                                                              |
 | pressed                   | #A33000                               | Pressed                                                                   |
 | tint                      | #FFF1EA                               | Icon-button fill, selected rows                                           |
@@ -67,7 +67,7 @@ A summary of the brand Page for the coding agent. The numbers are in `tokens.jso
    A section with no services switched on is hidden.
 
 6. **Bottom bar:** shows the live order status, or "View order · 3 · GH₵143" in the Accra sample while on the menu. A compact header pins on scroll.
-7. The footer line reads "Powered by Ozaa", with the micro logo.
+7. The footer line reads "Powered by Cravins", with the micro logo.
 
 ## 7. Other guest screens
 
@@ -78,7 +78,7 @@ A summary of the brand Page for the coding agent. The numbers are in `tokens.jso
 - **Game (Plate Stack):** one point per plate, with your best score kept on the phone. The leaderboard shows this week's top 5 at the venue, and a nickname is optional. A stamp can be earned at the owner's target score (for example 15), once per visit. The game works offline and has no ads.
 - **Food ready:** a black banner slides down over any screen, the game included, with a View button.
 
-## 8. Owner side (Ozaa chrome: always Ozaa orange, never the venue colour)
+## 8. Owner side (Cravins chrome: always Cravins orange, never the venue colour)
 
 - **Video reviews** (render: owner-reviews): tabs To check, Featured and Hidden. Each card shows the thumbnail and length, first name, stars, dish, quote and consent state, with Hide and Feature buttons. Low ratings get a note suggesting a private reply.
 - **Services** (render: owner-services): an on/off switch for every service, plus a game-stamp switch with its target score.
@@ -93,7 +93,7 @@ A venue picks one colour, which goes on buttons, the active category chip, add b
 2. **Colour on white** (icons and links): darken in 2% steps until it reaches 4.5:1. Yellow #FFC21A, for example, becomes #94710F.
 3. **Badges:** a tint mixing 14% colour with white, with the badge text darkened until it reaches 4.5:1 on the tint.
 4. **Pressed state:** 14% darker (8% when the text is dark).
-5. **Warning:** if the colour is within CIE76 ΔE 20 of Ozaa orange, Customise warns the owner.
+5. **Warning:** if the colour is within CIE76 ΔE 20 of Cravins orange, Customise warns the owner.
 6. Customise shows the ratios and any fallback as soon as the owner picks a colour.
 
 Port this function to `src/features/theming/deriveTheme.ts` with tests first (pstack-tdd). The renders show the results for #B5432A, #1F5C3F and #FFC21A.
@@ -124,5 +124,5 @@ The photos, avatars, story stills and review video in `prototype/img` and `proto
 ## 12. Still open (not for the coding agent to decide)
 
 - A trademark search (Ghana Registrar-General, OAPI, WIPO, and the offices for later countries).
-- A meaning check of "ozaa" with speakers of French, Portuguese, Arabic, Swahili, and the languages of the first cities.
-- Domains: ozaa.africa, ozaa.app, getozaa.com and ozaapay.com were free on 31 Oct 2026, and ozaa.com is taken. Nothing has been bought.
+- A meaning check of "cravins" with speakers of French, Portuguese, Arabic, Swahili, and the languages of the first cities.
+- Domains: cravins.africa, cravins.app, getcravins.com and cravinspay.com were free on 31 Oct 2026, and cravins.com is taken. Nothing has been bought.

@@ -9,7 +9,7 @@ import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 
-const seenKey = (slug: string) => `ozaa-notice-seen:${slug}`;
+const seenKey = (slug: string) => `cravins-notice-seen:${slug}`;
 
 /**
  * The venue's popup, once per version: after a guest closes it, it stays closed on this phone

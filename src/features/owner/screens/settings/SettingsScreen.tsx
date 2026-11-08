@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -33,6 +33,8 @@ import { LanguageSheet } from './LanguageSheet';
 export function SettingsScreen() {
   const theme = useTheme();
   const { t, i18n } = useTranslation();
+  const { width } = useWindowDimensions();
+  const wide = width >= 900;
   const router = useRouter();
   const firstName = useOwnerSession((state) => state.firstName) ?? '';
   const role = useOwnerSession((state) => state.role) ?? 'owner';
@@ -52,30 +54,51 @@ export function SettingsScreen() {
     endSession();
   };
 
-  return (
-    <OwnerPage title={t('owner.settings')}>
-      {/* Who is signed in, and where. */}
-      <View style={[styles.profile, { backgroundColor: theme.surface, borderColor: theme.line }]}>
-        <View style={[styles.avatar, { backgroundColor: theme.tint }]}>
-          {firstName ? (
-            <Text variant="display-m" style={{ color: theme.badgeInk }}>
-              {firstName.slice(0, 1).toUpperCase()}
-            </Text>
-          ) : (
-            <UserRound size={28} color={theme.badgeInk} />
-          )}
-        </View>
-        <Text variant="title">{firstName}</Text>
-        <View style={styles.center}>
-          <StatusPill label={t(`ownerSettings.roles.${role}`)} tone="neutral" icon={false} />
-        </View>
-        {location ? (
-          <Text variant="caption" style={{ color: theme.muted }}>
-            {location.name}
+  const profileBlock = (
+    <View style={[styles.profile, { backgroundColor: theme.surface, borderColor: theme.line }]}>
+      <View style={[styles.avatar, { backgroundColor: theme.tint }]}>
+        {firstName ? (
+          <Text variant="display-m" style={{ color: theme.badgeInk }}>
+            {firstName.slice(0, 1).toUpperCase()}
           </Text>
-        ) : null}
+        ) : (
+          <UserRound size={28} color={theme.badgeInk} />
+        )}
       </View>
+      <Text variant="title">{firstName}</Text>
+      <View style={styles.center}>
+        <StatusPill label={t(`ownerSettings.roles.${role}`)} tone="neutral" icon={false} />
+      </View>
+      {location ? (
+        <Text variant="caption" style={{ color: theme.muted }}>
+          {location.name}
+        </Text>
+      ) : null}
+    </View>
+  );
 
+  const accountSections = (
+    <>
+      <Section title={t('ownerSettings.account')}>
+        <LinkRow
+          icon={LogOut}
+          label={t('ownerSettings.signOut')}
+          onPress={() => setSheet('signOut')}
+        />
+      </Section>
+      <Section>
+        <LinkRow
+          icon={Trash2}
+          label={t('ownerSettings.delete')}
+          destructive
+          onPress={() => setSheet('delete')}
+        />
+      </Section>
+    </>
+  );
+
+  const mainSections = (
+    <>
       <Section title={t('ownerSettings.venue')}>
         <LinkRow
           icon={Building2}
@@ -119,27 +142,30 @@ export function SettingsScreen() {
         <SwitchRow
           icon={Volume2}
           label={t('ownerSettings.chime')}
-          hint={t('ownerSettings.chimeHint')}
           value={chime}
           onChange={setChime}
         />
       </Section>
+    </>
+  );
 
-      <Section title={t('ownerSettings.account')}>
-        <LinkRow
-          icon={LogOut}
-          label={t('ownerSettings.signOut')}
-          onPress={() => setSheet('signOut')}
-        />
-      </Section>
-      <Section>
-        <LinkRow
-          icon={Trash2}
-          label={t('ownerSettings.delete')}
-          destructive
-          onPress={() => setSheet('delete')}
-        />
-      </Section>
+  return (
+    <OwnerPage title={t('owner.settings')}>
+      {wide ? (
+        <View style={styles.split}>
+          <View style={styles.sideCol}>
+            {profileBlock}
+            {accountSections}
+          </View>
+          <View style={styles.mainCol}>{mainSections}</View>
+        </View>
+      ) : (
+        <>
+          {profileBlock}
+          {mainSections}
+          {accountSections}
+        </>
+      )}
 
       <LanguageSheet visible={sheet === 'language'} onClose={() => setSheet(null)} />
       <ConfirmDialog
@@ -160,12 +186,16 @@ export function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
+  split: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.space[6] },
+  sideCol: { width: 320, gap: tokens.space[4] },
+  mainCol: { flex: 1, minWidth: 0, gap: tokens.space[5] },
   center: { alignItems: 'center' },
   profile: {
     alignItems: 'center',
     gap: tokens.space[2],
     paddingVertical: tokens.space[6],
     paddingHorizontal: tokens.space[4],
+    borderWidth: 1,
     boxShadow: tokens.shadow.card,
     borderRadius: tokens.radius.lg,
     borderCurve: 'continuous',

@@ -24,7 +24,7 @@ export function TablesScreen() {
   const theme = useTheme();
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
-  const wide = width >= 1100;
+  const wide = width >= 900;
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const client = useQueryClient();
   const [template, setTemplate] = useState<TableCardTemplate>('folded_tent');
@@ -216,6 +216,7 @@ const styles = StyleSheet.create({
   card: {
     gap: tokens.space[4],
     padding: tokens.space[4],
+    borderWidth: 1,
     boxShadow: tokens.shadow.card,
     borderRadius: tokens.radius.lg,
     borderCurve: 'continuous',

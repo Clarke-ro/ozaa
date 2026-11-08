@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { BellOff } from 'lucide-react-native';
 import { useOwnerSession } from '@/features/session';
@@ -11,14 +11,14 @@ import { NoteCard } from './NoteCard';
 
 /**
  * What happened across the venue: pinned alerts, then new since the last visit, then earlier.
- * Each line opens the screen where it gets handled. Leaving the screen marks everything seen.
  */
 export function NotificationsScreen() {
   const { t } = useTranslation();
+  const { width } = useWindowDimensions();
+  const twoCol = width >= 920;
   const venueId = useOwnerSession((s) => s.venueId) ?? '';
   const markSeen = useNotesSeen((s) => s.markSeen);
   const feed = useNotifications();
-  // Fixed while the screen is open, so "New" doesn't empty itself under the owner's eyes.
   const [since] = useState(feed.lastSeen);
   useEffect(() => () => markSeen(venueId, Date.now()), [markSeen, venueId]);
 
@@ -44,9 +44,11 @@ export function NotificationsScreen() {
           groups.map((group) => (
             <View key={group.key} style={styles.group}>
               <SectionLabel title={group.title} caps />
-              <View style={styles.list}>
+              <View style={[styles.list, twoCol && styles.grid]}>
                 {group.items.map((note) => (
-                  <NoteCard key={note.id} note={note} now={feed.now} />
+                  <View key={note.id} style={twoCol ? styles.cell : undefined}>
+                    <NoteCard note={note} now={feed.now} />
+                  </View>
                 ))}
               </View>
             </View>
@@ -60,4 +62,6 @@ export function NotificationsScreen() {
 const styles = StyleSheet.create({
   group: { gap: tokens.space[2] },
   list: { gap: tokens.space[2] },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', gap: tokens.space[3] },
+  cell: { flexBasis: '48.5%', flexGrow: 1 },
 });

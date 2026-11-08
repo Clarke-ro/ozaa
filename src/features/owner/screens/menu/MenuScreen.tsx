@@ -20,7 +20,7 @@ import { useMenuDesk } from './useMenuDesk';
 import { LiveMenu } from './live/LiveMenu';
 
 // From this width the phone preview and its side panel fit together, so the menu opens live.
-const LIVE_FIRST = 1100;
+const LIVE_FIRST = 960;
 
 type Pending =
   | { kind: 'item'; item: MenuItem }
@@ -40,6 +40,7 @@ export function MenuScreen() {
   const [sectionsOpen, setSectionsOpen] = useState(false);
   const [pending, setPending] = useState<Pending | null>(null);
   const { width } = useWindowDimensions();
+  const twoCol = width >= 960;
   const [picked, setPicked] = useState<'list' | 'live' | null>(null);
   const mode = picked ?? (width >= LIVE_FIRST ? 'live' : 'list');
 
@@ -107,10 +108,14 @@ export function MenuScreen() {
           />
         ) : (
           <>
-            {/* Three slim rows: search, what kind of dishes, which section. */}
             <View style={styles.controls}>
               <View style={styles.searchRow}>
-                <View style={[styles.search, { backgroundColor: theme.surface }]}>
+                <View
+                  style={[
+                    styles.search,
+                    { backgroundColor: theme.surface, borderColor: theme.line },
+                  ]}
+                >
                   <Search size={18} color={theme.muted} />
                   <TextInput
                     value={query}
@@ -138,35 +143,40 @@ export function MenuScreen() {
                   onPress={() => setSectionsOpen(true)}
                   style={({ pressed }) => [
                     styles.iconBtn,
-                    { backgroundColor: pressed ? theme.wash : theme.surface },
+                    {
+                      borderColor: theme.line,
+                      backgroundColor: pressed ? theme.wash : theme.surface,
+                    },
                   ]}
                 >
                   <ListOrdered size={20} color={theme.ink} />
                 </Pressable>
               </View>
-              <FilterChips<DishFilter>
-                label={t('ownerMenu.filterLabel')}
-                value={status}
-                onChange={setStatus}
-                items={DISH_FILTERS.map((id) => ({
-                  id,
-                  label: t(`ownerMenu.filter.${id}`),
-                  count: typeCounts[id],
-                }))}
-              />
-              <FilterChips
-                label={t('ownerMenu.sections')}
-                value={section}
-                onChange={setSection}
-                items={[
-                  { id: 'all', label: t('ownerMenu.allSections') },
-                  ...sections.map((s) => ({
-                    id: s.id,
-                    label: s.hidden ? `${s.name.en} (${t('ownerMenu.hidden')})` : s.name.en,
-                    count: sectionCount(s.id),
-                  })),
-                ]}
-              />
+              <View style={[styles.filterBar, twoCol && styles.filterBarWide]}>
+                <FilterChips<DishFilter>
+                  label={t('ownerMenu.filterLabel')}
+                  value={status}
+                  onChange={setStatus}
+                  items={DISH_FILTERS.map((id) => ({
+                    id,
+                    label: t(`ownerMenu.filter.${id}`),
+                    count: typeCounts[id],
+                  }))}
+                />
+                <FilterChips
+                  label={t('ownerMenu.sections')}
+                  value={section}
+                  onChange={setSection}
+                  items={[
+                    { id: 'all', label: t('ownerMenu.allSections') },
+                    ...sections.map((s) => ({
+                      id: s.id,
+                      label: s.hidden ? `${s.name.en} (${t('ownerMenu.hidden')})` : s.name.en,
+                      count: sectionCount(s.id),
+                    })),
+                  ]}
+                />
+              </View>
             </View>
 
             {sections.length === 0 ? (
@@ -208,16 +218,17 @@ export function MenuScreen() {
                     onPress={() => desk.setAll.mutate({ items: shown, available: true })}
                   />
                 </View>
-                <View style={styles.list}>
+                <View style={[styles.list, twoCol && styles.grid]}>
                   {shown.map((item) => (
-                    <MenuItemRow
-                      key={item.id}
-                      item={item}
-                      currency={desk.currency}
-                      section={section === 'all' ? sectionName(item.categoryId) : undefined}
-                      onToggle={() => desk.toggle.mutate(item)}
-                      onEdit={() => setEditingItem(item)}
-                    />
+                    <View key={item.id} style={twoCol ? styles.cell : undefined}>
+                      <MenuItemRow
+                        item={item}
+                        currency={desk.currency}
+                        section={section === 'all' ? sectionName(item.categoryId) : undefined}
+                        onToggle={() => desk.toggle.mutate(item)}
+                        onEdit={() => setEditingItem(item)}
+                      />
+                    </View>
                   ))}
                 </View>
               </>
@@ -243,12 +254,10 @@ export function MenuScreen() {
         onDelete={(s) => setPending({ kind: 'section', section: s })}
         onAdd={() => setEditingSection(null)}
       />
-      {/* Keyed per item so the form starts fresh each time and a background refresh never wipes typing. */}
       {editingSection !== undefined ? (
         <SectionEditor
           key={editingSection?.id ?? 'new-section'}
           section={editingSection}
-          // A new section starts as food; an existing one keeps its own kind.
           kind={editingSection?.kind ?? 'food'}
           venueId={venueId}
           onClose={() => setEditingSection(undefined)}
@@ -309,8 +318,16 @@ export function MenuScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  controls: { gap: tokens.space[2] },
+  controls: { gap: tokens.space[3] },
   searchRow: { flexDirection: 'row', gap: tokens.space[2] },
+  filterBar: { gap: tokens.space[2] },
+  filterBarWide: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: tokens.space[3],
+  },
   search: {
     flex: 1,
     flexDirection: 'row',
@@ -318,6 +335,7 @@ const styles = StyleSheet.create({
     gap: tokens.space[2],
     minHeight: tokens.touchTarget,
     paddingHorizontal: tokens.space[3],
+    borderWidth: 1,
     borderRadius: tokens.radius.md,
     boxShadow: tokens.shadow.card,
   },
@@ -330,6 +348,7 @@ const styles = StyleSheet.create({
   iconBtn: {
     width: tokens.touchTarget,
     height: tokens.touchTarget,
+    borderWidth: 1,
     borderRadius: tokens.radius.md,
     alignItems: 'center',
     justifyContent: 'center',
@@ -337,5 +356,7 @@ const styles = StyleSheet.create({
   },
   bulk: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: tokens.space[1] },
   bulkBtn: { paddingHorizontal: tokens.space[2] },
-  list: { gap: tokens.space[2] },
+  list: { gap: tokens.space[3] },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start' },
+  cell: { flexBasis: '48.5%', flexGrow: 1 },
 });

@@ -6,7 +6,7 @@ description: Audit and fix HTML accessibility issues including ARIA labels, keyb
 Source: https://github.com/ibelick/ui-skills/tree/main/skills/fixing-accessibility
 License: MIT (c) 2026 Julien Thibeaut
 Commit: b88b130
-Copied: 2026-10-31 for the Ozaa build kit. Text unchanged below this header.
+Copied: 2026-10-31 for the Cravins build kit. Text unchanged below this header.
 -->
 
 # fixing-accessibility
