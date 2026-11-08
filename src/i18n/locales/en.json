@@ -1295,7 +1295,7 @@
     "networkMissing": "Add the network name.",
     "password": "Password",
     "security": "Security",
-    "open": "No password",
+    "open": "None",
     "hidden": "Hidden network",
     "hiddenHint": "Turn on if the name does not show in the phone list.",
     "gameStamp": "Stamp for a high score",
@@ -1542,22 +1542,39 @@
     "title": {
       "venue": "What is your venue called?",
       "tables": "How many tables?",
-      "wifi": "Guest Wi-Fi",
+      "wifi": "Your guest Wi-Fi",
       "payments": "How guests pay"
     },
     "venueName": "Venue name",
     "place": "Where it is",
     "placeHint": "Street and area",
-    "tablesExist": "Your tables are already set up. Tap Next.",
+    "tablesExist_one": "You already have {{count}} table. Tap Next, or add more above.",
+    "tablesExist_other": "You already have {{count}} tables. Tap Next, or add more above.",
     "skip": "Skip",
-    "doneTitle": "You are ready",
+    "doneTitle": "You're ready",
     "printQr": "Print table QR codes",
     "openFloor": "Open the floor",
     "err": {
       "name": "Add the venue name."
     },
-    "paymentsBody": "Guests can always pay you in person. To let them pay by MoMo or card on their phone, connect your own Paystack account. The money goes straight to you.",
-    "openIntegrations": "Connect Paystack"
+    "lead": {
+      "venue": "Guests see this name at the top of your page.",
+      "tables": "Each table gets its own QR code, so orders and waiter calls know where to go.",
+      "wifi": "Guests can join from your page without asking for the password. You can add it later.",
+      "payments": "Guests can always pay you in person. To let them pay by MoMo or card on their phone, connect your own Paystack account. The money goes straight to you."
+    },
+    "connect": "Connect Paystack",
+    "skipForNow": "Skip for now",
+    "connectedNote": "Paystack is connected. Guests can pay by MoMo or card on their phone, or in person.",
+    "doneLead": "Here's what you set up. Tap a line to change it.",
+    "summary": {
+      "noName": "No name yet",
+      "tables_one": "{{count}} table",
+      "tables_other": "{{count}} tables",
+      "notAdded": "Not added",
+      "online": "Online and in person",
+      "inPerson": "In person only"
+    }
   },
   "ownerLinks": {
     "add": "Add a link",

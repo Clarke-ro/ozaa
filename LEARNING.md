@@ -4,6 +4,33 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-08 · A clearer Setup, with Skip on payments
+
+**What we built**
+Setup is easier to follow. Each step asks one question and says why it matters. Wi-Fi and online payments can be skipped, and the end screen shows what you set up.
+
+**How it works**
+```
+Venue → Tables → Wi-Fi (Skip) → How guests pay (Connect Paystack, or Skip for now)
+                                         ↓
+                          "You're ready": Venue · Tables · Wi-Fi · Payments
+                          tap a line to go back and change it
+```
+`footerFor(step, paystackConnected)` decides the buttons under each step. `setupSummary(...)` turns what's saved into the four summary lines. Both are plain functions with tests, so the screen only draws.
+
+**Files to look at**
+- `src/features/owner/screens/setup/setupFlow.ts` and its test: the buttons and the summary.
+- `SetupScreen.tsx`: the steps. `SetupFooter.tsx`: the bar. `SetupDone.tsx`: the end screen.
+- `e2e/owner-setup.spec.ts`: skip Wi-Fi and payments, then check the summary.
+
+**New idea: one primary action per step**
+Every step has exactly one filled button: the thing most people should do next. Skip and Back are plain text buttons, so they're easy to find without competing. On Payments the filled button is "Connect Paystack", because that's the step's job, and "Skip for now" is the quiet way out.
+
+**Try it yourself**
+In `setupFlow.ts`, change Wi-Fi's `skip: 'skip'` to `skip: null` and run `npm test`. The "Wi-Fi can be skipped" test fails and shows what changed. Put it back afterwards.
+
+---
+
 ## 2026-11-08 · Payments without the off switch (BUILD.md box 4b.17, done)
 
 **What we built**

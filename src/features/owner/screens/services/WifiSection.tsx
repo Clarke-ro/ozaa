@@ -12,16 +12,19 @@ export function WifiSection({
   value,
   onChange,
   error,
+  bare,
 }: {
   value: WifiForm;
   onChange: <K extends keyof WifiForm>(key: K, next: WifiForm[K]) => void;
   error?: string;
+  /** No heading of its own, when the page title already says Wi-Fi (Setup). */
+  bare?: boolean;
 }) {
   const { t } = useTranslation();
   const open = value.security === 'OPEN' || value.security === 'nopass';
   const options = SECURITY.includes(value.security) ? SECURITY : [value.security, ...SECURITY];
   return (
-    <Section title={t('ownerServices.wifi')}>
+    <Section title={bare ? undefined : t('ownerServices.wifi')}>
       <InputRow
         label={t('ownerServices.network')}
         value={value.ssid}

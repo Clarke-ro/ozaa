@@ -5,35 +5,46 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { CircleCheck } from 'lucide-react-native';
 import { api } from '@/lib/api';
-import type { WifiSecurity } from '@/features/venue';
 import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
-import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
+import { fontFamily, useTheme } from '@/ui/theme';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
-import { Field, toast } from '../../kit';
+import { Field, cardStyle, toast } from '../../kit';
 import { planTables } from '../tables/planTables';
-import { WifiSection } from '../services/WifiSection';
-import { SetupSteps, STEPS } from './SetupSteps';
+import { WifiSection, type WifiForm } from '../services/WifiSection';
+import { SetupDone } from './SetupDone';
+import { SetupFooter } from './SetupFooter';
+import { SetupSteps } from './SetupSteps';
+import { STEPS, footerFor, setupSummary, type Step } from './setupFlow';
 
-/** First-time setup in four short steps. Each step saves before moving on; Wi-Fi can be skipped. */
+/**
+ * First-time setup in four short steps, then a summary. Each step saves before moving on.
+ * Wi-Fi and online payments can be skipped: guests can always pay in person.
+ */
 export function SetupScreen() {
   const theme = useTheme();
   const { t } = useTranslation();
   const router = useRouter();
   const client = useQueryClient();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
+  const on = Boolean(venueId);
   const venue = useQuery({
     queryKey: ownerKeys.venue(venueId),
     queryFn: () => api.ownerGetVenue(venueId),
-    enabled: Boolean(venueId),
+    enabled: on,
   });
   const tables = useQuery({
     queryKey: ownerKeys.tables(venueId),
     queryFn: () => api.ownerListTables(venueId),
-    enabled: Boolean(venueId),
+    enabled: on,
+  });
+  // Connecting Paystack in Integrations updates this cache, so coming back shows it connected.
+  const payment = useQuery({
+    queryKey: ownerKeys.paymentSettings(venueId),
+    queryFn: () => api.ownerGetPaymentSettings(venueId),
+    enabled: on,
   });
   const [step, setStep] = useState(0);
   const [showErrors, setShowErrors] = useState(false);
@@ -41,29 +52,31 @@ export function SetupScreen() {
   const [place, setPlace] = useState<string | null>(null);
   const [from, setFrom] = useState('1');
   const [to, setTo] = useState('10');
-  const [wifi, setWifi] = useState({
-    ssid: '',
-    password: '',
-    security: 'WPA2' as WifiSecurity,
-    hidden: false,
-  });
+  const [wifiDraft, setWifi] = useState<WifiForm | null>(null);
 
   const v = venue.data;
   const venueName = name ?? v?.name ?? '';
   const venuePlace = place ?? v?.location.label ?? '';
+  // Start from the Wi-Fi the venue already has, so a second run doesn't show it empty.
+  const wifi: WifiForm = wifiDraft ?? {
+    ssid: v?.wifi?.ssid ?? '',
+    password: v?.wifi?.password ?? '',
+    security: v?.wifi?.security ?? 'WPA2',
+    hidden: v?.wifi?.hidden ?? false,
+  };
+  const existing = tables.data?.items ?? [];
   const plan = planTables(
     'range',
     { start: from, end: to, prefix: '', list: '' },
-    (tables.data?.items ?? []).map((x) => x.code),
+    existing.map((x) => x.code),
   );
-  const current = STEPS[step];
+  const paystack = Boolean(payment.data?.paystack);
+  const current: Step | undefined = STEPS[step];
 
   const problem = (): string | null => {
     if (current === 'venue') return venueName.trim() ? null : t('ownerSetup.err.name');
-    if (current === 'tables')
-      return plan.error && (tables.data?.items.length ?? 0) === 0
-        ? t(plan.error, { max: 200 })
-        : null;
+    if (current === 'tables' && plan.error && existing.length === 0)
+      return t(plan.error, { max: 200 });
     return null;
   };
 
@@ -100,54 +113,33 @@ export function SetupScreen() {
   const err = showErrors ? problem() : null;
 
   if (!current) {
+    const rows = setupSummary({
+      venueName: v?.name ?? '',
+      tableCount: existing.length,
+      wifiName: v?.wifi?.ssid ?? '',
+      paystack,
+    });
     return (
       <OwnerPage title={t('owner.setup')}>
-        <View style={styles.done}>
-          <CircleCheck size={48} color={theme.success} />
-          <Text variant="title">{t('ownerSetup.doneTitle')}</Text>
-          <Text variant="body" style={[styles.center, { color: theme.muted }]}>
-            {t('owner.setupDone')}
-          </Text>
-          <Button label={t('ownerSetup.printQr')} onPress={() => router.push('/owner/tables')} />
-          <Button
-            label={t('ownerSetup.openFloor')}
-            tone="ghost"
-            onPress={() => router.push('/owner/floor')}
-          />
-        </View>
+        <SetupDone rows={rows} onEdit={(target) => setStep(STEPS.indexOf(target))} />
       </OwnerPage>
     );
   }
 
+  const footer = footerFor(current, paystack);
   return (
     <OwnerPage
       title={t('owner.setup')}
       footer={
-        <View style={[styles.bar, { borderTopColor: theme.line, backgroundColor: theme.surface }]}>
-          {step > 0 ? (
-            <Button
-              label={t('owner.back')}
-              tone="ghost"
-              size="md"
-              onPress={() => setStep((s) => s - 1)}
-            />
-          ) : null}
-          {current === 'wifi' ? (
-            <Button
-              label={t('ownerSetup.skip')}
-              tone="ghost"
-              size="md"
-              onPress={() => setStep((s) => s + 1)}
-            />
-          ) : null}
-          <Button
-            label={step === STEPS.length - 1 ? t('owner.finish') : t('owner.next')}
-            size="md"
-            style={styles.flex}
-            loading={save.isPending}
-            onPress={next}
-          />
-        </View>
+        <SetupFooter
+          footer={footer}
+          busy={save.isPending}
+          onBack={() => setStep((s) => s - 1)}
+          onSkip={() => setStep((s) => s + 1)}
+          onPrimary={() =>
+            footer.primary === 'connect' ? router.push('/owner/integrations') : next()
+          }
+        />
       }
     >
       <SetupSteps current={step} />
@@ -156,8 +148,19 @@ export function SetupScreen() {
         error={venue.isError}
         onRetry={() => void venue.refetch()}
       >
-        <View style={[styles.form, { backgroundColor: theme.surface, borderColor: theme.line }]}>
-          <Text variant="title">{t(`ownerSetup.title.${current}`)}</Text>
+        <View style={[styles.card, cardStyle(theme)]}>
+          <View style={styles.head}>
+            <Text variant="caption" style={{ color: theme.muted, fontFamily: fontFamily.strong }}>
+              {t('ownerSetup.progress', { step: step + 1, total: STEPS.length })}
+            </Text>
+            <Text variant="display-m" accessibilityRole="header">
+              {t(`ownerSetup.title.${current}`)}
+            </Text>
+            <Text variant="body" style={{ color: theme.muted }}>
+              {t(`ownerSetup.lead.${current}`)}
+            </Text>
+          </View>
+
           {current === 'venue' ? (
             <>
               <Field
@@ -174,6 +177,7 @@ export function SetupScreen() {
               />
             </>
           ) : null}
+
           {current === 'tables' ? (
             <>
               <View style={styles.row}>
@@ -198,27 +202,26 @@ export function SetupScreen() {
                         first: plan.codes[0],
                         last: plan.codes.at(-1),
                       })
-                    : t('ownerSetup.tablesExist'))}
+                    : t('ownerSetup.tablesExist', { count: existing.length }))}
               </Text>
             </>
           ) : null}
+
           {current === 'wifi' ? (
-            <WifiSection value={wifi} onChange={(k, val) => setWifi((w) => ({ ...w, [k]: val }))} />
+            <WifiSection
+              bare
+              value={wifi}
+              onChange={(k, val) => setWifi({ ...wifi, [k]: val })}
+            />
           ) : null}
-          {current === 'payments' ? (
-            // Nothing to save here: guests can always pay in person. Online pay is the venue's own
-            // Paystack, connected in Integrations (Clarke, 2026-11-08).
-            <>
-              <Text variant="body" style={{ color: theme.muted }}>
-                {t('ownerSetup.paymentsBody')}
+
+          {current === 'payments' && paystack ? (
+            <View style={[styles.note, { backgroundColor: theme.wash }]}>
+              <CircleCheck size={20} color={theme.success} />
+              <Text variant="body" style={styles.flex}>
+                {t('ownerSetup.connectedNote')}
               </Text>
-              <Button
-                label={t('ownerSetup.openIntegrations')}
-                tone="secondary"
-                size="md"
-                onPress={() => router.push('/owner/integrations')}
-              />
-            </>
+            </View>
           ) : null}
         </View>
       </DeskWait>
@@ -227,21 +230,16 @@ export function SetupScreen() {
 }
 
 const styles = StyleSheet.create({
-  form: {
-    gap: tokens.space[4],
-    padding: tokens.space[4],
-    boxShadow: tokens.shadow.card,
-    borderRadius: tokens.radius.lg,
+  card: { gap: tokens.space[5], padding: tokens.space[5] },
+  head: { gap: tokens.space[1] },
+  row: { flexDirection: 'row', gap: tokens.space[3] },
+  note: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[3],
+    padding: tokens.space[3],
+    borderRadius: tokens.radius.md,
     borderCurve: 'continuous',
   },
   flex: { flex: 1 },
-  row: { flexDirection: 'row', gap: tokens.space[3] },
-  bar: {
-    flexDirection: 'row',
-    gap: tokens.space[2],
-    padding: tokens.space[3],
-    borderTopWidth: StyleSheet.hairlineWidth,
-  },
-  done: { alignItems: 'center', gap: tokens.space[3], paddingVertical: tokens.space[8] },
-  center: { textAlign: 'center' },
 });
