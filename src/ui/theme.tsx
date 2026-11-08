@@ -1,9 +1,16 @@
 import { createContext, useContext, type ReactNode } from 'react';
 import { deriveTheme, type DerivedTheme } from '@/features/theming';
 import { NEUTRALS, type Scheme } from '@/theme/palette';
+import { tokens } from '@/theme/tokens';
 
 export type FontPair = 'ozaa' | 'serif' | 'bold';
 export type { Scheme };
+
+export type TextVariant =
+  'display-l' | 'display-m' | 'title' | 'body' | 'body-strong' | 'caption' | 'button';
+
+/** Sizes that replace the brand scale for every Text under a theme (the owner app uses one). */
+export type TypeScale = Partial<Record<TextVariant, { size: number; line: number }>>;
 
 /**
  * Colours by role. Screens read these and never write a hex value.
@@ -38,6 +45,8 @@ export type Theme = {
   warningTint: string;
   /** Dim layer behind sheets and dialogs. */
   scrim: string;
+  /** Missing = the brand scale from tokens.type. */
+  type?: TypeScale;
   derived: DerivedTheme;
 };
 
@@ -91,10 +100,23 @@ export const ozaaDarkTheme = themeFromAccent(null, 'ozaa', 'dark');
 
 /**
  * The owner app: same Ozaa colours, but pages sit on the canvas grey so white cards stand out.
- * Guest pages keep a white background (brand.md section 2).
+ * Its type follows the MenuRite dashboard (Clarke, 2026-11-07): Inter everywhere, numbers
+ * included, on a smaller scale (tokens.owner.type). Guest pages keep a white background and
+ * the brand scale (brand.md sections 2 and 3).
  */
-export const ozaaOwnerTheme: Theme = { ...ozaaTheme, bg: NEUTRALS.light.canvas };
-export const ozaaOwnerDarkTheme: Theme = { ...ozaaDarkTheme, bg: NEUTRALS.dark.canvas };
+const o = tokens.owner.type;
+const OWNER_TYPE: TypeScale = {
+  'display-l': o['display-l'],
+  'display-m': o['display-m'],
+  title: o.title,
+  body: o.body,
+  'body-strong': o['body-strong'],
+  caption: o.caption,
+  button: o.button,
+};
+const owner = { type: OWNER_TYPE, displayFont: 'Inter_600' };
+export const ozaaOwnerTheme: Theme = { ...ozaaTheme, ...owner, bg: NEUTRALS.light.canvas };
+export const ozaaOwnerDarkTheme: Theme = { ...ozaaDarkTheme, ...owner, bg: NEUTRALS.dark.canvas };
 
 const ThemeContext = createContext<Theme>(ozaaTheme);
 

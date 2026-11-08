@@ -413,7 +413,6 @@
     "madeUp": "You made {{amount}} today, {{percent}}% more than last Saturday.",
     "madeDown": "You made {{amount}} today, {{percent}}% less than last Saturday.",
     "openTables": "Open tables",
-    "liveOrders": "Live orders",
     "waiterCalls": "Waiter calls",
     "rating": "Rating",
     "noRating": "No ratings yet",
@@ -693,35 +692,21 @@
     "save": "Save"
   },
   "ownerDash": {
-    "greeting": "Hello, {{name}}",
+    "greet": {
+      "morning": "Good morning, {{name}}",
+      "afternoon": "Good afternoon, {{name}}",
+      "evening": "Good evening, {{name}}"
+    },
+    "greetPlain": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "howToday": "Here's how {{venue}} is doing today",
     "salesToday": "Sales today",
-    "needsYou": "Needs you now",
-    "allClear": "Nothing needs you right now.",
-    "quick": {
-      "scan": "Scan card",
-      "tables": "QR codes",
-      "menu": "Edit menu",
-      "feedback": "Feedback"
-    },
-    "line": {
-      "ordersToday_one": "order today",
-      "ordersToday_other": "orders today",
-      "visitors_one": "visitor",
-      "visitors_other": "visitors",
-      "tables_one": "table seated",
-      "tables_other": "tables seated",
-      "rating_one": "from 1 rating",
-      "rating_other": "from {{count}} ratings"
-    },
-    "seeAll": "See all",
-    "shortcuts": "Shortcuts",
-    "openCount_one": "{{count}} open",
-    "openCount_other": "{{count}} open",
-    "waitingCount_one": "{{count}} waiting",
-    "waitingCount_other": "{{count}} waiting",
-    "noLiveOrders": "No open orders right now.",
-    "items_one": "{{count}} item",
-    "items_other": "{{count}} items",
+    "viewSales": "View sales",
+    "viewOrders": "View orders",
+    "quickActions": "Quick actions",
     "trends": "Trends",
     "tiles": {
       "scans": "Table scans",
@@ -752,23 +737,11 @@
     },
     "callsA11y_one": "1 waiter call waiting",
     "callsA11y_other": "{{count}} waiter calls waiting",
-    "notes": {
-      "orders": "In the kitchen now",
-      "tables": "Seated now",
-      "callsWaiting": "Needs someone now",
-      "callsQuiet": "All quiet",
-      "ordersToday": "Since midnight",
-      "visitors": "From scans and links"
-    },
-    "flow": {
-      "lateStage_one": "{{label}}: the oldest has waited {{count}} min",
-      "lateStage_other": "{{label}}: the oldest has waited {{count}} min"
-    },
     "setup": {
-      "title": "Finish setting up",
-      "percent": "{{percent}}% done",
-      "next": "Next: {{step}}",
-      "continue": "Continue",
+      "title": "Complete your setup",
+      "badge": "{{percent}}%",
+      "done": "done",
+      "todo": "not done yet",
       "steps": {
         "details": "Add your description and location",
         "look": "Add your logo",
@@ -780,7 +753,9 @@
     },
     "stats": {
       "ordersToday": "Orders today",
-      "visitors": "Visitors today"
+      "pending": "Pending orders",
+      "visitors": "Visitors today",
+      "tables": "Tables seated"
     }
   },
   "ownerTables": {
@@ -880,6 +855,16 @@
     "deleteSection": "Delete {{name}}",
     "moveUp": "Move {{name}} up",
     "moveDown": "Move {{name}} down",
+    "categoriesLead": "Add, edit, hide and arrange the sections of your menu.",
+    "dragHint": "Drag a section by its handle to change the order. Hidden sections stay in the list, but guests don't see them.",
+    "sectionCount_one": "1 section",
+    "sectionCount_other": "{{count}} sections",
+    "addFoodSection": "Add a food section",
+    "addDrinksSection": "Add a drinks section",
+    "sectionActions": "More for {{name}}",
+    "edit": "Edit",
+    "moveUpShort": "Move up",
+    "moveDownShort": "Move down",
     "hidden": "Hidden",
     "dishCount_one": "1 dish",
     "dishCount_other": "{{count}} dishes",
@@ -1309,12 +1294,17 @@
     "showChart": "Chart"
   },
   "ownerInsights": {
+    "lead": "Who visited, what sold and when it got busy.",
     "range": {
       "today": "Today",
-      "7d": "7 days",
-      "30d": "30 days",
-      "90d": "90 days"
+      "7d": "Last 7 days",
+      "30d": "Last 30 days",
+      "90d": "Last 90 days"
     },
+    "feedbackCount": "Feedback notes",
+    "dishHead": "Dish",
+    "soldHead": "Sold",
+    "salesHead": "Sales",
     "sales": "Sales",
     "topDishes": "Top dishes",
     "sold_one": "1 sold",
@@ -1939,6 +1929,8 @@
     "orders_one": "{{count}} order",
     "orders_other": "{{count}} orders",
     "topItems": "Top dishes",
+    "dishHead": "Dish",
+    "valueHead": "Order value",
     "empty": "No orders in these dates yet.",
     "paid": "How it was paid",
     "paidOnline": "Paid online",

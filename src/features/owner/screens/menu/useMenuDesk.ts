@@ -106,6 +106,30 @@ export function useMenuDesk(venueId: string) {
     onSettled: refresh,
   });
 
+  // After a drag on Categories: save the new position of each section that moved. The whole
+  // section is sent, as in `move`, so hidden and schedule survive a server that replaces it.
+  const reorderSections = useMutation({
+    mutationFn: async ({ kind, orderedIds }: { kind: 'food' | 'drinks'; orderedIds: string[] }) => {
+      const sections = (menu.data?.categories ?? []).filter((c) => c.kind === kind);
+      for (const update of dishPositions(sections, orderedIds)) {
+        const section = sections.find((c) => c.id === update.id);
+        if (section) {
+          const { name, kind: sectionKind, hidden, schedule } = section;
+          await api.ownerUpdateCategory(venueId, section.id, {
+            name,
+            kind: sectionKind,
+            hidden,
+            schedule,
+            position: update.position,
+          });
+        }
+      }
+    },
+    onSuccess: () => toast.success(t('ownerKit.saved')),
+    onError: failed,
+    onSettled: refresh,
+  });
+
   // After a drag in one section: save the new position of each dish that moved.
   const reorderDishes = useMutation({
     mutationFn: async ({ dishes, orderedIds }: { dishes: MenuItem[]; orderedIds: string[] }) => {
@@ -130,6 +154,7 @@ export function useMenuDesk(venueId: string) {
     removeItem,
     removeSection,
     move,
+    reorderSections,
     reorderDishes,
   };
 }

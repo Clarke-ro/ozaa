@@ -8,26 +8,23 @@ import { LocationSwitcher } from '../../chrome/LocationSwitcher';
 import { useOwnerLayout } from '../../chrome/layout';
 import { DeskWait, OwnerPage, SkeletonBlock } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
-import { LiveKitchen } from './LiveKitchen';
-import { NeedsYouBar } from './NeedsYouBar';
+import { dayPart } from './greeting';
 import { QuickActions } from './QuickActions';
-import { SetupNudge } from './SetupNudge';
-import { TodayPulse } from './TodayPulse';
+import { SetupList } from './SetupList';
+import { StatsRow } from './StatsRow';
 
 // Live data refreshes every few seconds while the screen is open; the kitchen moves fast.
 const LIVE_MS = 5000;
-const BAND_SKELETON = tokens.space[16] * 3;
+const SKELETON = tokens.space[16] + tokens.space[12];
 
 /**
- * Today is one column of bands sitting straight on the page, the same order at every size: the
- * day's numbers first (the first thing an owner checks), then what needs you, the live kitchen,
- * setup (new venues) and shortcuts. Bands are split by thin lines, not boxed, and each has its
- * own shape (a big number, alert bars, ruled tickets, a line of pills), so they never look
- * alike. Nothing sits side by side in columns; lines of figures wrap like a sentence instead.
- * It uses the "wide" page width because it is a dashboard, so a desktop gets a full-width page.
+ * Today, laid out like a home dashboard in one centred column: a greeting, the stats row (the
+ * day's main number in a dark card and three small cards), the setup steps (owners, until done)
+ * and a grid of shortcuts. Live tickets live on Orders and urgent items behind the bell, so
+ * Today stays a calm overview. Every block is a white card on the grey page, split by space.
  */
 export function DashboardScreen() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { wide } = useOwnerLayout();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const firstName = useOwnerSession((state) => state.firstName);
@@ -37,18 +34,22 @@ export function DashboardScreen() {
     enabled: Boolean(venueId),
     refetchInterval: LIVE_MS,
   });
-  const d = desk.data;
-  const date = new Date().toLocaleDateString(i18n.language, {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
+  const venue = useQuery({
+    queryKey: ownerKeys.venue(venueId),
+    queryFn: () => api.ownerGetVenue(venueId),
+    enabled: Boolean(venueId),
   });
+  const part = dayPart(new Date().getHours());
+  const title = firstName
+    ? t(`ownerDash.greet.${part}`, { name: firstName })
+    : t(`ownerDash.greetPlain.${part}`);
+  const name = venue.data?.name;
+  const d = desk.data;
 
   return (
     <OwnerPage
-      title={firstName ? t('ownerDash.greeting', { name: firstName }) : t('owner.dashboard')}
-      subtitle={date}
-      width="wide"
+      title={title}
+      subtitle={name ? t('ownerDash.howToday', { venue: name }) : undefined}
       bell
     >
       {/* Wide screens have the location at the top of the sidebar. */}
@@ -63,17 +64,15 @@ export function DashboardScreen() {
         onRetry={() => void desk.refetch()}
         skeleton={
           <>
-            <SkeletonBlock height={BAND_SKELETON} />
-            <SkeletonBlock height={BAND_SKELETON} />
+            <SkeletonBlock height={SKELETON} />
+            <SkeletonBlock height={SKELETON} />
           </>
         }
       >
         {d ? (
           <View style={styles.stack}>
-            <TodayPulse dashboard={d} />
-            <NeedsYouBar />
-            <LiveKitchen venueId={venueId} />
-            <SetupNudge />
+            <StatsRow dashboard={d} />
+            <SetupList />
             <QuickActions />
           </View>
         ) : null}
@@ -84,5 +83,5 @@ export function DashboardScreen() {
 
 const styles = StyleSheet.create({
   location: { flexDirection: 'row' },
-  stack: { gap: tokens.space[6] },
+  stack: { gap: tokens.space[8] },
 });

@@ -14,7 +14,9 @@ const PAGES = [
   ['floor', '/owner/floor'],
   ['calls', '/owner/calls'],
   ['menu', '/owner/menu'],
+  ['categories', '/owner/categories'],
   ['sales', '/owner/sales'],
+  ['insights', '/owner/insights'],
 ] as const;
 
 async function waitLoaded(page: Page) {

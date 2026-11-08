@@ -1,35 +1,34 @@
 import type { OwnerDashboard } from '@/lib/api/types';
 
-export type FigureKey = 'sales' | 'ordersToday' | 'visitors' | 'tables' | 'rating';
+export type FigureKey = 'sales' | 'ordersToday' | 'pending' | 'visitors' | 'tables';
 
 export type Figure = {
   key: FigureKey;
-  /** Pesewas for sales, the average for rating (null with no ratings), a count for the rest. */
-  value: number | null;
+  /** Pesewas for sales, a count for the rest. */
+  value: number;
   /** The page behind the number. */
   href: string;
 };
 
 /**
- * Today's numbers: one big figure and a short line of smaller ones under it. Sales only mean
- * something when the app takes payments, so without payments the day's order count is the big
- * figure instead. Pending orders and waiter calls are not here on purpose: Live orders and
- * Needs you already show them, and two counts from two queries can briefly disagree.
+ * Today's stats row: one dark card with the day's main number, then three small cards. Sales
+ * only mean something when the app takes payments, so without payments the day's order count
+ * takes the dark card and tables seated fills the third small card, keeping the row at three.
  * The screen turns keys into words and formats the money.
  */
 export function todayFigures(
   d: OwnerDashboard,
   opts: { payments: boolean },
-): { hero: Figure; line: Figure[] } {
+): { hero: Figure; cards: [Figure, Figure, Figure] } {
   const ordersToday: Figure = { key: 'ordersToday', value: d.ordersToday, href: '/owner/orders' };
-  const line: Figure[] = [
-    { key: 'visitors', value: d.visitorsToday, href: '/owner/insights' },
-    { key: 'tables', value: d.openTables, href: '/owner/floor' },
-    { key: 'rating', value: d.ratingAverage, href: '/owner/reviews' },
-  ];
-  if (!opts.payments) return { hero: ordersToday, line };
+  const pending: Figure = { key: 'pending', value: d.pendingOrders, href: '/owner/orders' };
+  const visitors: Figure = { key: 'visitors', value: d.visitorsToday, href: '/owner/insights' };
+  if (!opts.payments) {
+    const tables: Figure = { key: 'tables', value: d.openTables, href: '/owner/floor' };
+    return { hero: ordersToday, cards: [pending, visitors, tables] };
+  }
   return {
-    hero: { key: 'sales', value: d.salesTodayPesewas, href: '/owner/insights' },
-    line: [ordersToday, ...line],
+    hero: { key: 'sales', value: d.salesTodayPesewas, href: '/owner/sales' },
+    cards: [ordersToday, pending, visitors],
   };
 }

@@ -19,41 +19,30 @@ const base: OwnerDashboard = {
 
 const keys = (figures: { key: string }[]) => figures.map((f) => f.key);
 
-test('with payments on, sales is the big figure and orders today leads the line under it', () => {
-  const { hero, line } = todayFigures(base, { payments: true });
-  expect(hero).toEqual({ key: 'sales', value: 125_000, href: '/owner/insights' });
-  expect(keys(line)).toEqual(['ordersToday', 'visitors', 'tables', 'rating']);
+test('with payments on, sales is the dark card and three small cards follow it', () => {
+  const { hero, cards } = todayFigures(base, { payments: true });
+  expect(hero).toEqual({ key: 'sales', value: 125_000, href: '/owner/sales' });
+  expect(keys(cards)).toEqual(['ordersToday', 'pending', 'visitors']);
 });
 
-test('with payments off, orders today is the big figure and sales is not shown at all', () => {
-  const { hero, line } = todayFigures(base, { payments: false });
+test('with payments off, orders today is the dark card and sales is not shown at all', () => {
+  const { hero, cards } = todayFigures(base, { payments: false });
   expect(hero).toEqual({ key: 'ordersToday', value: 14, href: '/owner/orders' });
-  expect(keys(line)).toEqual(['visitors', 'tables', 'rating']);
-  expect(keys([hero, ...line])).not.toContain('sales');
+  expect(keys(cards)).toEqual(['pending', 'visitors', 'tables']);
+  expect(keys([hero, ...cards])).not.toContain('sales');
 });
 
-test('pending orders and waiter calls are left out, because Live orders and Needs you show them', () => {
+test('there are always exactly three small cards, so the row never has a gap', () => {
   for (const payments of [true, false]) {
-    const { hero, line } = todayFigures(base, { payments });
-    expect(keys([hero, ...line])).not.toContain('pending');
-    expect(keys([hero, ...line])).not.toContain('calls');
+    expect(todayFigures(base, { payments }).cards).toHaveLength(3);
   }
 });
 
-test('rating carries null when there are no ratings yet, never a made-up zero', () => {
-  const rated = todayFigures(base, { payments: true }).line.find((f) => f.key === 'rating');
-  expect(rated).toEqual({ key: 'rating', value: 4.6, href: '/owner/reviews' });
-
-  const none = todayFigures({ ...base, ratingAverage: null, ratingCount: 0 }, { payments: true });
-  expect(none.line.find((f) => f.key === 'rating')?.value).toBeNull();
-});
-
-test('each figure opens the page behind it', () => {
-  const { line } = todayFigures(base, { payments: true });
-  expect(Object.fromEntries(line.map((f) => [f.key, f.href]))).toEqual({
-    ordersToday: '/owner/orders',
-    visitors: '/owner/insights',
-    tables: '/owner/floor',
-    rating: '/owner/reviews',
-  });
+test('each card carries its number from the dashboard and opens the page behind it', () => {
+  const { cards } = todayFigures(base, { payments: false });
+  expect(cards).toEqual([
+    { key: 'pending', value: 2, href: '/owner/orders' },
+    { key: 'visitors', value: 40, href: '/owner/insights' },
+    { key: 'tables', value: 5, href: '/owner/floor' },
+  ]);
 });

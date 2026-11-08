@@ -54,9 +54,12 @@ export function NavRow({
   const [hovered, setHovered] = useState(false);
   const Icon = NAV_ICONS[id];
   const shown = count && count > 0 ? (count > 99 ? '99+' : String(count)) : null;
-  // The selected item changes colour AND weight, so state never rests on colour alone.
-  const iconInk = current ? theme.ink : theme.muted;
-  const labelInk = current ? (compact ? theme.ink : theme.text) : theme.muted;
+  // The selected item changes colour AND weight, so state never rests on colour alone. In the
+  // sidebar the other items stay in the text colour, like a list; tabs grey them out. On the pale
+  // orange pill the ink is badgeInk, which deriveTheme checks at 4.5:1 against the tint.
+  const onInk = compact ? theme.ink : theme.badgeInk;
+  const iconInk = current ? onInk : compact ? theme.muted : theme.text;
+  const labelInk = current ? onInk : compact ? theme.muted : theme.text;
   // The count is read after the name ("Orders, 2"), and the name stays the button's label.
   const value = shown ? { text: shown } : undefined;
 
@@ -77,12 +80,12 @@ export function NavRow({
       style={({ pressed }) => [
         compact ? styles.tab : styles.row,
         iconOnly && styles.iconOnly,
-        !compact && (current || pressed || hovered) && { backgroundColor: theme.wash },
+        !compact && (pressed || hovered) && { backgroundColor: theme.wash },
+        // The open page sits in a pale orange pill, the one place the sidebar uses the brand colour.
+        !compact && current && { backgroundColor: theme.tint },
         compact && pressed && { opacity: 0.7 },
       ]}
     >
-      {/* A short orange bar marks the open page in the sidebar, like a bookmark. */}
-      {!compact && current ? <View style={[styles.marker, { backgroundColor: theme.ink }]} /> : null}
       <View>
         <Icon color={iconInk} size={compact ? 24 : 20} strokeWidth={current ? 2.4 : 2} />
         {shown && (compact || iconOnly) ? (
@@ -101,7 +104,7 @@ export function NavRow({
           style={[
             compact ? styles.tabLabel : styles.rowLabel,
             {
-              color: hovered && !current ? theme.text : labelInk,
+              color: labelInk,
               fontFamily: current ? fontFamily.strong : fontFamily.regular,
             },
           ]}
@@ -132,16 +135,12 @@ const styles = StyleSheet.create({
     borderRadius: tokens.radius.sm,
     borderCurve: 'continuous',
   },
-  marker: {
-    position: 'absolute',
-    left: 0,
-    top: tokens.space[2],
-    bottom: tokens.space[2],
-    width: 3,
-    borderRadius: tokens.radius.full,
-  },
   iconOnly: { justifyContent: 'center', paddingHorizontal: 0 },
-  rowLabel: { flex: 1, fontSize: tokens.type.body.size - 1, lineHeight: tokens.type.body.line },
+  rowLabel: {
+    flex: 1,
+    fontSize: tokens.owner.type.nav.size,
+    lineHeight: tokens.owner.type.nav.line,
+  },
   tab: { flex: 1, minHeight: 48, alignItems: 'center', justifyContent: 'center', gap: 2 },
   tabLabel: { fontSize: tokens.owner.micro.size, lineHeight: tokens.owner.micro.line - 1 },
   pill: {

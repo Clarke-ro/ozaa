@@ -247,6 +247,59 @@ export const tokens = {
       "wide": 1280
     },
     "statusEdge": 4,
+    "pageTitle": {
+      "use": "Page title at the top of every owner page (Inter 600). Bigger than title, plainer than display.",
+      "size": 20,
+      "line": 24
+    },
+    "type": {
+      "use": "Owner app type scale, measured from the MenuRite dashboard (Clarke, 2026-11-07). Inter only: their 500 maps to our 400, their 700 and 800 to our 600, because the app ships five font files (BUILD.md section 11). Guest pages keep the scale in `type` above.",
+      "display-l": {
+        "size": 30,
+        "line": 34
+      },
+      "display-m": {
+        "size": 24,
+        "line": 28
+      },
+      "title": {
+        "size": 15,
+        "line": 20
+      },
+      "body": {
+        "size": 14,
+        "line": 19
+      },
+      "body-strong": {
+        "size": 14,
+        "line": 19
+      },
+      "caption": {
+        "size": 12,
+        "line": 16
+      },
+      "button": {
+        "size": 14,
+        "line": 18
+      },
+      "nav": {
+        "size": 13,
+        "line": 18
+      },
+      "rowTitle": {
+        "size": 16,
+        "line": 20
+      },
+      "figure": {
+        "size": 20,
+        "line": 24
+      },
+      "caps": {
+        "size": 12,
+        "line": 16,
+        "letterSpacing": 0.5
+      }
+    },
     "micro": {
       "size": 11,
       "line": 14

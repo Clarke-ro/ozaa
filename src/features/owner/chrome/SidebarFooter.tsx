@@ -4,21 +4,14 @@ import { useTranslation } from 'react-i18next';
 import { CircleHelp, LogOut, UserRound, type LucideIcon } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
-import { ThemeProvider, useTheme, type Theme } from '@/ui/theme';
+import { useTheme } from '@/ui/theme';
 import { useOwnerSession } from '@/features/session';
 import { ConfirmDialog } from '../kit';
 import { useGoTo } from './NavRow';
 import { useSignOut } from './useSignOut';
 
 /** Help, who is signed in, and sign out, pinned under the sidebar's scrolling list. */
-export function SidebarFooter({
-  collapsed,
-  dialogTheme,
-}: {
-  collapsed: boolean;
-  /** The sidebar is always dark; the sign-out dialog sits over the page, so it uses the page's theme. */
-  dialogTheme: Theme;
-}) {
+export function SidebarFooter({ collapsed }: { collapsed: boolean }) {
   const theme = useTheme();
   const { t } = useTranslation();
   const goTo = useGoTo();
@@ -37,6 +30,7 @@ export function SidebarFooter({
       />
       <FooterRow
         icon={UserRound}
+        initial={firstName ? firstName.charAt(0).toUpperCase() : undefined}
         label={firstName || t('ownerChrome.profile')}
         detail={t(`ownerSettings.roles.${role}`)}
         collapsed={collapsed}
@@ -48,31 +42,32 @@ export function SidebarFooter({
         collapsed={collapsed}
         onPress={() => setConfirming(true)}
       />
-      <ThemeProvider theme={dialogTheme}>
-        <ConfirmDialog
-          visible={confirming}
-          title={t('ownerSettings.signOutTitle')}
-          message={t('ownerSettings.signOutBody')}
-          confirmLabel={t('ownerSettings.signOut')}
-          onConfirm={() => {
-            setConfirming(false);
-            signOut();
-          }}
-          onCancel={() => setConfirming(false)}
-        />
-      </ThemeProvider>
+      <ConfirmDialog
+        visible={confirming}
+        title={t('ownerSettings.signOutTitle')}
+        message={t('ownerSettings.signOutBody')}
+        confirmLabel={t('ownerSettings.signOut')}
+        onConfirm={() => {
+          setConfirming(false);
+          signOut();
+        }}
+        onCancel={() => setConfirming(false)}
+      />
     </View>
   );
 }
 
 function FooterRow({
   icon: Icon,
+  initial,
   label,
   detail,
   collapsed,
   onPress,
 }: {
   icon: LucideIcon;
+  /** Shown in a round chip instead of the icon, for the signed-in person. */
+  initial?: string;
   label: string;
   detail?: string;
   collapsed: boolean;
@@ -90,10 +85,22 @@ function FooterRow({
         pressed && { backgroundColor: theme.wash },
       ]}
     >
-      <Icon size={20} color={theme.muted} />
+      {initial ? (
+        <View style={[styles.avatar, { backgroundColor: theme.tint }]}>
+          <Text variant="body-strong" style={{ color: theme.badgeInk }}>
+            {initial}
+          </Text>
+        </View>
+      ) : (
+        <Icon size={20} color={theme.muted} />
+      )}
       {collapsed ? null : (
         <View style={styles.text}>
-          <Text variant="body" numberOfLines={1} style={[styles.label, { color: theme.muted }]}>
+          <Text
+            variant={initial ? 'body-strong' : 'body'}
+            numberOfLines={1}
+            style={[styles.label, { color: initial ? theme.text : theme.muted }]}
+          >
             {label}
           </Text>
           {detail ? (
@@ -106,6 +113,8 @@ function FooterRow({
     </Pressable>
   );
 }
+
+const AVATAR = tokens.space[8];
 
 const styles = StyleSheet.create({
   foot: {
@@ -123,6 +132,13 @@ const styles = StyleSheet.create({
     borderRadius: tokens.radius.sm,
   },
   rail: { justifyContent: 'center', paddingHorizontal: 0 },
+  avatar: {
+    width: AVATAR,
+    height: AVATAR,
+    borderRadius: tokens.radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   text: { flex: 1 },
-  label: { fontSize: tokens.type.body.size - 1 },
+  label: { fontSize: tokens.owner.type.nav.size, lineHeight: tokens.owner.type.nav.line },
 });

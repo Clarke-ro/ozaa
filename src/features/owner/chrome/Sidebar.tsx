@@ -6,13 +6,7 @@ import { PanelLeftClose, PanelLeftOpen } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
-import {
-  fontFamily,
-  ozaaOwnerDarkTheme,
-  ThemeProvider,
-  useTheme,
-  type Theme,
-} from '@/ui/theme';
+import { fontFamily, useTheme } from '@/ui/theme';
 import { useOwnerSession } from '@/features/session';
 import { OzaaMark } from '../kit/OzaaMark';
 import { LocationSwitcher } from './LocationSwitcher';
@@ -26,20 +20,11 @@ import { useNavCounts } from './useNavCounts';
 const MARK = tokens.space[8];
 
 /**
- * Wide screens only. A black column next to the light page, like a till's side menu, so the
- * navigation reads as one block and the page stays clean. It always uses the dark owner theme;
- * the page keeps the person's own light or dark setting. Folds down to an icon rail.
+ * Wide screens only. A light column on the card colour, split from the grey page by a thin
+ * line, with the pages in groups (main, sales, settings). The open page sits in a pale orange
+ * pill. It follows the person's light or dark setting like the page does. Folds to an icon rail.
  */
 export function Sidebar() {
-  const page = useTheme();
-  return (
-    <ThemeProvider theme={ozaaOwnerDarkTheme}>
-      <SidebarBody pageScheme={page} />
-    </ThemeProvider>
-  );
-}
-
-function SidebarBody({ pageScheme }: { pageScheme: Theme }) {
   const theme = useTheme();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
@@ -55,7 +40,7 @@ function SidebarBody({ pageScheme }: { pageScheme: Theme }) {
         styles.side,
         {
           width: collapsed ? tokens.owner.rail : tokens.owner.sidebar,
-          backgroundColor: theme.bg,
+          backgroundColor: theme.surface,
           borderRightColor: theme.line,
           paddingTop: insets.top + tokens.space[4],
         },
@@ -84,11 +69,13 @@ function SidebarBody({ pageScheme }: { pageScheme: Theme }) {
       {collapsed ? null : <LocationSwitcher variant="block" />}
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.list}>
-        {navGroups(role).map(({ group, items }) => (
-          <View key={group} style={styles.group}>
-            {collapsed ? (
-              <View style={[styles.rule, { backgroundColor: theme.line }]} />
-            ) : (
+        {navGroups(role).map(({ group, items }, index) => (
+          <View
+            key={group}
+            style={[styles.group, index > 0 && [styles.ruled, { borderTopColor: theme.line }]]}
+          >
+            {/* The main group needs no label; the groups after it are named. */}
+            {collapsed || group === 'main' ? null : (
               <Text
                 variant="caption"
                 accessibilityRole="header"
@@ -112,7 +99,7 @@ function SidebarBody({ pageScheme }: { pageScheme: Theme }) {
         ))}
       </ScrollView>
 
-      <SidebarFooter collapsed={collapsed} dialogTheme={pageScheme} />
+      <SidebarFooter collapsed={collapsed} />
     </View>
   );
 }
@@ -142,15 +129,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   scroll: { flex: 1 },
-  list: { paddingBottom: tokens.space[4] },
-  group: { gap: 2, marginTop: tokens.space[4] },
+  list: { paddingTop: tokens.space[2], paddingBottom: tokens.space[4] },
+  group: { gap: 2, paddingBottom: tokens.space[3] },
+  ruled: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: tokens.space[4] },
   groupLabel: {
     fontFamily: fontFamily.strong,
-    fontSize: tokens.owner.micro.size,
-    lineHeight: tokens.owner.micro.line,
-    letterSpacing: 0.8,
+    fontSize: tokens.owner.type.caps.size,
+    lineHeight: tokens.owner.type.caps.line,
+    letterSpacing: tokens.owner.type.caps.letterSpacing,
     paddingHorizontal: tokens.space[3],
     paddingBottom: tokens.space[2],
   },
-  rule: { height: StyleSheet.hairlineWidth, marginBottom: tokens.space[2] },
 });

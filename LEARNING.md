@@ -4,6 +4,46 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-08 · Owner app in the MenuRite layout
+
+**What we built**
+
+The owner app now follows the MenuRite dashboard's layout and type, in Ozaa's colours.
+
+- A light sidebar. The open page sits in a pale orange pill.
+- Every page starts with a bold title, a grey line and its action on the right.
+- **Today**: a black card with the day's main number, three small cards, the setup steps and a grid of shortcuts.
+- **Categories**: one card per section with a ⋮ menu and a drag handle, and a dashed "Add" box.
+- **Sales** and **Insights**: a period dropdown, figure cards and plain tables.
+- Text is Inter everywhere at a smaller size, numbers included.
+
+**How it works**
+
+```
+ThemeProvider (owner theme)
+  ├ colours     same as before
+  └ type        tokens.owner.type → every <Text> under it
+```
+
+`Text` asks the theme for sizes. The owner theme carries MenuRite's scale, and guest themes carry none, so guest pages keep the brand scale.
+
+**Files to look at**
+
+- `src/ui/theme.tsx`, `src/ui/Text.tsx`: the type scale
+- `src/features/owner/chrome/PageHeader.tsx`, `Sidebar.tsx`
+- `src/features/owner/kit/`: `PeriodSelect.tsx`, `FigureCard.tsx`, `RankTable.tsx`, `RowMenu.tsx`
+- `src/features/owner/screens/dashboard/todayFigures.ts` and its test
+
+**New idea: context**
+
+React context hands a value to everything inside a provider without passing it through every component. The theme works this way, so changing the owner theme's `type` changed the text on every owner page at once.
+
+**Try it yourself**
+
+In `design/tokens.json`, change `owner.type.body.size` from 14 to 16, then run `npm run gen:tokens` and reload an owner page.
+
+---
+
 ## 2026-11-07 · Owner app redesign, part 2
 
 **What we built**
