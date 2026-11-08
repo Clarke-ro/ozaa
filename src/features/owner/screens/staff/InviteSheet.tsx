@@ -11,7 +11,7 @@ import { useTheme } from '@/ui/theme';
 import { Chips, Field, ModalSheet, toast } from '../../kit';
 import { ownerKeys } from '../../data/keys';
 
-// Owners are not invited from here: a second owner can change payouts, so that stays a support step.
+// Owners are not invited from here: a second owner can change payment settings, so that stays a support step.
 export const INVITE_ROLES: StaffRole[] = [
   'manager',
   'waiter',

@@ -4,6 +4,36 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-08 · Payments without the off switch (BUILD.md box 4b.17, done)
+
+**What we built**
+The app no longer has a "payments off" switch. Every restaurant takes payment: in person by default, and online too once it connects its own Paystack. Staff mark in-person bills paid from Orders or Floor.
+
+**How it works**
+```
+guest eats → order served, not paid → Floor shows the table under "Bill"
+  guest pays online ............ Paystack says paid → table frees
+  guest pays at the counter .... staff tap Mark paid → Cash / Card machine / … → table frees
+```
+- Today leads with sales: money already taken, online or marked paid.
+- Setup's last step is "How guests pay", with a button to Integrations.
+- The old Payments page (payout account, refunds) is gone. Each restaurant sees online payments and refunds in its own Paystack dashboard. Old links go to Integrations.
+
+**Files to look at**
+- `src/features/owner/floor/floorStatus.ts`: a table frees once its bill is paid.
+- `src/features/owner/desk/daySummary.ts`: the "bills to collect" count.
+- `src/features/owner/screens/FloorScreen.tsx`: Mark paid opens the same sheet as Orders.
+- `src/features/owner/screens/setup/SetupScreen.tsx`: the new last step.
+- `e2e/pay-in-person.spec.ts`: serve a table, mark it paid in cash, watch it free up.
+
+**New idea: deleting a mode**
+For a week the code had two ways of working, payments on and payments off, and every screen asked which one it was in. Removing a mode means picking the one that stays, deleting the other branch everywhere, and deleting its tests too. The code gets shorter and there's one behaviour left to understand.
+
+**Try it yourself**
+On Floor, open a table with an order, tap through Start cooking → Mark ready → Mark served, then Mark paid → Cash. Watch the Bill count go up, then back down.
+
+---
+
 ## 2026-11-08 · Guests pay in the app only where the venue connected Paystack (BUILD.md box 4b.17, part 4)
 
 **What we built**

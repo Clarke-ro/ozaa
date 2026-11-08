@@ -8,7 +8,6 @@ import type {
   WrittenReview,
 } from '@/lib/api/types';
 import { ApiError } from '@/lib/api/errors';
-import { PAYMENTS_ENABLED } from '@/lib/features';
 import { calendarDay, summarizeDay } from '../features/owner/desk/daySummary';
 import { deriveFloor, type FloorOrder } from '../features/owner/floor/floorStatus';
 import { refundCharge } from '../features/owner/desk/refund';
@@ -45,7 +44,6 @@ export function floorFor(world: World, venueId: string) {
       orders: ordersOf(world, venueId).map(asFloorOrder),
       calls: world.calls.filter((call) => call.venueId === venueId),
       seatedCodes: world.seatedCodes[venueId] ?? [],
-      payments: PAYMENTS_ENABLED,
     }),
   };
 }
@@ -80,13 +78,10 @@ export function dashboardFor(world: World, venueId: string, now: number): OwnerD
   const summary = summarizeDay({
     orders,
     openCalls: openCalls.length,
-    openBillCalls: openCalls.filter((call) => call.reason === 'bill').length,
-    payments: PAYMENTS_ENABLED,
     ratings,
     nowIso: new Date(now).toISOString(),
     timeZone: venue.hours.timezone,
     yesterdayPesewas: world.yesterdayPesewas[venueId] ?? 0,
-    payoutVerified: world.payouts[venueId]?.verified ?? false,
     soldOut,
   });
   const liveOrders = orders.filter(

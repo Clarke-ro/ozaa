@@ -8,38 +8,30 @@ const primaries = (list: ReturnType<typeof detailActions>) =>
 
 describe('detailActions', () => {
   it('has no actions for a table with no order and no call', () => {
-    expect(detailActions(base, { payments: true, hasBill: false, step: null })).toEqual([]);
+    expect(detailActions(base, { hasBill: false, step: null })).toEqual([]);
   });
 
   it('makes On my way the one primary when a call is open', () => {
     const list = detailActions(
       { status: 'waiting_to_pay', orderId: 'o1', waiterCallId: 'c1' },
-      { payments: true, hasBill: true, step: null },
+      { hasBill: true, step: null },
     );
-    expect(list.map((item) => item.id)).toEqual(['acknowledge', 'resolve', 'cash']);
+    expect(list.map((item) => item.id)).toEqual(['acknowledge', 'resolve', 'markPaid']);
     expect(primaries(list).map((item) => item.id)).toEqual(['acknowledge']);
   });
 
-  it('makes Record cash the primary when payments are on and the table waits to pay', () => {
+  it('makes Mark paid the primary when payments are on and the table waits to pay', () => {
     const list = detailActions(
       { ...base, status: 'waiting_to_pay', orderId: 'o1' },
-      { payments: true, hasBill: true, step: null },
+      { hasBill: true, step: null },
     );
-    expect(list).toEqual([{ id: 'cash', tone: 'primary' }]);
+    expect(list).toEqual([{ id: 'markPaid', tone: 'primary' }]);
   });
 
-  it('never offers cash when payments are off', () => {
+  it('never offers Mark paid before the bill has loaded', () => {
     const list = detailActions(
       { ...base, status: 'waiting_to_pay', orderId: 'o1' },
-      { payments: false, hasBill: true, step: null },
-    );
-    expect(list).toEqual([]);
-  });
-
-  it('never offers cash before the bill has loaded', () => {
-    const list = detailActions(
-      { ...base, status: 'waiting_to_pay', orderId: 'o1' },
-      { payments: true, hasBill: false, step: null },
+      { hasBill: false, step: null },
     );
     expect(list).toEqual([]);
   });
@@ -47,7 +39,7 @@ describe('detailActions', () => {
   it('offers the next kitchen step as a secondary action', () => {
     const list = detailActions(
       { ...base, status: 'ordered', orderId: 'o1' },
-      { payments: true, hasBill: true, step: start },
+      { hasBill: true, step: start },
     );
     expect(list).toEqual([{ id: 'move', tone: 'secondary', move: 'start', next: 'preparing' }]);
   });
@@ -55,7 +47,7 @@ describe('detailActions', () => {
   it('has no kitchen step when the person has none to take', () => {
     const list = detailActions(
       { ...base, status: 'ordered', orderId: 'o1' },
-      { payments: true, hasBill: true, step: null },
+      { hasBill: true, step: null },
     );
     expect(list).toEqual([]);
   });
@@ -63,7 +55,7 @@ describe('detailActions', () => {
   it('never has more than one primary', () => {
     const list = detailActions(
       { status: 'waiting_to_pay', orderId: 'o1', waiterCallId: 'c1' },
-      { payments: true, hasBill: true, step: { move: 'serve', status: 'served' } },
+      { hasBill: true, step: { move: 'serve', status: 'served' } },
     );
     expect(list).toHaveLength(4);
     expect(primaries(list)).toHaveLength(1);

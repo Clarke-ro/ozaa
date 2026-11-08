@@ -5,8 +5,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { CircleCheck } from 'lucide-react-native';
 import { api } from '@/lib/api';
-import type { Schemas } from '@/lib/api/types';
-import { parsePhone } from '@/lib/phone';
 import type { WifiSecurity } from '@/features/venue';
 import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
@@ -15,13 +13,10 @@ import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
-import { Chips, Field, Section, SectionBody, toast } from '../../kit';
+import { Field, toast } from '../../kit';
 import { planTables } from '../tables/planTables';
 import { WifiSection } from '../services/WifiSection';
 import { SetupSteps, STEPS } from './SetupSteps';
-
-type MomoProvider = Schemas['MomoProvider'];
-const PROVIDERS: MomoProvider[] = ['mtn', 'vod', 'atl'];
 
 /** First-time setup in four short steps. Each step saves before moving on; Wi-Fi can be skipped. */
 export function SetupScreen() {
@@ -52,16 +47,10 @@ export function SetupScreen() {
     security: 'WPA2' as WifiSecurity,
     hidden: false,
   });
-  const [business, setBusiness] = useState('');
-  const [phone, setPhone] = useState('');
-  const [provider, setProvider] = useState<MomoProvider | null>(null);
 
   const v = venue.data;
   const venueName = name ?? v?.name ?? '';
   const venuePlace = place ?? v?.location.label ?? '';
-  const parsed = parsePhone(phone);
-  // Use the network the number belongs to when the prefix tells us; otherwise the owner picks.
-  const network = provider ?? parsed?.provider ?? null;
   const plan = planTables(
     'range',
     { start: from, end: to, prefix: '', list: '' },
@@ -75,10 +64,6 @@ export function SetupScreen() {
       return plan.error && (tables.data?.items.length ?? 0) === 0
         ? t(plan.error, { max: 200 })
         : null;
-    if (current === 'payout') {
-      if (!parsed) return t('ownerSetup.err.phone');
-      if (!network) return t('ownerSetup.err.network');
-    }
     return null;
   };
 
@@ -93,12 +78,6 @@ export function SetupScreen() {
         await api.ownerCreateTables(venueId, { codes: plan.codes });
       if (current === 'wifi' && wifi.ssid.trim())
         await api.ownerUpdateVenue(venueId, { wifi: { ...wifi, ssid: wifi.ssid.trim() } });
-      if (current === 'payout' && parsed && network) {
-        await api.ownerSetPayoutAccount(venueId, {
-          businessName: business.trim() || venueName.trim(),
-          settlement: { type: 'momo', provider: network, phone: parsed.phone },
-        });
-      }
     },
     onSuccess: () => {
       setShowErrors(false);
@@ -226,39 +205,19 @@ export function SetupScreen() {
           {current === 'wifi' ? (
             <WifiSection value={wifi} onChange={(k, val) => setWifi((w) => ({ ...w, [k]: val }))} />
           ) : null}
-          {current === 'payout' ? (
+          {current === 'payments' ? (
+            // Nothing to save here: guests can always pay in person. Online pay is the venue's own
+            // Paystack, connected in Integrations (Clarke, 2026-11-08).
             <>
-              <Field
-                label={t('ownerSetup.business')}
-                value={business}
-                onChangeText={setBusiness}
-                placeholder={venueName}
+              <Text variant="body" style={{ color: theme.muted }}>
+                {t('ownerSetup.paymentsBody')}
+              </Text>
+              <Button
+                label={t('ownerSetup.openIntegrations')}
+                tone="secondary"
+                size="md"
+                onPress={() => router.push('/owner/integrations')}
               />
-              <Field
-                label={t('ownerSetup.momo')}
-                value={phone}
-                onChangeText={setPhone}
-                keyboardType="phone-pad"
-                placeholder="024 123 4567"
-                error={err === t('ownerSetup.err.phone') ? err : undefined}
-              />
-              <Section
-                title={t('ownerSetup.network')}
-                note={err === t('ownerSetup.err.network') ? err : undefined}
-              >
-                <SectionBody>
-                  <Chips
-                    single
-                    label={t('ownerSetup.network')}
-                    options={PROVIDERS.map((id) => ({
-                      id,
-                      label: t(`ownerPayments.providers.${id}`),
-                    }))}
-                    selected={network ? [network] : []}
-                    onChange={(ids) => setProvider(ids[0] ?? null)}
-                  />
-                </SectionBody>
-              </Section>
             </>
           ) : null}
         </View>

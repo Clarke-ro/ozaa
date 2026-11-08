@@ -7,7 +7,6 @@ export { OrdersScreen } from './screens/orders/OrdersScreen';
 export { CallsScreen } from './screens/calls/CallsScreen';
 export { MenuScreen as MenuDeskScreen } from './screens/menu/MenuScreen';
 export { ServicesScreen as ServicesDeskScreen } from './screens/services/ServicesScreen';
-export { PaymentsScreen } from './screens/payments/PaymentsScreen';
 export { ReviewsScreen as ReviewsDeskScreen } from './screens/reviews/ReviewsScreen';
 export { TablesScreen } from './screens/tables/TablesScreen';
 export { BrandingScreen } from './screens/branding/BrandingScreen';
