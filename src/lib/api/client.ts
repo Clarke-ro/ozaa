@@ -24,6 +24,10 @@ import type {
   Menu,
   OwnerCreateOrderRequest,
   SalesReport,
+  ManualPaymentMethod,
+  ManualPayments,
+  PaymentSettings,
+  PaystackKeysInput,
   MenuCategory,
   MenuCategoryInput,
   MenuItem,
@@ -200,6 +204,17 @@ export type ApiClient = {
   ownerListWrittenReviews(venueId: string): Promise<{ items: WrittenReview[] }>;
   ownerReplyToReview(reviewId: string, body: { text: string }, call?: Call): Promise<WrittenReview>;
   ownerGetInsights(venueId: string, range?: InsightsReport['range']): Promise<InsightsReport>;
+  ownerRecordManualPayment(
+    orderId: string,
+    body: { method: ManualPaymentMethod },
+    call?: Call,
+  ): Promise<Order>;
+  /** Owner only. The Paystack secret key is never returned, only `secretKeyHint`. */
+  ownerGetPaymentSettings(venueId: string): Promise<PaymentSettings>;
+  ownerSetManualPayments(venueId: string, body: ManualPayments): Promise<PaymentSettings>;
+  ownerConnectPaystack(venueId: string, body: PaystackKeysInput): Promise<PaymentSettings>;
+  ownerDisconnectPaystack(venueId: string): Promise<PaymentSettings>;
+  ownerTestPaystack(venueId: string): Promise<{ ok: boolean; checkedAt: string; message?: string }>;
   /** Real order figures; `since` (inclusive) and `until` (exclusive) are ISO times. */
   ownerGetSales(venueId: string, filter?: { since?: string; until?: string }): Promise<SalesReport>;
   ownerListFeedback(

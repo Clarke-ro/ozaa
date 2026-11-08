@@ -10,6 +10,7 @@ import {
 } from '../features/loyalty/facts';
 import { ApiError } from '@/lib/api/errors';
 import { liveNotices } from '@/lib/notices';
+import { guestPayMethods } from '@/lib/payments';
 import type {
   LoyaltyCard,
   Menu,
@@ -22,6 +23,7 @@ import type {
   StaffMember,
   StaffRole,
   StoreNotices,
+  PaymentSettings,
   Table,
   VenuePublic,
   Business,
@@ -114,6 +116,8 @@ export type World = {
   wifi: Record<string, Wifi>;
   /** Store notices as the owner set them, by venue slug. Guests only get the live ones. */
   notices: Record<string, StoreNotices>;
+  /** Payment settings by venue id. Like the real server, never the secret key itself. */
+  paymentSettings: Record<string, PaymentSettings>;
   offers: Record<string, Offer[]>;
   orders: LiveOrder[];
   calls: (WaiterCall & { venueId: string })[];
@@ -481,6 +485,7 @@ export function createWorld(now: number): World {
     menus,
     wifi,
     notices: {},
+    paymentSettings: {},
     offers,
     orders,
     calls: [],
@@ -586,16 +591,33 @@ export function venueById(world: World, venueId: string): VenuePublic {
   return venue;
 }
 
+/** A new venue takes cash and nothing else until the owner sets up more. */
+export function defaultPaymentSettings(): PaymentSettings {
+  return {
+    paystack: null,
+    manual: {
+      cash: true,
+      cardMachine: false,
+      bankTransfer: { enabled: false },
+      momo: { enabled: false },
+    },
+  };
+}
+
 export function publicVenue(
   venue: VenuePublic,
   notices: StoreNotices | undefined,
   now: number,
+  payment: PaymentSettings = defaultPaymentSettings(),
 ): VenuePublic {
   return {
     ...venue,
     services: venue.services.filter((service) => service.enabled),
     // Like the server: guests get only what should show right now.
     notices: liveNotices(notices, now),
+    // Guests learn how they can pay; never a key.
+    payMethods: guestPayMethods(payment),
+    payEnabled: payment.paystack !== null,
   };
 }
 

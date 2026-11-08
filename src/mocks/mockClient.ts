@@ -41,12 +41,15 @@ import { decideMockCard, readMockCard } from './cardBox';
 import { checkLine, takeStock, unitPrice } from '@/lib/dishRules';
 import { checkFulfilment, onlineOrderingOf } from '@/lib/onlineOrdering';
 import { salesReport } from '@/lib/sales';
+import { checkManualPayments, checkPaystackKeys, keyHint } from '@/lib/payments';
+import { LIVE_PAYMENTS_ENABLED } from '@/lib/features';
 import { rememberOpenOrder } from './openOrder';
 import {
   createWorld,
   findOrder,
   keepLoyalty,
   nextId,
+  defaultPaymentSettings,
   publicVenue,
   serviceSettings,
   STAFF,
@@ -101,6 +104,19 @@ function sessionOf(world: World, tokens: TokenSource) {
   const session = world.sessions.get(token);
   if (!session) throw new ApiError(401, 'unauthorized', 'Sign in again');
   return session;
+}
+
+/** The signed-in staff member's role, for checks the real server makes. */
+function staffRole(world: World, tokens: TokenSource) {
+  const row = accessOf(world, tokens);
+  return STAFF.find((person) => person.phone === row.phone)?.role;
+}
+
+/** Payment settings hold the venue's Paystack keys: only the owner may read or change them. */
+function ownerOnly(world: World, tokens: TokenSource) {
+  if (staffRole(world, tokens) !== 'owner') {
+    throw new ApiError(403, 'forbidden', 'Only the owner can change payments');
+  }
 }
 
 function accessOf(world: World, tokens: TokenSource) {
@@ -353,6 +369,7 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
         lines,
         paidPesewas: paid,
         paymentStatus: paid >= live.order.totalPesewas ? 'paid' : 'part_paid',
+        paymentMethod: row.payment.method === 'card' ? 'online_card' : 'online_momo',
         updatedAt: new Date(clock).toISOString(),
       };
       const loyaltyToken = tokens.loyalty?.() ?? tokens.access();
@@ -484,14 +501,24 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       return {
         guestToken: token,
         expiresAt: new Date(now() + 12 * 3600_000).toISOString(),
-        venue: publicVenue(venue, world.notices[venue.slug], now()),
+        venue: publicVenue(
+          venue,
+          world.notices[venue.slug],
+          now(),
+          world.paymentSettings[venue.id],
+        ),
         table,
       };
     },
     async getVenue(slug, call) {
       await gate();
       const found = venueBySlug(world, slug);
-      const venue = publicVenue(found, world.notices[found.slug], now());
+      const venue = publicVenue(
+        found,
+        world.notices[found.slug],
+        now(),
+        world.paymentSettings[found.id],
+      );
       const tag = etag(venue);
       if (call?.ifNoneMatch === tag) throw new ApiError(304, 'not_modified', 'Not modified');
       return venue;
@@ -1076,8 +1103,85 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
         ...live.order,
         paidPesewas: paid,
         paymentStatus: paid >= live.order.totalPesewas ? 'paid' : 'part_paid',
+        paymentMethod: 'cash',
       };
       return live.order;
+    },
+    async ownerRecordManualPayment(orderId, body, call) {
+      await gate();
+      const role = staffRole(world, tokens);
+      if (role !== 'owner' && role !== 'manager' && role !== 'waiter') {
+        throw new ApiError(403, 'forbidden', 'Your role cannot mark orders paid');
+      }
+      return remember(call?.idempotencyKey, () => {
+        const live = findOrder(world, orderId);
+        // Already paid: nothing changes, so a double tap is harmless.
+        if (live.order.paymentStatus === 'paid') return live.order;
+        live.order = {
+          ...live.order,
+          paidPesewas: live.order.totalPesewas,
+          paymentStatus: 'paid',
+          paymentMethod: body.method,
+          updatedAt: new Date(now()).toISOString(),
+        };
+        return live.order;
+      });
+    },
+    async ownerGetPaymentSettings(venueId) {
+      await gate();
+      ownerOnly(world, tokens);
+      venueById(world, venueId);
+      return world.paymentSettings[venueId] ?? defaultPaymentSettings();
+    },
+    async ownerSetManualPayments(venueId, body) {
+      await gate();
+      ownerOnly(world, tokens);
+      const check = checkManualPayments(body);
+      if (!check.ok)
+        throw new ApiError(400, `manual_${check.field}_incomplete`, 'Add the details first');
+      const current = world.paymentSettings[venueId] ?? defaultPaymentSettings();
+      world.paymentSettings[venueId] = { ...current, manual: body };
+      return world.paymentSettings[venueId];
+    },
+    async ownerConnectPaystack(venueId, body) {
+      await gate();
+      ownerOnly(world, tokens);
+      const check = checkPaystackKeys(body, LIVE_PAYMENTS_ENABLED);
+      if (!check.ok) throw new ApiError(422, check.code, 'Paystack did not accept these keys');
+      const current = world.paymentSettings[venueId] ?? defaultPaymentSettings();
+      // The real server checks the keys with Paystack and stores the secret encrypted.
+      // The mock keeps only what the app may see: never the secret key.
+      world.paymentSettings[venueId] = {
+        ...current,
+        paystack: {
+          mode: body.mode,
+          publicKey: body.publicKey.trim(),
+          secretKeyHint: keyHint(body.secretKey),
+          connectedAt: new Date(now()).toISOString(),
+          lastCheckedAt: new Date(now()).toISOString(),
+        },
+      };
+      return world.paymentSettings[venueId];
+    },
+    async ownerDisconnectPaystack(venueId) {
+      await gate();
+      ownerOnly(world, tokens);
+      const current = world.paymentSettings[venueId] ?? defaultPaymentSettings();
+      world.paymentSettings[venueId] = { ...current, paystack: null };
+      return world.paymentSettings[venueId];
+    },
+    async ownerTestPaystack(venueId) {
+      await gate();
+      ownerOnly(world, tokens);
+      const current = world.paymentSettings[venueId] ?? defaultPaymentSettings();
+      const checkedAt = new Date(now()).toISOString();
+      if (!current.paystack)
+        return { ok: false, checkedAt, message: 'Connect your Paystack account first.' };
+      world.paymentSettings[venueId] = {
+        ...current,
+        paystack: { ...current.paystack, lastCheckedAt: checkedAt },
+      };
+      return { ok: true, checkedAt };
     },
     async ownerListWaiterCalls(venueId) {
       await gate();
