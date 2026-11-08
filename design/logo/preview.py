@@ -7,12 +7,12 @@ W, ROWH = 1700, 300
 board = Image.new('RGBA', (W, ROWH * 3 + 40), 'white'); d = ImageDraw.Draw(board)
 for r, bg in enumerate(['#FFFFFF', '#111111']):
     y = 20 + r * ROWH; d.rectangle([0, y - 20, W, y + ROWH - 20], fill=bg); x = 20
-    board.alpha_composite(load('png/ozaa-icon-192.png').resize((240, 240)), (x, y)); x += 270
+    board.alpha_composite(load('png/cravins-icon-192.png').resize((240, 240)), (x, y)); x += 270
     for s in (96, 48, 32, 24, 16):
-        im = load(f'png/ozaa-icon-{s}.png'); board.alpha_composite(im, (x, y)); x += s + 20
+        im = load(f'png/cravins-icon-{s}.png'); board.alpha_composite(im, (x, y)); x += s + 20
         z = im.resize((s * 4 if s <= 48 else s * 2,) * 2, Image.NEAREST); board.alpha_composite(z, (x, y)); x += z.width + 40
 y = 20 + 2 * ROWH; x = 20
-for p in ['png/ozaa-icon-black-512.png', 'png/ozaa-icon-white-512.png', 'png/ozaa-mark-mono-512.png', 'expo/icon.png']:
+for p in ['png/cravins-icon-black-512.png', 'png/cravins-icon-white-512.png', 'png/cravins-mark-mono-512.png', 'expo/icon.png']:
     bgc = '#FC5205' if 'white' in p else '#F4F4F5'
     d.rectangle([x, y, x + 240, y + 240], fill=bgc); board.alpha_composite(load(p).resize((240, 240)), (x, y)); x += 270
 fg = load('expo/adaptive-icon-foreground.png'); bgi = load('expo/adaptive-icon-background.png')

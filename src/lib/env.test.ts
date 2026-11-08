@@ -9,7 +9,7 @@ describe('readEnv', () => {
       EXPO_PUBLIC_MOCK_LATENCY_MS: 400,
       EXPO_PUBLIC_MOCK_FAIL_RATE: 0,
       EXPO_PUBLIC_MOCK_FAST: '0',
-      EXPO_PUBLIC_SITE_URL: 'https://ozaa.app',
+      EXPO_PUBLIC_SITE_URL: 'https://cravins.app',
       live: [],
     });
   });
@@ -28,6 +28,6 @@ describe('readEnv', () => {
   it('refuses a fail rate outside 0 to 1 and an unknown mode', () => {
     expect(() => readEnv({ EXPO_PUBLIC_MOCK_FAIL_RATE: '2' })).toThrow();
     expect(() => readEnv({ EXPO_PUBLIC_API_MODE: 'live' })).toThrow();
-    expect(() => readEnv({ EXPO_PUBLIC_SITE_URL: 'ozaa' })).toThrow();
+    expect(() => readEnv({ EXPO_PUBLIC_SITE_URL: 'cravins' })).toThrow();
   });
 });

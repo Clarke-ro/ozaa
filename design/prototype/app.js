@@ -1,20 +1,20 @@
-// Ozaa v5 guest app: one page, hash routes. index.html?venue=mamas#home
+// Cravins v5 guest app: one page, hash routes. index.html?venue=mamas#home
 // Routes: home, story/<id>, menu, wifi, waiter, waiter/sent, loyalty, review, review/record, play, status, pay
 (function () {
 const q = new URLSearchParams(location.search);
 const vk = q.get('venue') || 'mamas';
 const v = VENUES[vk];
 if (q.get('accent')) v.accent = q.get('accent') === 'none' ? null : q.get('accent');
-const t = OzaaTheme.deriveTheme(v.accent); OzaaTheme.applyTheme(t);
+const t = CravinsTheme.deriveTheme(v.accent); CravinsTheme.applyTheme(t);
 const root = document.documentElement.style;
 root.setProperty('--ring2', t.isDefault ? '#FC5205' : `color-mix(in srgb, ${t.fill} 55%, #FFB000)`);
-const fp = FONT_PAIRS[v.font] || FONT_PAIRS.ozaa;
+const fp = FONT_PAIRS[v.font] || FONT_PAIRS.cravins;
 root.setProperty('--display', `"${fp.display}"`); root.setProperty('--display-weight', fp.weight);
 const ced = n => 'GH₵' + (Number.isInteger(n) ? n : n.toFixed(2));
 const app = document.getElementById('app');
 const sb = document.getElementById('sb');
-const LS = (k, d) => { try { return JSON.parse(localStorage.getItem('ozaa:' + vk + ':' + k)) ?? d; } catch { return d; } };
-const SS = (k, val) => { try { localStorage.setItem('ozaa:' + vk + ':' + k, JSON.stringify(val)); } catch {} };
+const LS = (k, d) => { try { return JSON.parse(localStorage.getItem('cravins:' + vk + ':' + k)) ?? d; } catch { return d; } };
+const SS = (k, val) => { try { localStorage.setItem('cravins:' + vk + ':' + k, JSON.stringify(val)); } catch {} };
 const starRow = (n, size = 14) => `<span class="stars">${Array.from({ length: 5 }, (_, i) => icon('star', size, 1.5, i < n ? '#FFC21A' : 'rgba(255,255,255,.4)')).join('')}</span>`;
 const go = r => { location.hash = r; };
 const back = (to = 'home') => `<button class="iconbtn" data-go="${to}" aria-label="Back">${icon('back', 22)}</button>`;
@@ -61,7 +61,7 @@ function home() {
 </div>
 ${stories}
 ${secs}
-<div class="powered"><img src="img/ozaa-icon-small.svg" width="16" height="16" alt="">Powered by Ozaa</div>
+<div class="powered"><img src="img/cravins-icon-small.svg" width="16" height="16" alt="">Powered by Cravins</div>
 </div>
 <div class="compact" id="compact"><div style="width:36px;height:36px;border-radius:50%;overflow:hidden;flex:none">${venueLogo(v, t, 36)}</div><b>${v.name}</b><span class="meta">Table ${v.table}</span></div>
 ${on('status') ? `<div class="bar"><button class="obar" data-go="status"><span class="pulse"></span><span style="flex:1"><b>Order #${order.no} · Being prepared</b><span>About ${order.eta} min · ${order.items.length} items</span></span>${icon('chevron', 18)}</button></div>` : ''}`;
@@ -334,7 +334,7 @@ render();
 
 /* ---------- "Your food is ready!" banner, on every screen ---------- */
 // Fires when the kitchen marks the order ready. Demo triggers: ?ready=<seconds>, or another tab
-// posting to BroadcastChannel('ozaa-order') / localStorage 'ozaa:order-ready'.
+// posting to BroadcastChannel('cravins-order') / localStorage 'cravins:order-ready'.
 function showReady() {
   const el = document.getElementById('ready');
   el.innerHTML = `<span class="ic">${icon('utensils', 20)}</span><span class="tx"><b>Your food is ready!</b><span>${it(order.items[0].i).n} is on its way to table ${v.table}</span></span><button class="go" id="rgo">View</button>`;
@@ -343,8 +343,8 @@ function showReady() {
   document.getElementById('rgo').onclick = () => { el.classList.remove('show'); go('status'); };
   setTimeout(() => el.classList.remove('show'), q.get('ready') === '0' ? 1e9 : 8000);
 }
-window.ozaaShowReady = showReady;
+window.cravinsShowReady = showReady;
 if (q.get('ready') != null) setTimeout(showReady, +q.get('ready') * 1000);
-try { new BroadcastChannel('ozaa-order').onmessage = m => m.data === 'ready' && showReady(); } catch {}
-addEventListener('storage', e => e.key === 'ozaa:order-ready' && showReady());
+try { new BroadcastChannel('cravins-order').onmessage = m => m.data === 'ready' && showReady(); } catch {}
+addEventListener('storage', e => e.key === 'cravins:order-ready' && showReady());
 })();

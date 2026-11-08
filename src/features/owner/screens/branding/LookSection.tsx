@@ -17,7 +17,7 @@ const SWATCHES = [
   { hex: '#111111', name: 'Black' },
 ] as const;
 
-export type FontPair = 'ozaa' | 'serif' | 'bold';
+export type FontPair = 'cravins' | 'serif' | 'bold';
 
 /** Venue colour (swatches or any hex) and heading font. */
 export function LookSection({
@@ -128,7 +128,7 @@ export function LookSection({
   );
 }
 
-const FONTS: FontPair[] = ['ozaa', 'serif', 'bold'];
+const FONTS: FontPair[] = ['cravins', 'serif', 'bold'];
 
 function Label({ children }: { children: string }) {
   return (

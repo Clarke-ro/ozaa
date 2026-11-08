@@ -8,7 +8,7 @@ metadata:
 Source: https://github.com/LeoStehlik/no-slop-ui
 License: MIT (c) 2026 Leo Stehlik
 Commit: 3c8f9e5
-Copied: 2026-10-31 for the Ozaa build kit. Text unchanged below this header.
+Copied: 2026-10-31 for the Cravins build kit. Text unchanged below this header.
 -->
 # No Slop UI
 

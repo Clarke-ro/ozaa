@@ -23,7 +23,7 @@ export const useNotesSeen = create<SeenState>()(
       seen: {},
       markSeen: (venueId, at) => set((s) => ({ seen: { ...s.seen, [venueId]: at } })),
     }),
-    { name: 'ozaa-owner-notes-seen', storage: createJSONStorage(() => AsyncStorage) },
+    { name: 'cravins-owner-notes-seen', storage: createJSONStorage(() => AsyncStorage) },
   ),
 );
 

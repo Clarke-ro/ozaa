@@ -15,6 +15,6 @@ export const useOwnerPrefs = create<OwnerPrefs>()(
       chime: true,
       setChime: (on) => set({ chime: on }),
     }),
-    { name: 'ozaa-owner-prefs', storage: createJSONStorage(() => AsyncStorage) },
+    { name: 'cravins-owner-prefs', storage: createJSONStorage(() => AsyncStorage) },
   ),
 );

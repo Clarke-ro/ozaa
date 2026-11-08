@@ -19,7 +19,7 @@ export const useMyCalls = create<{
       clear: () => set({ ids: [] }),
     }),
     {
-      name: 'ozaa-guest-calls',
+      name: 'cravins-guest-calls',
       storage: createJSONStorage(() => ownerSessionStorage),
       partialize: ({ ids }) => ({ ids }),
     },

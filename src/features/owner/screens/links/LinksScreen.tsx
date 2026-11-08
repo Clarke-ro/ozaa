@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'lucide-react-native';
@@ -30,6 +30,8 @@ function host(url: string): string {
 export function LinksScreen() {
   const theme = useTheme();
   const { t, i18n } = useTranslation();
+  const { width } = useWindowDimensions();
+  const twoCol = width >= 920;
   const client = useQueryClient();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const key = ownerKeys.links(venueId);
@@ -89,42 +91,51 @@ export function LinksScreen() {
             return (
               <View key={placement} style={styles.group}>
                 <SectionLabel title={t(`ownerLinks.placement.${placement}`)} caps />
-                {group.map((link) => {
-                  const Icon = linkIcon(link.icon);
-                  return (
-                    <View key={link.id} style={[styles.row, { backgroundColor: theme.surface }]}>
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel={t('ownerLinks.editA11y', { title: link.title })}
-                        onPress={() => setEditing(link)}
-                        style={({ pressed }) => [styles.main, pressed && { opacity: 0.6 }]}
+                <View style={[styles.list, twoCol && styles.grid]}>
+                  {group.map((link) => {
+                    const Icon = linkIcon(link.icon);
+                    return (
+                      <View
+                        key={link.id}
+                        style={[
+                          styles.row,
+                          twoCol && styles.cell,
+                          { backgroundColor: theme.surface, borderColor: theme.line },
+                        ]}
                       >
-                        <Icon size={20} color={link.enabled ? theme.ink : theme.meta} />
-                        <View style={styles.flex}>
-                          <Text
-                            variant="body-strong"
-                            style={!link.enabled && { color: theme.muted }}
-                            numberOfLines={1}
-                          >
-                            {link.title}
-                          </Text>
-                          <Text variant="caption" numberOfLines={1} style={{ color: theme.muted }}>
-                            {host(link.url)} ·{' '}
-                            {t('ownerLinks.clicks', {
-                              count: link.clicks,
-                              n: link.clicks.toLocaleString(i18n.language),
-                            })}
-                          </Text>
-                        </View>
-                      </Pressable>
-                      <Toggle
-                        value={link.enabled}
-                        onChange={() => toggle.mutate(link)}
-                        label={t('ownerLinks.showA11y', { title: link.title })}
-                      />
-                    </View>
-                  );
-                })}
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityLabel={t('ownerLinks.editA11y', { title: link.title })}
+                          onPress={() => setEditing(link)}
+                          style={({ pressed }) => [styles.main, pressed && { opacity: 0.6 }]}
+                        >
+                          <Icon size={20} color={link.enabled ? theme.ink : theme.meta} />
+                          <View style={styles.flex}>
+                            <Text
+                              variant="body-strong"
+                              style={!link.enabled && { color: theme.muted }}
+                              numberOfLines={1}
+                            >
+                              {link.title}
+                            </Text>
+                            <Text variant="caption" numberOfLines={1} style={{ color: theme.muted }}>
+                              {host(link.url)} ·{' '}
+                              {t('ownerLinks.clicks', {
+                                count: link.clicks,
+                                n: link.clicks.toLocaleString(i18n.language),
+                              })}
+                            </Text>
+                          </View>
+                        </Pressable>
+                        <Toggle
+                          value={link.enabled}
+                          onChange={() => toggle.mutate(link)}
+                          label={t('ownerLinks.showA11y', { title: link.title })}
+                        />
+                      </View>
+                    );
+                  })}
+                </View>
               </View>
             );
           })
@@ -144,7 +155,9 @@ export function LinksScreen() {
 
 const styles = StyleSheet.create({
   group: { gap: tokens.space[2] },
-  // Each link is its own card, so turning one off or editing it never feels tied to the others.
+  list: { gap: tokens.space[3] },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start' },
+  cell: { flexBasis: '48.5%', flexGrow: 1 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -152,6 +165,7 @@ const styles = StyleSheet.create({
     minHeight: 64,
     paddingHorizontal: tokens.space[4],
     paddingVertical: tokens.space[3],
+    borderWidth: 1,
     borderRadius: tokens.radius.lg,
     borderCurve: 'continuous',
     boxShadow: tokens.shadow.card,

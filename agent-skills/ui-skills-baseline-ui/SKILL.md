@@ -6,7 +6,7 @@ description: Quickly deslop UI code by fixing spacing, hierarchy, typography, an
 Source: https://github.com/ibelick/ui-skills/tree/main/skills/baseline-ui
 License: MIT (c) 2026 Julien Thibeaut
 Commit: b88b130
-Copied: 2026-10-31 for the Ozaa build kit. Text unchanged below this header.
+Copied: 2026-10-31 for the Cravins build kit. Text unchanged below this header.
 -->
 
 # Baseline UI

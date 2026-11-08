@@ -15,14 +15,12 @@ export function NoticeCard({
   kind,
   draft,
   onDraft,
-  timeZone,
   error,
 }: {
   kind: NoticeKind;
   draft: NoticeDraft;
   onDraft: (draft: NoticeDraft) => void;
   timeZone: string;
-  /** The message for a field that failed, already translated. */
   error: (field: NoticeField) => string | undefined;
 }) {
   const theme = useTheme();
@@ -30,11 +28,10 @@ export function NoticeCard({
   const set = (key: keyof NoticeDraft) => (value: string) => onDraft({ ...draft, [key]: value });
   const Icon = kind === 'banner' ? Megaphone : PanelTop;
   return (
-    <Section title={t(`ownerNotice.${kind}.title`)} note={t(`ownerNotice.${kind}.note`)}>
+    <Section title={t(`ownerNotice.${kind}.title`)}>
       <SwitchRow
         icon={Icon}
         label={t('ownerNotice.show')}
-        hint={draft.enabled ? t('ownerNotice.showOn') : t('ownerNotice.showOff')}
         value={draft.enabled}
         onChange={(enabled) => onDraft({ ...draft, enabled })}
       />
@@ -82,9 +79,6 @@ export function NoticeCard({
               />
             </View>
           </View>
-          <Text variant="caption" style={{ color: theme.meta }}>
-            {t('ownerNotice.timesHint', { zone: timeZone })}
-          </Text>
           {draft.text.trim() ? (
             <View
               accessibilityLabel={t('ownerNotice.preview')}
@@ -117,7 +111,6 @@ export function NoticeCard({
 const styles = StyleSheet.create({
   stack: { gap: tokens.space[3] },
   row: { flexDirection: 'row', gap: tokens.space[3] },
-  // minWidth 0 lets two fields share a phone-width row on the web.
   flex: { flex: 1, minWidth: 0 },
   bannerPreview: {
     paddingVertical: tokens.space[2],

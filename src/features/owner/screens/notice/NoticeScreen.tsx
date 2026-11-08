@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
 import { useOwnerSession } from '@/features/session';
+import { tokens } from '@/theme/tokens';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
 import { useDraft } from '../../data/useDraft';
@@ -16,9 +18,11 @@ const FALLBACK_ZONE = 'Africa/Accra';
 
 type Drafts = Record<NoticeKind, NoticeDraft>;
 
-/** Store notice: a scrolling banner and a popup on the guest pages, each with times and a switch. */
+/** Store notice: a scrolling banner and a popup on the guest pages, side by side on desktop. */
 export function NoticeScreen() {
   const { t } = useTranslation();
+  const { width } = useWindowDimensions();
+  const twoCol = width >= 920;
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const venue = useQuery({
     queryKey: ownerKeys.venue(venueId),
@@ -27,7 +31,6 @@ export function NoticeScreen() {
   });
   const zone = venue.data?.hours.timezone ?? FALLBACK_ZONE;
   const saved = venue.data?.noticeSettings;
-  // Untouched cards follow the server; once the owner types, their text is kept (useDraft).
   const draft = useDraft<Drafts>({
     banner: draftOf(saved?.banner, zone),
     popup: draftOf(saved?.popup, zone),
@@ -61,7 +64,6 @@ export function NoticeScreen() {
   return (
     <OwnerPage
       title={t('owner.notice')}
-      subtitle={t('ownerNotice.lead')}
       footer={
         <SaveBar
           visible={draft.dirty}
@@ -79,17 +81,26 @@ export function NoticeScreen() {
         error={venue.isError}
         onRetry={() => void venue.refetch()}
       >
-        {(['banner', 'popup'] as const).map((kind) => (
-          <NoticeCard
-            key={kind}
-            kind={kind}
-            draft={current[kind]}
-            onDraft={(next) => draft.set(kind, next)}
-            timeZone={zone}
-            error={errorFor(kind)}
-          />
-        ))}
+        <View style={[styles.stack, twoCol && styles.split]}>
+          {(['banner', 'popup'] as const).map((kind) => (
+            <View key={kind} style={twoCol ? styles.col : undefined}>
+              <NoticeCard
+                kind={kind}
+                draft={current[kind]}
+                onDraft={(next) => draft.set(kind, next)}
+                timeZone={zone}
+                error={errorFor(kind)}
+              />
+            </View>
+          ))}
+        </View>
       </DeskWait>
     </OwnerPage>
   );
 }
+
+const styles = StyleSheet.create({
+  stack: { gap: tokens.space[5] },
+  split: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.space[5] },
+  col: { flex: 1, minWidth: 0 },
+});

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Users } from 'lucide-react-native';
@@ -21,9 +21,10 @@ import { ownerKeys } from '../../data/keys';
 export function StaffScreen() {
   const theme = useTheme();
   const { t, i18n } = useTranslation();
+  const { width } = useWindowDimensions();
+  const twoCol = width >= 900;
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    // "Seen 5 minutes ago" only needs to move once a minute.
     const id = setInterval(() => setNow(Date.now()), 60_000);
     return () => clearInterval(id);
   }, []);
@@ -51,7 +52,6 @@ export function StaffScreen() {
   });
 
   const members = (staff.data?.items ?? []).filter((m) => m.status !== 'removed');
-  // On shift first, then the rest by name, invites last.
   const sorted = [...members].sort(
     (a, b) =>
       Number(b.onShift ?? false) - Number(a.onShift ?? false) ||
@@ -100,9 +100,13 @@ export function StaffScreen() {
               ]}
             />
             <SectionLabel title={t('ownerStaff.team', { count: members.length })} caps />
-            {sorted.map((m) => (
-              <StaffCard key={m.id} member={m} now={now} onPress={() => setOpen(m)} />
-            ))}
+            <View style={[styles.list, twoCol && styles.grid]}>
+              {sorted.map((m) => (
+                <View key={m.id} style={twoCol ? styles.cell : undefined}>
+                  <StaffCard member={m} now={now} onPress={() => setOpen(m)} />
+                </View>
+              ))}
+            </View>
           </View>
         )}
       </DeskWait>
@@ -151,4 +155,9 @@ export function StaffScreen() {
   );
 }
 
-const styles = StyleSheet.create({ stack: { gap: tokens.space[3] } });
+const styles = StyleSheet.create({
+  stack: { gap: tokens.space[3] },
+  list: { gap: tokens.space[3] },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start' },
+  cell: { flexBasis: '48.5%', flexGrow: 1 },
+});

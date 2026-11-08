@@ -57,9 +57,6 @@ export function ButtonsSection({
           items={order.map((key) => ({ key, label: t(`ownerBranding.button.${key}`) }))}
           onOrder={onOrder}
         />
-        <Text variant="caption" style={{ color: theme.muted }}>
-          {t('ownerBranding.buttonsNote')}
-        </Text>
       </View>
     </View>
   );

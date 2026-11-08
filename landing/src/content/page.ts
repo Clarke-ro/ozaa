@@ -69,8 +69,8 @@ export const screens = {
 export type ScreenName = keyof typeof screens;
 
 export const site = {
-  name: "Ozaa",
-  title: "Ozaa. Turn every table into a smart ordering point",
+  name: "Cravins",
+  title: "Cravins. Turn every table into a smart ordering point",
   description:
     "Guests scan the QR on their table to see the menu, order, call a waiter or ask for the bill, with no app to download.",
   url: "",
@@ -197,7 +197,7 @@ export const who = {
 } as const;
 
 export const why = {
-  badge: "Why ozaa",
+  badge: "Why cravins",
   heading: "A smoother service for guests and staff",
   cards: [
     {
@@ -241,7 +241,7 @@ export const faq = {
     {
       question: "How long does setup take?",
       answer:
-        "You can add your menu and print your table codes in one sitting. There's no hardware to install: Ozaa runs on the phones, tablets and computers you already have.",
+        "You can add your menu and print your table codes in one sitting. There's no hardware to install: Cravins runs on the phones, tablets and computers you already have.",
     },
     {
       question: "Do guests need to download an app?",
@@ -249,9 +249,9 @@ export const faq = {
         "No. Guests scan the QR code on the table and your menu opens in their phone's browser. No download and no account.",
     },
     {
-      question: "How much does Ozaa cost?",
+      question: "How much does Cravins cost?",
       answer:
-        "You can try Ozaa free with a sample restaurant. Pricing for restaurants isn't set yet; it will be published here first.",
+        "You can try Cravins free with a sample restaurant. Pricing for restaurants isn't set yet; it will be published here first.",
     },
     {
       question: "Can I update the menu at any time?",
@@ -319,7 +319,7 @@ export const footer = {
   ],
   cookieSettings: "Cookie settings",
   /** The huge word set into the bottom edge of the footer. */
-  watermark: "OZAA",
+  watermark: "CRAVINS",
 } as const;
 
 export const floating = { label: "Get started" } as const;
@@ -329,10 +329,10 @@ export const floating = { label: "Get started" } as const;
 export const featuresPage = {
   title: "Features",
   description:
-    "Every Ozaa feature for restaurants: table ordering, waiter calls, bill requests, QR codes, the menu builder, loyalty and more.",
+    "Every Cravins feature for restaurants: table ordering, waiter calls, bill requests, QR codes, the menu builder, loyalty and more.",
   chip: "Features",
   heading: "Everything your tables need, in one place",
-  lead: "From the first scan to the last stamp, Ozaa runs table service on the guest's own phone.",
+  lead: "From the first scan to the last stamp, Cravins runs table service on the guest's own phone.",
   smallHeading: "And the details that make it work",
   small: [
     { icon: "wifi", title: "Wi-Fi QR", body: "Guests join your Wi-Fi in one tap. No password on a chalkboard." },
@@ -346,8 +346,8 @@ export const featuresPage = {
 
 export const demoPage = {
   title: "Try it",
-  description: "Open a live Ozaa demo menu and see what your guests would see.",
-  heading: "See Ozaa at a sample table",
+  description: "Open a live Cravins demo menu and see what your guests would see.",
+  heading: "See Cravins at a sample table",
   lead: "Each menu below is a live demo. Open one and order, call a waiter or join the loyalty card, just like a guest would.",
   preview: "Preview",
   menus: [
@@ -377,9 +377,9 @@ export const pricingPage = {
 
 export const contactPage = {
   title: "Contact",
-  description: "Questions about Ozaa for your restaurant? Send us a message.",
+  description: "Questions about Cravins for your restaurant? Send us a message.",
   heading: "Get in touch",
-  lead: "Questions about Ozaa for your restaurant? Send a message and we'll get back to you.",
+  lead: "Questions about Cravins for your restaurant? Send a message and we'll get back to you.",
   form: {
     name: "Your name",
     email: "Email",
@@ -403,19 +403,19 @@ export const contactPage = {
   comingSoon: "Coming soon",
   faqHeading: "Before you write",
   faq: [
-    { question: "Can I try Ozaa first?", answer: "Yes. Open a sample table from the Demo page and order like a guest would." },
+    { question: "Can I try Cravins first?", answer: "Yes. Open a sample table from the Demo page and order like a guest would." },
     { question: "Do you help with setup?", answer: "Yes. Tell us about your restaurant and we'll help you get your menu and tables ready." },
-    { question: "Is Ozaa available where I am?", answer: "Ozaa is built for restaurants anywhere, and the first launch is in Africa. Ask us about your city." },
+    { question: "Is Cravins available where I am?", answer: "Cravins is built for restaurants anywhere, and the first launch is in Africa. Ask us about your city." },
   ],
 } as const;
 
 export const authPages = {
   login: {
     title: "Log in",
-    heading: "Log in to Ozaa",
-    lead: "Owners and staff sign in with their phone number in the Ozaa app.",
+    heading: "Log in to Cravins",
+    lead: "Owners and staff sign in with their phone number in the Cravins app.",
     button: "Continue to sign in",
-    other: "New to Ozaa?",
+    other: "New to Cravins?",
     otherLink: "Get started",
   },
   start: {
@@ -446,7 +446,7 @@ export const blogPage = {
   minRead: "min read",
   back: "Back to blog",
   keepReading: "Keep reading",
-  ctaHeading: "Try ozaa free",
+  ctaHeading: "Try cravins free",
   ctaBody: "Put your menu on every table and take orders from the guest's own phone.",
   ctaButton: "Get started free",
   perPage: 12,

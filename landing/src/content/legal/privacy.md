@@ -8,7 +8,7 @@ This policy is a placeholder. Replace this file with your real privacy policy be
 
 ## 1. What this policy covers
 
-Explain which parts of Ozaa this applies to: this website, the guest table page and the owner app.
+Explain which parts of Cravins this applies to: this website, the guest table page and the owner app.
 
 ## 2. What we collect
 
@@ -38,4 +38,4 @@ Explain how someone can see, correct or delete their data, including deleting a 
 
 ## 7. Contact
 
-Say how to reach Ozaa about privacy.
+Say how to reach Cravins about privacy.

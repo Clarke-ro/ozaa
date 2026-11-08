@@ -1,4 +1,4 @@
-// Ozaa v5 sample data. In production this comes from the venue's settings in the owner dashboard.
+// Cravins v5 sample data. In production this comes from the venue's settings in the owner dashboard.
 // Every service a venue can switch on. Grouped into sections on the guest home.
 window.SERVICE_SECTIONS = [
   { id: 'table', title: 'At your table' },
