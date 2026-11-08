@@ -6,7 +6,7 @@ import { OwnerPage } from '../chrome/OwnerPage';
 import { useGoTo } from '../chrome/NavRow';
 import { EmptyCard } from '../kit';
 
-export type SoonPage = 'promos' | 'integrations' | 'help';
+export type SoonPage = 'promos' | 'help';
 
 /** A sidebar page whose screen isn't built yet. Says what's coming and leads back to Today. */
 export function ComingSoonScreen({ page }: { page: SoonPage }) {
