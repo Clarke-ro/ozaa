@@ -253,7 +253,7 @@ export const tokens = {
       "line": 24
     },
     "type": {
-      "use": "Owner app type scale, measured from the MenuRite dashboard (Clarke, 2026-11-07). Inter only: their 500 maps to our 400, their 700 and 800 to our 600, because the app ships five font files (BUILD.md section 11). Guest pages keep the scale in `type` above.",
+      "use": "Owner app type scale, measured from the reference dashboard in design/reference (Clarke, 2026-11-07). Inter only: their 500 maps to our 400, their 700 and 800 to our 600, because the app ships five font files (BUILD.md section 11). Guest pages keep the scale in `type` above.",
       "display-l": {
         "size": 30,
         "line": 34

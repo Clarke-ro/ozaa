@@ -83,6 +83,6 @@ const styles = StyleSheet.create({
   card: { flex: 1, minWidth: 0, padding: tokens.space[4], gap: tokens.space[2] },
   caps: { fontFamily: fontFamily.strong, letterSpacing: tokens.owner.type.caps.letterSpacing },
   value: { fontVariant: ['tabular-nums'] },
-  // Sales sets its figures smaller than Insights, as MenuRite does.
+  // Sales sets its figures smaller than Insights, as the reference dashboard does (design/reference).
   small: { fontSize: tokens.owner.type.figure.size, lineHeight: tokens.owner.type.figure.line },
 });
