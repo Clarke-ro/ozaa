@@ -202,6 +202,7 @@ export function PayScreen({ slug }: { slug: string }) {
             charge={charge}
             onRetry={() => send({ type: 'reset' })}
             onDone={() => router.push(`/${slug}/status`)}
+            onReceipt={(reference) => router.push(`/${slug}/receipt?reference=${reference}`)}
           />
         ) : (
           <>

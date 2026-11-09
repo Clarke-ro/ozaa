@@ -1,6 +1,6 @@
 import { makeStyles } from '@/ui/makeStyles';
 import { useState } from 'react';
-import { Platform, Pressable, Share, TextInput, View } from 'react-native';
+import { Platform, Pressable, Share, StyleSheet, TextInput, View } from 'react-native';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -21,7 +21,7 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
   const theme = useTheme();
   const { t } = useTranslation();
   const router = useRouter();
-  
+
   const [search, setSearch] = useState('');
   const [wantsOffersOnly, setWantsOffersOnly] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<LoyaltyCustomerSummary | null>(null);
@@ -130,7 +130,7 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
           />
         ) : (
           <View style={styles.customersList}>
-            {items.map((cust) => {
+            {items.map((cust, index) => {
               const displayName = cust.name || cust.phoneMasked;
               return (
                 <View key={cust.id}>
@@ -138,7 +138,7 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
                     accessibilityRole="button"
                     accessibilityLabel={displayName}
                     onPress={() => setSelectedCustomer(cust)}
-                    style={[styles.customerCard, { borderColor: theme.line }]}
+                    style={[styles.customerCard, index > 0 && styles.ruled]}
                   >
                     <View style={styles.customerMainRow}>
                       <View style={styles.customerAvatar}>
@@ -153,7 +153,9 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
                             {displayName}
                           </Text>
                           {cust.rewardsAvailable > 0 ? (
-                            <View style={[styles.readyPill, { backgroundColor: theme.warningTint }]}>
+                            <View
+                              style={[styles.readyPill, { backgroundColor: theme.warningTint }]}
+                            >
                               <Sparkles size={12} color={theme.warning} />
                               <Text
                                 variant="caption"
@@ -174,9 +176,12 @@ export function LoyaltyCustomersScreen({ venueId }: { venueId: string }) {
                       </View>
 
                       <View style={styles.stampBadgeCol}>
-                        <View style={[styles.stampPill, { backgroundColor: theme.fill }]}>
-                          <Award size={14} color={theme.onFill} />
-                          <Text variant="caption" style={{ color: theme.onFill, fontWeight: '800' }}>
+                        <View style={[styles.stampPill, { backgroundColor: theme.tint }]}>
+                          <Award size={14} color={theme.badgeInk} />
+                          <Text
+                            variant="caption"
+                            style={{ color: theme.badgeInk, fontWeight: '700' }}
+                          >
                             {t('ownerMembers.stamps', { count: cust.stamps })}
                           </Text>
                         </View>
@@ -290,25 +295,19 @@ const useStyles = makeStyles((theme) => ({
     borderWidth: 1,
     gap: tokens.space[2],
   },
+  // One white card for the whole list, with thin lines between people, like the reference dashboard.
   customersList: {
-    gap: tokens.space[3],
-  },
-  customersGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'flex-start',
-  },
-  customerCell: {
-    flexBasis: '48.5%',
-    flexGrow: 1,
+    backgroundColor: theme.surface,
+    borderColor: theme.line,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: tokens.radius.md,
+    overflow: 'hidden',
   },
   customerCard: {
-    padding: tokens.space[3],
-    borderRadius: tokens.radius.lg,
-    borderWidth: 1,
-    backgroundColor: theme.surface,
-    boxShadow: tokens.shadow.card,
+    paddingHorizontal: tokens.space[4],
+    paddingVertical: tokens.space[3],
   },
+  ruled: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.line },
   customerMainRow: {
     flexDirection: 'row',
     alignItems: 'center',

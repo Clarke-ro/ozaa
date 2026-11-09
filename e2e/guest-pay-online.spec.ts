@@ -42,6 +42,13 @@ test('guest at a venue with Paystack: order, pay by MoMo in test mode, and see i
     timeout: 20_000,
   });
   await page.screenshot({ path: 'test-results/pay-online-paid.png' });
+
+  // The receipt: the bill, what this guest paid, and a clear test label.
+  await page.getByRole('button', { name: 'See receipt' }).click();
+  await expect(page.getByText('Test payment. No money moved.')).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText('You paid')).toBeVisible();
+  await expect(page.getByText(/^Reference pay_/)).toBeVisible();
+  await page.screenshot({ path: 'test-results/pay-receipt.png', fullPage: true });
   await page.getByRole('button', { name: 'Back to your order' }).click();
   await expect(page.getByText('Not paid yet')).toHaveCount(0, { timeout: 15_000 });
 

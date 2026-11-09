@@ -31,6 +31,33 @@ Run `npm test` in `server/`. Then in `signature.test.ts`, change one letter of t
 
 ---
 
+## 2026-11-09 · The guest's receipt (BUILD.md box 2.6)
+
+**What we built**
+After paying, a guest can tap See receipt. It shows the venue, order, table and time; every dish, the subtotal and the table total; then their share, the tip, what they paid, how, and the payment reference. Test payments say "Test payment. No money moved." at the top.
+
+**How it works**
+```
+/{venue}/receipt?reference=pay_105
+  GET /payments/pay_105  → amount, tip, method, test or not
+  GET /orders/{orderId}  → dishes, subtotal, taxes, total, paid so far
+  receiptFigures(order, payment) → the numbers on the page
+```
+Tax lines come straight from the order. The list is empty today, and VAT, NHIL and GETFund will appear on their own once E-VAT is switched on, with no change to the screen.
+
+**Files to look at**
+- `src/features/pay/receiptFigures.ts` and its test: share, tip, still to pay.
+- `src/features/pay/ReceiptScreen.tsx`: the page.
+- `src/app/[venue]/receipt.tsx`: the route.
+
+**New idea: build for data that isn't there yet**
+Ghana's E-VAT lines aren't switched on, but the contract already has a `taxes` list. Drawing whatever is in that list, even when it's empty, means the receipt is ready the day the server starts sending tax lines.
+
+**Try it yourself**
+Pay a split bill (Split equally, 2 people) at `/bean-there/t/7`, then open the receipt. "Still to pay at the table" shows the other half.
+
+---
+
 ## 2026-11-09 · Paying by card (BUILD.md box 2.5)
 
 **What we built**

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
@@ -18,17 +18,12 @@ import { menuStyleOf } from '@/lib/menuStyle';
 
 type Tab = 'look' | 'words' | 'buttons' | 'preview';
 
-// From this width the guest preview sits beside the editor, so it needs no tab of its own.
-const SIDE_BY_SIDE = 900;
-
 /**
  * How the guest page looks, one topic at a time: Look (photos, colour, font), Words, Buttons,
- * and a full Preview. On wide screens the preview stays beside whichever topic is open.
+ * and a full Preview, in one column at every size.
  */
 export function BrandingScreen() {
   const { t } = useTranslation();
-  const { width } = useWindowDimensions();
-  const wide = width >= SIDE_BY_SIDE;
   const [tab, setTab] = useState<Tab>('look');
   const client = useQueryClient();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
@@ -106,7 +101,8 @@ export function BrandingScreen() {
 
   return (
     <OwnerPage
-      title={t('owner.branding')} subtitle={t('ownerLead.branding')}
+      title={t('owner.branding')}
+      subtitle={t('ownerLead.branding')}
       footer={<SaveBar visible={dirty} saving={save.isPending} onDiscard={reset} onSave={submit} />}
     >
       <DeskWait
@@ -116,18 +112,18 @@ export function BrandingScreen() {
       >
         <Segmented<Tab>
           label={t('owner.branding')}
-          value={tab === 'preview' && wide ? 'look' : tab}
+          value={tab}
           onChange={setTab}
           options={[
             { id: 'look', label: t('ownerBranding.tabs.look') },
             { id: 'words', label: t('ownerBranding.tabs.words') },
             { id: 'buttons', label: t('ownerBranding.tabs.buttons') },
-            ...(wide ? [] : [{ id: 'preview' as const, label: t('ownerBranding.tabs.preview') }]),
+            { id: 'preview', label: t('ownerBranding.tabs.preview') },
           ]}
         />
-        <View style={wide ? styles.split : styles.stack}>
+        <View style={styles.stack}>
           <View style={styles.editor}>
-            {tab === 'look' || (wide && tab === 'preview') ? (
+            {tab === 'look' ? (
               <>
                 <Section title={t('ownerBranding.photos')}>
                   <SectionBody>
@@ -195,7 +191,7 @@ export function BrandingScreen() {
                 />
               </>
             ) : null}
-            {tab === 'preview' && !wide ? (
+            {tab === 'preview' ? (
               <>
                 {previewVenue ? (
                   <GuestPreview
@@ -207,17 +203,6 @@ export function BrandingScreen() {
               </>
             ) : null}
           </View>
-          {wide ? (
-            <View style={styles.side}>
-              {previewVenue ? (
-                <GuestPreview
-                  venue={previewVenue}
-                  accent={isHex(f.accent) ? f.accent : null}
-                  font={f.font}
-                />
-              ) : null}
-            </View>
-          ) : null}
         </View>
       </DeskWait>
     </OwnerPage>
@@ -226,7 +211,5 @@ export function BrandingScreen() {
 
 const styles = StyleSheet.create({
   stack: { gap: tokens.space[5] },
-  split: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.space[6] },
   editor: { flex: 1, gap: tokens.space[5] },
-  side: { width: 380 },
 });

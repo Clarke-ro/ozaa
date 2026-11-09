@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { BellOff, BellRing, Footprints, Timer } from 'lucide-react-native';
+import { BellOff } from 'lucide-react-native';
 import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { useOwnerLayout } from '../../chrome/layout';
 import { averageResponseMinutes } from '../../desk/ops';
-import { DeskTabs, EmptyCard, MetricStrip } from '../../kit';
+import { DeskTabs, EmptyCard } from '../../kit';
+import { CallFigures } from './CallFigures';
 import { CallRow } from './CallRow';
 import { useWaiterCalls } from './useWaiterCalls';
 
@@ -15,15 +16,12 @@ type Tab = 'active' | 'history';
 
 // Waits only need to move once every half minute.
 const TICK_MS = 30_000;
-// Past this text size three numbers no longer fit side by side on a phone, so they stack.
-const STACK_AT = 1.3;
 
 /** Guests asking for a waiter. "On my way" tells the guest someone is coming; "Done" closes the call. */
 export function CallsScreen() {
   const { t } = useTranslation();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const { wide } = useOwnerLayout();
-  const { fontScale } = useWindowDimensions();
   const [tab, setTab] = useState<Tab>('active');
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -41,31 +39,7 @@ export function CallsScreen() {
 
   return (
     <OwnerPage title={t('owner.calls')} subtitle={t('ownerLead.calls')} width="wide">
-      <MetricStrip
-        columns={wide || fontScale <= STACK_AT ? 3 : 1}
-        metrics={[
-          {
-            key: 'waiting',
-            label: t('ownerCalls.status.open'),
-            value: String(waiting),
-            icon: BellRing,
-            alert: waiting > 0,
-            note: waiting > 0 ? t('ownerCalls.answerSoon') : undefined,
-          },
-          {
-            key: 'coming',
-            label: t('ownerCalls.status.acknowledged'),
-            value: String(active.length - waiting),
-            icon: Footprints,
-          },
-          {
-            key: 'avg',
-            label: t('ownerCalls.avgShort'),
-            value: avg == null ? '–' : t('ownerCalls.minutes', { count: avg }),
-            icon: Timer,
-          },
-        ]}
-      />
+      <CallFigures waiting={waiting} coming={active.length - waiting} avg={avg} wide={wide} />
       <DeskTabs
         value={tab}
         onChange={setTab}
