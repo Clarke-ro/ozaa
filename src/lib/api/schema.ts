@@ -239,8 +239,9 @@ export interface paths {
         put?: never;
         /**
          * Start a MoMo or card payment for a bill quote.
-         * @description The server calls Paystack with its secret key and the venue's subaccount (split payment),
-         *     so the money settles to the venue and Cravins's fee comes off automatically. Cravins never holds funds.
+         * @description The server calls Paystack with the venue's own secret key (payment-settings/paystack), so the
+         *     money goes straight to the venue's Paystack account. Cravins never holds funds and takes no cut.
+         *     Fails with 409 online_pay_off when the venue has no Paystack connected (`payMethods.online` is false).
          *     MoMo returns `pay_offline`: show `displayText` and poll `GET /payments/{reference}`.
          *     The guest has 180 seconds to approve on their phone (network limit).
          *     Card returns `open_url` with a Paystack checkout URL (open it in a browser tab or WebView).
@@ -901,9 +902,15 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get payout account (owner app). */
+        /**
+         * Old split model: get the payout account. Replaced by payment-settings (Clarke, 2026-11-08).
+         * @deprecated
+         */
         get: operations["ownerGetPayoutAccount"];
-        /** Create or update the venue's Paystack subaccount (bank or MoMo settlement). Owner role only. */
+        /**
+         * Old split model: create the venue's Paystack subaccount. Replaced by payment-settings/paystack (Clarke, 2026-11-08).
+         * @deprecated
+         */
         put: operations["ownerSetPayoutAccount"];
         post?: never;
         delete?: never;
@@ -953,7 +960,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Paystack sandbox charges and cash taken at the table. */
+        /**
+         * Old split model: charges and cash taken. The venue now sees online payments and refunds in its own Paystack dashboard (Clarke, 2026-11-08).
+         * @deprecated
+         */
         get: operations["ownerListTransactions"];
         put?: never;
         post?: never;
@@ -972,7 +982,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Refund a succeeded charge in full. Paystack sandbox, mocked. */
+        /**
+         * Old split model: refund a charge. Refunds now happen in the venue's own Paystack dashboard (Clarke, 2026-11-08).
+         * @deprecated
+         */
         post: operations["ownerRefundTransaction"];
         delete?: never;
         options?: never;
@@ -1390,7 +1403,7 @@ export interface components {
             user?: components["schemas"]["StaffUser"];
         };
         /**
-         * @description owner does everything incl. payouts; manager everything except payouts and staff; waiter orders and waiter calls; kitchen order status only.
+         * @description owner does everything incl. payment settings; manager everything except payment settings and staff; waiter orders and waiter calls; kitchen order status only.
          * @enum {string}
          */
         StaffRole: "owner" | "manager" | "waiter" | "kitchen" | "viewer" | "staff_scanner";
@@ -1975,7 +1988,7 @@ export interface components {
             createdAt: string;
             /** Format: date-time */
             paidAt?: string | null;
-            /** @description True when the server uses Paystack test keys. Show a "Test payment" label. */
+            /** @description True when the venue's Paystack keys are test keys. Show a "Test payment" label. */
             testMode: boolean;
         };
         /** @enum {string} */
@@ -2262,7 +2275,10 @@ export interface components {
             ratingAverage: number | null;
             ratingCount: number;
             alerts: {
-                /** @enum {string} */
+                /**
+                 * @description payout belongs to the old split model and is no longer sent.
+                 * @enum {string}
+                 */
                 code: "calls" | "bills" | "payout" | "sold_out";
                 count?: number;
                 detail?: string;
@@ -4403,7 +4419,7 @@ export interface operations {
                     "application/json": components["schemas"]["PayoutAccount"];
                 };
             };
-            /** @description Not set up yet. Pay stays off until it is. */
+            /** @description Not set up yet. */
             404: {
                 headers: {
                     [name: string]: unknown;

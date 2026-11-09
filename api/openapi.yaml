@@ -309,8 +309,9 @@ paths:
       security: [{ guestAuth: [] }]
       summary: Start a MoMo or card payment for a bill quote.
       description: |
-        The server calls Paystack with its secret key and the venue's subaccount (split payment),
-        so the money settles to the venue and Cravins's fee comes off automatically. Cravins never holds funds.
+        The server calls Paystack with the venue's own secret key (payment-settings/paystack), so the
+        money goes straight to the venue's Paystack account. Cravins never holds funds and takes no cut.
+        Fails with 409 online_pay_off when the venue has no Paystack connected (`payMethods.online` is false).
         MoMo returns `pay_offline`: show `displayText` and poll `GET /payments/{reference}`.
         The guest has 180 seconds to approve on their phone (network limit).
         Card returns `open_url` with a Paystack checkout URL (open it in a browser tab or WebView).
@@ -1258,7 +1259,8 @@ paths:
     get:
       tags: [owner-payouts]
       operationId: ownerGetPayoutAccount
-      summary: Get payout account (owner app).
+      deprecated: true
+      summary: "Old split model: get the payout account. Replaced by payment-settings (Clarke, 2026-11-08)."
       security: [{ ownerAuth: [] }]
       parameters: [{ $ref: '#/components/parameters/VenueId' }]
       responses:
@@ -1267,12 +1269,13 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/PayoutAccount' }
-        '404': { description: Not set up yet. Pay stays off until it is. }
+        '404': { description: Not set up yet. }
     put:
       tags: [owner-payouts]
       operationId: ownerSetPayoutAccount
+      deprecated: true
       security: [{ ownerAuth: [] }]
-      summary: Create or update the venue's Paystack subaccount (bank or MoMo settlement). Owner role only.
+      summary: "Old split model: create the venue's Paystack subaccount. Replaced by payment-settings/paystack (Clarke, 2026-11-08)."
       parameters: [{ $ref: '#/components/parameters/VenueId' }]
       requestBody:
         required: true
@@ -1321,7 +1324,8 @@ paths:
     get:
       tags: [owner-payouts]
       operationId: ownerListTransactions
-      summary: Paystack sandbox charges and cash taken at the table.
+      deprecated: true
+      summary: "Old split model: charges and cash taken. The venue now sees online payments and refunds in its own Paystack dashboard (Clarke, 2026-11-08)."
       security: [{ ownerAuth: [] }]
       parameters: [{ $ref: '#/components/parameters/VenueId' }]
       responses:
@@ -1338,7 +1342,8 @@ paths:
     post:
       tags: [owner-payouts]
       operationId: ownerRefundTransaction
-      summary: Refund a succeeded charge in full. Paystack sandbox, mocked.
+      deprecated: true
+      summary: "Old split model: refund a charge. Refunds now happen in the venue's own Paystack dashboard (Clarke, 2026-11-08)."
       security: [{ ownerAuth: [] }]
       parameters:
         - { $ref: '#/components/parameters/TransactionId' }
@@ -2032,7 +2037,7 @@ components:
     StaffRole:
       type: string
       enum: [owner, manager, waiter, kitchen, viewer, staff_scanner]
-      description: owner does everything incl. payouts; manager everything except payouts and staff; waiter orders and waiter calls; kitchen order status only.
+      description: owner does everything incl. payment settings; manager everything except payment settings and staff; waiter orders and waiter calls; kitchen order status only.
     StaffUser:
       type: object
       required: [id, firstName, phone, venues]
@@ -2675,7 +2680,7 @@ components:
         failureReason: { type: string, description: 'Plain words, safe to show.' }
         createdAt: { type: string, format: date-time }
         paidAt: { type: ['string', 'null'], format: date-time }
-        testMode: { type: boolean, description: True when the server uses Paystack test keys. Show a "Test payment" label. }
+        testMode: { type: boolean, description: True when the venue's Paystack keys are test keys. Show a "Test payment" label. }
 
     WaiterReason:
       type: string
@@ -2992,7 +2997,10 @@ components:
             type: object
             required: [code]
             properties:
-              code: { type: string, enum: [calls, bills, payout, sold_out] }
+              code:
+                type: string
+                enum: [calls, bills, payout, sold_out]
+                description: payout belongs to the old split model and is no longer sent.
               count: { type: integer }
               detail: { type: string }
     FloorStatus:
