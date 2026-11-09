@@ -1,4 +1,8 @@
 import type { ExpoConfig } from 'expo/config';
+import tokens from './design/tokens.json';
+
+const BRAND = tokens.color.brand.hex;
+const WHITE = tokens.color.white.hex;
 
 // Bundle ids are placeholders until Clarke owns a domain. Change them before the first store build.
 const config: ExpoConfig = {
@@ -17,15 +21,21 @@ const config: ExpoConfig = {
       foregroundImage: './assets/images/adaptive-icon-foreground.png',
       backgroundImage: './assets/images/adaptive-icon-background.png',
       monochromeImage: './assets/images/adaptive-icon-monochrome.png',
-      backgroundColor: '#FC5205',
+      backgroundColor: BRAND,
     },
   },
-  web: { output: 'single', favicon: './assets/images/favicon.png', bundler: 'metro' },
+  web: {
+    output: 'single',
+    favicon: './assets/images/favicon.png',
+    bundler: 'metro',
+    // Guest pages are white, so the phone's browser bar is too (matches public/manifest.json).
+    themeColor: WHITE,
+  },
   plugins: [
     'expo-router',
     [
       'expo-splash-screen',
-      { image: './assets/images/splash-icon.png', imageWidth: 200, backgroundColor: '#FFFFFF' },
+      { image: './assets/images/splash-icon.png', imageWidth: 200, backgroundColor: WHITE },
     ],
     'expo-font',
     'expo-secure-store',
