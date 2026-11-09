@@ -104,5 +104,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  actions: { flex: 1, gap: tokens.space[2] },
+  // A row, so each button keeps its own width instead of stretching across the card.
+  actions: {
+    flex: 1,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: tokens.space[2],
+  },
 });
