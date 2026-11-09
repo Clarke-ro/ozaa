@@ -71,3 +71,35 @@ test('guest MoMo payment that fails: says why, nothing taken, and Try again goes
   await page.getByRole('button', { name: 'Try again' }).click();
   await expect(page.getByRole('button', { name: /^Pay GH/ })).toBeVisible();
 });
+
+test('guest MoMo payment nobody approves: checks after 0:00, then Time ran out', async ({
+  page,
+}) => {
+  // A fake clock lets the test jump past the 3-minute countdown instead of waiting for it.
+  await page.clock.install();
+  await page.goto('/bean-there/t/7', { waitUntil: 'domcontentloaded' });
+  await page.getByRole('button', { name: /^Menu/ }).first().click();
+  await page
+    .getByRole('button', { name: /^Add .+ to your order$/ })
+    .first()
+    .click();
+  await page.getByRole('button', { name: /View order/ }).click();
+  await page.getByRole('button', { name: 'Send to kitchen' }).click();
+  await page.getByRole('button', { name: 'Pay & split bill' }).click();
+
+  // The mock never approves a MoMo number ending in 9; it expires at 3:00.
+  await page.getByRole('textbox', { name: 'MoMo number' }).fill('0241234569');
+  await page.getByRole('button', { name: /^Pay GH/ }).click();
+  await expect(page.getByText('Approve on your phone')).toBeVisible({ timeout: 15_000 });
+
+  await page.clock.runFor('02:59');
+  await expect(page.getByText('0:01')).toBeVisible();
+  await page.clock.runFor(1_000);
+  await expect(page.getByText('Still checking…')).toBeVisible();
+  await page.screenshot({ path: 'test-results/pay-online-checking.png' });
+
+  await page.clock.runFor('00:20');
+  await expect(page.getByText('Time ran out')).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('button', { name: 'Try again' })).toBeVisible();
+  await page.screenshot({ path: 'test-results/pay-online-timed-out.png' });
+});
