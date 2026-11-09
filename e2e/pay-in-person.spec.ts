@@ -86,7 +86,7 @@ test('owner: Today leads with sales, and a served table is marked paid from Floo
     .click();
 
   // Serve table 3's order from its sheet. Once served and unpaid, its card says it is waiting
-  // for the bill and carries "Mark paid" right on the card.
+  // for the bill.
   const table3 = page.getByRole('button', { name: /^Table 3,/ });
   const waitingForBill = page.getByRole('button', { name: /^Table 3, Waiting for the bill/ });
   await expect(table3).toBeVisible({ timeout: 15_000 });
@@ -95,9 +95,9 @@ test('owner: Today leads with sales, and a served table is marked paid from Floo
   for (const step of ['Start cooking', 'Mark ready', 'Mark served']) {
     await page.getByRole('button', { name: step }).click();
   }
-  await page.getByRole('button', { name: 'Close', exact: true }).first().click();
   await expect(waitingForBill).toBeVisible({ timeout: 15_000 });
-  await page.getByRole('button', { name: 'Mark paid' }).click();
+  // The table's sheet is still open; its own Mark paid closes it and asks how it was paid.
+  await page.getByRole('dialog').getByRole('button', { name: 'Mark paid' }).click();
   await expect(page.getByText(/^How did order #\d+ pay\?$/)).toBeVisible({ timeout: 15_000 });
   await page.waitForTimeout(600); // let the sheet finish sliding in before the screenshot
   await page.screenshot({ path: 'test-results/pay-in-person-owner-mark-paid.png' });
