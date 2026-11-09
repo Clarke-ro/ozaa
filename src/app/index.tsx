@@ -2,6 +2,8 @@ import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { DEMO } from '@/lib/demo';
+import { DEMO_TABLE_PATH } from '@/mocks/demo';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
 import { makeStyles } from '@/ui/makeStyles';
@@ -27,11 +29,14 @@ export default function LandingScreen() {
         <Text variant="body" style={styles.body}>
           {t('landing.body')}
         </Text>
-        <Button
-          label={t('landing.sample')}
-          onPress={() => router.push('/mamas-kitchen/t/12')}
-          style={styles.button}
-        />
+        {/* Demo builds only: the sample venue exists only in the mock. */}
+        {DEMO ? (
+          <Button
+            label={t('landing.sample')}
+            onPress={() => router.push(DEMO_TABLE_PATH)}
+            style={styles.button}
+          />
+        ) : null}
         <Button
           label={t('landing.owner')}
           tone="secondary"

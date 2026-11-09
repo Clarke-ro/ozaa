@@ -410,6 +410,7 @@
     "send": "Send code",
     "enter": "Enter",
     "sample": "Sample code is 123456.",
+    "sampleLogin": "{{venue}} · {{name}} ({{role}})",
     "dashboard": "Today",
     "floor": "Floor",
     "orders": "Orders",

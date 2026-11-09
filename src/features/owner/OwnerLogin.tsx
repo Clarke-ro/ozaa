@@ -13,6 +13,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
+import { DEMO } from '@/lib/demo';
 import { parseGhanaPhone } from '@/lib/phone';
 import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
@@ -22,12 +23,10 @@ import { Text } from '@/ui/Text';
 import { cravinsTheme, ThemeProvider, useTheme } from '@/ui/theme';
 import { DeskCard, CravinsMark } from './kit';
 import { SHADOW_INK } from '@/theme/palette';
+import { DEMO_LOGINS } from '@/mocks/demo';
 
-const SAMPLES = [
-  { label: "Mama's Kitchen (Owner)", phone: '0240000001' },
-  { label: 'Bean There (Manager)', phone: '0240000004' },
-  { label: "Auntie Ako's (Waiter)", phone: '0240000005' },
-];
+// Demo builds only: sample staff from the mock, typed the way a Ghanaian number is (024…).
+const SAMPLES = DEMO_LOGINS.map((person) => ({ ...person, local: `0${person.phone.slice(4)}` }));
 
 export function OwnerLogin() {
   const theme = useTheme();
@@ -35,7 +34,7 @@ export function OwnerLogin() {
   const { t } = useTranslation();
   const router = useRouter();
   const saveOwner = useOwnerSession((state) => state.saveOwner);
-  const [phone, setPhone] = useState('0240000001');
+  const [phone, setPhone] = useState(DEMO ? (SAMPLES[0]?.local ?? '') : '');
   const [code, setCode] = useState('');
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -200,35 +199,45 @@ export function OwnerLogin() {
                   disabled={!phone.trim() || (sent && !code.trim())}
                 />
 
-                {/* Sample login helpers */}
-                {!sent ? (
+                {/* Sample logins: demo builds only, the accounts exist only in the mock. */}
+                {!sent && DEMO ? (
                   <View style={styles.sampleSection}>
                     <Text variant="caption" style={{ color: theme.meta, textAlign: 'center' }}>
                       {t('owner.sample')}
                     </Text>
                     <View style={styles.sampleChips}>
-                      {SAMPLES.map((s) => (
-                        <Pressable
-                          key={s.phone}
-                          accessibilityRole="button"
-                          accessibilityLabel={s.label}
-                          onPress={() => {
-                            dismissKeyboard();
-                            setPhone(s.phone);
-                          }}
-                          style={[
-                            styles.sampleChip,
-                            {
-                              borderColor: phone === s.phone ? theme.black : theme.line,
-                              backgroundColor: phone === s.phone ? theme.wash : theme.surface,
-                            },
-                          ]}
-                        >
-                          <Text variant="caption" style={{ fontWeight: '600', color: theme.muted }}>
-                            {s.label}
-                          </Text>
-                        </Pressable>
-                      ))}
+                      {SAMPLES.map((s) => {
+                        const label = t('owner.sampleLogin', {
+                          venue: s.venueName,
+                          name: s.firstName,
+                          role: t(`owner.roles.${s.role}`),
+                        });
+                        return (
+                          <Pressable
+                            key={s.phone}
+                            accessibilityRole="button"
+                            accessibilityLabel={label}
+                            onPress={() => {
+                              dismissKeyboard();
+                              setPhone(s.local);
+                            }}
+                            style={[
+                              styles.sampleChip,
+                              {
+                                borderColor: phone === s.local ? theme.black : theme.line,
+                                backgroundColor: phone === s.local ? theme.wash : theme.surface,
+                              },
+                            ]}
+                          >
+                            <Text
+                              variant="caption"
+                              style={{ fontWeight: '600', color: theme.muted }}
+                            >
+                              {label}
+                            </Text>
+                          </Pressable>
+                        );
+                      })}
                     </View>
                   </View>
                 ) : null}

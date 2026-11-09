@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
-import { env } from '@/lib/env';
+import { DEMO } from '@/lib/demo';
 import { Check } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/ui/Button';
@@ -153,7 +153,7 @@ export function LoyaltyJoinCard({
       )}
 
       {/* Demo builds only: the sample member and code exist only in the mock. */}
-      {env.EXPO_PUBLIC_API_MODE === 'mock' ? (
+      {DEMO ? (
         <View style={styles.sampleRow}>
           <Text variant="caption" style={{ color: theme.meta }}>
             {t('loyalty.sampleHint')}

@@ -4,6 +4,8 @@ import * as Crypto from 'expo-crypto';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
+import { DEMO } from '@/lib/demo';
+import { DEMO_BOARD } from '@/mocks/demo';
 import { guestKeys } from '@/lib/queryKeys';
 import { useVenue } from '@/features/venue';
 import { Button } from '@/ui/Button';
@@ -107,7 +109,7 @@ export function GameScreen({ slug }: { slug: string }) {
           overOverlay={overOverlay}
         />
         <Text variant="body-strong">{t('game.board', { name: venue.data?.name ?? '' })}</Text>
-        {topOfBoard(saved).map((row, index) => (
+        {topOfBoard(saved, DEMO ? DEMO_BOARD : []).map((row, index) => (
           <Text key={`${row.nickname}-${index}`}>
             {index + 1} {row.nickname}{' '}
             {row.sample ? t('game.sample') : row.mine ? t('game.you') : ''} {row.score}
