@@ -183,3 +183,10 @@ export function canOpen(role: StaffRole, pathname: string): boolean {
   if (!item) return false;
   return item.roles.includes(role);
 }
+
+/** Pages shown on their own, with no tab bar or sidebar, so the owner finishes one job. */
+const FOCUSED: readonly string[] = ['/owner/setup'];
+
+export function isFocused(pathname: string): boolean {
+  return FOCUSED.includes(pathname);
+}

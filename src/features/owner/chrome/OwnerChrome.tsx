@@ -13,7 +13,7 @@ import { useArrivalChime } from '../data/useArrivalChime';
 import { useOwnerLayout } from './layout';
 import { NavRow, useGoTo } from './NavRow';
 import { Sidebar } from './Sidebar';
-import { canOpen, isCurrent, tabsFor } from './nav';
+import { canOpen, isCurrent, isFocused, tabsFor } from './nav';
 import { useNavCounts } from './useNavCounts';
 
 /** Wide screens get the sidebar; phones and small tablets get a tab bar so the page keeps its width. */
@@ -24,18 +24,25 @@ export function OwnerChrome({ children }: { children: ReactNode }) {
   const role = useOwnerSession((state) => state.role) ?? 'waiter';
   const path = usePathname();
   useArrivalChime();
-  const tabBarSpace = wide
-    ? tokens.space[6]
-    : tokens.owner.tabBar + Math.max(insets.bottom, tokens.space[2]) + tokens.space[3];
+  // Setup stands alone: no sidebar or tab bar to wander off into halfway through.
+  const focused = isFocused(path);
+  // Toasts sit above the tab bar, or above Setup's own button bar, which is about as tall.
+  const tabBarSpace =
+    wide && !focused
+      ? tokens.space[6]
+      : tokens.owner.tabBar + Math.max(insets.bottom, tokens.space[2]) + tokens.space[3];
 
   return (
     <View
-      style={[styles.shell, { backgroundColor: theme.bg, flexDirection: wide ? 'row' : 'column' }]}
+      style={[
+        styles.shell,
+        { backgroundColor: theme.bg, flexDirection: wide && !focused ? 'row' : 'column' },
+      ]}
     >
       <StatusBar style={theme.scheme === 'dark' ? 'light' : 'dark'} />
-      {wide ? <Sidebar /> : null}
+      {wide && !focused ? <Sidebar /> : null}
       <View style={styles.main}>{canOpen(role, path) ? children : <Blocked />}</View>
-      {wide ? null : <TabBar />}
+      {wide || focused ? null : <TabBar />}
       <ToastHost bottom={tabBarSpace} />
     </View>
   );

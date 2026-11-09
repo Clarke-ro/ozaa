@@ -1,4 +1,4 @@
-import { canOpen, isTabRoot, moreGroups, navFor, navGroups, tabsFor } from './nav';
+import { canOpen, isFocused, isTabRoot, moreGroups, navFor, navGroups, tabsFor } from './nav';
 
 test('kitchen only sees the order tickets', () => {
   expect(navFor('kitchen').map((item) => item.id)).toEqual(['orders']);
@@ -188,4 +188,10 @@ test('an old link to a moved page has the access of where it moved to', () => {
   expect(canOpen('owner', '/owner/payments')).toBe(true);
   expect(canOpen('manager', '/owner/payments')).toBe(false);
   expect(canOpen('waiter', '/owner/payments')).toBe(false);
+});
+
+test('setup is a focused flow: no tab bar or sidebar, on any screen size', () => {
+  expect(isFocused('/owner/setup')).toBe(true);
+  expect(isFocused('/owner')).toBe(false);
+  expect(isFocused('/owner/integrations')).toBe(false);
 });

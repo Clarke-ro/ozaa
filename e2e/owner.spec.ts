@@ -86,8 +86,11 @@ test('owner screens on phone (390x844): every tab and every More item opens, wit
         .click();
     }
     await page.screenshot({ path: `test-results/${name}-phone.png`, fullPage: false });
-    // Detail screens get a back button that returns to More.
-    await page.getByRole('button', { name: 'Back', exact: true }).click();
+    // Detail screens get a back button that returns to More. Setup stands alone (no tab bar),
+    // so it has Close instead.
+    await page
+      .getByRole('button', { name: name === 'owner-setup' ? 'Close' : 'Back', exact: true })
+      .click();
     await expect(
       page.getByRole('tab', { name: 'More', exact: true, selected: true }),
     ).toBeVisible();
@@ -101,5 +104,11 @@ test('owner screens on tablet (1024x768) use the sidebar', async ({ page }) => {
     await page.getByRole('button', { name: label, exact: true }).first().click();
     await waitLoaded(page);
     await page.screenshot({ path: `test-results/${name}-tablet.png`, fullPage: false });
+    // Setup hides the sidebar, so leave it before opening the next page.
+    if (name === 'owner-setup') {
+      await expect(page.getByRole('button', { name: 'Today', exact: true })).toHaveCount(0);
+      await page.getByRole('button', { name: 'Close', exact: true }).click();
+      await waitLoaded(page);
+    }
   }
 });
