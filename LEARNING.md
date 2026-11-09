@@ -4,6 +4,100 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-08 · A clearer Setup, with Skip on payments
+
+**What we built**
+Setup is easier to follow. It opens on its own, with no tab bar or sidebar, just Close. Each step asks one question, each field has its label on the page and a rounded box to type in, Wi-Fi and online payments can be skipped, and the end screen shows what you set up.
+
+**How it works**
+
+```
+Venue → Tables → Wi-Fi (Skip) → How guests pay (Connect Paystack, or Skip for now)
+                                         ↓
+                          "You're ready": Venue · Tables · Wi-Fi · Payments
+                          tap a line to go back and change it
+```
+
+`footerFor(step, paystackConnected)` decides the buttons under each step. `setupSummary(...)` turns what's saved into the four summary lines. Both are plain functions with tests, so the screen only draws.
+
+**Files to look at**
+
+- `src/features/owner/screens/setup/setupFlow.ts` and its test: the buttons and the summary.
+- `SetupScreen.tsx`: the steps. `SetupFrame.tsx`: the page with Close. `SetupFooter.tsx`: the buttons. `SetupField.tsx` and `WifiStep.tsx`: the rounded fields. `SetupDone.tsx`: the end screen.
+- `src/features/owner/chrome/nav.ts` (`isFocused`): pages shown without the tab bar or sidebar.
+- `e2e/owner-setup.spec.ts`: skip Wi-Fi and payments, then check the summary.
+
+**New idea: one primary action per step**
+Every step has exactly one filled button: the thing most people should do next. Skip and Back are plain text buttons, so they're easy to find without competing. On Payments the filled button is "Connect Paystack", because that's the step's job, and "Skip for now" is the quiet way out.
+
+**Try it yourself**
+In `setupFlow.ts`, change Wi-Fi's `skip: 'skip'` to `skip: null` and run `npm test`. The "Wi-Fi can be skipped" test fails and shows what changed. Put it back afterwards.
+
+---
+
+## 2026-11-08 · Payments without the off switch (BUILD.md box 4b.17, done)
+
+**What we built**
+The app no longer has a "payments off" switch. Every restaurant takes payment: in person by default, and online too once it connects its own Paystack. Staff mark in-person bills paid from Orders or Floor.
+
+**How it works**
+
+```
+guest eats → order served, not paid → Floor shows the table under "Bill"
+  guest pays online ............ Paystack says paid → table frees
+  guest pays at the counter .... staff tap Mark paid → Cash / Card machine / … → table frees
+```
+
+- Today leads with sales: money already taken, online or marked paid.
+- Setup's last step is "How guests pay", with a button to Integrations.
+- The old Payments page (payout account, refunds) is gone. Each restaurant sees online payments and refunds in its own Paystack dashboard. Old links go to Integrations.
+
+**Files to look at**
+
+- `src/features/owner/floor/floorStatus.ts`: a table frees once its bill is paid.
+- `src/features/owner/desk/daySummary.ts`: the "bills to collect" count.
+- `src/features/owner/screens/FloorScreen.tsx`: Mark paid opens the same sheet as Orders.
+- `src/features/owner/screens/setup/SetupScreen.tsx`: the new last step.
+- `e2e/pay-in-person.spec.ts`: serve a table, mark it paid in cash, watch it free up.
+
+**New idea: deleting a mode**
+For a week the code had two ways of working, payments on and payments off, and every screen asked which one it was in. Removing a mode means picking the one that stays, deleting the other branch everywhere, and deleting its tests too. The code gets shorter and there's one behaviour left to understand.
+
+**Try it yourself**
+On Floor, open a table with an order, tap through Start cooking → Mark ready → Mark served, then Mark paid → Cash. Watch the Bill count go up, then back down.
+
+---
+
+## 2026-11-08 · Guests pay in the app only where the venue connected Paystack (BUILD.md box 4b.17, part 4)
+
+**What we built**
+A guest sees "Pay & split bill" only at a venue that has connected its own Paystack account. Everywhere else they pay in person, and staff mark the order paid.
+
+**How it works**
+
+```
+venue page loads → payMethods.online?
+  yes → Pay card on home, Pay button on the order, MoMo or card in the app
+  no  → "Pay at the counter, or ask your waiter for the bill."
+        an old /pay link goes to the order instead
+```
+
+The server makes the same check. Starting a payment at a venue with no keys fails with `online_pay_off`, so the rule holds even if the app is out of date.
+
+**Files to look at**
+
+- `src/lib/payments.ts`: `canPayOnline`, the one place that decides.
+- `src/features/venue/ServiceGrid.tsx`, `src/features/orders/StatusScreen.tsx`, `src/features/pay/PayScreen.tsx`: the three places guests meet it.
+- `src/mocks/mockClient.ts` (`initializePayment`): the server-side check.
+- `e2e/guest-pay-online.spec.ts`: a guest at Bean There orders, pays by MoMo, and sees it paid.
+
+**New idea: a build switch versus data**
+Before, one switch (`PAYMENTS_ENABLED`) turned payments on or off for every restaurant at once, and changing it meant a new build. Now each restaurant's own data decides: has it connected Paystack? Two restaurants on the same app can behave differently, and an owner changes it from Integrations without anyone shipping an update.
+
+**Try it yourself**
+Open `/bean-there/t/7` and see the Pay card, then `/mamas-kitchen/t/12` and see it gone. In `samplePaymentSettings` (`src/mocks/world.ts`), change `'bean-there'` to `'mamas-kitchen'`, reload, and watch the card swap places.
+---
+
 ## 2026-11-08 · One column everywhere, a better QR page, analytics for Sales and Insights
 
 **What we built**
@@ -808,6 +902,7 @@ Edit a dish, add sizes, set Large to 20 and save. Then order it as a guest and c
 **What we built**
 
 In the dish editor, a new "Pricing and stock" part has:
+
 - a status: Available, Out of stock or Hidden
 - a sale price (optional)
 - a stock count (empty means unlimited)
@@ -847,6 +942,7 @@ Set a dish's sale price above its normal price. The form stops you. In `dishRule
 **What we built**
 
 A Store notice page for the owner with two cards:
+
 - **Scrolling banner:** runs across the top of the home and menu pages.
 - **Popup:** shows once when a guest opens the page.
 
@@ -883,6 +979,7 @@ Set a banner with an end time two minutes from now, open the guest home and wait
 **What we built**
 
 Branding → Look has a new **Menu style** part with three choices:
+
 - **Dish order** in each section: your order, Popular first, A to Z, or price low or high
 - **How the menu opens:** a list or a grid. Guests can still switch.
 - **Guest pages:** Light, Dark, or Follow phone
@@ -920,6 +1017,7 @@ Pick Dark and Grid in Branding, save, and open your guest menu.
 **What we built**
 
 On a wide screen, Menu now opens as a **Live preview**. Your guest menu sits in a phone frame, in your own colours and font. On the right are your menu link, a **Menu is published** switch, and the menu style choices.
+
 - Tap a dish to edit it.
 - Each section has **Add dish**, an edit button and, when dish order is "Your order", a **Reorder** button where you drag dishes into place.
 - On a phone, switch between Live preview and List at the top.
@@ -986,6 +1084,7 @@ Create an order for the Counter, then find it under New. It says Takeaway, becau
 **What we built**
 
 Today now shows six numbers:
+
 - Orders today
 - Pending (orders the kitchen hasn't started; red when any are waiting)
 - Visitors today
@@ -1025,6 +1124,7 @@ Create an order from Orders, then go back to Today. Orders today and Pending eac
 **What we built**
 
 A new **Online ordering** page under Settings:
+
 - **Take online orders**, the main switch for your menu link (table QR orders aren't affected)
 - **Pickup**, with how many minutes until it's ready
 - **Delivery**, with the lowest fee, the fee per km, the furthest distance, and an optional amount from which delivery is free
@@ -1096,6 +1196,7 @@ Turn on online ordering with pickup only, open your menu link in a private windo
 **What we built**
 
 A **Sales** page under Sales in the sidebar, for All time, Today, Yesterday, the last 7 days or the last 30 days. It shows:
+
 - **Six tiles:** order value, orders, completed, in progress, cancelled and discounts given
 - **Order value by day**
 - **Where orders came from:** tables, pickup or delivery

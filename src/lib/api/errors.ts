@@ -33,6 +33,7 @@ const MESSAGES: Record<string, string> = {
   paystack_keys_invalid: 'ownerPay.err.paystack_keys_invalid',
   paystack_mode_mismatch: 'ownerPay.err.paystack_mode_mismatch',
   live_not_enabled: 'ownerPay.err.live_not_enabled',
+  online_pay_off: 'status.payAtCounter',
   manual_bank_incomplete: 'ownerPay.err.bank',
   manual_momo_incomplete: 'ownerPay.err.momo',
   forbidden: 'errors.forbidden',

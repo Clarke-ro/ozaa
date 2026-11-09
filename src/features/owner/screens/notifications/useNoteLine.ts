@@ -1,9 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import {
-  Banknote,
   Bell,
   ChefHat,
-  CircleAlert,
   ClipboardList,
   Hourglass,
   Mail,
@@ -28,8 +26,6 @@ const ICON: Record<NoteKind, LucideIcon> = {
   call: Bell,
   order: ClipboardList,
   order_ready: ChefHat,
-  payment: Banknote,
-  payment_failed: CircleAlert,
   feedback: MessageSquare,
   staff_joined: UserPlus,
   staff_invited: Mail,

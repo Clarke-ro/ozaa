@@ -60,26 +60,6 @@ function fromOrder(order: FloorOrder | null, seated: boolean): FloorStatus {
 }
 
 /**
- * With payments off nothing in the app marks a bill paid, so the bill request is the signal:
- * an open or acknowledged bill request means the table is waiting for its bill, and staff
- * resolving it ("Bill settled") closes every order placed before the guest asked.
- */
-function withoutPayments(
-  order: FloorOrder | null,
-  calls: FloorCall[],
-  seated: boolean,
-): FloorStatus {
-  if (!order) return seated ? 'seated' : 'free';
-  if (OPEN_KITCHEN.has(order.status)) return 'ordered';
-  const settled = calls.some(
-    (call) =>
-      call.reason === 'bill' && call.status === 'resolved' && call.createdAt >= order.createdAt,
-  );
-  if (settled) return seated ? 'seated' : 'free';
-  return 'seated';
-}
-
-/**
  * Floor status is derived. Orders and waiter calls stay the source of truth,
  * so a table cannot be stored as both free and waiting to pay.
  */
@@ -88,22 +68,15 @@ export function deriveFloor(input: {
   orders: FloorOrder[];
   calls: FloorCall[];
   seatedCodes: readonly string[];
-  /** PAYMENTS_ENABLED. Off: "waiting to pay" comes from the guest's bill request, not payment status. */
-  payments: boolean;
 }): FloorTableView[] {
   const seated = new Set(input.seatedCodes);
   return input.tables.map((table) => {
     const order = latestOrder(input.orders, table.code);
     const tableCalls = input.calls.filter((item) => item.tableCode === table.code);
     const call = tableCalls.find((item) => item.status !== 'resolved') ?? null;
-    let status: FloorStatus;
-    if (input.payments) {
-      status = call ? 'needs_waiter' : fromOrder(order, seated.has(table.code));
-    } else if (call) {
-      status = call.reason === 'bill' ? 'waiting_to_pay' : 'needs_waiter';
-    } else {
-      status = withoutPayments(order, tableCalls, seated.has(table.code));
-    }
+    // A served bill frees the table once it's paid, online or marked paid by staff (Clarke,
+    // 2026-11-08). A bill request is a call like any other, so it shows as needing a waiter.
+    const status: FloorStatus = call ? 'needs_waiter' : fromOrder(order, seated.has(table.code));
     return {
       ...table,
       status,
@@ -111,7 +84,11 @@ export function deriveFloor(input: {
       orderNumber: order?.number ?? null,
       orderStatus: order?.status ?? null,
       paymentStatus: order?.paymentStatus ?? null,
-      billPesewas: order?.totalPesewas ?? null,
+      // Paid (or refunded) means nothing is owed, so the tile and sheet show no amount.
+      billPesewas:
+        order && (order.paymentStatus === 'unpaid' || order.paymentStatus === 'part_paid')
+          ? order.totalPesewas
+          : null,
       waiterCallId: call?.id ?? null,
       waiterReason: call?.reason ?? null,
     };

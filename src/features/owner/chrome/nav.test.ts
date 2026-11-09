@@ -1,4 +1,4 @@
-import { canOpen, isTabRoot, moreGroups, navFor, navGroups, tabsFor } from './nav';
+import { canOpen, isFocused, isTabRoot, moreGroups, navFor, navGroups, tabsFor } from './nav';
 
 test('kitchen only sees the order tickets', () => {
   expect(navFor('kitchen').map((item) => item.id)).toEqual(['orders']);
@@ -20,31 +20,28 @@ test('a manager sees the venue tools except payouts and staff', () => {
   expect(ids).not.toContain('staff');
 });
 
-test('with payments and previews on, the owner sees payouts, the till and staff', () => {
-  const ids = navFor('owner', true, true).map((item) => item.id);
-  expect(ids).toContain('payments');
+test('with previews on, the owner sees Integrations, the till and staff', () => {
+  const ids = navFor('owner', true).map((item) => item.id);
+  expect(ids).toContain('integrations');
   expect(ids).toContain('pos');
   expect(ids).toContain('staff');
   expect(ids).toContain('setup');
 });
 
-test('with payments off, nobody sees payments or the counter till', () => {
-  for (const role of ['owner', 'manager', 'waiter'] as const) {
-    const ids = navFor(role, false).map((item) => item.id);
-    expect(ids).not.toContain('payments');
-    expect(ids).not.toContain('pos');
+test('the old payout page is gone: payments are set up in Integrations', () => {
+  for (const role of ['owner', 'manager', 'waiter', 'kitchen', 'viewer'] as const) {
+    expect(navFor(role, true).map((item) => item.id as string)).not.toContain('payments');
   }
-  expect(navFor('owner', false).map((item) => item.id)).toContain('staff');
 });
 
 test('with previews off, nobody sees the sample-data screens', () => {
   for (const role of ['owner', 'manager', 'waiter'] as const) {
-    const ids = navFor(role, true, false).map((item) => item.id);
+    const ids = navFor(role, false).map((item) => item.id);
     for (const preview of ['stock', 'pos', 'ai', 'marketing']) {
       expect(ids).not.toContain(preview);
     }
   }
-  expect(navFor('owner', false, true).map((item) => item.id)).toEqual(
+  expect(navFor('owner', true).map((item) => item.id)).toEqual(
     expect.arrayContaining(['stock', 'ai', 'marketing']),
   );
 });
@@ -184,4 +181,17 @@ describe('canOpen', () => {
   it('blocks owner pages the nav does not know about', () => {
     expect(canOpen('waiter', '/owner/secret')).toBe(false);
   });
+});
+
+test('an old link to a moved page has the access of where it moved to', () => {
+  // /owner/payments became Integrations (owner only), and its route redirects there.
+  expect(canOpen('owner', '/owner/payments')).toBe(true);
+  expect(canOpen('manager', '/owner/payments')).toBe(false);
+  expect(canOpen('waiter', '/owner/payments')).toBe(false);
+});
+
+test('setup is a focused flow: no tab bar or sidebar, on any screen size', () => {
+  expect(isFocused('/owner/setup')).toBe(true);
+  expect(isFocused('/owner')).toBe(false);
+  expect(isFocused('/owner/integrations')).toBe(false);
 });

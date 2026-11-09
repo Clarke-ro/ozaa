@@ -1,4 +1,4 @@
-import type { Order, VenueTransaction, WaiterCall } from '@/lib/api/types';
+import type { Order, WaiterCall } from '@/lib/api/types';
 
 export type OrderTab = 'new' | 'cooking' | 'ready' | 'served' | 'rejected';
 /** A tab on the Orders screen: one stage, or every order. */
@@ -65,31 +65,4 @@ export function averageResponseMinutes(
   );
   if (!waits.length) return null;
   return Math.round(waits.reduce((sum, w) => sum + w, 0) / waits.length);
-}
-
-type Tx = Pick<VenueTransaction, 'status' | 'settlement'>;
-
-/** Only a payment that went through, and is not refunded already, can be refunded. */
-export function canRefund(tx: {
-  status: Tx['status'] | string;
-  settlement: Tx['settlement'] | string;
-}): boolean {
-  return tx.status === 'succeeded' && tx.settlement !== 'refunded';
-}
-
-/** Money that came in, money already paid out to the venue, and money given back. Only `succeeded` counts. */
-export function moneyTotals(txs: { amountPesewas: number; status: string; settlement: string }[]) {
-  return txs.reduce(
-    (sum, tx) => {
-      if (tx.status !== 'succeeded') return sum;
-      if (tx.settlement === 'refunded')
-        return { ...sum, refunded: sum.refunded + tx.amountPesewas };
-      return {
-        collected: sum.collected + tx.amountPesewas,
-        settled: sum.settled + (tx.settlement === 'settled' ? tx.amountPesewas : 0),
-        refunded: sum.refunded,
-      };
-    },
-    { collected: 0, settled: 0, refunded: 0 },
-  );
 }

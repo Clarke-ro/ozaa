@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { QrCode } from 'lucide-react-native';
 import { api } from '@/lib/api';
-import { PAYMENTS_ENABLED } from '@/lib/features';
+import { canPayOnline } from '@/lib/payments';
 import { generateTableCardHtml, type TableCardTemplate } from '@/features/tables';
 import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
@@ -57,8 +57,8 @@ export function TablesScreen() {
   const items = tables.data?.items ?? [];
   const open = items.find((table) => table.id === openId) ?? items[0] ?? null;
   const venueName = venue.data?.name ?? '';
-  // This line is printed on every table card, so it must not promise paying while payments are off.
-  const cta = t(PAYMENTS_ENABLED ? 'ownerTables.cta' : 'ownerTables.ctaNoPay');
+  // Printed cards only promise paying by phone where the venue takes payment online.
+  const cta = t(canPayOnline(venue.data) ? 'ownerTables.cta' : 'ownerTables.ctaNoPay');
   const name = (table: (typeof items)[number]) =>
     table.label ?? t('ownerOrders.table', { code: table.code });
 

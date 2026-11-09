@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
-// This build ships with PAYMENTS_ENABLED=false (docs/payments-removed.md). Nothing a guest or an
-// owner can reach should offer to take, track or report money paid.
+// A venue without Paystack: guests pay in person and staff mark the bill paid. Nothing a guest or
+// an owner can reach should offer the old in-app payment or payout screens.
 const PAY_WORDS = /Pay & split bill|MoMo or card|Mark paid in cash|Payouts?\b|Refund/;
 
 async function noPayWords(page: Page) {
@@ -17,14 +17,14 @@ function watchErrors(page: Page): string[] {
   return errors;
 }
 
-test('guest: scan a table, order, ask for the bill, and never see a payment screen', async ({
+test('guest at a venue with no Paystack: order, ask for the bill, and never see a payment screen', async ({
   page,
 }) => {
   const errors = watchErrors(page);
   await page.goto('/mamas-kitchen/t/12', { waitUntil: 'domcontentloaded' });
   await expect(page.getByText('Call waiter').first()).toBeVisible({ timeout: 15_000 });
   await noPayWords(page);
-  await page.screenshot({ path: 'test-results/payments-off-guest-home.png' });
+  await page.screenshot({ path: 'test-results/pay-in-person-guest-home.png' });
 
   // Move inside the app: a full page load restarts the in-browser mock and forgets the table.
   await page.getByRole('button', { name: /^Menu/ }).first().click();
@@ -40,7 +40,7 @@ test('guest: scan a table, order, ask for the bill, and never see a payment scre
     timeout: 15_000,
   });
   await noPayWords(page);
-  await page.screenshot({ path: 'test-results/payments-off-guest-status.png' });
+  await page.screenshot({ path: 'test-results/pay-in-person-guest-status.png' });
 
   // Asking for the bill is a waiter call, nothing more.
   await page.getByRole('button', { name: 'Call waiter' }).first().click();
@@ -49,7 +49,7 @@ test('guest: scan a table, order, ask for the bill, and never see a payment scre
   await expect(page.getByText('Your requests')).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText(/^Waiting, sent/)).toBeVisible();
   await noPayWords(page);
-  await page.screenshot({ path: 'test-results/payments-off-guest-bill.png' });
+  await page.screenshot({ path: 'test-results/pay-in-person-guest-bill.png' });
 
   // An old Pay link goes to the order instead of a 404.
   await page.goto('/mamas-kitchen/pay', { waitUntil: 'domcontentloaded' });
@@ -68,45 +68,48 @@ async function signInAsOwner(page: Page) {
   });
 }
 
-test('owner: orders, floor, calls and insights work with no payment cards', async ({ page }) => {
+test('owner: Today leads with sales, and a served table is marked paid from Floor', async ({
+  page,
+}) => {
   const errors = watchErrors(page);
   await signInAsOwner(page);
-  await expect(page.getByText('Pending orders').first()).toBeVisible({ timeout: 15_000 });
-  await noPayWords(page);
-  await page.screenshot({ path: 'test-results/payments-off-owner-today.png' });
+  await expect(page.getByText('Sales today').first()).toBeVisible({ timeout: 15_000 });
+  await page.screenshot({ path: 'test-results/pay-in-person-owner-today.png' });
 
-  // Seeded table 3 is served and unpaid. Without payments it is just seated, never "waiting to pay".
+  // The old payout page is gone from the menu; payments are set up in Integrations.
   await page.getByRole('tab', { name: 'More', exact: true }).click();
   await expect(page.getByRole('button', { name: /^Payments/ })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: /^Register/ })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /^Integrations/ }).first()).toBeVisible();
   await page
     .getByRole('button', { name: /^Floor/ })
     .first()
     .click();
-  // The Bill chip carries its count, read out as "Bill, N".
-  await expect(page.getByRole('tab', { name: /^Bill, \d+$/ })).toBeVisible({ timeout: 15_000 });
-  await noPayWords(page);
-  await page.screenshot({ path: 'test-results/payments-off-owner-floor.png' });
 
-  await page.getByRole('tab', { name: 'Orders', exact: true }).click();
-  await expect(page.getByText(/^(Not paid|Part paid|Paid)$/)).toHaveCount(0);
-  // The seeded water call on table 4 shows on Orders with no payment feed behind it.
-  await expect(page.getByText('Water', { exact: true }).first()).toBeVisible({ timeout: 15_000 });
-  await page.screenshot({ path: 'test-results/payments-off-owner-orders.png' });
+  // Serve table 3's order from its sheet: once served and unpaid it waits under Bill.
+  const billChip = page.getByRole('tab', { name: /^Bill, \d+$/ });
+  await expect(billChip).toBeVisible({ timeout: 15_000 });
+  const before = Number((await billChip.getAttribute('aria-label'))?.match(/\d+/)?.[0] ?? 0);
+  await page.getByRole('button', { name: /^Table 3,/ }).click();
+  for (const step of ['Start cooking', 'Mark ready', 'Mark served']) {
+    await page.getByRole('button', { name: step }).click();
+  }
+  await expect(page.getByRole('tab', { name: `Bill, ${before + 1}` })).toBeVisible({
+    timeout: 15_000,
+  });
+  await page.getByRole('button', { name: 'Mark paid' }).click();
+  await expect(page.getByText(/^How did order #\d+ pay\?$/)).toBeVisible({ timeout: 15_000 });
+  await page.waitForTimeout(600); // let the sheet finish sliding in before the screenshot
+  await page.screenshot({ path: 'test-results/pay-in-person-owner-mark-paid.png' });
+  await page.getByRole('button', { name: 'Cash' }).click();
+  await expect(page.getByText(/^Order #\d+ marked paid$/)).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('tab', { name: `Bill, ${before}` })).toBeVisible({
+    timeout: 15_000,
+  });
+  await page.screenshot({ path: 'test-results/pay-in-person-owner-floor.png' });
 
-  await page.getByRole('tab', { name: 'More', exact: true }).click();
-  await page
-    .getByRole('button', { name: /^Insights/ })
-    .first()
-    .click();
-  await expect(page.getByText('Top dishes', { exact: true })).toBeVisible({ timeout: 15_000 });
-  // Only what's on screen: the More list (still in the page, hidden) has a Sales page link.
-  await expect(page.getByText('Sales', { exact: true }).locator('visible=true')).toHaveCount(0);
-  await page.screenshot({ path: 'test-results/payments-off-owner-insights.png' });
-
-  // Old links to payment screens land somewhere useful.
+  // Old links to the payout page land on Integrations.
   await page.goto('/owner/payments', { waitUntil: 'domcontentloaded' });
-  await expect(page).toHaveURL(/\/owner\/(orders|login)/, { timeout: 15_000 });
+  await expect(page).toHaveURL(/\/owner\/(integrations|login)/, { timeout: 15_000 });
 
   expect(errors).toEqual([]);
 });

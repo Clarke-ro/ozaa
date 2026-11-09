@@ -7,7 +7,6 @@ const empty: NoteSources = {
   orders: [],
   calls: [],
   feedback: [],
-  transactions: [],
   staff: [],
   alerts: [],
 };
@@ -38,16 +37,6 @@ describe('buildNotifications', () => {
             createdAt: at(150),
           },
         ],
-        transactions: [
-          {
-            id: 't1',
-            orderNumber: 13,
-            amountPesewas: 82000,
-            currency: 'GHS',
-            status: 'succeeded',
-            createdAt: at(10),
-          },
-        ],
         staff: [{ id: 's1', firstName: 'Kwesi', status: 'active', joinedAt: at(60 * 24) }],
       },
       now,
@@ -55,7 +44,6 @@ describe('buildNotifications', () => {
     expect(notes.map((n) => n.kind)).toEqual([
       'call',
       'order',
-      'payment',
       'feedback',
       'staff_joined',
     ]);
@@ -200,16 +188,6 @@ describe('urgent items (the Needs you section)', () => {
         ...empty,
         alerts: [{ code: 'payout' }],
         calls: [{ id: 'c1', tableCode: '4', reason: 'water', status: 'open', createdAt: at(1) }],
-        transactions: [
-          {
-            id: 't1',
-            orderNumber: 13,
-            amountPesewas: 100,
-            currency: 'GHS',
-            status: 'succeeded',
-            createdAt: at(2),
-          },
-        ],
       },
       now,
     );

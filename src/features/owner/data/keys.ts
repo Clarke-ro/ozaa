@@ -26,8 +26,6 @@ export const ownerKeys = {
   services: (venueId: string) => ['owner-services', venueId] as const,
   staff: (venueId: string) => ['owner-staff', venueId] as const,
   devices: (venueId: string) => ['owner-devices', venueId] as const,
-  transactions: (venueId: string) => ['owner-transactions', venueId] as const,
-  payout: (venueId: string) => ['owner-payout', venueId] as const,
   reviews: (venueId: string) => ['owner-written', venueId] as const,
   /** Add the range after this: `[...sales(id), '7d']`. */
   sales: (venueId: string) => ['owner-sales', venueId] as const,

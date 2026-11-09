@@ -3,7 +3,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { api } from '@/lib/api';
-import { PAYMENTS_ENABLED } from '@/lib/features';
 import { useOwnerSession } from '@/features/session';
 import { buildNotifications, unseenCount, type Note } from '../desk/notifications';
 import { ownerKeys } from './keys';
@@ -60,13 +59,6 @@ export function useNotifications(): {
     queryFn: () => api.ownerListFeedback(venueId, { state: 'new' }),
     ...opts,
   });
-  const txs = useQuery({
-    queryKey: ownerKeys.transactions(venueId),
-    queryFn: () => api.ownerListTransactions(venueId),
-    ...opts,
-    // Payments off: no transactions to read, so the feed never shows payment lines.
-    enabled: on && PAYMENTS_ENABLED,
-  });
   const staff = useQuery({
     queryKey: ownerKeys.staff(venueId),
     queryFn: () => api.ownerListStaff(venueId),
@@ -78,7 +70,7 @@ export function useNotifications(): {
     ...opts,
   });
 
-  const all = [orders, calls, feedback, ...(PAYMENTS_ENABLED ? [txs] : []), staff, desk];
+  const all = [orders, calls, feedback, staff, desk];
   // "Now" is the latest fetch time, so the feed moves on with every refresh.
   const now = Math.max(0, ...all.map((q) => q.dataUpdatedAt));
   const notes = buildNotifications(
@@ -86,7 +78,6 @@ export function useNotifications(): {
       orders: orders.data?.items ?? [],
       calls: calls.data?.items ?? [],
       feedback: feedback.data?.items ?? [],
-      transactions: txs.data?.items ?? [],
       staff: staff.data?.items ?? [],
       alerts: desk.data?.alerts ?? [],
     },

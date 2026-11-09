@@ -1,0 +1,19 @@
+name: PR target
+# Every PR must merge into main. A PR aimed at another PR's branch looks "merged" on GitHub, but
+# its work only lands on that branch and never reaches main (this happened to #58-#60).
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, edited]
+
+jobs:
+  into-main:
+    runs-on: ubuntu-latest
+    steps:
+      - name: The PR merges into main
+        env:
+          BASE: ${{ github.base_ref }}
+        run: |
+          if [ "$BASE" != "main" ]; then
+            echo "::error::This PR merges into '$BASE', not main, so merging it will not put the work on main. Click Edit next to the PR title and change the base to main."
+            exit 1
+          fi

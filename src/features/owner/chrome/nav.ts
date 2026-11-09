@@ -1,5 +1,5 @@
 import type { StaffRole } from '@/features/orders';
-import { PAYMENTS_ENABLED, PREVIEWS_ENABLED } from '@/lib/features';
+import { PREVIEWS_ENABLED } from '@/lib/features';
 
 export type OwnerNavId =
   | 'dashboard'
@@ -11,7 +11,6 @@ export type OwnerNavId =
   | 'loyalty'
   | 'feedback'
   | 'services'
-  | 'payments'
   | 'reviews'
   | 'socials'
   | 'links'
@@ -45,8 +44,6 @@ export type OwnerNavItem = {
   href: string;
   roles: readonly StaffRole[];
   group: NavGroup;
-  /** Only shown when PAYMENTS_ENABLED is true. */
-  payments?: true;
   /** A roadmap preview on sample data. Only shown when PREVIEWS_ENABLED is true. */
   preview?: true;
 };
@@ -93,7 +90,6 @@ export const OWNER_NAV: readonly OwnerNavItem[] = [
   { id: 'customers', href: '/owner/customers', roles: DESK, group: 'sales' },
   { id: 'loyalty', href: '/owner/loyalty', roles: FRONT, group: 'sales' },
   { id: 'promos', href: '/owner/promos', roles: DESK, group: 'sales' },
-  { id: 'payments', href: '/owner/payments', roles: ['owner'], group: 'sales', payments: true },
   { id: 'feedback', href: '/owner/feedback', roles: DESK, group: 'sales' },
   { id: 'reviews', href: '/owner/reviews', roles: DESK, group: 'sales' },
   { id: 'business', href: '/owner/business', roles: ['owner'], group: 'settings' },
@@ -108,14 +104,7 @@ export const OWNER_NAV: readonly OwnerNavItem[] = [
   { id: 'setup', href: '/owner/setup', roles: ['owner'], group: 'settings' },
   { id: 'settings', href: '/owner/settings', roles: DESK, group: 'settings' },
   { id: 'stock', href: '/owner/stock', roles: DESK, group: 'previews', preview: true },
-  {
-    id: 'pos',
-    href: '/owner/pos',
-    roles: FRONT,
-    group: 'previews',
-    payments: true,
-    preview: true,
-  },
+  { id: 'pos', href: '/owner/pos', roles: FRONT, group: 'previews', preview: true },
   { id: 'ai', href: '/owner/ai', roles: DESK, group: 'previews', preview: true },
   { id: 'marketing', href: '/owner/marketing', roles: DESK, group: 'previews', preview: true },
 ];
@@ -133,15 +122,8 @@ const TABS: Record<StaffRole, readonly OwnerNavId[]> = {
   staff_scanner: ['scan'],
 };
 
-export function navFor(
-  role: StaffRole,
-  payments: boolean = PAYMENTS_ENABLED,
-  previews: boolean = PREVIEWS_ENABLED,
-): OwnerNavItem[] {
-  return OWNER_NAV.filter(
-    (item) =>
-      item.roles.includes(role) && (payments || !item.payments) && (previews || !item.preview),
-  );
+export function navFor(role: StaffRole, previews: boolean = PREVIEWS_ENABLED): OwnerNavItem[] {
+  return OWNER_NAV.filter((item) => item.roles.includes(role) && (previews || !item.preview));
 }
 
 export function tabsFor(role: StaffRole): OwnerNavItem[] {
@@ -186,10 +168,25 @@ export function isCurrent(pathname: string, href: string): boolean {
 // Pages every signed-in person may open: the More list and the Help page.
 const OPEN_TO_ALL = ['/owner/more', '/owner/help'];
 
+/** Pages that moved. An old link keeps working for whoever may open the new page; its route redirects. */
+const MOVED: Readonly<Record<string, string>> = {
+  // The payout page went with the split model; payments are set up in Integrations (2026-11-08).
+  '/owner/payments': '/owner/integrations',
+};
+
 export function canOpen(role: StaffRole, pathname: string): boolean {
+  const moved = MOVED[pathname];
+  if (moved) return canOpen(role, moved);
   if (OPEN_TO_ALL.includes(pathname)) return true;
   const item = OWNER_NAV.find((entry) => matches(pathname, entry.href));
   // A page missing from OWNER_NAV stays closed until someone decides who may see it.
   if (!item) return false;
   return item.roles.includes(role);
+}
+
+/** Pages shown on their own, with no tab bar or sidebar, so the owner finishes one job. */
+const FOCUSED: readonly string[] = ['/owner/setup'];
+
+export function isFocused(pathname: string): boolean {
+  return FOCUSED.includes(pathname);
 }

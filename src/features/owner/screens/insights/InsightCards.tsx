@@ -2,7 +2,6 @@ import { useTranslation } from 'react-i18next';
 import { Frown, Meh, Smile } from 'lucide-react-native';
 import type { InsightsReport } from '@/lib/api/types';
 import { pesewas } from '@/lib/brand';
-import { PAYMENTS_ENABLED } from '@/lib/features';
 import { formatMoney } from '@/lib/money';
 import { useTheme } from '@/ui/theme';
 import { AreaChart, BarChart, ChartCard, hourLabel, RankTable, SplitBar } from '../../kit';
@@ -32,29 +31,22 @@ export function SalesLine({ report: r }: Props) {
 }
 
 /**
- * The five best sellers as a table, each with its share of everything sold. With payments off
- * they rank by how many sold, which comes from orders, not from money taken.
+ * The five best sellers by money taken, each with how many sold and their share of all items sold.
  */
 export function TopDishesTable({ report: r }: Props) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const money = (minor: number) => formatMoney(pesewas(minor), r.currency);
   const sold = r.topItems.reduce((sum, item) => sum + item.count, 0);
   const rows = [...r.topItems]
-    .sort((a, b) => (PAYMENTS_ENABLED ? b.pesewas - a.pesewas : b.count - a.count))
+    .sort((a, b) => b.pesewas - a.pesewas)
     .slice(0, 5)
     .map((item) => {
       const share = sold > 0 ? Math.round((item.count / sold) * 100) : 0;
-      return PAYMENTS_ENABLED
-        ? {
-            label: item.name,
-            value: money(item.pesewas),
-            detail: t('ownerInsights.soldShare', { count: item.count, percent: share }),
-          }
-        : {
-            label: item.name,
-            value: item.count.toLocaleString(i18n.language),
-            detail: t('ownerInsights.share', { percent: share }),
-          };
+      return {
+        label: item.name,
+        value: money(item.pesewas),
+        detail: t('ownerInsights.soldShare', { count: item.count, percent: share }),
+      };
     });
   return (
     <ChartCard
@@ -63,7 +55,7 @@ export function TopDishesTable({ report: r }: Props) {
     >
       <RankTable
         nameHead={t('ownerInsights.dishHead')}
-        valueHead={t(PAYMENTS_ENABLED ? 'ownerInsights.salesHead' : 'ownerInsights.soldHead')}
+        valueHead={t('ownerInsights.salesHead')}
         rows={rows}
       />
     </ChartCard>

@@ -1,8 +1,6 @@
 import { Redirect } from 'expo-router';
-import { PaymentsScreen } from '@/features/owner';
-import { PAYMENTS_ENABLED } from '@/lib/features';
 
+// Payments are set up in Integrations now (each venue's own Paystack). Old links land there.
 export default function Route() {
-  if (!PAYMENTS_ENABLED) return <Redirect href="/owner/orders" />;
-  return <PaymentsScreen />;
+  return <Redirect href="/owner/integrations" />;
 }
