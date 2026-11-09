@@ -1,13 +1,14 @@
 import { useEffect, useReducer, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { Check, CircleCheck, Minus, Plus, Receipt, Smartphone } from 'lucide-react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { Receipt } from 'lucide-react-native';
 import * as Crypto from 'expo-crypto';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Redirect } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { api } from '@/lib/api';
+import type { Payment } from '@/lib/api/types';
 import { env } from '@/lib/env';
-import { asGhanaPhone, countryForVenue, parsePhone } from '@/lib/phone';
+import { asGhanaPhone, countryForVenue, formatPhone, parsePhone } from '@/lib/phone';
 import { DEFAULT_CURRENCY, formatMoney } from '@/lib/money';
 import { canPayOnline } from '@/lib/payments';
 import { useVenue } from '@/features/venue';
@@ -16,22 +17,31 @@ import { useGuestSession } from '@/features/session';
 import { Button } from '@/ui/Button';
 import { PageHeader } from '@/ui/PageHeader';
 import { SafeScreen } from '@/ui/Screen';
-import { PriceText } from '@/ui/PriceText';
 import { Text } from '@/ui/Text';
 import { ErrorState, LoadingState } from '@/ui/states';
 import { FilterChips } from '@/ui/FilterChips';
 import { tokens } from '@/theme/tokens';
 import { useTheme } from '@/ui/theme';
 import { payInitial, payTransition } from './paymentMachine';
-import { PayMethods, type PayMethod } from './PayMethods';
+import { secondsLeft } from './paymentWatch';
+import { BillLines } from './BillLines';
+import { PAY_METHODS, PayMethods, type PayMethod } from './PayMethods';
+import { PayProgress } from './PayProgress';
+import { PaySummary } from './PaySummary';
+import { payStyles } from './payStyles';
 import { quoteBill } from './quoteBill';
+import { SplitChoice, type SplitMode } from './SplitChoice';
+import { usePaymentWatch } from './usePaymentWatch';
 import { guestKeys } from '@/lib/queryKeys';
 
 const TIPS = [0, 5, 10, 15] as const;
+// Screens shown in place of the form once a payment has started (PayProgress).
+const IN_PROGRESS = ['awaiting_approval', 'checking', 'paid', 'failed', 'timed_out'];
 
 export function PayScreen({ slug }: { slug: string }) {
   const { t } = useTranslation();
   const theme = useTheme();
+  const router = useRouter();
   const client = useQueryClient();
   const venue = useVenue(slug);
   const currency = venue.data?.currency ?? DEFAULT_CURRENCY;
@@ -46,7 +56,7 @@ export function PayScreen({ slug }: { slug: string }) {
     queryFn: () => api.getOrder(orderId ?? ''),
     enabled: Boolean(orderId),
   });
-  const [mode, setMode] = useState<'whole' | 'equal' | 'items'>('whole');
+  const [mode, setMode] = useState<SplitMode>('whole');
   const [parts, setParts] = useState(2);
   // No tip and an empty number to start: the guest chooses, nothing is decided for them.
   const [tip, setTip] = useState<(typeof TIPS)[number]>(0);
@@ -54,26 +64,15 @@ export function PayScreen({ slug }: { slug: string }) {
   const [method, setMethod] = useState<PayMethod>('mtn');
   const [mine, setMine] = useState<string[]>([]);
   const [payState, send] = useReducer(payTransition, payInitial);
-  const [reference, setReference] = useState<string | null>(null);
+  const [started, setStarted] = useState<Payment | null>(null);
+  const left = usePaymentWatch(payState, send, t('pay.nothingTaken'));
 
-  const payment = useQuery({
-    queryKey: guestKeys.payment(reference),
-    queryFn: () => api.getPayment(reference ?? ''),
-    enabled:
-      Boolean(reference) && (payState.kind === 'awaiting_approval' || payState.kind === 'checking'),
-    refetchInterval: payState.kind === 'awaiting_approval' ? 3000 : false,
-  });
-
+  // Paid: the order now shows paid and a loyalty stamp may have landed.
   useEffect(() => {
-    if (!payment.data) return;
-    if (payment.data.status === 'succeeded') {
-      send({ type: 'server_succeeded', reference: payment.data.reference });
-      void client.invalidateQueries({ queryKey: guestKeys.loyaltyAll() });
-    }
-    if (payment.data.status === 'failed')
-      send({ type: 'server_failed', message: payment.data.failureReason ?? t('pay.failed') });
-    if (payment.data.status === 'abandoned') send({ type: 'verify_still_open' });
-  }, [client, payment.data, t]);
+    if (payState.kind !== 'paid') return;
+    void client.invalidateQueries({ queryKey: guestKeys.order(orderId) });
+    void client.invalidateQueries({ queryKey: guestKeys.loyaltyAll() });
+  }, [client, orderId, payState.kind]);
 
   // On phones the saved visit takes a moment to load; don't flash "nothing to pay" meanwhile.
   if (!hydrated || venue.isLoading) return <LoadingState />;
@@ -118,7 +117,6 @@ export function PayScreen({ slug }: { slug: string }) {
     }
   })();
   const due = preview?.totalPesewas ?? 0;
-  const card = [styles.card, { backgroundColor: theme.surface }];
 
   const start = async () => {
     send({ type: 'request_quote' });
@@ -140,7 +138,7 @@ export function PayScreen({ slug }: { slug: string }) {
       },
       { idempotencyKey },
     );
-    setReference(started.reference);
+    setStarted(started);
     if (started.status === 'pay_offline') {
       send({
         type: 'momo_started',
@@ -152,6 +150,21 @@ export function PayScreen({ slug }: { slug: string }) {
     }
   };
 
+  // What is being paid, for the steps after Pay: the server's amount once it has one.
+  const typed = asGhanaPhone(parsePhone(phone, country));
+  const methodName = t(PAY_METHODS.find((m) => m.id === method)?.label ?? 'pay.card');
+  const charge = {
+    amountPesewas: started?.amountPesewas ?? due,
+    currency,
+    method: methodName,
+    phone: typed && method !== 'card' ? formatPhone(typed) : undefined,
+    testMode: started?.testMode ?? venue.data?.payMethods?.testMode ?? false,
+    displayText: started?.displayText,
+  };
+  const total = started
+    ? secondsLeft(Date.parse(started.approveBy ?? ''), Date.parse(started.createdAt))
+    : 0;
+
   return (
     <SafeScreen>
       <PageHeader
@@ -159,124 +172,29 @@ export function PayScreen({ slug }: { slug: string }) {
         subtitle={t('home.table', { code: order.data.tableCode ?? '' })}
       />
       <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
-        {payState.kind === 'paid' ? (
-          <View style={[card, styles.state]}>
-            <CircleCheck size={32} color={theme.success} />
-            <Text variant="display-m">{t('pay.paid')}</Text>
-          </View>
-        ) : null}
-        {payState.kind === 'awaiting_approval' || payState.kind === 'checking' ? (
-          <View style={[card, styles.state]}>
-            <Smartphone size={32} color={theme.ink} />
-            <Text variant="title" style={styles.center}>
-              {payState.kind === 'checking' ? t('pay.checking') : t('pay.waiting')}
-            </Text>
-          </View>
-        ) : null}
-        {payState.kind === 'choosing' || payState.kind === 'failed' ? (
+        {IN_PROGRESS.includes(payState.kind) ? (
+          <PayProgress
+            state={payState}
+            left={left}
+            total={total}
+            charge={charge}
+            onRetry={() => send({ type: 'reset' })}
+            onDone={() => router.push(`/${slug}/status`)}
+          />
+        ) : (
           <>
-            {payState.kind === 'failed' ? (
-              <Text variant="body" style={{ color: theme.error }}>
-                {t('pay.failed')}
-              </Text>
-            ) : null}
+            <BillLines
+              order={order.data}
+              picking={mode === 'items'}
+              mine={mine}
+              onToggle={(id) =>
+                setMine((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]))
+              }
+              currency={currency}
+            />
+            <SplitChoice mode={mode} onMode={setMode} parts={parts} onParts={setParts} />
 
-            <View style={card}>
-              {order.data.lines.map((line) => {
-                const picked = mine.includes(line.id);
-                const pickable = mode === 'items' && !line.paid;
-                return (
-                  <Pressable
-                    key={line.id}
-                    disabled={!pickable}
-                    accessibilityRole={pickable ? 'checkbox' : undefined}
-                    accessibilityState={pickable ? { checked: picked } : undefined}
-                    onPress={() =>
-                      setMine((cur) =>
-                        picked ? cur.filter((id) => id !== line.id) : [...cur, line.id],
-                      )
-                    }
-                    style={styles.line}
-                  >
-                    {mode === 'items' ? (
-                      <View
-                        style={[
-                          styles.box,
-                          {
-                            borderColor: picked ? theme.ink : theme.line,
-                            backgroundColor: picked ? theme.ink : theme.surface,
-                          },
-                        ]}
-                      >
-                        {picked ? <Check size={14} color={theme.white} strokeWidth={3} /> : null}
-                      </View>
-                    ) : null}
-                    <Text variant="body" style={[styles.flex, line.paid && { color: theme.meta }]}>
-                      {line.quantity} × {line.name}
-                    </Text>
-                    {line.paid ? (
-                      <Text variant="caption" style={{ color: theme.success }}>
-                        {t('pay.linePaid')}
-                      </Text>
-                    ) : (
-                      <PriceText amount={line.totalPesewas} currency={currency} />
-                    )}
-                  </Pressable>
-                );
-              })}
-              <View style={[styles.line, styles.total, { borderColor: theme.line }]}>
-                <Text variant="body-strong" style={styles.flex}>
-                  {t('pay.tableTotal')}
-                </Text>
-                <PriceText amount={order.data.totalPesewas} currency={currency} size="title" />
-              </View>
-            </View>
-
-            <View style={styles.block}>
-              <Text variant="title">{t('pay.how')}</Text>
-              <FilterChips<'whole' | 'equal' | 'items'>
-                label={t('pay.how')}
-                value={mode}
-                onChange={setMode}
-                items={(['whole', 'equal', 'items'] as const).map((id) => ({
-                  id,
-                  label: t(`pay.${id}`),
-                }))}
-              />
-              {mode === 'equal' ? (
-                <View style={[card, styles.people]}>
-                  <Text variant="body-strong" style={styles.flex}>
-                    {t('pay.people')}
-                  </Text>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={t('pay.fewer')}
-                    onPress={() => setParts((v) => Math.max(MIN_PARTS, v - 1))}
-                    style={[styles.step, { backgroundColor: theme.wash }]}
-                  >
-                    <Minus size={18} color={theme.text} />
-                  </Pressable>
-                  <Text variant="title" style={styles.num}>
-                    {parts}
-                  </Text>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={t('pay.more')}
-                    onPress={() => setParts((v) => Math.min(MAX_PARTS, v + 1))}
-                    style={[styles.step, { backgroundColor: theme.wash }]}
-                  >
-                    <Plus size={18} color={theme.text} />
-                  </Pressable>
-                </View>
-              ) : null}
-              {mode === 'items' ? (
-                <Text variant="caption" style={{ color: theme.muted }}>
-                  {t('pay.pickItems')}
-                </Text>
-              ) : null}
-            </View>
-
-            <View style={styles.block}>
+            <View style={payStyles.block}>
               <Text variant="title">{t('pay.tip')}</Text>
               <FilterChips
                 label={t('pay.tip')}
@@ -289,7 +207,7 @@ export function PayScreen({ slug }: { slug: string }) {
               />
             </View>
 
-            <View style={styles.block}>
+            <View style={payStyles.block}>
               <Text variant="title">{t('pay.with')}</Text>
               <PayMethods
                 value={method}
@@ -301,33 +219,21 @@ export function PayScreen({ slug }: { slug: string }) {
               />
             </View>
 
-            <View style={card}>
-              <SumRow
-                label={t('pay.yourShare')}
-                amount={preview?.sharePesewas ?? 0}
-                currency={currency}
-              />
-              <SumRow
-                label={t('pay.tipLine')}
-                amount={preview?.tipPesewas ?? 0}
-                currency={currency}
-              />
-              <View style={[styles.line, styles.total, { borderColor: theme.line }]}>
-                <Text variant="body-strong" style={styles.flex}>
-                  {t('pay.due')}
-                </Text>
-                <PriceText amount={due} currency={currency} size="title" />
-              </View>
-            </View>
+            <PaySummary
+              share={preview?.sharePesewas ?? 0}
+              tip={preview?.tipPesewas ?? 0}
+              due={due}
+              currency={currency}
+            />
             <Button
               label={t('pay.payNow', { amount: formatMoney(pesewas(due), currency) })}
               disabled={!preview || due <= 0}
-              onPress={() => {
-                if (payState.kind === 'failed') send({ type: 'reset' });
+              loading={payState.kind !== 'choosing'}
+              onPress={() =>
                 void start().catch(() =>
-                  send({ type: 'start_rejected', message: t('pay.failed') }),
-                );
-              }}
+                  send({ type: 'start_rejected', message: t('pay.nothingTaken') }),
+                )
+              }
             />
             {venue.data?.payMethods?.testMode ? (
               <Text variant="caption" style={[styles.center, { color: theme.meta }]}>
@@ -335,25 +241,9 @@ export function PayScreen({ slug }: { slug: string }) {
               </Text>
             ) : null}
           </>
-        ) : null}
+        )}
       </ScrollView>
     </SafeScreen>
-  );
-}
-
-// The contract allows splitting between 2 and 20 people.
-const MIN_PARTS = 2;
-const MAX_PARTS = 20;
-
-function SumRow({ label, amount, currency }: { label: string; amount: number; currency: string }) {
-  const theme = useTheme();
-  return (
-    <View style={styles.line}>
-      <Text variant="body" style={[styles.flex, { color: theme.muted }]}>
-        {label}
-      </Text>
-      <PriceText amount={amount} currency={currency} />
-    </View>
   );
 }
 
@@ -363,39 +253,6 @@ const styles = StyleSheet.create({
     gap: tokens.space[5],
     paddingBottom: tokens.space[16],
   },
-  card: {
-    gap: tokens.space[2],
-    padding: tokens.space[4],
-    borderRadius: tokens.radius.lg,
-    borderCurve: 'continuous',
-    boxShadow: tokens.shadow.card,
-  },
-  block: { gap: tokens.space[3] },
-  line: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3], minHeight: 28 },
-  total: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    paddingTop: tokens.space[2],
-    marginTop: tokens.space[1],
-  },
-  flex: { flex: 1 },
-  box: {
-    width: 20,
-    height: 20,
-    borderRadius: tokens.radius.sm - 2,
-    borderWidth: 1.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  people: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
-  step: {
-    width: tokens.touchTarget,
-    height: tokens.touchTarget,
-    borderRadius: tokens.radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  num: { minWidth: 28, textAlign: 'center', fontVariant: ['tabular-nums'] },
-  state: { alignItems: 'center', gap: tokens.space[3], paddingVertical: tokens.space[8] },
   empty: {
     alignItems: 'center',
     gap: tokens.space[3],
