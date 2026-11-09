@@ -615,11 +615,15 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       await gate();
       const live = findOrder(world, orderId);
       const quote = quoteBill(
-        live.order.lines.map((line) => ({
-          id: line.id,
-          totalPesewas: pesewas(line.totalPesewas),
-          paid: line.paid,
-        })),
+        {
+          lines: live.order.lines.map((line) => ({
+            id: line.id,
+            totalPesewas: pesewas(line.totalPesewas),
+            paid: line.paid,
+          })),
+          totalPesewas: pesewas(live.order.totalPesewas),
+          paidPesewas: pesewas(live.order.paidPesewas),
+        },
         {
           mode: body.mode,
           parts: body.parts,

@@ -88,6 +88,22 @@ test('manual methods need their details, then guests see them', async () => {
   expect(methods?.momo).toEqual({ network: 'mtn', number: '+233241234567', name: 'Mama K' });
 });
 
+test('after part of the bill is paid, paying the whole bill asks only for what is left', async () => {
+  const { api } = await signedInMock();
+  const { id } = await api.getVenue('mamas-kitchen');
+  const dish = (await api.getMenu('mamas-kitchen')).items[0]!;
+  const order = await api.ownerCreateOrder(
+    id,
+    { clientOrderId: crypto.randomUUID(), lines: [{ menuItemId: dish.id, quantity: 2 }] },
+    { idempotencyKey: 'part-1' },
+  );
+  // One friend's share, paid in cash: money on the order, but no dish marked paid.
+  await api.ownerRecordCashPayment(order.id, { amountPesewas: dish.pricePesewas });
+  const quote = await api.quoteBill(order.id, { mode: 'whole' });
+  expect(quote.sharePesewas).toBe(order.totalPesewas - dish.pricePesewas);
+  expect(quote.remainingAfterPesewas).toBe(0);
+});
+
 test('staff mark an order paid by method; doing it twice changes nothing; the kitchen cannot', async () => {
   const { api } = await signedInMock();
   const { id } = await api.getVenue('mamas-kitchen');

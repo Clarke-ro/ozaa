@@ -107,16 +107,20 @@ export function PayScreen({ slug }: { slug: string }) {
   if (order.isLoading) return <LoadingState />;
   if (order.isError || !order.data) return <ErrorState onRetry={() => void order.refetch()} />;
 
-  // The same rules the server uses (quoteBill): paid lines are skipped, an equal split gives
-  // leftover pesewas to earlier payers, and My items needs at least one dish picked.
+  // The same rules the server uses (quoteBill): what is left is the order total minus what is
+  // paid, an equal split gives leftover pesewas to earlier payers, and My items needs a dish.
   const preview = (() => {
     try {
       return quoteBill(
-        order.data.lines.map((l) => ({
-          id: l.id,
-          totalPesewas: pesewas(l.totalPesewas),
-          paid: l.paid,
-        })),
+        {
+          lines: order.data.lines.map((l) => ({
+            id: l.id,
+            totalPesewas: pesewas(l.totalPesewas),
+            paid: l.paid,
+          })),
+          totalPesewas: pesewas(order.data.totalPesewas),
+          paidPesewas: pesewas(order.data.paidPesewas),
+        },
         {
           mode,
           parts: mode === 'equal' ? parts : undefined,
