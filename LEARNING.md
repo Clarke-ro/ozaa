@@ -4,6 +4,103 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-09 · Demo builds and real builds
+
+**What we fixed**
+
+Some sample things showed in every build, even one pointed at a real server: the owner sign-in came pre-filled with a made-up number and offered three sample accounts, the landing page had a button to a sample table, and the game board listed five made-up players. Two sample-account labels were also wrong ("Manager", "Waiter" for numbers that are owners in the mock).
+
+**How it works now**
+
+```
+EXPO_PUBLIC_API_MODE=mock  ─►  DEMO = true   sample logins, sample table, sample scores, test numbers
+EXPO_PUBLIC_API_MODE=http  ─►  DEMO = false  none of them
+```
+
+All sample people and places live in `src/mocks/demo.ts`. The mock world and the screens both read from it, so the sign-in buttons can't disagree with who the mock thinks is signed in.
+
+**Files to look at**
+
+- `src/lib/demo.ts`: the one `DEMO` switch.
+- `src/mocks/demo.ts`: sample staff, the code `123456`, loyalty members, the game board.
+
+**New idea: one source of truth for demo data**
+
+When the same sample person is typed in two places, the two copies drift apart (that's how "Bean There (Manager)" happened). Keep the data once and build the labels from it.
+
+**Try it yourself**
+
+Set `EXPO_PUBLIC_API_MODE=http` in `.env`, open `/owner/login`, and see the sample buttons disappear.
+
+---
+
+## 2026-11-09 · Staying signed in: refreshing the owner's token
+
+**What we built**
+
+An owner's access token works for an hour. Before this, nothing renewed it: on a real server every owner page would start failing after an hour, until you signed out by hand. Now the app quietly swaps the refresh token for a new access token and carries on. Sign out also tells the server, so the old token can't be used again.
+
+**How it works**
+
+```
+owner call ─► 401 "expired"
+   └─► refresh once (every screen that failed waits on the same refresh)
+         ├─ new tokens ─► save them ─► try the call again ─► screen carries on
+         ├─ refused    ─► sign out ─► cached owner data wiped ─► sign-in page
+         └─ offline    ─► stay signed in, the screen shows its offline message
+```
+
+**Files to look at**
+
+- `src/lib/api/ownerRetry.ts`: catches the 401 on owner calls and tries once more.
+- `src/features/session/ownerRefresh.ts`: does the refresh, only one at a time.
+- `src/app/owner/_layout.tsx`: wipes owner data whenever the sign-in ends.
+
+**New idea: single flight**
+
+Five owner screens poll at once, so an expired token fails five calls together. If each started its own refresh, the first would use up the refresh token (it works only once) and the other four would be refused and sign you out. So the first caller starts the refresh and the rest wait for that same answer. That's called a single-flight request.
+
+**Try it yourself**
+
+In `ownerRefresh.test.ts`, change the "many calls" test to start 10 calls. How many times does the server get asked?
+
+---
+
+## 2026-11-09 · Fix: what's left to pay on a bill
+
+**What we fixed**
+
+Two ways the bill came out wrong:
+
+- Three friends split a GH₵300 bill. One pays GH₵100 as an equal share. The next taps **Pay the whole bill** and was asked for GH₵300 again, not GH₵200.
+- A delivery order paid with **Pay the whole bill** left out the delivery fee, so the order stayed part paid.
+
+**How it works now**
+
+```
+what's left = order total (dishes + delivery fee) − already paid
+whole bill  = what's left
+equal share = what's left ÷ people still to pay (rounded up)
+my dishes   = the dishes you pick, never more than what's left
+```
+
+Before, "what's left" was worked out by adding up the dishes not marked paid. An equal share pays money, not dishes, so no dish was ever marked and the old sum never went down.
+
+**Files to look at**
+
+- `src/features/pay/quoteBill.ts` and its test.
+- `src/mocks/mockClient.payments.test.ts`: the same rule through the mock API.
+
+**New idea: one source of truth**
+
+The order already says its total and how much is paid. Working the same number out a second way (from the dishes) gave a second answer that could disagree. Read the number the server gives you instead of rebuilding it.
+
+**Try it yourself**
+
+In `quoteBill.test.ts`, add a test where two people pay equal shares of a GH₵100 bill, then a third pays the whole bill. What should the third person pay?
+
+---
+
 ## 2026-11-09 · Owner pages, round 3: cards, full pages and a warmer background
 
 **What we built**
