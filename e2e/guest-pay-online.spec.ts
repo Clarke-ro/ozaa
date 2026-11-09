@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 // BUILD.md 4b.17: guests pay in the app only where the venue connected its own Paystack. In the
 // sample data Bean There has test keys connected; Mama's Kitchen takes payment in person
-// (payments-off.spec.ts covers that side).
+// (pay-in-person.spec.ts covers that side).
 
 test('guest at a venue with Paystack: order, pay by MoMo in test mode, and see it paid', async ({
   page,

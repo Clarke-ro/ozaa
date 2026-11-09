@@ -9,7 +9,7 @@ const tabs = [
 ] as const;
 
 // Everything else the owner reaches from More. Previews are labelled "<name>, Preview".
-// Payments and the Register preview are off in this build (PAYMENTS_ENABLED=false).
+// The Register preview is off unless PREVIEWS_ENABLED=true; payments are set up in Integrations.
 const moreItems = [
   ['Floor', 'owner-floor'],
   ['Calls', 'owner-calls'],

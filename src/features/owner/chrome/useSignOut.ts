@@ -12,7 +12,7 @@ export function useSignOut() {
   return useCallback(() => {
     clearOwner();
     router.replace('/owner/login');
-    // Drop this account's orders, customers and payouts so the next person to sign in on this
+    // Drop this account's orders, customers and payment settings so the next person to sign in on this
     // device never sees them, not even for a moment.
     client.removeQueries({ predicate: (query) => isOwnerQuery(query.queryKey) });
   }, [clearOwner, router, client]);

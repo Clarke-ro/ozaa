@@ -37,15 +37,10 @@ export function calendarDay(iso: string, timeZone: string): string {
 export function summarizeDay(input: {
   orders: DayOrder[];
   openCalls: number;
-  /** Bill requests not yet resolved (open or acknowledged). Only used with payments off. */
-  openBillCalls: number;
-  /** PAYMENTS_ENABLED. Off: no payout alert, and bills come from bill requests, not payment status. */
-  payments: boolean;
   ratings: number[];
   nowIso: string;
   timeZone: string;
   yesterdayPesewas: number;
-  payoutVerified: boolean;
   soldOut: string[];
 }): DaySummary {
   const today = calendarDay(input.nowIso, input.timeZone);
@@ -77,17 +72,14 @@ export function summarizeDay(input: {
     ratingCount === 0 ? null : input.ratings.reduce((sum, stars) => sum + stars, 0) / ratingCount;
   const alerts: DeskAlert[] = [];
   if (input.openCalls > 0) alerts.push({ code: 'calls', count: input.openCalls });
-  // With payments off nothing marks an order paid, so counting unpaid orders would never clear.
-  // The guest's bill request is the signal instead, and it clears when staff settle it.
-  const bills = input.payments
-    ? input.orders.filter(
-        (order) =>
-          order.status === 'served' &&
-          (order.paymentStatus === 'unpaid' || order.paymentStatus === 'part_paid'),
-      ).length
-    : input.openBillCalls;
+  // A served order still owing money is a bill to collect. It clears when the guest pays online
+  // or staff mark it paid (Clarke, 2026-11-08). The old payout alert went with the split model.
+  const bills = input.orders.filter(
+    (order) =>
+      order.status === 'served' &&
+      (order.paymentStatus === 'unpaid' || order.paymentStatus === 'part_paid'),
+  ).length;
   if (bills > 0) alerts.push({ code: 'bills', count: bills });
-  if (input.payments && !input.payoutVerified) alerts.push({ code: 'payout' });
   if (input.soldOut.length > 0)
     alerts.push({
       code: 'sold_out',

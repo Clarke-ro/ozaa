@@ -6,7 +6,6 @@ import { Frown, Meh, Smile } from 'lucide-react-native';
 import { api } from '@/lib/api';
 import type { InsightsReport } from '@/lib/api/types';
 import { pesewas } from '@/lib/brand';
-import { PAYMENTS_ENABLED } from '@/lib/features';
 import { formatMoney } from '@/lib/money';
 import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
@@ -36,7 +35,7 @@ const RANGES: readonly Range[] = ['today', '7d', '30d', '90d'];
  */
 export function InsightsScreen() {
   const theme = useTheme();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const [range, setRange] = useState<Range>('30d');
   const report = useQuery({
@@ -49,7 +48,6 @@ export function InsightsScreen() {
   const mood = moodTotals(r?.feedbackSentimentSeries);
   const moodTotal = mood.positive + mood.neutral + mood.negative;
   const peak = r ? busiestHour(r.peakHours) : null;
-  const n = (v: number) => v.toLocaleString(i18n.language);
 
   return (
     <OwnerPage
@@ -77,43 +75,34 @@ export function InsightsScreen() {
           <View style={styles.stack}>
             <InsightFigures report={r} peak={peak} feedback={moodTotal} />
 
-            {PAYMENTS_ENABLED ? (
-              <ChartCard
-                title={t('ownerInsights.sales')}
-                figure={money(r.salesPesewas)}
-                rows={r.series.map((p) => ({ label: p.label, value: money(p.pesewas) }))}
-                empty={r.series.length ? undefined : t('ownerDash.noTrend')}
-              >
-                <BarChart
-                  bars={r.series.map((p) => ({ label: p.label, value: p.pesewas }))}
-                  format={money}
-                  summary={t('ownerInsights.sales')}
-                />
-              </ChartCard>
-            ) : null}
+            <ChartCard
+              title={t('ownerInsights.sales')}
+              figure={money(r.salesPesewas)}
+              rows={r.series.map((p) => ({ label: p.label, value: money(p.pesewas) }))}
+              empty={r.series.length ? undefined : t('ownerDash.noTrend')}
+            >
+              <BarChart
+                bars={r.series.map((p) => ({ label: p.label, value: p.pesewas }))}
+                format={money}
+                summary={t('ownerInsights.sales')}
+              />
+            </ChartCard>
 
             <ChartCard
               title={t('ownerInsights.topDishes')}
               empty={r.topItems.length ? undefined : t('ownerDash.noTrend')}
             >
-              {/* Payments off: rank by how many sold, which comes from orders, not money taken. */}
               <RankTable
                 nameHead={t('ownerInsights.dishHead')}
-                valueHead={t(
-                  PAYMENTS_ENABLED ? 'ownerInsights.salesHead' : 'ownerInsights.soldHead',
-                )}
+                valueHead={t('ownerInsights.salesHead')}
                 rows={[...r.topItems]
-                  .sort((a, b) => (PAYMENTS_ENABLED ? b.pesewas - a.pesewas : b.count - a.count))
+                  .sort((a, b) => b.pesewas - a.pesewas)
                   .slice(0, 5)
-                  .map((item) =>
-                    PAYMENTS_ENABLED
-                      ? {
-                          label: item.name,
-                          value: money(item.pesewas),
-                          detail: t('ownerInsights.sold', { count: item.count }),
-                        }
-                      : { label: item.name, value: n(item.count) },
-                  )}
+                  .map((item) => ({
+                    label: item.name,
+                    value: money(item.pesewas),
+                    detail: t('ownerInsights.sold', { count: item.count }),
+                  }))}
               />
             </ChartCard>
 

@@ -16,7 +16,5 @@ export function figureText(f: Figure, currency: string, t: TFunction): FigureTex
       return { label: t('ownerDash.stats.pending'), value: String(f.value) };
     case 'visitors':
       return { label: t('ownerDash.stats.visitors'), value: String(f.value) };
-    case 'tables':
-      return { label: t('ownerDash.stats.tables'), value: String(f.value) };
   }
 }

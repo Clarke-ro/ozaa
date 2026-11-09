@@ -2,7 +2,6 @@ import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { REASON_ICON } from '@/features/waiter';
 import type { WaiterCall } from '@/lib/api/types';
-import { PAYMENTS_ENABLED } from '@/lib/features';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
@@ -52,9 +51,7 @@ export function CallRow({
     call.staffFirstName ? t('ownerCalls.by', { name: call.staffFirstName }) : null,
   ].filter(Boolean);
   const edge = open ? theme.error : live ? theme.meta : null;
-  const doneLabel =
-    // Payments off: resolving a bill request is how a table's bill is closed.
-    !PAYMENTS_ENABLED && call.reason === 'bill' ? t('owner.billSettled') : t('owner.doneCall');
+  const doneLabel = t('owner.doneCall');
 
   const actions = live ? (
     <View style={[styles.actions, wide && styles.actionsWide]}>

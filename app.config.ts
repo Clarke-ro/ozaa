@@ -55,8 +55,6 @@ const config: ExpoConfig = {
   experiments: { typedRoutes: true, chunking: { mode: 'granular' } },
   extra: {
     router: { origin: false },
-    // Payments are off in this build (docs/payments-removed.md). Start with PAYMENTS_ENABLED=true to show them.
-    paymentsEnabled: process.env.PAYMENTS_ENABLED === 'true',
     // Roadmap previews (Stock, AI waiter, Marketing, Register) run on sample data. Off unless
     // PREVIEWS_ENABLED=true, so a real venue never sees made-up numbers.
     previewsEnabled: process.env.PREVIEWS_ENABLED === 'true',
