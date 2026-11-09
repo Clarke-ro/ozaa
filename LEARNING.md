@@ -1371,38 +1371,3 @@ In the contract, the secret key is marked `writeOnly`. Apps can send it, but no 
 **Try it yourself**
 
 Connect with `pk_test_` and `sk_test_` keys from your own Paystack test account, then try a `pk_live_` key and see why it's refused.
-
----
-
-## 2026-11-09 · Fix: what's left to pay on a bill
-
-**What we fixed**
-
-Two ways the bill came out wrong:
-
-- Three friends split a GH₵300 bill. One pays GH₵100 as an equal share. The next taps **Pay the whole bill** and was asked for GH₵300 again, not GH₵200.
-- A delivery order paid with **Pay the whole bill** left out the delivery fee, so the order stayed part paid.
-
-**How it works now**
-
-```
-what's left = order total (dishes + delivery fee) − already paid
-whole bill  = what's left
-equal share = what's left ÷ people still to pay (rounded up)
-my dishes   = the dishes you pick, never more than what's left
-```
-
-Before, "what's left" was worked out by adding up the dishes not marked paid. An equal share pays money, not dishes, so no dish was ever marked and the old sum never went down.
-
-**Files to look at**
-
-- `src/features/pay/quoteBill.ts` and its test.
-- `src/mocks/mockClient.payments.test.ts`: the same rule through the mock API.
-
-**New idea: one source of truth**
-
-The order already says its total and how much is paid. Working the same number out a second way (from the dishes) gave a second answer that could disagree. Read the number the server gives you instead of rebuilding it.
-
-**Try it yourself**
-
-In `quoteBill.test.ts`, add a test where two people pay equal shares of a GH₵100 bill, then a third pays the whole bill. What should the third person pay?
