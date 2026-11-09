@@ -43,6 +43,7 @@ export function PayProgress({
   charge,
   onRetry,
   onDone,
+  onReceipt,
 }: {
   state: PayUiState;
   left: number;
@@ -50,6 +51,7 @@ export function PayProgress({
   charge: Charge;
   onRetry: () => void;
   onDone: () => void;
+  onReceipt: (reference: string) => void;
 }) {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -109,6 +111,11 @@ export function PayProgress({
       return (
         <Stage icon={CircleCheck} tone="success" title={amount} body={t('pay.paid')}>
           <Button label={t('pay.backToOrder')} onPress={onDone} />
+          <Button
+            label={t('pay.seeReceipt')}
+            tone="ghost"
+            onPress={() => onReceipt(state.reference)}
+          />
         </Stage>
       );
     case 'failed':
