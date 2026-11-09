@@ -1,7 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { VenuePublic } from '@/lib/api/types';
-import { PAYMENT_SERVICES } from '@/lib/features';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { ServiceList } from './ServiceList';
@@ -17,10 +16,13 @@ export const NOT_BUILT: readonly string[] = ['reserve', 'events'];
  */
 export function ServiceGrid({
   services,
+  payOnline,
   onOpen,
 }: {
   slug: string;
   services: VenuePublic['services'];
+  /** The venue's own Paystack is connected. Without it there is no in-app Pay, so no Pay card. */
+  payOnline: boolean;
   onOpen: (id: string) => void;
 }) {
   const { t } = useTranslation();
@@ -32,7 +34,7 @@ export function ServiceGrid({
             service.enabled &&
             service.section === section &&
             !NOT_BUILT.includes(service.id) &&
-            !PAYMENT_SERVICES.includes(service.id),
+            (service.id !== 'pay' || payOnline),
         );
         if (items.length === 0) return null;
         return (

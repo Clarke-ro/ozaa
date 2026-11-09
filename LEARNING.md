@@ -4,6 +4,34 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-08 · Guests pay in the app only where the venue connected Paystack (BUILD.md box 4b.17, part 4)
+
+**What we built**
+A guest sees "Pay & split bill" only at a venue that has connected its own Paystack account. Everywhere else they pay in person, and staff mark the order paid.
+
+**How it works**
+```
+venue page loads → payMethods.online?
+  yes → Pay card on home, Pay button on the order, MoMo or card in the app
+  no  → "Pay at the counter, or ask your waiter for the bill."
+        an old /pay link goes to the order instead
+```
+The server makes the same check. Starting a payment at a venue with no keys fails with `online_pay_off`, so the rule holds even if the app is out of date.
+
+**Files to look at**
+- `src/lib/payments.ts`: `canPayOnline`, the one place that decides.
+- `src/features/venue/ServiceGrid.tsx`, `src/features/orders/StatusScreen.tsx`, `src/features/pay/PayScreen.tsx`: the three places guests meet it.
+- `src/mocks/mockClient.ts` (`initializePayment`): the server-side check.
+- `e2e/guest-pay-online.spec.ts`: a guest at Bean There orders, pays by MoMo, and sees it paid.
+
+**New idea: a build switch versus data**
+Before, one switch (`PAYMENTS_ENABLED`) turned payments on or off for every restaurant at once, and changing it meant a new build. Now each restaurant's own data decides: has it connected Paystack? Two restaurants on the same app can behave differently, and an owner changes it from Integrations without anyone shipping an update.
+
+**Try it yourself**
+Open `/bean-there/t/7` and see the Pay card, then `/mamas-kitchen/t/12` and see it gone. In `samplePaymentSettings` (`src/mocks/world.ts`), change `'bean-there'` to `'mamas-kitchen'`, reload, and watch the card swap places.
+
+---
+
 ## 2026-11-08 · Owner app in the MenuRite layout
 
 **What we built**

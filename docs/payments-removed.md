@@ -25,9 +25,9 @@ PAYMENTS_ENABLED=true npx expo start --web --clear
 
 | Area | With payments off |
 |---|---|
-| Guest home | The "Pay & split bill" tile is hidden (`PAYMENT_SERVICES` in `ServiceGrid`). |
-| Guest order status | No Pay button and no paid/unpaid line. It says "Pay at the counter, or ask your waiter for the bill." |
-| `/[venue]/pay` | Redirects to the order status page. |
+| Guest home | **Per venue now (4b.17):** the "Pay & split bill" tile shows only when the venue connected its own Paystack (`canPayOnline`). |
+| Guest order status | **Per venue now:** a Pay button where Paystack is connected. Elsewhere it says "Pay at the counter, or ask your waiter for the bill.", and shows "Paid" once staff mark it. |
+| `/[venue]/pay` | **Per venue now:** redirects to the order status page when the venue has no Paystack. |
 | Ask for the bill | Unchanged: it's a waiter call with reason `bill`. |
 | Owner nav | "Payments" and the "Register" (counter till) preview are hidden (`payments: true` in `nav.ts`). |
 | `/owner/payments`, `/owner/pos` | Redirect to Orders. |

@@ -3,6 +3,7 @@ import type {
   ManualPayments,
   PaymentSettings,
   PaystackKeysInput,
+  VenuePublic,
 } from '@/lib/api/types';
 import { isGhanaPhone } from '@/lib/brand';
 
@@ -67,4 +68,12 @@ export function guestPayMethods(settings: PaymentSettings): GuestPayMethods {
         ? { network: momo.network, number: momo.number, name: momo.name ?? '' }
         : null,
   };
+}
+
+/**
+ * True when guests can pay in the app: the venue's own Paystack is connected. Otherwise they pay
+ * in person and staff mark the order paid (BUILD.md 4b.17).
+ */
+export function canPayOnline(venue: Pick<VenuePublic, 'payMethods'> | undefined): boolean {
+  return venue?.payMethods?.online === true;
 }
