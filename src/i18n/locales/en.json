@@ -269,7 +269,20 @@
     "yourShare": "Your share",
     "tipLine": "Tip",
     "due": "To pay",
-    "payNow": "Pay {{amount}}"
+    "payNow": "Pay {{amount}}",
+    "seeReceipt": "See receipt"
+  },
+  "receipt": {
+    "title": "Receipt",
+    "order": "Order {{number}}",
+    "subtotal": "Subtotal",
+    "paid": "You paid",
+    "paidWith": "Paid with {{method}}",
+    "reference": "Reference {{reference}}",
+    "stillToPay": "Still to pay at the table",
+    "test": "Test payment. No money moved.",
+    "none": "No receipt yet",
+    "noneBody": "This payment has not gone through, so there is nothing to show."
   },
   "loyalty": {
     "title": "Loyalty card",
