@@ -4,6 +4,35 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-09 · Waiting for a MoMo approval (BUILD.md box 2.4)
+
+**What we built**
+After a guest taps Pay with MoMo, they see "Approve on your phone", what they're paying, and a 3:00 countdown. Then one of three endings: paid, didn't go through (with the network's reason), or time ran out. The last two say nothing was taken and offer Try again.
+
+**How it works**
+```
+Pay → "Approve on your phone"  3:00 … 0:00   (asks the server every 3 s)
+        succeeded → Paid
+        failed    → That didn't go through + reason
+        0:00      → Still checking… (asks the server to verify, up to 5 times)
+                      succeeded → Paid
+                      abandoned / still open → Time ran out
+```
+
+**Files to look at**
+- `src/features/pay/paymentWatch.ts` and its test: the countdown and what each server status means.
+- `src/features/pay/usePaymentWatch.ts`: the timer and the checks.
+- `src/features/pay/PayProgress.tsx`: the four screens.
+- `e2e/guest-pay-online.spec.ts`: one payment that works, one that fails.
+
+**New idea: never trust the countdown to say "failed"**
+The countdown runs on the guest's phone, and phone clocks drift. Someone can approve at 0:01 and Paystack may report it a few seconds later. So when the clock hits 0:00 we don't say "failed". We ask the server again a few times first. Only the server's word moves money, and only "succeeded" counts as paid.
+
+**Try it yourself**
+In the mock, a MoMo number ending in 0 fails and one ending in 9 never gets approved. Pay at `/bean-there/t/7` with 0241234569 and wait three minutes to see Time ran out.
+
+---
+
 ## 2026-11-08 · A clearer Setup, with Skip on payments
 
 **What we built**
