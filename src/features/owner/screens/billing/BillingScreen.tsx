@@ -5,13 +5,13 @@ import { Check, Minus } from 'lucide-react-native';
 import { api } from '@/lib/api';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
+import { fontFamily, useTheme } from '@/ui/theme';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
-import { DeskCard, StatusPill } from '../../kit';
+import { cardStyle, DeskCard, StatusPill } from '../../kit';
 import { PLANS, PLANS_ARE_PLACEHOLDERS, monthlyPrice, type PlanInfo } from './plans';
 
-/** The owner's plan and the others on offer, side by side on wide screens. */
+/** The plan you are on in its own card, then every plan side by side on wide screens. */
 export function BillingScreen() {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -23,7 +23,7 @@ export function BillingScreen() {
   });
 
   return (
-    <OwnerPage title={t('ownerBilling.title')}>
+    <OwnerPage title={t('ownerBilling.title')} subtitle={t('ownerBilling.lead')}>
       <DeskWait
         loading={business.isPending}
         error={business.isError}
@@ -31,13 +31,11 @@ export function BillingScreen() {
       >
         {business.data ? (
           <View style={styles.stack}>
+            <CurrentPlan planId={business.data.business.plan} />
             <View style={[styles.list, threeCol && styles.row]}>
               {PLANS.map((plan) => (
                 <View key={plan.id} style={threeCol ? styles.col : undefined}>
-                  <PlanCard
-                    plan={plan}
-                    current={plan.id === business.data.business.plan}
-                  />
+                  <PlanCard plan={plan} current={plan.id === business.data.business.plan} />
                 </View>
               ))}
             </View>
@@ -50,6 +48,40 @@ export function BillingScreen() {
         ) : null}
       </DeskWait>
     </OwnerPage>
+  );
+}
+
+/** The plan the business is on, in its own card at the top: name, Active, and what it costs. */
+function CurrentPlan({ planId }: { planId: PlanInfo['id'] }) {
+  const { t } = useTranslation();
+  const theme = useTheme();
+  const plan = PLANS.find((p) => p.id === planId);
+  if (!plan) return null;
+  const price =
+    plan.monthly === 0
+      ? t('ownerBilling.free')
+      : t('ownerBilling.perMonth', { price: monthlyPrice(plan) });
+  return (
+    <View style={[styles.current, cardStyle(theme)]}>
+      <View style={styles.head}>
+        <View style={styles.name}>
+          <Text variant="caption" style={[styles.caps, { color: theme.muted }]}>
+            {t('ownerBilling.yourPlan').toUpperCase()}
+          </Text>
+          <Text variant="display-m">{plan.name}</Text>
+        </View>
+        <StatusPill label={t('ownerPay.active')} tone="success" boxed />
+      </View>
+      <View style={[styles.line, { borderTopColor: theme.line }]}>
+        <Text variant="body" style={{ color: theme.muted }}>
+          {t('ownerBilling.price')}
+        </Text>
+        <Text variant="body-strong">{price}</Text>
+      </View>
+      <Text variant="caption" style={{ color: theme.muted }}>
+        {t('ownerBilling.notLive')}
+      </Text>
+    </View>
   );
 }
 
@@ -108,4 +140,12 @@ const styles = StyleSheet.create({
   name: { flex: 1, gap: 2 },
   features: { gap: tokens.space[2] },
   feature: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
+  current: { padding: tokens.space[4], gap: tokens.space[3] },
+  caps: { fontFamily: fontFamily.strong, letterSpacing: tokens.owner.type.caps.letterSpacing },
+  line: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingTop: tokens.space[3],
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
 });

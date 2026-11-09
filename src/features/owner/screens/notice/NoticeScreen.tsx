@@ -61,7 +61,7 @@ export function NoticeScreen() {
 
   return (
     <OwnerPage
-      title={t('owner.notice')}
+      title={t('owner.notice')} subtitle={t('ownerNotice.lead')}
       footer={
         <SaveBar
           visible={draft.dirty}

@@ -46,7 +46,7 @@ export function BusinessScreen() {
 
   return (
     <OwnerPage
-      title={t('owner.business')}
+      title={t('owner.business')} subtitle={t('ownerLead.business')}
       footer={
         <SaveBar
           visible={draft.dirty}

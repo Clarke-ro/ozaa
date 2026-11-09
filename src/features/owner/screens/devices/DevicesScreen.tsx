@@ -47,7 +47,7 @@ export function DevicesScreen() {
 
   return (
     <OwnerPage
-      title={t('owner.devices')}
+      title={t('owner.devices')} subtitle={t('ownerLead.devices')}
       action={
         <Button
           label={t('ownerDevices.pairShort')}

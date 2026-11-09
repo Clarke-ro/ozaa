@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Linking, StyleSheet, View } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { CircleCheck } from 'lucide-react-native';
+import { CircleCheck, CreditCard } from 'lucide-react-native';
 import { api } from '@/lib/api';
 import { toMessageKey } from '@/lib/api/errors';
 import type { PaymentSettings } from '@/lib/api/types';
@@ -92,7 +92,13 @@ export function PaystackCard({
   if (paystack) {
     const since = new Date(paystack.connectedAt).toLocaleDateString(i18n.language);
     return (
-      <Section title={t('ownerPay.paystack')} note={t('ownerPay.ownAccount')}>
+      <Section
+        title={t('ownerPay.paystack')}
+        subtitle={t('ownerPay.ownAccount')}
+        icon={CreditCard}
+        badge={<StatusPill label={t('ownerPay.active')} tone="success" boxed />}
+        collapsible
+      >
         <SectionBody>
           <View style={styles.stack}>
             <View style={styles.row}>
@@ -156,7 +162,13 @@ export function PaystackCard({
 
   const error = tried && !check.ok ? t(`ownerPay.err.${check.code}`) : undefined;
   return (
-    <Section title={t('ownerPay.paystack')} note={t('ownerPay.ownAccount')}>
+    <Section
+      title={t('ownerPay.paystack')}
+      subtitle={t('ownerPay.ownAccount')}
+      icon={CreditCard}
+      collapsible
+      defaultOpen
+    >
       <SectionBody>
         <View style={styles.stack}>
           <Text variant="body-strong">{t('ownerPay.whereTitle')}</Text>

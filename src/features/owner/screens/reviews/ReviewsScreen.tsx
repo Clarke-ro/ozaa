@@ -48,7 +48,7 @@ export function ReviewsScreen() {
   const average = all.length ? all.reduce((sum, r) => sum + r.stars, 0) / all.length : null;
 
   return (
-    <OwnerPage title={t('owner.reviews')}>
+    <OwnerPage title={t('owner.reviews')} subtitle={t('ownerLead.reviews')}>
       <DeskWait
         loading={reviews.isLoading}
         error={reviews.isError}
