@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
 import type { InsightsReport } from '@/lib/api/types';
-import { PAYMENTS_ENABLED } from '@/lib/features';
 import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
 import { useOwnerLayout } from '../../chrome/layout';
@@ -27,7 +26,7 @@ const RANGES: readonly Range[] = ['today', '7d', '30d', '90d'];
 
 /**
  * Insights as an analytics page: the period picker on the right of the title, the headline
- * figures (four across on wide screens), sales as a line when payments are on, then the
+ * figures (four across on wide screens), sales as a line, then the
  * breakdowns two by two on wide screens: top dishes and busy hours, returning guests and
  * feedback mood, and loyalty stamps over time.
  */
@@ -82,7 +81,7 @@ export function InsightsScreen() {
               feedback={mood.positive + mood.neutral + mood.negative}
               columns={wide ? 4 : 2}
             />
-            {PAYMENTS_ENABLED ? <SalesLine report={r} /> : null}
+            <SalesLine report={r} />
             {pair(<TopDishesTable report={r} />, <BusyHours report={r} />)}
             {pair(<GuestsSplit report={r} />, <MoodSplit report={r} />)}
             <StampsLine report={r} />

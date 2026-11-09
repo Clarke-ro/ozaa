@@ -246,8 +246,14 @@
     "test": "Test payment",
     "waiting": "Check your phone and enter your PIN to approve.",
     "paid": "Paid. Your order is with the kitchen.",
-    "failed": "That didn't go through and nothing was taken. Try again?",
     "checking": "Still checking…",
+    "approveTitle": "Approve on your phone",
+    "left": "left to approve",
+    "failedTitle": "That didn't go through",
+    "nothingTaken": "Nothing was taken.",
+    "timedOutTitle": "Time ran out",
+    "timedOutBody": "The request on your phone expired before you approved it. Nothing was taken.",
+    "backToOrder": "Back to your order",
     "offline": "You're offline. Connect to pay.",
     "tryAgain": "Try again",
     "testNumber": "Test mode: any valid number works and nothing is charged.",
@@ -396,7 +402,6 @@
     "loyalty": "Loyalty",
     "services": "Services",
     "payments": "Payments",
-    "payouts": "Payouts",
     "reviews": "Reviews",
     "tables": "QR codes and links",
     "branding": "Branding",
@@ -417,7 +422,6 @@
     "rating": "Rating",
     "noRating": "No ratings yet",
     "noAlerts": "Nothing needs you right now.",
-    "alertPayout": "The payout account is not checked yet.",
     "alertSold": "Sold out. {{detail}}",
     "free": "Free",
     "seated": "Seated",
@@ -425,13 +429,11 @@
     "waitingPay": "Waiting for the bill",
     "needsWaiter": "Needs a waiter",
     "noBill": "No open bill on this table.",
-    "cash": "Mark paid in cash",
     "start": "Start preparing",
     "markReady": "Mark ready",
     "markServed": "Mark served",
     "onTheWay": "On my way",
     "doneCall": "Done",
-    "billSettled": "Bill settled",
     "noCalls": "No one is calling.",
     "callOpen": "Waiting for someone to pick this up.",
     "noOrders": "No tickets in the kitchen.",
@@ -455,9 +457,6 @@
     "pendingSettle": "Waiting to settle",
     "failedPay": "Failed",
     "testPayment": "Test payment",
-    "payoutLine": "Pays out to {{account}}. {{status}}.",
-    "payoutReady": "Checked",
-    "payoutWait": "Not checked yet",
     "toCheck": "To check",
     "featured": "Featured",
     "hidden": "Hidden",
@@ -487,7 +486,6 @@
     "setupName": "Venue",
     "setupTables": "Tables",
     "setupWifi": "Wi-Fi",
-    "setupPayout": "Payout",
     "setupDone": "You can print the table QR codes and open the floor.",
     "next": "Next",
     "finish": "Finish setup",
@@ -603,7 +601,6 @@
       "feedback": "Private notes from guests",
       "reviews": "Ratings and replies",
       "insights": "Top dishes, busy hours and guest mood",
-      "payments": "Payments, refunds and payouts",
       "staff": "Who can sign in and what they see",
       "devices": "Phones paired for scanning",
       "business": "Business name and locations",
@@ -705,7 +702,6 @@
     "howToday": "Here's how {{venue}} is doing today",
     "salesToday": "Sales today",
     "viewSales": "View sales",
-    "viewOrders": "View orders",
     "quickActions": "Quick actions",
     "trends": "Trends",
     "tiles": {
@@ -754,8 +750,7 @@
     "stats": {
       "ordersToday": "Orders today",
       "pending": "Pending orders",
-      "visitors": "Visitors today",
-      "tables": "Tables seated"
+      "visitors": "Visitors today"
     }
   },
   "ownerTables": {
@@ -1285,7 +1280,7 @@
   },
   "ownerBusiness": {
     "business": "Business",
-    "nameNote": "Shown on receipts and payout records.",
+    "nameNote": "Shown on receipts.",
     "locations_one": "1 location",
     "locations_other": "{{count}} locations",
     "addLocation": "Add location",
@@ -1305,7 +1300,7 @@
     "phone": "Phone",
     "email": "Email",
     "separate": "Separate business",
-    "separateHint": "Its own name on receipts and its own payouts.",
+    "separateHint": "Its own name on receipts and its own Paystack account.",
     "editA11y": "Edit {{name}}",
     "locationsLabel": "Locations"
   },
@@ -1316,7 +1311,7 @@
     "networkMissing": "Add the network name.",
     "password": "Password",
     "security": "Security",
-    "open": "No password",
+    "open": "None",
     "hidden": "Hidden network",
     "hiddenHint": "Turn on if the name does not show in the phone list.",
     "gameStamp": "Stamp for a high score",
@@ -1353,11 +1348,9 @@
       "90d": "Last 90 days"
     },
     "feedbackCount": "Feedback notes",
-    "share": "{{percent}}% of dishes sold",
     "soldShare_one": "1 sold · {{percent}}% of dishes sold",
     "soldShare_other": "{{count}} sold · {{percent}}% of dishes sold",
     "dishHead": "Dish",
-    "soldHead": "Sold",
     "salesHead": "Sales",
     "sales": "Sales",
     "topDishes": "Top dishes",
@@ -1501,56 +1494,6 @@
     "waited_other": "waiting {{count}} min",
     "by": "{{name}} is on it"
   },
-  "ownerPayments": {
-    "payoutTitle": "Payouts go to",
-    "fee": "Cravins fee: {{percent}}% of each payment.",
-    "payoutType": {
-      "bank": "Bank",
-      "momo": "Mobile money"
-    },
-    "collected": "Collected",
-    "settled": "Paid out",
-    "refundedNote": "{{amount}} refunded",
-    "list": "Payments",
-    "empty": "No payments yet",
-    "emptyBody": "Payments from guests show here as they come in.",
-    "orderTitle": "Order #{{number}}",
-    "test": "Test payment",
-    "amount": "Amount",
-    "method": "Method",
-    "payment": "Payment",
-    "payout": "Payout",
-    "when": "When",
-    "reference": "Reference",
-    "methods": {
-      "momo": "Mobile money",
-      "card": "Card",
-      "cash": "Cash"
-    },
-    "providers": {
-      "mtn": "MTN MoMo",
-      "vod": "Telecel Cash",
-      "atl": "AT Money"
-    },
-    "status": {
-      "succeeded": "Paid",
-      "failed": "Failed",
-      "abandoned": "Not finished",
-      "pending": "Waiting"
-    },
-    "settlement": {
-      "pending": "To be paid out",
-      "settled": "Paid out",
-      "refunded": "Refunded"
-    },
-    "refund": "Refund {{amount}}",
-    "refundTitle": "Refund {{amount}}?",
-    "refundBody": "The guest gets the money back on the same method. This cannot be undone.",
-    "refundConfirm": "Refund",
-    "refunded": "Refund sent",
-    "waiting": "To pay out",
-    "refundedShort": "Refunded"
-  },
   "ownerStaff": {
     "invite": "Invite",
     "sendInvite": "Send invite",
@@ -1568,8 +1511,8 @@
     "removeBody": "They will be signed out and cannot sign in to this venue again unless you invite them.",
     "removeConfirm": "Remove",
     "can": {
-      "owner": "Everything, including payouts and the team.",
-      "manager": "Everything except payouts and the team.",
+      "owner": "Everything, including payment settings and the team.",
+      "manager": "Everything except payment settings and the team.",
       "waiter": "Orders and waiter calls.",
       "kitchen": "Order status only.",
       "viewer": "Can look, cannot change anything.",
@@ -1599,7 +1542,7 @@
     "listNote": "Tap a phone to remove it.",
     "lastSeen": "Last used {{when}}",
     "empty": "No scanner phones yet",
-    "emptyBody": "Pair a staff phone so it can scan loyalty cards without seeing payouts or settings.",
+    "emptyBody": "Pair a staff phone so it can scan loyalty cards without seeing sales or settings.",
     "removed": "Phone removed",
     "removeTitle": "Remove {{name}}?",
     "removeBody": "It will stop scanning straight away. You can pair it again later.",
@@ -1613,29 +1556,42 @@
       "venue": "Venue",
       "tables": "Tables",
       "wifi": "Wi-Fi",
-      "payout": "Payout"
+      "payments": "Payments"
     },
     "title": {
       "venue": "What is your venue called?",
       "tables": "How many tables?",
-      "wifi": "Guest Wi-Fi",
-      "payout": "Where should money go?"
+      "wifi": "Your guest Wi-Fi",
+      "payments": "How guests pay"
     },
     "venueName": "Venue name",
     "place": "Where it is",
     "placeHint": "Street and area",
-    "tablesExist": "Your tables are already set up. Tap Next.",
-    "business": "Name on the account",
-    "momo": "Mobile money number",
-    "network": "Network",
+    "tablesExist_one": "You have {{count}} table already.",
+    "tablesExist_other": "You have {{count}} tables already.",
     "skip": "Skip",
-    "doneTitle": "You are ready",
+    "doneTitle": "You're ready",
     "printQr": "Print table QR codes",
     "openFloor": "Open the floor",
     "err": {
-      "name": "Add the venue name.",
-      "phone": "Enter a mobile money number, like 024 123 4567.",
-      "network": "Pick the network for this number."
+      "name": "Add the venue name."
+    },
+    "connect": "Connect Paystack",
+    "skipForNow": "Skip for now",
+    "summary": {
+      "noName": "No name yet",
+      "tables_one": "{{count}} table",
+      "tables_other": "{{count}} tables",
+      "notAdded": "Not added",
+      "online": "Online and in person",
+      "inPerson": "In person only"
+    },
+    "pay": {
+      "inPerson": "In person",
+      "online": "Online with Paystack",
+      "on": "On",
+      "connected": "Connected",
+      "notConnected": "Not connected"
     }
   },
   "ownerLinks": {
@@ -1740,8 +1696,7 @@
     "customers": "Diners who joined your loyalty card. Phone numbers stay masked.",
     "floor": "Every table at a glance. Tap one to see its bill and act on it.",
     "scan": "Scan a guest's loyalty card to give a stamp or a reward.",
-    "socials": "Your social media links on the guest page.",
-    "setup": "The steps to get your venue ready for guests."
+    "socials": "Your social media links on the guest page."
   },
   "ownerNotes": {
     "title": "Notifications",
@@ -1760,8 +1715,6 @@
       "call": "Table {{table}}: {{reason}}",
       "order": "New order #{{number}} from table {{table}}",
       "order_ready": "Order #{{number}} is ready for table {{table}}",
-      "payment": "{{amount}} paid for order #{{number}}",
-      "payment_failed": "A payment for order #{{number}} didn't go through",
       "feedback": "A guest left a {{score}}-star note",
       "staff_joined": "{{name}} joined the team",
       "staff_invited": "{{name}} hasn't accepted the invite yet",

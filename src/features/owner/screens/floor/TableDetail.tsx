@@ -1,12 +1,9 @@
-import { useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
-import * as Crypto from 'expo-crypto';
 import { useTranslation } from 'react-i18next';
 import { Bell } from 'lucide-react-native';
 import { nextOrderMove, type StaffRole } from '@/features/orders';
 import type { FloorTable, Order } from '@/lib/api/types';
 import { pesewas } from '@/lib/brand';
-import { PAYMENTS_ENABLED } from '@/lib/features';
 import { formatMoney } from '@/lib/money';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
@@ -28,6 +25,7 @@ export function TableDetail({
   currency,
   role,
   actions,
+  onMarkPaid,
   onClose,
 }: {
   table: FloorTable;
@@ -35,28 +33,16 @@ export function TableDetail({
   currency: string;
   role: StaffRole;
   actions: FloorActions;
+  /** Opens "How did it pay?" for this bill, the same sheet as on Orders. */
+  onMarkPaid: (order: Order) => void;
   onClose: () => void;
 }) {
   const theme = useTheme();
   const { t } = useTranslation();
-  // One idempotency key per bill and amount while the sheet is open (like MarkPaidSheet), so a
-  // retry after a lost response is the same payment to the server. A new amount is a new key.
-  const keys = useRef(new Map<string, string>());
-  const cashKey = (orderId: string, amount: number): string => {
-    const id = `${orderId}:${amount}`;
-    const known = keys.current.get(id);
-    if (known) return known;
-    const fresh = Crypto.randomUUID();
-    keys.current.set(id, fresh);
-    return fresh;
-  };
-  // With payments off nothing marks money paid, so the full total is still owed.
-  const due = bill
-    ? Math.max(0, bill.totalPesewas - (PAYMENTS_ENABLED ? bill.paidPesewas : 0))
-    : 0;
+  const due = bill ? Math.max(0, bill.totalPesewas - bill.paidPesewas) : 0;
   // Worked out once per table, then shared by the label and the tap.
   const step = table.orderStatus ? nextOrderMove(table.orderStatus, role) : null;
-  const steps = detailActions(table, { payments: PAYMENTS_ENABLED, hasBill: bill != null, step });
+  const steps = detailActions(table, { hasBill: bill != null, step });
   const subtitle = [
     t(STATUS_LABEL[table.status]),
     table.orderNumber != null ? t('ownerFloor.orderNumber', { number: table.orderNumber }) : null,
@@ -69,12 +55,9 @@ export function TableDetail({
       case 'acknowledge':
         return t('owner.onTheWay');
       case 'resolve':
-        // Payments off: resolving a bill request is how a table's bill is closed.
-        return !PAYMENTS_ENABLED && table.waiterReason === 'bill'
-          ? t('owner.billSettled')
-          : t('owner.doneCall');
-      case 'cash':
-        return t('owner.cash');
+        return t('owner.doneCall');
+      case 'markPaid':
+        return t('ownerOrders.markPaid.open');
       case 'move':
         return t(`ownerOrders.move.${item.move}`);
     }
@@ -85,15 +68,15 @@ export function TableDetail({
       actions.answerCall(table.waiterCallId, 'acknowledged');
     } else if (item.id === 'resolve' && table.waiterCallId) {
       actions.answerCall(table.waiterCallId, 'resolved');
-    } else if (item.id === 'cash' && table.orderId) {
-      actions.recordCash(table.orderId, due, cashKey(table.orderId, due));
+    } else if (item.id === 'markPaid' && bill) {
+      onMarkPaid(bill);
     } else if (item.id === 'move' && table.orderId) {
       actions.moveOrder(table.orderId, item.next);
     }
   };
 
   const busy = (item: DetailAction) =>
-    item.id === 'cash' ? actions.paying : item.id === 'move' ? actions.moving : actions.answering;
+    item.id === 'markPaid' ? false : item.id === 'move' ? actions.moving : actions.answering;
 
   const footer =
     steps.length > 0 ? (
@@ -116,7 +99,8 @@ export function TableDetail({
     <ModalSheet
       visible
       onClose={onClose}
-      title={t('ownerFloor.tableName', { name: table.label ?? table.code })}
+      // The label is already the table's full name ("Table 12"); only a bare code needs "Table".
+      title={table.label ?? t('ownerFloor.tableName', { name: table.code })}
       subtitle={subtitle}
       footer={footer}
     >

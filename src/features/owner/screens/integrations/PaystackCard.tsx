@@ -12,6 +12,7 @@ import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
+import { guestKeys } from '@/lib/queryKeys';
 import { ownerKeys } from '../../data/keys';
 import {
   ConfirmDialog,
@@ -47,8 +48,12 @@ export function PaystackCard({
   const [tried, setTried] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [testResult, setTestResult] = useState<{ ok: boolean; message?: string } | null>(null);
-  const refresh = (next: PaymentSettings) =>
+  // payMethods on the venue (Pay switch, QR card line, Mark paid methods) follow these settings.
+  const refresh = (next: PaymentSettings) => {
     client.setQueryData(ownerKeys.paymentSettings(venueId), next);
+    void client.invalidateQueries({ queryKey: ownerKeys.venue(venueId) });
+    void client.invalidateQueries({ queryKey: guestKeys.venueAll() });
+  };
 
   const check = checkPaystackKeys({ mode, publicKey, secretKey }, LIVE_PAYMENTS_ENABLED);
   const connect = useMutation({

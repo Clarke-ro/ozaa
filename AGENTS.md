@@ -62,6 +62,7 @@ Clarke is building Cravins, a QR table app for restaurants in Ghana. He is a **b
 10. **No external actions.** Don't buy anything (domains, services), sign up for anything, post anything or message anyone. Ask Clarke instead.
 
 ## Commits and PRs
+- **Every PR merges into `main`. Never stack PRs** (one PR aimed at another PR's branch). GitHub shows a stacked PR as merged, but its work lands on the other branch, not on `main`. If a PR needs work that isn't merged yet, wait for it to merge, then branch from `main`. The "PR target" check fails on any PR that doesn't merge into `main`.
 - Title: conventional commit, such as `feat(pay): add MoMo approval countdown`.
 - Body in plain words, three short lines:
   - **What** changed.

@@ -2,7 +2,6 @@ import { StyleSheet, View } from 'react-native';
 import { useRouter, type Href } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import type { OwnerDashboard } from '@/lib/api/types';
-import { PAYMENTS_ENABLED } from '@/lib/features';
 import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
 import { useOwnerLayout } from '../../chrome/layout';
@@ -23,16 +22,12 @@ export function StatsRow({ dashboard: d }: { dashboard: OwnerDashboard }) {
   const router = useRouter();
   const { wide } = useOwnerLayout();
   const role = useOwnerSession((state) => state.role) ?? 'waiter';
-  const { hero, cards } = todayFigures(d, { payments: PAYMENTS_ENABLED });
+  const { hero, cards } = todayFigures(d);
   const go = (f: Figure) => (canOpen(role, f.href) ? () => router.push(f.href as Href) : undefined);
   const top = figureText(hero, d.currency, t);
-  const link = hero.key === 'sales' ? t('ownerDash.viewSales') : t('ownerDash.viewOrders');
   // Sales carry the brand sentence ("You made GH₵2,480 today, 12% more than last Saturday.").
   const line = salesLine(d);
-  const note =
-    hero.key === 'sales'
-      ? t(line.key, { amount: top.value, percent: line.percent ?? 0 })
-      : undefined;
+  const note = t(line.key, { amount: top.value, percent: line.percent ?? 0 });
 
   const small = cards.map((f) => {
     const text = figureText(f, d.currency, t);
@@ -42,7 +37,7 @@ export function StatsRow({ dashboard: d }: { dashboard: OwnerDashboard }) {
   return (
     <View style={wide ? styles.row : styles.stack}>
       <View style={wide ? styles.heroWide : undefined}>
-        <HeroCard label={top.label} value={top.value} note={note} link={link} onPress={go(hero)} />
+        <HeroCard label={top.label} value={top.value} note={note} link={t('ownerDash.viewSales')} onPress={go(hero)} />
       </View>
       <View style={[styles.row, wide && styles.smallWide]}>{small}</View>
     </View>

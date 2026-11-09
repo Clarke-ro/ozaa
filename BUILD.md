@@ -561,7 +561,7 @@ Work top to bottom. Each box is one small PR that ends in a verifiable state (ps
 - [x] 2.1 Bill split logic, tdd. Covers whole bill, equal split with remainder pesewas going to the first payers, my items, tips (0/5/10/15% rounded half-up to the pesewa, or a custom amount), and "remaining after".
 - [x] 2.2 `paymentMachine.ts`, tdd (section 9).
 - [x] 2.3 Pay screen: split choice, tip, method (MTN MoMo / Telecel Cash / AT Money / card), phone field with network guess, and "Pay GH₵143 with MoMo. You approve it on your phone." Render: `pay.png`.
-- [ ] 2.4 MoMo wait screen: countdown from `approveBy`, "Check your phone and enter your PIN to approve.", then paid, failed or timed-out states. Render: `v4-reference/03-momo-checkout.png`, restyled to v5.
+- [x] 2.4 MoMo wait screen: countdown from `approveBy`, "Check your phone and enter your PIN to approve.", then paid, failed or timed-out states. Render: `v4-reference/03-momo-checkout.png`, restyled to v5.
 - [ ] 2.5 Card: open `authorizationUrl` (expo-web-browser on native, same tab on web with a return URL), then verify on return.
 - [ ] 2.6 Receipt view: lines, tip, empty-ready tax lines, and "Test payment" label in sandbox.
 - [x] 2.7 Owner payout account screen: bank or MoMo, shows the masked account and status.
@@ -614,7 +614,7 @@ Approved by Clarke on 2026-11-03. Details and file locations are in `docs/menuri
 - [x] 4b.14 *contract* + UI: online ordering settings (on/off, pickup prep time, delivery fees, distance, free threshold).
 - [x] 4b.15 *contract* + UI: menu-link guest flow (pickup or delivery, contact form, confirmation and status page) and the source on every order.
 - [x] 4b.16 *contract* + UI: Sales page (totals, counts by status, discounts, top items, revenue over time, by source).
-- [ ] 4b.17 *contract* + UI: Settings > Integrations > Payments (own Paystack keys, where to find them, test/live, test connection), manual methods, mark paid by method, payment status on orders and sales. Split bill hidden.
+- [x] 4b.17 *contract* + UI: Settings > Integrations > Payments (own Paystack keys, where to find them, test/live, test connection), manual methods, mark paid by method, payment status on orders and sales. Split bill hidden.
 - [ ] 4b.18 WhatsApp order-alerts number field, behind a flag that stays off.
 - [ ] **Review:** Clarke sees every new screen in light and dark, phone and tablet, then says go for the backend (per-venue encrypted Paystack keys, webhook per venue, push alerts).
 

@@ -244,7 +244,8 @@ export const tokens = {
     "tabBar": 56,
     "page": {
       "form": 880,
-      "wide": 1280
+      "wide": 1280,
+      "setup": 560
     },
     "statusEdge": 4,
     "pageTitle": {

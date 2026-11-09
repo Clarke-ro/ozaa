@@ -3,7 +3,6 @@ import type {
   Order,
   OwnerDashboard,
   StaffMember,
-  VenueTransaction,
   WaiterCall,
 } from '@/lib/api/types';
 
@@ -19,10 +18,6 @@ export type NoteSources = {
     FeedbackItem,
     'id' | 'sentiment' | 'score' | 'archived' | 'visibleAfter' | 'createdAt'
   >[];
-  transactions: Pick<
-    VenueTransaction,
-    'id' | 'orderNumber' | 'amountPesewas' | 'currency' | 'status' | 'createdAt'
-  >[];
   staff: Pick<StaffMember, 'id' | 'firstName' | 'status' | 'joinedAt'>[];
   alerts: OwnerDashboard['alerts'];
 };
@@ -35,8 +30,6 @@ export type NoteKind =
   | 'call'
   | 'order'
   | 'order_ready'
-  | 'payment'
-  | 'payment_failed'
   | 'feedback'
   | 'staff_joined'
   | 'staff_invited';
@@ -138,17 +131,6 @@ export function buildNotifications(src: NoteSources, now: number): Note[] {
         vars: { number: o.number, table: o.tableCode ?? '' },
       });
     }
-  }
-  for (const tx of src.transactions) {
-    if (tx.status !== 'succeeded' && tx.status !== 'failed') continue;
-    timed.push({
-      id: `tx-${tx.id}`,
-      kind: tx.status === 'succeeded' ? 'payment' : 'payment_failed',
-      at: tx.createdAt,
-      tone: tx.status === 'succeeded' ? 'good' : 'alert',
-      href: '/owner/payments',
-      vars: { number: tx.orderNumber, amount: tx.amountPesewas, currency: tx.currency },
-    });
   }
   for (const f of src.feedback) {
     // Notes stay hidden for their privacy delay (visibleAfter), here as everywhere else.

@@ -9,7 +9,6 @@ const tables = [
 
 test('a table with no order and no guest is free', () => {
   const [table] = deriveFloor({
-    payments: true,
     tables: [tables[0]!],
     orders: [],
     calls: [],
@@ -21,7 +20,6 @@ test('a table with no order and no guest is free', () => {
 
 test('a seated guest with no order is seated', () => {
   const [table] = deriveFloor({
-    payments: true,
     tables: [tables[2]!],
     orders: [],
     calls: [],
@@ -32,7 +30,6 @@ test('a seated guest with no order is seated', () => {
 
 test('an open kitchen ticket is ordered, and a served unpaid bill is waiting to pay', () => {
   const floor = deriveFloor({
-    payments: true,
     tables,
     seatedCodes: [],
     calls: [],
@@ -69,7 +66,6 @@ test('an open kitchen ticket is ordered, and a served unpaid bill is waiting to 
 
 test('a paid served table goes free, and a call beats every other status', () => {
   const floor = deriveFloor({
-    payments: true,
     tables,
     seatedCodes: [],
     orders: [
@@ -114,7 +110,6 @@ test('a paid served table goes free, and a call beats every other status', () =>
 
 test('a resolved call and a cancelled order do not hold the table', () => {
   const [table] = deriveFloor({
-    payments: true,
     tables: [tables[0]!],
     seatedCodes: [],
     orders: [
@@ -142,110 +137,22 @@ test('a resolved call and a cancelled order do not hold the table', () => {
   expect(table?.status).toBe('free');
 });
 
-describe('with payments switched off', () => {
-  const served = {
-    id: 'ord_3',
-    number: 18,
+test('once the bill is paid the table shows no amount, so a free table never shows money', () => {
+  const order = (paymentStatus: 'paid' | 'part_paid' | 'unpaid') => ({
+    id: `ord_${paymentStatus}`,
+    number: 9,
     tableCode: '3',
     status: 'served' as const,
-    paymentStatus: 'unpaid' as const,
-    totalPesewas: 4500,
-    createdAt: '2026-10-31T12:00:00Z',
-    updatedAt: '2026-10-31T12:30:00Z',
-  };
-  const table3 = [tables[1]!];
-
-  test('a served unpaid order is not waiting to pay; the guests are still at the table', () => {
-    const [table] = deriveFloor({
-      payments: false,
-      tables: table3,
-      orders: [served],
-      calls: [],
-      seatedCodes: [],
-    });
-    expect(table?.status).toBe('seated');
-    expect(table?.billPesewas).toBe(4500);
+    paymentStatus,
+    totalPesewas: 12000,
+    createdAt: '2026-10-31T11:00:00Z',
+    updatedAt: '2026-10-31T11:00:00Z',
   });
-
-  test('asking for the bill puts the table in waiting for the bill, even once a waiter is on the way', () => {
-    for (const status of ['open', 'acknowledged'] as const) {
-      const [table] = deriveFloor({
-        payments: false,
-        tables: table3,
-        orders: [served],
-        calls: [
-          {
-            id: 'wcl_b',
-            tableCode: '3',
-            reason: 'bill',
-            status,
-            createdAt: '2026-10-31T12:40:00Z',
-          },
-        ],
-        seatedCodes: [],
-      });
-      expect(table).toMatchObject({
-        status: 'waiting_to_pay',
-        waiterCallId: 'wcl_b',
-        waiterReason: 'bill',
-      });
-    }
-  });
-
-  test('other requests still need a waiter', () => {
-    const [table] = deriveFloor({
-      payments: false,
-      tables: table3,
-      orders: [served],
-      calls: [
-        {
-          id: 'wcl_w',
-          tableCode: '3',
-          reason: 'water',
-          status: 'open',
-          createdAt: '2026-10-31T12:40:00Z',
-        },
-      ],
-      seatedCodes: [],
-    });
-    expect(table?.status).toBe('needs_waiter');
-  });
-
-  test('settling the bill request frees the table', () => {
-    const [table] = deriveFloor({
-      payments: false,
-      tables: table3,
-      orders: [served],
-      calls: [
-        {
-          id: 'wcl_b',
-          tableCode: '3',
-          reason: 'bill',
-          status: 'resolved',
-          createdAt: '2026-10-31T12:40:00Z',
-        },
-      ],
-      seatedCodes: [],
-    });
-    expect(table?.status).toBe('free');
-  });
-
-  test('a new order after a settled bill opens the table again', () => {
-    const [table] = deriveFloor({
-      payments: false,
-      tables: table3,
-      orders: [{ ...served, id: 'ord_4', status: 'received', createdAt: '2026-10-31T13:00:00Z' }],
-      calls: [
-        {
-          id: 'wcl_b',
-          tableCode: '3',
-          reason: 'bill',
-          status: 'resolved',
-          createdAt: '2026-10-31T12:40:00Z',
-        },
-      ],
-      seatedCodes: [],
-    });
-    expect(table?.status).toBe('ordered');
-  });
+  const bill = (paymentStatus: 'paid' | 'part_paid' | 'unpaid') =>
+    deriveFloor({ tables, seatedCodes: [], calls: [], orders: [order(paymentStatus)] }).find(
+      (table) => table.code === '3',
+    )?.billPesewas;
+  expect(bill('paid')).toBeNull();
+  expect(bill('part_paid')).toBe(12000);
+  expect(bill('unpaid')).toBe(12000);
 });

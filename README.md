@@ -29,4 +29,4 @@ npx expo lint
 npx expo export -p web && npx playwright test
 ```
 
-Payments are off in this build (`PAYMENTS_ENABLED=false`). The payment code, including the Paystack sandbox server, is on the `feature/payments-v1` branch. See `docs/payments-removed.md` to bring it back.
+Each restaurant connects its own Paystack account in Integrations. Guests pay in the app only where it's connected; everywhere else they pay in person and staff mark the order paid. Test keys only for now. The Paystack server isn't built yet (BUILD.md 2b), so payments run on the mock.

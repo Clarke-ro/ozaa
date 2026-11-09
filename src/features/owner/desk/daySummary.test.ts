@@ -2,13 +2,10 @@ import { summarizeDay } from './daySummary';
 
 const base = {
   openCalls: 0,
-  openBillCalls: 0,
-  payments: true,
   ratings: [5, 4],
   nowIso: '2026-10-31T18:00:00Z',
   timeZone: 'Africa/Accra',
   yesterdayPesewas: 221429,
-  payoutVerified: true,
   soldOut: [] as string[],
 };
 
@@ -63,11 +60,10 @@ test('a late evening order in Lagos still counts as the next local day', () => {
   expect(summary.ratingAverage).toBeNull();
 });
 
-test('alerts name calls, unpaid served bills, an unchecked payout, and sold-out dishes', () => {
+test('alerts name calls, unpaid served bills and sold-out dishes', () => {
   const summary = summarizeDay({
     ...base,
     openCalls: 2,
-    payoutVerified: false,
     soldOut: ['Banku & tilapia'],
     orders: [
       {
@@ -81,48 +77,24 @@ test('alerts name calls, unpaid served bills, an unchecked payout, and sold-out 
   expect(summary.alerts.map((alert) => alert.code)).toEqual([
     'calls',
     'bills',
-    'payout',
     'sold_out',
   ]);
 });
 
-test('with payments off, bills come from bill requests and there is no payout alert', () => {
-  const summary = summarizeDay({
-    ...base,
-    payments: false,
-    openCalls: 3,
-    openBillCalls: 2,
-    payoutVerified: false,
-    orders: [
-      {
-        status: 'served',
-        paidPesewas: 0,
-        createdAt: '2026-10-31T15:00:00Z',
-        paymentStatus: 'unpaid',
-      },
-    ],
+test('a bill clears once the order is paid, online or marked paid by staff', () => {
+  const served = (paymentStatus: string, paidPesewas: number) => ({
+    status: 'served',
+    paidPesewas,
+    createdAt: '2026-10-31T15:00:00Z',
+    paymentStatus,
   });
-  expect(summary.alerts).toEqual([
-    { code: 'calls', count: 3 },
-    { code: 'bills', count: 2 },
+  expect(summarizeDay({ ...base, orders: [served('unpaid', 0)] }).alerts).toEqual([
+    { code: 'bills', count: 1 },
   ]);
-});
-
-test('with payments off and no bill requests, served unpaid orders raise nothing', () => {
-  const summary = summarizeDay({
-    ...base,
-    payments: false,
-    payoutVerified: false,
-    orders: [
-      {
-        status: 'served',
-        paidPesewas: 0,
-        createdAt: '2026-10-31T15:00:00Z',
-        paymentStatus: 'unpaid',
-      },
-    ],
-  });
-  expect(summary.alerts).toEqual([]);
+  expect(summarizeDay({ ...base, orders: [served('part_paid', 500)] }).alerts).toEqual([
+    { code: 'bills', count: 1 },
+  ]);
+  expect(summarizeDay({ ...base, orders: [served('paid', 1000)] }).alerts).toEqual([]);
 });
 
 test('orders today skip cancelled ones and earlier days; pending counts only received', () => {

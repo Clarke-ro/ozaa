@@ -485,7 +485,7 @@ export function createWorld(now: number): World {
     menus,
     wifi,
     notices: {},
-    paymentSettings: {},
+    paymentSettings: samplePaymentSettings(venues, now),
     offers,
     orders,
     calls: [],
@@ -592,6 +592,31 @@ export function venueById(world: World, venueId: string): VenuePublic {
 }
 
 /** A new venue takes cash and nothing else until the owner sets up more. */
+/**
+ * Sample data: Bean There has connected its own Paystack (test keys), so the demo shows a guest
+ * paying in the app. Mama's Kitchen and Auntie Akos take payment in person.
+ */
+function samplePaymentSettings(
+  venues: Record<string, VenuePublic>,
+  now: number,
+): Record<string, PaymentSettings> {
+  const bean = Object.values(venues).find((venue) => venue.slug === 'bean-there');
+  if (!bean) return {};
+  const at = new Date(now).toISOString();
+  return {
+    [bean.id]: {
+      ...defaultPaymentSettings(),
+      paystack: {
+        mode: 'test',
+        publicKey: 'pk_test_beanthere0sample',
+        secretKeyHint: '••••0000',
+        connectedAt: at,
+        lastCheckedAt: at,
+      },
+    },
+  };
+}
+
 export function defaultPaymentSettings(): PaymentSettings {
   return {
     paystack: null,

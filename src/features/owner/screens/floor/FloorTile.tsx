@@ -64,7 +64,7 @@ export function FloorTile({
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ selected }}
-      accessibilityLabel={[t('ownerFloor.tableName', { name: label ?? code }), word, bill]
+      accessibilityLabel={[label ?? t('ownerFloor.tableName', { name: code }), word, bill]
         .filter(Boolean)
         .join(', ')}
       onPress={onPress}

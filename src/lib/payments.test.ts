@@ -1,4 +1,10 @@
-import { checkManualPayments, checkPaystackKeys, guestPayMethods, keyHint } from './payments';
+import {
+  canPayOnline,
+  checkManualPayments,
+  checkPaystackKeys,
+  guestPayMethods,
+  keyHint,
+} from './payments';
 
 const pk = 'pk_test_abcdef1234567890';
 const sk = 'sk_test_abcdef1234567890';
@@ -121,5 +127,15 @@ describe('guestPayMethods', () => {
     expect(methods.online).toBe(true);
     expect(methods.testMode).toBe(true);
     expect(JSON.stringify(methods)).not.toContain('sk_');
+  });
+});
+
+describe('canPayOnline', () => {
+  test('only when the venue says its own Paystack is connected', () => {
+    expect(canPayOnline(undefined)).toBe(false);
+    expect(canPayOnline({})).toBe(false);
+    const methods = { online: false, cash: true, cardMachine: false };
+    expect(canPayOnline({ payMethods: methods })).toBe(false);
+    expect(canPayOnline({ payMethods: { ...methods, online: true } })).toBe(true);
   });
 });

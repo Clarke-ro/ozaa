@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
 import type { ServiceSettings } from '@/lib/api/types';
 import { NOT_BUILT, type WifiSecurity } from '@/features/venue';
-import { PAYMENT_SERVICES } from '@/lib/features';
+import { canPayOnline } from '@/lib/payments';
 import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
@@ -91,8 +91,10 @@ export function ServicesScreen() {
           <View style={styles.stack}>
             <View style={styles.stack}>
               {SECTIONS.map((section) => {
+                // Pay in the app needs the venue's own Paystack, so its switch only shows then.
                 const items = s.services.filter(
-                  (item) => item.section === section && !PAYMENT_SERVICES.includes(item.id),
+                  (item) =>
+                    item.section === section && (item.id !== 'pay' || canPayOnline(venue.data)),
                 );
                 if (!items.length && section !== 'fun') return null;
                 return (

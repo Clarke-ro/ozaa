@@ -32,7 +32,6 @@ import {
   UserRoundSearch,
   Users,
   UtensilsCrossed,
-  Wallet,
   type LucideIcon,
 } from 'lucide-react-native';
 import type { OwnerNavId } from './nav';
@@ -47,7 +46,6 @@ export const NAV_ICONS: Record<OwnerNavId | 'more', LucideIcon> = {
   loyalty: Gift,
   feedback: Inbox,
   services: Settings2,
-  payments: Wallet,
   reviews: Star,
   socials: Globe,
   links: Link,

@@ -12,9 +12,10 @@ export const guestKeys = {
   wifi: (slug: string) => ['wifi', slug] as const,
   order: (orderId: string | null) => ['order', orderId] as const,
   waiterCall: (callId: string) => ['waiter', callId] as const,
-  payment: (reference: string | null) => ['payment', reference] as const,
   loyaltyProgram: (slug: string) => ['loyalty-program', slug] as const,
   loyaltyAll: () => ['loyalty'] as const,
+  /** Every venue page, e.g. after the owner changes how guests pay. */
+  venueAll: () => ['venue'] as const,
   loyaltyVenue: (slug: string) => ['loyalty', slug] as const,
   loyaltyCard: (slug: string, token: string | null | undefined) =>
     ['loyalty', slug, token] as const,

@@ -12,6 +12,7 @@ import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
+import { guestKeys } from '@/lib/queryKeys';
 import { ownerKeys } from '../../data/keys';
 import { Chips, Field, Section, SectionBody, SwitchRow, toast } from '../../kit';
 
@@ -43,6 +44,8 @@ export function ManualPaymentsCard({
     mutationFn: () => api.ownerSetManualPayments(venueId, next),
     onSuccess: (result) => {
       client.setQueryData(ownerKeys.paymentSettings(venueId), result);
+      void client.invalidateQueries({ queryKey: ownerKeys.venue(venueId) });
+      void client.invalidateQueries({ queryKey: guestKeys.venueAll() });
       setTried(false);
       toast.success(t('ownerKit.saved'));
     },
