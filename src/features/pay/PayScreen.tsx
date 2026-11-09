@@ -4,7 +4,7 @@ import { Receipt } from 'lucide-react-native';
 import * as Crypto from 'expo-crypto';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Redirect, useRouter } from 'expo-router';
+import { Redirect, useRouter, type Href } from 'expo-router';
 import { api } from '@/lib/api';
 import type { Payment } from '@/lib/api/types';
 import { env } from '@/lib/env';
@@ -25,6 +25,8 @@ import { useTheme } from '@/ui/theme';
 import { payInitial, payTransition } from './paymentMachine';
 import { secondsLeft } from './paymentWatch';
 import { BillLines } from './BillLines';
+import { openCheckout } from './openCheckout';
+import { useCardReturn } from './useCardReturn';
 import { PAY_METHODS, PayMethods, type PayMethod } from './PayMethods';
 import { PayProgress } from './PayProgress';
 import { PaySummary } from './PaySummary';
@@ -36,7 +38,14 @@ import { guestKeys } from '@/lib/queryKeys';
 
 const TIPS = [0, 5, 10, 15] as const;
 // Screens shown in place of the form once a payment has started (PayProgress).
-const IN_PROGRESS = ['awaiting_approval', 'checking', 'paid', 'failed', 'timed_out'];
+const IN_PROGRESS = [
+  'awaiting_approval',
+  'opening_checkout',
+  'checking',
+  'paid',
+  'failed',
+  'timed_out',
+];
 
 export function PayScreen({ slug }: { slug: string }) {
   const { t } = useTranslation();
@@ -66,6 +75,9 @@ export function PayScreen({ slug }: { slug: string }) {
   const [payState, send] = useReducer(payTransition, payInitial);
   const [started, setStarted] = useState<Payment | null>(null);
   const left = usePaymentWatch(payState, send, t('pay.nothingTaken'));
+  // The payment on screen: the one just started here, or the one a card page sent us back with.
+  const returned = useCardReturn(send);
+  const shown = started ?? returned;
 
   // Paid: the order now shows paid and a loyalty stamp may have landed.
   useEffect(() => {
@@ -147,22 +159,32 @@ export function PayScreen({ slug }: { slug: string }) {
       });
     } else if (started.authorizationUrl) {
       send({ type: 'card_started', reference: started.reference, url: started.authorizationUrl });
+      const where = await openCheckout(started.authorizationUrl, (path) =>
+        router.push(path as Href),
+      );
+      if (where === 'back') send({ type: 'returned_from_checkout' });
     }
   };
 
   // What is being paid, for the steps after Pay: the server's amount once it has one.
   const typed = asGhanaPhone(parsePhone(phone, country));
-  const methodName = t(PAY_METHODS.find((m) => m.id === method)?.label ?? 'pay.card');
+  const paidWith: PayMethod = shown
+    ? shown.method === 'card'
+      ? 'card'
+      : (shown.provider ?? method)
+    : method;
+  const card = paidWith === 'card';
   const charge = {
-    amountPesewas: started?.amountPesewas ?? due,
+    amountPesewas: shown?.amountPesewas ?? due,
     currency,
-    method: methodName,
-    phone: typed && method !== 'card' ? formatPhone(typed) : undefined,
-    testMode: started?.testMode ?? venue.data?.payMethods?.testMode ?? false,
-    displayText: started?.displayText,
+    method: t(PAY_METHODS.find((m) => m.id === paidWith)?.label ?? 'pay.card'),
+    phone: typed && !card ? formatPhone(typed) : undefined,
+    card,
+    testMode: shown?.testMode ?? venue.data?.payMethods?.testMode ?? false,
+    displayText: shown?.displayText,
   };
-  const total = started
-    ? secondsLeft(Date.parse(started.approveBy ?? ''), Date.parse(started.createdAt))
+  const total = shown
+    ? secondsLeft(Date.parse(shown.approveBy ?? ''), Date.parse(shown.createdAt))
     : 0;
 
   return (

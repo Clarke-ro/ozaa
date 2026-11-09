@@ -103,3 +103,47 @@ test('guest MoMo payment nobody approves: after 0:00 the app checks, then Time r
   await expect(page.getByRole('button', { name: 'Try again' })).toBeVisible();
   await page.screenshot({ path: 'test-results/pay-online-timed-out.png' });
 });
+
+// Order at Bean There, open Pay and choose card.
+async function payByCard(page: import('@playwright/test').Page) {
+  await page.goto('/bean-there/t/7', { waitUntil: 'domcontentloaded' });
+  await page.getByRole('button', { name: /^Menu/ }).first().click();
+  await page
+    .getByRole('button', { name: /^Add .+ to your order$/ })
+    .first()
+    .click();
+  await page.getByRole('button', { name: /View order/ }).click();
+  await page.getByRole('button', { name: 'Send to kitchen' }).click();
+  await page.getByRole('button', { name: 'Pay & split bill' }).click();
+  await page.getByRole('radio', { name: 'Debit or credit card' }).click();
+  await page.getByRole('button', { name: /^Pay GH/ }).click();
+}
+
+test('guest pays by card: the card page sends them back and the app shows it paid', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await payByCard(page);
+
+  // The mock's stand-in for Paystack's card page, then back to /bean-there/pay?reference=…
+  await page.getByRole('button', { name: 'Pay', exact: true }).click();
+  await expect(page).toHaveURL(/\/bean-there\/pay\?reference=/, { timeout: 15_000 });
+  await expect(page.getByText('Paid. Your order is with the kitchen.')).toBeVisible({
+    timeout: 20_000,
+  });
+  await page.screenshot({ path: 'test-results/pay-card-paid.png' });
+  expect(errors).toEqual([]);
+});
+
+test('guest cancels on the card page: Not paid, nothing taken, Try again', async ({ page }) => {
+  await payByCard(page);
+  await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Not paid', exact: true })).toBeVisible({
+    timeout: 20_000,
+  });
+  await expect(page.getByText("The card payment didn't finish. Nothing was taken.")).toBeVisible();
+  await page.screenshot({ path: 'test-results/pay-card-cancelled.png' });
+  await page.getByRole('button', { name: 'Try again' }).click();
+  await expect(page.getByRole('button', { name: /^Pay GH/ })).toBeVisible();
+});

@@ -44,3 +44,15 @@ test('illegal jumps stay put', () => {
       .kind,
   ).toBe('paid');
 });
+
+test('landing back on the pay page with a reference goes straight to checking', () => {
+  // On the web the card page is a full page away, so the screen starts fresh with only the
+  // reference Paystack added to the address.
+  expect(payTransition(payInitial, { type: 'resume_check', reference: 'pay_3' })).toEqual({
+    kind: 'checking',
+    reference: 'pay_3',
+  });
+  // Only from a fresh screen: a payment already under way is not replaced.
+  const waiting = { kind: 'awaiting_approval', reference: 'pay_1', approveBy: 1 } as const;
+  expect(payTransition(waiting, { type: 'resume_check', reference: 'pay_3' })).toEqual(waiting);
+});
