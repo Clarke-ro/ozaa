@@ -4,6 +4,33 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-09 · The first server: Paystack in test mode (BUILD.md 2b)
+
+**What we built**
+A small server in `server/` that talks to Paystack with your test key. It can start a MoMo charge or a card checkout, check a payment, and accept Paystack's signed messages (webhooks). The app can send just its payment calls there (`EXPO_PUBLIC_API_LIVE=payments`) while everything else stays on the mock.
+
+**How it works**
+```
+app (mock bill) ──POST /payments + the quote──▶ server ──▶ Paystack /charge or /transaction/initialize
+app ──GET /payments/{ref} every 3 s──▶ server ──(every 5 s)──▶ Paystack /transaction/verify
+Paystack ──signed webhook──▶ server   (refused if the signature is wrong)
+server says "succeeded" ──▶ app marks the mock order paid
+```
+
+**Files to look at**
+- `server/src/status.ts` and its test: how Paystack's answer becomes ours. Only "success" for the right amount counts.
+- `server/src/signature.ts`: checking a webhook really came from Paystack.
+- `server/src/payments.ts`: starting, refreshing and finishing a payment.
+- `server/README.md`: how to run it with your key, and what to know before testing.
+
+**New idea: a signature proves who sent a message**
+Anyone can send our webhook address a message saying "paid". Paystack takes the message and our secret key and computes a code from them (HMAC-SHA512) that only someone holding the key can make. We do the same calculation, and only if the two codes match do we believe it.
+
+**Try it yourself**
+Run `npm test` in `server/`. Then in `signature.test.ts`, change one letter of the body after it's signed and watch the test refuse it.
+
+---
+
 ## 2026-11-09 · The guest's receipt (BUILD.md box 2.6)
 
 **What we built**

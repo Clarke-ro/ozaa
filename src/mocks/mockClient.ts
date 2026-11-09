@@ -205,6 +205,27 @@ function linkExtras(
   };
 }
 
+export type SandboxQuote = {
+  orderId: string;
+  venueSlug: string;
+  amountPesewas: number;
+  tipPesewas: number;
+};
+
+/**
+ * Phase 2b only (EXPO_PUBLIC_API_LIVE=payments): lets the real payment calls read the bill quote
+ * from this mock and put a succeeded payment on the mock order. Filled in by createMockClient.
+ */
+export const sandboxBridge: {
+  quote: (quoteId: string) => SandboxQuote;
+  track: (payment: Payment) => Payment;
+} = {
+  quote: () => {
+    throw new Error('The mock API has not started.');
+  },
+  track: (payment) => payment,
+};
+
 export function createMockClient(options: MockOptions = {}): ApiClient {
   const now = options.now ?? (() => Date.now());
   const world = createWorld(now());
@@ -398,6 +419,27 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
     }
     return row.payment;
   }
+
+  // Phase 2b: payments go to the sandbox server while the bill stays here (src/lib/api/index.ts).
+  sandboxBridge.quote = (quoteId) => {
+    const quote = world.quotes.get(quoteId);
+    if (!quote || quote.expiresAt < now())
+      throw new ApiError(409, 'quote_expired', 'That bill changed. Ask for a new total.');
+    const live = findOrder(world, quote.orderId);
+    return {
+      orderId: quote.orderId,
+      venueSlug: venueById(world, live.order.venueId).slug,
+      amountPesewas: quote.share + quote.tip,
+      tipPesewas: quote.tip,
+    };
+  };
+  sandboxBridge.track = (payment) => {
+    const row = world.payments.get(payment.reference);
+    if (!row) world.payments.set(payment.reference, { payment, phone: '', applied: false });
+    else if (!row.applied) row.payment = payment;
+    // Only the server's "succeeded" puts money on the order, the same way a mock payment does.
+    return payment.status === 'succeeded' ? settle(payment.reference) : payment;
+  };
 
   const api: ApiClient = {
     async requestOtp(body) {
