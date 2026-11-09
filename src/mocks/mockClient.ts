@@ -42,6 +42,7 @@ import { checkLine, takeStock, unitPrice } from '@/lib/dishRules';
 import { checkFulfilment, onlineOrderingOf } from '@/lib/onlineOrdering';
 import { salesReport } from '@/lib/sales';
 import { checkManualPayments, checkPaystackKeys, keyHint } from '@/lib/payments';
+import { env } from '@/lib/env';
 import { LIVE_PAYMENTS_ENABLED } from '@/lib/features';
 import { rememberOpenOrder } from './openOrder';
 import {
@@ -609,8 +610,8 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
         if (!quote || quote.expiresAt < now())
           throw new ApiError(409, 'quote_expired', 'That bill changed. Ask for a new total.');
         // Online payment goes through the venue's own Paystack, so no keys means no online pay.
-        const paystack =
-          world.paymentSettings[findOrder(world, quote.orderId).order.venueId]?.paystack ?? null;
+        const venueId = findOrder(world, quote.orderId).order.venueId;
+        const paystack = world.paymentSettings[venueId]?.paystack ?? null;
         if (!paystack)
           throw new ApiError(409, 'online_pay_off', 'This venue takes payment in person.');
         const reference = nextId(world, 'pay');
@@ -628,7 +629,9 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
           displayText:
             body.method === 'momo' ? 'Check your phone and enter your PIN to approve.' : undefined,
           authorizationUrl:
-            body.method === 'card' ? `https://mock.cravins.app/checkout/${reference}` : undefined,
+            body.method === 'card'
+              ? mockCheckoutUrl(reference, venueById(world, venueId)?.slug ?? '')
+              : undefined,
           approveBy: body.method === 'momo' ? new Date(now() + 180_000).toISOString() : null,
           createdAt,
           paidAt: null,
@@ -1625,3 +1628,13 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
 }
 
 export { decideMockCard };
+
+/**
+ * The mock's stand-in for Paystack's card page, on this app's own address. `back` is where
+ * Paystack's callback would send the guest (`{site}/{venueSlug}/pay`, see POST /payments).
+ */
+function mockCheckoutUrl(reference: string, slug: string): string {
+  const origin = typeof location === 'undefined' ? env.EXPO_PUBLIC_SITE_URL : location.origin;
+  const back = encodeURIComponent(`/${slug}/pay`);
+  return `${origin}/dev/mock-checkout?ref=${reference}&back=${back}`;
+}

@@ -244,7 +244,11 @@ export interface paths {
          *     Fails with 409 online_pay_off when the venue has no Paystack connected (`payMethods.online` is false).
          *     MoMo returns `pay_offline`: show `displayText` and poll `GET /payments/{reference}`.
          *     The guest has 180 seconds to approve on their phone (network limit).
-         *     Card returns `open_url` with a Paystack checkout URL (open it in a browser tab or WebView).
+         *     Card returns `open_url` with a Paystack checkout URL: on the web open it in the same tab, in
+         *     the app open it in the in-app browser. The server sets Paystack's callback URL to
+         *     `{site}/{venueSlug}/pay`, and Paystack adds `?reference=…&trxref=…` when it sends the guest
+         *     back. The app then calls `POST /payments/{reference}/verify`. Only `succeeded` counts; a card
+         *     payment the guest cancelled or left comes back `abandoned`.
          */
         post: operations["initializePayment"];
         delete?: never;
