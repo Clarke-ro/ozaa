@@ -672,7 +672,7 @@ Phase 6 is kept for launch hardening: E-VAT receipts, error monitoring, app stor
   - `api/fixtures/check-fixtures.mjs` in CI
   - the mock client's responses validated against the schema in a test
 - **Web end-to-end (Playwright):** the guest flow on each sample venue. Then compare a screenshot with each render in `design/renders/`. The renders came from the HTML prototype, so expect small font-rendering differences. Use `maxDiffPixelRatio` of about 0.03 and look at the diff images yourself.
-- **Prove it works** (`pstack-principle-prove-it-works`, `cursor-team-kit-verify-this`): before you say a screen is done, open it in the browser and take a screenshot. Compare it with the render, and attach both to the PR.
+- **Prove it works** (`pstack-principle-prove-it-works`, `cursor-team-kit-verify-this`): before you say a screen is done, run the tests, the type check and lint. Screenshots are optional (Clarke, 2026-11-09).
 - **Native:** in Phase 1b and later, a Maestro smoke flow on an Android emulator for owner login → orders → services.
 - **Before merging:** run `pstack-blast-radius` on the diff, plus lint, typecheck, tests and the Playwright run.
 
@@ -680,7 +680,6 @@ Phase 6 is kept for launch hardening: E-VAT receipts, error monitoring, app stor
 
 - [ ] It does what the checklist item says, and nothing more.
 - [ ] `npx tsc --noEmit`, `npx expo lint` and `npm test` pass. Playwright passes for touched screens.
-- [ ] Screenshots from the real build sit next to the matching render, for all 3 sample venues where it applies. For owner screens, Cravins chrome only.
 - [ ] Every state is covered: loading, empty, error, offline and success. Works at 320 px wide and with 200% text size.
 - [ ] Copy is in i18n, matches `brand.md` section 10, and has been through `pstack-unslop`.
 - [ ] Accessibility labels, 44 px targets and 4.5:1 contrast. No new contrast failures from venue colours.
