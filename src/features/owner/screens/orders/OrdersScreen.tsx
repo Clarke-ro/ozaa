@@ -9,7 +9,7 @@ import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
 import { orderTab, orderTabCounts, type OrderView } from '../../desk/ops';
 import { DEFAULT_CURRENCY } from '@/lib/money';
-import { EmptyCard, PeriodSelect } from '../../kit';
+import { cardStyle, EmptyCard, PeriodSelect } from '../../kit';
 import { Button } from '@/ui/Button';
 import { tokens } from '@/theme/tokens';
 import { ORDER_RANGES, orderRange, type OrderRange } from '../../desk/orderRange';
@@ -18,10 +18,10 @@ import { MarkPaidSheet, inPersonMethods } from './MarkPaidSheet';
 import type { Order } from '@/lib/api/types';
 import { guestKeys } from '@/lib/queryKeys';
 import { OpenCalls } from './OpenCalls';
-import { OrderCard } from './OrderCard';
+import { OrderRow } from './OrderRow';
 import { OrdersToolbar } from './OrdersToolbar';
-import { TicketGrid } from './TicketGrid';
 import { useOrderMove } from './useOrderMove';
+import { useTheme } from '@/ui/theme';
 
 const LIVE: OrderView[] = ['new', 'cooking', 'ready'];
 // Only a safety net while the venue loads; every venue has a zone in its opening hours.
@@ -29,9 +29,13 @@ const FALLBACK_ZONE = 'Africa/Accra';
 // Ticket ages only need to move once every half minute.
 const TICK_MS = 30_000;
 
-/** Kitchen tickets by stage. Each ticket shows only the next step this person is allowed to take. */
+/**
+ * Kitchen tickets by stage, as one list card. Each ticket shows only the next step this person is
+ * allowed to take.
+ */
 export function OrdersScreen() {
   const { t } = useTranslation();
+  const theme = useTheme();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const role = useOwnerSession((state) => state.role) ?? 'waiter';
   // Null until staff pick a stage; until then show the first stage that has tickets.
@@ -86,7 +90,6 @@ export function OrdersScreen() {
     <OwnerPage
       title={t('owner.orders')}
       subtitle={t('ownerOrders.lead')}
-      width="wide"
       action={
         <View style={styles.actions}>
           <PeriodSelect<OrderRange>
@@ -119,11 +122,13 @@ export function OrdersScreen() {
             description={t('ownerOrders.emptyBody')}
           />
         ) : (
-          <TicketGrid
-            orders={shown}
-            renderTicket={(order) => (
-              <OrderCard
+          // One white card, one ruled row per ticket, like the menu list.
+          <View style={[cardStyle(theme), styles.list]}>
+            {shown.map((order, index) => (
+              <OrderRow
+                key={order.id}
                 order={order}
+                first={index === 0}
                 now={now}
                 currency={venue.data?.currency ?? DEFAULT_CURRENCY}
                 next={move.label(order)}
@@ -131,8 +136,8 @@ export function OrdersScreen() {
                 onNext={() => move.run(order)}
                 onMarkPaid={canCreate ? () => setPaying(order) : undefined}
               />
-            )}
-          />
+            ))}
+          </View>
         )}
       </DeskWait>
       {paying && venue.data ? (
@@ -158,4 +163,5 @@ export function OrdersScreen() {
 
 const styles = StyleSheet.create({
   actions: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
+  list: { overflow: 'hidden' },
 });

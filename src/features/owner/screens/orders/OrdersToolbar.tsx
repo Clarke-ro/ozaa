@@ -1,10 +1,10 @@
 import { useTranslation } from 'react-i18next';
-import { FilterChips } from '@/ui/FilterChips';
+import { DeskTabs } from '../../kit';
 import { ORDER_VIEWS, type OrderView } from '../../desk/ops';
 
 /**
- * The one row of chips above the tickets: which stage, each with its count. The dates live in
- * the dropdown in the page header, so there is never a second row of chips.
+ * The stages as underlined tabs, each with its count, the same tabs as Calls. The dates live in
+ * the dropdown in the page header, so there is only ever one row of choices.
  */
 export function OrdersToolbar({
   tab,
@@ -17,11 +17,10 @@ export function OrdersToolbar({
 }) {
   const { t } = useTranslation();
   return (
-    <FilterChips<OrderView>
-      label={t('owner.orders')}
+    <DeskTabs<OrderView>
       value={tab}
       onChange={onTab}
-      items={ORDER_VIEWS.map((id) => ({
+      tabs={ORDER_VIEWS.map((id) => ({
         id,
         label: t(`ownerOrders.tabs.${id}`),
         count: counts[id],
