@@ -1,30 +1,32 @@
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { useTranslation } from 'react-i18next';
-import { Code, Copy, Download, Share2 } from 'lucide-react-native';
+import { Copy, Download, Share2 } from 'lucide-react-native';
 import { env } from '@/lib/env';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
-import { SectionLabel, toast } from '../../kit';
-import { embedSnippet, menuLink } from '../../desk/menuLink';
+import { fontFamily, useTheme } from '@/ui/theme';
+import { cardStyle, toast } from '../../kit';
+import { menuLink } from '../../desk/menuLink';
 import { IconAction } from './IconAction';
+import { QrImage } from './QrImage';
 import { canPrint, downloadQr, shareLink } from './qrActions';
 
+const QR = tokens.space[16] * 3;
+
 /**
- * The venue's shareable menu link and website embed snippet, side by side on wide screens.
+ * The menu's own QR code and link, for posters, flyers and social bios: a card with the QR and
+ * Download / Share, then a card with the link and a Copy button. It is not tied to a table.
  */
 export function MenuLinkCard({ slug, venueName }: { slug: string; venueName: string }) {
   const theme = useTheme();
   const { t } = useTranslation();
-  const { width } = useWindowDimensions();
-  const wide = width >= 920;
   const url = menuLink(env.EXPO_PUBLIC_SITE_URL, slug);
-  const snippet = embedSnippet(url, venueName);
+  const shown = url.replace(/^https?:\/\//, '');
 
-  const copy = async (text: string, done: string) => {
-    const ok = await Clipboard.setStringAsync(text);
-    if (ok) toast.success(done);
+  const copy = async () => {
+    const ok = await Clipboard.setStringAsync(url);
+    if (ok) toast.success(t('ownerTables.copied'));
     else toast.error(t('ownerTables.copyFailed'));
   };
   const share = async () => {
@@ -34,71 +36,79 @@ export function MenuLinkCard({ slug, venueName }: { slug: string; venueName: str
   };
 
   return (
-    <View style={[styles.wrap, wide && styles.split]}>
-      <View style={styles.col}>
-        <SectionLabel title={t('ownerTables.menuLink')} caps />
-        <View style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.line }]}>
-          <Text variant="body-strong" selectable accessibilityLabel={url} numberOfLines={1}>
-            {url}
-          </Text>
-          <View style={styles.row}>
+    <View style={styles.stack}>
+      <View style={[styles.card, styles.qrCard, cardStyle(theme)]}>
+        <View accessible accessibilityLabel={t('ownerTables.menuQrA11y')}>
+          <QrImage url={url} size={QR} />
+        </View>
+        <View style={styles.row}>
+          {canPrint ? (
             <IconAction
-              icon={Copy}
-              label={t('ownerTables.copyLink')}
-              onPress={() => void copy(url, t('ownerTables.copied'))}
+              icon={Download}
+              label={t('ownerTables.download')}
+              onPress={() => downloadQr(url, `${venueName}-menu`.replace(/\s+/g, '-'))}
             />
-            <IconAction icon={Share2} label={t('ownerTables.share')} onPress={() => void share()} />
-            {canPrint ? (
-              <IconAction
-                icon={Download}
-                label={t('ownerTables.download')}
-                onPress={() => downloadQr(url, `${venueName}-menu`.replace(/\s+/g, '-'))}
-              />
-            ) : null}
-          </View>
+          ) : null}
+          <IconAction icon={Share2} label={t('ownerTables.share')} onPress={() => void share()} />
         </View>
       </View>
 
-      <View style={styles.col}>
-        <SectionLabel title={t('ownerTables.embedTitle')} caps />
-        <View style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.line }]}>
-          <View style={[styles.code, { backgroundColor: theme.wash, borderColor: theme.line }]}>
-            <Text variant="caption" selectable numberOfLines={1} style={styles.mono}>
-              {snippet}
+      <View style={[styles.card, cardStyle(theme)]}>
+        <Text variant="caption" style={[styles.label, { color: theme.muted }]}>
+          {t('ownerTables.menuLink')}
+        </Text>
+        <View style={[styles.field, { backgroundColor: theme.wash }]}>
+          <Text variant="body" selectable numberOfLines={1} style={styles.url}>
+            {shown}
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('ownerTables.copyLink')}
+            onPress={() => void copy()}
+            style={({ pressed }) => [
+              styles.copy,
+              { backgroundColor: theme.surface, borderColor: theme.line },
+              pressed && { backgroundColor: theme.line },
+            ]}
+          >
+            <Copy size={16} color={theme.text} />
+            <Text variant="caption" style={styles.copyText}>
+              {t('ownerTables.copyShort')}
             </Text>
-          </View>
-          <View style={styles.row}>
-            <IconAction
-              icon={Code}
-              label={t('ownerTables.copyCode')}
-              onPress={() => void copy(snippet, t('ownerTables.codeCopied'))}
-            />
-          </View>
+          </Pressable>
         </View>
+        <Text variant="caption" style={{ color: theme.muted }}>
+          {t('ownerTables.menuLinkHint')}
+        </Text>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: tokens.space[4] },
-  split: { flexDirection: 'row', alignItems: 'stretch', gap: tokens.space[5] },
-  col: { flex: 1, minWidth: 0, gap: tokens.space[2] },
-  card: {
-    flex: 1,
-    justifyContent: 'space-between',
-    gap: tokens.space[3],
-    padding: tokens.space[4],
-    borderWidth: 1,
-    boxShadow: tokens.shadow.card,
-    borderRadius: tokens.radius.lg,
-    borderCurve: 'continuous',
-  },
-  row: { flexDirection: 'row', gap: tokens.space[2], flexWrap: 'wrap' },
-  code: {
-    padding: tokens.space[2],
+  stack: { gap: tokens.space[3] },
+  card: { padding: tokens.space[4], gap: tokens.space[3] },
+  qrCard: { alignItems: 'center', gap: tokens.space[5], paddingTop: tokens.space[8] },
+  row: { flexDirection: 'row', gap: tokens.space[2], alignSelf: 'stretch' },
+  label: { fontFamily: fontFamily.strong },
+  field: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[2],
+    minHeight: tokens.touchTarget,
+    paddingLeft: tokens.space[3],
+    paddingRight: tokens.space[1],
     borderRadius: tokens.radius.sm,
-    borderWidth: StyleSheet.hairlineWidth,
   },
-  mono: { fontFamily: 'monospace' },
+  url: { flex: 1 },
+  copy: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[1],
+    minHeight: tokens.touchTarget - tokens.space[2],
+    paddingHorizontal: tokens.space[3],
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: tokens.radius.sm,
+  },
+  copyText: { fontFamily: fontFamily.strong },
 });

@@ -10,15 +10,18 @@ Plain-language notes for Clarke. Newest at the top.
 Setup is easier to follow. It opens on its own, with no tab bar or sidebar, just Close. Each step asks one question, each field has its label on the page and a rounded box to type in, Wi-Fi and online payments can be skipped, and the end screen shows what you set up.
 
 **How it works**
+
 ```
 Venue → Tables → Wi-Fi (Skip) → How guests pay (Connect Paystack, or Skip for now)
                                          ↓
                           "You're ready": Venue · Tables · Wi-Fi · Payments
                           tap a line to go back and change it
 ```
+
 `footerFor(step, paystackConnected)` decides the buttons under each step. `setupSummary(...)` turns what's saved into the four summary lines. Both are plain functions with tests, so the screen only draws.
 
 **Files to look at**
+
 - `src/features/owner/screens/setup/setupFlow.ts` and its test: the buttons and the summary.
 - `SetupScreen.tsx`: the steps. `SetupFrame.tsx`: the page with Close. `SetupFooter.tsx`: the buttons. `SetupField.tsx` and `WifiStep.tsx`: the rounded fields. `SetupDone.tsx`: the end screen.
 - `src/features/owner/chrome/nav.ts` (`isFocused`): pages shown without the tab bar or sidebar.
@@ -38,16 +41,19 @@ In `setupFlow.ts`, change Wi-Fi's `skip: 'skip'` to `skip: null` and run `npm te
 The app no longer has a "payments off" switch. Every restaurant takes payment: in person by default, and online too once it connects its own Paystack. Staff mark in-person bills paid from Orders or Floor.
 
 **How it works**
+
 ```
 guest eats → order served, not paid → Floor shows the table under "Bill"
   guest pays online ............ Paystack says paid → table frees
   guest pays at the counter .... staff tap Mark paid → Cash / Card machine / … → table frees
 ```
+
 - Today leads with sales: money already taken, online or marked paid.
 - Setup's last step is "How guests pay", with a button to Integrations.
 - The old Payments page (payout account, refunds) is gone. Each restaurant sees online payments and refunds in its own Paystack dashboard. Old links go to Integrations.
 
 **Files to look at**
+
 - `src/features/owner/floor/floorStatus.ts`: a table frees once its bill is paid.
 - `src/features/owner/desk/daySummary.ts`: the "bills to collect" count.
 - `src/features/owner/screens/FloorScreen.tsx`: Mark paid opens the same sheet as Orders.
@@ -68,15 +74,18 @@ On Floor, open a table with an order, tap through Start cooking → Mark ready �
 A guest sees "Pay & split bill" only at a venue that has connected its own Paystack account. Everywhere else they pay in person, and staff mark the order paid.
 
 **How it works**
+
 ```
 venue page loads → payMethods.online?
   yes → Pay card on home, Pay button on the order, MoMo or card in the app
   no  → "Pay at the counter, or ask your waiter for the bill."
         an old /pay link goes to the order instead
 ```
+
 The server makes the same check. Starting a payment at a venue with no keys fails with `online_pay_off`, so the rule holds even if the app is out of date.
 
 **Files to look at**
+
 - `src/lib/payments.ts`: `canPayOnline`, the one place that decides.
 - `src/features/venue/ServiceGrid.tsx`, `src/features/orders/StatusScreen.tsx`, `src/features/pay/PayScreen.tsx`: the three places guests meet it.
 - `src/mocks/mockClient.ts` (`initializePayment`): the server-side check.
@@ -87,6 +96,40 @@ Before, one switch (`PAYMENTS_ENABLED`) turned payments on or off for every rest
 
 **Try it yourself**
 Open `/bean-there/t/7` and see the Pay card, then `/mamas-kitchen/t/12` and see it gone. In `samplePaymentSettings` (`src/mocks/world.ts`), change `'bean-there'` to `'mamas-kitchen'`, reload, and watch the card swap places.
+---
+
+## 2026-11-08 · One column everywhere, a better QR page, analytics for Sales and Insights
+
+**What we built**
+
+- Every owner page is one column now, as on the reference dashboard. That covers Notifications, Custom links, Store notice, Business, Staff, Settings, Feedback, Reviews, Services, Socials, Online ordering and the loyalty form.
+- **QR codes and links**: a big QR for your menu link with Download and Share, the link with a Copy button, the website code folded away, then one card for the table QR codes.
+- **Sales**: each figure says how it changed against the period before ("12% vs previous 7 days"). There is a new Average order card, a line chart over every day of the period, and a card showing how orders ended up.
+- **Insights**: four headline figures across, busy hours as bars, top dishes with their share of everything sold, and loyalty stamps over time.
+- Settings cards now have a bold title inside the white card.
+
+**How it works**
+
+```
+Sales page opens → asks for this period  ┐
+                 → asks for the one before ┘→ percentChange(now, before) → "▲ 12%"
+```
+
+`previousOrderRange()` works out the period just before: yesterday for Today, and the 7 days before for Last 7 days. `fillDays()` puts a zero on quiet days so the chart never skips a day.
+
+**Files to look at**
+
+- `src/features/owner/desk/salesCompare.ts` and its test
+- `src/features/owner/kit/charts/AreaChart.tsx`, `kit/FigureCard.tsx`
+- `src/features/owner/screens/tables/TablesScreen.tsx`, `TableQrCard.tsx`
+
+**New idea: comparing like with like**
+
+A change percent only means something when both periods are the same length. That is why "today so far" compares with all of yesterday. With nothing before, we show no percent at all rather than a made-up 100%.
+
+**Try it yourself**
+
+In `salesCompare.test.ts`, add a test for `percentChange(150, 100)`. What should it return?
 
 ---
 
@@ -859,6 +902,7 @@ Edit a dish, add sizes, set Large to 20 and save. Then order it as a guest and c
 **What we built**
 
 In the dish editor, a new "Pricing and stock" part has:
+
 - a status: Available, Out of stock or Hidden
 - a sale price (optional)
 - a stock count (empty means unlimited)
@@ -898,6 +942,7 @@ Set a dish's sale price above its normal price. The form stops you. In `dishRule
 **What we built**
 
 A Store notice page for the owner with two cards:
+
 - **Scrolling banner:** runs across the top of the home and menu pages.
 - **Popup:** shows once when a guest opens the page.
 
@@ -934,6 +979,7 @@ Set a banner with an end time two minutes from now, open the guest home and wait
 **What we built**
 
 Branding → Look has a new **Menu style** part with three choices:
+
 - **Dish order** in each section: your order, Popular first, A to Z, or price low or high
 - **How the menu opens:** a list or a grid. Guests can still switch.
 - **Guest pages:** Light, Dark, or Follow phone
@@ -971,6 +1017,7 @@ Pick Dark and Grid in Branding, save, and open your guest menu.
 **What we built**
 
 On a wide screen, Menu now opens as a **Live preview**. Your guest menu sits in a phone frame, in your own colours and font. On the right are your menu link, a **Menu is published** switch, and the menu style choices.
+
 - Tap a dish to edit it.
 - Each section has **Add dish**, an edit button and, when dish order is "Your order", a **Reorder** button where you drag dishes into place.
 - On a phone, switch between Live preview and List at the top.
@@ -1037,6 +1084,7 @@ Create an order for the Counter, then find it under New. It says Takeaway, becau
 **What we built**
 
 Today now shows six numbers:
+
 - Orders today
 - Pending (orders the kitchen hasn't started; red when any are waiting)
 - Visitors today
@@ -1076,6 +1124,7 @@ Create an order from Orders, then go back to Today. Orders today and Pending eac
 **What we built**
 
 A new **Online ordering** page under Settings:
+
 - **Take online orders**, the main switch for your menu link (table QR orders aren't affected)
 - **Pickup**, with how many minutes until it's ready
 - **Delivery**, with the lowest fee, the fee per km, the furthest distance, and an optional amount from which delivery is free
@@ -1147,6 +1196,7 @@ Turn on online ordering with pickup only, open your menu link in a private windo
 **What we built**
 
 A **Sales** page under Sales in the sidebar, for All time, Today, Yesterday, the last 7 days or the last 30 days. It shows:
+
 - **Six tiles:** order value, orders, completed, in progress, cancelled and discounts given
 - **Order value by day**
 - **Where orders came from:** tables, pickup or delivery

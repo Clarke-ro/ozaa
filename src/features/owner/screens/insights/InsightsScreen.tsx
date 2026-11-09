@@ -1,27 +1,23 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Frown, Meh, Smile } from 'lucide-react-native';
 import { api } from '@/lib/api';
 import type { InsightsReport } from '@/lib/api/types';
-import { pesewas } from '@/lib/brand';
-import { formatMoney } from '@/lib/money';
 import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
-import { useTheme } from '@/ui/theme';
+import { useOwnerLayout } from '../../chrome/layout';
 import { DeskWait, OwnerPage, SkeletonBlock } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
+import { PeriodSelect, StatusPill } from '../../kit';
 import {
-  BarChart,
-  ChartCard,
-  HourStrip,
-  hourLabel,
-  PeriodSelect,
-  RankTable,
-  SplitBar,
-  StatusPill,
-} from '../../kit';
+  BusyHours,
+  GuestsSplit,
+  MoodSplit,
+  SalesLine,
+  StampsLine,
+  TopDishesTable,
+} from './InsightCards';
 import { InsightFigures } from './InsightFigures';
 import { busiestHour, moodTotals } from './insightsModel';
 
@@ -29,13 +25,14 @@ type Range = InsightsReport['range'];
 const RANGES: readonly Range[] = ['today', '7d', '30d', '90d'];
 
 /**
- * Insights laid out like a report: the period picker on the right of the title, a grid of
- * figure cards two across, then one full-width card each for sales (when payments are on), top
- * dishes, busy hours and feedback mood.
+ * Insights as an analytics page: the period picker on the right of the title, the headline
+ * figures (four across on wide screens), sales as a line, then the
+ * breakdowns two by two on wide screens: top dishes and busy hours, returning guests and
+ * feedback mood, and loyalty stamps over time.
  */
 export function InsightsScreen() {
-  const theme = useTheme();
   const { t } = useTranslation();
+  const { wide } = useOwnerLayout();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const [range, setRange] = useState<Range>('30d');
   const report = useQuery({
@@ -44,10 +41,15 @@ export function InsightsScreen() {
     enabled: Boolean(venueId),
   });
   const r = report.data;
-  const money = (minor: number) => formatMoney(pesewas(minor), r?.currency ?? 'GHS');
   const mood = moodTotals(r?.feedbackSentimentSeries);
-  const moodTotal = mood.positive + mood.neutral + mood.negative;
   const peak = r ? busiestHour(r.peakHours) : null;
+
+  const pair = (a: ReactNode, b: ReactNode) => (
+    <View style={[styles.pair, wide && styles.row]}>
+      <View style={wide ? styles.flex : undefined}>{a}</View>
+      <View style={wide ? styles.flex : undefined}>{b}</View>
+    </View>
+  );
 
   return (
     <OwnerPage
@@ -73,78 +75,16 @@ export function InsightsScreen() {
       >
         {r ? (
           <View style={styles.stack}>
-            <InsightFigures report={r} peak={peak} feedback={moodTotal} />
-
-            <ChartCard
-              title={t('ownerInsights.sales')}
-              figure={money(r.salesPesewas)}
-              rows={r.series.map((p) => ({ label: p.label, value: money(p.pesewas) }))}
-              empty={r.series.length ? undefined : t('ownerDash.noTrend')}
-            >
-              <BarChart
-                bars={r.series.map((p) => ({ label: p.label, value: p.pesewas }))}
-                format={money}
-                summary={t('ownerInsights.sales')}
-              />
-            </ChartCard>
-
-            <ChartCard
-              title={t('ownerInsights.topDishes')}
-              empty={r.topItems.length ? undefined : t('ownerDash.noTrend')}
-            >
-              <RankTable
-                nameHead={t('ownerInsights.dishHead')}
-                valueHead={t('ownerInsights.salesHead')}
-                rows={[...r.topItems]
-                  .sort((a, b) => b.pesewas - a.pesewas)
-                  .slice(0, 5)
-                  .map((item) => ({
-                    label: item.name,
-                    value: money(item.pesewas),
-                    detail: t('ownerInsights.sold', { count: item.count }),
-                  }))}
-              />
-            </ChartCard>
-
-            <ChartCard
-              title={t('ownerInsights.busy')}
-              rows={r.peakHours.map((h) => ({
-                label: hourLabel(h.hour),
-                value: t('ownerInsights.orders', { count: h.orders }),
-              }))}
-              empty={peak == null ? t('ownerDash.noTrend') : undefined}
-            >
-              <HourStrip hours={r.peakHours} summary={t('ownerInsights.busy')} />
-            </ChartCard>
-
-            <ChartCard
-              title={t('ownerInsights.mood')}
-              empty={moodTotal ? undefined : t('ownerDash.noTrend')}
-            >
-              <SplitBar
-                summary={t('ownerInsights.mood')}
-                parts={[
-                  {
-                    label: t('ownerFeedback.mood.positive'),
-                    amount: mood.positive,
-                    color: theme.success,
-                    icon: Smile,
-                  },
-                  {
-                    label: t('ownerFeedback.mood.neutral'),
-                    amount: mood.neutral,
-                    color: theme.meta,
-                    icon: Meh,
-                  },
-                  {
-                    label: t('ownerFeedback.mood.negative'),
-                    amount: mood.negative,
-                    color: theme.error,
-                    icon: Frown,
-                  },
-                ]}
-              />
-            </ChartCard>
+            <InsightFigures
+              report={r}
+              peak={peak}
+              feedback={mood.positive + mood.neutral + mood.negative}
+              columns={wide ? 4 : 2}
+            />
+            <SalesLine report={r} />
+            {pair(<TopDishesTable report={r} />, <BusyHours report={r} />)}
+            {pair(<GuestsSplit report={r} />, <MoodSplit report={r} />)}
+            <StampsLine report={r} />
           </View>
         ) : null}
       </DeskWait>
@@ -154,5 +94,8 @@ export function InsightsScreen() {
 
 const styles = StyleSheet.create({
   stack: { gap: tokens.space[4] },
+  pair: { gap: tokens.space[4] },
+  row: { flexDirection: 'row', alignItems: 'flex-start' },
+  flex: { flex: 1, minWidth: 0 },
   actions: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
 });

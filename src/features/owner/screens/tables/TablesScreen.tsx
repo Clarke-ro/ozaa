@@ -1,30 +1,31 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Download, Printer, QrCode, Share2 } from 'lucide-react-native';
+import { QrCode } from 'lucide-react-native';
 import { api } from '@/lib/api';
 import { canPayOnline } from '@/lib/payments';
 import { generateTableCardHtml, type TableCardTemplate } from '@/features/tables';
 import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
-import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
 import { EmptyCard, SectionLabel, toast } from '../../kit';
 import { AddTablesSheet } from './AddTablesSheet';
-import { CARD_ACCENTS, TableCardControls, TableCardPreview } from './TableCardPreview';
-import { IconAction } from './IconAction';
+import { EmbedCard } from './EmbedCard';
 import { MenuLinkCard } from './MenuLinkCard';
-import { canPrint, downloadQr, printHtml, shareLink } from './qrActions';
+import { printHtml, shareLink } from './qrActions';
+import { TableQrCard } from './TableQrCard';
+import { CARD_ACCENTS } from './TableCardPreview';
 
+/**
+ * QR codes and links in one column: the menu's own QR code and link first (for posters and
+ * bios), the website embed folded under it, then one card for the table QR codes, where you
+ * pick a table, style its card and print it.
+ */
 export function TablesScreen() {
-  const theme = useTheme();
   const { t } = useTranslation();
-  const { width } = useWindowDimensions();
-  const wide = width >= 900;
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const client = useQueryClient();
   const [template, setTemplate] = useState<TableCardTemplate>('folded_tent');
@@ -56,9 +57,10 @@ export function TablesScreen() {
   const items = tables.data?.items ?? [];
   const open = items.find((table) => table.id === openId) ?? items[0] ?? null;
   const venueName = venue.data?.name ?? '';
-  // This line is printed on every table card, so it must not promise paying while payments are off.
   // Printed cards only promise paying by phone where the venue takes payment online.
   const cta = t(canPayOnline(venue.data) ? 'ownerTables.cta' : 'ownerTables.ctaNoPay');
+  const name = (table: (typeof items)[number]) =>
+    table.label ?? t('ownerOrders.table', { code: table.code });
 
   const print = (all: boolean) => {
     const targets = all ? items : open ? [open] : [];
@@ -74,94 +76,10 @@ export function TablesScreen() {
     if (result === 'failed') toast.error(t('ownerTables.shareFailed'));
   };
 
-  const name = (table: (typeof items)[number]) =>
-    table.label ?? t('ownerOrders.table', { code: table.code });
-
-  const preview = open ? (
-    <View style={[styles.card, { borderColor: theme.line, backgroundColor: theme.surface }]}>
-      <TableCardPreview
-        table={open}
-        venueName={venueName}
-        template={template}
-        accent={accent}
-        cta={cta}
-      />
-      <TableCardControls
-        template={template}
-        onTemplate={setTemplate}
-        accent={accent}
-        onAccent={setAccent}
-      />
-      <View style={styles.actions}>
-        {canPrint ? (
-          <Button
-            label={t('ownerTables.printOne', { name: name(open) })}
-            onPress={() => print(false)}
-          />
-        ) : null}
-        <View style={styles.row}>
-          <IconAction icon={Share2} label={t('ownerTables.share')} onPress={() => void share()} />
-          {canPrint ? (
-            <IconAction
-              icon={Download}
-              label={t('ownerTables.download')}
-              onPress={() =>
-                open.qrUrl &&
-                downloadQr(open.qrUrl, `${venueName}-${open.code}`.replace(/\s+/g, '-'))
-              }
-            />
-          ) : null}
-          {canPrint && items.length > 1 ? (
-            <IconAction
-              icon={Printer}
-              label={t('ownerTables.printAll', { count: items.length })}
-              onPress={() => print(true)}
-            />
-          ) : null}
-        </View>
-        {canPrint ? null : (
-          <Text variant="caption" style={{ color: theme.muted }}>
-            {t('ownerTables.printOnWeb')}
-          </Text>
-        )}
-      </View>
-    </View>
-  ) : null;
-
-  const list = (
-    <View style={styles.listWrap}>
-      <SectionLabel title={t('ownerTables.count', { count: items.length })} caps />
-      <View accessibilityRole="radiogroup" style={styles.grid}>
-        {items.map((table) => {
-          const on = table.id === open?.id;
-          return (
-            <Pressable
-              key={table.id}
-              accessibilityRole="radio"
-              accessibilityState={{ checked: on }}
-              accessibilityLabel={name(table)}
-              onPress={() => setOpenId(table.id)}
-              style={({ pressed }) => [
-                styles.seat,
-                {
-                  backgroundColor: on ? theme.black : pressed ? theme.wash : theme.surface,
-                  borderColor: on ? theme.black : theme.line,
-                },
-              ]}
-            >
-              <Text variant="body-strong" style={{ color: on ? theme.white : theme.text }}>
-                {table.code}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
-    </View>
-  );
-
   return (
     <OwnerPage
       title={t('owner.tables')}
+      subtitle={t('ownerTables.pageLead')}
       action={
         items.length > 0 ? (
           <Button
@@ -173,33 +91,49 @@ export function TablesScreen() {
         ) : null
       }
     >
-      {venue.data ? <MenuLinkCard slug={venue.data.slug} venueName={venueName} /> : null}
-      <SectionLabel title={t('ownerTables.tableCodes')} caps />
-      <DeskWait
-        loading={tables.isLoading}
-        error={tables.isError}
-        onRetry={() => void tables.refetch()}
-      >
-        {items.length === 0 ? (
-          <EmptyCard
-            icon={QrCode}
-            title={t('ownerTables.emptyTitle')}
-            description={t('ownerTables.emptyBody')}
-            actionLabel={t('ownerTables.addTitle')}
-            onAction={() => setAdding(true)}
-          />
-        ) : wide ? (
-          <View style={styles.split}>
-            <View style={styles.flex}>{list}</View>
-            <View style={styles.flex}>{preview}</View>
+      <View style={styles.stack}>
+        {venue.data ? (
+          <View style={styles.group}>
+            <SectionLabel title={t('ownerTables.menuLink')} caps />
+            <MenuLinkCard slug={venue.data.slug} venueName={venueName} />
+            <EmbedCard slug={venue.data.slug} venueName={venueName} />
           </View>
-        ) : (
-          <>
-            {list}
-            {preview}
-          </>
-        )}
-      </DeskWait>
+        ) : null}
+
+        <View style={styles.group}>
+          <SectionLabel title={t('ownerTables.tableCodes')} caps />
+          <DeskWait
+            loading={tables.isLoading}
+            error={tables.isError}
+            onRetry={() => void tables.refetch()}
+          >
+            {items.length === 0 || !open ? (
+              <EmptyCard
+                icon={QrCode}
+                title={t('ownerTables.emptyTitle')}
+                description={t('ownerTables.emptyBody')}
+                actionLabel={t('ownerTables.addTitle')}
+                onAction={() => setAdding(true)}
+              />
+            ) : (
+              <TableQrCard
+                tables={items}
+                open={open}
+                onOpen={setOpenId}
+                name={name}
+                venueName={venueName}
+                template={template}
+                onTemplate={setTemplate}
+                accent={accent}
+                onAccent={setAccent}
+                cta={cta}
+                onPrint={print}
+                onShare={() => void share()}
+              />
+            )}
+          </DeskWait>
+        </View>
+      </View>
       <AddTablesSheet
         visible={adding}
         onClose={() => setAdding(false)}
@@ -212,28 +146,6 @@ export function TablesScreen() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  split: { flexDirection: 'row', gap: tokens.space[6], alignItems: 'flex-start' },
-  card: {
-    gap: tokens.space[4],
-    padding: tokens.space[4],
-    borderWidth: 1,
-    boxShadow: tokens.shadow.card,
-    borderRadius: tokens.radius.lg,
-    borderCurve: 'continuous',
-  },
-  actions: { gap: tokens.space[3] },
-  row: { flexDirection: 'row', gap: tokens.space[2] },
-  listWrap: { gap: tokens.space[2] },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.space[2] },
-  seat: {
-    minWidth: 52,
-    height: 52,
-    paddingHorizontal: tokens.space[3],
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: tokens.radius.md,
-    borderCurve: 'continuous',
-  },
+  stack: { gap: tokens.space[6] },
+  group: { gap: tokens.space[3] },
 });

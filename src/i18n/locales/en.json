@@ -748,6 +748,9 @@
     }
   },
   "ownerTables": {
+    "pageLead": "Share your menu link and print a QR code for every table.",
+    "menuQrA11y": "QR code for your menu link",
+    "copyShort": "Copy",
     "lead": "Each table gets its own QR code. Guests scan it to see the menu, order and pay.",
     "cta": "Scan to see the menu, call a waiter and pay",
     "ctaNoPay": "Scan to see the menu, order and call a waiter",
@@ -795,7 +798,7 @@
     "copyLink": "Copy link",
     "copyFailed": "Could not copy. Select the text and copy it yourself.",
     "embedTitle": "Add the menu to your website",
-    "embedHint": "Paste this code into your website where the menu should appear.",
+    "embedHint": "Show your menu inside your own website.",
     "copyCode": "Copy code",
     "codeCopied": "Code copied",
     "tableCodes": "Table QR codes"
@@ -1332,6 +1335,8 @@
       "90d": "Last 90 days"
     },
     "feedbackCount": "Feedback notes",
+    "soldShare_one": "1 sold · {{percent}}% of dishes sold",
+    "soldShare_other": "{{count}} sold · {{percent}}% of dishes sold",
     "dishHead": "Dish",
     "salesHead": "Sales",
     "sales": "Sales",
@@ -1576,6 +1581,9 @@
     }
   },
   "ownerLinks": {
+    "lead": "Extra buttons on your guest page. Switch one off to hide it without deleting it.",
+    "count_one": "1 link",
+    "count_other": "{{count}} links",
     "add": "Add a link",
     "addShort": "Add",
     "edit": "Edit link",
@@ -1661,6 +1669,7 @@
   },
   "ownerNotes": {
     "title": "Notifications",
+    "lead": "Orders, waiter calls, payments and guest notes, newest first.",
     "pinned": "Needs you",
     "new": "New",
     "earlier": "Earlier",
@@ -1895,10 +1904,21 @@
     }
   },
   "ownerSales": {
-    "lead": "What was ordered, from every table and your menu link. Paid or not; payments come separately.",
+    "lead": "Order value, orders and how they were paid, compared with the period before.",
+    "vs": {
+      "all": "vs before",
+      "today": "vs yesterday",
+      "yesterday": "vs the day before",
+      "7d": "vs previous 7 days",
+      "30d": "vs previous 30 days"
+    },
+    "statusMix": "How orders ended up",
+    "soldShare_one": "1 sold · {{percent}}% of order value",
+    "soldShare_other": "{{count}} sold · {{percent}}% of order value",
     "stats": {
       "value": "Order value",
       "orders": "Orders",
+      "average": "Average order",
       "completed": "Completed",
       "inProgress": "In progress",
       "cancelled": "Cancelled",
@@ -1907,6 +1927,7 @@
     "notes": {
       "value": "Cancelled orders not counted",
       "orders": "Not counting cancelled",
+      "average": "Order value per order",
       "completed": "Served or handed over",
       "inProgress": "New, cooking or ready",
       "cancelled": "Rejected or cancelled",

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'lucide-react-native';
@@ -7,31 +7,24 @@ import { api } from '@/lib/api';
 import type { CustomLink } from '@/lib/api/types';
 import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
-import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
-import { EmptyCard, Toggle, toast, SectionLabel } from '../../kit';
-import { linkIcon } from './icons';
-import { LinkEditor } from './LinkEditor';
 import { ownerKeys } from '../../data/keys';
+import { AddDashed, EmptyCard, SectionLabel, toast } from '../../kit';
+import { LinkEditor } from './LinkEditor';
+import { LinkRow } from './LinkRow';
 
 const PLACEMENTS: CustomLink['placement'][] = ['button', 'banner', 'menu'];
 
-function host(url: string): string {
-  try {
-    return new URL(url).host.replace(/^www\./, '');
-  } catch {
-    return url;
-  }
-}
-
-/** Extra buttons on the guest page, grouped by where they show. Switch one off without deleting it. */
+/**
+ * Extra buttons on the guest page in one column, grouped by where they show: a white card per
+ * link, then the count and a dashed "Add a link" box at the end. Switch one off to hide it
+ * without deleting it.
+ */
 export function LinksScreen() {
   const theme = useTheme();
-  const { t, i18n } = useTranslation();
-  const { width } = useWindowDimensions();
-  const twoCol = width >= 920;
+  const { t } = useTranslation();
   const client = useQueryClient();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const key = ownerKeys.links(venueId);
@@ -60,17 +53,7 @@ export function LinksScreen() {
   const items = [...(links.data?.items ?? [])].sort((a, b) => a.sortOrder - b.sortOrder);
 
   return (
-    <OwnerPage
-      title={t('owner.links')}
-      action={
-        <Button
-          label={t('ownerLinks.addShort')}
-          tone="secondary"
-          size="md"
-          onPress={() => setEditing(null)}
-        />
-      }
-    >
+    <OwnerPage title={t('owner.links')} subtitle={t('ownerLinks.lead')}>
       <DeskWait
         loading={links.isLoading}
         error={links.isError}
@@ -85,60 +68,33 @@ export function LinksScreen() {
             onAction={() => setEditing(null)}
           />
         ) : (
-          PLACEMENTS.map((placement) => {
-            const group = items.filter((l) => l.placement === placement);
-            if (!group.length) return null;
-            return (
-              <View key={placement} style={styles.group}>
-                <SectionLabel title={t(`ownerLinks.placement.${placement}`)} caps />
-                <View style={[styles.list, twoCol && styles.grid]}>
-                  {group.map((link) => {
-                    const Icon = linkIcon(link.icon);
-                    return (
-                      <View
+          <View style={styles.stack}>
+            {PLACEMENTS.map((placement) => {
+              const group = items.filter((l) => l.placement === placement);
+              if (!group.length) return null;
+              return (
+                <View key={placement} style={styles.group}>
+                  <SectionLabel title={t(`ownerLinks.placement.${placement}`)} caps />
+                  <View style={styles.list}>
+                    {group.map((link) => (
+                      <LinkRow
                         key={link.id}
-                        style={[
-                          styles.row,
-                          twoCol && styles.cell,
-                          { backgroundColor: theme.surface, borderColor: theme.line },
-                        ]}
-                      >
-                        <Pressable
-                          accessibilityRole="button"
-                          accessibilityLabel={t('ownerLinks.editA11y', { title: link.title })}
-                          onPress={() => setEditing(link)}
-                          style={({ pressed }) => [styles.main, pressed && { opacity: 0.6 }]}
-                        >
-                          <Icon size={20} color={link.enabled ? theme.ink : theme.meta} />
-                          <View style={styles.flex}>
-                            <Text
-                              variant="body-strong"
-                              style={!link.enabled && { color: theme.muted }}
-                              numberOfLines={1}
-                            >
-                              {link.title}
-                            </Text>
-                            <Text variant="caption" numberOfLines={1} style={{ color: theme.muted }}>
-                              {host(link.url)} ·{' '}
-                              {t('ownerLinks.clicks', {
-                                count: link.clicks,
-                                n: link.clicks.toLocaleString(i18n.language),
-                              })}
-                            </Text>
-                          </View>
-                        </Pressable>
-                        <Toggle
-                          value={link.enabled}
-                          onChange={() => toggle.mutate(link)}
-                          label={t('ownerLinks.showA11y', { title: link.title })}
-                        />
-                      </View>
-                    );
-                  })}
+                        link={link}
+                        onEdit={() => setEditing(link)}
+                        onToggle={() => toggle.mutate(link)}
+                      />
+                    ))}
+                  </View>
                 </View>
-              </View>
-            );
-          })
+              );
+            })}
+            <View style={styles.group}>
+              <Text variant="caption" style={[styles.count, { color: theme.muted }]}>
+                {t('ownerLinks.count', { count: items.length })}
+              </Text>
+              <AddDashed label={t('ownerLinks.add')} onPress={() => setEditing(null)} />
+            </View>
+          </View>
         )}
       </DeskWait>
       {editing !== undefined ? (
@@ -154,22 +110,8 @@ export function LinksScreen() {
 }
 
 const styles = StyleSheet.create({
-  group: { gap: tokens.space[2] },
-  list: { gap: tokens.space[3] },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start' },
-  cell: { flexBasis: '48.5%', flexGrow: 1 },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[3],
-    minHeight: 64,
-    paddingHorizontal: tokens.space[4],
-    paddingVertical: tokens.space[3],
-    borderWidth: 1,
-    borderRadius: tokens.radius.lg,
-    borderCurve: 'continuous',
-    boxShadow: tokens.shadow.card,
-  },
-  main: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
-  flex: { flex: 1, gap: 2 },
+  stack: { gap: tokens.space[6] },
+  group: { gap: tokens.space[3] },
+  list: { gap: tokens.space[2] },
+  count: { alignSelf: 'flex-end' },
 });

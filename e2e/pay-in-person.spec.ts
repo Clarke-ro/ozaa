@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
-// This build ships with PAYMENTS_ENABLED=false (docs/payments-removed.md). Nothing a guest or an
-// owner can reach should offer to take, track or report money paid.
+// A venue without Paystack: guests pay in person and staff mark the bill paid. Nothing a guest or
+// an owner can reach should offer the old in-app payment or payout screens.
 const PAY_WORDS = /Pay & split bill|MoMo or card|Mark paid in cash|Payouts?\b|Refund/;
 
 async function noPayWords(page: Page) {

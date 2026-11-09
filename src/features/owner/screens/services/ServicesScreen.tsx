@@ -1,4 +1,4 @@
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
@@ -21,9 +21,7 @@ const SECTIONS: Toggle['section'][] = ['table', 'rewards', 'fun', 'more'];
 /** What guests can do from the table (each switch saves at once), and the venue Wi-Fi. */
 export function ServicesScreen() {
   const { t } = useTranslation();
-  const { width } = useWindowDimensions();
-  const wide = width >= 920;
-  const client = useQueryClient();
+    const client = useQueryClient();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const key = ownerKeys.services(venueId);
   const services = useQuery({
@@ -90,8 +88,8 @@ export function ServicesScreen() {
         onRetry={() => void services.refetch()}
       >
         {s ? (
-          <View style={[styles.stack, wide && styles.split]}>
-            <View style={[styles.stack, wide && styles.mainCol]}>
+          <View style={styles.stack}>
+            <View style={styles.stack}>
               {SECTIONS.map((section) => {
                 // Pay in the app needs the venue's own Paystack, so its switch only shows then.
                 const items = s.services.filter(
@@ -146,7 +144,7 @@ export function ServicesScreen() {
                 );
               })}
             </View>
-            <View style={wide ? styles.sideCol : undefined}>
+            <View>
               <WifiSection value={draft.value} onChange={draft.set} />
             </View>
           </View>
@@ -158,9 +156,6 @@ export function ServicesScreen() {
 
 const styles = StyleSheet.create({
   stack: { gap: tokens.space[5] },
-  split: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.space[6] },
-  mainCol: { flex: 1, minWidth: 0 },
-  sideCol: { width: 420 },
   row: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
   flex: { flex: 1 },
 });

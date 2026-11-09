@@ -5,7 +5,7 @@ import { insightTiles } from '../../desk/dashboardModel';
 import { CardGrid, FigureCard, hourLabel } from '../../kit';
 
 /**
- * Insights' figure cards, two across at every size: scans and menu views, the busiest hour,
+ * Insights' headline figure cards, four across on wide screens and two on phones: scans and menu views, the busiest hour,
  * returning guests, feedback notes, then the loyalty figures (which open Loyalty). A figure
  * the server did not send is left out, never shown as a made-up zero.
  */
@@ -13,10 +13,12 @@ export function InsightFigures({
   report: r,
   peak,
   feedback,
+  columns,
 }: {
   report: InsightsReport;
   peak: number | null;
   feedback: number;
+  columns: number;
 }) {
   const { t, i18n } = useTranslation();
   const router = useRouter();
@@ -26,7 +28,7 @@ export function InsightFigures({
   const loyalty = tiles.filter((tile) => tile.id !== 'scans' && tile.id !== 'menuViews');
 
   return (
-    <CardGrid columns={2}>
+    <CardGrid columns={columns}>
       {visits.map((tile) => (
         <FigureCard
           key={tile.id}

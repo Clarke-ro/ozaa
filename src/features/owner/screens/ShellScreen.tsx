@@ -1,6 +1,6 @@
 import { makeStyles } from '@/ui/makeStyles';
 import type { ReactNode } from 'react';
-import { View, useWindowDimensions } from 'react-native';
+import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { type LucideIcon } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
@@ -24,14 +24,12 @@ export function ShellScreen({
 }) {
   const styles = useStyles();
   const { t } = useTranslation();
-  const { width } = useWindowDimensions();
-  const wide = width >= 920;
-
+  
   return (
     <OwnerPage title={title}>
-      <View style={[styles.stack, wide && styles.split]}>
+      <View style={styles.stack}>
         {preview ? (
-          <DeskCard style={[styles.previewContainer, wide && styles.mainCol]}>
+          <DeskCard style={styles.previewContainer}>
             <View style={styles.previewHeader}>
               <View style={styles.previewTitleRow}>
                 {Icon ? <IconTile icon={Icon} tone="tint" size={36} /> : null}
@@ -48,7 +46,7 @@ export function ShellScreen({
           </DeskCard>
         ) : null}
 
-        <DeskCard style={[styles.roadmapCard, wide && styles.sideCol]}>
+        <DeskCard style={styles.roadmapCard}>
           <SectionLabel title={t('ownerShell.roadmap')} caps />
 
           <View style={styles.stepsList}>

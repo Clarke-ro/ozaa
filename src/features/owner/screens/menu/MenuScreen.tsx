@@ -40,8 +40,7 @@ export function MenuScreen() {
   const [sectionsOpen, setSectionsOpen] = useState(false);
   const [pending, setPending] = useState<Pending | null>(null);
   const { width } = useWindowDimensions();
-  const twoCol = width >= 960;
-  const [picked, setPicked] = useState<'list' | 'live' | null>(null);
+    const [picked, setPicked] = useState<'list' | 'live' | null>(null);
   const mode = picked ?? (width >= LIVE_FIRST ? 'live' : 'list');
 
   const all = desk.menu.data?.items ?? [];
@@ -152,7 +151,7 @@ export function MenuScreen() {
                   <ListOrdered size={20} color={theme.ink} />
                 </Pressable>
               </View>
-              <View style={[styles.filterBar, twoCol && styles.filterBarWide]}>
+              <View style={styles.filterBar}>
                 <FilterChips<DishFilter>
                   label={t('ownerMenu.filterLabel')}
                   value={status}
@@ -218,9 +217,9 @@ export function MenuScreen() {
                     onPress={() => desk.setAll.mutate({ items: shown, available: true })}
                   />
                 </View>
-                <View style={[styles.list, twoCol && styles.grid]}>
+                <View style={styles.list}>
                   {shown.map((item) => (
-                    <View key={item.id} style={twoCol ? styles.cell : undefined}>
+                    <View key={item.id}>
                       <MenuItemRow
                         item={item}
                         currency={desk.currency}
@@ -321,13 +320,6 @@ const styles = StyleSheet.create({
   controls: { gap: tokens.space[3] },
   searchRow: { flexDirection: 'row', gap: tokens.space[2] },
   filterBar: { gap: tokens.space[2] },
-  filterBarWide: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    flexWrap: 'wrap',
-    gap: tokens.space[3],
-  },
   search: {
     flex: 1,
     flexDirection: 'row',
@@ -357,6 +349,4 @@ const styles = StyleSheet.create({
   bulk: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: tokens.space[1] },
   bulkBtn: { paddingHorizontal: tokens.space[2] },
   list: { gap: tokens.space[3] },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start' },
-  cell: { flexBasis: '48.5%', flexGrow: 1 },
 });

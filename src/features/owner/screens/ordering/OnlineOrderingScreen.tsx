@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Bike, ShoppingBag, Store } from 'lucide-react-native';
@@ -27,9 +27,7 @@ const EXAMPLE_FOOD = 5000;
 export function OnlineOrderingScreen() {
   const theme = useTheme();
   const { t } = useTranslation();
-  const { width } = useWindowDimensions();
-  const twoCol = width >= 920;
-  const venueId = useOwnerSession((state) => state.venueId) ?? '';
+    const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const venue = useQuery({
     queryKey: ownerKeys.venue(venueId),
     queryFn: () => api.ownerGetVenue(venueId),
@@ -100,8 +98,8 @@ export function OnlineOrderingScreen() {
           />
         </Section>
 
-        <View style={[styles.methods, twoCol && styles.methodsRow]}>
-          <View style={twoCol ? styles.col : undefined}>
+        <View style={styles.methods}>
+          <View>
             <Section title={t('ownerOrdering.pickup')}>
               <SwitchRow
                 icon={Store}
@@ -124,7 +122,7 @@ export function OnlineOrderingScreen() {
             </Section>
           </View>
 
-          <View style={twoCol ? styles.col : undefined}>
+          <View>
             <Section title={t('ownerOrdering.delivery')}>
               <SwitchRow
                 icon={Bike}
@@ -216,8 +214,6 @@ export function OnlineOrderingScreen() {
 
 const styles = StyleSheet.create({
   methods: { gap: tokens.space[5] },
-  methodsRow: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.space[5] },
-  col: { flex: 1, minWidth: 0 },
   stack: { gap: tokens.space[3] },
   row: { flexDirection: 'row', gap: tokens.space[3] },
   flex: { flex: 1, minWidth: 0 },

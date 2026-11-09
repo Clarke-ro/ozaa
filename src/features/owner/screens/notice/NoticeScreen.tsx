@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
@@ -21,9 +21,7 @@ type Drafts = Record<NoticeKind, NoticeDraft>;
 /** Store notice: a scrolling banner and a popup on the guest pages, side by side on desktop. */
 export function NoticeScreen() {
   const { t } = useTranslation();
-  const { width } = useWindowDimensions();
-  const twoCol = width >= 920;
-  const venueId = useOwnerSession((state) => state.venueId) ?? '';
+    const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const venue = useQuery({
     queryKey: ownerKeys.venue(venueId),
     queryFn: () => api.ownerGetVenue(venueId),
@@ -81,9 +79,9 @@ export function NoticeScreen() {
         error={venue.isError}
         onRetry={() => void venue.refetch()}
       >
-        <View style={[styles.stack, twoCol && styles.split]}>
+        <View style={styles.stack}>
           {(['banner', 'popup'] as const).map((kind) => (
-            <View key={kind} style={twoCol ? styles.col : undefined}>
+            <View key={kind}>
               <NoticeCard
                 kind={kind}
                 draft={current[kind]}
@@ -101,6 +99,4 @@ export function NoticeScreen() {
 
 const styles = StyleSheet.create({
   stack: { gap: tokens.space[5] },
-  split: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.space[5] },
-  col: { flex: 1, minWidth: 0 },
 });
