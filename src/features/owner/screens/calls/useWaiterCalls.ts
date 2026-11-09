@@ -3,9 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
 import { ownerKeys } from '../../data/keys';
 import { toast } from '../../kit';
-
-// Calls are urgent, so check every few seconds while a screen that shows them is open.
-const LIVE_MS = 5000;
+import { POLL_MS } from '@/lib/polling';
 
 /** The venue's waiter calls and bill requests, plus the "On my way" / "Done" update. */
 export function useWaiterCalls(venueId: string) {
@@ -16,7 +14,7 @@ export function useWaiterCalls(venueId: string) {
     queryKey: key,
     queryFn: () => api.ownerListWaiterCalls(venueId),
     enabled: Boolean(venueId),
-    refetchInterval: LIVE_MS,
+    refetchInterval: POLL_MS.owner,
   });
   const update = useMutation({
     mutationFn: ({ id, status }: { id: string; status: 'acknowledged' | 'resolved' }) =>

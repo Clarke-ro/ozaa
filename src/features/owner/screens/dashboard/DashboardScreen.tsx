@@ -12,9 +12,8 @@ import { dayPart } from './greeting';
 import { QuickActions } from './QuickActions';
 import { SetupList } from './SetupList';
 import { StatsRow } from './StatsRow';
+import { POLL_MS } from '@/lib/polling';
 
-// Live data refreshes every few seconds while the screen is open; the kitchen moves fast.
-const LIVE_MS = 5000;
 const SKELETON = tokens.space[16] + tokens.space[12];
 
 /**
@@ -32,7 +31,7 @@ export function DashboardScreen() {
     queryKey: ownerKeys.dashboard(venueId),
     queryFn: () => api.ownerGetDashboard(venueId),
     enabled: Boolean(venueId),
-    refetchInterval: LIVE_MS,
+    refetchInterval: POLL_MS.owner,
   });
   const venue = useQuery({
     queryKey: ownerKeys.venue(venueId),

@@ -9,9 +9,7 @@ import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { REASON_ICON } from './reasonIcon';
 import { guestKeys } from '@/lib/queryKeys';
-
-// Checks the call often enough that "on the way" shows within a few seconds of the tap.
-const POLL_MS = 3000;
+import { POLL_MS } from '@/lib/polling';
 
 /** One call the guest made, live: waiting (and since when), who is coming, or done. */
 export function CallStatusCard({ id, now }: { id: string; now: number }) {
@@ -21,7 +19,7 @@ export function CallStatusCard({ id, now }: { id: string; now: number }) {
     queryKey: guestKeys.waiterCall(id),
     queryFn: () => api.getWaiterCall(id),
     // Stop asking once it is done.
-    refetchInterval: (q) => (q.state.data?.status === 'resolved' ? false : POLL_MS),
+    refetchInterval: (q) => (q.state.data?.status === 'resolved' ? false : POLL_MS.guestWaiting),
   });
   const c = call.data;
   if (!c) return null;

@@ -6,9 +6,7 @@ import { api } from '@/lib/api';
 import { useOwnerSession } from '@/features/session';
 import { buildNotifications, unseenCount, type Note } from '../desk/notifications';
 import { ownerKeys } from './keys';
-
-// The feed refreshes as often as the busiest screen it draws from (orders and calls).
-const LIVE_MS = 15_000;
+import { POLL_MS } from '@/lib/polling';
 
 type SeenState = {
   /** When the owner last opened Notifications, per venue. Kept on this device only. */
@@ -43,7 +41,7 @@ export function useNotifications(): {
   const venueId = useOwnerSession((s) => s.venueId) ?? '';
   const lastSeen = useNotesSeen((s) => s.seen[venueId] ?? null);
   const on = Boolean(venueId);
-  const opts = { enabled: on, refetchInterval: LIVE_MS } as const;
+  const opts = { enabled: on, refetchInterval: POLL_MS.ownerNotifications } as const;
   const orders = useQuery({
     queryKey: ownerKeys.orders(venueId),
     queryFn: () => api.ownerListOrders(venueId),

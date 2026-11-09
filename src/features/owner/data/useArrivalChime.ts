@@ -6,9 +6,8 @@ import { useOwnerSession } from '@/features/session';
 import { chimeStep, type ChimeState } from '../desk/arrivals';
 import { ownerKeys } from './keys';
 import { useOwnerPrefs } from './ownerPrefs';
+import { POLL_MS } from '@/lib/polling';
 
-// Same pace as the Orders and Calls screens, and the same cache keys, so this adds no extra calls.
-const LIVE_MS = 5000;
 const CHIME = require('../../../../assets/sounds/new-order.wav');
 
 /**
@@ -29,13 +28,13 @@ export function useArrivalChime() {
     queryKey: ownerKeys.orders(venueId),
     queryFn: () => api.ownerListOrders(venueId),
     enabled: Boolean(venueId) && hearsOrders,
-    refetchInterval: LIVE_MS,
+    refetchInterval: POLL_MS.owner,
   });
   const calls = useQuery({
     queryKey: ownerKeys.calls(venueId),
     queryFn: () => api.ownerListWaiterCalls(venueId),
     enabled: Boolean(venueId) && hearsCalls,
-    refetchInterval: LIVE_MS,
+    refetchInterval: POLL_MS.owner,
   });
 
   const seen = useRef<ChimeState>({ orders: null, calls: null });

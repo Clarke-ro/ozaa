@@ -18,8 +18,7 @@ import { TableGrid } from './floor/TableGrid';
 import { filterTables, floorCounts, type FloorFilter } from './floor/floorFilter';
 import { useFloorActions } from './floor/useFloorActions';
 import { MarkPaidSheet, inPersonMethods } from './orders/MarkPaidSheet';
-
-const LIVE_MS = 5000;
+import { POLL_MS } from '@/lib/polling';
 
 /**
  * The room at a glance: filter chips, then every table as a tile across the full page width.
@@ -39,7 +38,7 @@ export function FloorScreen() {
     queryKey: ownerKeys.floor(venueId),
     queryFn: () => api.ownerGetFloor(venueId),
     enabled: Boolean(venueId),
-    refetchInterval: LIVE_MS,
+    refetchInterval: POLL_MS.owner,
   });
   // Polled with the floor: a table's sheet shows its bill and actions only once the order is
   // here, so a table that has just ordered must not open with "No open bill".
@@ -47,7 +46,7 @@ export function FloorScreen() {
     queryKey: ownerKeys.orders(venueId),
     queryFn: () => api.ownerListOrders(venueId),
     enabled: Boolean(venueId),
-    refetchInterval: LIVE_MS,
+    refetchInterval: POLL_MS.owner,
   });
   const venue = useQuery({
     queryKey: ownerKeys.venue(venueId),
