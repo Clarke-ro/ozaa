@@ -6,7 +6,7 @@ export const ORDER_RANGES: readonly OrderRange[] = ['all', 'today', 'yesterday',
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** Midnight at the start of the venue's calendar day that is `daysBack` days before `now`. */
-function midnight(now: number, daysBack: number, timeZone: string): string {
+export function midnight(now: number, daysBack: number, timeZone: string): string {
   // The venue's date today, e.g. "2026-11-04", then step back whole days on the calendar.
   const today = formatWhen(new Date(now).toISOString(), timeZone).slice(0, 10);
   const [y, m, d] = today.split('-').map(Number) as [number, number, number];

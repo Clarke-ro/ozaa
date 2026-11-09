@@ -1,16 +1,14 @@
 import { Image, Pressable, StyleSheet, View } from 'react-native';
-import Svg, { Path, Rect } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
 import { Check } from 'lucide-react-native';
-import { env } from '@/lib/env';
 import type { Table } from '@/lib/api/types';
-import { qrModules } from '@/lib/qrSvg';
 import { hapticSelection } from '@/lib/haptics';
 import type { TableCardTemplate } from '@/features/tables';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { cravinsTheme, ThemeProvider, useTheme } from '@/ui/theme';
 import { Segmented } from '../../kit';
+import { QrImage } from './QrImage';
 import { QR_PAPER } from '@/theme/palette';
 
 // Card accents. Names are read out by screen readers and shown under the selected swatch.
@@ -24,6 +22,7 @@ export const CARD_ACCENTS = [
 
 // A QR code must be dark on light or many phone cameras will not read it, so these never follow dark mode.
 const QR_INK = '#111111';
+const QR_SIZE = 168;
 
 export function TableCardControls({
   template,
@@ -124,7 +123,7 @@ export function TableCardPreview({
                 {label}
               </Text>
             </View>
-            <QrMark url={table.qrUrl ?? ''} />
+            <QrImage url={table.qrUrl ?? ''} size={QR_SIZE} />
             <Text variant="caption" style={[styles.center, { color: cravinsTheme.muted }]}>
               {cta}
             </Text>
@@ -132,16 +131,6 @@ export function TableCardPreview({
         </View>
       </View>
     </ThemeProvider>
-  );
-}
-
-function QrMark({ url }: { url: string }) {
-  const drawn = qrModules(url || env.EXPO_PUBLIC_SITE_URL, 168);
-  return (
-    <Svg width={168} height={168} viewBox={`0 0 ${drawn.size} ${drawn.size}`}>
-      <Rect width={drawn.size} height={drawn.size} fill={QR_PAPER} />
-      <Path d={drawn.path} fill={QR_INK} />
-    </Svg>
   );
 }
 

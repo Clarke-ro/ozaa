@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, TextInput, View, useWindowDimensions } from 'react-native';
+import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Inbox, Search, Shield, X } from 'lucide-react-native';
@@ -20,9 +20,7 @@ type Tab = 'new' | 'archived' | 'ai';
 export function FeedbackScreen() {
   const theme = useTheme();
   const { t } = useTranslation();
-  const { width } = useWindowDimensions();
-  const twoCol = width >= 920;
-  const venueId = useOwnerSession((state) => state.venueId) ?? '';
+    const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const client = useQueryClient();
   const [tab, setTab] = useState<Tab>('new');
   const [search, setSearch] = useState('');
@@ -76,7 +74,7 @@ export function FeedbackScreen() {
         <AskCravinsAiScreen venueId={venueId} />
       ) : (
         <>
-          <View style={[styles.toolbar, twoCol && styles.toolbarWide]}>
+          <View style={styles.toolbar}>
             <View
               style={[styles.search, { borderColor: theme.line, backgroundColor: theme.surface }]}
             >
@@ -126,9 +124,9 @@ export function FeedbackScreen() {
                 description={query ? t('ownerFeedback.noMatchBody') : t('ownerFeedback.emptyBody')}
               />
             ) : (
-              <View style={[styles.list, twoCol && styles.grid]}>
+              <View style={styles.list}>
                 {items.map((item) => (
-                  <View key={item.id} style={twoCol ? styles.cell : undefined}>
+                  <View key={item.id}>
                     <FeedbackCard
                       now={now}
                       item={item}
@@ -148,12 +146,6 @@ export function FeedbackScreen() {
 
 const styles = StyleSheet.create({
   toolbar: { gap: tokens.space[2] },
-  toolbarWide: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: tokens.space[4],
-  },
   search: {
     flex: 1,
     flexDirection: 'row',
@@ -173,6 +165,4 @@ const styles = StyleSheet.create({
   },
   note: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
   list: { gap: tokens.space[3] },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start' },
-  cell: { flexBasis: '48.5%', flexGrow: 1 },
 });

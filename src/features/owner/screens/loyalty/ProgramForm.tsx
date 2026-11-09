@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
@@ -62,19 +62,17 @@ export function useProgramEditor(venueId: string, program: LoyaltyProgram | unde
   return { draft, showErrors, saveBar };
 }
 
-/** The stamp card rules, with live preview beside the form on wide screens. */
+/** The stamp card rules in one column, with the live preview under the stamp settings. */
 export function ProgramForm({ editor }: { editor: ReturnType<typeof useProgramEditor> }) {
   const theme = useTheme();
   const { t } = useTranslation();
-  const { width } = useWindowDimensions();
-  const wide = width >= 920;
-  const { draft, showErrors } = editor;
+    const { draft, showErrors } = editor;
   const f = draft.value;
   const missingReward = showErrors && f.enabled && !f.reward.trim();
 
   return (
-    <View style={[styles.stack, wide && styles.split]}>
-      <View style={[styles.stack, wide && styles.mainCol]}>
+    <View style={styles.stack}>
+      <View style={styles.stack}>
         <Section title={t('ownerLoyalty.card')}>
           <SwitchRow
             label={t('ownerLoyalty.on')}
@@ -107,11 +105,9 @@ export function ProgramForm({ editor }: { editor: ReturnType<typeof useProgramEd
             value={f.halfway}
             onChange={(v) => draft.set('halfway', v)}
           />
-          {!wide ? (
-            <SectionBody>
-              <StampPreview stamps={f.stamps} reward={f.reward} />
-            </SectionBody>
-          ) : null}
+          <SectionBody>
+            <StampPreview stamps={f.stamps} reward={f.reward} />
+          </SectionBody>
         </Section>
 
         <Section title={t('ownerLoyalty.gap')}>
@@ -162,25 +158,12 @@ export function ProgramForm({ editor }: { editor: ReturnType<typeof useProgramEd
           ) : null}
         </Section>
       </View>
-
-      {wide ? (
-        <View style={styles.previewCol}>
-          <Section title={t('ownerNotice.preview')}>
-            <SectionBody>
-              <StampPreview stamps={f.stamps} reward={f.reward} />
-            </SectionBody>
-          </Section>
-        </View>
-      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   stack: { gap: tokens.space[5] },
-  split: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.space[6] },
-  mainCol: { flex: 1, minWidth: 0 },
-  previewCol: { width: 360 },
   row: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
   flex: { flex: 1 },
 });

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Crypto from 'expo-crypto';
 import { useTranslation } from 'react-i18next';
@@ -20,9 +20,7 @@ type Filter = 'all' | 'reply';
 export function ReviewsScreen() {
   const theme = useTheme();
   const { t } = useTranslation();
-  const { width } = useWindowDimensions();
-  const twoCol = width >= 920;
-  const client = useQueryClient();
+    const client = useQueryClient();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const [filter, setFilter] = useState<Filter>('all');
   const key = ownerKeys.reviews(venueId);
@@ -56,7 +54,7 @@ export function ReviewsScreen() {
         error={reviews.isError}
         onRetry={() => void reviews.refetch()}
       >
-        <View style={[styles.toolbar, twoCol && styles.toolbarWide]}>
+        <View style={styles.toolbar}>
           {average != null ? (
             <View
               style={styles.summary}
@@ -75,7 +73,7 @@ export function ReviewsScreen() {
           ) : (
             <View />
           )}
-          <View style={twoCol ? styles.segmentWrap : undefined}>
+          <View>
             <Segmented<Filter>
               label={t('ownerReviews.show')}
               value={filter}
@@ -94,9 +92,9 @@ export function ReviewsScreen() {
             description={t('ownerReviews.emptyBody')}
           />
         ) : (
-          <View style={[styles.list, twoCol && styles.grid]}>
+          <View style={styles.list}>
             {shown.map((review) => (
-              <View key={review.id} style={twoCol ? styles.cell : undefined}>
+              <View key={review.id}>
                 <ReviewCard
                   review={review}
                   sending={reply.isPending && reply.variables?.id === review.id}
@@ -113,15 +111,6 @@ export function ReviewsScreen() {
 
 const styles = StyleSheet.create({
   toolbar: { gap: tokens.space[3] },
-  toolbarWide: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: tokens.space[4],
-  },
-  segmentWrap: { minWidth: 280 },
   summary: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
   list: { gap: tokens.space[3] },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start' },
-  cell: { flexBasis: '48.5%', flexGrow: 1 },
 });

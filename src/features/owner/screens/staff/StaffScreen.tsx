@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Users } from 'lucide-react-native';
@@ -21,9 +21,7 @@ import { ownerKeys } from '../../data/keys';
 export function StaffScreen() {
   const theme = useTheme();
   const { t, i18n } = useTranslation();
-  const { width } = useWindowDimensions();
-  const twoCol = width >= 900;
-  const [now, setNow] = useState(() => Date.now());
+    const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 60_000);
     return () => clearInterval(id);
@@ -100,9 +98,9 @@ export function StaffScreen() {
               ]}
             />
             <SectionLabel title={t('ownerStaff.team', { count: members.length })} caps />
-            <View style={[styles.list, twoCol && styles.grid]}>
+            <View style={styles.list}>
               {sorted.map((m) => (
-                <View key={m.id} style={twoCol ? styles.cell : undefined}>
+                <View key={m.id}>
                   <StaffCard member={m} now={now} onPress={() => setOpen(m)} />
                 </View>
               ))}
@@ -158,6 +156,4 @@ export function StaffScreen() {
 const styles = StyleSheet.create({
   stack: { gap: tokens.space[3] },
   list: { gap: tokens.space[3] },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start' },
-  cell: { flexBasis: '48.5%', flexGrow: 1 },
 });

@@ -4,6 +4,41 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-08 · One column everywhere, a better QR page, analytics for Sales and Insights
+
+**What we built**
+
+- Every owner page is one column now, as on the reference dashboard. That covers Notifications, Custom links, Store notice, Business, Staff, Settings, Feedback, Reviews, Services, Socials, Online ordering and the loyalty form.
+- **QR codes and links**: a big QR for your menu link with Download and Share, the link with a Copy button, the website code folded away, then one card for the table QR codes.
+- **Sales**: each figure says how it changed against the period before ("12% vs previous 7 days"). There is a new Average order card, a line chart over every day of the period, and a card showing how orders ended up.
+- **Insights**: four headline figures across, busy hours as bars, top dishes with their share of everything sold, and loyalty stamps over time.
+- Settings cards now have a bold title inside the white card.
+
+**How it works**
+
+```
+Sales page opens → asks for this period  ┐
+                 → asks for the one before ┘→ percentChange(now, before) → "▲ 12%"
+```
+
+`previousOrderRange()` works out the period just before: yesterday for Today, and the 7 days before for Last 7 days. `fillDays()` puts a zero on quiet days so the chart never skips a day.
+
+**Files to look at**
+
+- `src/features/owner/desk/salesCompare.ts` and its test
+- `src/features/owner/kit/charts/AreaChart.tsx`, `kit/FigureCard.tsx`
+- `src/features/owner/screens/tables/TablesScreen.tsx`, `TableQrCard.tsx`
+
+**New idea: comparing like with like**
+
+A change percent only means something when both periods are the same length. That is why "today so far" compares with all of yesterday. With nothing before, we show no percent at all rather than a made-up 100%.
+
+**Try it yourself**
+
+In `salesCompare.test.ts`, add a test for `percentChange(150, 100)`. What should it return?
+
+---
+
 ## 2026-11-08 · Owner app in the MenuRite layout
 
 **What we built**

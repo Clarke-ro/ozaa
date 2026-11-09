@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -33,8 +33,6 @@ import { LanguageSheet } from './LanguageSheet';
 export function SettingsScreen() {
   const theme = useTheme();
   const { t, i18n } = useTranslation();
-  const { width } = useWindowDimensions();
-  const wide = width >= 900;
   const router = useRouter();
   const firstName = useOwnerSession((state) => state.firstName) ?? '';
   const role = useOwnerSession((state) => state.role) ?? 'owner';
@@ -151,21 +149,9 @@ export function SettingsScreen() {
 
   return (
     <OwnerPage title={t('owner.settings')}>
-      {wide ? (
-        <View style={styles.split}>
-          <View style={styles.sideCol}>
-            {profileBlock}
-            {accountSections}
-          </View>
-          <View style={styles.mainCol}>{mainSections}</View>
-        </View>
-      ) : (
-        <>
-          {profileBlock}
-          {mainSections}
-          {accountSections}
-        </>
-      )}
+      {profileBlock}
+      {mainSections}
+      {accountSections}
 
       <LanguageSheet visible={sheet === 'language'} onClose={() => setSheet(null)} />
       <ConfirmDialog
@@ -186,9 +172,6 @@ export function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  split: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.space[6] },
-  sideCol: { width: 320, gap: tokens.space[4] },
-  mainCol: { flex: 1, minWidth: 0, gap: tokens.space[5] },
   center: { alignItems: 'center' },
   profile: {
     alignItems: 'center',
