@@ -8,7 +8,7 @@ import { Button } from '@/ui/Button';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
 import { Segmented } from '../../kit';
-import { LoyaltyCustomersScreen } from '../LoyaltyCustomersScreen';
+import { CustomerList } from '../customers/CustomerList';
 import { ProgramForm, useProgramEditor } from './ProgramForm';
 import { LoyaltyOverview } from './LoyaltyOverview';
 import { ResultsTab } from './ResultsTab';
@@ -58,7 +58,7 @@ export function LoyaltyScreen() {
         onRetry={() => void loyalty.refetch()}
       >
         {tab === 'program' && loyalty.data ? <ProgramForm editor={editor} /> : null}
-        {tab === 'members' ? <LoyaltyCustomersScreen venueId={venueId} /> : null}
+        {tab === 'members' ? <CustomerList venueId={venueId} /> : null}
         {tab === 'results' ? <ResultsTab venueId={venueId} /> : null}
       </DeskWait>
     </OwnerPage>
