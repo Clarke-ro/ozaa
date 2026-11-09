@@ -139,7 +139,13 @@ export type World = {
   >;
   payments: Map<
     string,
-    { payment: import('@/lib/api/types').Payment; phone: string; applied: boolean }
+    {
+      payment: import('@/lib/api/types').Payment;
+      phone: string;
+      applied: boolean;
+      /** The quote this payment pays: which dishes get marked paid when it succeeds. */
+      quoteId?: string;
+    }
   >;
   idempotency: Map<string, unknown>;
   otpFails: Map<string, number>;

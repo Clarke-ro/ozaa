@@ -46,7 +46,7 @@ function withLivePayments(base: ApiClient): ApiClient {
     initializePayment: async (body, call) => {
       const quote = JSON.stringify(sandboxBridge.quote(body.quoteId));
       const payment = await http.initializePayment(body, { ...call, sandboxQuote: btoa(quote) });
-      return sandboxBridge.track(payment);
+      return sandboxBridge.track(payment, body.quoteId);
     },
     getPayment: async (reference) => sandboxBridge.track(await http.getPayment(reference)),
     verifyPayment: async (reference) => sandboxBridge.track(await http.verifyPayment(reference)),
