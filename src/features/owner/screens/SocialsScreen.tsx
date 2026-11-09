@@ -64,7 +64,7 @@ export function SocialsScreen() {
 
   return (
     <OwnerPage
-      title={t('ownerPages.socialsTitle')}
+      title={t('ownerPages.socialsTitle')} subtitle={t('ownerLead.socials')}
       footer={
         <SaveBar
           visible={draft.dirty}

@@ -106,7 +106,7 @@ export function BrandingScreen() {
 
   return (
     <OwnerPage
-      title={t('owner.branding')}
+      title={t('owner.branding')} subtitle={t('ownerLead.branding')}
       footer={<SaveBar visible={dirty} saving={save.isPending} onDiscard={reset} onSave={submit} />}
     >
       <DeskWait

@@ -1,53 +1,103 @@
-import { Children, Fragment, isValidElement, type ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Children, Fragment, isValidElement, useState, type ReactNode } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { ChevronDown, ChevronUp, type LucideIcon } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { cardStyle } from './cardStyle';
 
+const CHIP = tokens.space[10] + tokens.space[1];
+
 /**
- * One group of settings as a white card: a bold title (with an optional small control on its
- * right) inside the top of the card, then the rows split by hairlines, and an optional one-line
- * note under the card. Every settings page uses it, so they all read the same.
+ * One group of settings as a white card: a bold title (with an optional icon, a grey line under
+ * it, a status badge and one small control on the right) inside the top of the card, then the
+ * rows split by hairlines, and an optional one-line note under the card.
+ * `collapsible` makes the head a button that folds the rows away, as on an integrations list.
  */
 export function Section({
   title,
+  subtitle,
+  icon: Icon,
+  badge,
   note,
   action,
+  collapsible,
+  defaultOpen = false,
   children,
 }: {
   title?: string;
+  subtitle?: string;
+  icon?: LucideIcon;
+  /** A small status pill beside the title, e.g. "Active". */
+  badge?: ReactNode;
   /** One short line under the card. Keep it to what the owner can't guess. */
   note?: string;
   /** Optional small control on the right of the title, such as a text button. */
   action?: ReactNode;
+  collapsible?: boolean;
+  defaultOpen?: boolean;
   children: ReactNode;
 }) {
   const theme = useTheme();
+  const [open, setOpen] = useState(defaultOpen);
+  const shown = !collapsible || open;
   const rows = Children.toArray(children).filter(isValidElement);
-  return (
-    <View style={styles.wrap}>
-      <View style={[styles.card, cardStyle(theme)]}>
-        {title || action ? (
-          <View style={styles.head}>
-            {title ? (
+  const Chevron = open ? ChevronUp : ChevronDown;
+
+  const head =
+    title || action ? (
+      <View style={[styles.head, Icon && styles.headIcon]}>
+        {Icon ? (
+          <View style={[styles.chip, { backgroundColor: theme.tint }]}>
+            <Icon size={20} color={theme.badgeInk} />
+          </View>
+        ) : null}
+        <View style={styles.words}>
+          {title ? (
+            <View style={styles.titleRow}>
               <Text variant="title" accessibilityRole="header" style={styles.title}>
                 {title}
               </Text>
-            ) : (
-              <View />
-            )}
-            {action}
-          </View>
-        ) : null}
-        {rows.map((row, index) => (
-          <Fragment key={row.key ?? index}>
-            {index > 0 ? <View style={[styles.rule, { backgroundColor: theme.line }]} /> : null}
-            {row}
-          </Fragment>
-        ))}
+              {badge}
+            </View>
+          ) : null}
+          {subtitle ? (
+            <Text variant="caption" style={{ color: theme.muted }}>
+              {subtitle}
+            </Text>
+          ) : null}
+        </View>
+        {action}
+        {collapsible ? <Chevron size={18} color={theme.meta} /> : null}
       </View>
-      {note ? (
+    ) : null;
+
+  return (
+    <View style={styles.wrap}>
+      <View style={[styles.card, cardStyle(theme)]}>
+        {collapsible && head ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={title}
+            accessibilityState={{ expanded: open }}
+            onPress={() => setOpen((v) => !v)}
+            style={({ pressed }) => [pressed && { backgroundColor: theme.wash }]}
+          >
+            {head}
+          </Pressable>
+        ) : (
+          head
+        )}
+        {shown
+          ? rows.map((row, index) => (
+              <Fragment key={row.key ?? index}>
+                {index > 0 ? <View style={[styles.rule, { backgroundColor: theme.line }]} /> : null}
+                {row}
+              </Fragment>
+            ))
+          : null}
+      </View>
+      {note && shown ? (
         <Text variant="caption" style={[styles.note, { color: theme.muted }]}>
           {note}
         </Text>
@@ -62,12 +112,21 @@ const styles = StyleSheet.create({
   head: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     gap: tokens.space[3],
     paddingHorizontal: tokens.space[4],
     paddingTop: tokens.space[4],
     paddingBottom: tokens.space[1],
   },
+  headIcon: { paddingBottom: tokens.space[4] },
+  chip: {
+    width: CHIP,
+    height: CHIP,
+    borderRadius: tokens.radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  words: { flex: 1, minWidth: 0, gap: 2 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: tokens.space[2] },
   title: { flexShrink: 1 },
   rule: { height: StyleSheet.hairlineWidth, marginLeft: tokens.space[4] },
   note: { paddingHorizontal: tokens.space[1] },

@@ -57,7 +57,7 @@ export function ScanStampScreen() {
   };
 
   return (
-    <OwnerPage title={t('ownerScan.title')}>
+    <OwnerPage title={t('ownerScan.title')} subtitle={t('ownerLead.scan')}>
       <View style={styles.stack}>
         <View>
           <ScanViewfinder gutter={gutter} onScanned={send} />

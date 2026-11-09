@@ -59,7 +59,7 @@ export function StaffScreen() {
 
   return (
     <OwnerPage
-      title={t('owner.staff')}
+      title={t('owner.staff')} subtitle={t('ownerLead.staff')}
       action={
         <Button
           label={t('ownerStaff.invite')}

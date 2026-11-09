@@ -71,7 +71,7 @@ export function OnlineOrderingScreen() {
 
   return (
     <OwnerPage
-      title={t('owner.ordering')}
+      title={t('owner.ordering')} subtitle={t('ownerLead.ordering')}
       footer={
         <SaveBar
           visible={draft.dirty}

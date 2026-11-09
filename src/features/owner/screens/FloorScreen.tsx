@@ -59,7 +59,7 @@ export function FloorScreen() {
   const empty = items.length === 0 ? t('owner.emptyFloor') : t('ownerFloor.noMatch');
 
   return (
-    <OwnerPage title={t('owner.floor')} width="wide">
+    <OwnerPage title={t('owner.floor')} subtitle={t('ownerLead.floor')} width="wide">
       <DeskWait
         loading={floor.isLoading}
         error={floor.isError}

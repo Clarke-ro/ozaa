@@ -845,6 +845,13 @@
   },
   "ownerMenu": {
     "lead": "What guests see when they scan. Changes show on the guest menu straight away.",
+    "moreActions": "More menu actions",
+    "addHere": "Add a dish here",
+    "editSectionShort": "Edit section",
+    "addFirst": "Add the first dish",
+    "noSection": "No section",
+    "noMatchBody": "Change the search or the filter to see more dishes.",
+    "showAll": "Show all dishes",
     "addDish": "Add dish",
     "food": "Food",
     "drinks": "Drinks",
@@ -1377,6 +1384,7 @@
     "joinedTrend": "New members"
   },
   "ownerOrders": {
+    "lead": "Every ticket from tables and your menu link, by stage.",
     "tabs": {
       "new": "New",
       "cooking": "Cooking",
@@ -1717,6 +1725,24 @@
     "problemTitle": "Couldn't add a stamp",
     "problemBody": "The card may be on cooldown or not recognised. Try again."
   },
+  "ownerLead": {
+    "branding": "How your guest page looks: colour, font, photos and buttons.",
+    "business": "Your business name and every location you run.",
+    "calls": "Guests asking for a waiter, and how fast each call was picked up.",
+    "devices": "Phones and tablets that scan loyalty cards at the counter.",
+    "feedback": "Private notes guests leave after their meal.",
+    "loyalty": "Your stamp card, its members and how it is doing.",
+    "ordering": "Pickup and delivery orders from your menu link.",
+    "reviews": "Public ratings and reviews, and your replies.",
+    "services": "What guests can do from the table, and your Wi-Fi details.",
+    "settings": "Your account, your venue and how the app behaves.",
+    "staff": "Who works here, what they can open and who is on shift.",
+    "customers": "Diners who joined your loyalty card. Phone numbers stay masked.",
+    "floor": "Every table at a glance. Tap one to see its bill and act on it.",
+    "scan": "Scan a guest's loyalty card to give a stamp or a reward.",
+    "socials": "Your social media links on the guest page.",
+    "setup": "The steps to get your venue ready for guests."
+  },
   "ownerNotes": {
     "title": "Notifications",
     "lead": "Orders, waiter calls, payments and guest notes, newest first.",
@@ -1838,6 +1864,9 @@
   },
   "ownerBilling": {
     "title": "Billing",
+    "lead": "Your plan and what each plan includes.",
+    "free": "Free",
+    "price": "Price",
     "current": "Your plan",
     "yourPlan": "Current plan",
     "notLive": "Billing isn’t live yet. You won’t be charged.",
@@ -2019,6 +2048,7 @@
     "secretHint": "Sent once to Cravins’s server, kept encrypted, and never shown again.",
     "connect": "Connect Paystack",
     "connected": "Paystack connected",
+    "active": "Active",
     "isConnected": "Connected since {{date}}",
     "test": "Test connection",
     "testOk": "Paystack answered. Your keys work.",

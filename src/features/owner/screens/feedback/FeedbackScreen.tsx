@@ -60,7 +60,7 @@ export function FeedbackScreen() {
   const items = list.data?.items ?? [];
 
   return (
-    <OwnerPage title={t('owner.feedback')}>
+    <OwnerPage title={t('owner.feedback')} subtitle={t('ownerLead.feedback')}>
       <DeskTabs
         value={tab}
         onChange={setTab}

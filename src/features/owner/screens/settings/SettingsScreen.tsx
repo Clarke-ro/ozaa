@@ -148,7 +148,7 @@ export function SettingsScreen() {
   );
 
   return (
-    <OwnerPage title={t('owner.settings')}>
+    <OwnerPage title={t('owner.settings')} subtitle={t('ownerLead.settings')}>
       {profileBlock}
       {mainSections}
       {accountSections}

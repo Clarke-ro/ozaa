@@ -122,7 +122,7 @@ export function SetupScreen() {
 
   if (!current) {
     return (
-      <OwnerPage title={t('owner.setup')}>
+      <OwnerPage title={t('owner.setup')} subtitle={t('ownerLead.setup')}>
         <View style={styles.done}>
           <CircleCheck size={48} color={theme.success} />
           <Text variant="title">{t('ownerSetup.doneTitle')}</Text>
@@ -142,7 +142,7 @@ export function SetupScreen() {
 
   return (
     <OwnerPage
-      title={t('owner.setup')}
+      title={t('owner.setup')} subtitle={t('ownerLead.setup')}
       footer={
         <View style={[styles.bar, { borderTopColor: theme.line, backgroundColor: theme.surface }]}>
           {step > 0 ? (

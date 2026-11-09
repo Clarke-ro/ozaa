@@ -72,7 +72,7 @@ export function ServicesScreen() {
 
   return (
     <OwnerPage
-      title={t('owner.services')}
+      title={t('owner.services')} subtitle={t('ownerLead.services')}
       footer={
         <SaveBar
           visible={draft.dirty}
