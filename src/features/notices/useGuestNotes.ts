@@ -4,9 +4,7 @@ import { api } from '@/lib/api';
 import { useGuestSession, useMyCalls } from '@/features/session';
 import { buildGuestNotes, unseenGuestNotes, type GuestNote } from './guestNotes';
 import { guestKeys } from '@/lib/queryKeys';
-
-// Same pace as the order status page, so the bell and the page agree.
-const LIVE_MS = 10_000;
+import { POLL_MS } from '@/lib/polling';
 
 /** When the guest last opened Notifications, for this visit. */
 export const useGuestNotesSeen = create<{ at: number | null; mark: (at: number) => void }>(
@@ -22,13 +20,13 @@ export function useGuestNotes(slug: string): { notes: GuestNote[]; unseen: numbe
     queryKey: guestKeys.order(orderId),
     queryFn: () => api.getOrder(orderId ?? ''),
     enabled: Boolean(orderId),
-    refetchInterval: LIVE_MS,
+    refetchInterval: POLL_MS.guest,
   });
   const calls = useQueries({
     queries: callIds.map((id) => ({
       queryKey: guestKeys.waiterCall(id),
       queryFn: () => api.getWaiterCall(id),
-      refetchInterval: LIVE_MS,
+      refetchInterval: POLL_MS.guest,
     })),
   });
   const notes = buildGuestNotes({

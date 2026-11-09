@@ -22,6 +22,7 @@ import { OrderCard } from './OrderCard';
 import { OrdersToolbar } from './OrdersToolbar';
 import { useOrderMove } from './useOrderMove';
 import { useVenuePay } from './useVenuePay';
+import { POLL_MS } from '@/lib/polling';
 
 const LIVE: OrderView[] = ['new', 'cooking', 'ready'];
 // Only a safety net while the venue loads; every venue has a zone in its opening hours.
@@ -60,7 +61,7 @@ export function OrdersScreen() {
     queryKey: key,
     queryFn: () => api.ownerListOrders(venueId, filter),
     enabled: Boolean(venueId),
-    refetchInterval: 5000,
+    refetchInterval: POLL_MS.owner,
   });
   const canCreate = role === 'owner' || role === 'manager' || role === 'waiter';
   const currency = venue.data?.currency ?? DEFAULT_CURRENCY;

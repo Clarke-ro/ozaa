@@ -3,9 +3,7 @@ import { api } from '@/lib/api';
 import { useOwnerSession } from '@/features/session';
 import { ownerKeys } from '../data/keys';
 import { navFor, type OwnerNavId } from './nav';
-
-// Same pace and cache key as Today, so the sidebar adds no extra calls while Today is open.
-const LIVE_MS = 5000;
+import { POLL_MS } from '@/lib/polling';
 
 /**
  * Small numbers next to Orders and Calls in the sidebar and tab bar: orders waiting for the
@@ -19,7 +17,7 @@ export function useNavCounts(): Partial<Record<OwnerNavId, number>> {
     queryKey: ownerKeys.dashboard(venueId),
     queryFn: () => api.ownerGetDashboard(venueId),
     enabled: Boolean(venueId) && allowed,
-    refetchInterval: LIVE_MS,
+    refetchInterval: POLL_MS.owner,
   });
   if (!allowed || !desk.data) return {};
   return { orders: desk.data.pendingOrders, calls: desk.data.openCalls };

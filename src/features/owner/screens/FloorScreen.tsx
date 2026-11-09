@@ -25,8 +25,8 @@ import { TablePanel } from './floor/TablePanel';
 import { useFloorActions } from './floor/useFloorActions';
 import { MarkPaidSheet } from './orders/MarkPaidSheet';
 import { useVenuePay } from './orders/useVenuePay';
+import { POLL_MS } from '@/lib/polling';
 
-const LIVE_MS = 5000;
 // Minutes since ordering only need to move once every half minute.
 const TICK_MS = 30_000;
 // The side panel on a desktop: room for a bill and its buttons.
@@ -59,7 +59,7 @@ export function FloorScreen() {
     queryKey: ownerKeys.floor(venueId),
     queryFn: () => api.ownerGetFloor(venueId),
     enabled: Boolean(venueId),
-    refetchInterval: LIVE_MS,
+    refetchInterval: POLL_MS.owner,
   });
   // Polled with the floor: a table's details show its bill only once the order is here, so a
   // table that has just ordered must not open with "No open bill".
@@ -67,7 +67,7 @@ export function FloorScreen() {
     queryKey: ownerKeys.orders(venueId),
     queryFn: () => api.ownerListOrders(venueId),
     enabled: Boolean(venueId),
-    refetchInterval: LIVE_MS,
+    refetchInterval: POLL_MS.owner,
   });
 
   const items = floor.data?.items ?? [];
@@ -161,7 +161,11 @@ export function FloorScreen() {
         onRetry={() => void floor.refetch()}
       >
         {items.length === 0 ? (
-          <EmptyCard icon={Grid2x2} title={t('owner.emptyFloor')} description={t('ownerLead.floor')} />
+          <EmptyCard
+            icon={Grid2x2}
+            title={t('owner.emptyFloor')}
+            description={t('ownerLead.floor')}
+          />
         ) : (
           <View style={styles.stack}>
             <RoomCard counts={toneCounts(items)} />

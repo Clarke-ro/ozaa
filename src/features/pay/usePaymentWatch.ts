@@ -2,9 +2,8 @@ import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import type { PayUiEvent, PayUiState } from './paymentMachine';
 import { eventFor, secondsLeft } from './paymentWatch';
+import { POLL_MS } from '@/lib/polling';
 
-// How often we ask the server while the guest approves. Paystack's own guidance is a few seconds.
-const POLL_MS = 3000;
 const TICK_MS = 1000;
 
 /**
@@ -57,7 +56,7 @@ export function usePaymentWatch(
       }
     };
     void ask();
-    const id = setInterval(() => void ask(), POLL_MS);
+    const id = setInterval(() => void ask(), POLL_MS.guestWaiting);
     return () => {
       stopped = true;
       clearInterval(id);

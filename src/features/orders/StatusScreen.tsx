@@ -18,9 +18,7 @@ import { ErrorState, LoadingState } from '@/ui/states';
 import { useTheme } from '@/ui/theme';
 import { StatusTimeline } from './StatusTimeline';
 import { guestKeys } from '@/lib/queryKeys';
-
-// Same pace as the bell, so both agree.
-const LIVE_MS = 10_000;
+import { POLL_MS } from '@/lib/polling';
 
 /** Where the order is: now, the steps, what was ordered, and what to do next. */
 export function StatusScreen({ slug }: { slug: string }) {
@@ -35,7 +33,7 @@ export function StatusScreen({ slug }: { slug: string }) {
     queryKey: guestKeys.order(orderId),
     queryFn: () => api.getOrder(orderId ?? ''),
     enabled: Boolean(orderId),
-    refetchInterval: LIVE_MS,
+    refetchInterval: POLL_MS.guest,
   });
 
   // On phones the saved visit takes a moment to load; don't flash "no order" meanwhile.

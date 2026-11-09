@@ -21,6 +21,7 @@ import { orderSteps } from './orderSteps';
 import { OrderTimeline } from './OrderTimeline';
 import { useOrderMove } from './useOrderMove';
 import { useVenuePay } from './useVenuePay';
+import { POLL_MS } from '@/lib/polling';
 
 // The side column on a desktop: wide enough for the timeline and the pay button, no wider.
 const SIDE_COLUMN = 340;
@@ -43,7 +44,7 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
     queryKey: ownerKeys.orders(venueId),
     queryFn: () => api.ownerListOrders(venueId),
     enabled: Boolean(venueId),
-    refetchInterval: 5000,
+    refetchInterval: POLL_MS.owner,
   });
   const move = useOrderMove(venueId, role);
   const order = orders.data?.items.find((item) => item.id === orderId) ?? null;
