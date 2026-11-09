@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
+import { api } from '@/lib/api';
 import { isOwnerQuery } from '@/lib/queryPersist';
 import { useOwnerSession } from '@/features/session';
 
@@ -10,6 +11,9 @@ export function useSignOut() {
   const client = useQueryClient();
   const clearOwner = useOwnerSession((state) => state.clearOwner);
   return useCallback(() => {
+    // Tell the server first, while the token still works, so it can't be used again. Signing out
+    // on this device mustn't wait on the network or fail with it.
+    api.logout().catch(() => undefined);
     clearOwner();
     router.replace('/owner/login');
     // Drop this account's orders, customers and payment settings so the next person to sign in on this
