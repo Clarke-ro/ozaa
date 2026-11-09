@@ -1371,35 +1371,3 @@ In the contract, the secret key is marked `writeOnly`. Apps can send it, but no 
 **Try it yourself**
 
 Connect with `pk_test_` and `sk_test_` keys from your own Paystack test account, then try a `pk_live_` key and see why it's refused.
-
----
-
-## 2026-11-09 · Staying signed in: refreshing the owner's token
-
-**What we built**
-
-An owner's access token works for an hour. Before this, nothing renewed it: on a real server every owner page would start failing after an hour, until you signed out by hand. Now the app quietly swaps the refresh token for a new access token and carries on. Sign out also tells the server, so the old token can't be used again.
-
-**How it works**
-
-```
-owner call ─► 401 "expired"
-   └─► refresh once (every screen that failed waits on the same refresh)
-         ├─ new tokens ─► save them ─► try the call again ─► screen carries on
-         ├─ refused    ─► sign out ─► cached owner data wiped ─► sign-in page
-         └─ offline    ─► stay signed in, the screen shows its offline message
-```
-
-**Files to look at**
-
-- `src/lib/api/ownerRetry.ts`: catches the 401 on owner calls and tries once more.
-- `src/features/session/ownerRefresh.ts`: does the refresh, only one at a time.
-- `src/app/owner/_layout.tsx`: wipes owner data whenever the sign-in ends.
-
-**New idea: single flight**
-
-Five owner screens poll at once, so an expired token fails five calls together. If each started its own refresh, the first would use up the refresh token (it works only once) and the other four would be refused and sign you out. So the first caller starts the refresh and the rest wait for that same answer. That's called a single-flight request.
-
-**Try it yourself**
-
-In `ownerRefresh.test.ts`, change the "many calls" test to start 10 calls. How many times does the server get asked?
