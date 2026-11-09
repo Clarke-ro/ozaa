@@ -24,14 +24,6 @@ export type StackState = {
 
 export type StampRule = { minScore: number; alreadyToday: boolean };
 
-export const SAMPLE_BOARD = [
-  { nickname: 'Kwame', score: 23, sample: true },
-  { nickname: 'Ama', score: 19, sample: true },
-  { nickname: 'Yaw', score: 16, sample: true },
-  { nickname: 'Esi', score: 12, sample: true },
-  { nickname: 'Kojo', score: 9, sample: true },
-] as const;
-
 export type BoardRow = { nickname: string; score: number; sample?: boolean; mine?: boolean };
 
 export function plateSpeed(score: number): number {
@@ -147,6 +139,10 @@ export function stepStack(state: StackState, dtSeconds: number): StackState {
   return { ...state, dir, current: { ...state.current, x }, falling };
 }
 
-export function topOfBoard(saved: readonly BoardRow[]): BoardRow[] {
-  return [...saved, ...SAMPLE_BOARD].sort((left, right) => right.score - left.score).slice(0, 5);
+/** The five best: this phone's saved scores, plus any sample rows (demo builds only). */
+export function topOfBoard(
+  saved: readonly BoardRow[],
+  samples: readonly BoardRow[] = [],
+): BoardRow[] {
+  return [...saved, ...samples].sort((left, right) => right.score - left.score).slice(0, 5);
 }

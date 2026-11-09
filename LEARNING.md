@@ -1398,3 +1398,33 @@ In the contract, the secret key is marked `writeOnly`. Apps can send it, but no 
 **Try it yourself**
 
 Connect with `pk_test_` and `sk_test_` keys from your own Paystack test account, then try a `pk_live_` key and see why it's refused.
+
+---
+
+## 2026-11-09 · Demo builds and real builds
+
+**What we fixed**
+
+Some sample things showed in every build, even one pointed at a real server: the owner sign-in came pre-filled with a made-up number and offered three sample accounts, the landing page had a button to a sample table, and the game board listed five made-up players. Two sample-account labels were also wrong ("Manager", "Waiter" for numbers that are owners in the mock).
+
+**How it works now**
+
+```
+EXPO_PUBLIC_API_MODE=mock  ─►  DEMO = true   sample logins, sample table, sample scores, test numbers
+EXPO_PUBLIC_API_MODE=http  ─►  DEMO = false  none of them
+```
+
+All sample people and places live in `src/mocks/demo.ts`. The mock world and the screens both read from it, so the sign-in buttons can't disagree with who the mock thinks is signed in.
+
+**Files to look at**
+
+- `src/lib/demo.ts`: the one `DEMO` switch.
+- `src/mocks/demo.ts`: sample staff, the code `123456`, loyalty members, the game board.
+
+**New idea: one source of truth for demo data**
+
+When the same sample person is typed in two places, the two copies drift apart (that's how "Bean There (Manager)" happened). Keep the data once and build the labels from it.
+
+**Try it yourself**
+
+Set `EXPO_PUBLIC_API_MODE=http` in `.env`, open `/owner/login`, and see the sample buttons disappear.

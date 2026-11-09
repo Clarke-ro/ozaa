@@ -21,7 +21,6 @@ import type {
   PayoutAccount,
   ServiceSettings,
   StaffMember,
-  StaffRole,
   StoreNotices,
   PaymentSettings,
   Table,
@@ -42,22 +41,10 @@ import offersFile from './fixtures/offers.json';
 import ordersFile from './fixtures/orders.json';
 import venuesFile from './fixtures/venues.json';
 import wifiFile from './fixtures/wifi.json';
+import { DEMO_LOYALTY_PHONES, STAFF } from './demo';
 import { kitchenQueue } from './kitchenQueue';
 
-export type StaffSeed = {
-  phone: string;
-  role: StaffRole;
-  firstName: string;
-  slug: string;
-};
-
-export const STAFF: StaffSeed[] = [
-  { phone: '+233240000001', role: 'owner', firstName: 'Ama', slug: 'mamas-kitchen' },
-  { phone: '+233240000002', role: 'waiter', firstName: 'Kwesi', slug: 'mamas-kitchen' },
-  { phone: '+233240000003', role: 'kitchen', firstName: 'Yaw', slug: 'mamas-kitchen' },
-  { phone: '+233240000004', role: 'owner', firstName: 'Kojo', slug: 'bean-there' },
-  { phone: '+233240000005', role: 'owner', firstName: 'Akosua', slug: 'auntie-akos' },
-];
+export { STAFF, type StaffSeed } from './demo';
 
 // Sample shift data for the Staff screen: surname, how long ago they joined and were last seen,
 // whether they are on shift, and today's work. Keyed by the last four digits of the phone.
@@ -441,13 +428,9 @@ export function createWorld(now: number): World {
   const staff: World['staff'] = [];
   const access = new Map<string, { phone: string; purpose: 'owner_login' | 'guest_loyalty' }>();
   for (const venue of Object.values(venues)) {
-    const phone = samplePhone(
-      venue.slug === 'mamas-kitchen'
-        ? '+233244000099'
-        : venue.slug === 'bean-there'
-          ? '+233204000099'
-          : '+233274000099',
-    );
+    const member = DEMO_LOYALTY_PHONES[venue.slug];
+    if (!member) throw new Error(`No sample loyalty member for ${venue.slug}`);
+    const phone = samplePhone(member);
     access.set(`acc_guest_loyalty_${phone}`, { phone, purpose: 'guest_loyalty' });
     const seeded = cardFile[venue.slug];
     loyalty[venue.id] = seeded

@@ -7,7 +7,6 @@ export {
   plateSpeed,
   PLAY_HEIGHT,
   PLAY_WIDTH,
-  SAMPLE_BOARD,
   stepStack,
   topOfBoard,
   type BoardRow,

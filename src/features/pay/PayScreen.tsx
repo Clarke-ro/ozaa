@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { Redirect, useRouter, type Href } from 'expo-router';
 import { api } from '@/lib/api';
 import type { Payment } from '@/lib/api/types';
-import { env } from '@/lib/env';
+import { DEMO } from '@/lib/demo';
 import { asGhanaPhone, countryForVenue, formatPhone, parsePhone } from '@/lib/phone';
 import { DEFAULT_CURRENCY, formatMoney } from '@/lib/money';
 import { canPayOnline } from '@/lib/payments';
@@ -238,7 +238,7 @@ export function PayScreen({ slug }: { slug: string }) {
                 phone={phone}
                 onPhone={setPhone}
                 // Demo builds only: the mock accepts any valid number and charges nothing.
-                hint={env.EXPO_PUBLIC_API_MODE === 'mock' ? t('pay.testNumber') : undefined}
+                hint={DEMO ? t('pay.testNumber') : undefined}
               />
             </View>
 

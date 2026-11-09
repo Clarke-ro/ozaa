@@ -1,3 +1,4 @@
+import { DEMO_CODE } from './demo';
 import {
   blankVenue,
   currencyCode,
@@ -450,7 +451,7 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       await gate();
       const fails = world.otpFails.get(body.phone) ?? 0;
       if (fails >= 3) throw new ApiError(429, 'rate_limited', 'Too many tries');
-      if (body.code !== '123456') {
+      if (body.code !== DEMO_CODE) {
         world.otpFails.set(body.phone, fails + 1);
         throw new ApiError(401, 'bad_code', 'That code is wrong');
       }
@@ -483,7 +484,7 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       const row = world.access.get(previous);
       if (!row) throw new ApiError(401, 'unauthorized', 'Sign in again');
       world.refresh.delete(body.refreshToken);
-      return api.verifyOtp({ phone: row.phone, code: '123456', purpose: row.purpose });
+      return api.verifyOtp({ phone: row.phone, code: DEMO_CODE, purpose: row.purpose });
     },
     async logout() {
       await gate();

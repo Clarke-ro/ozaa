@@ -23,14 +23,9 @@ import { RewardsList } from './RewardsList';
 import { LoyaltyJoinCard } from './LoyaltyJoinCard';
 import { WalletCard } from './WalletCard';
 import { guestKeys } from '@/lib/queryKeys';
+import { DEMO_CODE, DEMO_LOYALTY_PHONES } from '@/mocks/demo';
 
 const CONSENT = 'consent-2026-10-v1';
-
-function defaultSamplePhone(slug: string): string {
-  if (slug === 'bean-there') return '+233204000099';
-  if (slug === 'auntie-akos') return '+233274000099';
-  return '+233244000099';
-}
 
 export function LoyaltyScreen({ slug }: { slug: string }) {
   const { t } = useTranslation();
@@ -136,8 +131,13 @@ export function LoyaltyScreen({ slug }: { slug: string }) {
 
   const openSample = async () => {
     setErrorMessage(null);
-    const sample = defaultSamplePhone(slug);
-    const tokens = await api.verifyOtp({ phone: sample, code: '123456', purpose: 'guest_loyalty' });
+    // Demo builds only (the button shows only then): this venue's sample member.
+    const sample = DEMO_LOYALTY_PHONES[slug] ?? DEMO_LOYALTY_PHONES['mamas-kitchen'] ?? '';
+    const tokens = await api.verifyOtp({
+      phone: sample,
+      code: DEMO_CODE,
+      purpose: 'guest_loyalty',
+    });
     setLoyaltyToken(tokens.accessToken);
     const existing = await api.getMyLoyaltyCard(slug);
     setJoinedCard(existing);
