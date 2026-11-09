@@ -258,6 +258,10 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
     /** Runs once the food total is known, before any stock is taken; throws to refuse. */
     extras: (foodPesewas: number) => OrderExtras = () => ({ source: 'table' }),
   ): Order {
+    // CreateOrderRequest.lines has minItems 1: an empty order would reach the kitchen as a blank ticket.
+    if (body.lines.length === 0) {
+      throw new ApiError(400, 'validation', 'Add at least one dish');
+    }
     const lines = body.lines.map((line) => {
       const item = menu.items.find((candidate) => candidate.id === line.menuItemId);
       if (!item) throw new ApiError(422, 'item_sold_out', 'That dish is not on the menu');

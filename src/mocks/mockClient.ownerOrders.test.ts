@@ -56,3 +56,15 @@ test('the date filter keeps orders inside since and before until', async () => {
   });
   expect(window.items.length).toBe(all.length);
 });
+
+test('an order with no dishes is refused, as the contract says (at least one line)', async () => {
+  const api = await ownerApi(now);
+  const { id } = await api.getVenue('mamas-kitchen');
+  await expect(
+    api.ownerCreateOrder(
+      id,
+      { clientOrderId: crypto.randomUUID(), lines: [] },
+      { idempotencyKey: 'manual-empty' },
+    ),
+  ).rejects.toMatchObject({ status: 400, code: 'validation' });
+});
