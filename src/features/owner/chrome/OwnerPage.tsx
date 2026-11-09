@@ -29,6 +29,7 @@ export function OwnerPage({
   footer,
   width = 'form',
   bell,
+  back,
   children,
 }: {
   title: string;
@@ -40,6 +41,8 @@ export function OwnerPage({
   width?: 'form' | 'wide';
   /** Show the bell on phones too (wide screens always show it). */
   bell?: boolean;
+  /** For a page opened from another page: a Back link above the title on wide screens. */
+  back?: { label: string; onPress: () => void };
   children: ReactNode;
 }) {
   const theme = useTheme();
@@ -59,7 +62,13 @@ export function OwnerPage({
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
       >
-        <PageHeader title={title} subtitle={subtitle} action={action} bell={wide && mayNotify} />
+        <PageHeader
+          title={title}
+          subtitle={subtitle}
+          action={action}
+          bell={wide && mayNotify}
+          back={back}
+        />
         <View style={styles.body}>{children}</View>
       </ScrollView>
       {footer}

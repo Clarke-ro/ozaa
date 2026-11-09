@@ -155,10 +155,13 @@ function matches(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-/** Tabs and More sit at the root of the stack, so they get no back button. */
+/**
+ * Tabs and More sit at the root of the stack, so they get no back button. A page opened from a
+ * tab (one order under Orders) is not the tab itself, so it does.
+ */
 export function isTabRoot(role: StaffRole, pathname: string): boolean {
   if (pathname === '/owner/more') return true;
-  return tabsFor(role).some((item) => matches(pathname, item.href));
+  return tabsFor(role).some((item) => pathname === item.href);
 }
 
 export function isCurrent(pathname: string, href: string): boolean {

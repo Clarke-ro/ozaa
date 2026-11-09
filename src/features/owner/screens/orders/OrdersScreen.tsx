@@ -1,27 +1,27 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { ClipboardList } from 'lucide-react-native';
 import { api } from '@/lib/api';
 import { useOwnerSession } from '@/features/session';
+import type { Order } from '@/lib/api/types';
+import { DEFAULT_CURRENCY } from '@/lib/money';
+import { tokens } from '@/theme/tokens';
+import { Button } from '@/ui/Button';
+import { useOwnerLayout } from '../../chrome/layout';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
 import { orderTab, orderTabCounts, type OrderView } from '../../desk/ops';
-import { DEFAULT_CURRENCY } from '@/lib/money';
-import { cardStyle, EmptyCard, PeriodSelect } from '../../kit';
-import { Button } from '@/ui/Button';
-import { tokens } from '@/theme/tokens';
 import { ORDER_RANGES, orderRange, type OrderRange } from '../../desk/orderRange';
+import { CardGrid, EmptyCard, PeriodSelect } from '../../kit';
 import { CreateOrderSheet } from './CreateOrderSheet';
-import { MarkPaidSheet, inPersonMethods } from './MarkPaidSheet';
-import type { Order } from '@/lib/api/types';
-import { guestKeys } from '@/lib/queryKeys';
-import { OpenCalls } from './OpenCalls';
-import { OrderRow } from './OrderRow';
+import { MarkPaidSheet } from './MarkPaidSheet';
+import { OrderCard } from './OrderCard';
 import { OrdersToolbar } from './OrdersToolbar';
 import { useOrderMove } from './useOrderMove';
-import { useTheme } from '@/ui/theme';
+import { useVenuePay } from './useVenuePay';
 import { POLL_MS } from '@/lib/polling';
 
 const LIVE: OrderView[] = ['new', 'cooking', 'ready'];
@@ -31,12 +31,14 @@ const FALLBACK_ZONE = 'Africa/Accra';
 const TICK_MS = 30_000;
 
 /**
- * Kitchen tickets by stage, as one list card. Each ticket shows only the next step this person is
- * allowed to take.
+ * Kitchen tickets by stage, each on its own card in a grid (three across on a desktop, two on a
+ * tablet, one on a phone). A card shows the dishes and only the next step this person is allowed
+ * to take; tapping it opens the full order. Waiter calls live on Calls and the Floor, not here.
  */
 export function OrdersScreen() {
   const { t } = useTranslation();
-  const theme = useTheme();
+  const router = useRouter();
+  const { wide, desktop } = useOwnerLayout();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const role = useOwnerSession((state) => state.role) ?? 'waiter';
   // Null until staff pick a stage; until then show the first stage that has tickets.
@@ -49,11 +51,7 @@ export function OrdersScreen() {
     const id = setInterval(() => setNow(Date.now()), TICK_MS);
     return () => clearInterval(id);
   }, []);
-  const venue = useQuery({
-    queryKey: ownerKeys.venue(venueId),
-    queryFn: () => api.ownerGetVenue(venueId),
-    enabled: Boolean(venueId),
-  });
+  const { venue, methods } = useVenuePay(venueId);
   // The range's days start at midnight where the venue is, not where this phone is.
   const filter = orderRange(range, now, venue.data?.hours.timezone ?? FALLBACK_ZONE);
   // "All time" shares the cache with the chime and Today; a range gets its own entry under it,
@@ -66,13 +64,7 @@ export function OrdersScreen() {
     refetchInterval: POLL_MS.owner,
   });
   const canCreate = role === 'owner' || role === 'manager' || role === 'waiter';
-  // What guests can pay with is on the public venue, so waiters can read it too (no keys in it).
-  const slug = venue.data?.slug ?? '';
-  const publicVenue = useQuery({
-    queryKey: guestKeys.venue(slug),
-    queryFn: () => api.getVenue(slug),
-    enabled: Boolean(slug),
-  });
+  const currency = venue.data?.currency ?? DEFAULT_CURRENCY;
 
   const move = useOrderMove(venueId, role);
 
@@ -91,6 +83,7 @@ export function OrdersScreen() {
     <OwnerPage
       title={t('owner.orders')}
       subtitle={t('ownerOrders.lead')}
+      width="wide"
       action={
         <View style={styles.actions}>
           <PeriodSelect<OrderRange>
@@ -109,7 +102,6 @@ export function OrdersScreen() {
         </View>
       }
     >
-      <OpenCalls now={now} />
       <OrdersToolbar tab={tab} counts={counts} onTab={setPicked} />
       <DeskWait
         loading={orders.isLoading}
@@ -123,29 +115,28 @@ export function OrdersScreen() {
             description={t('ownerOrders.emptyBody')}
           />
         ) : (
-          // One white card, one ruled row per ticket, like the menu list.
-          <View style={[cardStyle(theme), styles.list]}>
-            {shown.map((order, index) => (
-              <OrderRow
+          <CardGrid columns={desktop ? 3 : wide ? 2 : 1}>
+            {shown.map((order) => (
+              <OrderCard
                 key={order.id}
                 order={order}
-                first={index === 0}
                 now={now}
-                currency={venue.data?.currency ?? DEFAULT_CURRENCY}
+                currency={currency}
                 next={move.label(order)}
                 busy={move.busy(order)}
                 onNext={() => move.run(order)}
+                onOpen={() => router.push(`/owner/orders/${order.id}`)}
                 onMarkPaid={canCreate ? () => setPaying(order) : undefined}
               />
             ))}
-          </View>
+          </CardGrid>
         )}
       </DeskWait>
       {paying && venue.data ? (
         <MarkPaidSheet
           order={paying}
           venueId={venueId}
-          methods={inPersonMethods(publicVenue.data?.payMethods)}
+          methods={methods}
           currency={venue.data.currency}
           onClose={() => setPaying(null)}
         />
@@ -164,5 +155,4 @@ export function OrdersScreen() {
 
 const styles = StyleSheet.create({
   actions: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
-  list: { overflow: 'hidden' },
 });

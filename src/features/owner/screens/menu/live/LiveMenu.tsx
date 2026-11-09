@@ -5,12 +5,22 @@ import { tokens } from '@/theme/tokens';
 import { MenuRail } from './MenuRail';
 import { PhonePreview, type PreviewActions } from './PhonePreview';
 import { ReorderSheet } from './ReorderSheet';
+import { WalkInPreview } from './WalkInPreview';
+import { WalkInRail } from './WalkInRail';
+
+/** Who the preview is for: guests ordering from the menu link, or guests at a table. */
+export type Audience = 'online' | 'walkin';
 
 // Phone (390) + rail (360) + gaps fit side by side from here; below it the rail goes underneath.
 const SIDE_BY_SIDE = 920;
 
-/** The menu as guests see it, editable in place, with the link, publish and style beside it. */
+/**
+ * The menu as guests see it, editable in place. Online shows the menu-link page with the link,
+ * publish switch and style beside it; walk-in shows the table page a guest lands on after
+ * scanning, with where to change its buttons beside it.
+ */
 export function LiveMenu({
+  audience,
   venue,
   sections,
   dishes,
@@ -19,6 +29,7 @@ export function LiveMenu({
   onEditSection,
   onReorder,
 }: Omit<PreviewActions, 'onReorder'> & {
+  audience: Audience;
   venue: VenueSettings;
   sections: MenuCategory[];
   dishes: MenuItem[];
@@ -30,23 +41,23 @@ export function LiveMenu({
     dishes: MenuItem[];
   } | null>(null);
   const wide = width >= SIDE_BY_SIDE;
+  const actions: PreviewActions = {
+    onEditDish,
+    onAddDish,
+    onEditSection,
+    onReorder: (section, inSection) => setReordering({ section, dishes: inSection }),
+  };
   return (
     <View style={[styles.wrap, wide && styles.row]}>
       <View style={wide ? styles.phoneCol : null}>
-        <PhonePreview
-          venue={venue}
-          sections={sections}
-          dishes={dishes}
-          actions={{
-            onEditDish,
-            onAddDish,
-            onEditSection,
-            onReorder: (section, inSection) => setReordering({ section, dishes: inSection }),
-          }}
-        />
+        {audience === 'online' ? (
+          <PhonePreview venue={venue} sections={sections} dishes={dishes} actions={actions} />
+        ) : (
+          <WalkInPreview venue={venue} sections={sections} dishes={dishes} actions={actions} />
+        )}
       </View>
       <View style={wide ? styles.railCol : null}>
-        <MenuRail venue={venue} />
+        {audience === 'online' ? <MenuRail venue={venue} /> : <WalkInRail venue={venue} />}
       </View>
       {reordering ? (
         <ReorderSheet
