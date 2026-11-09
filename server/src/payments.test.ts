@@ -113,3 +113,30 @@ test('an unknown reference is null, and webhooks for it are ignored', async () =
   assert.equal(await svc.get('nope'), null);
   assert.equal(svc.fromWebhook('nope', pending()), null);
 });
+
+test('a card payer who came back early and then paid is still paid', async () => {
+  let answer: PaystackTransaction = { status: 'abandoned', amount: 14_300, currency: 'GHS' };
+  const { svc } = service(() => answer);
+  await svc.start({ charge, method: 'card' }, 'key-1');
+  // Back in the app before paying: Paystack says abandoned.
+  assert.equal((await svc.verify('pay_1'))?.status, 'abandoned');
+  // They go back to Paystack's page and pay. The money moved, so the payment must count.
+  answer = { status: 'success', amount: 14_300, currency: 'GHS' };
+  assert.equal(svc.fromWebhook('pay_1', answer)?.status, 'succeeded');
+});
+
+test('after abandoned, a success for the wrong amount is still not paid', async () => {
+  const { svc } = service(() => ({ status: 'abandoned', amount: 14_300, currency: 'GHS' }));
+  await svc.start({ charge, method: 'card' }, 'key-1');
+  await svc.verify('pay_1');
+  const late = svc.fromWebhook('pay_1', { status: 'success', amount: 100, currency: 'GHS' });
+  assert.equal(late?.status, 'failed');
+});
+
+test('two taps at the same moment with one Idempotency-Key charge once', async () => {
+  const { svc, calls } = service(pending);
+  const input = { charge, method: 'momo' as const, momo: { phone: '+233241234567', provider: 'mtn' as const } };
+  const [a, b] = await Promise.all([svc.start(input, 'key-1'), svc.start(input, 'key-1')]);
+  assert.equal(a.reference, b.reference);
+  assert.equal(calls.length, 1);
+});
