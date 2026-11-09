@@ -218,7 +218,8 @@ export type SandboxQuote = {
  */
 export const sandboxBridge: {
   quote: (quoteId: string) => SandboxQuote;
-  track: (payment: Payment) => Payment;
+  /** `quoteId` on the first call for a payment, so a "My items" payment marks its own dishes. */
+  track: (payment: Payment, quoteId?: string) => Payment;
 } = {
   quote: () => {
     throw new Error('The mock API has not started.');
@@ -378,7 +379,7 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
     }
     if (row.payment.status === 'succeeded' && !row.applied) {
       row.applied = true;
-      const quote = [...world.quotes.values()].find((item) => world.payments.get(reference));
+      const quote = row.quoteId ? world.quotes.get(row.quoteId) : undefined;
       const live = findOrder(world, row.payment.orderId);
       const share = row.payment.amountPesewas - (row.payment.tipPesewas ?? 0);
       const paid = live.order.paidPesewas + share;
@@ -433,9 +434,10 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       tipPesewas: quote.tip,
     };
   };
-  sandboxBridge.track = (payment) => {
+  sandboxBridge.track = (payment, quoteId) => {
     const row = world.payments.get(payment.reference);
-    if (!row) world.payments.set(payment.reference, { payment, phone: '', applied: false });
+    if (!row)
+      world.payments.set(payment.reference, { payment, phone: '', applied: false, quoteId });
     else if (!row.applied) row.payment = payment;
     // Only the server's "succeeded" puts money on the order, the same way a mock payment does.
     return payment.status === 'succeeded' ? settle(payment.reference) : payment;
@@ -679,7 +681,12 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
           paidAt: null,
           testMode: paystack.mode === 'test',
         };
-        world.payments.set(reference, { payment, phone: body.momo?.phone ?? '', applied: false });
+        world.payments.set(reference, {
+          payment,
+          phone: body.momo?.phone ?? '',
+          applied: false,
+          quoteId: body.quoteId,
+        });
         return payment;
       });
     },
