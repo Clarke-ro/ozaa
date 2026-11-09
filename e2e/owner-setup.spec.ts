@@ -12,7 +12,10 @@ test('owner setup: skip Wi-Fi and payments, then see what was set up', async ({ 
   await page.getByRole('textbox', { name: 'Code', exact: true }).fill('123456');
   await page.getByRole('button', { name: 'Enter', exact: true }).click();
   await page.getByRole('tab', { name: 'More', exact: true }).click();
-  await page.getByRole('button', { name: /^Setup/ }).first().click();
+  await page
+    .getByRole('button', { name: /^Setup/ })
+    .first()
+    .click();
 
   await expect(page.getByText('What is your venue called?')).toBeVisible({ timeout: 15_000 });
   // Setup stands alone: no tab bar to wander off into.
@@ -20,9 +23,11 @@ test('owner setup: skip Wi-Fi and payments, then see what was set up', async ({ 
   await page.screenshot({ path: 'test-results/setup-venue.png' });
   await page.getByRole('button', { name: 'Next', exact: true }).click();
   await expect(page.getByText('How many tables?')).toBeVisible({ timeout: 15_000 });
+  await page.screenshot({ path: 'test-results/setup-tables.png' });
   await page.getByRole('button', { name: 'Next', exact: true }).click();
 
   await expect(page.getByText('Your guest Wi-Fi')).toBeVisible({ timeout: 15_000 });
+  await page.screenshot({ path: 'test-results/setup-wifi.png' });
   await page.getByRole('button', { name: 'Skip', exact: true }).click();
 
   await expect(page.getByText('How guests pay')).toBeVisible({ timeout: 15_000 });

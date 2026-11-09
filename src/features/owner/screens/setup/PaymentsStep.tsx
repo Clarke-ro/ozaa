@@ -44,7 +44,7 @@ function PayCard({
   const theme = useTheme();
   return (
     <View
-      style={[styles.card, cardStyle(theme)]}
+      style={[cardStyle(theme), styles.card]}
       accessible
       accessibilityLabel={`${label}, ${state}`}
     >
@@ -64,6 +64,7 @@ const styles = StyleSheet.create({
     gap: tokens.space[3],
     padding: tokens.space[4],
     minHeight: tokens.touchTarget + tokens.space[4],
+    borderRadius: tokens.radius.lg,
   },
   label: { flex: 1 },
 });

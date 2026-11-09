@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
   head: { gap: tokens.space[2] },
   cards: { gap: tokens.space[3] },
   // The row brings its own padding; the card clips its pressed colour to the rounded corners.
-  card: { overflow: 'hidden' },
+  card: { overflow: 'hidden', borderRadius: tokens.radius.lg },
   actions: { gap: tokens.space[2] },
   actionsWide: { flexDirection: 'row', alignItems: 'center' },
 });

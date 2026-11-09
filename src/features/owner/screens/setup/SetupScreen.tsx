@@ -7,18 +7,19 @@ import { api } from '@/lib/api';
 import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
 import { DeskWait } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
-import { Field, cardStyle, toast } from '../../kit';
+import { toast } from '../../kit';
 import { planTables } from '../tables/planTables';
-import { WifiSection, type WifiForm } from '../services/WifiSection';
+import type { WifiForm } from '../services/WifiSection';
 import { PaymentsStep } from './PaymentsStep';
 import { SetupDone } from './SetupDone';
+import { SetupField } from './SetupField';
 import { SetupFooter } from './SetupFooter';
 import { SetupFrame } from './SetupFrame';
 import { SetupSteps } from './SetupSteps';
 import { TablesStep } from './TablesStep';
+import { WifiStep } from './WifiStep';
 import { STEPS, footerFor, setupSummary, type Step } from './setupFlow';
 
 /**
@@ -26,7 +27,6 @@ import { STEPS, footerFor, setupSummary, type Step } from './setupFlow';
  * Wi-Fi and online payments can be skipped: guests can always pay in person.
  */
 export function SetupScreen() {
-  const theme = useTheme();
   const { t } = useTranslation();
   const router = useRouter();
   const client = useQueryClient();
@@ -129,8 +129,6 @@ export function SetupScreen() {
   }
 
   const footer = footerFor(current, paystack);
-  // Each field sits on its own card; the question above them is the step's only heading.
-  const card = [cardStyle(theme), styles.card];
   return (
     <SetupFrame
       footer={
@@ -145,9 +143,7 @@ export function SetupScreen() {
         />
       }
     >
-      <View style={card}>
-        <SetupSteps current={step} />
-      </View>
+      <SetupSteps current={step} />
       <DeskWait
         loading={venue.isLoading}
         error={venue.isError}
@@ -160,22 +156,18 @@ export function SetupScreen() {
 
           {current === 'venue' ? (
             <>
-              <View style={card}>
-                <Field
-                  label={t('ownerSetup.venueName')}
-                  value={venueName}
-                  onChangeText={setName}
-                  error={err ?? undefined}
-                />
-              </View>
-              <View style={card}>
-                <Field
-                  label={t('ownerSetup.place')}
-                  value={venuePlace}
-                  onChangeText={setPlace}
-                  placeholder={t('ownerSetup.placeHint')}
-                />
-              </View>
+              <SetupField
+                label={t('ownerSetup.venueName')}
+                value={venueName}
+                onChangeText={setName}
+                error={err ?? undefined}
+              />
+              <SetupField
+                label={t('ownerSetup.place')}
+                value={venuePlace}
+                onChangeText={setPlace}
+                placeholder={t('ownerSetup.placeHint')}
+              />
             </>
           ) : null}
 
@@ -188,12 +180,11 @@ export function SetupScreen() {
               plan={plan}
               existing={existing.length}
               error={err}
-              card={card}
             />
           ) : null}
 
           {current === 'wifi' ? (
-            <WifiSection bare value={wifi} onChange={(k, val) => setWifi({ ...wifi, [k]: val })} />
+            <WifiStep value={wifi} onChange={(k, val) => setWifi({ ...wifi, [k]: val })} />
           ) : null}
 
           {current === 'payments' ? <PaymentsStep paystack={paystack} /> : null}
@@ -204,7 +195,6 @@ export function SetupScreen() {
 }
 
 const styles = StyleSheet.create({
-  card: { padding: tokens.space[4] },
-  stack: { gap: tokens.space[3] },
+  stack: { gap: tokens.space[4] },
   question: { marginTop: tokens.space[2], marginBottom: tokens.space[1] },
 });

@@ -2,7 +2,6 @@ import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
-import { useTheme } from '@/ui/theme';
 import { useOwnerLayout } from '../../chrome/layout';
 import type { Footer } from './setupFlow';
 
@@ -13,8 +12,8 @@ const PRIMARY: Record<Footer['primary'], string> = {
 };
 
 /**
- * The bar under each step: Back on the left, then Skip and the one filled button. On a wide
- * screen the buttons stay inside the page column instead of stretching across the window.
+ * The buttons under each step, on the page itself (no bar behind them): Back on the left, then
+ * Skip and the one filled button. On a wide screen they stay inside the page column.
  */
 export function SetupFooter({
   footer,
@@ -29,16 +28,10 @@ export function SetupFooter({
   onSkip: () => void;
   onPrimary: () => void;
 }) {
-  const theme = useTheme();
   const { t } = useTranslation();
   const { wide, gutter } = useOwnerLayout();
   return (
-    <View
-      style={[
-        styles.bar,
-        { borderTopColor: theme.line, backgroundColor: theme.surface, paddingHorizontal: gutter },
-      ]}
-    >
+    <View style={[styles.bar, { paddingHorizontal: gutter }]}>
       <View style={[styles.inner, { maxWidth: tokens.owner.page.setup }]}>
         {footer.back ? (
           <Button label={t('owner.back')} tone="ghost" size="md" onPress={onBack} />
@@ -61,7 +54,7 @@ export function SetupFooter({
 }
 
 const styles = StyleSheet.create({
-  bar: { paddingVertical: tokens.space[3], borderTopWidth: StyleSheet.hairlineWidth },
+  bar: { paddingVertical: tokens.space[3] },
   inner: {
     width: '100%',
     alignSelf: 'center',

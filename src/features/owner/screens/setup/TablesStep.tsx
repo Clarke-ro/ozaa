@@ -1,12 +1,12 @@
-import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
-import { Field } from '../../kit';
 import type { planTables } from '../tables/planTables';
+import { SetupField } from './SetupField';
 
-/** From and To, each on its own card, then one line saying which tables will be added. */
+/** From and To side by side, then one line saying which tables will be added. */
 export function TablesStep({
   from,
   to,
@@ -15,7 +15,6 @@ export function TablesStep({
   plan,
   existing,
   error,
-  card,
 }: {
   from: string;
   to: string;
@@ -24,23 +23,22 @@ export function TablesStep({
   plan: ReturnType<typeof planTables>;
   existing: number;
   error: string | null;
-  card: StyleProp<ViewStyle>;
 }) {
   const theme = useTheme();
   const { t } = useTranslation();
   return (
     <>
       <View style={styles.row}>
-        <View style={[card, styles.flex]}>
-          <Field
+        <View style={styles.flex}>
+          <SetupField
             label={t('ownerTables.from')}
             value={from}
             onChangeText={onFrom}
             keyboardType="number-pad"
           />
         </View>
-        <View style={[card, styles.flex]}>
-          <Field
+        <View style={styles.flex}>
+          <SetupField
             label={t('ownerTables.to')}
             value={to}
             onChangeText={onTo}
