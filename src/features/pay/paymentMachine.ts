@@ -26,6 +26,7 @@ export type PayUiEvent =
   | { type: 'server_failed'; message: string }
   | { type: 'countdown_done' }
   | { type: 'returned_from_checkout' }
+  | { type: 'resume_check'; reference: string }
   | { type: 'verify_still_open' }
   | { type: 'reset' };
 
@@ -40,6 +41,7 @@ export function payTransition(state: PayUiState, event: PayUiEvent): PayUiState 
   }
   switch (state.kind) {
     case 'choosing':
+      if (event.type === 'resume_check') return { kind: 'checking', reference: event.reference };
       return event.type === 'request_quote' ? { kind: 'quoting' } : state;
     case 'quoting':
       return event.type === 'quote_ready' ? { kind: 'confirming' } : state;

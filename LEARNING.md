@@ -4,6 +4,36 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-09 · Paying by card (BUILD.md box 2.5)
+
+**What we built**
+A guest can pay by debit or credit card. Cravins opens Paystack's card page. On the web it opens in the same tab; in the app it opens in the in-app browser. When they come back, the app checks the payment and shows Paid. If they cancelled, it shows "Not paid. Nothing was taken." with Try again.
+
+**How it works**
+```
+Pay by card → Paystack's card page
+   web: Paystack sends the guest to /{venue}/pay?reference=…   (a fresh page)
+   app: the guest closes the in-app browser
+→ "Still checking…"  (POST /payments/{reference}/verify)
+     succeeded → Paid
+     abandoned → Not paid, nothing taken
+```
+The reference in the address is all the app needs. It asks the server, and only "succeeded" counts.
+
+**Files to look at**
+- `src/features/pay/openCheckout.ts`: where the card page opens on each platform.
+- `src/features/pay/useCardReturn.ts`: picks up the reference when the guest comes back.
+- `src/features/pay/paymentMachine.ts`: the new `resume_check` step.
+- `e2e/guest-pay-online.spec.ts`: a card that's paid and one that's cancelled.
+
+**New idea: the address carries the state**
+On the web, going to Paystack leaves our page, so everything held in memory is lost. Paystack brings the guest back with `?reference=…` in the address. That one word is enough to pick up where we left off, because the server knows the rest. It's also why we never trust the address alone: we always ask the server what really happened.
+
+**Try it yourself**
+On the test checkout page, tap Cancel, then Try again, then pay. You'll see the same screen handle both endings.
+
+---
+
 ## 2026-11-09 · Waiting for a MoMo approval (BUILD.md box 2.4)
 
 **What we built**

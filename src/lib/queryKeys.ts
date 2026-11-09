@@ -11,6 +11,7 @@ export const guestKeys = {
   offers: (slug: string) => ['offers', slug] as const,
   wifi: (slug: string) => ['wifi', slug] as const,
   order: (orderId: string | null) => ['order', orderId] as const,
+  payment: (reference: string | null) => ['payment', reference] as const,
   waiterCall: (callId: string) => ['waiter', callId] as const,
   loyaltyProgram: (slug: string) => ['loyalty-program', slug] as const,
   loyaltyAll: () => ['loyalty'] as const,

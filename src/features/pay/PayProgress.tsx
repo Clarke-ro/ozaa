@@ -1,6 +1,13 @@
 import type { ReactNode } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
-import { CircleCheck, CircleX, Clock, Smartphone, type LucideIcon } from 'lucide-react-native';
+import {
+  CircleCheck,
+  CircleX,
+  Clock,
+  CreditCard,
+  Smartphone,
+  type LucideIcon,
+} from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { pesewas } from '@/lib/brand';
 import { formatMoney } from '@/lib/money';
@@ -18,6 +25,8 @@ export type Charge = {
   method: string;
   /** "024 123 4567", for MoMo. */
   phone?: string;
+  /** Paid on Paystack's card page, so "time ran out" means the guest cancelled or left it. */
+  card: boolean;
   testMode: boolean;
   /** Paystack's own words for the prompt, when it sent some. */
   displayText?: string;
@@ -84,6 +93,12 @@ export function PayProgress({
           </View>
         </Stage>
       );
+    case 'opening_checkout':
+      return (
+        <Stage tone="ink" title={t('pay.openingCard')} charge={charge} amount={amount}>
+          <ActivityIndicator color={theme.ink} />
+        </Stage>
+      );
     case 'checking':
       return (
         <Stage tone="ink" title={t('pay.checking')} charge={charge} amount={amount}>
@@ -112,10 +127,10 @@ export function PayProgress({
     case 'timed_out':
       return (
         <Stage
-          icon={Clock}
+          icon={charge.card ? CreditCard : Clock}
           tone="ink"
-          title={t('pay.timedOutTitle')}
-          body={t('pay.timedOutBody')}
+          title={t(charge.card ? 'pay.cardCancelledTitle' : 'pay.timedOutTitle')}
+          body={t(charge.card ? 'pay.cardCancelledBody' : 'pay.timedOutBody')}
           charge={charge}
           amount={amount}
         >
