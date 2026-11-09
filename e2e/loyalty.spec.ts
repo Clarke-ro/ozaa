@@ -71,7 +71,7 @@ test('guest loyalty wallet card, earn history, claim code QR, and owner confirma
   await page.getByRole('button', { name: 'Enter' }).click();
   // Owners have Loyalty as a tab.
   await page.getByRole('tab', { name: 'Loyalty', exact: true }).click();
-  await expect(page.getByText('STAMP CARD')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Stamp card' })).toBeVisible();
   await page.waitForTimeout(800);
   await page.screenshot({ path: 'test-results/owner-loyalty-setup.png', fullPage: false });
 
