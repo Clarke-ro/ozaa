@@ -4,6 +4,33 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-09 · Owner pages, round 3: cards, full pages and a warmer background
+
+**What we built**
+Your fixes from today. Finished setup steps drop off Today. Menu previews both the online menu and the table page walk-in guests see. Orders shows one card per order, with no calls on top, and each card opens a full page. Floor puts the tables that need you first. Calls is a board. Customers are small cards that open a full page. Pages are narrower and sit on a very light orange background.
+
+**How it works**
+```
+Floor:  tables → groupTables() → Needs you | Eating | Free
+Calls:  calls  → callBoard()   → Waiting | On the way | Done
+Orders: tap a card → /owner/orders/ord_123 → finds that order in the list you already loaded
+```
+
+**Files to look at**
+- `src/features/owner/screens/floor/floorGroups.ts`: sorts tables into the three bands.
+- `src/features/owner/screens/calls/callBoard.ts`: splits calls into columns and finds the most common request.
+- `src/features/owner/screens/orders/orderSteps.ts`: the order timeline (received, preparing, ready, served).
+- `src/app/owner/orders/[id].tsx`: the full order page's route.
+- `design/tokens.json`: `canvas` (the background) and `owner.page.form` (page width).
+
+**New idea: a route with a blank in it**
+`[id].tsx` is a file name with a blank to fill in. `/owner/orders/ord_7` and `/owner/orders/ord_9` both open the same screen, and the screen reads the blank (`id`) to know which order to show. The customer page works the same way.
+
+**Try it yourself**
+In `floorGroups.ts`, swap the order of `'attention'` and `'eating'` in `ORDER`, run `npm test`, and watch the test that says "attention first" fail. Then put it back.
+
+---
+
 ## 2026-11-09 · The first server: Paystack in test mode (BUILD.md 2b)
 
 **What we built**

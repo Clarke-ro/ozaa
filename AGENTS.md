@@ -27,7 +27,7 @@ Clarke is building Cravins, a QR table app for restaurants in Ghana. He is a **b
 - **Run `pstack-unslop` on all UI copy and all docs** (README, LEARNING.md, PR text, comments). Copy must also match `design/brand.md` section 10.
 - **Use `pstack-teach` to write every `LEARNING.md` entry.**
 - Lean on the pstack principles when relevant, especially these:
-  - `principle-prove-it-works`: screenshot the real screen
+  - `principle-prove-it-works`: check the real thing (tests, type check, lint)
   - `principle-sequence-verifiable-units`: one small PR per checklist box
   - `principle-laziness-protocol`: the smallest change that works
   - `principle-type-system-discipline`: unions for states, branded `Pesewas`
@@ -36,7 +36,7 @@ Clarke is building Cravins, a QR table app for restaurants in Ghana. He is a **b
 ## Hard rules
 1. **Frontend first.** Build the UI on the mock API (`EXPO_PUBLIC_API_MODE=mock`). Do not write backend code until Clarke approves the UI at the gate in BUILD.md Phase 4. The one exception is the Paystack sandbox slice in Phase 2b.
 2. **Keep to the contract.** Use only endpoints and fields in `api/openapi.yaml`. If you need a change, make it in its own PR first: lint it, regenerate types, update fixtures. Never hand-edit `src/lib/api/schema.ts`.
-3. **Match the renders.** Every screen has a render in `design/renders/` (mapping in BUILD.md section 6). Take a screenshot of your build at 390×844 for each sample venue and compare it with the render before calling it done. Attach both to the PR.
+3. **Match the renders.** Every screen has a render in `design/renders/` (mapping in BUILD.md section 6). Build to match it. Screenshots are optional, not required before calling work done or opening a PR (Clarke, 2026-11-09).
 4. **Never mention TakeOrder.** Not in code, comments, copy, commits, docs or file names. The product is Cravins. (Also never use "ScanChop", an old working name.)
 5. **Money:**
    - Integer pesewas only, and the server total wins.
@@ -67,9 +67,9 @@ Clarke is building Cravins, a QR table app for restaurants in Ghana. He is a **b
 - Body in plain words, three short lines:
   - **What** changed.
   - **Why**.
-  - **How I checked it** (tests, screenshots).
+  - **How I checked it** (tests, type check, lint).
 - One checklist box per PR. Tick the box in BUILD.md in the same PR.
-- PR description: the architect sketch, before and after screenshots next to the render, the blast-radius summary, and the LEARNING.md entry link. Use `templates/pull_request_template.md`.
+- PR description: the architect sketch, the blast-radius summary, and the LEARNING.md entry link. Screenshots are welcome but optional. Use `templates/pull_request_template.md`.
 
 ## LEARNING.md (for Clarke)
 Use the template in `templates/LEARNING.template.md`. Write one entry per feature with `pstack-teach`. Each entry has:
