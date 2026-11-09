@@ -2,6 +2,7 @@ import createClient from 'openapi-fetch';
 import type { paths } from './schema';
 import type { ApiClient, TokenSource } from './client';
 import { ApiError } from './errors';
+import type { Call } from './types';
 
 function problem(error: unknown, status: number): ApiError {
   if (typeof error === 'object' && error !== null && 'title' in error && 'status' in error) {
@@ -17,10 +18,7 @@ function problem(error: unknown, status: number): ApiError {
 
 export function createHttpClient(baseUrl: string, tokens: TokenSource): ApiClient {
   const client = createClient<paths>({ baseUrl });
-  const headers = (
-    kind: 'guest' | 'access' | 'loyalty',
-    call?: { idempotencyKey?: string; ifNoneMatch?: string; deleteToken?: string },
-  ) => {
+  const headers = (kind: 'guest' | 'access' | 'loyalty', call?: Call) => {
     const token =
       kind === 'guest'
         ? tokens.guest()
@@ -32,6 +30,7 @@ export function createHttpClient(baseUrl: string, tokens: TokenSource): ApiClien
     if (call?.idempotencyKey) value['Idempotency-Key'] = call.idempotencyKey;
     if (call?.ifNoneMatch) value['If-None-Match'] = call.ifNoneMatch;
     if (call?.deleteToken) value['X-Delete-Token'] = call.deleteToken;
+    if (call?.sandboxQuote) value['X-Cravins-Sandbox-Quote'] = call.sandboxQuote;
     return value;
   };
 

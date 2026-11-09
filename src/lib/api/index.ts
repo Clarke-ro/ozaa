@@ -1,4 +1,4 @@
-import { createMockClient } from '@/mocks/mockClient';
+import { createMockClient, sandboxBridge } from '@/mocks/mockClient';
 import type { ApiClient } from './client';
 import { env } from '../env';
 import { createHttpClient } from './http';
@@ -34,13 +34,22 @@ const mock = createMockClient({
 
 const http = createHttpClient(env.EXPO_PUBLIC_API_URL, tokens);
 
+/**
+ * Phase 2b (EXPO_PUBLIC_API_LIVE=payments): the three payment calls go to the Paystack sandbox
+ * server in server/, everything else stays on the mock. The bill lives in the mock, so we send the
+ * server what the quote says, and put a payment the server calls succeeded on the mock order.
+ */
 function withLivePayments(base: ApiClient): ApiClient {
   if (!env.live.includes('payments')) return base;
   return {
     ...base,
-    initializePayment: http.initializePayment,
-    getPayment: http.getPayment,
-    verifyPayment: http.verifyPayment,
+    initializePayment: async (body, call) => {
+      const quote = JSON.stringify(sandboxBridge.quote(body.quoteId));
+      const payment = await http.initializePayment(body, { ...call, sandboxQuote: btoa(quote) });
+      return sandboxBridge.track(payment);
+    },
+    getPayment: async (reference) => sandboxBridge.track(await http.getPayment(reference)),
+    verifyPayment: async (reference) => sandboxBridge.track(await http.verifyPayment(reference)),
   };
 }
 
