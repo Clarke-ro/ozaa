@@ -49,7 +49,7 @@ Source: https://github.com/cursor/plugins/tree/main/pstack (commit 4dd1d05, 29 O
 | pstack-create-verification-skill | Make a project skill that drives the app the way a user does. | Phase 0: create `.cursor/skills/verify-cravins/` that opens the web build at 390x844 and screenshots each route. |
 | pstack-typescript-best-practices | TypeScript rules. | Every .ts/.tsx file. |
 | pstack-technical-writing | Layered writing standard for docs. | BUILD notes, README, LEARNING.md. |
-| pstack-principle-prove-it-works | Check the real thing, not a proxy. | Before calling a task done: screenshot vs render, test run, real response. |
+| pstack-principle-prove-it-works | Check the real thing, not a proxy. | Before calling a task done: test run, real response. Screenshots optional. |
 | pstack-principle-subtract-before-you-add | Remove dead code before adding. | Every refactor. |
 | pstack-principle-laziness-protocol | Smallest change that solves it; no extra layers. | Every PR. |
 | pstack-principle-boundary-discipline | Validate at the edges (API, storage, URL params), trust types inside. | api client (zod parse of responses), route params, storage reads. |

@@ -1,159 +1,26 @@
-import { StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { Bell } from 'lucide-react-native';
-import { nextOrderMove, type StaffRole } from '@/features/orders';
+import type { StaffRole } from '@/features/orders';
 import type { FloorTable, Order } from '@/lib/api/types';
-import { pesewas } from '@/lib/brand';
-import { formatMoney } from '@/lib/money';
-import { tokens } from '@/theme/tokens';
-import { Button } from '@/ui/Button';
-import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
 import { ModalSheet } from '../../kit';
-import { BillLines } from './BillLines';
-import { detailActions, type DetailAction } from './detailActions';
-import { STATUS_LABEL } from './FloorTile';
+import { TableDetailBody, useTableTitle } from './TableDetailBody';
 import type { FloorActions } from './useFloorActions';
 
-/**
- * One table, opened from its tile: what is owed, any open waiter call, the dishes on the bill,
- * and the next steps. It is a sheet over the floor, so the grid keeps the full page width.
- */
+/** One table in a sheet over the floor, for screens too narrow for the side panel. */
 export function TableDetail({
-  table,
-  bill,
-  currency,
-  role,
-  actions,
-  onMarkPaid,
   onClose,
+  ...props
 }: {
   table: FloorTable;
   bill: Order | null;
   currency: string;
   role: StaffRole;
   actions: FloorActions;
-  /** Opens "How did it pay?" for this bill, the same sheet as on Orders. */
   onMarkPaid: (order: Order) => void;
   onClose: () => void;
 }) {
-  const theme = useTheme();
-  const { t } = useTranslation();
-  const due = bill ? Math.max(0, bill.totalPesewas - bill.paidPesewas) : 0;
-  // Worked out once per table, then shared by the label and the tap.
-  const step = table.orderStatus ? nextOrderMove(table.orderStatus, role) : null;
-  const steps = detailActions(table, { hasBill: bill != null, step });
-  const subtitle = [
-    t(STATUS_LABEL[table.status]),
-    table.orderNumber != null ? t('ownerFloor.orderNumber', { number: table.orderNumber }) : null,
-  ]
-    .filter(Boolean)
-    .join(' · ');
-
-  const label = (item: DetailAction): string => {
-    switch (item.id) {
-      case 'acknowledge':
-        return t('owner.onTheWay');
-      case 'resolve':
-        return t('owner.doneCall');
-      case 'markPaid':
-        return t('ownerOrders.markPaid.open');
-      case 'move':
-        return t(`ownerOrders.move.${item.move}`);
-    }
-  };
-
-  const run = (item: DetailAction) => {
-    if (item.id === 'acknowledge' && table.waiterCallId) {
-      actions.answerCall(table.waiterCallId, 'acknowledged');
-    } else if (item.id === 'resolve' && table.waiterCallId) {
-      actions.answerCall(table.waiterCallId, 'resolved');
-    } else if (item.id === 'markPaid' && bill) {
-      onMarkPaid(bill);
-    } else if (item.id === 'move' && table.orderId) {
-      actions.moveOrder(table.orderId, item.next);
-    }
-  };
-
-  const busy = (item: DetailAction) =>
-    item.id === 'markPaid' ? false : item.id === 'move' ? actions.moving : actions.answering;
-
-  const footer =
-    steps.length > 0 ? (
-      <View style={styles.actions}>
-        {steps.map((item) => (
-          <Button
-            key={item.id}
-            label={label(item)}
-            tone={item.tone}
-            size="md"
-            loading={busy(item)}
-            onPress={() => run(item)}
-            style={styles.action}
-          />
-        ))}
-      </View>
-    ) : undefined;
-
+  const { title, subtitle } = useTableTitle(props.table);
   return (
-    <ModalSheet
-      visible
-      onClose={onClose}
-      // The label is already the table's full name ("Table 12"); only a bare code needs "Table".
-      title={table.label ?? t('ownerFloor.tableName', { name: table.code })}
-      subtitle={subtitle}
-      footer={footer}
-    >
-      {table.billPesewas != null ? (
-        <View style={styles.due}>
-          <Text variant="caption" style={{ color: theme.muted }}>
-            {t('ownerFloor.due')}
-          </Text>
-          <Text variant="display-m" style={styles.money}>
-            {formatMoney(pesewas(due), currency)}
-          </Text>
-        </View>
-      ) : null}
-
-      {table.waiterReason ? (
-        <View style={[styles.call, { backgroundColor: theme.errorTint }]}>
-          <View style={[styles.edge, { backgroundColor: theme.error }]} />
-          <Bell size={20} color={theme.error} />
-          <Text variant="body-strong" style={styles.callText}>
-            {t('ownerFloor.callNotice', { reason: t(`waiter.reasons.${table.waiterReason}`) })}
-          </Text>
-        </View>
-      ) : null}
-
-      <View style={styles.bill}>
-        <Text variant="caption" accessibilityRole="header" style={{ color: theme.muted }}>
-          {t('ownerFloor.billHeading')}
-        </Text>
-        <BillLines lines={bill?.lines ?? []} currency={currency} />
-      </View>
+    <ModalSheet visible onClose={onClose} title={title} subtitle={subtitle}>
+      <TableDetailBody {...props} />
     </ModalSheet>
   );
 }
-
-const styles = StyleSheet.create({
-  due: { gap: tokens.space[1] },
-  money: { fontVariant: ['tabular-nums'] },
-  call: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[3],
-    minHeight: tokens.touchTarget,
-    paddingVertical: tokens.space[3],
-    paddingLeft: tokens.space[3] + tokens.owner.statusEdge,
-    paddingRight: tokens.space[3],
-    borderRadius: tokens.radius.md,
-    borderCurve: 'continuous',
-    overflow: 'hidden',
-  },
-  // Drawn as its own strip so the rounded corners clip it cleanly on every platform.
-  edge: { position: 'absolute', left: 0, top: 0, bottom: 0, width: tokens.owner.statusEdge },
-  callText: { flex: 1 },
-  bill: { gap: tokens.space[1] },
-  actions: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', gap: tokens.space[2] },
-  action: { flexGrow: 1 },
-});
