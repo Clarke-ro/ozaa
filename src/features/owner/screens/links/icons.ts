@@ -19,7 +19,3 @@ export const LINK_ICONS: Record<string, LucideIcon> = {
   gift: Gift,
   sparkles: Sparkles,
 };
-
-export function linkIcon(key: string | undefined): LucideIcon {
-  return (key && LINK_ICONS[key]) || Link;
-}
