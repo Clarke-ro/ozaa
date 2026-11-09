@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { ChevronLeft } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
@@ -10,17 +11,21 @@ import { NotificationBell } from './NotificationBell';
  * The top of every owner page, sitting on the page itself: a bold title with an optional grey
  * line under it on the left, and the screen's one action and the bell on the right. On phones
  * the grey line goes under the whole row, so it is never squeezed beside the action.
+ * A page opened from another one (one order, one customer) gets a small Back link above the
+ * title on wide screens; phones have Back in their top bar instead.
  */
 export function PageHeader({
   title,
   subtitle,
   action,
   bell,
+  back,
 }: {
   title: string;
   subtitle?: string;
   action?: ReactNode;
   bell: boolean;
+  back?: { label: string; onPress: () => void };
 }) {
   const theme = useTheme();
   const { wide } = useOwnerLayout();
@@ -32,6 +37,20 @@ export function PageHeader({
 
   return (
     <View style={styles.block}>
+      {wide && back ? (
+        <Pressable
+          accessibilityRole="link"
+          accessibilityLabel={back.label}
+          onPress={back.onPress}
+          hitSlop={tokens.space[2]}
+          style={({ pressed }) => [styles.back, pressed && { opacity: 0.6 }]}
+        >
+          <ChevronLeft size={16} color={theme.muted} />
+          <Text variant="caption" style={{ color: theme.muted }}>
+            {back.label}
+          </Text>
+        </Pressable>
+      ) : null}
       <View style={styles.head}>
         <View style={styles.words}>
           <Text variant="title" accessibilityRole="header" numberOfLines={2} style={styles.title}>
@@ -49,6 +68,13 @@ export function PageHeader({
 
 const styles = StyleSheet.create({
   block: { gap: tokens.space[1] },
+  back: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: tokens.space[1],
+    marginBottom: tokens.space[1],
+  },
   head: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
   words: { flex: 1, gap: tokens.space[1] },
   title: { fontSize: tokens.owner.pageTitle.size, lineHeight: tokens.owner.pageTitle.line },

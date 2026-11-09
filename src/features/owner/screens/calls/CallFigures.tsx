@@ -1,25 +1,29 @@
 import { useTranslation } from 'react-i18next';
+import type { WaiterCall } from '@/lib/api/types';
 import { CardGrid, FigureCard } from '../../kit';
 
 /**
- * The three numbers at the top of Calls as white figure cards: waiting now, on the way, and how
- * fast calls are picked up. Three across on wide screens; on phones the third wraps under.
+ * The four numbers at the top of Calls: waiting now, on the way, how fast calls are picked up,
+ * and what guests ask for most. Four across on a desktop, two by two below that.
  */
 export function CallFigures({
   waiting,
   coming,
   avg,
-  wide,
+  top,
+  columns,
 }: {
   waiting: number;
   coming: number;
   /** Average minutes to pick up a call, or null with none picked up yet. */
   avg: number | null;
-  wide: boolean;
+  /** What guests ask for most, or null with no calls. */
+  top: WaiterCall['reason'] | null;
+  columns: number;
 }) {
   const { t } = useTranslation();
   return (
-    <CardGrid columns={wide ? 3 : 2}>
+    <CardGrid columns={columns}>
       <FigureCard
         order="labelFirst"
         label={t('ownerCalls.status.open')}
@@ -35,6 +39,11 @@ export function CallFigures({
         order="labelFirst"
         label={t('ownerCalls.avgShort')}
         value={avg == null ? '–' : t('ownerCalls.minutes', { count: avg })}
+      />
+      <FigureCard
+        order="labelFirst"
+        label={t('ownerCalls.topReason')}
+        value={top ? t(`waiter.reasons.${top}`) : '–'}
       />
     </CardGrid>
   );
