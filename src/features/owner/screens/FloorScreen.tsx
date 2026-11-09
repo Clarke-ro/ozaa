@@ -7,11 +7,11 @@ import { useOwnerSession } from '@/features/session';
 import { api } from '@/lib/api';
 import type { Order } from '@/lib/api/types';
 import { guestKeys } from '@/lib/queryKeys';
+import { Grid2x2 } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
-import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
 import { DeskWait, OwnerPage } from '../chrome/OwnerPage';
 import { ownerKeys } from '../data/keys';
+import { EmptyCard } from '../kit';
 import { FloorToolbar } from './floor/FloorToolbar';
 import { TableDetail } from './floor/TableDetail';
 import { TableGrid } from './floor/TableGrid';
@@ -26,7 +26,6 @@ const LIVE_MS = 5000;
  * Tapping a tile opens that table in a sheet, so there is no side column taking space from the grid.
  */
 export function FloorScreen() {
-  const theme = useTheme();
   const { t } = useTranslation();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const role = (useOwnerSession((state) => state.role) ?? 'waiter') as StaffRole;
@@ -83,9 +82,7 @@ export function FloorScreen() {
           {shown.length > 0 ? (
             <TableGrid tables={shown} currency={currency} picked={picked} onPick={setPicked} />
           ) : (
-            <Text variant="body" style={{ color: theme.muted }}>
-              {empty}
-            </Text>
+            <EmptyCard icon={Grid2x2} title={empty} description={t('ownerLead.floor')} />
           )}
         </View>
       </DeskWait>
