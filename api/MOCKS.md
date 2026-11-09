@@ -57,7 +57,7 @@ These photos and the video are **AI-generated samples**. Show a small "Sample" l
 | Waiter call | `open`, then `acknowledged` after 8 s with `staffFirstName: "Kwesi"`. |
 | Bill quote | Implements whole, equal and items, plus tips, exactly as in BUILD.md 13 / 2.1. `expiresAt` = now + 10 min. |
 | MoMo payment | `POST /payments` returns `pay_offline` with `displayText: "Check your phone and enter your PIN to approve."` and `approveBy` = now + 180 s. The outcome depends on the **last digit of the phone number**: `0` → `failed` after 5 s (`failureReason: "Not enough money in the wallet."`); `9` → stays `pay_offline` and becomes `abandoned` at `approveBy`; anything else → `succeeded` after 5 s. `testMode: true`. |
-| Card payment | Returns `open_url` with `authorizationUrl` set to a local mock page (`/_dev/mock-checkout?ref=…`) that has Pay and Cancel buttons. Pay → `succeeded`, Cancel → `abandoned`. |
+| Card payment | Returns `open_url` with `authorizationUrl` set to a local mock page (`/dev/mock-checkout?ref=…&back=/{slug}/pay`) that has Pay and Cancel buttons. Pay → `succeeded`, Cancel → `abandoned`. Both then go back to `/{slug}/pay?reference=…&trxref=…`, as Paystack's callback does. |
 | Verify | `POST /payments/{ref}/verify` returns the current state right away. |
 | Order after payment | On `succeeded`, add to `paidPesewas`, mark the paid lines (items mode), and set `paymentStatus` to `part_paid` or `paid`. On loyalty-joined sessions, add one stamp. |
 | OTP | Any Ghana phone works. The code is always `123456`. A wrong code 3 times gives 429 with `Retry-After: 30`. |
