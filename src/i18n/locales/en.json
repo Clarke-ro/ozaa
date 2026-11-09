@@ -450,7 +450,6 @@
     "markServed": "Mark served",
     "onTheWay": "On my way",
     "doneCall": "Done",
-    "noCalls": "No one is calling.",
     "callOpen": "Waiting for someone to pick this up.",
     "noOrders": "No tickets in the kitchen.",
     "soldOut": "Sold out",
@@ -752,7 +751,6 @@
     "setup": {
       "title": "Complete your setup",
       "badge": "{{percent}}%",
-      "done": "done",
       "todo": "not done yet",
       "steps": {
         "details": "Add your description and location",
@@ -1041,7 +1039,6 @@
     "left_other": "{{count}} left",
     "live": {
       "mode": "How to edit the menu",
-      "preview": "Live preview",
       "list": "List",
       "phone": "Your guest menu, as guests see it",
       "reorder": "Reorder dishes in {{name}}",
@@ -1053,7 +1050,15 @@
       "view": "View menu",
       "published": "Menu is published",
       "publishedOn": "Guests can see your menu and order.",
-      "publishedOff": "Hidden. Guests see a page that says the menu isn’t open yet."
+      "publishedOff": "Hidden. Guests see a page that says the menu isn’t open yet.",
+      "online": "Online ordering",
+      "walkIn": "Walk-in",
+      "walkInPhone": "Your table page, as walk-in guests see it",
+      "backToTable": "Back to the table page",
+      "walkInTitle": "Walk-in guests",
+      "walkInBody": "Guests at a table scan its QR code and land on this page. Tap Menu in the preview to edit the dine-in menu.",
+      "editServices": "Edit services",
+      "tableCodes": "Table QR codes"
     }
   },
   "ownerBranding": {
@@ -1187,7 +1192,6 @@
     "chimeHint": "A short chime when an order or a waiter call comes in, while Cravins is open."
   },
   "ownerFloor": {
-    "table": "Table",
     "tableName": "Table {{name}}",
     "orderNumber": "Order #{{number}}",
     "due": "Amount due",
@@ -1195,20 +1199,21 @@
     "billHeading": "On the bill",
     "qty_one": "{{count}}×",
     "qty_other": "{{count}}×",
-    "noMatch": "No tables in this group right now.",
-    "filter": {
-      "label": "Show tables",
-      "all": "All",
-      "calls": "Calls",
-      "paying": "Bill",
-      "active": "Active",
-      "free": "Free"
-    },
     "legend": {
       "free": "Free",
       "occupied": "Occupied",
       "paying": "Bill",
       "calling": "Calling"
+    },
+    "inUse": "{{count}} of {{total}}",
+    "inUseLabel": "tables in use",
+    "pickTable": "Pick a table to see its bill and what to do next.",
+    "tables_one": "{{count}} table",
+    "tables_other": "{{count}} tables",
+    "group": {
+      "attention": "Needs you",
+      "eating": "Eating",
+      "free": "Free"
     }
   },
   "ownerShell": {
@@ -1405,8 +1410,6 @@
     "table": "Table {{code}}",
     "takeaway": "Takeaway",
     "takeawayCode": "TA",
-    "showDetails": "Shows the dishes and the next step",
-    "hideDetails": "Hides the ticket details",
     "paid": {
       "unpaid": "Not paid",
       "part_paid": "Part paid",
@@ -1437,8 +1440,6 @@
     "stage_other": "{{label}}, {{count}} orders",
     "items_one": "{{count}} item",
     "items_other": "{{count}} items",
-    "openCalls_one": "{{count}} table waiting for you",
-    "openCalls_other": "{{count}} tables waiting for you",
     "range": {
       "label": "Dates",
       "all": "All time",
@@ -1486,6 +1487,33 @@
       "title": "How did order #{{number}} pay?",
       "lead": "Marks the full {{total}} as paid.",
       "done": "Order #{{number}} marked paid"
+    },
+    "openHint": "Opens the full order",
+    "moreDishes_one": "+ {{count}} more dish",
+    "moreDishes_other": "+ {{count}} more dishes",
+    "detail": {
+      "title": "Order #{{number}}",
+      "next": "Next",
+      "each": "{{price}} each",
+      "addOn": "+ {{name}}",
+      "addOnPriced": "+ {{name}} · {{price}}",
+      "minus": "−{{amount}}",
+      "subtotal": "Subtotal",
+      "saved": "Sale savings",
+      "delivery": "Delivery fee",
+      "total": "Total",
+      "paidSoFar": "Paid so far",
+      "due": "Still to pay",
+      "dishes": "Dishes",
+      "progress": "Progress",
+      "payment": "Payment",
+      "about": "Details",
+      "where": "Where",
+      "placed": "Ordered",
+      "eta": "Ready in about",
+      "missing": "We can't find this order",
+      "missingBody": "It may be from an earlier day. Go back to Orders and pick it from the list.",
+      "backToOrders": "Back to Orders"
     }
   },
   "ownerCalls": {
@@ -1494,21 +1522,19 @@
       "acknowledged": "On the way",
       "resolved": "Done"
     },
-    "active": "Active",
-    "history": "Done",
-    "noHistory": "No finished calls yet",
-    "emptyBody": "When a guest taps Call waiter, it shows here and on the Floor.",
-    "avg_one": "Average pick-up time: 1 minute",
-    "avg_other": "Average pick-up time: {{count}} minutes",
-    "avgA11y_one": "Average pick-up time 1 minute",
-    "avgA11y_other": "Average pick-up time {{count}} minutes",
     "avgShort": "Avg pick-up",
     "answerSoon": "Guests are waiting",
     "minutes_one": "1 min",
     "minutes_other": "{{count}} min",
-    "waited_one": "waiting 1 min",
-    "waited_other": "waiting {{count}} min",
-    "by": "{{name}} is on it"
+    "by": "{{name}} is on it",
+    "topReason": "Most asked for",
+    "latest_one": "Showing the latest call",
+    "latest_other": "Showing the latest {{count}}",
+    "emptyColumn": {
+      "open": "Nobody is waiting",
+      "acknowledged": "Nobody is on the way",
+      "resolved": "No finished calls yet"
+    }
   },
   "ownerStaff": {
     "invite": "Invite",
@@ -1771,28 +1797,35 @@
     "clearSearch": "Clear search",
     "export": "Export CSV",
     "exportTitle": "Cravins loyalty members",
-    "optInTitle": "Marketing opt-in (Act 843)",
-    "optInBody": "Show only customers who agreed to receive SMS offers.",
     "optInFilter": "Filter by opt-in",
     "count": "Enrolled diners ({{count}})",
     "noMatchTitle": "No customers match your search",
     "noMatchBody": "Check the phone number or clear the search.",
     "emptyTitle": "No loyalty members yet",
     "emptyBody": "When diners scan your table QR and claim their pass, they appear here.",
-    "rewardsReady_one": "1 reward ready",
-    "rewardsReady_other": "{{count}} rewards ready",
-    "lastVisit": "{{phone}} · Last visit {{date}}",
     "stamps_one": "1 stamp",
     "stamps_other": "{{count}} stamps",
-    "profile": "Diner profile",
-    "activeStamps_one": "Member with 1 active stamp",
-    "activeStamps_other": "Member with {{count}} active stamps",
     "currentStamps": "Current stamps",
     "unclaimed": "Unclaimed rewards",
     "marketingStatus": "Marketing status (Act 843)",
     "consented": "Agreed to offers by WhatsApp and SMS",
     "optedOut": "Opted out of offers",
-    "stampAtScan": "Stamp or redeem at Scan"
+    "stampAtScan": "Stamp or redeem at Scan",
+    "optInShort": "Agreed to offers",
+    "openHint": "Opens this member's details",
+    "rewardShort_one": "Reward ready",
+    "rewardShort_other": "{{count}} rewards ready",
+    "readyNote": "Ready to redeem at Scan",
+    "card": "Stamp card",
+    "progress_one": "{{count}} of {{total}} stamps towards the next reward",
+    "progress_other": "{{count}} of {{total}} stamps towards the next reward",
+    "contact": "Contact",
+    "phone": "Phone",
+    "email": "Email",
+    "lastSeen": "Last visit",
+    "missing": "We can't find this member",
+    "missingBody": "They may have left the loyalty card. Go back to the list and search again.",
+    "backToList": "Back to Customers"
   },
   "ownerAi": {
     "title": "Cravins feedback assistant",

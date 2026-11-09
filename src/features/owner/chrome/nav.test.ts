@@ -119,6 +119,10 @@ describe('isTabRoot', () => {
     expect(isTabRoot('owner', '/owner/branding')).toBe(false);
     expect(isTabRoot('waiter', '/owner/menu')).toBe(false);
   });
+
+  test('a page opened from a tab, such as one order, gets a back button', () => {
+    expect(isTabRoot('owner', '/owner/orders/ord_1')).toBe(false);
+  });
 });
 
 describe('sidebar groups', () => {

@@ -8,10 +8,8 @@ import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { VenueImage } from '@/ui/VenueImage';
 import { ThemeProvider, themeFromAccent, useTheme, type FontPair } from '@/ui/theme';
+import { PhoneFrame } from './PhoneFrame';
 import { PreviewSection } from './PreviewSection';
-
-// The width the guest renders are drawn at (BUILD.md: 390×844), so the preview matches them.
-const PHONE_WIDTH = 390;
 
 export type PreviewActions = {
   onEditDish: (dish: MenuItem) => void;
@@ -19,6 +17,15 @@ export type PreviewActions = {
   onEditSection: (section: MenuCategory) => void;
   onReorder: (section: MenuCategory, dishes: MenuItem[]) => void;
 };
+
+/** The guest pages' theme: the venue's colour and font, light or dark as its menu style says. */
+export function guestTheme(venue: VenueSettings) {
+  const font = venue.theme.fontPair;
+  const fontPair: FontPair = font === 'serif' || font === 'bold' ? font : 'cravins';
+  // "Follow phone" previews as light; the owner can switch to Dark to see that version.
+  const scheme = menuStyleOf(venue.menuStyle).colorScheme === 'dark' ? 'dark' : 'light';
+  return themeFromAccent(venue.theme.accent, fontPair, scheme);
+}
 
 /**
  * The guest menu inside a phone frame, in the venue's own colours, font and light or dark, built
@@ -37,13 +44,8 @@ export function PhonePreview({
   actions: PreviewActions;
 }) {
   const style = menuStyleOf(venue.menuStyle);
-  const font = venue.theme.fontPair;
-  const fontPair: FontPair = font === 'serif' || font === 'bold' ? font : 'cravins';
-  // "Follow phone" previews as light; the owner can switch to Dark to see that version.
-  const scheme = style.colorScheme === 'dark' ? 'dark' : 'light';
-  const theme = themeFromAccent(venue.theme.accent, fontPair, scheme);
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeProvider theme={guestTheme(venue)}>
       <PhoneBody
         venue={venue}
         sections={sections}
@@ -73,10 +75,7 @@ function PhoneBody({
   const [chip, setChip] = useState('all');
   const shown = chip === 'all' ? sections : sections.filter((s) => s.id === chip);
   return (
-    <View
-      accessibilityLabel={t('ownerMenu.live.phone')}
-      style={[styles.phone, { backgroundColor: theme.bg, borderColor: theme.line }]}
-    >
+    <PhoneFrame label={t('ownerMenu.live.phone')}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={[styles.cover, { backgroundColor: theme.wash }]}>
           {venue.banner?.url ? (
@@ -127,21 +126,11 @@ function PhoneBody({
           })}
         </View>
       </ScrollView>
-    </View>
+    </PhoneFrame>
   );
 }
 
 const styles = StyleSheet.create({
-  phone: {
-    width: '100%',
-    maxWidth: PHONE_WIDTH,
-    height: 760,
-    alignSelf: 'center',
-    borderWidth: 8,
-    borderRadius: 40,
-    borderCurve: 'continuous',
-    overflow: 'hidden',
-  },
   scroll: { paddingBottom: tokens.space[8] },
   cover: { height: 140, overflow: 'hidden' },
   intro: { paddingHorizontal: tokens.space[4], gap: tokens.space[1], marginTop: -36 },
