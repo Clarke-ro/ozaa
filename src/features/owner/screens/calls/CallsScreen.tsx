@@ -40,7 +40,7 @@ export function CallsScreen() {
   const avg = averageResponseMinutes(all);
 
   return (
-    <OwnerPage title={t('owner.calls')} width="wide">
+    <OwnerPage title={t('owner.calls')} subtitle={t('ownerLead.calls')} width="wide">
       <MetricStrip
         columns={wide || fontScale <= STACK_AT ? 3 : 1}
         metrics={[

@@ -56,7 +56,12 @@ export function ManualPaymentsCard({
     tried && !check.ok && check.field === field ? t(`ownerPay.err.${field}`) : undefined;
 
   return (
-    <Section title={t('ownerPay.manual')} note={t('ownerPay.manualNote')}>
+    <Section
+      title={t('ownerPay.manual')}
+      subtitle={t('ownerPay.manualNote')}
+      icon={Banknote}
+      collapsible
+    >
       <SwitchRow
         icon={Banknote}
         label={t('ownerPay.cash')}

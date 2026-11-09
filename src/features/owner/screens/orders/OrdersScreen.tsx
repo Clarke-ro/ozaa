@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { ClipboardList } from 'lucide-react-native';
@@ -8,9 +9,10 @@ import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
 import { orderTab, orderTabCounts, type OrderView } from '../../desk/ops';
 import { DEFAULT_CURRENCY } from '@/lib/money';
-import { EmptyCard } from '../../kit';
+import { EmptyCard, PeriodSelect } from '../../kit';
 import { Button } from '@/ui/Button';
-import { orderRange, type OrderRange } from '../../desk/orderRange';
+import { tokens } from '@/theme/tokens';
+import { ORDER_RANGES, orderRange, type OrderRange } from '../../desk/orderRange';
 import { CreateOrderSheet } from './CreateOrderSheet';
 import { MarkPaidSheet, inPersonMethods } from './MarkPaidSheet';
 import type { Order } from '@/lib/api/types';
@@ -83,19 +85,28 @@ export function OrdersScreen() {
   return (
     <OwnerPage
       title={t('owner.orders')}
+      subtitle={t('ownerOrders.lead')}
       width="wide"
       action={
-        canCreate && venue.data ? (
-          <Button
-            label={t('ownerOrders.create.open')}
-            size="md"
-            onPress={() => setCreating(true)}
+        <View style={styles.actions}>
+          <PeriodSelect<OrderRange>
+            label={t('ownerOrders.range.label')}
+            value={range}
+            onChange={setRange}
+            options={ORDER_RANGES.map((id) => ({ id, label: t(`ownerOrders.range.${id}`) }))}
           />
-        ) : null
+          {canCreate && venue.data ? (
+            <Button
+              label={t('ownerOrders.create.open')}
+              size="md"
+              onPress={() => setCreating(true)}
+            />
+          ) : null}
+        </View>
       }
     >
       <OpenCalls now={now} />
-      <OrdersToolbar tab={tab} counts={counts} onTab={setPicked} range={range} onRange={setRange} />
+      <OrdersToolbar tab={tab} counts={counts} onTab={setPicked} />
       <DeskWait
         loading={orders.isLoading}
         error={orders.isError}
@@ -144,3 +155,7 @@ export function OrdersScreen() {
     </OwnerPage>
   );
 }
+
+const styles = StyleSheet.create({
+  actions: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
+});
