@@ -25,8 +25,20 @@ export class BillError extends Error {
   }
 }
 
-function unpaidTotal(lines: readonly BillLine[]): Pesewas {
-  return pesewas(lines.reduce((sum, line) => sum + (line.paid ? 0 : line.totalPesewas), 0));
+/**
+ * The bill as the order reports it. `totalPesewas` is the server's total (dishes plus any
+ * delivery fee) and `paidPesewas` is everything already paid, by any split. What is left is
+ * worked out from these two, not from the lines: an equal share pays money, not dishes, so it
+ * marks no line paid.
+ */
+export type Bill = {
+  lines: readonly BillLine[];
+  totalPesewas: Pesewas;
+  paidPesewas: Pesewas;
+};
+
+function outstanding(bill: Bill): number {
+  return Math.max(0, bill.totalPesewas - bill.paidPesewas);
 }
 
 /**
@@ -39,16 +51,17 @@ function equalShare(remaining: number, parts: number): number {
   return Math.ceil(remaining / parts);
 }
 
-export function quoteBill(lines: readonly BillLine[], request: BillRequest): BillShare {
-  const remaining = unpaidTotal(lines);
+export function quoteBill(bill: Bill, request: BillRequest): BillShare {
+  const remaining = outstanding(bill);
   let share = 0;
   if (request.mode === 'whole') share = remaining;
   else if (request.mode === 'equal') share = equalShare(remaining, request.parts ?? 0);
   else {
-    const ids = request.lineIds ?? [];
+    // A dish picked twice is still one dish.
+    const ids = [...new Set(request.lineIds ?? [])];
     if (ids.length === 0) throw new BillError('no_lines');
     for (const id of ids) {
-      const line = lines.find((item) => item.id === id);
+      const line = bill.lines.find((item) => item.id === id);
       if (!line || line.paid) throw new BillError('line_unavailable');
       share += line.totalPesewas;
     }
