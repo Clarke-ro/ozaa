@@ -2,6 +2,7 @@ import { createMockClient, sandboxBridge } from '@/mocks/mockClient';
 import type { ApiClient } from './client';
 import { env } from '../env';
 import { createHttpClient } from './http';
+import { withOwnerRetry, type OnUnauthorized } from './ownerRetry';
 
 let guestToken: string | null = null;
 let accessToken: string | null = null;
@@ -53,7 +54,17 @@ function withLivePayments(base: ApiClient): ApiClient {
   };
 }
 
-export const api: ApiClient = env.EXPO_PUBLIC_API_MODE === 'http' ? http : withLivePayments(mock);
+let onUnauthorized: OnUnauthorized | null = null;
+
+/** The owner session plugs in here: how to get a new access token when one expires. */
+export function setOnUnauthorized(handler: OnUnauthorized | null): void {
+  onUnauthorized = handler;
+}
+
+export const api: ApiClient = withOwnerRetry(
+  env.EXPO_PUBLIC_API_MODE === 'http' ? http : withLivePayments(mock),
+  () => onUnauthorized,
+);
 
 export { ApiError, OfflineError, toMessageKey } from './errors';
 export type { ApiClient } from './client';

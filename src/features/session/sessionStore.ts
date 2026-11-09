@@ -2,7 +2,14 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { useMyCalls } from './myCalls';
 import { ownerSessionStorage } from './ownerStorage';
-import { setAccessToken, setGuestToken, setLoyaltyToken as setApiLoyaltyToken } from '@/lib/api';
+import { ownerRefresher } from './ownerRefresh';
+import {
+  api,
+  setAccessToken,
+  setGuestToken,
+  setLoyaltyToken as setApiLoyaltyToken,
+  setOnUnauthorized,
+} from '@/lib/api';
 import type { StaffRole } from '@/lib/api/types';
 
 type GuestSessionState = {
@@ -40,6 +47,8 @@ type OwnerSessionState = {
     role: StaffRole;
     firstName: string;
   }) => void;
+  /** New tokens from a refresh; who is signed in stays the same. */
+  saveTokens: (input: { accessToken: string; refreshToken: string }) => void;
   switchVenue: (venueId: string) => void;
   clearOwner: () => void;
 };
@@ -105,6 +114,10 @@ export const useOwnerSession = create<OwnerSessionState>()(
         setAccessToken(accessToken);
         set({ accessToken, refreshToken, venueId, role, firstName });
       },
+      saveTokens: ({ accessToken, refreshToken }) => {
+        setAccessToken(accessToken);
+        set({ accessToken, refreshToken });
+      },
       switchVenue: (venueId) => set({ venueId }),
       clearOwner: () => {
         setAccessToken(null);
@@ -129,4 +142,15 @@ export const useOwnerSession = create<OwnerSessionState>()(
       },
     },
   ),
+);
+
+// An expired owner token is swapped for a new one behind the scenes (src/lib/api/ownerRetry.ts).
+// If the refresh token is refused too, the owner is signed out and the layout shows sign-in.
+setOnUnauthorized(
+  ownerRefresher({
+    refreshToken: () => useOwnerSession.getState().refreshToken,
+    refresh: (refreshToken) => api.refreshTokens({ refreshToken }),
+    save: (tokens) => useOwnerSession.getState().saveTokens(tokens),
+    signOut: () => useOwnerSession.getState().clearOwner(),
+  }),
 );
