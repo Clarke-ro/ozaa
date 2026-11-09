@@ -85,26 +85,25 @@ test('owner: Today leads with sales, and a served table is marked paid from Floo
     .first()
     .click();
 
-  // Serve table 3's order from its sheet: once served and unpaid it waits under Bill.
-  const billChip = page.getByRole('tab', { name: /^Bill, \d+$/ });
-  await expect(billChip).toBeVisible({ timeout: 15_000 });
-  const before = Number((await billChip.getAttribute('aria-label'))?.match(/\d+/)?.[0] ?? 0);
-  await page.getByRole('button', { name: /^Table 3,/ }).click();
+  // Serve table 3's order from its sheet. Once served and unpaid, its card says it is waiting
+  // for the bill.
+  const table3 = page.getByRole('button', { name: /^Table 3,/ });
+  const waitingForBill = page.getByRole('button', { name: /^Table 3, Waiting for the bill/ });
+  await expect(table3).toBeVisible({ timeout: 15_000 });
+  await expect(waitingForBill).toHaveCount(0);
+  await table3.click();
   for (const step of ['Start cooking', 'Mark ready', 'Mark served']) {
     await page.getByRole('button', { name: step }).click();
   }
-  await expect(page.getByRole('tab', { name: `Bill, ${before + 1}` })).toBeVisible({
-    timeout: 15_000,
-  });
-  await page.getByRole('button', { name: 'Mark paid' }).click();
+  await expect(waitingForBill).toBeVisible({ timeout: 15_000 });
+  // The table's sheet is still open; its own Mark paid closes it and asks how it was paid.
+  await page.getByRole('dialog').getByRole('button', { name: 'Mark paid' }).click();
   await expect(page.getByText(/^How did order #\d+ pay\?$/)).toBeVisible({ timeout: 15_000 });
   await page.waitForTimeout(600); // let the sheet finish sliding in before the screenshot
   await page.screenshot({ path: 'test-results/pay-in-person-owner-mark-paid.png' });
   await page.getByRole('button', { name: 'Cash' }).click();
   await expect(page.getByText(/^Order #\d+ marked paid$/)).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByRole('tab', { name: `Bill, ${before}` })).toBeVisible({
-    timeout: 15_000,
-  });
+  await expect(waitingForBill).toHaveCount(0, { timeout: 15_000 });
   await page.screenshot({ path: 'test-results/pay-in-person-owner-floor.png' });
 
   // Old links to the payout page land on Integrations.

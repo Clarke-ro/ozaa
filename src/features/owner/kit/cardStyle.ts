@@ -3,7 +3,7 @@ import { tokens } from '@/theme/tokens';
 import type { Theme } from '@/ui/theme';
 
 /**
- * The one card look in the owner app: white on the grey page, a hairline edge, soft corners and
+ * The one card look in the owner app: white on the light orange page, a hairline edge, soft corners and
  * no shadow. Today's cards, category rows and the live menu card all use it, so pages read as
  * one set.
  */

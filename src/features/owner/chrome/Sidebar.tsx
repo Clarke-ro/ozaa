@@ -20,7 +20,7 @@ import { useNavCounts } from './useNavCounts';
 const MARK = tokens.space[8];
 
 /**
- * Wide screens only. A light column on the card colour, split from the grey page by a thin
+ * Wide screens only. A light column on the card colour, split from the light orange page by a thin
  * line, with the pages in groups (main, sales, settings). The open page sits in a pale orange
  * pill. It follows the person's light or dark setting like the page does. Folds to an icon rail.
  */

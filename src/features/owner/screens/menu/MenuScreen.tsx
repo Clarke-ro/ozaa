@@ -7,7 +7,7 @@ import { Button } from '@/ui/Button';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ConfirmDialog, Segmented } from '../../kit';
 import { DishEditor } from './DishEditor';
-import { LiveMenu } from './live/LiveMenu';
+import { LiveMenu, type Audience } from './live/LiveMenu';
 import { MenuListView } from './MenuListView';
 import { SectionEditor } from './SectionEditor';
 import { SectionsSheet } from './SectionsSheet';
@@ -22,16 +22,18 @@ type Pending =
   | { kind: 'soldOut'; items: MenuItem[] };
 
 /**
- * The menu builder: the live phone preview or the list, the dish and section editors, and the
- * confirmations for deleting and for marking everything sold out.
+ * The menu builder: a live phone preview for online ordering or for walk-in guests, or the list;
+ * the dish and section editors; and the confirmations for deleting and for marking everything
+ * sold out.
  */
 export function MenuScreen() {
   const { t } = useTranslation();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const desk = useMenuDesk(venueId);
   const { width } = useWindowDimensions();
-  const [picked, setPicked] = useState<'list' | 'live' | null>(null);
-  const mode = picked ?? (width >= LIVE_FIRST ? 'live' : 'list');
+  // Online and walk-in are the two live previews; List is the plain editor.
+  const [picked, setPicked] = useState<Audience | 'list' | null>(null);
+  const mode = picked ?? (width >= LIVE_FIRST ? 'online' : 'list');
   // The section a new dish goes into, from "Add a dish here".
   const [addTo, setAddTo] = useState<string | undefined>(undefined);
   const [editingItem, setEditingItem] = useState<MenuItem | null | undefined>(undefined);
@@ -79,12 +81,14 @@ export function MenuScreen() {
           value={mode}
           onChange={setPicked}
           options={[
-            { id: 'live', label: t('ownerMenu.live.preview') },
+            { id: 'online', label: t('ownerMenu.live.online') },
+            { id: 'walkin', label: t('ownerMenu.live.walkIn') },
             { id: 'list', label: t('ownerMenu.live.list') },
           ]}
         />
-        {mode === 'live' && desk.venue.data ? (
+        {mode !== 'list' && desk.venue.data ? (
           <LiveMenu
+            audience={mode}
             venue={desk.venue.data}
             sections={sections}
             dishes={all}
