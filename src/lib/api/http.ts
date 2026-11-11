@@ -122,9 +122,6 @@ export function createHttpClient(baseUrl: string, tokens: TokenSource): ApiClien
           headers: headers('guest'),
         }),
       ),
-    async paystackWebhook() {
-      throw new ApiError(404, 'request_failed', 'The app does not call the Paystack webhook');
-    },
     callWaiter: (body, call) =>
       ok(
         client.POST('/waiter-calls', {
@@ -366,14 +363,6 @@ export function createHttpClient(baseUrl: string, tokens: TokenSource): ApiClien
           headers: headers('access'),
         }),
       ),
-    ownerRecordCashPayment: (orderId, body, call) =>
-      ok(
-        client.POST('/owner/orders/{orderId}/cash-payment', {
-          body,
-          params: { path: { orderId }, header: { 'Idempotency-Key': call?.idempotencyKey ?? '' } },
-          headers: headers('access', call),
-        }),
-      ),
     ownerListWaiterCalls: (venueId) =>
       ok(
         client.GET('/owner/venues/{venueId}/waiter-calls', {
@@ -417,21 +406,6 @@ export function createHttpClient(baseUrl: string, tokens: TokenSource): ApiClien
           body,
           params: { path: { venueId }, header: { 'Idempotency-Key': call?.idempotencyKey ?? '' } },
           headers: headers('access', call),
-        }),
-      ),
-    ownerGetPayoutAccount: (venueId) =>
-      ok(
-        client.GET('/owner/venues/{venueId}/payout-account', {
-          params: { path: { venueId } },
-          headers: headers('access'),
-        }),
-      ),
-    ownerSetPayoutAccount: (venueId, body) =>
-      ok(
-        client.PUT('/owner/venues/{venueId}/payout-account', {
-          body,
-          params: { path: { venueId } },
-          headers: headers('access'),
         }),
       ),
     ownerGetDashboard: (venueId) =>

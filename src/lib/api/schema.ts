@@ -701,23 +701,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/owner/orders/{orderId}/cash-payment": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Staff mark an order as paid in cash at the counter. */
-        post: operations["ownerRecordCashPayment"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/owner/venues/{venueId}/payment-settings": {
         parameters: {
             query?: never;
@@ -893,30 +876,6 @@ export interface paths {
         put?: never;
         /** Confirm a guest's 6-character redemption claim code. Staff confirmation is the only debit. */
         post: operations["ownerConfirmRedemption"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/owner/venues/{venueId}/payout-account": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Old split model: get the payout account. Replaced by payment-settings (Clarke, 2026-11-08).
-         * @deprecated
-         */
-        get: operations["ownerGetPayoutAccount"];
-        /**
-         * Old split model: create the venue's Paystack subaccount. Replaced by payment-settings/paystack (Clarke, 2026-11-08).
-         * @deprecated
-         */
-        put: operations["ownerSetPayoutAccount"];
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2229,31 +2188,6 @@ export interface components {
                 number?: components["schemas"]["GhanaPhone"];
                 name?: string;
             } | null;
-        };
-        PayoutAccountInput: {
-            businessName: string;
-            settlement: {
-                /** @constant */
-                type: "bank";
-                /** @description From Paystack List Banks (country=ghana). */
-                bankCode: string;
-                accountNumber: string;
-            } | {
-                /** @constant */
-                type: "momo";
-                provider: components["schemas"]["MomoProvider"];
-                phone: components["schemas"]["GhanaPhone"];
-            };
-        };
-        PayoutAccount: {
-            businessName: string;
-            /** @enum {string} */
-            settlementType: "bank" | "momo";
-            /** @example **** 4567 */
-            accountMasked: string;
-            verified: boolean;
-            /** @description Cravins's share taken by the Paystack split. Set by Cravins, read-only here. */
-            cravinsFeePercent: number;
         };
         /**
          * @description Sample venues use GHS. Amount fields are minor units (pesewas, kobo, cents) except XOF, which is the whole franc.
@@ -4045,37 +3979,6 @@ export interface operations {
             409: components["responses"]["Conflict"];
         };
     };
-    ownerRecordCashPayment: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description A new UUID per user action. Reuse it when retrying the same action. */
-                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
-            };
-            path: {
-                orderId: components["parameters"]["OrderId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    amountPesewas: components["schemas"]["Pesewas"];
-                };
-            };
-        };
-        responses: {
-            /** @description Saved. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Order"];
-                };
-            };
-        };
-    };
     ownerGetPaymentSettings: {
         parameters: {
             query?: never;
@@ -4401,62 +4304,6 @@ export interface operations {
             };
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
-        };
-    };
-    ownerGetPayoutAccount: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                venueId: components["parameters"]["VenueId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Where the venue's money settles (Paystack subaccount). Account numbers are masked. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PayoutAccount"];
-                };
-            };
-            /** @description Not set up yet. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ownerSetPayoutAccount: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                venueId: components["parameters"]["VenueId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PayoutAccountInput"];
-            };
-        };
-        responses: {
-            /** @description Saved and checked by Paystack. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PayoutAccount"];
-                };
-            };
-            422: components["responses"]["Unprocessable"];
         };
     };
     ownerGetDashboard: {

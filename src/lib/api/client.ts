@@ -37,8 +37,6 @@ import type {
   OtpPurpose,
   OwnerDashboard,
   Payment,
-  PayoutAccount,
-  PayoutAccountInput,
   ScannerDevice,
   ServiceSettings,
   StaffMember,
@@ -88,7 +86,6 @@ export type ApiClient = {
   initializePayment(body: InitializePaymentRequest, call: Call): Promise<Payment>;
   getPayment(reference: string): Promise<Payment>;
   verifyPayment(reference: string): Promise<Payment>;
-  paystackWebhook(rawBody: string, signature: string | null): Promise<void>;
   callWaiter(body: { reason: WaiterReason; note?: string }, call: Call): Promise<WaiterCall>;
   getWaiterCall(id: string): Promise<WaiterCall>;
   getVenueLoyaltyProgram(slug: string): Promise<LoyaltyProgram>;
@@ -163,11 +160,6 @@ export type ApiClient = {
   ): Promise<{ items: Order[]; nextCursor?: string | null }>;
   ownerCreateOrder(venueId: string, body: OwnerCreateOrderRequest, call: Call): Promise<Order>;
   ownerSetOrderStatus(orderId: string, body: { status: Order['status'] }): Promise<Order>;
-  ownerRecordCashPayment(
-    orderId: string,
-    body: { amountPesewas: number },
-    call?: Call,
-  ): Promise<Order>;
   ownerListWaiterCalls(venueId: string): Promise<{ items: WaiterCall[] }>;
   ownerUpdateWaiterCall(
     id: string,
@@ -195,8 +187,6 @@ export type ApiClient = {
     venueId: string,
     body: { qrPayload: string; action: 'stamp' | 'redeem' },
   ): Promise<LoyaltyScanResult>;
-  ownerGetPayoutAccount(venueId: string): Promise<PayoutAccount>;
-  ownerSetPayoutAccount(venueId: string, body: PayoutAccountInput): Promise<PayoutAccount>;
   ownerGetDashboard(venueId: string): Promise<OwnerDashboard>;
   ownerGetFloor(venueId: string): Promise<{ items: FloorTable[] }>;
   ownerListTransactions(venueId: string): Promise<{ items: VenueTransaction[] }>;

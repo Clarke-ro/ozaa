@@ -1,4 +1,5 @@
 import { ApiError } from '@/lib/api/errors';
+import { decideMockCard } from './cardBox';
 import { signedInMock } from './testOwner';
 
 const keys = {
@@ -89,18 +90,27 @@ test('manual methods need their details, then guests see them', async () => {
 });
 
 test('after part of the bill is paid, paying the whole bill asks only for what is left', async () => {
-  const { api } = await signedInMock();
+  const { api, setGuest } = await signedInMock();
   const { id } = await api.getVenue('mamas-kitchen');
+  await api.ownerConnectPaystack(id, keys);
   const dish = (await api.getMenu('mamas-kitchen')).items[0]!;
-  const order = await api.ownerCreateOrder(
-    id,
-    { clientOrderId: crypto.randomUUID(), lines: [{ menuItemId: dish.id, quantity: 2 }] },
-    { idempotencyKey: 'part-1' },
+  setGuest(
+    (await api.createGuestSession({ venueSlug: 'mamas-kitchen', tableCode: '4' })).guestToken,
   );
-  // One friend's share, paid in cash: money on the order, but no dish marked paid.
-  await api.ownerRecordCashPayment(order.id, { amountPesewas: dish.pricePesewas });
+  const order = await api.createOrder(
+    { clientOrderId: crypto.randomUUID(), lines: [{ menuItemId: dish.id, quantity: 2 }] },
+    { idempotencyKey: crypto.randomUUID() },
+  );
+  // One friend pays half by card: money on the order, but no dish marked paid.
+  const half = await api.quoteBill(order.id, { mode: 'equal', parts: 2 });
+  const payment = await api.initializePayment(
+    { quoteId: half.quoteId, method: 'card' },
+    { idempotencyKey: crypto.randomUUID() },
+  );
+  decideMockCard(payment.reference, 'succeeded');
+  expect((await api.verifyPayment(payment.reference)).status).toBe('succeeded');
   const quote = await api.quoteBill(order.id, { mode: 'whole' });
-  expect(quote.sharePesewas).toBe(order.totalPesewas - dish.pricePesewas);
+  expect(quote.sharePesewas).toBe(order.totalPesewas - half.sharePesewas);
   expect(quote.remainingAfterPesewas).toBe(0);
 });
 

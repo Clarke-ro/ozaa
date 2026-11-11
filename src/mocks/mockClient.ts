@@ -707,9 +707,6 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       await gate();
       return settle(reference);
     },
-    async paystackWebhook() {
-      await gate();
-    },
     async callWaiter(body, call) {
       await gate();
       return remember(call.idempotencyKey, () => {
@@ -1161,18 +1158,6 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       };
       return live.order;
     },
-    async ownerRecordCashPayment(orderId, body) {
-      await gate();
-      const live = findOrder(world, orderId);
-      const paid = live.order.paidPesewas + body.amountPesewas;
-      live.order = {
-        ...live.order,
-        paidPesewas: paid,
-        paymentStatus: paid >= live.order.totalPesewas ? 'paid' : 'part_paid',
-        paymentMethod: 'cash',
-      };
-      return live.order;
-    },
     async ownerRecordManualPayment(orderId, body, call) {
       await gate();
       const role = staffRole(world, tokens);
@@ -1306,28 +1291,6 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
         if (!card) throw new ApiError(404, 'claim_unknown', LOYALTY_PROBLEMS.claim_unknown.title);
         return card as LoyaltyCard;
       });
-    },
-    async ownerGetPayoutAccount(venueId) {
-      await gate();
-      const account = world.payouts[venueId];
-      if (!account) throw new ApiError(404, 'venue_not_found', 'No payout account yet');
-      return account;
-    },
-    async ownerSetPayoutAccount(venueId, body) {
-      await gate();
-      const masked =
-        body.settlement.type === 'bank'
-          ? `**** ${body.settlement.accountNumber.slice(-4)}`
-          : `**** ${body.settlement.phone.slice(-4)}`;
-      const account = {
-        businessName: body.businessName,
-        settlementType: body.settlement.type,
-        accountMasked: masked,
-        verified: false,
-        cravinsFeePercent: world.payouts[venueId]?.cravinsFeePercent ?? 0,
-      };
-      world.payouts[venueId] = account;
-      return account;
     },
     async ownerGetDashboard(venueId) {
       await gate();

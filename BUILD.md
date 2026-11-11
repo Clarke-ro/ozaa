@@ -433,7 +433,7 @@ Ghana is the first launch market and the default sample: cedis, `+233`, and `Afr
   - The server learns the result from the `charge.success` webhook. The signature is HMAC-SHA512 of the raw body with the secret key, in `x-paystack-signature`.
   - The server falls back to Verify Transaction if the webhook is late.
 - **Split payments:**
-  - Each venue gets a Paystack **subaccount** (bank or MoMo payout, `PUT /owner/venues/{id}/payout-account`).
+  - Each venue gets a Paystack **subaccount** (bank or MoMo payout). *Replaced 2026-11-08: each venue connects its own Paystack keys (`payment-settings`). The old `payout-account` calls left the contract on 2026-11-11.*
   - Every transaction names the subaccount, so Paystack settles the venue directly.
   - Cravins's cut is the split share.
   - **Cravins never holds funds.** This keeps Cravins out of the Bank of Ghana PSP licence rules under Act 987, but Clarke must confirm this with a lawyer before launch.
@@ -564,8 +564,8 @@ Work top to bottom. Each box is one small PR that ends in a verifiable state (ps
 - [x] 2.4 MoMo wait screen: countdown from `approveBy`, "Check your phone and enter your PIN to approve.", then paid, failed or timed-out states. Render: `v4-reference/03-momo-checkout.png`, restyled to v5.
 - [x] 2.5 Card: open `authorizationUrl` (expo-web-browser on native, same tab on web with a return URL), then verify on return.
 - [x] 2.6 Receipt view: lines, tip, empty-ready tax lines, and "Test payment" label in sandbox.
-- [x] 2.7 Owner payout account screen: bank or MoMo, shows the masked account and status.
-- [x] 2.8 Owner "Mark paid in cash" (`/owner/orders/{id}/cash-payment`).
+- [x] 2.7 Owner payout account screen: bank or MoMo, shows the masked account and status. *(Replaced by Payments settings; endpoint removed 2026-11-11.)*
+- [x] 2.8 Owner "Mark paid in cash" (`/owner/orders/{id}/cash-payment`). *(Replaced by Mark paid with a method, `manual-payment`; endpoint removed 2026-11-11.)*
 - [ ] **2b Paystack sandbox slice** (the only early server code, in `server/`):
   - Implement only `POST /payments`, `GET /payments/{ref}`, `POST /payments/{ref}/verify` and `POST /webhooks/paystack`, with **test** keys from the server env.
   - The app uses `EXPO_PUBLIC_API_LIVE=payments` to send just these calls to the server and keep everything else on mocks.

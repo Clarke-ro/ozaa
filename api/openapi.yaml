@@ -1007,28 +1007,6 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Order' }
         '409': { $ref: '#/components/responses/Conflict' }
-  /owner/orders/{orderId}/cash-payment:
-    post:
-      tags: [owner-orders]
-      operationId: ownerRecordCashPayment
-      security: [{ ownerAuth: [] }]
-      summary: Staff mark an order as paid in cash at the counter.
-      parameters: [{ $ref: '#/components/parameters/OrderId' }, { $ref: '#/components/parameters/IdempotencyKey' }]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [amountPesewas]
-              properties:
-                amountPesewas: { $ref: '#/components/schemas/Pesewas' }
-      responses:
-        '200':
-          description: Saved.
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/Order' }
   /owner/venues/{venueId}/payment-settings:
     get:
       tags: [owner-payments]
@@ -1258,41 +1236,6 @@ paths:
               schema: { $ref: '#/components/schemas/LoyaltyCard' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
-
-  /owner/venues/{venueId}/payout-account:
-    get:
-      tags: [owner-payouts]
-      operationId: ownerGetPayoutAccount
-      deprecated: true
-      summary: "Old split model: get the payout account. Replaced by payment-settings (Clarke, 2026-11-08)."
-      security: [{ ownerAuth: [] }]
-      parameters: [{ $ref: '#/components/parameters/VenueId' }]
-      responses:
-        '200':
-          description: Where the venue's money settles (Paystack subaccount). Account numbers are masked.
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/PayoutAccount' }
-        '404': { description: Not set up yet. }
-    put:
-      tags: [owner-payouts]
-      operationId: ownerSetPayoutAccount
-      deprecated: true
-      security: [{ ownerAuth: [] }]
-      summary: "Old split model: create the venue's Paystack subaccount. Replaced by payment-settings/paystack (Clarke, 2026-11-08)."
-      parameters: [{ $ref: '#/components/parameters/VenueId' }]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: '#/components/schemas/PayoutAccountInput' }
-      responses:
-        '200':
-          description: Saved and checked by Paystack.
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/PayoutAccount' }
-        '422': { $ref: '#/components/responses/Unprocessable' }
 
   /owner/venues/{venueId}/dashboard:
     get:
@@ -2946,34 +2889,6 @@ components:
             network: { $ref: '#/components/schemas/MomoProvider' }
             number: { $ref: '#/components/schemas/GhanaPhone' }
             name: { type: string }
-    PayoutAccountInput:
-      type: object
-      required: [businessName, settlement]
-      properties:
-        businessName: { type: string, maxLength: 80 }
-        settlement:
-          oneOf:
-            - type: object
-              required: [type, bankCode, accountNumber]
-              properties:
-                type: { const: bank }
-                bankCode: { type: string, description: From Paystack List Banks (country=ghana). }
-                accountNumber: { type: string }
-            - type: object
-              required: [type, provider, phone]
-              properties:
-                type: { const: momo }
-                provider: { $ref: '#/components/schemas/MomoProvider' }
-                phone: { $ref: '#/components/schemas/GhanaPhone' }
-    PayoutAccount:
-      type: object
-      required: [businessName, settlementType, accountMasked, verified, cravinsFeePercent]
-      properties:
-        businessName: { type: string }
-        settlementType: { type: string, enum: [bank, momo] }
-        accountMasked: { type: string, example: '**** 4567' }
-        verified: { type: boolean }
-        cravinsFeePercent: { type: number, description: 'Cravins''s share taken by the Paystack split. Set by Cravins, read-only here.' }
 
     Currency:
       type: string
