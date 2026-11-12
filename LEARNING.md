@@ -4,6 +4,31 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-12 · Splitting the real-server client
+
+**What we changed**
+
+`src/lib/api/http.ts`, the client that talks to the real server, was 644 lines. It's now six area files plus a 19-line `http.ts` that joins them, the same pattern as the mock split.
+
+**How we proved nothing changed**
+
+No test called `http.ts` directly. So, for this PR only, a throwaway test built the old and the new client side by side with a fake `fetch`, called all 87 methods on both, and compared every request: method, address, headers and body. All 87 matched. Then we deleted the throwaway test.
+
+**Files to look at**
+
+- `src/lib/api/httpContext.ts`: the shared parts (`headers()` adds the sign-in token and the idempotency key).
+- `src/lib/api/httpGuestCalls.ts`: one area, short enough to read in one go.
+
+**New idea: a characterisation test**
+
+When you move code that has no tests, record what the old code does and check the new code does the same thing. You don't need to know what's right, only that nothing changed.
+
+**Try it yourself**
+
+Open `httpContext.ts` and find where `Idempotency-Key` is added. Then find a call in `httpOwnerOrderCalls.ts` that sends one.
+
+---
+
 ## 2026-11-12 · Splitting the mock API into areas
 
 **What we changed**
