@@ -4,6 +4,36 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-12 · Fewer Vercel deploys
+
+**What we changed**
+
+One repo feeds two Vercel projects: the app (guest table pages and the owner app) and the landing site. Every push to any PR branch built both as previews, and every merge built both again. Ten merges in one evening hit Vercel's daily limit.
+
+**How it works now**
+
+```
+push to a PR branch   ─►  nothing deploys
+merge to main         ─►  landing/ changed?            ─► landing builds
+                      ─►  app files (or pricing) changed? ─► app builds
+                      ─►  only docs, server, e2e, .md  ─► nothing builds
+```
+
+**Files to look at**
+
+- `vercel.json` and `landing/vercel.json`: `git.deploymentEnabled` lets only `main` deploy; `ignoreCommand` decides whether to build.
+- `scripts/vercel-skip-app.sh`: the app's rule, with comments.
+
+**New idea: the ignored build step**
+
+Before building, Vercel runs `ignoreCommand`. Exit code 0 means "skip", anything else means "build". `git diff --quiet A B -- folder` exits 0 when nothing in that folder changed between two commits, so it fits exactly. When in doubt (an unknown commit, a manual redeploy), the rules build.
+
+**Try it yourself**
+
+Run `git diff --quiet HEAD~1 HEAD -- landing; echo $?` in Git Bash. 0 means the last commit didn't touch the landing site.
+
+---
+
 ## 2026-11-11 · Removing calls nobody uses
 
 **What we changed**
