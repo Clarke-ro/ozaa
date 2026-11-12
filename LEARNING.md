@@ -4,6 +4,38 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-12 · Splitting the mock API into areas
+
+**What we changed**
+
+`src/mocks/mockClient.ts` was 1,661 lines: every pretend server call in one file. It's now eleven files of 80 to 231 lines. The code inside each call didn't change, and the same 41 mock tests pass before and after.
+
+**How it works now**
+
+```
+createMockClient()
+  └─ createMockContext()          one shared world, tokens, clock
+       ├─ mockAuthCalls(ctx)      sign-in, guest session
+       ├─ mockGuestCalls(ctx)     menu, order, bill, pay
+       ├─ mockOwnerOrderCalls(ctx) ...and five more areas
+       └─ { ...auth, ...guest, ... }  joined into one ApiClient
+```
+
+**Files to look at**
+
+- `src/mocks/mockClient.ts`: the join, now 80 lines.
+- `src/mocks/mockContext.ts`: what every area shares.
+
+**New idea: pass the shared state in**
+
+The calls used to share state because they all sat inside one big function. Now each area is a function that takes `ctx`, the shared state, and returns its calls. Every area still sees the same world, so an order a guest places is still the one the owner sees. TypeScript checks that the joined object has every method `ApiClient` asks for: leave one out and `tsc` fails.
+
+**Try it yourself**
+
+Comment out `...mockOwnerDeskCalls(ctx),` in `mockClient.ts` and run `npx tsc --noEmit`. Read which methods it says are missing, then put the line back.
+
+---
+
 ## 2026-11-12 · Fewer Vercel deploys
 
 **What we changed**
