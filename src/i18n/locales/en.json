@@ -1301,7 +1301,11 @@
     "rewards30": "Rewards",
     "last30": "Last 30 days",
     "treatWhat": "What they get",
-    "treatHint": "For example: a free sobolo"
+    "treatHint": "For example: a free sobolo",
+    "stampOnPaid": "Stamp paid Cravins orders",
+    "stampOnPaidHint": "Members get a stamp on their own when they pay through Cravins.",
+    "expire": "Stamps last 90 days",
+    "expireHint": "Older stamps drop off the card. Off keeps them forever."
   },
   "ownerBusiness": {
     "business": "Business",
@@ -1761,7 +1765,18 @@
     "redeem": "Redeem reward",
     "closeResult": "Close",
     "problemTitle": "Couldn't add a stamp",
-    "problemBody": "The card may be on cooldown or not recognised. Try again."
+    "problemBody": "The card may be on cooldown or not recognised. Try again.",
+    "phoneTitle": "Scan with your phone",
+    "phoneBody": "A computer can't scan loyalty cards. Point your phone camera at this code to open the scanner, or use a paired scanner phone.",
+    "pair": "Pair a scanner phone",
+    "lookupTitle": "Find a guest without their card",
+    "lookupLabel": "Name, last 4 digits or card code",
+    "lookupHint": "Name, last 4 digits, or a card code and Enter",
+    "noMatch": "No member matches that.",
+    "today": "Today",
+    "noneToday": "No stamps or rewards given today yet.",
+    "stampTo_one": "Stamp · {{count}} on the card",
+    "stampTo_other": "Stamp · {{count}} on the card"
   },
   "ownerLead": {
     "branding": "How your guest page looks: colour, font, photos and buttons.",
@@ -1852,7 +1867,7 @@
     "close": "Close"
   },
   "ownerMembers": {
-    "search": "Search by diner phone or name",
+    "search": "Search by name or last 4 digits",
     "clearSearch": "Clear search",
     "export": "Export CSV",
     "exportTitle": "Cravins loyalty members",
@@ -1884,7 +1899,31 @@
     "lastSeen": "Last visit",
     "missing": "We can't find this member",
     "missingBody": "They may have left the loyalty card. Go back to the list and search again.",
-    "backToList": "Back to Customers"
+    "backToList": "Back to Customers",
+    "filter": "Show",
+    "tags": {
+      "all": "All",
+      "reward_ready": "Reward ready",
+      "regular": "Regulars",
+      "new": "New",
+      "quiet": "Quiet lately"
+    },
+    "visits_one": "{{count}} visit",
+    "visits_other": "{{count}} visits",
+    "addStamp": "Add a stamp",
+    "stamped": "Stamp added",
+    "cooldown": "Already stamped in the last hour",
+    "visitsTitle": "Visits",
+    "noVisits": "No paid visits yet.",
+    "consentTitle": "What they agreed to",
+    "loyaltyAgreed": "Loyalty card",
+    "loyaltyAgreedAt": "Agreed {{date}} · text {{version}}",
+    "marketingYes": "Agreed to offers",
+    "marketingNo": "Didn't agree to offers",
+    "favourite": "Favourite",
+    "spent": "Spent",
+    "counterStamp": "Stamp at the counter",
+    "rewardReady": "A reward is ready to claim"
   },
   "ownerAi": {
     "title": "Cravins feedback assistant",

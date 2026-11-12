@@ -1,34 +1,38 @@
 import { useState } from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
 import { hapticSuccess, hapticWarning } from '@/lib/haptics';
 import type { LoyaltyScanResult } from '@/lib/api/types';
 import { tokens } from '@/theme/tokens';
-import { Button } from '@/ui/Button';
-import { Text } from '@/ui/Text';
-import { fontFamily, useTheme } from '@/ui/theme';
 import { useOwnerSession } from '@/features/session';
 import { OwnerPage, useGutter } from '../chrome/OwnerPage';
-import { DeskCard } from '../kit';
+import { toast } from '../kit';
+import { GuestLookup } from './scan/GuestLookup';
+import { ScanLog } from './scan/ScanLog';
+import { ScanOnPhone } from './scan/ScanOnPhone';
 import { ScanProblem, ScanResult } from './scan/ScanResult';
 import { ScanViewfinder } from './scan/ScanViewfinder';
 import { ownerKeys } from '../data/keys';
 
-/** Scan a guest's loyalty QR (or type its code) to add a stamp or redeem a reward. */
+/**
+ * Scan a guest's loyalty QR to add a stamp or give a reward. On a computer (no camera) the page
+ * shows a code to open the scanner on a phone. Guests can also be found by name or last 4 digits,
+ * and the day's stamps and rewards are listed underneath.
+ */
 export function ScanStampScreen() {
   const { t } = useTranslation();
-  const theme = useTheme();
   const gutter = useGutter();
-    const venueId = useOwnerSession((state) => state.venueId) ?? '';
+  const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const client = useQueryClient();
   const program = useQuery({
     queryKey: ownerKeys.loyalty(venueId),
     queryFn: () => api.ownerGetLoyalty(venueId),
     enabled: Boolean(venueId),
   });
-  const [code, setCode] = useState('');
+  // The log covers the last day; worked out once per visit to the page.
+  const [since] = useState(() => new Date(Date.now() - 86_400_000).toISOString());
   const [result, setResult] = useState<LoyaltyScanResult | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const [scanned, setScanned] = useState<string | null>(null);
@@ -40,13 +44,30 @@ export function ScanStampScreen() {
       setResult(data);
       setProblem(null);
       void (data.cooldownViolated ? hapticWarning() : hapticSuccess());
-      void client.invalidateQueries({ queryKey: ownerKeys.loyalty(venueId) });
-      void client.invalidateQueries({ queryKey: ownerKeys.loyaltyCustomers(venueId) });
+      refresh();
     },
     onError: (err: Error) => {
       void hapticWarning();
       setProblem(err.message || t('ownerScan.problemBody'));
     },
+  });
+
+  // Customers, Loyalty and the log count the same stamps, so they refresh together.
+  const refresh = () => {
+    void client.invalidateQueries({ queryKey: ownerKeys.loyalty(venueId) });
+    void client.invalidateQueries({ queryKey: ownerKeys.loyaltyCustomers(venueId) });
+    void client.invalidateQueries({ queryKey: ownerKeys.scans(venueId) });
+  };
+  const stampById = useMutation({
+    mutationFn: (customerId: string) =>
+      api.ownerStampLoyaltyCustomer(venueId, customerId, { idempotencyKey: crypto.randomUUID() }),
+    onSuccess: (data) => {
+      setResult(data);
+      setProblem(null);
+      if (data.cooldownViolated) toast.error(t('ownerMembers.cooldown'));
+      refresh();
+    },
+    onError: () => toast.error(t('ownerKit.saveFailed')),
   });
 
   const send = (qr: string) => {
@@ -59,41 +80,21 @@ export function ScanStampScreen() {
   return (
     <OwnerPage title={t('ownerScan.title')} subtitle={t('ownerLead.scan')}>
       <View style={styles.stack}>
-        <View>
-          <ScanViewfinder gutter={gutter} onScanned={send} />
-        </View>
+        {Platform.OS === 'web' ? (
+          <ScanOnPhone />
+        ) : (
+          <View>
+            <ScanViewfinder gutter={gutter} onScanned={send} />
+          </View>
+        )}
 
         <View style={styles.sideCol}>
-          <DeskCard style={styles.manualCard}>
-            <Text variant="caption" style={{ color: theme.meta, fontFamily: fontFamily.strong }}>
-              {t('ownerScan.typeCode')}
-            </Text>
-            <View style={styles.row}>
-              <TextInput
-                accessibilityLabel={t('ownerScan.codeLabel')}
-                autoCapitalize="characters"
-                autoCorrect={false}
-                returnKeyType="done"
-                value={code}
-                onChangeText={setCode}
-                onSubmitEditing={() => send(code)}
-                placeholder={t('ownerScan.codeHint')}
-                placeholderTextColor={theme.meta}
-                style={[
-                  styles.input,
-                  { borderColor: theme.line, color: theme.text, backgroundColor: theme.bg },
-                ]}
-              />
-              <Button
-                label={t('ownerScan.addStamp')}
-                tone="primary"
-                size="md"
-                onPress={() => send(code)}
-                loading={scan.isPending}
-                disabled={!code.trim()}
-              />
-            </View>
-          </DeskCard>
+          <GuestLookup
+            venueId={venueId}
+            busyId={stampById.isPending ? (stampById.variables ?? null) : null}
+            onStamp={(id) => stampById.mutate(id)}
+            onCode={send}
+          />
 
           {result ? (
             <ScanResult
@@ -105,6 +106,7 @@ export function ScanStampScreen() {
             />
           ) : null}
           {problem ? <ScanProblem message={problem} onClose={() => setProblem(null)} /> : null}
+          <ScanLog venueId={venueId} since={since} />
         </View>
       </View>
     </OwnerPage>
@@ -114,15 +116,4 @@ export function ScanStampScreen() {
 const styles = StyleSheet.create({
   stack: { gap: tokens.space[5] },
   sideCol: { gap: tokens.space[4] },
-  manualCard: { gap: tokens.space[3] },
-  row: { flexDirection: 'row', gap: tokens.space[2] },
-  input: {
-    flex: 1,
-    minHeight: tokens.touchTarget,
-    borderWidth: 1,
-    borderRadius: tokens.radius.md,
-    paddingHorizontal: tokens.space[3],
-    fontFamily: fontFamily.regular,
-    fontSize: tokens.type.body.size,
-  },
 });
