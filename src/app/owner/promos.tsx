@@ -1,4 +1,4 @@
-import { ComingSoonScreen } from '@/features/owner';
+import { PromosScreen } from '@/features/owner';
 export default function Route() {
-  return <ComingSoonScreen page="promos" />;
+  return <PromosScreen />;
 }

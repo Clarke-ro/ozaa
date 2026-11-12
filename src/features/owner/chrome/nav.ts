@@ -78,7 +78,7 @@ export const OWNER_NAV: readonly OwnerNavItem[] = [
     group: 'main',
   },
   { id: 'menu', href: '/owner/menu', roles: DESK, group: 'main' },
-  // Sections move into Menu with the Menu redesign (4c.4); until then the page opens from Menu.
+  // Sections are edited on Menu; the old page still opens from links.
   { id: 'categories', href: '/owner/categories', roles: DESK, group: 'main', unlisted: true },
   { id: 'tables', href: '/owner/tables', roles: DESK, group: 'main' },
   { id: 'links', href: '/owner/links', roles: DESK, group: 'main' },
