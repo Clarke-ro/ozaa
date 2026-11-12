@@ -1063,7 +1063,10 @@
       "walkInBody": "Guests at a table scan its QR code and land on this page. Tap Menu in the preview to edit the dine-in menu.",
       "editServices": "Edit services",
       "tableCodes": "Table QR codes"
-    }
+    },
+    "showTitle": "Show on the menu",
+    "popular": "Popular",
+    "popularHint": "Adds a Popular tag guests see on the dish."
   },
   "ownerBranding": {
     "lead": "How your page looks to guests: colour, words, photos and the order of the buttons.",
@@ -1720,7 +1723,9 @@
       "url": "Enter a web address, like mamas.kitchen/book.",
       "start": "Use the format YYYY-MM-DD, like 2026-12-01.",
       "end": "Use YYYY-MM-DD, on or after the From date."
-    }
+    },
+    "moveUp": "Move {{title}} up",
+    "moveDown": "Move {{title}} down"
   },
   "about": {
     "hours": "Opening hours",
