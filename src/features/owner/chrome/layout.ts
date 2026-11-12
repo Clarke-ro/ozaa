@@ -20,7 +20,7 @@ export function useOwnerLayout(): OwnerLayout {
   const { width } = useWindowDimensions();
   const gutter =
     width >= o.desktopFrom
-      ? tokens.space[10]
+      ? tokens.space[8]
       : width >= o.tabletFrom
         ? tokens.space[6]
         : tokens.space[4];
