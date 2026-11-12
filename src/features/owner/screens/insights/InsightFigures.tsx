@@ -6,18 +6,16 @@ import { CardGrid, FigureCard, hourLabel } from '../../kit';
 
 /**
  * Insights' headline figure cards, four across on wide screens and two on phones: scans and menu views, the busiest hour,
- * returning guests, feedback notes, then the loyalty figures (which open Loyalty). A figure
+ * returning guests, then the loyalty figures (which open Loyalty). A figure
  * the server did not send is left out, never shown as a made-up zero.
  */
 export function InsightFigures({
   report: r,
   peak,
-  feedback,
   columns,
 }: {
   report: InsightsReport;
   peak: number | null;
-  feedback: number;
   columns: number;
 }) {
   const { t, i18n } = useTranslation();
@@ -45,7 +43,6 @@ export function InsightFigures({
         label={t('ownerInsights.guests')}
         value={`${r.repeatGuests.sharePercent}%`}
       />
-      <FigureCard order="valueFirst" label={t('ownerInsights.feedbackCount')} value={n(feedback)} />
       {loyalty.map((tile) => (
         <FigureCard
           key={tile.id}

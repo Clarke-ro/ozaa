@@ -4,8 +4,19 @@ import type { InsightsReport } from '@/lib/api/types';
 import { pesewas } from '@/lib/brand';
 import { formatMoney } from '@/lib/money';
 import { useTheme } from '@/ui/theme';
-import { AreaChart, BarChart, ChartCard, hourLabel, RankTable, SplitBar } from '../../kit';
-import { moodTotals, shortMoney } from './insightsModel';
+import {
+  AreaChart,
+  BarChart,
+  ChartCard,
+  hourLabel,
+  RankBars,
+  RankTable,
+  SplitBar,
+} from '../../kit';
+import { funnelSteps, moodTotals, shortMoney } from './insightsModel';
+import { Pressable } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Text } from '@/ui/Text';
 
 type Props = { report: InsightsReport };
 
@@ -110,7 +121,7 @@ export function GuestsSplit({ report: r }: Props) {
 export function MoodSplit({ report: r }: Props) {
   const theme = useTheme();
   const { t } = useTranslation();
-  const mood = moodTotals(r.feedbackSentimentSeries);
+  const mood = moodTotals(r);
   const total = mood.positive + mood.neutral + mood.negative;
   return (
     <ChartCard title={t('ownerInsights.mood')} empty={total ? undefined : t('ownerDash.noTrend')}>
@@ -137,27 +148,58 @@ export function MoodSplit({ report: r }: Props) {
           },
         ]}
       />
+      {total > 0 ? <NotesLink /> : null}
     </ChartCard>
   );
 }
 
-/** Loyalty stamps given per day, when the server sends the series. */
-export function StampsLine({ report: r }: Props) {
+function NotesLink() {
+  const theme = useTheme();
+  const { t } = useTranslation();
+  const router = useRouter();
+  return (
+    <Pressable accessibilityRole="link" onPress={() => router.push('/owner/feedback')}>
+      <Text variant="body-strong" style={{ color: theme.ink }}>
+        {t('ownerInsights.readNotes')}
+      </Text>
+    </Pressable>
+  );
+}
+
+/** Scanned a code, opened the menu, placed an order: how many visits made each step. */
+export function Funnel({ report: r }: Props) {
   const { t, i18n } = useTranslation();
-  const series = r.loyaltySeries ?? [];
-  if (series.length === 0) return null;
-  const total = series.reduce((sum, d) => sum + d.stamps, 0);
-  const n = (v: number) => v.toLocaleString(i18n.language);
+  const steps = funnelSteps(r);
   return (
     <ChartCard
-      title={t('ownerDash.stampsChart')}
-      figure={n(total)}
-      rows={series.map((d) => ({ label: d.date, value: n(d.stamps) }))}
+      title={t('ownerInsights.funnel')}
+      empty={steps[0].count > 0 ? undefined : t('ownerInsights.noVisits')}
     >
-      <AreaChart
-        points={series.map((d) => ({ label: d.date.slice(5), value: d.stamps }))}
-        format={n}
-        summary={t('ownerDash.stampsChart')}
+      <RankBars
+        items={steps.map((step) => ({
+          label: t(`ownerInsights.step.${step.key}`),
+          value: step.count,
+          detail: `${step.percent}%`,
+        }))}
+        format={(v) => v.toLocaleString(i18n.language)}
+      />
+    </ChartCard>
+  );
+}
+
+/** Guest visits by hour of the day: when people come in, ordering or not. */
+export function VisitsByHour({ report: r }: Props) {
+  const { t } = useTranslation();
+  const hours = r.visitsByHour ?? [];
+  return (
+    <ChartCard
+      title={t('ownerInsights.whenGuestsCome')}
+      empty={hours.length ? undefined : t('ownerInsights.noVisits')}
+    >
+      <BarChart
+        bars={hours.map((h) => ({ label: hourLabel(h.hour), value: h.visits }))}
+        format={(v) => t('ownerInsights.visits', { count: v })}
+        summary={t('ownerInsights.whenGuestsCome')}
       />
     </ChartCard>
   );

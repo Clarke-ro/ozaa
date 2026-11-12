@@ -9,39 +9,52 @@ import { tokens } from '@/theme/tokens';
 import { useOwnerLayout } from '../../chrome/layout';
 import { DeskWait, OwnerPage, SkeletonBlock } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
-import { PeriodSelect, StatusPill } from '../../kit';
+import { Field, PeriodSelect, StatusPill } from '../../kit';
 import {
   BusyHours,
+  Funnel,
   GuestsSplit,
   MoodSplit,
   SalesLine,
-  StampsLine,
   TopDishesTable,
+  VisitsByHour,
 } from './InsightCards';
 import { InsightFigures } from './InsightFigures';
-import { busiestHour, moodTotals } from './insightsModel';
+import { busiestHour } from './insightsModel';
 
 type Range = InsightsReport['range'];
-const RANGES: readonly Range[] = ['today', '7d', '30d', '90d'];
+const RANGES: readonly Range[] = ['today', '7d', '30d', '90d', 'custom'];
+const DAY_MS = 86_400_000;
+const isDay = (v: string) => /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v));
 
 /**
  * Insights as an analytics page: the period picker on the right of the title, the headline
  * figures (four across on wide screens), sales as a line, then the
  * breakdowns two by two on wide screens: top dishes and busy hours, returning guests and
- * feedback mood, and loyalty stamps over time.
+ * and feedback mood, with the scan-to-order funnel and visits by hour on top.
  */
 export function InsightsScreen() {
   const { t } = useTranslation();
   const { wide } = useOwnerLayout();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const [range, setRange] = useState<Range>('30d');
+  // Custom dates are typed as YYYY-MM-DD; the end day is included, so the window runs to the next midnight.
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
+  const customOk = isDay(from) && isDay(to) && from <= to;
+  const window =
+    range === 'custom' && customOk
+      ? {
+          since: new Date(from).toISOString(),
+          until: new Date(Date.parse(to) + DAY_MS).toISOString(),
+        }
+      : undefined;
   const report = useQuery({
-    queryKey: ownerKeys.insights(venueId, range),
-    queryFn: () => api.ownerGetInsights(venueId, range),
-    enabled: Boolean(venueId),
+    queryKey: [...ownerKeys.insights(venueId, range), from, to],
+    queryFn: () => api.ownerGetInsights(venueId, range, window),
+    enabled: Boolean(venueId) && (range !== 'custom' || customOk),
   });
   const r = report.data;
-  const mood = moodTotals(r?.feedbackSentimentSeries);
   const peak = r ? busiestHour(r.peakHours) : null;
 
   const pair = (a: ReactNode, b: ReactNode) => (
@@ -67,8 +80,24 @@ export function InsightsScreen() {
         </View>
       }
     >
+      {range === 'custom' ? (
+        <View style={styles.dates}>
+          <Field
+            label={t('ownerInsights.from')}
+            placeholder="2026-11-01"
+            value={from}
+            onChangeText={setFrom}
+          />
+          <Field
+            label={t('ownerInsights.to')}
+            placeholder="2026-11-12"
+            value={to}
+            onChangeText={setTo}
+          />
+        </View>
+      ) : null}
       <DeskWait
-        loading={report.isLoading}
+        loading={report.isLoading && (range !== 'custom' || customOk)}
         error={report.isError}
         onRetry={() => void report.refetch()}
         skeleton={<SkeletonBlock height={260} />}
@@ -78,13 +107,12 @@ export function InsightsScreen() {
             <InsightFigures
               report={r}
               peak={peak}
-              feedback={mood.positive + mood.neutral + mood.negative}
               columns={wide ? 4 : 2}
             />
+            {pair(<Funnel report={r} />, <VisitsByHour report={r} />)}
             <SalesLine report={r} />
             {pair(<TopDishesTable report={r} />, <BusyHours report={r} />)}
             {pair(<GuestsSplit report={r} />, <MoodSplit report={r} />)}
-            <StampsLine report={r} />
           </View>
         ) : null}
       </DeskWait>
@@ -97,5 +125,6 @@ const styles = StyleSheet.create({
   pair: { gap: tokens.space[4] },
   row: { flexDirection: 'row', alignItems: 'flex-start' },
   flex: { flex: 1, minWidth: 0 },
+  dates: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.space[3] },
   actions: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
 });
