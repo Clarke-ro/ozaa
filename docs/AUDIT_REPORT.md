@@ -185,6 +185,16 @@ Screenshots: CI uploads every Playwright screenshot as the `playwright-report` a
 | N6 | Most mock owner calls (47 of 62) don't check who is signed in or that the venue is theirs. | The mock runs in the browser, so it isn't a security line. | Phase 5 contract tests must check a staff member at venue A gets 403 for venue B on every owner call. |
 | N7 | No meta description on the web page. | It's new public copy. | Give me the line. |
 
+**Clarke's answers (2026-11-11):**
+
+- **N1:** remove `ownerRecordCashPayment`, `ownerGetPayoutAccount`, `ownerSetPayoutAccount` from the contract, and `paystackWebhook` from the app's client (the server keeps the route). Keep `getMe`. Keep refunds and `getLeaderboard` for now. Done in #84.
+- **N2:** later, when there's a server. Written into BUILD.md 5.6.
+- **N3:** keep the sample-data site until Phase 5. Written into BUILD.md 5.6.
+- **N4:** yes. Clarke renames the repo in GitHub settings; the agent then updates the git remote.
+- **N5:** yes, one PR per file, no behaviour change, tests green before and after. `mockClient.ts` first.
+- **N6:** contract tests in BUILD.md 5.2, no code now.
+- **N7:** "Order and pay from your table." Done in #85.
+
 ## 9. Remaining issues by rank
 
 1. **High, before Phase 5 goes live:** the real server needs everything the mock skips: tenant checks on every owner call (N6), rate limits on OTP and order creation, server-side bill quotes (the 2b sandbox trusts the app's quote header, acceptable only because it refuses live keys), a store for idempotency keys and payments (the sandbox keeps them in memory).

@@ -622,10 +622,14 @@ Approved by Clarke on 2026-11-03. Details and file locations are in `docs/menuri
 
 - [ ] 5.1 `server/`: Hono + TypeScript, Postgres with Drizzle migrations, config parsed with zod, structured logs without personal data.
 - [ ] 5.2 Implement the contract exactly. Run contract tests that call every operation and validate responses against `openapi.yaml`, and reuse the fixtures as seed data.
+  - Tenant checks (audit N6, 2026-11-11): for **every** `/owner/...` operation, a staff member of venue A gets 403 for venue B's venue, order, table, call, menu item and loyalty data. The mock doesn't enforce this (most mock owner calls skip it), so these tests are the first real line.
+  - Role checks: each owner call is tested with every `StaffRole` in the contract (owner, manager, waiter, kitchen, viewer, staff_scanner) against what that role may do.
 - [ ] 5.3 Auth (OTP via an SMS provider Clarke chooses), roles, rate limits, idempotency store.
 - [ ] 5.4 Money: Paystack live-ready (still test keys), each venue's own keys stored encrypted, a webhook URL per venue checked with that venue's secret, reconciliation job (verify pending payments older than 5 min).
 - [ ] 5.5 Media: object storage with pre-signed uploads, image resizing, video transcoding to 480p and a poster.
 - [ ] 5.6 Switch the app to `EXPO_PUBLIC_API_MODE=http` in staging. The Playwright suite must pass against staging.
+  - The live Vercel site runs on sample data until this step (audit N3). Don't show it to real venues as the product before then.
+  - The game board reads `GET …/leaderboard` from the server instead of this phone's scores (audit N2).
 - [ ] 5.7 Privacy page, consent records, data deletion, backups.
 
 ### Phases 6–13: the rest, in Clarke's order
