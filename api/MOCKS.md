@@ -26,7 +26,10 @@ src/lib/api/client.ts      interface ApiClient { getVenue(slug): Promise<VenuePu
 src/lib/api/errors.ts      ApiError (from Problem Details), OfflineError, plus a toMessageKey(error) for i18n
 src/lib/api/http.ts        createHttpClient({ baseUrl, getToken }) using openapi-fetch
 src/lib/api/index.ts       export const api = env.API_MODE === 'mock' ? createMockClient() : createHttpClient(...)
-src/mocks/mockClient.ts    createMockClient({ latencyMs, failRate, now })
+src/mocks/mockClient.ts    createMockClient({ latencyMs, failRate, now }): joins the area files below
+src/mocks/mockContext.ts   shared state: the world, tokens, clock, gate(), placeOrder(), remember()
+src/mocks/mock*Calls.ts    the calls by area (auth, guest, owner venue, orders, loyalty, desk, business)
+src/mocks/mockRules.ts     small pure helpers; mockSettle.ts moves a payment along
 src/mocks/db.ts            in-memory tables seeded from fixtures (deep-cloned so tests are isolated)
 src/mocks/media.ts         maps https://mock.cravins.app/media/... to bundled files
 src/mocks/fixtures/*.json  copied from api/fixtures by scripts/copy-fixtures.mjs (don't edit the copies)
