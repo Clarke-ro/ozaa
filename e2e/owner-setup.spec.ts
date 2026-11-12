@@ -11,11 +11,9 @@ test('owner setup: skip Wi-Fi and payments, then see what was set up', async ({ 
   await page.getByRole('button', { name: 'Send code', exact: true }).click();
   await page.getByRole('textbox', { name: 'Code', exact: true }).fill('123456');
   await page.getByRole('button', { name: 'Enter', exact: true }).click();
-  await page.getByRole('tab', { name: 'More', exact: true }).click();
-  await page
-    .getByRole('button', { name: /^Setup/ })
-    .first()
-    .click();
+  // Setup isn't in the menu any more; the owner reaches it from "Complete your setup" or a link.
+  await page.getByRole('tab', { name: 'More', exact: true }).waitFor();
+  await page.goto('/owner/setup', { waitUntil: 'domcontentloaded' });
 
   await expect(page.getByText('What is your venue called?')).toBeVisible({ timeout: 15_000 });
   // Setup stands alone: no tab bar to wander off into.

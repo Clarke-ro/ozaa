@@ -88,12 +88,18 @@ export function NavRow({
     >
       <View>
         <Icon color={iconInk} size={compact ? 24 : 20} strokeWidth={current ? 2.4 : 2} />
-        {shown && (compact || iconOnly) ? (
+        {shown && compact ? (
           <View style={[styles.dot, { backgroundColor: theme.fill, borderColor: theme.surface }]}>
             <Text variant="caption" style={[styles.micro, { color: theme.onFill }]}>
               {shown}
             </Text>
           </View>
+        ) : null}
+        {/* Folded sidebar: a plain dot says "something waits"; the number is read out by name. */}
+        {shown && iconOnly ? (
+          <View
+            style={[styles.railDot, { backgroundColor: theme.fill, borderColor: theme.surface }]}
+          />
         ) : null}
       </View>
       {iconOnly ? null : (
@@ -125,7 +131,18 @@ export function NavRow({
 
 const DOT = tokens.owner.micro.line + tokens.space[1];
 
+const RAIL_DOT = tokens.space[2] + 2;
+
 const styles = StyleSheet.create({
+  railDot: {
+    position: 'absolute',
+    top: -2,
+    right: -3,
+    width: RAIL_DOT,
+    height: RAIL_DOT,
+    borderRadius: RAIL_DOT / 2,
+    borderWidth: 2,
+  },
   row: {
     minHeight: tokens.button.height.md - tokens.space[1],
     flexDirection: 'row',

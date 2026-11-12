@@ -17,9 +17,9 @@ export function useGutter() {
 
 /**
  * Every owner screen sits in this. The page starts with its own header (a bold title, a grey
- * line under it, the screen's one action and the bell on the right), then the content, in one
- * centred column on the page colour. Wide screens have no bar above it; the sidebar does that
- * job. Phones get a slim bar with the Cravins mark (or Back on detail screens) and the bell.
+ * line under it, the screen's one action on the right), then the content, in one centred column
+ * on the page colour. Wide screens have no bar above it and no bell: the sidebar's Notifications
+ * row and its count do that job. Phones get a slim bar with the Cravins mark (or Back) and the bell.
  * `width="form"` keeps settings and Today at a readable width; `wide` is for long lists.
  */
 export function OwnerPage({
@@ -39,7 +39,7 @@ export function OwnerPage({
   /** Pinned under the scroll area, e.g. a SaveBar. */
   footer?: ReactNode;
   width?: 'form' | 'wide';
-  /** Show the bell on phones too (wide screens always show it). */
+  /** Show the bell in the phone bar. Wide screens use the sidebar's Notifications row instead. */
   bell?: boolean;
   /** For a page opened from another page: a Back link above the title on wide screens. */
   back?: { label: string; onPress: () => void };
@@ -62,13 +62,7 @@ export function OwnerPage({
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
       >
-        <PageHeader
-          title={title}
-          subtitle={subtitle}
-          action={action}
-          bell={wide && mayNotify}
-          back={back}
-        />
+        <PageHeader title={title} subtitle={subtitle} action={action} bell={false} back={back} />
         <View style={styles.body}>{children}</View>
       </ScrollView>
       {footer}

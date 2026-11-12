@@ -4,6 +4,39 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-12 · The new sidebar (BUILD.md box 4c.2)
+
+**What we built**
+
+The owner sidebar now has five groups: Main, Sales, Guests, Venue and Account. Your name sits at the bottom and opens your profile and settings, where Help and sign out are. The sidebar folds to icons and stays folded on every page until you open it again.
+
+**How it works**
+
+```
+nav.ts      one list of pages: group, who may open it, listed or not
+Sidebar     shows the groups; the fold choice comes from ownerPrefs (saved on this device)
+Location    your locations with their own logo; picking one changes venueId,
+            and every screen refetches for that venue
+```
+
+Setup and Sections are "unlisted": a link still opens them, but they aren't in the menu.
+
+**Files to look at**
+
+- `src/features/owner/chrome/nav.ts`: the groups and who sees what.
+- `src/features/owner/data/ownerPrefs.ts`: the saved fold.
+- `src/features/owner/chrome/SidebarFooter.tsx`: the owner button.
+
+**New idea: persisted state**
+
+Most screen state is forgotten when you leave the page. `persist` writes a small value to the device's storage and reads it back on load, so a choice like "keep the sidebar folded" survives page changes and the next visit.
+
+**Try it yourself**
+
+In `nav.ts`, move `promos` from `sales` to `guests` and run `npx jest src/features/owner/chrome`. Watch the test that pins each group's pages fail.
+
+---
+
 ## 2026-11-12 · One set of records behind every owner screen (BUILD.md box 4c.1)
 
 **What we built**

@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import {
   BellDot,
   Building2,
+  CircleHelp,
   Globe,
   LogOut,
   Smartphone,
@@ -78,6 +79,12 @@ export function SettingsScreen() {
   const accountSections = (
     <>
       <Section title={t('ownerSettings.account')}>
+        {/* Help and sign out used to sit under the sidebar; the owner button leads here now. */}
+        <LinkRow
+          icon={CircleHelp}
+          label={t('ownerChrome.help')}
+          onPress={() => router.push('/owner/help')}
+        />
         <LinkRow
           icon={LogOut}
           label={t('ownerSettings.signOut')}

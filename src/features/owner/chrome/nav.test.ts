@@ -1,7 +1,7 @@
 import { canOpen, isFocused, isTabRoot, moreGroups, navFor, navGroups, tabsFor } from './nav';
 
-test('kitchen only sees the order tickets', () => {
-  expect(navFor('kitchen').map((item) => item.id)).toEqual(['orders']);
+test('kitchen only sees the order tickets, plus their own profile', () => {
+  expect(navFor('kitchen').map((item) => item.id)).toEqual(['orders', 'settings']);
 });
 
 test('a waiter sees the floor, tickets and calls, and not payouts', () => {
@@ -25,7 +25,12 @@ test('with previews on, the owner sees Integrations, the till and staff', () => 
   expect(ids).toContain('integrations');
   expect(ids).toContain('pos');
   expect(ids).toContain('staff');
-  expect(ids).toContain('setup');
+});
+
+test('setup is not listed (it lives in "Complete your setup") but its link still opens', () => {
+  expect(navFor('owner', true).map((item) => item.id)).not.toContain('setup');
+  expect(canOpen('owner', '/owner/setup')).toBe(true);
+  expect(canOpen('manager', '/owner/setup')).toBe(false);
 });
 
 test('the old payout page is gone: payments are set up in Integrations', () => {
@@ -126,31 +131,35 @@ describe('isTabRoot', () => {
 });
 
 describe('sidebar groups', () => {
-  test('the owner sidebar runs Main, then Sales, then Settings', () => {
+  test('the owner sidebar runs Main, Sales, Guests, Venue, then Account', () => {
     const groups = navGroups('owner').map((entry) => entry.group);
-    expect(groups).toEqual(['main', 'sales', 'settings']);
+    expect(groups).toEqual(['main', 'sales', 'guests', 'venue', 'account']);
   });
 
-  test('each group holds the pages the owner expects there', () => {
+  test('each group holds the pages the canvas puts there', () => {
     const byGroup = Object.fromEntries(
       navGroups('owner').map((entry) => [entry.group, entry.items.map((item) => item.id)]),
     );
-    expect(byGroup.main).toEqual(
-      expect.arrayContaining(['dashboard', 'menu', 'categories', 'tables', 'insights', 'notice']),
-    );
-    expect(byGroup.sales).toEqual(
-      expect.arrayContaining(['orders', 'floor', 'customers', 'loyalty', 'promos']),
-    );
-    expect(byGroup.settings).toEqual(
-      expect.arrayContaining([
-        'business',
-        'branding',
-        'integrations',
-        'staff',
-        'billing',
-        'settings',
-      ]),
-    );
+    expect(byGroup.main).toEqual([
+      'dashboard',
+      'notifications',
+      'menu',
+      'tables',
+      'links',
+      'notice',
+      'insights',
+    ]);
+    expect(byGroup.sales).toEqual(['orders', 'sales', 'floor', 'calls', 'scan', 'promos']);
+    expect(byGroup.guests).toEqual(['customers', 'loyalty', 'feedback', 'reviews']);
+    expect(byGroup.venue).toEqual(['business', 'branding', 'services', 'ordering', 'socials']);
+    expect(byGroup.account).toEqual(['integrations', 'staff', 'devices', 'billing']);
+  });
+
+  test('profile and settings sit behind the owner button, and in More on a phone', () => {
+    const sidebar = navGroups('owner').flatMap((entry) => entry.items.map((item) => item.id));
+    expect(sidebar).not.toContain('settings');
+    const more = moreGroups('waiter').flatMap((entry) => entry.items.map((item) => item.id));
+    expect(more).toContain('settings');
   });
 
   test('only the owner sees billing and integrations', () => {
@@ -163,7 +172,7 @@ describe('sidebar groups', () => {
 
   test('the sidebar and More list every allowed page exactly once', () => {
     for (const role of ['owner', 'manager', 'waiter', 'kitchen'] as const) {
-      const ids = navGroups(role).flatMap((entry) => entry.items.map((item) => item.id));
+      const ids = navGroups(role, true).flatMap((entry) => entry.items.map((item) => item.id));
       expect(new Set(ids).size).toBe(ids.length);
       expect(ids.length).toBe(navFor(role).length);
     }
