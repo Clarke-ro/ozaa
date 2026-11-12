@@ -1,16 +1,5 @@
-import {
-  apply,
-  blankVenue,
-  featured,
-  LOYALTY_PROBLEMS,
-  samplePhone,
-  seedVenueLoyalty,
-  type Command,
-  type VenueLoyalty,
-} from '../features/loyalty/facts';
-import { ApiError } from '@/lib/api/errors';
-import { liveNotices } from '@/lib/notices';
-import { guestPayMethods } from '@/lib/payments';
+import { blankVenue, samplePhone, seedVenueLoyalty } from '../features/loyalty/facts';
+import type { VenueLoyalty } from '../features/loyalty/facts';
 import type {
   LoyaltyCard,
   Menu,
@@ -18,21 +7,9 @@ import type {
   MenuItem,
   Offer,
   Order,
-  ServiceSettings,
-  StaffMember,
-  StoreNotices,
-  PaymentSettings,
   Table,
   VenuePublic,
-  Business,
-  CustomLink,
-  FeedbackItem,
-  Location,
-  ScannerDevice,
-  VenueTransaction,
-  WaiterCall,
   Wifi,
-  WrittenReview,
 } from '@/lib/api/types';
 import loyaltyFile from './fixtures/loyaltyCards.json';
 import menusFile from './fixtures/menus.json';
@@ -42,43 +19,23 @@ import venuesFile from './fixtures/venues.json';
 import wifiFile from './fixtures/wifi.json';
 import { DEMO_LOYALTY_PHONES, STAFF } from './demo';
 import { kitchenQueue } from './kitchenQueue';
+import type { LiveOrder, World } from './worldTypes';
+import { seedOwnerDesk } from './seedOwnerDesk';
+import { samplePaymentSettings, staffDetail, tablesFor } from './worldSamples';
 
 export { STAFF, type StaffSeed } from './demo';
-
-// Sample shift data for the Staff screen: surname, how long ago they joined and were last seen,
-// whether they are on shift, and today's work. Keyed by the last four digits of the phone.
-const STAFF_DETAIL: Record<
-  string,
-  {
-    lastName: string;
-    joinedDaysAgo: number;
-    lastSeenMinutesAgo: number | null;
-    onShift: boolean;
-    today: { ordersHandled: number; callsAnswered: number; avgPickupMinutes: number | null };
-  }
-> = {
-  '0001': {
-    lastName: 'Owusu',
-    joinedDaysAgo: 420,
-    lastSeenMinutesAgo: 2,
-    onShift: true,
-    today: { ordersHandled: 6, callsAnswered: 2, avgPickupMinutes: 3 },
-  },
-  '0002': {
-    lastName: 'Asante',
-    joinedDaysAgo: 210,
-    lastSeenMinutesAgo: 1,
-    onShift: true,
-    today: { ordersHandled: 18, callsAnswered: 11, avgPickupMinutes: 2 },
-  },
-  '0003': {
-    lastName: 'Boateng',
-    joinedDaysAgo: 95,
-    lastSeenMinutesAgo: 140,
-    onShift: false,
-    today: { ordersHandled: 23, callsAnswered: 0, avgPickupMinutes: null },
-  },
-};
+export type { LiveOrder, World } from './worldTypes';
+export {
+  defaultPaymentSettings,
+  findOrder,
+  keepLoyalty,
+  nextId,
+  publicVenue,
+  serviceSettings,
+  venueById,
+  venueBySlug,
+} from './worldLookups';
+export type { MenuCategory, MenuItem };
 
 type RecordFile = Record<string, unknown>;
 
@@ -92,273 +49,6 @@ function load<T>(file: unknown, name: string): Record<string, T> {
   const out: Record<string, T> = {};
   for (const [key, value] of Object.entries(copy)) out[key] = value as T;
   return out;
-}
-
-export type LiveOrder = { order: Order; receivedAt: number; manual: boolean };
-
-export type World = {
-  venues: Record<string, VenuePublic>;
-  menus: Record<string, Menu>;
-  wifi: Record<string, Wifi>;
-  /** Store notices as the owner set them, by venue slug. Guests only get the live ones. */
-  notices: Record<string, StoreNotices>;
-  /** Payment settings by venue id. Like the real server, never the secret key itself. */
-  paymentSettings: Record<string, PaymentSettings>;
-  offers: Record<string, Offer[]>;
-  orders: LiveOrder[];
-  calls: (WaiterCall & { venueId: string })[];
-  seatedCodes: Record<string, string[]>;
-  yesterdayPesewas: Record<string, number>;
-  written: (WrittenReview & { venueId: string })[];
-  transactions: (VenueTransaction & { venueId: string })[];
-  loyalty: Record<string, VenueLoyalty>;
-  staff: (StaffMember & { venueId: string; phone: string })[];
-  tables: Record<string, Table[]>;
-  feedback: (FeedbackItem & { venueId: string })[];
-  customLinks: (CustomLink & { venueId: string })[];
-  business: { business: Business; locations: Location[] };
-  devices: (ScannerDevice & { venueId: string })[];
-  quotes: Map<
-    string,
-    { orderId: string; share: number; tip: number; lineIds: string[]; expiresAt: number }
-  >;
-  payments: Map<
-    string,
-    {
-      payment: import('@/lib/api/types').Payment;
-      phone: string;
-      applied: boolean;
-      /** The quote this payment pays: which dishes get marked paid when it succeeds. */
-      quoteId?: string;
-    }
-  >;
-  idempotency: Map<string, unknown>;
-  otpFails: Map<string, number>;
-  sessions: Map<
-    string,
-    { slug: string; tableCode: string | null; orderId: string | null; startedAt: string }
-  >;
-  /** Sample visits already counted today, so the demo isn't empty. Real visits add to it. */
-  visitorBase: Record<string, number>;
-  access: Map<string, { phone: string; purpose: 'owner_login' | 'guest_loyalty' }>;
-  refresh: Map<string, string>;
-  seq: number;
-};
-
-function tablesFor(slug: string, code: string): Table[] {
-  const codes = [code, '1', '2', '3', '4', '5', '6', '7', '8'];
-  const unique = [...new Set(codes)];
-  return unique.map((item) => ({
-    id: `tbl_${slug}_${item}`,
-    code: item,
-    label: `Table ${item}`,
-    qrUrl: `https://cravins.app/${slug}/t/${item}`,
-  }));
-}
-
-function seedOwnerDesk(world: World, now: number): void {
-  const mama = world.venues['mamas-kitchen'];
-  if (!mama) return;
-  world.seatedCodes[mama.id] = ['7'];
-  world.yesterdayPesewas[mama.id] = 221429;
-  world.visitorBase[mama.id] = 37;
-
-  // Seed feedback
-  world.feedback.push(
-    {
-      id: 'fbk_1',
-      venueId: mama.id,
-      sentiment: 'positive',
-      score: 5,
-      text: 'The grilled tilapia and hot pepper was incredible! Best in Osu.',
-      photoUrl: null,
-      contactName: 'Kofi Mensah',
-      contactPhone: '+233241234567',
-      archived: false,
-      visibleAfter: new Date(now - 12 * 3600_000).toISOString(),
-      createdAt: new Date(now - 14 * 3600_000).toISOString(),
-    },
-    {
-      id: 'fbk_2',
-      venueId: mama.id,
-      sentiment: 'neutral',
-      score: 3,
-      text: 'Food took about 25 minutes to arrive on a busy Friday night.',
-      photoUrl: null,
-      contactName: null,
-      contactPhone: null,
-      archived: false,
-      visibleAfter: new Date(now - 3 * 3600_000).toISOString(),
-      createdAt: new Date(now - 5 * 3600_000).toISOString(),
-    },
-    {
-      id: 'fbk_3',
-      venueId: mama.id,
-      sentiment: 'negative',
-      score: 2,
-      text: 'The kelewele was a bit too salty and we waited long for the bill.',
-      photoUrl: null,
-      contactName: 'Esi Boateng',
-      contactPhone: '+233209876543',
-      archived: false,
-      visibleAfter: new Date(now - 1 * 3600_000).toISOString(),
-      createdAt: new Date(now - 2 * 3600_000).toISOString(),
-    },
-    {
-      id: 'fbk_4',
-      venueId: mama.id,
-      sentiment: 'negative',
-      score: 1,
-      text: 'Recent feedback test note that is still held in anonymity delay window.',
-      photoUrl: null,
-      contactName: null,
-      contactPhone: null,
-      archived: false,
-      visibleAfter: new Date(now + 4 * 3600_000).toISOString(),
-      createdAt: new Date(now - 30 * 60_000).toISOString(),
-    },
-  );
-
-  // Seed custom links
-  world.customLinks.push(
-    {
-      id: 'lnk_1',
-      venueId: mama.id,
-      title: 'Reserve Weekend Table',
-      url: 'https://mamas.kitchen/reserve',
-      icon: 'calendar',
-      placement: 'button',
-      startDate: null,
-      endDate: null,
-      sortOrder: 1,
-      clicks: 42,
-      enabled: true,
-    },
-    {
-      id: 'lnk_2',
-      venueId: mama.id,
-      title: 'Follow our Instagram',
-      url: 'https://instagram.com/mamas_kitchen_gh',
-      icon: 'instagram',
-      placement: 'button',
-      startDate: null,
-      endDate: null,
-      sortOrder: 2,
-      clicks: 128,
-      enabled: true,
-    },
-  );
-
-  // Seed paired scanner device
-  world.devices.push({
-    id: 'dev_ipad1',
-    venueId: mama.id,
-    name: 'Floor iPad Pro (Register)',
-    platform: 'iOS 18.2',
-    pairedAt: new Date(now - 7 * 86400_000).toISOString(),
-    lastSeen: new Date(now - 10 * 60_000).toISOString(),
-    pairingCode: null,
-  });
-  world.calls.push({
-    id: 'wcl_mamas4',
-    venueId: mama.id,
-    tableCode: '4',
-    reason: 'water',
-    status: 'open',
-    staffFirstName: null,
-    createdAt: new Date(now - 4 * 60_000).toISOString(),
-  });
-  world.orders.push({
-    manual: true,
-    receivedAt: now,
-    order: {
-      id: 'ord_mamasbill',
-      number: 18,
-      venueId: mama.id,
-      tableCode: '3',
-      status: 'served',
-      paymentStatus: 'unpaid',
-      lines: [
-        {
-          id: 'oln_bill',
-          menuItemId: 'itm_mamas0',
-          name: 'Jollof & chicken',
-          quantity: 1,
-          modifiers: [],
-          unitPricePesewas: 4500,
-          totalPesewas: 4500,
-          paid: false,
-        },
-      ],
-      subtotalPesewas: 4500,
-      taxes: [],
-      totalPesewas: 4500,
-      paidPesewas: 0,
-      etaMinutes: null,
-      createdAt: new Date(now - 40 * 60_000).toISOString(),
-      updatedAt: new Date(now - 15 * 60_000).toISOString(),
-      readyAt: new Date(now - 20 * 60_000).toISOString(),
-    },
-  });
-  const paid = world.orders.filter(
-    (item) => item.order.venueId === mama.id && item.order.paymentStatus === 'paid',
-  );
-  const methods = ['momo', 'card', 'cash'] as const;
-  paid.forEach((item, index) => {
-    const method = methods[index % methods.length] ?? 'momo';
-    world.transactions.push({
-      id: `txn_mama${index}`,
-      venueId: mama.id,
-      reference: `ref_mama${index}`,
-      orderId: item.order.id,
-      orderNumber: item.order.number,
-      method,
-      provider: method === 'momo' ? 'mtn' : undefined,
-      amountPesewas: item.order.paidPesewas,
-      currency: 'GHS',
-      status: 'succeeded',
-      settlement: index === 0 ? 'pending' : 'settled',
-      createdAt: item.order.createdAt,
-      testMode: true,
-    });
-  });
-  world.written.push(
-    {
-      id: 'rev_mamas1',
-      venueId: mama.id,
-      stars: 5,
-      firstName: 'Efua',
-      text: 'The waakye was hot and the shito was perfect.',
-      highlights: ['food'],
-      createdAt: new Date(now - 2 * 60 * 60_000).toISOString(),
-      reply: null,
-    },
-    {
-      id: 'rev_mamas2',
-      venueId: mama.id,
-      stars: 2,
-      firstName: 'Kojo',
-      text: 'We waited a long time for the bill.',
-      highlights: ['speed'],
-      createdAt: new Date(now - 5 * 60 * 60_000).toISOString(),
-      reply: null,
-    },
-  );
-}
-
-function staffDetail(key: string, now: number) {
-  const d = STAFF_DETAIL[key];
-  if (!d) return {};
-  return {
-    lastName: d.lastName,
-    joinedAt: new Date(now - d.joinedDaysAgo * 86_400_000).toISOString(),
-    lastActiveAt:
-      d.lastSeenMinutesAgo == null
-        ? null
-        : new Date(now - d.lastSeenMinutesAgo * 60_000).toISOString(),
-    onShift: d.onShift,
-    today: d.today,
-  };
 }
 
 export function createWorld(now: number): World {
@@ -526,116 +216,3 @@ export function createWorld(now: number): World {
   seedOwnerDesk(world, now);
   return world;
 }
-
-export function keepLoyalty(
-  world: World,
-  venueId: string,
-  command: Command,
-  nowIso: string,
-): { venue: VenueLoyalty; effect: 'posted' | 'duplicate' | 'skipped'; memberId: string | null } {
-  const place = venueById(world, venueId);
-  const current = world.loyalty[venueId] ?? blankVenue(venueId, place.currency);
-  const step = apply(current, command, nowIso);
-  if (!step.ok) {
-    const problem = LOYALTY_PROBLEMS[step.error.code];
-    throw new ApiError(problem.status, step.error.code, problem.title);
-  }
-  world.loyalty[venueId] = step.next;
-  if (command.type === 'save_programme') {
-    const best = featured(step.next.programme);
-    world.venues[place.slug] = {
-      ...place,
-      loyaltySummary:
-        step.next.programme.enabled && best
-          ? { stampsNeeded: best.cost, rewardTitle: best.title }
-          : null,
-    };
-  }
-  return { venue: step.next, effect: step.effect, memberId: step.memberId };
-}
-
-export function venueBySlug(world: World, slug: string): VenuePublic {
-  const venue = world.venues[slug];
-  if (!venue || ['owner', 'api', 'legal', 'help'].includes(slug)) {
-    throw new ApiError(404, 'venue_not_found', 'Venue not found');
-  }
-  return venue;
-}
-
-export function venueById(world: World, venueId: string): VenuePublic {
-  const venue = Object.values(world.venues).find((item) => item.id === venueId);
-  if (!venue) throw new ApiError(404, 'venue_not_found', 'Venue not found');
-  return venue;
-}
-
-/** A new venue takes cash and nothing else until the owner sets up more. */
-/**
- * Sample data: Bean There has connected its own Paystack (test keys), so the demo shows a guest
- * paying in the app. Mama's Kitchen and Auntie Akos take payment in person.
- */
-function samplePaymentSettings(
-  venues: Record<string, VenuePublic>,
-  now: number,
-): Record<string, PaymentSettings> {
-  const bean = Object.values(venues).find((venue) => venue.slug === 'bean-there');
-  if (!bean) return {};
-  const at = new Date(now).toISOString();
-  return {
-    [bean.id]: {
-      ...defaultPaymentSettings(),
-      paystack: {
-        mode: 'test',
-        publicKey: 'pk_test_beanthere0sample',
-        secretKeyHint: '••••0000',
-        connectedAt: at,
-        lastCheckedAt: at,
-      },
-    },
-  };
-}
-
-export function defaultPaymentSettings(): PaymentSettings {
-  return {
-    paystack: null,
-    manual: {
-      cash: true,
-      cardMachine: false,
-      bankTransfer: { enabled: false },
-      momo: { enabled: false },
-    },
-  };
-}
-
-export function publicVenue(
-  venue: VenuePublic,
-  notices: StoreNotices | undefined,
-  now: number,
-  payment: PaymentSettings = defaultPaymentSettings(),
-): VenuePublic {
-  return {
-    ...venue,
-    services: venue.services.filter((service) => service.enabled),
-    // Like the server: guests get only what should show right now.
-    notices: liveNotices(notices, now),
-    // Guests learn how they can pay; never a key.
-    payMethods: guestPayMethods(payment),
-    payEnabled: payment.paystack !== null,
-  };
-}
-
-export function nextId(world: World, prefix: string): string {
-  world.seq += 1;
-  return `${prefix}_${world.seq}`;
-}
-
-export function findOrder(world: World, orderId: string): LiveOrder {
-  const live = world.orders.find((item) => item.order.id === orderId);
-  if (!live) throw new ApiError(404, 'order_not_found', 'Order not found');
-  return live;
-}
-
-export function serviceSettings(venue: VenuePublic): ServiceSettings {
-  return { services: venue.services, game: venue.game ?? { enabled: false, minScore: 15 } };
-}
-
-export type { MenuCategory, MenuItem };
