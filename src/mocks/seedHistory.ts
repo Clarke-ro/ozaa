@@ -18,7 +18,7 @@ function pick(seed: number, max: number): number {
 }
 
 /**
- * Thirty days of finished, paid orders and guest visits for Mama's Kitchen. Sales, Insights,
+ * Sixty days of finished, paid orders and guest visits for Mama's Kitchen. Sales, Insights,
  * Today's "vs yesterday" and the visit funnel all read these same records, so they agree.
  * A venue without this seed starts at zero, like a brand-new venue would.
  */
@@ -31,7 +31,7 @@ export function seedHistory(world: World, now: number): void {
   const staff = STAFF.filter((person) => person.slug === venue.slug && person.role !== 'kitchen');
   const startOfToday = now - (now % DAY);
 
-  for (let day = 1; day <= 30; day += 1) {
+  for (let day = 1; day <= 60; day += 1) {
     const orders = 6 + pick(day, 9);
     for (let n = 0; n < orders; n += 1) {
       const seed = day * 100 + n;
