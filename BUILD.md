@@ -624,7 +624,7 @@ Approved by Clarke on 2026-11-12: build the canvas redesign on the mock first, b
 
 - [x] 4c.1 *contract* + mock: waiter-call reply, snooze and "on my way"; order served time and reject reason; promos (rules, schedule, code, channel, usage) applied by the server; notifications with per-person read state; customer tags, visits and detail; manual stamp and scan log; Sales vs the period before, by hour, by staff, by method and E-VAT; Insights funnel and custom dates from real visits; business details and location digital address; profile, preferences and phone change with a code; tax setup; paid-order stamp switch. The mock's history, members and visits are one set of records, so every screen agrees.
 - [x] 4c.2 Shell: sidebar groups, collapse that remembers, location switcher with the location's logo, owner menu, real plan tag.
-- [ ] 4c.3 Run the room: Today, Notifications, Orders, Floor, Calls and the detail pages, on one live source.
+- [x] 4c.3 Run the room: Today, Notifications, Orders, Floor, Calls and the detail pages, on one live source.
 - [ ] 4c.4 Menu and money: Menu, Edit dish, QR codes and links, Custom links, Store notice, Promos.
 - [ ] 4c.5 Numbers: Sales and Insights with date ranges and empty states.
 - [ ] 4c.6 Guests: Customers, Customer details, Loyalty, Scan and stamp, Reviews, Feedback.

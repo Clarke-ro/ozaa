@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Grid2x2 } from 'lucide-react-native';
 import type { StaffRole } from '@/features/orders';
@@ -43,7 +44,9 @@ export function FloorScreen() {
   const { wide, desktop } = useOwnerLayout();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const role = (useOwnerSession((state) => state.role) ?? 'waiter') as StaffRole;
-  const [picked, setPicked] = useState<string | null>(null);
+  // A link like /owner/floor?table=tbl_4 (from a notification) opens that table straight away.
+  const params = useLocalSearchParams<{ table?: string }>();
+  const [picked, setPicked] = useState<string | null>(params.table ?? null);
   const [paying, setPaying] = useState<Order | null>(null);
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -73,11 +76,13 @@ export function FloorScreen() {
   const items = floor.data?.items ?? [];
   const orderOf = (table: FloorTable) =>
     orders.data?.items.find((item) => item.id === table.orderId) ?? null;
+  // How long the table has been like this, from the server: since the call, or since the order moved.
   const minutesOf = (item: FloorTable) => {
+    if (item.since) return ticketAge(item.since, now).minutes;
     const order = orderOf(item);
     return order ? ticketAge(order.createdAt, now).minutes : null;
   };
-  const table = items.find((item) => item.id === picked) ?? null;
+  const table = items.find((item) => item.id === picked || item.code === picked) ?? null;
   const bill = table ? orderOf(table) : null;
   const currency = venue.data?.currency ?? DEFAULT_CURRENCY;
   const mayTakePay = role === 'owner' || role === 'manager' || role === 'waiter';

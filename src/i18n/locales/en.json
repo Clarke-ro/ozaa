@@ -432,8 +432,8 @@
     "more": "More",
     "customise": "Branding",
     "made": "You made {{amount}} today.",
-    "madeUp": "You made {{amount}} today, {{percent}}% more than last Saturday.",
-    "madeDown": "You made {{amount}} today, {{percent}}% less than last Saturday.",
+    "madeUp": "You made {{amount}} today, {{percent}}% more than yesterday.",
+    "madeDown": "You made {{amount}} today, {{percent}}% less than yesterday.",
     "openTables": "Open tables",
     "waiterCalls": "Waiter calls",
     "rating": "Rating",
@@ -1538,7 +1538,43 @@
       "open": "Nobody is waiting",
       "acknowledged": "Nobody is on the way",
       "resolved": "No finished calls yet"
-    }
+    },
+    "openA11y": "Table {{table}}, {{reason}}. Open the call",
+    "hasMessage": "Has a message from the guest",
+    "replied": "{{name}} replied: {{reply}}",
+    "detail": {
+      "title": "Table {{table}}",
+      "lead": "{{reason}} · waiting {{minutes}}",
+      "leadDone": "{{reason}} · done",
+      "details": "Details",
+      "message": "Message from the guest",
+      "reason": "Reason",
+      "askedAt": "Asked at",
+      "waiter": "Answered by",
+      "nobody": "Nobody yet",
+      "table": "Table",
+      "reply": "Reply",
+      "replyNote": "The guest sees your reply on their phone, and the call is marked done. Snooze keeps it open and brings it back in 1 min.",
+      "onMyWay": "On my way",
+      "snooze": "Snooze 1 min",
+      "done": "Done",
+      "earlier": "Earlier today at table {{table}}",
+      "noEarlier": "No other calls from this table today.",
+      "gone": "This call is no longer here",
+      "goneBody": "It may be from yesterday. Open Calls to see today’s.",
+      "back": "Calls",
+      "finished": "Finished {{time}}"
+    },
+    "quick": {
+      "now": "Coming now",
+      "twoMin": "Coming in 2 min",
+      "water": "Bringing water",
+      "bill": "Bringing your bill",
+      "cutlery": "Bringing cutlery",
+      "order_more": "Coming to take your order",
+      "clean_table": "Coming to clear the table"
+    },
+    "snoozed": "Snoozed. It comes back in 1 min."
   },
   "ownerStaff": {
     "invite": "Invite",
@@ -1746,7 +1782,7 @@
   },
   "ownerNotes": {
     "title": "Notifications",
-    "lead": "Orders, waiter calls, payments and guest notes, newest first.",
+    "lead": "Orders, waiter calls, bills and guest notes from today, newest first.",
     "pinned": "Needs you",
     "new": "New",
     "earlier": "Earlier",
@@ -1768,7 +1804,26 @@
       "bills_other": "{{count}} tables are waiting for the bill",
       "order_late": "Order #{{number}} for table {{table}} has waited over 20 minutes"
     },
-    "allClear": "Nothing needs you right now."
+    "allClear": "Nothing needs you right now.",
+    "today": "Today",
+    "markAll": "Mark all as read",
+    "unread": "Unread",
+    "filter": "Show",
+    "all": "All",
+    "emptyFilter": "Nothing of this kind today.",
+    "justNow": "Just now",
+    "minutesAgo_one": "{{count}} min ago",
+    "minutesAgo_other": "{{count}} min ago",
+    "hoursAgo_one": "{{count}} h ago",
+    "hoursAgo_other": "{{count}} h ago",
+    "kinds": {
+      "order": "Orders",
+      "call": "Calls",
+      "bill": "Bills",
+      "guest_note": "Guest notes",
+      "review": "Reviews"
+    },
+    "emptyFilterBody": "Pick All to see everything from today."
   },
   "time": {
     "now": "just now",

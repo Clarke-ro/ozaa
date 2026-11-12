@@ -25,7 +25,7 @@ export function StatsRow({ dashboard: d }: { dashboard: OwnerDashboard }) {
   const { hero, cards } = todayFigures(d);
   const go = (f: Figure) => (canOpen(role, f.href) ? () => router.push(f.href as Href) : undefined);
   const top = figureText(hero, d.currency, t);
-  // Sales carry the brand sentence ("You made GH₵2,480 today, 12% more than last Saturday.").
+  // Sales carry the brand sentence ("You made GH₵2,480 today, 12% more than yesterday.").
   const line = salesLine(d);
   const note = t(line.key, { amount: top.value, percent: line.percent ?? 0 });
 
@@ -37,7 +37,13 @@ export function StatsRow({ dashboard: d }: { dashboard: OwnerDashboard }) {
   return (
     <View style={wide ? styles.row : styles.stack}>
       <View style={wide ? styles.heroWide : undefined}>
-        <HeroCard label={top.label} value={top.value} note={note} link={t('ownerDash.viewSales')} onPress={go(hero)} />
+        <HeroCard
+          label={top.label}
+          value={top.value}
+          note={note}
+          link={t('ownerDash.viewSales')}
+          onPress={go(hero)}
+        />
       </View>
       <View style={[styles.row, wide && styles.smallWide]}>{small}</View>
     </View>

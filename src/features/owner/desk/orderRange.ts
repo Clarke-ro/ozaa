@@ -1,7 +1,7 @@
 import { formatWhen, parseWhen } from './noticeForm';
 
 export type OrderRange = 'all' | 'today' | 'yesterday' | '7d' | '30d';
-export const ORDER_RANGES: readonly OrderRange[] = ['all', 'today', 'yesterday', '7d', '30d'];
+export const ORDER_RANGES: readonly OrderRange[] = ['today', 'yesterday', '7d', '30d', 'all'];
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 

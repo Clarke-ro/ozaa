@@ -4,15 +4,15 @@ import { Bell } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
-import { useNotifications } from '../data/useNotifications';
+import { useOwnerFeed } from '../data/useOwnerFeed';
 import { useGoTo } from './NavRow';
 
-/** The bell in the page header, with the number of notifications since Notifications was last opened. */
+/** The bell in the phone bar, with this person's unread count from the notification feed. */
 export function NotificationBell() {
   const theme = useTheme();
   const { t } = useTranslation();
   const goTo = useGoTo();
-  const { unseen } = useNotifications();
+  const unseen = useOwnerFeed().data?.unreadCount ?? 0;
   return (
     <Pressable
       accessibilityRole="button"

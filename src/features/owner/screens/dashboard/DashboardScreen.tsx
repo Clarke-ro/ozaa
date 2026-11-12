@@ -11,6 +11,7 @@ import { ownerKeys } from '../../data/keys';
 import { dayPart } from './greeting';
 import { QuickActions } from './QuickActions';
 import { SetupList } from './SetupList';
+import { NeedsYou } from './NeedsYou';
 import { StatsRow } from './StatsRow';
 import { POLL_MS } from '@/lib/polling';
 
@@ -19,8 +20,8 @@ const SKELETON = tokens.space[16] + tokens.space[12];
 /**
  * Today, laid out like a home dashboard in one centred column: a greeting, the stats row (the
  * day's main number in a dark card and three small cards), the setup steps (owners, until done)
- * and a grid of shortcuts. Live tickets live on Orders and urgent items behind the bell, so
- * Today stays a calm overview. Every block is a white card on the light orange page, split by space.
+ * then what needs someone now (from the notification feed), the setup steps (owners, until done)
+ * and a grid of shortcuts. Every block is a white card on the warm grey page, split by space.
  */
 export function DashboardScreen() {
   const { t } = useTranslation();
@@ -38,7 +39,14 @@ export function DashboardScreen() {
     queryFn: () => api.ownerGetVenue(venueId),
     enabled: Boolean(venueId),
   });
-  const part = dayPart(new Date().getHours());
+  // Good morning or evening by the venue's clock, not the phone's.
+  const timeZone = venue.data?.hours.timezone;
+  const hour = Number(
+    new Intl.DateTimeFormat('en-GB', { hour: '2-digit', hourCycle: 'h23', timeZone }).format(
+      new Date(),
+    ),
+  );
+  const part = dayPart(hour);
   const title = firstName
     ? t(`ownerDash.greet.${part}`, { name: firstName })
     : t(`ownerDash.greetPlain.${part}`);
@@ -71,6 +79,7 @@ export function DashboardScreen() {
         {d ? (
           <View style={styles.stack}>
             <StatsRow dashboard={d} />
+            <NeedsYou />
             <SetupList />
             <QuickActions />
           </View>

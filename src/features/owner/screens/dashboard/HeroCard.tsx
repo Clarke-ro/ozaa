@@ -18,7 +18,7 @@ export function HeroCard({
 }: {
   label: string;
   value: string;
-  /** One sentence under the number, e.g. "You made GH₵2,480 today, 12% more than last Saturday." */
+  /** One sentence under the number, e.g. "You made GH₵2,480 today, 12% more than yesterday." */
   note?: string;
   link: string;
   /** Missing when this person may not open the page behind the number. */
