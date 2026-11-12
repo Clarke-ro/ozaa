@@ -34,6 +34,35 @@ Run `git diff --quiet HEAD~1 HEAD -- landing; echo $?` in Git Bash. 0 means the 
 
 ---
 
+## 2026-11-11 · Removing calls nobody uses
+
+**What we changed**
+
+Four API calls had no screen using them. Two were the old "payout account" (from when Paystack split the money and Cravins took a share). One was "mark paid in cash", replaced by "mark paid" with a method (cash, card machine, transfer, MoMo). The fourth was the Paystack webhook in the app's client, but only Paystack calls that, and it calls the server, never the app.
+
+**How it works now**
+
+```
+api/openapi.yaml ──npm run gen:api──► src/lib/api/schema.ts ──► client.ts, http.ts, mockClient.ts
+```
+
+We cut the payout and cash calls from the contract, regenerated the types, then the type checker pointed at every place that still used them. The webhook stays in the contract because the server in `server/` still answers it.
+
+**Files to look at**
+
+- `api/openapi.yaml`: the contract.
+- `src/lib/api/client.ts`: the list of calls the app can make.
+
+**New idea: dead code costs something**
+
+A call nobody uses still has to be read, kept in the mock, and built on the server. Worse, it can mislead: someone might build the payout screen again, against your decision that Cravins never holds funds.
+
+**Try it yourself**
+
+`getLeaderboard` is still in the contract but no screen calls it. Search for it, then find where the game board gets its scores instead.
+
+---
+
 ## 2026-11-09 · Demo builds and real builds
 
 **What we fixed**

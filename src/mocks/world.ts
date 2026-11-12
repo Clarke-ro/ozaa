@@ -18,7 +18,6 @@ import type {
   MenuItem,
   Offer,
   Order,
-  PayoutAccount,
   ServiceSettings,
   StaffMember,
   StoreNotices,
@@ -113,7 +112,6 @@ export type World = {
   written: (WrittenReview & { venueId: string })[];
   transactions: (VenueTransaction & { venueId: string })[];
   loyalty: Record<string, VenueLoyalty>;
-  payouts: Record<string, PayoutAccount>;
   staff: (StaffMember & { venueId: string; phone: string })[];
   tables: Record<string, Table[]>;
   feedback: (FeedbackItem & { venueId: string })[];
@@ -429,7 +427,6 @@ export function createWorld(now: number): World {
   orders.push(...kitchenQueue(now, 25));
 
   const loyalty: Record<string, VenueLoyalty> = {};
-  const payouts: Record<string, PayoutAccount> = {};
   const tables: Record<string, Table[]> = {};
   const staff: World['staff'] = [];
   const access = new Map<string, { phone: string; purpose: 'owner_login' | 'guest_loyalty' }>();
@@ -442,14 +439,6 @@ export function createWorld(now: number): World {
     loyalty[venue.id] = seeded
       ? seedVenueLoyalty(venue.id, seeded, phone)
       : blankVenue(venue.id, venue.currency);
-    payouts[venue.id] = {
-      businessName: venue.name,
-      settlementType: 'momo',
-      accountMasked: '024 *** 0001',
-      verified: true,
-      // Clarke has not set Cravins's fee yet. The sample shows 0 until he does.
-      cravinsFeePercent: 0,
-    };
     const sample = orders.find((item) => item.order.venueId === venue.id)?.order.tableCode ?? '1';
     tables[venue.id] = tablesFor(venue.slug, sample);
   }
@@ -484,7 +473,6 @@ export function createWorld(now: number): World {
     written: [],
     transactions: [],
     loyalty,
-    payouts,
     staff,
     tables,
     feedback: [],
