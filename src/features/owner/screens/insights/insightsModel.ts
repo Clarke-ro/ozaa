@@ -4,9 +4,10 @@ import { formatMoney } from '@/lib/money';
 
 type Mood = { positive: number; neutral: number; negative: number };
 
-/** Feedback notes in the period, by mood. */
-export function moodTotals(series: InsightsReport['feedbackSentimentSeries']): Mood {
-  return (series ?? []).reduce(
+/** Feedback notes in the period, by mood. The server's `mood` totals win; older reports sent a series. */
+export function moodTotals(report: Pick<InsightsReport, 'mood' | 'feedbackSentimentSeries'>): Mood {
+  if (report.mood) return report.mood;
+  return (report.feedbackSentimentSeries ?? []).reduce(
     (sum, day) => ({
       positive: sum.positive + day.positive,
       neutral: sum.neutral + day.neutral,
@@ -28,4 +29,17 @@ export function shortMoney(minor: number, currency: string): string {
   const symbol = formatMoney(pesewas(0), currency).replace(/[\d.,\s]/g, '');
   const k = minor / 100_000;
   return `${symbol}${k >= 100 ? Math.round(k) : Math.round(k * 10) / 10}k`;
+}
+
+/** Each funnel step as a share of the first (scans), rounded; zero scans gives zeros, not NaN. */
+export function funnelSteps(
+  r: Pick<InsightsReport, 'scansCount' | 'menuViewsCount' | 'ordersCount'>,
+) {
+  const scans = r.scansCount ?? 0;
+  const pct = (n: number) => (scans > 0 ? Math.round((n / scans) * 100) : 0);
+  return [
+    { key: 'scanned', count: scans, percent: scans > 0 ? 100 : 0 },
+    { key: 'opened', count: r.menuViewsCount ?? 0, percent: pct(r.menuViewsCount ?? 0) },
+    { key: 'ordered', count: r.ordersCount ?? 0, percent: pct(r.ordersCount ?? 0) },
+  ] as const;
 }

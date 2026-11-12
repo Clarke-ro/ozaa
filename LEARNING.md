@@ -26,6 +26,28 @@ Moving a link renumbers every link in its group 0, 1, 2… and saves only the on
 **Try it yourself**
 
 Give two links the same `sortOrder` in the mock, open Custom links and move one. Watch both get clean numbers.
+## 2026-11-12 · Sales and Insights from real records (BUILD.md box 4c.5)
+
+**What we built**
+
+Insights shows the scan → menu → order funnel, when guests come by hour, and guest mood with a link to the notes. You can pick custom dates. Sales adds how guests paid, sales by hour, by staff member, and E-VAT once tax is set up (until then, a link to set it up). When there's no earlier period, Sales says so instead of showing a wild percentage.
+
+**How it works**
+
+Every card reads one report from the server for the chosen dates. A card with nothing to show says so in words, so a quiet week looks quiet, not broken.
+
+**Files to look at**
+
+- `src/features/owner/screens/insights/insightsModel.ts`: `funnelSteps` (each step as a share of scans) and its test.
+- `src/features/owner/screens/sales/SalesBreakdowns.tsx`: the new Sales cards.
+
+**New idea: dividing by zero**
+
+A percentage is "part ÷ whole". With zero scans, that's a division by zero, which gives `NaN` ("not a number") on screen. `funnelSteps` checks for zero first and shows 0%.
+
+**Try it yourself**
+
+Pick Custom dates on Insights and enter a range from last year. Every card should show its empty message.
 
 ---
 
