@@ -1165,7 +1165,7 @@
     "websiteHint": "mamas.kitchen"
   },
   "ownerSettings": {
-    "profile": "Profile",
+    "profile": "Your profile",
     "location": "Location",
     "preferences": "Preferences",
     "language": "Language",
@@ -1177,7 +1177,7 @@
     "signOutBody": "You will need a code sent to your phone to sign in again.",
     "delete": "Delete account",
     "deleteTitle": "Delete your account",
-    "deleteBody": "This deletes your account and your personal data. It cannot be undone.",
+    "deleteBody": "This deletes your login, profile and venues. Paid orders, payments and tax records are kept for 6 years with your personal details removed, because Ghana tax law requires them. It cannot be undone.",
     "deleteType": "Type {{phrase}} to confirm",
     "deleteConfirm": "Delete my account",
     "cancel": "Cancel",
@@ -1193,7 +1193,29 @@
     "appearance": "Appearance",
     "appearanceValue": "Follows your phone",
     "chime": "Sound for new orders",
-    "chimeHint": "A short chime when an order or a waiter call comes in, while Cravins is open."
+    "chimeHint": "A short chime when an order or a waiter call comes in, while Cravins is open.",
+    "photo": "Photo",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "email": "Email",
+    "saveProfile": "Save profile",
+    "phone": "Phone",
+    "changePhone": "Change your phone number",
+    "newPhone": "New phone number",
+    "sendCode": "Send code",
+    "code": "6-digit code",
+    "codeSent": "We sent a code to the new number. The number changes once you enter it.",
+    "confirm": "Confirm",
+    "phoneChanged": "Phone number changed",
+    "codeWrong": "That code isn't right",
+    "phoneSendFailed": "Couldn't send a code to that number",
+    "look": {
+      "light": "Light",
+      "dark": "Dark",
+      "system": "Follow my device"
+    },
+    "notifyTitle": "Notifications",
+    "notifyNote": "Choose what shows in Notifications and on the badges for you."
   },
   "ownerFloor": {
     "tableName": "Table {{name}}",

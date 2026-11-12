@@ -4,6 +4,34 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-12 · Your profile and preferences (BUILD.md box 4c.8)
+
+**What we built**
+
+Settings starts with your profile: photo, first and last name, email, and your phone number, which only changes after you enter a code sent to the new number. Below that: Light, Dark or Follow my device, sound for new orders, and which notifications you get. Delete account now explains that paid orders and tax records stay for 6 years without your personal details.
+
+**How it works**
+
+```
+pick Dark ──► saved on this device (instant) ──► saved on your profile (follows you)
+turn off "Guest notes" ──► profile ──► the server leaves them out of your feed and badges
+```
+
+**Files to look at**
+
+- `src/features/owner/screens/settings/ProfileSection.tsx`, `PhoneSheet.tsx`, `PrefsSection.tsx`.
+- `src/app/owner/_layout.tsx`: picks the light or dark theme.
+
+**New idea: confirm before you change**
+
+A phone number is how you sign in. If a typo changed it straight away, you'd be locked out. So the change waits until a code sent to the new number comes back.
+
+**Try it yourself**
+
+Turn off Orders under Notifications and watch the Notifications count in the sidebar drop.
+
+---
+
 ## 2026-11-12 · Promos (part of BUILD.md box 4c.4)
 
 **What we built**
