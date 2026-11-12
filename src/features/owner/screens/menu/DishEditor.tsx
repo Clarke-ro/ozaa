@@ -8,7 +8,16 @@ import { dishStatus, statusFields, type DishStatus } from '@/lib/dishRules';
 import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
-import { Chips, Field, ModalSheet, PhotoField, Section, SectionBody, toast } from '../../kit';
+import {
+  Chips,
+  Field,
+  ModalSheet,
+  PhotoField,
+  Section,
+  SectionBody,
+  SwitchRow,
+  toast,
+} from '../../kit';
 import { AddOnsEditor } from './AddOnsEditor';
 import { checkDish, checkStock } from './forms';
 import { DishStockFields, type StockDraft } from './DishStockFields';
@@ -52,6 +61,7 @@ export function DishEditor({
   });
   const [calories, setCalories] = useState(item?.calories ? String(item.calories) : '');
   const [dietary, setDietary] = useState<MenuItem['dietary']>(item?.dietary ?? []);
+  const [badges, setBadges] = useState<MenuItem['badges']>(item?.badges ?? []);
   const [dietaryCustom, setDietaryCustom] = useState<string[]>(item?.dietaryCustom ?? []);
   const [allergens, setAllergens] = useState<string[]>(item?.allergens ?? []);
   const [groups, setGroups] = useState<ModifierGroup[]>(item?.modifierGroups ?? []);
@@ -81,6 +91,7 @@ export function DishEditor({
         minQuantity: stock.minQuantity,
         maxQuantity: stock.maxQuantity,
         dietary,
+        badges,
         dietaryCustom,
         allergens,
         calories: calories.trim() ? Number.parseInt(calories, 10) || undefined : undefined,
@@ -172,6 +183,20 @@ export function DishEditor({
             onDraft={setStockDraft}
             currency={currency}
             error={error}
+          />
+        </SectionBody>
+      </Section>
+
+      <Section title={t('ownerMenu.showTitle')}>
+        <SectionBody>
+          {/* Popular puts a tag on the dish for guests; the guest menu can sort by it. */}
+          <SwitchRow
+            label={t('ownerMenu.popular')}
+            hint={t('ownerMenu.popularHint')}
+            value={badges.includes('popular')}
+            onChange={(on) =>
+              setBadges((now) => (on ? [...now, 'popular'] : now.filter((b) => b !== 'popular')))
+            }
           />
         </SectionBody>
       </Section>
