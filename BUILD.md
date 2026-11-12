@@ -626,7 +626,7 @@ Approved by Clarke on 2026-11-12: build the canvas redesign on the mock first, b
 - [x] 4c.2 Shell: sidebar groups, collapse that remembers, location switcher with the location's logo, owner menu, real plan tag.
 - [x] 4c.3 Run the room: Today, Notifications, Orders, Floor, Calls and the detail pages, on one live source.
 - [x] 4c.4 Menu and money: Menu, Edit dish, QR codes and links, Custom links, Store notice, Promos.
-- [ ] 4c.5 Numbers: Sales and Insights with date ranges and empty states.
+- [x] 4c.5 Numbers: Sales and Insights with date ranges and empty states.
 - [x] 4c.6 Guests: Customers, Customer details, Loyalty, Scan and stamp, Reviews, Feedback.
 - [ ] 4c.7 Venue: Business and locations, Branding, Services, Online ordering, Social links.
 - [ ] 4c.8 Account: Integrations, Staff, Staff member, Scanner devices, Billing, Settings, Profile, Help.

@@ -15,6 +15,9 @@ import { PeriodSelect } from '../../kit';
 import { BySource, HowPaid, StatusMix, TopDishes } from './SalesCards';
 import { SalesFigures } from './SalesFigures';
 import { SalesTrend } from './SalesTrend';
+import { ByHour, ByMethod, ByStaff, TaxCard } from './SalesBreakdowns';
+import { Text } from '@/ui/Text';
+import { useTheme } from '@/ui/theme';
 
 // Only a safety net while the venue loads; every venue has a zone in its opening hours.
 const FALLBACK_ZONE = 'Africa/Accra';
@@ -27,6 +30,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
  * from and how they ended up).
  */
 export function SalesScreen() {
+  const theme = useTheme();
   const { t } = useTranslation();
   const { wide } = useOwnerLayout();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
@@ -97,9 +101,16 @@ export function SalesScreen() {
               vsLabel={t(`ownerSales.vs.${range}`)}
               wide={wide}
             />
+            {range !== 'all' && r.previous === null ? (
+              <Text variant="caption" style={{ color: theme.muted }}>
+                {t('ownerSales.noPrevious')}
+              </Text>
+            ) : null}
             <SalesTrend report={r} from={from} to={to} />
             {pair(<TopDishes report={r} />, <HowPaid report={r} />)}
+            {pair(<ByMethod report={r} />, <ByHour report={r} />)}
             {pair(<BySource report={r} />, <StatusMix report={r} />)}
+            {pair(<ByStaff report={r} />, <TaxCard report={r} />)}
           </View>
         ) : null}
       </DeskWait>
