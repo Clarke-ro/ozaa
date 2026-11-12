@@ -4,6 +4,31 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-12 · Promos (part of BUILD.md box 4c.4)
+
+**What we built**
+
+Promos was a "Coming soon" page. Now you can add a discount (a percent, an amount or a free dish), choose days, hours, where it works, a minimum spend and an optional code, and switch it off without deleting it. Each promo shows Running, Scheduled, Ended or Off, and how often it was used.
+
+**How it works**
+
+The sheet checks what you typed (`promoForm.ts`) before saving. The server keeps the promo and, when a guest orders, takes off the single best one before tax and delivery. The app never works out the discount itself.
+
+**Files to look at**
+
+- `src/features/owner/screens/promos/promoForm.ts` and its test.
+- `src/features/owner/screens/promos/PromosScreen.tsx`.
+
+**New idea: a draft**
+
+The form keeps a "draft": text exactly as you typed it, like "15" for GH₵15. Only on Save is it turned into what the API wants, like 1500 pesewas. So a half-typed amount never reaches the server.
+
+**Try it yourself**
+
+Add a 50% promo for Friday only, then create an order on a Friday and on another day and compare the totals.
+
+---
+
 ## 2026-11-12 · Run the room on one feed (BUILD.md box 4c.3)
 
 **What we built**
