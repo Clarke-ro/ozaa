@@ -1,7 +1,7 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
 import type { Location } from '@/lib/api/types';
@@ -10,58 +10,34 @@ import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
-import { useDraft } from '../../data/useDraft';
-import { Field, SaveBar, toast } from '../../kit';
+import { toast } from '../../kit';
 import { AddLocationCard, LocationCard } from './LocationCard';
 import { LocationEditor } from './LocationEditor';
+import { BusinessDetails } from './BusinessDetails';
+import { HoursSection } from './HoursSection';
+import { TaxSection } from './TaxSection';
 
 export function BusinessScreen() {
   const { t } = useTranslation();
-    const client = useQueryClient();
   const venueId = useOwnerSession((state) => state.venueId);
   const switchVenue = useOwnerSession((state) => state.switchVenue);
   const data = useQuery({ queryKey: ownerKeys.business(), queryFn: () => api.ownerGetBusiness() });
-  const draft = useDraft({ name: data.data?.business.name ?? '' });
+  const venue = useQuery({
+    queryKey: ownerKeys.venue(venueId ?? ''),
+    queryFn: () => api.ownerGetVenue(venueId ?? ''),
+    enabled: Boolean(venueId),
+  });
   const params = useLocalSearchParams<{ add?: string }>();
   const [editing, setEditing] = useState<Location | null | undefined>(
     params.add === '1' ? null : undefined,
   );
   const locations = data.data?.locations ?? [];
-
-  const rename = useMutation({
-    mutationFn: (name: string) => api.ownerUpdateBusiness({ name }),
-    onSuccess: () => {
-      toast.success(t('ownerKit.saved'));
-      draft.reset();
-      void client.invalidateQueries({ queryKey: ownerKeys.business() });
-    },
-    onError: () => toast.error(t('ownerKit.saveFailed')),
-  });
-
-  const saveName = () => {
-    const name = draft.value.name.trim();
-    if (name) rename.mutate(name);
-    else toast.error(t('ownerBusiness.needName'));
-  };
+  const business = data.data?.business;
 
   return (
-    <OwnerPage
-      title={t('owner.business')} subtitle={t('ownerLead.business')}
-      footer={
-        <SaveBar
-          visible={draft.dirty}
-          saving={rename.isPending}
-          onDiscard={draft.reset}
-          onSave={saveName}
-        />
-      }
-    >
+    <OwnerPage title={t('owner.business')} subtitle={t('ownerLead.business')}>
       <DeskWait loading={data.isLoading} error={data.isError} onRetry={() => void data.refetch()}>
-        <Field
-          label={t('owner.businessName')}
-          value={draft.value.name}
-          onChangeText={(v) => draft.set('name', v)}
-        />
+        {business ? <BusinessDetails key={business.name} business={business} /> : null}
 
         <View style={styles.stack}>
           <Text variant="body-strong" style={styles.label}>
@@ -86,6 +62,12 @@ export function BusinessScreen() {
             </View>
           </View>
         </View>
+        {venue.data ? (
+          <>
+            <TaxSection venue={venue.data} tin={business?.tin ?? null} />
+            <HoursSection key={venue.data.id} venue={venue.data} />
+          </>
+        ) : null}
       </DeskWait>
       {editing !== undefined ? (
         <LocationEditor

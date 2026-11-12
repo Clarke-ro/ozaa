@@ -4,6 +4,31 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-12 · Business details, E-VAT and opening hours (BUILD.md box 4c.7)
+
+**What we built**
+
+Business and locations now holds the business's description, categories, cuisines, price range, year opened, website, phone, email, TIN and registration number. Each location can have a GhanaPostGPS digital address. The open location has an E-VAT switch (prices with tax inside, or tax on top) and an opening-hours editor. Branding, Services, Online ordering and Social links were already built on real data.
+
+**How it works**
+
+Switching E-VAT on is saved on the venue, never shown to guests (the TIN stays private). From then on, orders carry VAT, NHIL and GETFund lines, and Sales shows their totals.
+
+**Files to look at**
+
+- `src/features/owner/screens/business/BusinessDetails.tsx`, `TaxSection.tsx`, `HoursSection.tsx`.
+- `src/features/owner/screens/business/hoursForm.ts` and its test.
+
+**New idea: checking input against a pattern**
+
+A TIN is a letter and ten digits. The code checks that with a "regular expression", `^[A-Z]\d{10}$`, before saving, so a typo is caught on screen, not on a receipt.
+
+**Try it yourself**
+
+Switch E-VAT on, place an order, then open Sales: the E-VAT card now shows totals.
+
+---
+
 ## 2026-11-12 · Promos (part of BUILD.md box 4c.4)
 
 **What we built**

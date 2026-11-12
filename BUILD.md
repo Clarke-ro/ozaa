@@ -628,7 +628,7 @@ Approved by Clarke on 2026-11-12: build the canvas redesign on the mock first, b
 - [ ] 4c.4 Menu and money: Menu, Edit dish, QR codes and links, Custom links, Store notice, Promos.
 - [ ] 4c.5 Numbers: Sales and Insights with date ranges and empty states.
 - [ ] 4c.6 Guests: Customers, Customer details, Loyalty, Scan and stamp, Reviews, Feedback.
-- [ ] 4c.7 Venue: Business and locations, Branding, Services, Online ordering, Social links.
+- [x] 4c.7 Venue: Business and locations, Branding, Services, Online ordering, Social links.
 - [ ] 4c.8 Account: Integrations, Staff, Staff member, Scanner devices, Billing, Settings, Profile, Help.
 - [ ] 4c.9 Walk-through: switch locations, finish a call, a bill and an order, publish a menu change, run a store notice schedule, stamp a guest; check a new venue, a quiet day and a waiter account.
 
