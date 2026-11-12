@@ -53,6 +53,7 @@ export function InsightsScreen() {
 
   return (
     <OwnerPage
+      width="wide"
       title={t('owner.insights')}
       subtitle={t('ownerInsights.lead')}
       action={

@@ -99,7 +99,7 @@ export const cravinsTheme = themeFromAccent(null, 'cravins');
 export const cravinsDarkTheme = themeFromAccent(null, 'cravins', 'dark');
 
 /**
- * The owner app: same Cravins colours, but pages sit on a very light orange canvas so white cards stand out.
+ * The owner app: same Cravins colours, but pages sit on a soft grey canvas so white cards stand out.
  * Its type follows the reference dashboard (Clarke, 2026-11-07): Inter everywhere, numbers
  * included, on a smaller scale (tokens.owner.type). Guest pages keep a white background and
  * the brand scale (brand.md sections 2 and 3).

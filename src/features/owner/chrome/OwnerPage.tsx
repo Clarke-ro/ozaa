@@ -49,7 +49,9 @@ export function OwnerPage({
   const { wide, gutter } = useOwnerLayout();
   const role = useOwnerSession((state) => state.role) ?? 'waiter';
   const mayNotify = navFor(role).some((item) => item.id === 'notifications');
-  const frame = { maxWidth: tokens.owner.page[width] + gutter * 2, paddingHorizontal: gutter };
+  // The header always spans the full page, so the title and the bell sit in the same place on
+  // every screen. Only the content under it narrows to a readable width on form pages.
+  const frame = { maxWidth: tokens.owner.page.wide + gutter * 2, paddingHorizontal: gutter };
 
   return (
     <KeyboardAvoidingView
@@ -69,7 +71,7 @@ export function OwnerPage({
           bell={wide && mayNotify}
           back={back}
         />
-        <View style={styles.body}>{children}</View>
+        <View style={[styles.body, { maxWidth: tokens.owner.page[width] }]}>{children}</View>
       </ScrollView>
       {footer}
     </KeyboardAvoidingView>
@@ -86,5 +88,5 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   pageWide: { paddingTop: tokens.space[8], gap: tokens.space[6] },
-  body: { gap: tokens.space[4] },
+  body: { gap: tokens.space[4], width: '100%' },
 });

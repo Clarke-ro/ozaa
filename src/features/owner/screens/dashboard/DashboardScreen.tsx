@@ -47,6 +47,7 @@ export function DashboardScreen() {
 
   return (
     <OwnerPage
+      width="wide"
       title={title}
       subtitle={name ? t('ownerDash.howToday', { venue: name }) : undefined}
       bell

@@ -73,6 +73,7 @@ export function SalesScreen() {
 
   return (
     <OwnerPage
+      width="wide"
       title={t('owner.sales')}
       subtitle={t('ownerSales.lead')}
       action={
