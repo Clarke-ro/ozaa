@@ -1,4 +1,6 @@
-import { CategoriesScreen } from '@/features/owner';
+import { Redirect } from 'expo-router';
+
+// Sections are edited on the Menu page now (its Sections button). Old links land there.
 export default function Route() {
-  return <CategoriesScreen />;
+  return <Redirect href="/owner/menu" />;
 }
