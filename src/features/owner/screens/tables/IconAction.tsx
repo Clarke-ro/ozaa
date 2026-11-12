@@ -34,8 +34,11 @@ export function IconAction({
 }
 
 const styles = StyleSheet.create({
+  // Starts from its own text width and grows to fill the row, so a row of these can wrap on a
+  // phone instead of cutting the labels short.
   iconAction: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: 'auto',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

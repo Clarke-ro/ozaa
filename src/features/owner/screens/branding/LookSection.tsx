@@ -34,7 +34,7 @@ export function LookSection({
   const theme = useTheme();
   const { t } = useTranslation();
   const bad = !isHex(accent);
-  const card = [styles.card, { backgroundColor: theme.surface }];
+  const card = [styles.card, { backgroundColor: theme.surface, borderColor: theme.line }];
   return (
     <View style={styles.stack}>
       {/* Each part is its own card with its name above it, so nothing is crammed together. */}
@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
     padding: tokens.space[3],
     borderRadius: tokens.radius.lg,
     borderCurve: 'continuous',
-    boxShadow: tokens.shadow.card,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   swatches: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.space[1] },
   hit: {

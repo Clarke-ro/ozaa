@@ -110,8 +110,10 @@ export function NoticeCard({
 
 const styles = StyleSheet.create({
   stack: { gap: tokens.space[3] },
-  row: { flexDirection: 'row', gap: tokens.space[3] },
-  flex: { flex: 1, minWidth: 0 },
+  // The two date boxes sit side by side when there is room and stack on a phone, so a full
+  // "2026-11-04 18:00" is never cut off.
+  row: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.space[3] },
+  flex: { flex: 1, minWidth: 200 },
   bannerPreview: {
     paddingVertical: tokens.space[2],
     paddingHorizontal: tokens.space[3],

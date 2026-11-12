@@ -118,6 +118,8 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: tokens.space[2] },
   input: {
     flex: 1,
+    // A web text box has a built-in minimum width; without this it pushes the button out of the card.
+    minWidth: 0,
     minHeight: tokens.touchTarget,
     borderWidth: 1,
     borderRadius: tokens.radius.md,

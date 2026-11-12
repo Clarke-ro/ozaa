@@ -75,7 +75,14 @@ const styles = StyleSheet.create({
     gap: tokens.space[1],
     marginBottom: tokens.space[1],
   },
-  head: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
+  // Always as tall as a button, so the title sits at the same height whether or not the page
+  // has an action beside it.
+  head: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[3],
+    minHeight: tokens.touchTarget,
+  },
   words: { flex: 1, gap: tokens.space[1] },
   title: { fontSize: tokens.owner.pageTitle.size, lineHeight: tokens.owner.pageTitle.line },
   side: { flexShrink: 0 },

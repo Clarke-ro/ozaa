@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: tokens.space[2],
     minHeight: tokens.touchTarget,
-    maxWidth: 220,
+    maxWidth: MENU_WIDTH,
     paddingHorizontal: tokens.space[3],
     borderRadius: tokens.radius.full,
     borderWidth: StyleSheet.hairlineWidth,

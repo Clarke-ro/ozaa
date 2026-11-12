@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
   card: {
     gap: tokens.space[2],
     padding: tokens.space[4],
-    boxShadow: tokens.shadow.card,
+    borderWidth: StyleSheet.hairlineWidth,
     borderRadius: tokens.radius.lg,
   },
   head: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },

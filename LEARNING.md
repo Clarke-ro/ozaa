@@ -1586,3 +1586,38 @@ In the contract, the secret key is marked `writeOnly`. Apps can send it, but no 
 **Try it yourself**
 
 Connect with `pk_test_` and `sk_test_` keys from your own Paystack test account, then try a `pk_live_` key and see why it's refused.
+
+## Owner app design pass: one card look, nothing cut off (2026-11-12)
+
+**What we built**
+
+A tidy-up of the owner screens after looking at all 37 of them on a phone and on a desktop.
+
+- Every card now has the same look: white, a thin line round it, no shadow. Before, More, Staff, Feedback, Reviews, Devices and a few others had a soft shadow and no line.
+- Words no longer get cut off: the Menu tabs ("Online ordering"), the Store notice dates, the QR page buttons, and the "Add stamp" button on Scan.
+- Insights no longer leaves one small card beside a hole, and the chart's side labels are round numbers.
+- The page title sits at the same height on every page, with or without a button beside it.
+
+**How it works**
+
+```
+shared piece (kit/)  →  used by many screens
+Segmented, CardGrid, IconAction, PageHeader, AreaChart
+fix it once here     →  every screen that uses it is fixed
+```
+
+Most fixes were one or two lines in a shared piece, not one fix per screen.
+
+**Files to look at**
+
+- `src/features/owner/kit/cardStyle.ts`: the card look, in one place.
+- `src/features/owner/kit/Segmented.tsx`: tabs that size to their words.
+- `src/features/owner/kit/charts/AreaChart.tsx`: `niceTop` picks the round numbers.
+
+**New idea: flex-basis**
+
+In a row, `flex: 1` means "everyone gets the same width, whatever is inside". `flexBasis: 'auto'` with `flexGrow: 1` means "start at the width of your words, then share what's left". The second one is why "Online ordering" now fits.
+
+**Try it yourself**
+
+In `Segmented.tsx`, change `flexBasis: 'auto'` back to `0` and open Menu on a narrow window. Watch the first tab get cut off again.

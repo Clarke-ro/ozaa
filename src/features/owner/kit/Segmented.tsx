@@ -67,8 +67,12 @@ const styles = StyleSheet.create({
     borderRadius: tokens.radius.md,
     borderCurve: 'continuous',
   },
+  // Segments share spare room equally but start from their own text width, so a long label
+  // ("Online ordering") gets the room it needs instead of being cut off.
   segment: {
-    flex: 1,
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 'auto',
     minHeight: tokens.touchTarget - 4,
     alignItems: 'center',
     justifyContent: 'center',

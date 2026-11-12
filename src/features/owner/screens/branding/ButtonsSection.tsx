@@ -31,7 +31,7 @@ export function ButtonsSection({
         <Text variant="body-strong" style={styles.label}>
           {t('ownerBranding.tint')}
         </Text>
-        <View style={[styles.card, { backgroundColor: theme.surface }]}>
+        <View style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.line }]}>
           <Segmented<Tint>
             label={t('ownerBranding.tint')}
             value={tint}
@@ -71,6 +71,6 @@ const styles = StyleSheet.create({
     padding: tokens.space[3],
     borderRadius: tokens.radius.lg,
     borderCurve: 'continuous',
-    boxShadow: tokens.shadow.card,
+    borderWidth: StyleSheet.hairlineWidth,
   },
 });

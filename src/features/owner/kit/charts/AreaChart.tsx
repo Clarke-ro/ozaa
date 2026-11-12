@@ -7,17 +7,21 @@ import { useTheme } from '@/ui/theme';
 
 export type Point = { label: string; value: number };
 
-const GRID = 3;
+// Two gaps means three lines: zero, half and the top.
+const GRID = 2;
 const DOT = tokens.space[1] + 1;
 // Room for the grid labels ("GH₵3.3k") on the left, and for the end dot on the right.
 const AXIS = tokens.space[16] + tokens.space[2];
 const END = DOT + tokens.space[1];
 
-/** A round number just above `max`, so grid lines land on 0, ¼ of it, half of it and so on. */
+/**
+ * A round number just above `max` whose half is round too, so the middle grid line reads
+ * "GH₵1k" and never "GH₵666.67".
+ */
 function niceTop(max: number): number {
   if (max <= 0) return 1;
   const step = 10 ** Math.floor(Math.log10(max));
-  for (const m of [1, 2, 2.5, 5, 10]) if (m * step >= max) return m * step;
+  for (const m of [1, 2, 4, 6, 8, 10]) if (m * step >= max) return m * step;
   return 10 * step;
 }
 

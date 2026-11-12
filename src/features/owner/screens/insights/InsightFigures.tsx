@@ -28,7 +28,7 @@ export function InsightFigures({
   const loyalty = tiles.filter((tile) => tile.id !== 'scans' && tile.id !== 'menuViews');
 
   return (
-    <CardGrid columns={columns}>
+    <CardGrid columns={columns} fillLast={columns === 2}>
       {visits.map((tile) => (
         <FigureCard
           key={tile.id}

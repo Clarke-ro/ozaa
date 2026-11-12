@@ -117,7 +117,7 @@ function Icon({
 
 const styles = StyleSheet.create({
   list: {
-    boxShadow: tokens.shadow.card,
+    borderWidth: StyleSheet.hairlineWidth,
     borderRadius: tokens.radius.md,
     overflow: 'hidden',
   },
