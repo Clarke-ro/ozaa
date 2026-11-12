@@ -1,5 +1,5 @@
 import { apply, LOYALTY_PROBLEMS, minor, toWire } from '../features/loyalty/facts';
-import { fold } from '../features/loyalty/factsWire';
+import { fold } from '../features/loyalty/factsFold';
 import type { Member } from '../features/loyalty/factsTypes';
 import { ApiError } from '@/lib/api/errors';
 import type { LoyaltyCard, LoyaltyScanResult } from '@/lib/api/types';

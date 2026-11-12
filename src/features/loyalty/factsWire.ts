@@ -1,77 +1,17 @@
 import type { GhanaPhone } from '@/lib/brand';
 import {
   brand,
-  currencyCode,
-  DAY,
-  draw,
   isRecord,
-  TIER_IDS,
-  type EarnMode,
   type Fact,
-  type HistoryRow,
-  type LoyaltyErrorCode,
   type Member,
   type Programme,
   type ProgressState,
-  type RewardOffer,
-  type TierBand,
-  type TierId,
   type VenueLoyalty,
   type Wallet,
 } from './factsTypes';
-
-export function fold(
-  programme: Programme,
-  facts: readonly Fact[],
-  now: string,
-): { balance: number; lifetime: number; tier: TierId; live: Wallet['liveClaim'] } {
-  const nowMs = Date.parse(now);
-  const confirmed = new Set(
-    facts
-      .filter((fact) => fact.kind === 'confirm')
-      .map((fact) => (fact.kind === 'confirm' ? fact.claimId : '')),
-  );
-  const liveFact = facts.find(
-    (fact) =>
-      fact.kind === 'claim' && !confirmed.has(fact.id) && Date.parse(fact.expiresAt) > nowMs,
-  );
-  const live =
-    liveFact && liveFact.kind === 'claim'
-      ? {
-          code: liveFact.code,
-          expiresAt: liveFact.expiresAt,
-          title: liveFact.title,
-          units: liveFact.units,
-        }
-      : null;
-  const earns = facts.filter((fact) => fact.kind === 'earn');
-  let lifetime = 0;
-  const remaining = earns.map((fact) => {
-    lifetime += fact.units;
-    return fact.units;
-  });
-  let spend = facts
-    .filter((fact) => fact.kind === 'confirm')
-    .reduce((sum, fact) => sum + fact.units, 0);
-  if (live) spend += live.units;
-  for (let index = 0; index < remaining.length && spend > 0; index += 1) {
-    const lot = remaining[index] ?? 0;
-    const take = Math.min(lot, spend);
-    remaining[index] = lot - take;
-    spend -= take;
-  }
-  let balance = 0;
-  earns.forEach((fact, index) => {
-    const expired =
-      programme.expiryDays != null && nowMs - Date.parse(fact.at) >= programme.expiryDays * DAY;
-    if (!expired) balance += remaining[index] ?? 0;
-  });
-  let tier: TierId = 'bronze';
-  for (const band of programme.tiers) {
-    if (lifetime >= band.minLifetime) tier = band.id;
-  }
-  return { balance, lifetime, tier, live };
-}
+import { featured, fold } from './factsFold';
+import { historyOf } from './factsHistory';
+import { programmeFromWire } from './factsParse';
 
 export function walletFromWire(input: unknown, now: string, venueSlug: string): Wallet {
   const card = asCard(input);
@@ -109,34 +49,6 @@ export function walletFromWire(input: unknown, now: string, venueSlug: string): 
     })),
     liveClaim: folded.live,
     history: historyOf(member.facts),
-  };
-}
-
-export function programmeFromWire(input: unknown): Programme & { readonly memberCount: number } {
-  if (!isRecord(input)) throw new Error('Loyalty programme is not valid');
-  const earn = parseEarn(input.earn);
-  const tiers = parseTiers(input.tiers);
-  if (!earn || !tiers) throw new Error('Loyalty programme is not valid');
-  const rewards = Array.isArray(input.rewards)
-    ? input.rewards.flatMap((row) =>
-        isRecord(row) &&
-        typeof row.id === 'string' &&
-        typeof row.title === 'string' &&
-        typeof row.cost === 'number'
-          ? [{ id: row.id, title: row.title, cost: row.cost }]
-          : [],
-      )
-    : [];
-  return {
-    enabled: input.enabled === true,
-    currency: currencyCode(typeof input.currency === 'string' ? input.currency : 'GHS'),
-    earn,
-    tiers,
-    rewards,
-    expiryDays: typeof input.expiryDays === 'number' ? input.expiryDays : null,
-    claimTtlSeconds: typeof input.claimTtlSeconds === 'number' ? input.claimTtlSeconds : 600,
-    birthdayTreat: typeof input.birthdayTreat === 'string' ? input.birthdayTreat : null,
-    memberCount: typeof input.memberCount === 'number' ? input.memberCount : 0,
   };
 }
 
@@ -194,184 +106,6 @@ export function toWire(
   }
   const member = Object.values(venue.members).find((item) => item.phone === request.phone);
   return member ? cardWire(venue, member) : null;
-}
-
-export function parseProgramme(
-  input: unknown,
-  venueCurrency: string,
-  random: () => number,
-  previous: Programme,
-): { ok: true; programme: Programme } | { ok: false; code: LoyaltyErrorCode } {
-  if (!isRecord(input)) return { ok: false, code: 'programme_invalid' };
-  const enabled = input.enabled === true;
-  const earn = parseEarn(input.earn);
-  if (!earn) return { ok: false, code: 'programme_invalid' };
-  const tiers = parseTiers(input.tiers);
-  if (!tiers) return { ok: false, code: 'programme_invalid' };
-  const rewards = parseRewards(input.rewards, random);
-  if (!rewards || (enabled && rewards.length === 0))
-    return { ok: false, code: 'programme_invalid' };
-  const expiry = input.expiryDays;
-  if (!(
-    expiry === null ||
-    (typeof expiry === 'number' && Number.isInteger(expiry) && expiry >= 1)
-  )) {
-    return { ok: false, code: 'programme_invalid' };
-  }
-  const ttl = input.claimTtlSeconds;
-  if (!(typeof ttl === 'number' && Number.isInteger(ttl) && ttl >= 60 && ttl <= 3600)) {
-    return { ok: false, code: 'programme_invalid' };
-  }
-  const birthday = input.birthdayTreat;
-  if (!(birthday === null || typeof birthday === 'string'))
-    return { ok: false, code: 'programme_invalid' };
-  let currency = previous.currency;
-  try {
-    currency = currencyCode(venueCurrency);
-  } catch {
-    return { ok: false, code: 'programme_invalid' };
-  }
-  return {
-    ok: true,
-    programme: {
-      enabled,
-      currency,
-      earn,
-      tiers,
-      rewards,
-      expiryDays: expiry,
-      claimTtlSeconds: ttl,
-      birthdayTreat: birthday,
-    },
-  };
-}
-
-export function factKey(fact: Fact): string {
-  if (fact.kind === 'earn' && fact.source.type === 'paid_visit')
-    return `earn:order:${fact.source.orderId}`;
-  if (fact.kind === 'earn' && fact.source.type === 'game') return `earn:game:${fact.source.day}`;
-  if (fact.kind === 'earn' && fact.source.type === 'birthday')
-    return `earn:birthday:${fact.source.year}`;
-  if (fact.kind === 'claim') return `claim:${fact.id}`;
-  if (fact.kind === 'confirm') return `confirm:${fact.claimId}`;
-  return '';
-}
-
-export function featured(programme: Programme): RewardOffer | null {
-  return programme.rewards.reduce<RewardOffer | null>(
-    (best, reward) => (!best || reward.cost < best.cost ? reward : best),
-    null,
-  );
-}
-
-function parseEarn(value: unknown): EarnMode | null {
-  if (!isRecord(value)) return null;
-  if (value.kind === 'stamps') return { kind: 'stamps' };
-  if (value.kind !== 'points') return null;
-  if (typeof value.points !== 'number' || !Number.isInteger(value.points) || value.points < 1)
-    return null;
-  if (typeof value.perMinor !== 'number' || !Number.isInteger(value.perMinor) || value.perMinor < 1)
-    return null;
-  return { kind: 'points', points: value.points, perMinor: value.perMinor };
-}
-
-function parseTiers(value: unknown): Programme['tiers'] | null {
-  if (!Array.isArray(value) || value.length !== 3) return null;
-  const tiers: TierBand[] = [];
-  for (let index = 0; index < 3; index += 1) {
-    const row = value[index];
-    if (!isRecord(row) || row.id !== TIER_IDS[index]) return null;
-    if (
-      typeof row.minLifetime !== 'number' ||
-      !Number.isInteger(row.minLifetime) ||
-      row.minLifetime < 0
-    )
-      return null;
-    if (index === 0 && row.minLifetime !== 0) return null;
-    const previous = tiers[index - 1];
-    if (previous && row.minLifetime <= previous.minLifetime) return null;
-    tiers.push({ id: TIER_IDS[index] as TierId, minLifetime: row.minLifetime });
-  }
-  return tiers as unknown as Programme['tiers'];
-}
-
-function parseRewards(value: unknown, random: () => number): RewardOffer[] | null {
-  if (!Array.isArray(value)) return null;
-  const rewards: RewardOffer[] = [];
-  const ids = new Set<string>();
-  for (const row of value) {
-    if (
-      !isRecord(row) ||
-      typeof row.title !== 'string' ||
-      row.title.trim() === '' ||
-      row.title.length > 80
-    )
-      return null;
-    if (typeof row.cost !== 'number' || !Number.isInteger(row.cost) || row.cost < 1) return null;
-    const id = typeof row.id === 'string' && row.id.length > 0 ? row.id : `rwd_${draw(random, 8)}`;
-    if (ids.has(id)) return null;
-    ids.add(id);
-    rewards.push({ id, title: row.title.trim(), cost: row.cost });
-  }
-  return rewards;
-}
-
-function historyOf(facts: readonly Fact[]): HistoryRow[] {
-  return facts.flatMap<HistoryRow>((fact): HistoryRow[] => {
-    if (fact.kind === 'earn' && fact.source.type === 'paid_visit') {
-      return [
-        {
-          at: fact.at,
-          source: 'paid_visit',
-          direction: 'in',
-          units: fact.units,
-          title: null,
-          amountMinor: fact.source.amountMinor,
-          currency: fact.source.currency,
-        },
-      ];
-    }
-    if (fact.kind === 'earn' && fact.source.type === 'game') {
-      return [
-        {
-          at: fact.at,
-          source: 'game',
-          direction: 'in',
-          units: fact.units,
-          title: null,
-          amountMinor: null,
-          currency: null,
-        },
-      ];
-    }
-    if (fact.kind === 'earn' && fact.source.type === 'birthday') {
-      return [
-        {
-          at: fact.at,
-          source: 'birthday',
-          direction: 'in',
-          units: fact.units,
-          title: fact.source.title,
-          amountMinor: null,
-          currency: null,
-        },
-      ];
-    }
-    if (fact.kind === 'confirm') {
-      return [
-        {
-          at: fact.at,
-          source: 'redeem',
-          direction: 'out',
-          units: fact.units,
-          title: fact.title,
-          amountMinor: null,
-          currency: null,
-        },
-      ];
-    }
-    return [];
-  });
 }
 
 function cardWire(venue: VenueLoyalty, member: Member) {
