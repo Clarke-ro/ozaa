@@ -1,116 +1,78 @@
-import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { VenueImage } from '@/ui/VenueImage';
+import { usePathname } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { CircleHelp, LogOut, UserRound, type LucideIcon } from 'lucide-react-native';
+import { ChevronRight } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { useOwnerSession } from '@/features/session';
-import { ConfirmDialog } from '../kit';
+import { useMe } from '../data/useMe';
 import { useGoTo } from './NavRow';
-import { useSignOut } from './useSignOut';
+import { isCurrent } from './nav';
 
-/** Help, who is signed in, and sign out, pinned under the sidebar's scrolling list. */
+/**
+ * The owner button at the foot of the sidebar: who is signed in, and the way to their profile
+ * and settings (Help and sign out live there too). Folded, only the photo or initial shows.
+ */
 export function SidebarFooter({ collapsed }: { collapsed: boolean }) {
   const theme = useTheme();
   const { t } = useTranslation();
   const goTo = useGoTo();
-  const signOut = useSignOut();
-  const firstName = useOwnerSession((state) => state.firstName) ?? '';
+  const path = usePathname();
+  const me = useMe();
+  const sessionName = useOwnerSession((state) => state.firstName) ?? '';
   const role = useOwnerSession((state) => state.role) ?? 'owner';
-  const [confirming, setConfirming] = useState(false);
+  const name = me.data
+    ? [me.data.firstName, me.data.lastName].filter(Boolean).join(' ')
+    : sessionName;
+  const roleLabel = t(`ownerSettings.roles.${role}`);
+  const photo = me.data?.photo?.url;
+  const here = isCurrent(path, '/owner/settings') || isCurrent(path, '/owner/help');
 
   return (
     <View style={[styles.foot, { borderTopColor: theme.line }]}>
-      <FooterRow
-        icon={CircleHelp}
-        label={t('ownerChrome.help')}
-        collapsed={collapsed}
-        onPress={() => goTo('/owner/help')}
-      />
-      <FooterRow
-        icon={UserRound}
-        initial={firstName ? firstName.charAt(0).toUpperCase() : undefined}
-        label={firstName || t('ownerChrome.profile')}
-        detail={t(`ownerSettings.roles.${role}`)}
-        collapsed={collapsed}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t('ownerChrome.ownerButton', {
+          name: name || t('ownerChrome.profile'),
+          role: roleLabel,
+        })}
+        accessibilityState={{ selected: here }}
         onPress={() => goTo('/owner/settings')}
-      />
-      <FooterRow
-        icon={LogOut}
-        label={t('ownerSettings.signOut')}
-        collapsed={collapsed}
-        onPress={() => setConfirming(true)}
-      />
-      <ConfirmDialog
-        visible={confirming}
-        title={t('ownerSettings.signOutTitle')}
-        message={t('ownerSettings.signOutBody')}
-        confirmLabel={t('ownerSettings.signOut')}
-        onConfirm={() => {
-          setConfirming(false);
-          signOut();
-        }}
-        onCancel={() => setConfirming(false)}
-      />
-    </View>
-  );
-}
-
-function FooterRow({
-  icon: Icon,
-  initial,
-  label,
-  detail,
-  collapsed,
-  onPress,
-}: {
-  icon: LucideIcon;
-  /** Shown in a round chip instead of the icon, for the signed-in person. */
-  initial?: string;
-  label: string;
-  detail?: string;
-  collapsed: boolean;
-  onPress: () => void;
-}) {
-  const theme = useTheme();
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={detail ? `${label}, ${detail}` : label}
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.row,
-        collapsed && styles.rail,
-        pressed && { backgroundColor: theme.wash },
-      ]}
-    >
-      {initial ? (
-        <View style={[styles.avatar, { backgroundColor: theme.tint }]}>
-          <Text variant="body-strong" style={{ color: theme.badgeInk }}>
-            {initial}
-          </Text>
-        </View>
-      ) : (
-        <Icon size={20} color={theme.muted} />
-      )}
-      {collapsed ? null : (
-        <View style={styles.text}>
-          <Text
-            variant={initial ? 'body-strong' : 'body'}
-            numberOfLines={1}
-            style={[styles.label, { color: initial ? theme.text : theme.muted }]}
-          >
-            {label}
-          </Text>
-          {detail ? (
-            <Text variant="caption" numberOfLines={1} style={{ color: theme.meta }}>
-              {detail}
+        style={({ pressed }) => [
+          styles.row,
+          collapsed && styles.rail,
+          {
+            borderColor: here ? theme.text : theme.line,
+            backgroundColor: here ? theme.tint : pressed ? theme.wash : theme.surface,
+          },
+        ]}
+      >
+        {photo ? (
+          <VenueImage url={photo} alt="" style={styles.avatar} />
+        ) : (
+          <View style={[styles.avatar, { backgroundColor: theme.tint }]}>
+            <Text variant="body-strong" style={{ color: theme.badgeInk }}>
+              {(name || '?').charAt(0).toUpperCase()}
             </Text>
-          ) : null}
-        </View>
-      )}
-    </Pressable>
+          </View>
+        )}
+        {collapsed ? null : (
+          <>
+            <View style={styles.text}>
+              <Text variant="body-strong" numberOfLines={1}>
+                {name}
+              </Text>
+              <Text variant="caption" numberOfLines={1} style={{ color: theme.meta }}>
+                {roleLabel}
+              </Text>
+            </View>
+            <ChevronRight size={16} color={theme.meta} />
+          </>
+        )}
+      </Pressable>
+    </View>
   );
 }
 
@@ -119,19 +81,20 @@ const AVATAR = tokens.space[8];
 const styles = StyleSheet.create({
   foot: {
     borderTopWidth: StyleSheet.hairlineWidth,
-    paddingTop: tokens.space[2],
+    paddingTop: tokens.space[3],
     paddingBottom: tokens.space[4],
-    gap: 2,
   },
   row: {
-    minHeight: tokens.touchTarget,
+    minHeight: 52,
     flexDirection: 'row',
     alignItems: 'center',
     gap: tokens.space[3],
-    paddingHorizontal: tokens.space[3],
-    borderRadius: tokens.radius.sm,
+    paddingHorizontal: tokens.space[2],
+    borderRadius: tokens.radius.md,
+    borderCurve: 'continuous',
+    borderWidth: StyleSheet.hairlineWidth,
   },
-  rail: { justifyContent: 'center', paddingHorizontal: 0 },
+  rail: { justifyContent: 'center', paddingHorizontal: 0, borderWidth: 0 },
   avatar: {
     width: AVATAR,
     height: AVATAR,
@@ -139,6 +102,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  text: { flex: 1 },
-  label: { fontSize: tokens.owner.type.nav.size, lineHeight: tokens.owner.type.nav.line },
+  text: { flex: 1, minWidth: 0 },
 });

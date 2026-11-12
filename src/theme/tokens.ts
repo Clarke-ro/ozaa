@@ -41,10 +41,10 @@ export const tokens = {
       "contrastOnBlack": 19.11
     },
     "canvas": {
-      "hex": "#FFF7F2",
-      "use": "Owner app page background in light mode: a very light orange, so white cards stand out (Clarke, 2026-11-09). The sidebar stays white. Guest pages stay white.",
-      "contrastOnWhite": 1.06,
-      "contrastOnBlack": 17.84
+      "hex": "#F3F3F0",
+      "use": "Owner app page background in light mode: a warm light grey, so white cards stand out (Clarke, canvas redesign 2026-11-12). The sidebar stays white. Guest pages stay white.",
+      "contrastOnWhite": 1.11,
+      "contrastOnBlack": 18.89
     },
     "brand": {
       "hex": "#FC5205",

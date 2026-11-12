@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { usePathname } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -15,14 +14,16 @@ import { PlanBadge } from './PlanBadge';
 import { SidebarFooter } from './SidebarFooter';
 import { isCurrent, navGroups } from './nav';
 import { useNavCounts } from './useNavCounts';
+import { useOwnerPrefs } from '../data/ownerPrefs';
 
 // The mark is in the "micro" logo tier (32 px or less, brand.md section 1).
 const MARK = tokens.space[8];
 
 /**
  * Wide screens only. A light column on the card colour, split from the light orange page by a thin
- * line, with the pages in groups (main, sales, settings). The open page sits in a pale orange
- * pill. It follows the person's light or dark setting like the page does. Folds to an icon rail.
+ * line, with the pages in groups (main, sales, guests, venue, account). The open page sits in a
+ * pale orange pill. Folds to an icon rail (counts become dots), and remembers that choice. The
+ * owner button at the foot opens profile and settings, where Help and sign out live.
  */
 export function Sidebar() {
   const theme = useTheme();
@@ -31,7 +32,8 @@ export function Sidebar() {
   const role = useOwnerSession((state) => state.role) ?? 'waiter';
   const path = usePathname();
   const counts = useNavCounts();
-  const [collapsed, setCollapsed] = useState(false);
+  const collapsed = useOwnerPrefs((state) => state.sidebarCollapsed);
+  const setCollapsed = useOwnerPrefs((state) => state.setSidebarCollapsed);
   const Toggle = collapsed ? PanelLeftOpen : PanelLeftClose;
 
   return (
@@ -60,13 +62,13 @@ export function Sidebar() {
           accessibilityRole="button"
           accessibilityLabel={collapsed ? t('ownerChrome.expand') : t('ownerChrome.collapse')}
           accessibilityState={{ expanded: !collapsed }}
-          onPress={() => setCollapsed((value) => !value)}
+          onPress={() => setCollapsed(!collapsed)}
           style={({ pressed }) => [styles.toggle, pressed && { backgroundColor: theme.wash }]}
         >
           <Toggle size={20} color={theme.muted} />
         </Pressable>
       </View>
-      {collapsed ? null : <LocationSwitcher variant="block" />}
+      <LocationSwitcher variant={collapsed ? 'rail' : 'block'} />
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.list}>
         {navGroups(role).map(({ group, items }, index) => (
@@ -74,7 +76,7 @@ export function Sidebar() {
             key={group}
             style={[styles.group, index > 0 && [styles.ruled, { borderTopColor: theme.line }]]}
           >
-            {/* The main group needs no label; the groups after it are named. */}
+            {/* The main group needs no label; the groups after it are named. Folded, the line between groups is enough. */}
             {collapsed || group === 'main' ? null : (
               <Text
                 variant="caption"

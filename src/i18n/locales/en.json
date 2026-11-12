@@ -597,7 +597,10 @@
     "navGroups": {
       "main": "Main",
       "sales": "Sales",
-      "settings": "Settings",
+      "guests": "Guests",
+      "venue": "Venue",
+      "account": "Account",
+      "personal": "You",
       "previews": "Coming later"
     },
     "moreLead": "Everything else for running the venue.",
@@ -1857,7 +1860,10 @@
     "expand": "Expand sidebar",
     "help": "Help",
     "plan": "{{plan}} plan",
-    "profile": "Your profile"
+    "profile": "Your profile",
+    "ownerButton": "{{name}}, {{role}}. Profile and settings",
+    "locationCount_one": "{{count}} location",
+    "locationCount_other": "{{count}} locations"
   },
   "ownerSoon": {
     "title": "Coming soon",

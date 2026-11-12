@@ -36,8 +36,9 @@ export type OwnerNavId =
   | 'ordering'
   | 'sales';
 
-// Main runs the menu and guest page, Sales runs service and money, Settings holds the set-up pages.
-export type NavGroup = 'main' | 'sales' | 'settings' | 'previews';
+// The sidebar groups, top to bottom. `personal` (your profile and settings) isn't in the list:
+// it sits behind the owner button at the bottom of the sidebar, and in More on a phone.
+export type NavGroup = 'main' | 'sales' | 'guests' | 'venue' | 'account' | 'personal' | 'previews';
 
 export type OwnerNavItem = {
   id: OwnerNavId;
@@ -46,10 +47,20 @@ export type OwnerNavItem = {
   group: NavGroup;
   /** A roadmap preview on sample data. Only shown when PREVIEWS_ENABLED is true. */
   preview?: true;
+  /** May be opened (from a link) but isn't listed: Setup is reached from "Complete your setup". */
+  unlisted?: true;
 };
 
 const FRONT: readonly StaffRole[] = ['owner', 'manager', 'waiter'];
 const DESK: readonly StaffRole[] = ['owner', 'manager'];
+const ALL: readonly StaffRole[] = [
+  'owner',
+  'manager',
+  'waiter',
+  'kitchen',
+  'viewer',
+  'staff_scanner',
+];
 
 // Order here is the order in the sidebar and inside each More group.
 export const OWNER_NAV: readonly OwnerNavItem[] = [
@@ -67,11 +78,12 @@ export const OWNER_NAV: readonly OwnerNavItem[] = [
     group: 'main',
   },
   { id: 'menu', href: '/owner/menu', roles: DESK, group: 'main' },
-  { id: 'categories', href: '/owner/categories', roles: DESK, group: 'main' },
+  // Sections move into Menu with the Menu redesign (4c.4); until then the page opens from Menu.
+  { id: 'categories', href: '/owner/categories', roles: DESK, group: 'main', unlisted: true },
   { id: 'tables', href: '/owner/tables', roles: DESK, group: 'main' },
   { id: 'links', href: '/owner/links', roles: DESK, group: 'main' },
-  { id: 'insights', href: '/owner/insights', roles: DESK, group: 'main' },
   { id: 'notice', href: '/owner/notice', roles: DESK, group: 'main' },
+  { id: 'insights', href: '/owner/insights', roles: DESK, group: 'main' },
   {
     id: 'orders',
     href: '/owner/orders',
@@ -87,29 +99,38 @@ export const OWNER_NAV: readonly OwnerNavItem[] = [
     roles: ['owner', 'manager', 'waiter', 'staff_scanner'],
     group: 'sales',
   },
-  { id: 'customers', href: '/owner/customers', roles: DESK, group: 'sales' },
-  { id: 'loyalty', href: '/owner/loyalty', roles: FRONT, group: 'sales' },
   { id: 'promos', href: '/owner/promos', roles: DESK, group: 'sales' },
-  { id: 'feedback', href: '/owner/feedback', roles: DESK, group: 'sales' },
-  { id: 'reviews', href: '/owner/reviews', roles: DESK, group: 'sales' },
-  { id: 'business', href: '/owner/business', roles: ['owner'], group: 'settings' },
-  { id: 'branding', href: '/owner/branding', roles: DESK, group: 'settings' },
-  { id: 'services', href: '/owner/services', roles: DESK, group: 'settings' },
-  { id: 'ordering', href: '/owner/ordering', roles: DESK, group: 'settings' },
-  { id: 'socials', href: '/owner/socials', roles: DESK, group: 'settings' },
-  { id: 'integrations', href: '/owner/integrations', roles: ['owner'], group: 'settings' },
-  { id: 'staff', href: '/owner/staff', roles: ['owner'], group: 'settings' },
-  { id: 'devices', href: '/owner/devices', roles: DESK, group: 'settings' },
-  { id: 'billing', href: '/owner/billing', roles: ['owner'], group: 'settings' },
-  { id: 'setup', href: '/owner/setup', roles: ['owner'], group: 'settings' },
-  { id: 'settings', href: '/owner/settings', roles: DESK, group: 'settings' },
+  { id: 'customers', href: '/owner/customers', roles: DESK, group: 'guests' },
+  { id: 'loyalty', href: '/owner/loyalty', roles: FRONT, group: 'guests' },
+  { id: 'feedback', href: '/owner/feedback', roles: DESK, group: 'guests' },
+  { id: 'reviews', href: '/owner/reviews', roles: DESK, group: 'guests' },
+  { id: 'business', href: '/owner/business', roles: ['owner'], group: 'venue' },
+  { id: 'branding', href: '/owner/branding', roles: DESK, group: 'venue' },
+  { id: 'services', href: '/owner/services', roles: DESK, group: 'venue' },
+  { id: 'ordering', href: '/owner/ordering', roles: DESK, group: 'venue' },
+  { id: 'socials', href: '/owner/socials', roles: DESK, group: 'venue' },
+  { id: 'integrations', href: '/owner/integrations', roles: ['owner'], group: 'account' },
+  { id: 'staff', href: '/owner/staff', roles: ['owner'], group: 'account' },
+  { id: 'devices', href: '/owner/devices', roles: DESK, group: 'account' },
+  { id: 'billing', href: '/owner/billing', roles: ['owner'], group: 'account' },
+  // Everyone signed in has a profile; the page shows only the parts their role may change.
+  { id: 'settings', href: '/owner/settings', roles: ALL, group: 'personal' },
+  { id: 'setup', href: '/owner/setup', roles: ['owner'], group: 'account', unlisted: true },
   { id: 'stock', href: '/owner/stock', roles: DESK, group: 'previews', preview: true },
   { id: 'pos', href: '/owner/pos', roles: FRONT, group: 'previews', preview: true },
   { id: 'ai', href: '/owner/ai', roles: DESK, group: 'previews', preview: true },
   { id: 'marketing', href: '/owner/marketing', roles: DESK, group: 'previews', preview: true },
 ];
 
-export const NAV_GROUPS: readonly NavGroup[] = ['main', 'sales', 'settings', 'previews'];
+export const NAV_GROUPS: readonly NavGroup[] = [
+  'main',
+  'sales',
+  'guests',
+  'venue',
+  'account',
+  'personal',
+  'previews',
+];
 
 // Four tabs at most, so "More" always fits as the fifth (HIG: 3 to 5 tabs).
 // Owners and managers run the venue (menu, loyalty); waiters work the floor.
@@ -122,8 +143,11 @@ const TABS: Record<StaffRole, readonly OwnerNavId[]> = {
   staff_scanner: ['scan'],
 };
 
+/** Every listed page this person may open. Unlisted pages still open from links (see canOpen). */
 export function navFor(role: StaffRole, previews: boolean = PREVIEWS_ENABLED): OwnerNavItem[] {
-  return OWNER_NAV.filter((item) => item.roles.includes(role) && (previews || !item.preview));
+  return OWNER_NAV.filter(
+    (item) => item.roles.includes(role) && !item.unlisted && (previews || !item.preview),
+  );
 }
 
 export function tabsFor(role: StaffRole): OwnerNavItem[] {
@@ -133,7 +157,7 @@ export function tabsFor(role: StaffRole): OwnerNavItem[] {
 
 export function moreGroups(role: StaffRole): { group: NavGroup; items: OwnerNavItem[] }[] {
   const tabs = new Set(TABS[role]);
-  return navGroups(role)
+  return navGroups(role, true)
     .map(({ group, items }) => ({
       group,
       items: items.filter((item) => !tabs.has(item.id)),
@@ -141,13 +165,21 @@ export function moreGroups(role: StaffRole): { group: NavGroup; items: OwnerNavI
     .filter((entry) => entry.items.length > 0);
 }
 
-/** Every page this person may open, in sidebar groups. Empty groups are dropped. */
-export function navGroups(role: StaffRole): { group: NavGroup; items: OwnerNavItem[] }[] {
+/**
+ * The sidebar list, in groups. Empty groups are dropped. `personal` is left out by default:
+ * the sidebar reaches it through the owner button; More on a phone lists it (withPersonal).
+ */
+export function navGroups(
+  role: StaffRole,
+  withPersonal = false,
+): { group: NavGroup; items: OwnerNavItem[] }[] {
   const allowed = navFor(role);
-  return NAV_GROUPS.map((group) => ({
-    group,
-    items: allowed.filter((item) => item.group === group),
-  })).filter((entry) => entry.items.length > 0);
+  return NAV_GROUPS.filter((group) => withPersonal || group !== 'personal')
+    .map((group) => ({
+      group,
+      items: allowed.filter((item) => item.group === group),
+    }))
+    .filter((entry) => entry.items.length > 0);
 }
 
 function matches(pathname: string, href: string): boolean {

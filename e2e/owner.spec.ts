@@ -25,9 +25,7 @@ const moreItems = [
   ['Staff', 'owner-staff'],
   ['Scanner devices', 'owner-devices'],
   ['Business and locations', 'owner-business'],
-  ['Setup', 'owner-setup'],
   ['Settings', 'owner-settings'],
-  ['Categories', 'owner-categories'],
   ['Store notice', 'owner-notice'],
   ['Customers', 'owner-customers'],
   ['Promos and coupons', 'owner-promos'],
@@ -100,15 +98,23 @@ test('owner screens on phone (390x844): every tab and every More item opens, wit
 test('owner screens on tablet (1024x768) use the sidebar', async ({ page }) => {
   await page.setViewportSize({ width: 1024, height: 768 });
   await signInAsOwner(page, true);
-  for (const [label, name] of [...tabs, ...moreItems]) {
+  // Settings isn't a sidebar row: the owner button at the foot of the sidebar opens it.
+  for (const [label, name] of [...tabs, ...moreItems].filter(([label]) => label !== 'Settings')) {
     await page.getByRole('button', { name: label, exact: true }).first().click();
     await waitLoaded(page);
     await page.screenshot({ path: `test-results/${name}-tablet.png`, fullPage: false });
-    // Setup hides the sidebar, so leave it before opening the next page.
-    if (name === 'owner-setup') {
-      await expect(page.getByRole('button', { name: 'Today', exact: true })).toHaveCount(0);
-      await page.getByRole('button', { name: 'Close', exact: true }).click();
-      await waitLoaded(page);
-    }
   }
+  await page.getByRole('button', { name: /Profile and settings$/ }).click();
+  await waitLoaded(page);
+  await expect(page.getByRole('button', { name: 'Help', exact: true })).toBeVisible();
+});
+
+test('the folded sidebar stays folded on the next page', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await signInAsOwner(page, true);
+  await page.getByRole('button', { name: 'Collapse sidebar', exact: true }).click();
+  await page.getByRole('button', { name: 'Orders', exact: true }).first().click();
+  await waitLoaded(page);
+  await expect(page.getByRole('button', { name: 'Expand sidebar', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Expand sidebar', exact: true }).click();
 });

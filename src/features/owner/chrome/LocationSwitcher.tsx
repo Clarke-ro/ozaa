@@ -10,7 +10,16 @@ import {
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Building2, Check, ChevronDown, ChevronRight, Plus } from 'lucide-react-native';
+import {
+  Building2,
+  Check,
+  ChevronDown,
+  ChevronRight,
+  ChevronsUpDown,
+  Plus,
+} from 'lucide-react-native';
+import { VenueImage } from '@/ui/VenueImage';
+import type { Location } from '@/lib/api/types';
 import { api } from '@/lib/api';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
@@ -19,11 +28,30 @@ import { useOwnerSession } from '@/features/session';
 import { hapticSelection } from '@/lib/haptics';
 import { ownerKeys } from '../data/keys';
 
+/** The location's own logo, or its first letter on a grey tile when it has none. Never the Cravins mark. */
+function LocationLogo({ location, size }: { location: Location | undefined; size: number }) {
+  const theme = useTheme();
+  const box = { width: size, height: size, borderRadius: tokens.radius.sm };
+  if (location?.logo?.url) return <VenueImage url={location.logo.url} alt="" style={box} />;
+  return (
+    <View style={[box, styles.initial, { backgroundColor: theme.wash }]}>
+      {location ? (
+        <Text variant="body-strong" style={{ color: theme.text }}>
+          {location.name.charAt(0).toUpperCase()}
+        </Text>
+      ) : (
+        <Building2 size={16} color={theme.meta} />
+      )}
+    </View>
+  );
+}
+
 /**
- * Shows the active location. Tapping it drops one card from the button holding a pill per
- * location (the current one tinted and outlined), then Add location and Manage locations. `chip` sits in the Today panel; `block` heads the sidebar.
+ * Shows the active location. Tapping it drops one card over the page (nothing below moves) with a
+ * pill per location, the current one ticked, then Add location and Manage locations.
+ * `chip` sits in the Today panel; `block` heads the sidebar; `rail` is the folded sidebar (logo only).
  */
-export function LocationSwitcher({ variant }: { variant: 'chip' | 'block' }) {
+export function LocationSwitcher({ variant }: { variant: 'chip' | 'block' | 'rail' }) {
   const theme = useTheme();
   const { t } = useTranslation();
   const router = useRouter();
@@ -55,6 +83,9 @@ export function LocationSwitcher({ variant }: { variant: 'chip' | 'block' }) {
   // Never show a made-up venue name while loading.
   const name = active?.name ?? (business.isLoading ? '' : t('ownerKit.chooseLocation'));
   const block = variant === 'block';
+  const rail = variant === 'rail';
+  const area = active?.city ?? active?.address1 ?? null;
+  const count = t('ownerChrome.locationCount', { count: locations.length });
 
   return (
     <>
@@ -66,26 +97,35 @@ export function LocationSwitcher({ variant }: { variant: 'chip' | 'block' }) {
         accessibilityState={{ expanded: open }}
         onPress={openMenu}
         style={({ pressed }) => [
-          block ? styles.block : styles.chip,
-          // The chip sits on the grey Today panel, so it is the white surface; the sidebar block is grey.
+          rail ? styles.rail : block ? styles.block : styles.chip,
           {
-            borderColor: theme.line,
-            backgroundColor: pressed ? theme.line : block ? theme.wash : theme.surface,
+            borderColor: open ? theme.text : theme.line,
+            backgroundColor: pressed ? theme.wash : theme.surface,
           },
         ]}
       >
-        <Building2 size={16} color={theme.text} />
-        <View style={block ? styles.blockCopy : styles.chipCopy}>
-          {block ? (
-            <Text variant="caption" style={{ color: theme.meta }}>
-              {t('ownerKit.location')}
+        {block || rail ? (
+          <LocationLogo location={active} size={rail ? tokens.space[8] : tokens.space[8]} />
+        ) : (
+          <Building2 size={16} color={theme.text} />
+        )}
+        {rail ? null : (
+          <View style={block ? styles.blockCopy : styles.chipCopy}>
+            <Text variant="body-strong" numberOfLines={1} style={styles.name}>
+              {name}
             </Text>
-          ) : null}
-          <Text variant="body-strong" numberOfLines={1} style={styles.name}>
-            {name}
-          </Text>
-        </View>
-        <ChevronDown size={16} color={theme.meta} />
+            {block && locations.length > 0 ? (
+              <Text variant="caption" numberOfLines={1} style={{ color: theme.meta }}>
+                {area ? `${area} · ${count}` : count}
+              </Text>
+            ) : null}
+          </View>
+        )}
+        {rail ? null : block ? (
+          <ChevronsUpDown size={18} color={theme.muted} />
+        ) : (
+          <ChevronDown size={16} color={theme.meta} />
+        )}
       </Pressable>
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
@@ -131,7 +171,7 @@ export function LocationSwitcher({ variant }: { variant: 'chip' | 'block' }) {
                   },
                 ]}
               >
-                <Building2 size={16} color={selected ? theme.ink : theme.text} />
+                <LocationLogo location={location} size={tokens.space[6]} />
                 <Text variant="body-strong" numberOfLines={1} style={styles.optionCopy}>
                   {location.name}
                   {location.city ? (
@@ -207,7 +247,16 @@ const styles = StyleSheet.create({
     borderCurve: 'continuous',
     borderWidth: StyleSheet.hairlineWidth,
   },
-  blockCopy: { flex: 1 },
+  blockCopy: { flex: 1, minWidth: 0 },
+  rail: {
+    alignSelf: 'center',
+    minWidth: tokens.touchTarget,
+    minHeight: tokens.touchTarget,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: tokens.radius.md,
+  },
+  initial: { alignItems: 'center', justifyContent: 'center' },
   name: { fontSize: tokens.type.caption.size + 1 },
   // One card holds the menu; inside it each location is a pill the size of the location button.
   menu: {

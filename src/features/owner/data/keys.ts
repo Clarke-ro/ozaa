@@ -8,6 +8,11 @@ import { guestKeys } from '@/lib/queryKeys';
  */
 export const ownerKeys = {
   business: () => ['owner-business'] as const,
+  /** The signed-in person: name, photo and app preferences. */
+  me: () => ['owner-me'] as const,
+  notifications: (venueId: string) => ['owner-notifications', venueId] as const,
+  promos: (venueId: string) => ['owner-promos', venueId] as const,
+  scans: (venueId: string) => ['owner-scans', venueId] as const,
   venue: (venueId: string) => ['owner-venue', venueId] as const,
   dashboard: (venueId: string) => ['owner-dashboard', venueId] as const,
   insights: (venueId: string, range?: string) =>
