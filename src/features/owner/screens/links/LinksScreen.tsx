@@ -14,6 +14,7 @@ import { ownerKeys } from '../../data/keys';
 import { AddDashed, EmptyCard, SectionLabel, toast } from '../../kit';
 import { LinkEditor } from './LinkEditor';
 import { LinkRow } from './LinkRow';
+import { moveLink } from './moveLink';
 
 const PLACEMENTS: CustomLink['placement'][] = ['button', 'banner', 'menu'];
 
@@ -50,6 +51,23 @@ export function LinksScreen() {
     onError: () => toast.error(t('ownerKit.saveFailed')),
   });
 
+  // Saves the new order of every link that moved; the guest page shows them in this order.
+  const move = useMutation({
+    mutationFn: async (changes: { id: string; sortOrder: number }[]) => {
+      for (const change of changes) {
+        const link = links.data?.items.find((item) => item.id === change.id);
+        if (link)
+          await api.ownerUpdateCustomLink(venueId, link.id, {
+            title: link.title,
+            url: link.url,
+            sortOrder: change.sortOrder,
+          });
+      }
+    },
+    onSettled: () => client.invalidateQueries({ queryKey: key }),
+    onError: () => toast.error(t('ownerKit.saveFailed')),
+  });
+
   const items = [...(links.data?.items ?? [])].sort((a, b) => a.sortOrder - b.sortOrder);
 
   return (
@@ -76,12 +94,20 @@ export function LinksScreen() {
                 <View key={placement} style={styles.group}>
                   <SectionLabel title={t(`ownerLinks.placement.${placement}`)} caps />
                   <View style={styles.list}>
-                    {group.map((link) => (
+                    {group.map((link, index) => (
                       <LinkRow
                         key={link.id}
                         link={link}
                         onEdit={() => setEditing(link)}
                         onToggle={() => toggle.mutate(link)}
+                        onMove={{
+                          up:
+                            index > 0 ? () => move.mutate(moveLink(group, link.id, -1)) : undefined,
+                          down:
+                            index < group.length - 1
+                              ? () => move.mutate(moveLink(group, link.id, 1))
+                              : undefined,
+                        }}
                       />
                     ))}
                   </View>

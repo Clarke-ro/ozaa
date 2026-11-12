@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Link as LinkIcon } from 'lucide-react-native';
+import { ChevronDown, ChevronUp, Link as LinkIcon } from 'lucide-react-native';
 import type { CustomLink } from '@/lib/api/types';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
@@ -26,10 +26,13 @@ export function LinkRow({
   link,
   onEdit,
   onToggle,
+  onMove,
 }: {
   link: CustomLink;
   onEdit: () => void;
   onToggle: () => void;
+  /** Move up (-1) or down (1). Left out at the ends, so the button can't do nothing. */
+  onMove: { up?: () => void; down?: () => void };
 }) {
   const theme = useTheme();
   const { t, i18n } = useTranslation();
@@ -61,6 +64,25 @@ export function LinkRow({
           </Text>
         </View>
       </Pressable>
+      {(['up', 'down'] as const).map((dir) => {
+        const move = onMove[dir];
+        const Arrow = dir === 'up' ? ChevronUp : ChevronDown;
+        return (
+          <Pressable
+            key={dir}
+            accessibilityRole="button"
+            accessibilityLabel={t(dir === 'up' ? 'ownerLinks.moveUp' : 'ownerLinks.moveDown', {
+              title: link.title,
+            })}
+            accessibilityState={{ disabled: !move }}
+            disabled={!move}
+            onPress={move}
+            style={({ pressed }) => [styles.move, pressed && { backgroundColor: theme.wash }]}
+          >
+            <Arrow size={18} color={move ? theme.muted : theme.line} />
+          </Pressable>
+        );
+      })}
       <Toggle
         value={on}
         onChange={onToggle}
@@ -88,4 +110,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   flex: { flex: 1, gap: 2 },
+  move: {
+    width: tokens.touchTarget,
+    height: tokens.touchTarget,
+    borderRadius: tokens.radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });
