@@ -1414,7 +1414,8 @@
       "today": "Today",
       "7d": "Last 7 days",
       "30d": "Last 30 days",
-      "90d": "Last 90 days"
+      "90d": "Last 90 days",
+      "custom": "Custom dates"
     },
     "feedbackCount": "Feedback notes",
     "soldShare_one": "1 sold · {{percent}}% of dishes sold",
@@ -1435,7 +1436,20 @@
     "returningShort": "Returning",
     "firstVisit": "First visit",
     "mood": "Feedback mood",
-    "notes": "notes in this period"
+    "notes": "notes in this period",
+    "funnel": "From scan to order",
+    "noVisits": "No guest visits in this period yet.",
+    "step": {
+      "scanned": "Scanned a code",
+      "opened": "Opened the menu",
+      "ordered": "Placed an order"
+    },
+    "whenGuestsCome": "When guests come",
+    "visits_one": "{{count}} visit",
+    "visits_other": "{{count}} visits",
+    "readNotes": "Read the notes",
+    "from": "From (YYYY-MM-DD)",
+    "to": "To (YYYY-MM-DD)"
   },
   "ownerLoyaltyResults": {
     "members": "Members",
@@ -2132,12 +2146,33 @@
     "orders_other": "{{count}} orders",
     "topItems": "Top dishes",
     "dishHead": "Dish",
-    "valueHead": "Order value",
+    "valueHead": "Value",
     "empty": "No orders in these dates yet.",
     "paid": "How it was paid",
     "paidOnline": "Paid online",
     "paidInPerson": "Paid in person",
-    "unpaid": "Not paid yet"
+    "unpaid": "Not paid yet",
+    "byMethod": "How guests paid",
+    "noPaid": "No paid orders in this period.",
+    "methodHead": "Method",
+    "ordersCount_one": "{{count}} order",
+    "ordersCount_other": "{{count}} orders",
+    "method": {
+      "online_card": "Card (online)",
+      "online_momo": "MoMo (online)",
+      "cash": "Cash",
+      "card_machine": "Card machine",
+      "bank_transfer": "Bank transfer",
+      "momo_merchant": "MoMo to your number"
+    },
+    "byHour": "By hour",
+    "byStaff": "By staff",
+    "noStaff": "No staff handled orders in this period.",
+    "staffHead": "Staff",
+    "tax": "E-VAT and levies",
+    "taxOff": "Tax isn't set up, so orders carry no VAT lines.",
+    "taxSetUp": "Set up tax",
+    "noPrevious": "No earlier period to compare with."
   },
   "ownerPay": {
     "lead": "How guests pay you. Online payments go straight to your own Paystack account; Cravins never holds your money.",
