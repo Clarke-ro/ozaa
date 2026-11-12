@@ -1,4 +1,7 @@
-import type { Order, OrderSource } from '@/lib/api/types';
+import type { Order, OrderSource, PaymentMethodUsed, StaffRole } from '@/lib/api/types';
+
+/** The staff member who took or moved an order. The mock and server record it; guests don't. */
+export type HandledBy = { staffId: string; firstName: string; role: StaffRole };
 
 /** Only what the report reads, so tests and the mock can pass small objects. */
 export type SalesOrder = Pick<Order, 'status' | 'createdAt' | 'totalPesewas'> & {
@@ -6,6 +9,8 @@ export type SalesOrder = Pick<Order, 'status' | 'createdAt' | 'totalPesewas'> & 
   paymentStatus?: Order['paymentStatus'];
   paymentMethod?: Order['paymentMethod'];
   deliveryFeePesewas?: number;
+  handledBy?: HandledBy | null;
+  taxes?: Order['taxes'];
   lines: { name: string; quantity: number; totalPesewas: number; discountPesewas?: number }[];
 };
 
@@ -15,7 +20,21 @@ export type SalesNumbers = {
   byStatus: Record<Order['status'], number>;
   discountsPesewas: number;
   deliveryFeesPesewas: number;
-  payments: { onlinePesewas: number; inPersonPesewas: number; unpaidPesewas: number };
+  avgPesewas: number;
+  payments: {
+    onlinePesewas: number;
+    inPersonPesewas: number;
+    unpaidPesewas: number;
+    byMethod: { method: PaymentMethodUsed; orders: number; pesewas: number }[];
+  };
+  byHour: { hour: number; orders: number; pesewas: number }[];
+  byStaff: (HandledBy & { orders: number; pesewas: number })[];
+  tax: {
+    vatPesewas: number;
+    nhilPesewas: number;
+    getfundPesewas: number;
+    totalPesewas: number;
+  } | null;
   bySource: { source: OrderSource; orders: number; pesewas: number }[];
   topItems: { name: string; count: number; pesewas: number }[];
   days: { date: string; orders: number; pesewas: number }[];
@@ -33,11 +52,47 @@ function venueDate(iso: string, timeZone: string): string {
   }).format(new Date(iso));
 }
 
+/** The hour of the day (0-23) on the venue's clock. */
+function venueHour(iso: string, timeZone: string): number {
+  const hour = new Intl.DateTimeFormat('en-GB', {
+    timeZone,
+    hour: '2-digit',
+    hourCycle: 'h23',
+  }).format(new Date(iso));
+  return Number(hour);
+}
+
+/** Add one order's money to a running tally kept in a map. */
+function tally<K>(map: Map<K, { orders: number; pesewas: number }>, key: K, pesewas: number) {
+  const now = map.get(key) ?? { orders: 0, pesewas: 0 };
+  map.set(key, { orders: now.orders + 1, pesewas: now.pesewas + pesewas });
+}
+
+const biggestFirst = <T extends { pesewas: number }>(a: T, b: T) => b.pesewas - a.pesewas;
+
+/**
+ * The window of the same length just before [since, until), for the "vs last period" line.
+ * Null without a since: "all time" has nothing before it to compare with.
+ */
+export function previousWindow(
+  since: string | undefined,
+  until: string,
+): { since: string; until: string } | null {
+  if (!since) return null;
+  const start = Date.parse(since);
+  const length = Date.parse(until) - start;
+  return { since: new Date(start - length).toISOString(), until: new Date(start).toISOString() };
+}
+
 /**
  * The Sales page figures from a list of orders (already cut to the date range). Money counts
  * every order that wasn't cancelled, paid or not: it is what was ordered. Payments are separate.
  */
-export function salesReport(orders: readonly SalesOrder[], timeZone: string): SalesNumbers {
+export function salesReport(
+  orders: readonly SalesOrder[],
+  timeZone: string,
+  options: { taxEnabled?: boolean } = {},
+): SalesNumbers {
   const byStatus: SalesNumbers['byStatus'] = {
     received: 0,
     preparing: 0,
@@ -53,6 +108,10 @@ export function salesReport(orders: readonly SalesOrder[], timeZone: string): Sa
   let deliveryFeesPesewas = 0;
   let orderCount = 0;
   const payments = { onlinePesewas: 0, inPersonPesewas: 0, unpaidPesewas: 0 };
+  const methods = new Map<PaymentMethodUsed, { orders: number; pesewas: number }>();
+  const hours = new Map<number, { orders: number; pesewas: number }>();
+  const staff = new Map<string, { who: HandledBy; orders: number; pesewas: number }>();
+  const tax = { vatPesewas: 0, nhilPesewas: 0, getfundPesewas: 0 };
 
   for (const order of orders) {
     byStatus[order.status] += 1;
@@ -65,15 +124,27 @@ export function salesReport(orders: readonly SalesOrder[], timeZone: string): Sa
       const online = order.paymentMethod === 'online_card' || order.paymentMethod === 'online_momo';
       if (online) payments.onlinePesewas += order.totalPesewas;
       else payments.inPersonPesewas += order.totalPesewas;
+      if (order.paymentMethod) tally(methods, order.paymentMethod, order.totalPesewas);
     } else {
       payments.unpaidPesewas += order.totalPesewas;
     }
-    const source = order.source ?? 'table';
-    const s = sources.get(source) ?? { orders: 0, pesewas: 0 };
-    sources.set(source, { orders: s.orders + 1, pesewas: s.pesewas + order.totalPesewas });
-    const date = venueDate(order.createdAt, timeZone);
-    const d = days.get(date) ?? { orders: 0, pesewas: 0 };
-    days.set(date, { orders: d.orders + 1, pesewas: d.pesewas + order.totalPesewas });
+    tally(sources, order.source ?? 'table', order.totalPesewas);
+    tally(days, venueDate(order.createdAt, timeZone), order.totalPesewas);
+    tally(hours, venueHour(order.createdAt, timeZone), order.totalPesewas);
+    if (order.handledBy) {
+      const who = order.handledBy;
+      const row = staff.get(who.staffId) ?? { who, orders: 0, pesewas: 0 };
+      staff.set(who.staffId, {
+        who,
+        orders: row.orders + 1,
+        pesewas: row.pesewas + order.totalPesewas,
+      });
+    }
+    for (const line of order.taxes ?? []) {
+      if (line.code === 'vat') tax.vatPesewas += line.amountPesewas;
+      else if (line.code === 'nhil') tax.nhilPesewas += line.amountPesewas;
+      else tax.getfundPesewas += line.amountPesewas;
+    }
     for (const line of order.lines) {
       discountsPesewas += line.discountPesewas ?? 0;
       const item = items.get(line.name) ?? { count: 0, pesewas: 0 };
@@ -87,13 +158,23 @@ export function salesReport(orders: readonly SalesOrder[], timeZone: string): Sa
   return {
     orderCount,
     valuePesewas,
+    avgPesewas: orderCount === 0 ? 0 : Math.round(valuePesewas / orderCount),
     byStatus,
     discountsPesewas,
     deliveryFeesPesewas,
-    payments,
-    bySource: [...sources]
-      .map(([source, value]) => ({ source, ...value }))
-      .sort((a, b) => b.pesewas - a.pesewas),
+    payments: {
+      ...payments,
+      byMethod: [...methods].map(([method, value]) => ({ method, ...value })).sort(biggestFirst),
+    },
+    byHour: [...hours].map(([hour, value]) => ({ hour, ...value })).sort((a, b) => a.hour - b.hour),
+    byStaff: [...staff.values()]
+      .map(({ who, orders: count, pesewas }) => ({ ...who, orders: count, pesewas }))
+      .sort(biggestFirst),
+    // E-VAT only shows once the venue switched tax on; before that the lines are empty anyway.
+    tax: options.taxEnabled
+      ? { ...tax, totalPesewas: tax.vatPesewas + tax.nhilPesewas + tax.getfundPesewas }
+      : null,
+    bySource: [...sources].map(([source, value]) => ({ source, ...value })).sort(biggestFirst),
     topItems: [...items]
       .map(([name, value]) => ({ name, ...value }))
       .sort((a, b) => b.pesewas - a.pesewas)

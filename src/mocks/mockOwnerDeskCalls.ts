@@ -1,8 +1,9 @@
 import type { ApiClient } from '@/lib/api/client';
 import { ApiError } from '@/lib/api/errors';
 import type { SalesReport } from '@/lib/api/types';
-import { insightsFor, replyFor, writtenFor } from './ownerDesk';
-import { salesReport } from '@/lib/sales';
+import { replyFor, writtenFor } from './ownerDesk';
+import { insightsFor } from './ownerInsights';
+import { previousWindow, salesReport } from '@/lib/sales';
 import { venueById } from './world';
 import { accessOf } from './mockRules';
 import type { MockContext } from './mockContext';
@@ -25,24 +26,54 @@ export function mockOwnerDeskCalls(ctx: MockContext) {
       await gate();
       accessOf(world, tokens);
       const venue = venueById(world, venueId);
-      const since = filter?.since ? Date.parse(filter.since) : -Infinity;
-      const until = filter?.until ? Date.parse(filter.until) : Infinity;
-      const orders = world.orders
-        .map((row) => row.order)
-        .filter((order) => order.venueId === venueId)
-        .filter((order) => {
-          const at = Date.parse(order.createdAt);
-          return at >= since && at < until;
-        });
-      return {
+      const timeZone = venue.hours.timezone;
+      const taxEnabled = world.tax[venueId]?.enabled ?? false;
+      // No end means "up to now and anything placed this very moment".
+      const until = filter?.until;
+      const rows = (from: string | undefined, to: string | undefined) =>
+        world.orders
+          .filter((row) => row.order.venueId === venueId)
+          .filter((row) => {
+            const at = Date.parse(row.order.createdAt);
+            return (
+              (from === undefined || at >= Date.parse(from)) &&
+              (to === undefined || at < Date.parse(to))
+            );
+          })
+          .map((row) => ({ ...row.order, handledBy: row.handledBy ?? null }));
+      const current = salesReport(rows(filter?.since, until), timeZone, { taxEnabled });
+      const window = previousWindow(filter?.since, until ?? new Date(now()).toISOString());
+      const before = window ? salesReport(rows(window.since, window.until), timeZone) : null;
+      const refundsPesewas = world.transactions
+        .filter((item) => item.venueId === venueId && item.settlement === 'refunded')
+        .filter((item) => {
+          const at = Date.parse(item.createdAt);
+          return (
+            (!filter?.since || at >= Date.parse(filter.since)) && (!until || at < Date.parse(until))
+          );
+        })
+        .reduce((sum, item) => sum + item.amountPesewas, 0);
+      const report: SalesReport = {
         currency: venue.currency,
-        ...salesReport(orders, venue.hours.timezone),
-      } as SalesReport;
+        ...current,
+        refundsPesewas,
+        // No orders before means nothing to compare with, so the page says so.
+        previous:
+          window && before && before.orderCount > 0
+            ? {
+                ...window,
+                orderCount: before.orderCount,
+                valuePesewas: before.valuePesewas,
+                avgPesewas: before.avgPesewas,
+              }
+            : null,
+      };
+      return report;
     },
-    async ownerGetInsights(venueId, range = '7d') {
+    async ownerGetInsights(venueId, range = '7d', window) {
       await gate();
       accessOf(world, tokens);
-      return insightsFor(world, venueId, range);
+      return insightsFor(world, venueId, range, now(), window);
     },
     async ownerListFeedback(venueId, query) {
       await gate();

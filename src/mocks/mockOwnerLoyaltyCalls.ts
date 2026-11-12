@@ -2,18 +2,28 @@ import { blankVenue, LOYALTY_PROBLEMS, toWire } from '../features/loyalty/facts'
 import type { ApiClient } from '@/lib/api/client';
 import { ApiError } from '@/lib/api/errors';
 import type { LoyaltyCard, LoyaltyProgram } from '@/lib/api/types';
-import { keepLoyalty, venueById } from './world';
+import { keepLoyalty, STAFF, venueById } from './world';
+import { accessOf } from './mockRules';
+import { analyticsOf, customerDetail, customersOf, memberFrom } from './loyaltyDesk';
+import { rewardMember, stampMember } from './loyaltyStamps';
 import type { MockContext } from './mockContext';
 
 /** Mock calls: the owner's loyalty programme, members, analytics and card scanning. */
 export function mockOwnerLoyaltyCalls(ctx: MockContext) {
-  const { world, now, random, gate, remember } = ctx;
+  const { world, tokens, now, random, gate, remember } = ctx;
+  const staffName = () => {
+    const phone = accessOf(world, tokens).phone;
+    return STAFF.find((person) => person.phone === phone)?.firstName ?? 'Staff';
+  };
   return {
     async ownerGetLoyalty(venueId) {
       await gate();
       const venue = venueById(world, venueId);
       const current = world.loyalty[venueId] ?? blankVenue(venueId, venue.currency);
-      return toWire(current, { kind: 'programme' }) as LoyaltyProgram;
+      return {
+        ...(toWire(current, { kind: 'programme' }) as LoyaltyProgram),
+        stampOnPaidOrder: !world.noAutoStamp.has(venueId),
+      };
     },
     async ownerSetLoyalty(venueId, body) {
       await gate();
@@ -24,7 +34,12 @@ export function mockOwnerLoyaltyCalls(ctx: MockContext) {
         { type: 'save_programme', input: body, venueCurrency: venue.currency, random },
         new Date(now()).toISOString(),
       );
-      return toWire(next, { kind: 'programme' }) as LoyaltyProgram;
+      if (body.stampOnPaidOrder === false) world.noAutoStamp.add(venueId);
+      if (body.stampOnPaidOrder === true) world.noAutoStamp.delete(venueId);
+      return {
+        ...(toWire(next, { kind: 'programme' }) as LoyaltyProgram),
+        stampOnPaidOrder: !world.noAutoStamp.has(venueId),
+      };
     },
     async ownerListLoyaltyMembers(venueId) {
       await gate();
@@ -49,111 +64,58 @@ export function mockOwnerLoyaltyCalls(ctx: MockContext) {
     },
     async ownerGetLoyaltyAnalytics(venueId, range = '30d') {
       await gate();
-      const scale = range === '7d' ? 1 : range === '90d' ? 6 : 3;
-      return {
-        range,
-        enrolledCount: 76 * scale,
-        stampsIssued: 312 * scale,
-        rewardsRedeemed: 28 * scale,
-        newEnrollments: 22 * scale,
-        series: [
-          { date: 'Mon', newEnrollments: 3, stampsIssued: 14, rewardsRedeemed: 1 },
-          { date: 'Tue', newEnrollments: 5, stampsIssued: 20, rewardsRedeemed: 2 },
-          { date: 'Wed', newEnrollments: 4, stampsIssued: 18, rewardsRedeemed: 1 },
-          { date: 'Thu', newEnrollments: 8, stampsIssued: 28, rewardsRedeemed: 3 },
-          { date: 'Fri', newEnrollments: 12, stampsIssued: 45, rewardsRedeemed: 5 },
-          { date: 'Sat', newEnrollments: 16, stampsIssued: 62, rewardsRedeemed: 8 },
-          { date: 'Sun', newEnrollments: 11, stampsIssued: 51, rewardsRedeemed: 6 },
-        ],
-      };
+      accessOf(world, tokens);
+      return analyticsOf(world, venueId, range, now());
     },
     async ownerListLoyaltyCustomers(venueId, query) {
       await gate();
-      let customers = [
-        {
-          id: 'cst_1',
-          name: 'Kofi Mensah',
-          phoneMasked: '024 *** 4567',
-          email: 'kofi@example.com',
-          stamps: 8,
-          rewardsAvailable: 1,
-          wantsOffers: true,
-          lastStampAt: new Date(now() - 3600_000 * 2).toISOString(),
-        },
-        {
-          id: 'cst_2',
-          name: 'Abena Osei',
-          phoneMasked: '020 *** 9821',
-          email: 'abena@example.com',
-          stamps: 4,
-          rewardsAvailable: 0,
-          wantsOffers: true,
-          lastStampAt: new Date(now() - 3600_000 * 26).toISOString(),
-        },
-        {
-          id: 'cst_3',
-          name: 'Kwame Asante',
-          phoneMasked: '055 *** 1122',
-          email: null,
-          stamps: 10,
-          rewardsAvailable: 2,
-          wantsOffers: false,
-          lastStampAt: new Date(now() - 3600_000 * 72).toISOString(),
-        },
-        {
-          id: 'cst_4',
-          name: 'Yaa Konadu',
-          phoneMasked: '024 *** 3344',
-          email: 'yaa@example.com',
-          stamps: 2,
-          rewardsAvailable: 0,
-          wantsOffers: true,
-          lastStampAt: new Date(now() - 3600_000 * 120).toISOString(),
-        },
-      ];
-      if (query?.wantsOffers) customers = customers.filter((c) => c.wantsOffers);
+      accessOf(world, tokens);
+      const all = customersOf(world, venueId, now());
+      let items = all;
+      if (query?.wantsOffers !== undefined)
+        items = items.filter((c) => c.wantsOffers === query.wantsOffers);
       if (query?.search) {
-        const q = query.search.toLowerCase();
-        customers = customers.filter(
+        const q = query.search.trim().toLowerCase();
+        // Name, or the last 4 digits of the phone; the full number is never sent.
+        items = items.filter(
           (c) =>
-            c.name.toLowerCase().includes(q) ||
-            c.phoneMasked.includes(q) ||
-            (c.email?.toLowerCase().includes(q) ?? false),
+            c.name.toLowerCase().includes(q) || (/^\d{1,4}$/.test(q) && c.phoneMasked.endsWith(q)),
         );
       }
-      return { items: customers, totalCount: customers.length };
+      const countsByTag: Record<string, number> = {};
+      for (const c of items)
+        for (const tag of c.tags ?? []) countsByTag[tag] = (countsByTag[tag] ?? 0) + 1;
+      if (query?.tag) items = items.filter((c) => c.tags?.includes(query.tag!));
+      return { items, totalCount: all.length, countsByTag };
+    },
+    async ownerGetLoyaltyCustomer(venueId, customerId) {
+      await gate();
+      accessOf(world, tokens);
+      return customerDetail(world, venueId, customerId, now());
+    },
+    async ownerStampLoyaltyCustomer(venueId, customerId, call) {
+      await gate();
+      const by = staffName();
+      return remember(call?.idempotencyKey, () =>
+        stampMember(world, venueId, memberFrom(world, venueId, customerId), by, now()),
+      );
+    },
+    async ownerListLoyaltyScans(venueId, since) {
+      await gate();
+      accessOf(world, tokens);
+      const from = since ? Date.parse(since) : -Infinity;
+      return {
+        items: world.scanLog
+          .filter((row) => row.venueId === venueId && Date.parse(row.at) >= from)
+          .map(({ venueId: _v, ...row }) => row),
+      };
     },
     async ownerScanLoyaltyCard(venueId, body) {
       await gate();
-      const venue = venueById(world, venueId);
-      const current = world.loyalty[venueId] ?? blankVenue(venueId, venue.currency);
-      const card = toWire(current, {
-        kind: 'member',
-        memberId: 'mem_sample',
-      }) as LoyaltyCard | null;
-      if (!card) throw new ApiError(404, 'card_not_found', 'No loyalty card found for that code');
-      if (body.action === 'stamp') {
-        return {
-          success: true,
-          card,
-          customerName: 'Kofi Mensah',
-          stamps: 8,
-          cooldownViolated: false,
-          cooldownRemainingSeconds: 0,
-          rewardUnlocked: false,
-          message: '+1 Stamp recorded successfully.',
-        };
-      }
-      return {
-        success: true,
-        card,
-        customerName: 'Kofi Mensah',
-        stamps: 0,
-        cooldownViolated: false,
-        cooldownRemainingSeconds: 0,
-        rewardUnlocked: true,
-        message: 'Reward Free Jollof redeemed successfully.',
-      };
+      const by = staffName();
+      const member = memberFrom(world, venueId, body.qrPayload);
+      if (body.action === 'stamp') return stampMember(world, venueId, member, by, now());
+      return rewardMember(world, venueId, member, by, now(), random);
     },
   } satisfies Partial<ApiClient>;
 }

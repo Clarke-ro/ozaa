@@ -78,10 +78,10 @@ export function httpOwnerOrderCalls({ client, headers, ok }: HttpContext) {
           headers: headers('access'),
         }),
       ),
-    ownerListWaiterCalls: (venueId) =>
+    ownerListWaiterCalls: (venueId, query) =>
       ok(
         client.GET('/owner/venues/{venueId}/waiter-calls', {
-          params: { path: { venueId } },
+          params: { path: { venueId }, query: query ?? {} },
           headers: headers('access'),
         }),
       ),

@@ -1,4 +1,5 @@
 import { orderTransition } from '../features/orders/orderMachine';
+import { applyCallUpdate, isInQueue } from '../features/waiter/callUpdate';
 import type { ApiClient } from '@/lib/api/client';
 import { ApiError } from '@/lib/api/errors';
 import { dashboardFor, floorFor, refundFor, transactionsFor } from './ownerDesk';
@@ -7,6 +8,13 @@ import { LIVE_PAYMENTS_ENABLED } from '@/lib/features';
 import { defaultPaymentSettings, findOrder, STAFF, venueById } from './world';
 import { accessOf, fresh, linkExtras, ownerOnly, staffRole } from './mockRules';
 import type { MockContext } from './mockContext';
+import type { StaffRole } from '@/lib/api/types';
+
+const handler = (staff: { phone: string; firstName: string; role: StaffRole }) => ({
+  staffId: `stf_${staff.phone.slice(-4)}`,
+  firstName: staff.firstName,
+  role: staff.role,
+});
 
 /** Mock calls: staff run service: orders, marking paid, payment settings, waiter calls, the floor. */
 export function mockOwnerOrderCalls(ctx: MockContext) {
@@ -39,11 +47,14 @@ export function mockOwnerOrderCalls(ctx: MockContext) {
         if (!menu) throw new ApiError(404, 'order_not_found', 'Menu not found');
         // Works while unpublished, so staff can try the menu before opening.
         const tableCode = body.tableCode ?? null;
-        return placeOrder(venue, menu, body, tableCode, true, (food) =>
+        const order = placeOrder(venue, menu, body, tableCode, true, (food) =>
           body.fulfilment
             ? linkExtras(venue, body.fulfilment, food, true)
             : { source: tableCode ? 'table' : 'pickup' },
         );
+        const live = world.orders.find((item) => item.order.id === order.id);
+        if (live) live.handledBy = handler(staff);
+        return order;
       });
     },
     async ownerSetOrderStatus(orderId, body) {
@@ -64,12 +75,20 @@ export function mockOwnerOrderCalls(ctx: MockContext) {
       const next = move && staff ? orderTransition(live.order.status, move, staff.role) : null;
       if (!next || next !== body.status)
         throw new ApiError(409, 'illegal_move', 'That status change is not allowed');
+      const at = new Date(now()).toISOString();
       live.manual = true;
+      // The person who serves a guest's own QR order is the one Sales credits.
+      if (!live.handledBy && next === 'served' && staff) live.handledBy = handler(staff);
       live.order = {
         ...live.order,
         status: next,
-        updatedAt: new Date(now()).toISOString(),
-        readyAt: next === 'ready' ? new Date(now()).toISOString() : live.order.readyAt,
+        updatedAt: at,
+        readyAt: next === 'ready' ? at : live.order.readyAt,
+        servedAt: next === 'served' ? at : (live.order.servedAt ?? null),
+        cancelReason:
+          next === 'cancelled'
+            ? body.cancelReason?.trim() || null
+            : (live.order.cancelReason ?? null),
       };
       return live.order;
     },
@@ -149,25 +168,30 @@ export function mockOwnerOrderCalls(ctx: MockContext) {
       };
       return { ok: true, checkedAt };
     },
-    async ownerListWaiterCalls(venueId) {
+    async ownerListWaiterCalls(venueId, query) {
       await gate();
-      return {
-        items: world.calls
-          .filter((call) => call.venueId === venueId)
-          .map(({ venueId: _id, ...call }) => call),
-      };
+      accessOf(world, tokens);
+      const open = query?.open ?? true;
+      const since = query?.since ? Date.parse(query.since) : -Infinity;
+      const items = world.calls
+        .filter((call) => call.venueId === venueId)
+        .filter((call) => (open ? isInQueue(call, now()) : Date.parse(call.createdAt) >= since))
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+        .map(({ venueId: _id, ...call }) => call);
+      return { items };
     },
     async ownerUpdateWaiterCall(id, body) {
       await gate();
-      const callRow = world.calls.find((item) => item.id === id);
-      if (!callRow) throw new ApiError(404, 'order_not_found', 'That call has finished');
+      const index = world.calls.findIndex((item) => item.id === id);
+      const callRow = world.calls[index];
+      if (!callRow) throw new ApiError(404, 'not_found', 'That call has finished');
       const staff = STAFF.find((person) => person.phone === accessOf(world, tokens).phone);
-      callRow.status = body.status;
-      if (body.status === 'acknowledged') {
-        callRow.staffFirstName = staff?.firstName ?? 'Kwesi';
-        callRow.acknowledgedAt = new Date(now()).toISOString();
-      }
-      return callRow;
+      if (!staff) throw new ApiError(403, 'forbidden', 'Sign in as staff');
+      const next = applyCallUpdate(callRow, body, staff.firstName, now());
+      if (!next) throw new ApiError(409, 'illegal_move', 'That call has already finished');
+      world.calls[index] = { ...next, venueId: callRow.venueId };
+      const { venueId: _id, ...saved } = world.calls[index];
+      return saved;
     },
     async ownerGetDashboard(venueId) {
       await gate();

@@ -1,7 +1,5 @@
-import { pesewas } from '@/lib/brand';
 import type {
   VenuePublic,
-  InsightsReport,
   Order,
   OwnerDashboard,
   VenueTransaction,
@@ -38,14 +36,26 @@ function asFloorOrder(order: Order): FloorOrder {
 
 export function floorFor(world: World, venueId: string) {
   const tables = world.tables[venueId] ?? [];
-  return {
-    items: deriveFloor({
-      tables,
-      orders: ordersOf(world, venueId).map(asFloorOrder),
-      calls: world.calls.filter((call) => call.venueId === venueId),
-      seatedCodes: world.seatedCodes[venueId] ?? [],
-    }),
-  };
+  const orders = ordersOf(world, venueId);
+  const calls = world.calls.filter((call) => call.venueId === venueId);
+  const items = deriveFloor({
+    tables,
+    orders: orders.map(asFloorOrder),
+    calls,
+    seatedCodes: world.seatedCodes[venueId] ?? [],
+  }).map((table) => {
+    // How long the table has been like this: since the call, or since the order last moved.
+    const call = calls.find((item) => item.id === table.waiterCallId);
+    const order = orders.find((item) => item.id === table.orderId);
+    const since =
+      table.status === 'needs_waiter'
+        ? (call?.createdAt ?? null)
+        : table.status === 'free'
+          ? null
+          : (order?.updatedAt ?? null);
+    return { ...table, since, waiterFirstName: call?.staffFirstName ?? null };
+  });
+  return { items };
 }
 
 /** Guest sessions started today (venue's zone). One scan or one opened link is one visit. */
@@ -60,6 +70,16 @@ function visitsToday(world: World, venue: VenuePublic, now: number): number {
       count += 1;
   }
   return count;
+}
+
+/** What was ordered (not cancelled) on the venue's calendar day that contains `at`. */
+function salesOnDay(orders: Order[], timeZone: string, at: number): number {
+  const day = calendarDay(new Date(at).toISOString(), timeZone);
+  return orders
+    .filter(
+      (order) => order.status !== 'cancelled' && calendarDay(order.createdAt, timeZone) === day,
+    )
+    .reduce((sum, order) => sum + order.totalPesewas, 0);
 }
 
 export function dashboardFor(world: World, venueId: string, now: number): OwnerDashboard {
@@ -81,7 +101,7 @@ export function dashboardFor(world: World, venueId: string, now: number): OwnerD
     ratings,
     nowIso: new Date(now).toISOString(),
     timeZone: venue.hours.timezone,
-    yesterdayPesewas: world.yesterdayPesewas[venueId] ?? 0,
+    yesterdayPesewas: salesOnDay(orders, venue.hours.timezone, now - 86_400_000),
     soldOut,
   });
   const liveOrders = orders.filter(
@@ -101,7 +121,7 @@ export function dashboardFor(world: World, venueId: string, now: number): OwnerD
     alerts: summary.alerts,
     ordersToday: summary.ordersToday,
     pendingOrders: summary.pendingOrders,
-    visitorsToday: (world.visitorBase[venueId] ?? 0) + visitsToday(world, venue, now),
+    visitorsToday: visitsToday(world, venue, now),
   };
 }
 
@@ -153,44 +173,4 @@ export function replyFor(world: World, reviewId: string, textBody: string): Writ
   review.reply = textBody;
   const { venueId: _venue, ...saved } = review;
   return saved;
-}
-
-export function insightsFor(
-  world: World,
-  venueId: string,
-  range: InsightsReport['range'],
-): InsightsReport {
-  const venue = venueById(world, venueId);
-  const scale = range === 'today' ? 1 : range === '30d' ? 4 : 2;
-  const items = world.menus[venue.slug]?.items ?? [];
-  const top = items.slice(0, 3).map((item, index) => ({
-    name: text(item.name),
-    count: (12 - index * 3) * scale,
-    pesewas: pesewas(item.pricePesewas * (8 - index) * scale),
-  }));
-  const sales = top.reduce((sum, item) => sum + item.pesewas, 0);
-  const labels =
-    range === 'today'
-      ? ['9', '12', '15', '18', '21']
-      : range === '30d'
-        ? ['W1', 'W2', 'W3', 'W4']
-        : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  return {
-    range,
-    currency: venue.currency,
-    salesPesewas: pesewas(sales),
-    sample: true,
-    series: labels.map((label, index) => ({
-      label,
-      pesewas: pesewas(Math.round(sales / labels.length) + index * 1000),
-    })),
-    topItems: top,
-    peakHours: [
-      { hour: 12, orders: 6 * scale },
-      { hour: 13, orders: 9 * scale },
-      { hour: 19, orders: 11 * scale },
-      { hour: 20, orders: 7 * scale },
-    ],
-    repeatGuests: { count: 14 * scale, sharePercent: range === 'today' ? 18 : 34 },
-  };
 }

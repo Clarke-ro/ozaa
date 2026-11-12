@@ -155,12 +155,12 @@ function asCard(input: unknown): {
   };
 }
 
-function maskPhone(phone: GhanaPhone): string {
+export function maskPhone(phone: GhanaPhone): string {
   const national = phone.slice(4);
   return `0${national.slice(0, 2)} *** ${national.slice(-4)}`;
 }
 
-function cardNumber(memberId: string): string {
+export function cardNumber(memberId: string): string {
   let hash = 0x811c9dc5;
   for (const char of memberId) {
     hash ^= char.charCodeAt(0);

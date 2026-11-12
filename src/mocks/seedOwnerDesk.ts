@@ -5,8 +5,6 @@ export function seedOwnerDesk(world: World, now: number): void {
   const mama = world.venues['mamas-kitchen'];
   if (!mama) return;
   world.seatedCodes[mama.id] = ['7'];
-  world.yesterdayPesewas[mama.id] = 221429;
-  world.visitorBase[mama.id] = 37;
 
   // Seed feedback
   world.feedback.push(

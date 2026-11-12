@@ -1,11 +1,12 @@
 import type { ApiClient } from '@/lib/api/client';
 import { ApiError } from '@/lib/api/errors';
 import { nextId } from './world';
+import { accessOf, ownerOnly } from './mockRules';
 import type { MockContext } from './mockContext';
 
 /** Mock calls: the business behind the venues: custom links, locations and scanner devices. */
 export function mockOwnerBusinessCalls(ctx: MockContext) {
-  const { world, now, gate } = ctx;
+  const { world, tokens, now, gate } = ctx;
   return {
     async ownerListCustomLinks(venueId) {
       await gate();
@@ -53,11 +54,27 @@ export function mockOwnerBusinessCalls(ctx: MockContext) {
     },
     async ownerGetBusiness() {
       await gate();
-      return world.business;
+      accessOf(world, tokens);
+      // Each location runs one venue: its logo, tables and staff come from that venue.
+      const locations = world.business.locations.map((loc) => {
+        const venue = Object.values(world.venues).find((v) => v.id === loc.id);
+        return {
+          ...loc,
+          venueId: loc.venueId ?? loc.id,
+          logo: venue?.logo ?? null,
+          tableCount: (world.tables[loc.id] ?? []).length,
+          staffCount: world.staff.filter((p) => p.venueId === loc.id && p.status === 'active')
+            .length,
+        };
+      });
+      return { business: world.business.business, locations };
     },
     async ownerUpdateBusiness(body) {
       await gate();
-      world.business.business.name = body.name;
+      ownerOnly(world, tokens);
+      if (body.name !== undefined && body.name.trim().length < 2)
+        throw new ApiError(422, 'name_too_short', 'Give the business a name');
+      Object.assign(world.business.business, body);
       return world.business.business;
     },
     async ownerCreateLocation(body) {
@@ -81,6 +98,7 @@ export function mockOwnerBusinessCalls(ctx: MockContext) {
     },
     async ownerUpdateLocation(locationId, body) {
       await gate();
+      ownerOnly(world, tokens);
       const loc = world.business.locations.find((l) => l.id === locationId);
       if (!loc) throw new ApiError(404, 'not_found', 'Location not found');
       if (body.name !== undefined) loc.name = body.name;
@@ -91,6 +109,16 @@ export function mockOwnerBusinessCalls(ctx: MockContext) {
       if (body.city !== undefined) loc.city = body.city;
       if (body.postcode !== undefined) loc.postcode = body.postcode;
       if (body.country !== undefined) loc.country = body.country;
+      if (body.digitalAddress !== undefined) {
+        if (body.digitalAddress && !/^[A-Z]{2}-\d{3,4}-\d{4}$/.test(body.digitalAddress))
+          throw new ApiError(
+            422,
+            'digital_address_not_valid',
+            'Use the GhanaPostGPS form, like GA-123-4567',
+          );
+        loc.digitalAddress = body.digitalAddress;
+      }
+      if (body.geo !== undefined) loc.geo = body.geo;
       return loc;
     },
     async ownerListScannerDevices(venueId) {

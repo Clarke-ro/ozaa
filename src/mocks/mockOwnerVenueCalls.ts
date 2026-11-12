@@ -19,13 +19,16 @@ export function mockOwnerVenueCalls(ctx: MockContext) {
         ...venue,
         wifi: world.wifi[venue.slug],
         noticeSettings: world.notices[venue.slug] ?? { banner: null, popup: null },
+        tax: world.tax[venueId] ?? { enabled: false, pricesIncludeTax: true, tin: null },
       };
     },
     async ownerUpdateVenue(venueId, body) {
       await gate();
       accessOf(world, tokens);
       const venue = venueById(world, venueId);
-      const { bannerMediaId, logoMediaId, noticeSettings, ...fields } = body;
+      // Tax stays off the public venue: guests never see the TIN.
+      const { bannerMediaId, logoMediaId, noticeSettings, tax, ...fields } = body;
+      if (tax) world.tax[venueId] = tax;
       const banner = mockUploadedImage(bannerMediaId) ?? venue.banner;
       const logo = logoMediaId === null ? null : (mockUploadedImage(logoMediaId) ?? venue.logo);
       const next = {
@@ -47,6 +50,7 @@ export function mockOwnerVenueCalls(ctx: MockContext) {
         ...next,
         wifi: world.wifi[venue.slug],
         noticeSettings: world.notices[venue.slug] ?? { banner: null, popup: null },
+        tax: world.tax[venueId] ?? { enabled: false, pricesIncludeTax: true, tin: null },
       };
     },
     async ownerSetTheme(venueId, body) {

@@ -12,6 +12,8 @@ import { mockOwnerOrderCalls } from './mockOwnerOrderCalls';
 import { mockOwnerLoyaltyCalls } from './mockOwnerLoyaltyCalls';
 import { mockOwnerDeskCalls } from './mockOwnerDeskCalls';
 import { mockOwnerBusinessCalls } from './mockOwnerBusinessCalls';
+import { mockOwnerPromoCalls } from './mockOwnerPromoCalls';
+import { mockOwnerNotificationCalls } from './mockOwnerNotificationCalls';
 
 export type { MockOptions } from './mockContext';
 
@@ -73,6 +75,8 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
     ...mockOwnerLoyaltyCalls(ctx),
     ...mockOwnerDeskCalls(ctx),
     ...mockOwnerBusinessCalls(ctx),
+    ...mockOwnerPromoCalls(ctx),
+    ...mockOwnerNotificationCalls(ctx),
   };
 }
 
