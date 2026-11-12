@@ -33,7 +33,6 @@ export { ComingSoonScreen } from './screens/ComingSoonScreen';
 export { BillingScreen } from './screens/billing/BillingScreen';
 export { CustomersScreen } from './screens/CustomersScreen';
 export { CustomerDetailScreen } from './screens/customers/CustomerDetailScreen';
-export { CategoriesScreen } from './screens/menu/CategoriesScreen';
 export { NoticeScreen } from './screens/notice/NoticeScreen';
 export { OnlineOrderingScreen } from './screens/ordering/OnlineOrderingScreen';
 export { SalesScreen } from './screens/sales/SalesScreen';

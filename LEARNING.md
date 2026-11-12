@@ -4,6 +4,31 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-12 · Menu and links tidy-up (BUILD.md box 4c.4)
+
+**What we built**
+
+Sections are edited only on Menu now (the old Sections page sends you there). A dish has a Popular switch. Custom links have up and down arrows to set their order on the guest page.
+
+**How it works**
+
+Moving a link renumbers every link in its group 0, 1, 2… and saves only the ones that changed, so the order can't get stuck with two links at the same number.
+
+**Files to look at**
+
+- `src/features/owner/screens/links/moveLink.ts` and its test.
+- `src/features/owner/screens/menu/DishEditor.tsx`: the Popular switch.
+
+**New idea: a redirect**
+
+`app/owner/categories.tsx` is a route that only says "go to /owner/menu". Old bookmarks and links keep working while the page itself is gone.
+
+**Try it yourself**
+
+Give two links the same `sortOrder` in the mock, open Custom links and move one. Watch both get clean numbers.
+
+---
+
 ## 2026-11-12 · Promos (part of BUILD.md box 4c.4)
 
 **What we built**
