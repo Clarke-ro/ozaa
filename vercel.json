@@ -1,5 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "git": { "deploymentEnabled": { "main": true, "**": false } },
+  "ignoreCommand": "bash scripts/vercel-skip-app.sh",
   "buildCommand": "npx expo export -p web",
   "outputDirectory": "dist",
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
