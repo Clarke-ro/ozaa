@@ -78,8 +78,6 @@ export const OWNER_NAV: readonly OwnerNavItem[] = [
     group: 'main',
   },
   { id: 'menu', href: '/owner/menu', roles: DESK, group: 'main' },
-  // Sections are edited on Menu; the old page still opens from links.
-  { id: 'categories', href: '/owner/categories', roles: DESK, group: 'main', unlisted: true },
   { id: 'tables', href: '/owner/tables', roles: DESK, group: 'main' },
   { id: 'links', href: '/owner/links', roles: DESK, group: 'main' },
   { id: 'notice', href: '/owner/notice', roles: DESK, group: 'main' },
@@ -207,6 +205,8 @@ const OPEN_TO_ALL = ['/owner/more', '/owner/help'];
 const MOVED: Readonly<Record<string, string>> = {
   // The payout page went with the split model; payments are set up in Integrations (2026-11-08).
   '/owner/payments': '/owner/integrations',
+  // Sections are edited on the Menu page (canvas redesign).
+  '/owner/categories': '/owner/menu',
 };
 
 export function canOpen(role: StaffRole, pathname: string): boolean {
