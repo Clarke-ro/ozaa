@@ -1587,7 +1587,7 @@ In the contract, the secret key is marked `writeOnly`. Apps can send it, but no 
 
 Connect with `pk_test_` and `sk_test_` keys from your own Paystack test account, then try a `pk_live_` key and see why it's refused.
 
-## Owner app design pass: one card look, nothing cut off (2026-11-12)
+## 2026-11-12 · Owner app design pass: one card look, nothing cut off
 
 **What we built**
 
