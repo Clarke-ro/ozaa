@@ -30,6 +30,8 @@ const config: ExpoConfig = {
     bundler: 'metro',
     // Guest pages are white, so the phone's browser bar is too (matches public/manifest.json).
     themeColor: WHITE,
+    // Search engines and link previews show this under the title (Clarke, 2026-11-11).
+    description: 'Order and pay from your table.',
   },
   plugins: [
     'expo-router',
