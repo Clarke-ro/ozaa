@@ -30,7 +30,8 @@ src/mocks/mockClient.ts    createMockClient({ latencyMs, failRate, now }): joins
 src/mocks/mockContext.ts   shared state: the world, tokens, clock, gate(), placeOrder(), remember()
 src/mocks/mock*Calls.ts    the calls by area (auth, guest, owner venue, orders, loyalty, desk, business)
 src/mocks/mockRules.ts     small pure helpers; mockSettle.ts moves a payment along
-src/mocks/db.ts            in-memory tables seeded from fixtures (deep-cloned so tests are isolated)
+src/mocks/world.ts         createWorld(): in-memory tables seeded from fixtures (deep-cloned so tests are isolated)
+src/mocks/world*.ts        its types, lookups (venueBySlug, findOrder...) and sample data; seedOwnerDesk.ts
 src/mocks/media.ts         maps https://mock.cravins.app/media/... to bundled files
 src/mocks/fixtures/*.json  copied from api/fixtures by scripts/copy-fixtures.mjs (don't edit the copies)
 ```
