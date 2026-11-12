@@ -2148,5 +2148,74 @@
       "bank": "Add the account name and number, or switch bank transfer off.",
       "momo": "Pick the network and type the MoMo number, or switch MoMo off."
     }
+  },
+  "ownerPromos": {
+    "lead": "Discounts and codes. They come off the bill before the guest pays.",
+    "new": "New promo",
+    "edit": "Edit promo",
+    "save": "Save promo",
+    "delete": "Delete promo",
+    "name": "Name",
+    "kind": "Type",
+    "kinds": {
+      "percent_off": "% off",
+      "amount_off": "Amount off",
+      "free_item": "Free dish"
+    },
+    "percent": "Percent off",
+    "amount": "Amount off (GH₵)",
+    "freeItem": "Free dish",
+    "channel": "Where it works",
+    "channels": {
+      "all": "Everywhere",
+      "table": "At the table",
+      "online": "Menu link"
+    },
+    "days": "Days",
+    "dayNames": {
+      "0": "Mon",
+      "1": "Tue",
+      "2": "Wed",
+      "3": "Thu",
+      "4": "Fri",
+      "5": "Sat",
+      "6": "Sun"
+    },
+    "from": "From",
+    "to": "To",
+    "minSpend": "Minimum spend (GH₵)",
+    "code": "Code",
+    "codeHint": "Leave empty to apply on its own.",
+    "on": "On",
+    "everyDay": "Every day",
+    "percentOff": "{{percent}}% off",
+    "amountOff": "{{amount}} off",
+    "freeItemShort": "A free dish",
+    "over": "over {{amount}}",
+    "used_one": "Used once",
+    "used_other": "Used {{count}} times",
+    "states": {
+      "all": "All",
+      "running": "Running",
+      "scheduled": "Scheduled",
+      "ended": "Ended",
+      "off": "Off"
+    },
+    "filter": "Show",
+    "empty": "No promos yet",
+    "emptyBody": "Add a discount or a code. The best one comes off each bill on its own.",
+    "editA11y": "Edit {{name}}",
+    "onA11y": "{{name}} on",
+    "note": "Promos never add up: the server takes off the single best one, before tax and delivery.",
+    "errors": {
+      "name": "Give it a name",
+      "percent": "Use a number from 1 to 100",
+      "amount": "Enter an amount, like 15",
+      "freeItemId": "Pick the free dish",
+      "code": "3 to 20 letters or numbers",
+      "startTime": "Use times like 16:00 for both",
+      "minSpend": "Enter an amount, like 100",
+      "codeTaken": "Another promo already uses this code"
+    }
   }
 }
