@@ -37,8 +37,7 @@ export function CallsScreen() {
   const all = calls.data?.items ?? [];
   const board = callBoard(all);
   const busyId = update.isPending ? (update.variables?.id ?? null) : null;
-  const answer = (id: string, status: 'acknowledged' | 'resolved') =>
-    update.mutate({ id, status });
+  const answer = (id: string, status: 'acknowledged' | 'resolved') => update.mutate({ id, status });
 
   const column = (id: CallColumn, showTitle: boolean) => (
     <CallColumnView

@@ -4,6 +4,37 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-12 · Run the room on one feed (BUILD.md box 4c.3)
+
+**What we built**
+
+Notifications, "Needs you" on Today, the sidebar count and the phone bell now read one list from the server, so they always agree. Each waiter call has its own page with the guest's message, quick replies and a 1-minute snooze. Orders open on Today, and Floor shows how long each table has waited.
+
+**How it works**
+
+```
+server feed ──► Notifications (filters, unread dots, mark all as read)
+            ├─► Today "Needs you" (only items still open)
+            └─► sidebar Notifications count and phone bell (unread)
+reply on a call ──► call resolved ──► calls, floor, Today and the feed refresh together
+```
+
+**Files to look at**
+
+- `src/features/owner/data/useOwnerFeed.ts`: the feed, "mark read" and where each item opens.
+- `src/features/owner/screens/calls/CallDetailScreen.tsx`: one call.
+- `src/features/owner/screens/calls/quickReplies.ts`: which replies a call offers.
+
+**New idea: invalidating a cache**
+
+The app keeps answers from the server in a cache so screens load fast. After a change, we "invalidate" the keys of everything that change touched. Every screen showing those keys fetches again, so the badge and the floor tile move without a refresh.
+
+**Try it yourself**
+
+In `quickReplies.ts`, add `'Back in 5 min'` for every reason, then open a call and watch it appear.
+
+---
+
 ## 2026-11-12 · The new sidebar (BUILD.md box 4c.2)
 
 **What we built**

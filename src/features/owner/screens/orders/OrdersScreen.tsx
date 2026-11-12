@@ -43,7 +43,7 @@ export function OrdersScreen() {
   const role = useOwnerSession((state) => state.role) ?? 'waiter';
   // Null until staff pick a stage; until then show the first stage that has tickets.
   const [picked, setPicked] = useState<OrderView | null>(null);
-  const [range, setRange] = useState<OrderRange>('all');
+  const [range, setRange] = useState<OrderRange>('today');
   const [creating, setCreating] = useState(false);
   const [paying, setPaying] = useState<Order | null>(null);
   const [now, setNow] = useState(() => Date.now());

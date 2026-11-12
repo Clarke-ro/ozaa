@@ -11,7 +11,7 @@ export type FeedSources = {
     Order,
     'id' | 'number' | 'tableCode' | 'status' | 'paymentStatus' | 'createdAt' | 'source'
   >[];
-  calls: Pick<WaiterCall, 'id' | 'tableCode' | 'reason' | 'status' | 'createdAt'>[];
+  calls: Pick<WaiterCall, 'id' | 'tableCode' | 'reason' | 'status' | 'createdAt' | 'note'>[];
   feedback: Pick<
     FeedbackItem,
     'id' | 'sentiment' | 'text' | 'archived' | 'visibleAfter' | 'createdAt'
@@ -57,7 +57,8 @@ export function notificationFeed(
       title: bill
         ? `Table ${call.tableCode} wants the bill`
         : `Table ${call.tableCode} needs a waiter`,
-      detail: bill ? null : call.reason.replace('_', ' '),
+      // The guest's own words, when they wrote any. The reason is already in the title's wording.
+      detail: call.note ? short(call.note) : null,
       createdAt: call.createdAt,
       needsAction: call.status !== 'resolved',
       target: { type: 'call', id: call.id },

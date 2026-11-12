@@ -4,10 +4,11 @@ import { useOwnerSession } from '@/features/session';
 import { ownerKeys } from '../data/keys';
 import { navFor, type OwnerNavId } from './nav';
 import { POLL_MS } from '@/lib/polling';
+import { useOwnerFeed } from '../data/useOwnerFeed';
 
 /**
- * Small numbers next to Orders and Calls in the sidebar and tab bar: orders waiting for the
- * kitchen and open waiter calls. Read from the dashboard, so only people who may see it get counts.
+ * Small numbers in the sidebar and tab bar: orders waiting for the kitchen, open waiter calls
+ * (from the dashboard, the same figures Today shows) and this person's unread notifications.
  */
 export function useNavCounts(): Partial<Record<OwnerNavId, number>> {
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
@@ -19,6 +20,8 @@ export function useNavCounts(): Partial<Record<OwnerNavId, number>> {
     enabled: Boolean(venueId) && allowed,
     refetchInterval: POLL_MS.owner,
   });
-  if (!allowed || !desk.data) return {};
-  return { orders: desk.data.pendingOrders, calls: desk.data.openCalls };
+  const feed = useOwnerFeed();
+  const unread = feed.data?.unreadCount;
+  if (!allowed || !desk.data) return unread ? { notifications: unread } : {};
+  return { orders: desk.data.pendingOrders, calls: desk.data.openCalls, notifications: unread };
 }
