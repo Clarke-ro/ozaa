@@ -1,10 +1,9 @@
 import { useEffect } from 'react';
 import { Redirect, Stack, usePathname } from 'expo-router';
 import { useColorScheme } from 'react-native';
-import { useOwnerPrefs } from '@/features/owner/data/ownerPrefs';
 import { useQueryClient } from '@tanstack/react-query';
 import { useOwnerSession } from '@/features/session';
-import { OwnerChrome } from '@/features/owner';
+import { OwnerChrome, useOwnerPrefs } from '@/features/owner';
 import { isOwnerQuery } from '@/lib/queryPersist';
 import { cravinsOwnerDarkTheme, cravinsOwnerTheme, ThemeProvider } from '@/ui/theme';
 
