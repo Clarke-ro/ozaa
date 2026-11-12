@@ -24,7 +24,8 @@ The app talks to one interface, `ApiClient`. In Phases 0–4 that interface is b
 src/lib/api/schema.ts      generated: npx openapi-typescript api/openapi.yaml -o src/lib/api/schema.ts
 src/lib/api/client.ts      interface ApiClient { getVenue(slug): Promise<VenuePublic>; ... }  one method per operationId
 src/lib/api/errors.ts      ApiError (from Problem Details), OfflineError, plus a toMessageKey(error) for i18n
-src/lib/api/http.ts        createHttpClient({ baseUrl, getToken }) using openapi-fetch
+src/lib/api/http.ts        createHttpClient(baseUrl, tokens): joins the http*Calls.ts area files
+src/lib/api/httpContext.ts the openapi-fetch client, auth headers, ok() and problem()
 src/lib/api/index.ts       export const api = env.API_MODE === 'mock' ? createMockClient() : createHttpClient(...)
 src/mocks/mockClient.ts    createMockClient({ latencyMs, failRate, now }): joins the area files below
 src/mocks/mockContext.ts   shared state: the world, tokens, clock, gate(), placeOrder(), remember()
