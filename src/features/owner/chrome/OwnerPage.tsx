@@ -10,7 +10,7 @@ import { PhoneBar } from './PhoneBar';
 
 export { DeskWait, SkeletonBlock } from './DeskWait';
 
-/** Page margin: 16 on phones, 24 on tablets, 32 on desktops. */
+/** Page margin: 16 on phones, 24 on tablets, 40 on desktops. */
 export function useGutter() {
   return useOwnerLayout().gutter;
 }
@@ -20,14 +20,14 @@ export function useGutter() {
  * line under it, the screen's one action and the bell on the right), then the content, in one
  * centred column on the page colour. Wide screens have no bar above it; the sidebar does that
  * job. Phones get a slim bar with the Cravins mark (or Back on detail screens) and the bell.
- * `width="form"` keeps settings and Today at a readable width; `wide` is for long lists.
+ * Every page fills the window between equal side margins; `width` is kept so callers still
+ * type-check, and is no longer used to narrow the page.
  */
 export function OwnerPage({
   title,
   subtitle,
   action,
   footer,
-  width = 'form',
   bell,
   back,
   children,
@@ -49,9 +49,9 @@ export function OwnerPage({
   const { wide, gutter } = useOwnerLayout();
   const role = useOwnerSession((state) => state.role) ?? 'waiter';
   const mayNotify = navFor(role).some((item) => item.id === 'notifications');
-  // The header always spans the full page, so the title and the bell sit in the same place on
-  // every screen. Only the content under it narrows to a readable width on form pages.
-  const frame = { maxWidth: tokens.owner.page.wide + gutter * 2, paddingHorizontal: gutter };
+  // Content fills the window with the same margin on both sides, never a centred column, so
+  // every page lines up with the sidebar the same way (Clarke, 2026-11-12).
+  const frame = { paddingHorizontal: gutter };
 
   return (
     <KeyboardAvoidingView
@@ -71,7 +71,7 @@ export function OwnerPage({
           bell={wide && mayNotify}
           back={back}
         />
-        <View style={[styles.body, { maxWidth: tokens.owner.page[width] }]}>{children}</View>
+        <View style={styles.body}>{children}</View>
       </ScrollView>
       {footer}
     </KeyboardAvoidingView>
@@ -85,7 +85,6 @@ const styles = StyleSheet.create({
     paddingBottom: tokens.space[16] + tokens.space[8],
     gap: tokens.space[5],
     width: '100%',
-    alignSelf: 'center',
   },
   pageWide: { paddingTop: tokens.space[8], gap: tokens.space[6] },
   body: { gap: tokens.space[4], width: '100%' },
