@@ -1,6 +1,8 @@
 import type { TokenSource } from '@/lib/api/client';
 import { ApiError, OfflineError } from '@/lib/api/errors';
-import type { Menu, Order, OrderLineInput, VenuePublic } from '@/lib/api/types';
+import { bestPromo } from '@/lib/promos';
+import { taxLines } from '@/lib/tax';
+import type { AppliedPromo, Menu, Order, OrderLineInput, VenuePublic } from '@/lib/api/types';
 import { checkLine, takeStock, unitPrice } from '@/lib/dishRules';
 import { createWorld, nextId } from './world';
 import type { OrderExtras } from './mockRules';
@@ -43,7 +45,7 @@ export function createMockContext(options: MockOptions = {}) {
   function placeOrder(
     venue: VenuePublic,
     menu: Menu,
-    body: { lines: OrderLineInput[] },
+    body: { lines: OrderLineInput[]; promoCode?: string },
     tableCode: string | null,
     manual: boolean,
     /** Runs once the food total is known, before any stock is taken; throws to refuse. */
@@ -88,6 +90,28 @@ export function createMockContext(options: MockOptions = {}) {
     const subtotal = lines.reduce((sum, line) => sum + line.totalPesewas, 0);
     const extra = extras(subtotal);
     const deliveryFee = extra.deliveryFeePesewas ?? 0;
+    // Promos: the server picks the one that saves most, before tax and delivery.
+    const promos = world.promos.filter((promo) => promo.venueId === venue.id);
+    let applied: AppliedPromo | null = null;
+    try {
+      applied = bestPromo(
+        promos,
+        {
+          lines: lines.map((line) => ({
+            ...line,
+            categoryId: menu.items.find((item) => item.id === line.menuItemId)?.categoryId ?? null,
+          })),
+          channel: extra.source === 'table' ? 'table' : 'online',
+          code: body.promoCode ?? null,
+        },
+        now(),
+        venue.hours.timezone,
+      );
+    } catch {
+      throw new ApiError(422, 'promo_not_valid', "That code doesn't work right now");
+    }
+    const afterPromo = subtotal - (applied?.pesewas ?? 0);
+    const tax = taxLines(afterPromo, world.tax[venue.id]);
     // Stock: two lines of the same dish count together, and nothing is taken until every line is fine.
     const wanted = new Map<string, number>();
     for (const line of body.lines) {
@@ -113,8 +137,9 @@ export function createMockContext(options: MockOptions = {}) {
       paymentStatus: 'unpaid',
       lines,
       subtotalPesewas: subtotal,
-      taxes: [],
-      totalPesewas: subtotal + deliveryFee,
+      taxes: tax.lines,
+      totalPesewas: afterPromo + tax.addedPesewas + deliveryFee,
+      promoDiscounts: applied ? [applied] : [],
       paidPesewas: 0,
       source: extra.source,
       contact: extra.contact ?? null,
@@ -126,6 +151,13 @@ export function createMockContext(options: MockOptions = {}) {
       readyAt: null,
     };
     world.orders.push({ order, receivedAt: now(), manual });
+    if (applied) {
+      const used = world.promos.find((promo) => promo.id === applied?.promoId);
+      if (used) {
+        used.usageCount += 1;
+        used.discountGivenPesewas = (used.discountGivenPesewas ?? 0) + applied.pesewas;
+      }
+    }
     return order;
   }
 

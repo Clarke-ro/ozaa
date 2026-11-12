@@ -4,6 +4,40 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-12 · One set of records behind every owner screen (BUILD.md box 4c.1)
+
+**What we built**
+
+The contract and the mock now hold everything the new owner screens need: call replies and snooze, promos, notifications, customer tags, Sales comparisons, the Insights funnel, business details and your profile. No screen has to make up a number.
+
+**How it works**
+
+```
+30 days of paid orders ─┬─► Sales (vs the week before, by hour, by staff)
+guest visits ───────────┼─► Insights funnel: scanned → opened menu → ordered
+members' stamps ────────┼─► Customers and Loyalty (same member count)
+calls, orders, notes ───┴─► Notifications, badges, Floor, Calls
+```
+
+Before, Insights and Customers returned fixed sample numbers, so Today could say 37 visitors while Insights said something else. Now one seed (`seedHistory.ts`, `seedMembers.ts`) builds the records and every figure is worked out from them, the same way the real server will.
+
+**Files to look at**
+
+- `src/lib/promos.ts`: which promo applies to a bill. The biggest single one wins.
+- `src/lib/insights.ts` and `src/lib/sales.ts`: figures from orders and visits.
+- `src/lib/notificationFeed.ts`: one feed for Notifications and the badges.
+- `src/features/waiter/callUpdate.ts`: on my way, reply (which finishes the call) and snooze.
+
+**New idea: one source of truth**
+
+If two screens each keep their own copy of a number, they drift apart. Here every screen asks for the same records and does its own sums, so they can't disagree.
+
+**Try it yourself**
+
+In `src/lib/promos.test.ts`, change the happy-hour window to `18:00`–`20:00` and run `npx jest src/lib/promos.test.ts`. Watch which test fails, and why.
+
+---
+
 ## 2026-11-12 · Splitting the real-server client
 
 **What we changed**

@@ -81,10 +81,10 @@ export function httpOwnerMoreCalls({ client, headers, ok }: HttpContext) {
           headers: headers('access'),
         }),
       ),
-    ownerGetInsights: (venueId, range) =>
+    ownerGetInsights: (venueId, range, window) =>
       ok(
         client.GET('/owner/venues/{venueId}/insights', {
-          params: { path: { venueId }, query: range ? { range } : {} },
+          params: { path: { venueId }, query: { ...(range ? { range } : {}), ...(window ?? {}) } },
           headers: headers('access'),
         }),
       ),

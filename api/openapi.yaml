@@ -46,6 +46,9 @@ tags:
   - name: owner-links
   - name: owner-business
   - name: owner-devices
+  - name: owner-promos
+  - name: owner-notifications
+  - name: owner-profile
   - name: webhooks
 security: []
 paths:
@@ -1133,6 +1136,10 @@ paths:
         - in: query
           name: open
           schema: { type: boolean, default: true }
+        - in: query
+          name: since
+          description: With open=false, only calls made at or after this moment (for example since midnight in the venue's time zone). Newest first.
+          schema: { type: string, format: date-time }
       responses:
         '200':
           description: OK
@@ -1152,9 +1159,20 @@ paths:
           application/json:
             schema:
               type: object
-              required: [status]
+              minProperties: 1
+              description: "Send one of: a status, a reply, or a snooze. A reply also resolves the call. A snooze leaves the status alone."
               properties:
-                status: { type: string, enum: [acknowledged, resolved] }
+                status: { type: string, enum: [acknowledged, resolved], description: "acknowledged is \"On my way\": the guest sees the staff member's first name." }
+                reply:
+                  type: string
+                  minLength: 1
+                  maxLength: 80
+                  description: A short message the guest sees on their phone, such as "Coming in 2 min". Resolves the call.
+                snoozeMinutes:
+                  type: integer
+                  minimum: 1
+                  maximum: 10
+                  description: Hide the call from the queue for this long, then bring it back. The guest still sees it as waiting.
       responses:
         '200':
           description: Saved. `acknowledged` shows the staff member's first name to the guest.
@@ -1353,10 +1371,18 @@ paths:
         - { $ref: '#/components/parameters/VenueId' }
         - in: query
           name: range
-          schema: { type: string, enum: [today, 7d, 30d, 90d], default: 7d }
+          schema: { type: string, enum: [today, 7d, 30d, 90d, custom], default: 7d }
+        - in: query
+          name: since
+          description: Required with range custom.
+          schema: { type: string, format: date-time }
+        - in: query
+          name: until
+          description: Required with range custom.
+          schema: { type: string, format: date-time }
       responses:
         '200':
-          description: Sample figures until the real ledger exists. The response says sample true.
+          description: "Worked out from the venue's real visits, orders and feedback. sample is only true for a demo venue."
           content:
             application/json:
               schema: { $ref: '#/components/schemas/InsightsReport' }
@@ -1579,9 +1605,12 @@ paths:
         - in: query
           name: wantsOffers
           schema: { type: boolean }
+        - in: query
+          name: tag
+          schema: { $ref: '#/components/schemas/CustomerTag' }
       responses:
         '200':
-          description: Enrolled loyalty customers.
+          description: "Enrolled loyalty customers, most recent visit first. `search` matches the name or the last 4 digits of the phone. totalCount is every member, before filters; countsByTag is per tag, before the tag filter."
           content:
             application/json:
               schema:
@@ -1592,6 +1621,9 @@ paths:
                     type: array
                     items: { $ref: '#/components/schemas/LoyaltyCustomerSummary' }
                   totalCount: { type: integer }
+                  countsByTag:
+                    type: object
+                    additionalProperties: { type: integer, minimum: 0 }
 
   /owner/venues/{venueId}/loyalty/scan:
     post:
@@ -1640,17 +1672,13 @@ paths:
     patch:
       tags: [owner-business]
       operationId: ownerUpdateBusiness
-      summary: Update business name.
+      summary: Update business details. Owners only.
       security: [{ ownerAuth: [] }]
       requestBody:
         required: true
         content:
           application/json:
-            schema:
-              type: object
-              required: [name]
-              properties:
-                name: { type: string, minLength: 2, maxLength: 60 }
+            schema: { $ref: '#/components/schemas/BusinessPatch' }
       responses:
         '200':
           description: Updated business.
@@ -1782,6 +1810,7 @@ paths:
       tags: [auth]
       operationId: deleteAccount
       summary: Delete account and personal data.
+      description: "Removes the owner's login, profile and venues from the app. Paid orders, payments and tax lines are kept for 6 years with the personal data removed, because Ghana tax law requires the records."
       security: [{ ownerAuth: [] }]
       requestBody:
         required: true
@@ -1795,6 +1824,259 @@ paths:
       responses:
         '204':
           description: Account deleted.
+
+  # ---------------------------------------------------------------- owner: promos
+  /owner/venues/{venueId}/promos:
+    get:
+      tags: [owner-promos]
+      operationId: ownerListPromos
+      summary: Every promo, with its state worked out now in the venue's time zone.
+      security: [{ ownerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { type: object, required: [items], properties: { items: { type: array, items: { $ref: '#/components/schemas/Promo' } } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [owner-promos]
+      operationId: ownerCreatePromo
+      summary: Add a promo. Owners and managers only.
+      security: [{ ownerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PromoInput' }
+      responses:
+        '201':
+          description: Created.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Promo' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+  /owner/venues/{venueId}/promos/{promoId}:
+    patch:
+      tags: [owner-promos]
+      operationId: ownerUpdatePromo
+      summary: Change a promo, or switch it on or off.
+      security: [{ ownerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/VenueId' }
+        - { in: path, name: promoId, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PromoPatch' }
+      responses:
+        '200':
+          description: Saved.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Promo' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+    delete:
+      tags: [owner-promos]
+      operationId: ownerDeletePromo
+      summary: Delete a promo. Orders that used it keep their discount.
+      security: [{ ownerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/VenueId' }
+        - { in: path, name: promoId, required: true, schema: { type: string } }
+      responses:
+        '204': { description: Deleted. }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ---------------------------------------------------------------- owner: notifications
+  /owner/venues/{venueId}/notifications:
+    get:
+      tags: [owner-notifications]
+      operationId: ownerListNotifications
+      summary: Newest first. Orders, waiter calls, bill requests, guest notes and reviews for this venue. Poll every 5 s with the orders board.
+      description: Read state is kept per staff member. Staff only get kinds their role may see.
+      security: [{ ownerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/VenueId' }
+        - in: query
+          name: kind
+          schema: { $ref: '#/components/schemas/OwnerNotificationKind' }
+        - in: query
+          name: unread
+          schema: { type: boolean }
+        - { $ref: '#/components/parameters/Cursor' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, unreadCount, countsByKind]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/OwnerNotification' } }
+                  unreadCount: { type: integer, minimum: 0 }
+                  countsByKind:
+                    type: object
+                    description: Unread count per kind, for the filter chips.
+                    additionalProperties: { type: integer, minimum: 0 }
+                  nextCursor: { type: ['string', 'null'] }
+  /owner/venues/{venueId}/notifications/read:
+    post:
+      tags: [owner-notifications]
+      operationId: ownerMarkNotificationsRead
+      summary: Mark some notifications, or all of them, as read for the signed-in staff member.
+      security: [{ ownerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  items: { type: string }
+                  description: Leave out to mark every notification read.
+      responses:
+        '200':
+          description: The new unread count.
+          content:
+            application/json:
+              schema: { type: object, required: [unreadCount], properties: { unreadCount: { type: integer, minimum: 0 } } }
+
+  # ---------------------------------------------------------------- owner: one loyalty customer
+  /owner/venues/{venueId}/loyalty/customers/{customerId}:
+    get:
+      tags: [owner-loyalty]
+      operationId: ownerGetLoyaltyCustomer
+      summary: One loyalty member, their visits and what they agreed to.
+      security: [{ ownerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/VenueId' }
+        - { in: path, name: customerId, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoyaltyCustomerDetail' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /owner/venues/{venueId}/loyalty/customers/{customerId}/stamp:
+    post:
+      tags: [owner-loyalty]
+      operationId: ownerStampLoyaltyCustomer
+      summary: Add a stamp to a member found by name, phone or card code, when their card can't be scanned. Same cooldown as a scan.
+      security: [{ ownerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/VenueId' }
+        - { in: path, name: customerId, required: true, schema: { type: string } }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      responses:
+        '200':
+          description: Stamp result.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoyaltyScanResult' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /owner/venues/{venueId}/loyalty/scans:
+    get:
+      tags: [owner-loyalty]
+      operationId: ownerListLoyaltyScans
+      summary: Stamps and rewards given at this venue since a moment, newest first. Drives "Today" on Scan and stamp.
+      security: [{ ownerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/VenueId' }
+        - in: query
+          name: since
+          schema: { type: string, format: date-time }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { type: object, required: [items], properties: { items: { type: array, items: { $ref: '#/components/schemas/LoyaltyScanLogEntry' } } } }
+
+  # ---------------------------------------------------------------- owner: profile
+  /me/profile:
+    patch:
+      tags: [owner-profile]
+      operationId: updateMyProfile
+      summary: Change the signed-in staff member's own name, email, photo and app preferences. The phone changes through /me/phone.
+      security: [{ ownerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/StaffProfilePatch' }
+      responses:
+        '200':
+          description: Saved.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StaffUser' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+  /me/phone:
+    post:
+      tags: [owner-profile]
+      operationId: requestPhoneChange
+      summary: Send a 6-digit code to the new number. The number only changes once the code is confirmed.
+      security: [{ ownerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone]
+              properties:
+                phone: { $ref: '#/components/schemas/GhanaPhone' }
+      responses:
+        '202':
+          description: Code sent.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [expiresInSeconds, resendInSeconds]
+                properties:
+                  expiresInSeconds: { type: integer, example: 300 }
+                  resendInSeconds: { type: integer, example: 30 }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+  /me/phone/verify:
+    post:
+      tags: [owner-profile]
+      operationId: confirmPhoneChange
+      summary: Confirm the new number with the code sent to it.
+      security: [{ ownerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone, code]
+              properties:
+                phone: { $ref: '#/components/schemas/GhanaPhone' }
+                code: { type: string, pattern: '^[0-9]{6}$' }
+      responses:
+        '200':
+          description: Number changed.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StaffUser' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
 
 components:
   securitySchemes:
@@ -1991,7 +2273,11 @@ components:
       properties:
         id: { type: string }
         firstName: { type: string }
+        lastName: { type: ['string', 'null'] }
         phone: { $ref: '#/components/schemas/GhanaPhone' }
+        email: { type: ['string', 'null'], format: email }
+        photo: { oneOf: [{ $ref: '#/components/schemas/Image' }, { type: 'null' }] }
+        prefs: { $ref: '#/components/schemas/StaffPrefs' }
         venues:
           type: array
           items:
@@ -2236,6 +2522,7 @@ components:
             noticeSettings:
               allOf: [{ $ref: '#/components/schemas/StoreNotices' }]
               description: Every notice as the owner set it, including ones switched off or outside their times.
+            tax: { $ref: '#/components/schemas/TaxSetup' }
     VenueSettingsPatch:
       type: object
       properties:
@@ -2259,6 +2546,7 @@ components:
         menuStyle: { $ref: '#/components/schemas/MenuStyle' }
         published: { type: boolean }
         onlineOrdering: { $ref: '#/components/schemas/OnlineOrdering' }
+        tax: { $ref: '#/components/schemas/TaxSetup' }
     Wifi:
       type: object
       required: [ssid, security]
@@ -2453,6 +2741,10 @@ components:
         clientOrderId: { type: string, format: uuid, description: Made on the phone so an offline retry never creates two orders. }
         lines: { type: array, minItems: 1, maxItems: 60, items: { $ref: '#/components/schemas/OrderLineInput' } }
         note: { type: string, maxLength: 200 }
+        promoCode:
+          type: string
+          pattern: '^[A-Z0-9]{3,20}$'
+          description: A promo code the guest typed. Fails with promo_not_valid when it doesn't apply now. Promos without a code apply on their own.
         fulfilment:
           allOf: [{ $ref: '#/components/schemas/OnlineFulfilment' }]
           description: "Required for a menu-link order. Fails with online_ordering_off, method_off, too_far or no_venue_location when it can't be met."
@@ -2552,9 +2844,22 @@ components:
           allOf: [{ $ref: '#/components/schemas/Pesewas' }]
           description: "Included in totalPesewas. 0 or missing for pickup and table orders."
         etaMinutes: { type: ['integer', 'null'] }
+        promoDiscounts:
+          type: array
+          description: "Promos the server applied when the order was placed, already taken off totalPesewas. Missing or empty means none."
+          items: { $ref: '#/components/schemas/AppliedPromo' }
+        cancelReason: { type: ['string', 'null'], maxLength: 200, description: Why staff rejected or cancelled it. }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
         readyAt: { type: ['string', 'null'], format: date-time }
+        servedAt: { type: ['string', 'null'], format: date-time }
+    AppliedPromo:
+      type: object
+      required: [promoId, name, pesewas]
+      properties:
+        promoId: { type: string }
+        name: { type: string }
+        pesewas: { $ref: '#/components/schemas/Pesewas' }
     OrderPage:
       type: object
       required: [items]
@@ -2644,6 +2949,10 @@ components:
         staffFirstName: { type: ['string', 'null'], example: Kwesi }
         createdAt: { type: string, format: date-time }
         acknowledgedAt: { type: ['string', 'null'], format: date-time }
+        resolvedAt: { type: ['string', 'null'], format: date-time }
+        reply: { type: ['string', 'null'], maxLength: 80, description: The staff reply the guest sees on their phone. }
+        repliedAt: { type: ['string', 'null'], format: date-time }
+        snoozedUntil: { type: ['string', 'null'], format: date-time, description: Owner app only. Hidden from the queue until this moment. }
 
     ConsentInput:
       type: object
@@ -2693,7 +3002,10 @@ components:
         rewards:
           type: array
           items: { $ref: '#/components/schemas/RewardOffer' }
-        expiryDays: { type: ['integer', 'null'], minimum: 1 }
+        expiryDays: { type: ['integer', 'null'], minimum: 1, description: Stamps older than this many days drop off the card. Null means they never expire. }
+        stampOnPaidOrder:
+          type: boolean
+          description: "True adds a stamp on its own when a member's Cravins order is paid (Paystack succeeded). False means stamps only come from a scan. Missing means true."
         claimTtlSeconds: { type: integer, minimum: 60, maximum: 3600 }
         birthdayTreat: { type: ['string', 'null'] }
         memberCount: { type: integer, readOnly: true }
@@ -2941,6 +3253,8 @@ components:
         billPesewas: { oneOf: [{ $ref: '#/components/schemas/Pesewas' }, { type: 'null' }] }
         waiterCallId: { type: ['string', 'null'] }
         waiterReason: { oneOf: [{ $ref: '#/components/schemas/WaiterReason' }, { type: 'null' }] }
+        since: { type: ['string', 'null'], format: date-time, description: When the table entered this status. Null for free tables. }
+        waiterFirstName: { type: ['string', 'null'], description: "The staff member who looks after this table, if one is set." }
     VenueTransaction:
       type: object
       required: [id, reference, orderId, orderNumber, method, amountPesewas, currency, status, settlement, createdAt, testMode]
@@ -2974,12 +3288,30 @@ components:
       type: object
       required: [range, currency, salesPesewas, series, topItems, peakHours, repeatGuests, sample]
       properties:
-        range: { type: string, enum: [today, 7d, 30d, 90d] }
+        range: { type: string, enum: [today, 7d, 30d, 90d, custom] }
+        since: { type: string, format: date-time }
+        until: { type: string, format: date-time }
         currency: { $ref: '#/components/schemas/Currency' }
         salesPesewas: { $ref: '#/components/schemas/Pesewas' }
-        sample: { type: boolean, description: True until the ledger is real. Show the Sample label. }
-        scansCount: { type: integer }
-        menuViewsCount: { type: integer }
+        sample: { type: boolean, description: True only for a demo venue. Show the Sample label then. }
+        scansCount: { type: integer, description: Table and menu-link QR scans. }
+        menuViewsCount: { type: integer, description: Visits that opened the menu. }
+        ordersCount: { type: integer, description: Visits that placed an order. }
+        visitsByHour:
+          type: array
+          items:
+            type: object
+            required: [hour, visits]
+            properties:
+              hour: { type: integer, minimum: 0, maximum: 23 }
+              visits: { type: integer }
+        mood:
+          type: object
+          required: [positive, neutral, negative]
+          properties:
+            positive: { type: integer }
+            neutral: { type: integer }
+            negative: { type: integer }
         loyaltyMetrics:
           type: object
           properties:
@@ -3040,12 +3372,59 @@ components:
 
     SalesReport:
       type: object
-      required: [currency, orderCount, valuePesewas, byStatus, discountsPesewas, deliveryFeesPesewas, payments, bySource, topItems, days]
+      required: [currency, orderCount, valuePesewas, avgPesewas, byStatus, discountsPesewas, deliveryFeesPesewas, payments, bySource, topItems, days, byHour, byStaff, previous, tax]
       description: "Built from orders, not payments: what was ordered. Cancelled orders count in byStatus only, never in money."
       properties:
         currency: { $ref: '#/components/schemas/Currency' }
         orderCount: { type: integer, minimum: 0, description: Orders that weren't cancelled. }
         valuePesewas: { $ref: '#/components/schemas/Pesewas' }
+        avgPesewas: { $ref: '#/components/schemas/Pesewas' }
+        refundsPesewas: { $ref: '#/components/schemas/Pesewas' }
+        previous:
+          description: "The same length of time just before since. Null when there is no since, or the venue had no orders then."
+          oneOf:
+            - type: 'null'
+            - type: object
+              required: [since, until, orderCount, valuePesewas, avgPesewas]
+              properties:
+                since: { type: string, format: date-time }
+                until: { type: string, format: date-time }
+                orderCount: { type: integer, minimum: 0 }
+                valuePesewas: { $ref: '#/components/schemas/Pesewas' }
+                avgPesewas: { $ref: '#/components/schemas/Pesewas' }
+        byHour:
+          type: array
+          description: Hours of the day in the venue's time zone that had orders.
+          items:
+            type: object
+            required: [hour, orders, pesewas]
+            properties:
+              hour: { type: integer, minimum: 0, maximum: 23 }
+              orders: { type: integer }
+              pesewas: { $ref: '#/components/schemas/Pesewas' }
+        byStaff:
+          type: array
+          description: Orders each staff member took or moved to served. Guest QR orders nobody touched are left out.
+          items:
+            type: object
+            required: [staffId, firstName, role, orders, pesewas]
+            properties:
+              staffId: { type: string }
+              firstName: { type: string }
+              role: { $ref: '#/components/schemas/StaffRole' }
+              orders: { type: integer }
+              pesewas: { $ref: '#/components/schemas/Pesewas' }
+        tax:
+          description: "E-VAT and levies on these orders. Null until tax is set up in Settings."
+          oneOf:
+            - type: 'null'
+            - type: object
+              required: [vatPesewas, nhilPesewas, getfundPesewas, totalPesewas]
+              properties:
+                vatPesewas: { $ref: '#/components/schemas/Pesewas' }
+                nhilPesewas: { $ref: '#/components/schemas/Pesewas' }
+                getfundPesewas: { $ref: '#/components/schemas/Pesewas' }
+                totalPesewas: { $ref: '#/components/schemas/Pesewas' }
         byStatus:
           type: object
           required: [received, preparing, ready, served, cancelled]
@@ -3065,6 +3444,15 @@ components:
             onlinePesewas: { $ref: '#/components/schemas/Pesewas' }
             inPersonPesewas: { $ref: '#/components/schemas/Pesewas' }
             unpaidPesewas: { $ref: '#/components/schemas/Pesewas' }
+            byMethod:
+              type: array
+              items:
+                type: object
+                required: [method, orders, pesewas]
+                properties:
+                  method: { $ref: '#/components/schemas/PaymentMethodUsed' }
+                  orders: { type: integer }
+                  pesewas: { $ref: '#/components/schemas/Pesewas' }
         bySource:
           type: array
           items:
@@ -3169,6 +3557,14 @@ components:
         rewardsAvailable: { type: integer }
         wantsOffers: { type: boolean }
         lastStampAt: { type: string, format: date-time }
+        visitCount: { type: integer, minimum: 0, description: Paid visits at this venue. }
+        firstVisitAt: { type: ['string', 'null'], format: date-time }
+        lastVisitAt: { type: ['string', 'null'], format: date-time }
+        spentPesewas: { $ref: '#/components/schemas/Pesewas' }
+        tags:
+          type: array
+          description: Worked out from activity, never typed in.
+          items: { $ref: '#/components/schemas/CustomerTag' }
 
     LoyaltyAnalyticsReport:
       type: object
@@ -3214,6 +3610,20 @@ components:
           type: string
           enum: [free, pro, business]
           description: The Cravins plan this business is on. Matches the plan ids on the pricing page. Billing is not live yet, so this is read-only.
+        description: { type: ['string', 'null'], maxLength: 300, description: Shown on the menu link and Google profile. }
+        categories:
+          type: array
+          maxItems: 8
+          description: The first one is the main category.
+          items: { $ref: '#/components/schemas/BusinessCategory' }
+        cuisines: { type: array, maxItems: 10, items: { type: string, minLength: 1, maxLength: 30 } }
+        priceRange: { type: ['integer', 'null'], minimum: 1, maximum: 4 }
+        yearOpened: { type: ['integer', 'null'], minimum: 1900, maximum: 2100 }
+        website: { type: ['string', 'null'], maxLength: 200 }
+        phone: { type: ['string', 'null'] }
+        email: { type: ['string', 'null'], format: email }
+        tin: { type: ['string', 'null'], description: Ghana Revenue Authority taxpayer number. Printed on receipts. }
+        registrationNumber: { type: ['string', 'null'], description: Office of the Registrar of Companies number. }
     Location:
       type: object
       required: [id, businessId, slug, name, country, currency]
@@ -3230,6 +3640,12 @@ components:
         postcode: { type: ['string', 'null'] }
         country: { type: string }
         currency: { $ref: '#/components/schemas/Currency' }
+        venueId: { type: string, description: "The venue this location runs. Every /owner/venues/{venueId} call uses it." }
+        digitalAddress: { type: ['string', 'null'], pattern: '^[A-Z]{2}-[0-9]{3,4}-[0-9]{4}$', description: GhanaPostGPS code. }
+        geo: { oneOf: [{ $ref: '#/components/schemas/GeoPoint' }, { type: 'null' }] }
+        logo: { oneOf: [{ $ref: '#/components/schemas/Image' }, { type: 'null' }] }
+        tableCount: { type: integer, minimum: 0 }
+        staffCount: { type: integer, minimum: 0 }
     LocationInput:
       type: object
       required: [name, country]
@@ -3251,6 +3667,8 @@ components:
         city: { type: string }
         postcode: { type: string }
         country: { type: string }
+        digitalAddress: { type: ['string', 'null'], pattern: '^[A-Z]{2}-[0-9]{3,4}-[0-9]{4}$' }
+        geo: { oneOf: [{ $ref: '#/components/schemas/GeoPoint' }, { type: 'null' }] }
 
     ScannerDevice:
       type: object
@@ -3263,3 +3681,192 @@ components:
         pairedAt: { type: string, format: date-time }
         lastSeen: { type: string, format: date-time }
         pairingCode: { type: ['string', 'null'] }
+
+    CustomerTag:
+      type: string
+      enum: [new, regular, quiet, reward_ready]
+      description: "new: first visit in the last 30 days. regular: 5 or more visits. quiet: no visit for 30 days. reward_ready: a reward to claim."
+    LoyaltyCustomerDetail:
+      allOf:
+        - { $ref: '#/components/schemas/LoyaltyCustomerSummary' }
+        - type: object
+          required: [stampsRequired, visits, consent]
+          properties:
+            stampsRequired: { type: integer, minimum: 1 }
+            nextReward: { type: ['string', 'null'] }
+            favouriteItem: { type: ['string', 'null'] }
+            visits:
+              type: array
+              description: Newest first, at most 20.
+              items:
+                type: object
+                required: [at, totalPesewas, stampAdded]
+                properties:
+                  at: { type: string, format: date-time }
+                  orderId: { type: ['string', 'null'] }
+                  orderNumber: { type: ['integer', 'null'] }
+                  tableCode: { type: ['string', 'null'] }
+                  source: { $ref: '#/components/schemas/OrderSource' }
+                  summary: { type: string, description: "The dishes, short." }
+                  totalPesewas: { $ref: '#/components/schemas/Pesewas' }
+                  stampAdded: { type: boolean }
+            consent:
+              type: object
+              required: [loyaltyAt, textVersion, marketing]
+              properties:
+                loyaltyAt: { type: string, format: date-time }
+                textVersion: { type: string }
+                marketing: { type: boolean }
+                marketingAt: { type: ['string', 'null'], format: date-time }
+    LoyaltyScanLogEntry:
+      type: object
+      required: [id, at, customerId, customerName, action]
+      properties:
+        id: { type: string }
+        at: { type: string, format: date-time }
+        customerId: { type: string }
+        customerName: { type: string }
+        action: { type: string, enum: [stamp, reward] }
+        stampsAfter: { type: integer }
+        reward: { type: ['string', 'null'] }
+        by: { type: ['string', 'null'], description: Staff first name or the scanner device name. }
+    PromoKind:
+      type: string
+      enum: [percent_off, amount_off, free_item]
+    PromoChannel:
+      type: string
+      enum: [all, table, online]
+    PromoInput:
+      type: object
+      required: [name, kind, channel, enabled]
+      description: "A rule the server applies to the bill before the guest pays. The best single promo wins; promos never stack."
+      properties:
+        name: { type: string, minLength: 2, maxLength: 60 }
+        kind: { $ref: '#/components/schemas/PromoKind' }
+        percent: { type: ['integer', 'null'], minimum: 1, maximum: 100, description: percent_off only. Applies to drinks only when appliesTo is drinks. }
+        amountPesewas: { oneOf: [{ $ref: '#/components/schemas/Pesewas' }, { type: 'null' }], description: amount_off only. }
+        freeItemId: { type: ['string', 'null'], description: "free_item only. One of this dish comes free when it is on the order." }
+        appliesTo: { type: string, enum: [order, category], description: Missing means the whole order. }
+        categoryId: { type: ['string', 'null'], description: "With appliesTo category, only lines in this menu section are discounted." }
+        minSpendPesewas: { oneOf: [{ $ref: '#/components/schemas/Pesewas' }, { type: 'null' }] }
+        code: { type: ['string', 'null'], pattern: '^[A-Z0-9]{3,20}$', description: "Null applies on its own. With a code, the guest must type it." }
+        channel: { $ref: '#/components/schemas/PromoChannel' }
+        days:
+          type: array
+          maxItems: 7
+          description: Days it runs, 0 is Monday. Empty means every day.
+          items: { type: integer, minimum: 0, maximum: 6 }
+        startTime: { type: ['string', 'null'], pattern: '^[0-2][0-9]:[0-5][0-9]$', description: Daily window in the venue's time zone. Null means all day. }
+        endTime: { type: ['string', 'null'], pattern: '^[0-2][0-9]:[0-5][0-9]$' }
+        startsAt: { type: ['string', 'null'], format: date-time }
+        endsAt: { type: ['string', 'null'], format: date-time }
+        usageLimit: { type: ['integer', 'null'], minimum: 1 }
+        enabled: { type: boolean }
+    PromoPatch:
+      type: object
+      minProperties: 1
+      description: Any PromoInput fields to change.
+      properties:
+        name: { type: string, minLength: 2, maxLength: 60 }
+        kind: { $ref: '#/components/schemas/PromoKind' }
+        percent: { type: ['integer', 'null'], minimum: 1, maximum: 100 }
+        amountPesewas: { oneOf: [{ $ref: '#/components/schemas/Pesewas' }, { type: 'null' }] }
+        freeItemId: { type: ['string', 'null'] }
+        appliesTo: { type: string, enum: [order, category] }
+        categoryId: { type: ['string', 'null'] }
+        minSpendPesewas: { oneOf: [{ $ref: '#/components/schemas/Pesewas' }, { type: 'null' }] }
+        code: { type: ['string', 'null'], pattern: '^[A-Z0-9]{3,20}$' }
+        channel: { $ref: '#/components/schemas/PromoChannel' }
+        days: { type: array, maxItems: 7, items: { type: integer, minimum: 0, maximum: 6 } }
+        startTime: { type: ['string', 'null'], pattern: '^[0-2][0-9]:[0-5][0-9]$' }
+        endTime: { type: ['string', 'null'], pattern: '^[0-2][0-9]:[0-5][0-9]$' }
+        startsAt: { type: ['string', 'null'], format: date-time }
+        endsAt: { type: ['string', 'null'], format: date-time }
+        usageLimit: { type: ['integer', 'null'], minimum: 1 }
+        enabled: { type: boolean }
+    Promo:
+      allOf:
+        - { $ref: '#/components/schemas/PromoInput' }
+        - type: object
+          required: [id, state, usageCount, createdAt]
+          properties:
+            id: { type: string }
+            state:
+              type: string
+              enum: [running, scheduled, ended, off]
+              description: "Worked out now. running: on and inside its dates (the daily window may still be closed). scheduled: starts later. ended: past endsAt or usage limit. off: switched off."
+            usageCount: { type: integer, minimum: 0 }
+            discountGivenPesewas: { $ref: '#/components/schemas/Pesewas' }
+            createdAt: { type: string, format: date-time }
+    OwnerNotificationKind:
+      type: string
+      enum: [order, call, bill, guest_note, review]
+    OwnerNotification:
+      type: object
+      required: [id, kind, title, createdAt, readAt, needsAction, target]
+      properties:
+        id: { type: string }
+        kind: { $ref: '#/components/schemas/OwnerNotificationKind' }
+        title: { type: string, example: Table 4 needs a waiter }
+        detail: { type: ['string', 'null'], example: Asked for water }
+        createdAt: { type: string, format: date-time }
+        readAt: { type: ['string', 'null'], format: date-time }
+        needsAction: { type: boolean, description: "True while the order, call or bill behind it is still open. Drives \"Needs you\"." }
+        target:
+          type: object
+          required: [type, id]
+          properties:
+            type: { type: string, enum: [order, call, table, feedback, review] }
+            id: { type: string }
+    BusinessCategory:
+      type: string
+      enum: [restaurant, chop_bar, cafe, bar, lounge, fast_food, bakery, catering]
+    BusinessPatch:
+      type: object
+      minProperties: 1
+      properties:
+        name: { type: string, minLength: 2, maxLength: 60 }
+        description: { type: ['string', 'null'], maxLength: 300 }
+        categories: { type: array, maxItems: 8, items: { $ref: '#/components/schemas/BusinessCategory' } }
+        cuisines: { type: array, maxItems: 10, items: { type: string, minLength: 1, maxLength: 30 } }
+        priceRange: { type: ['integer', 'null'], minimum: 1, maximum: 4 }
+        yearOpened: { type: ['integer', 'null'], minimum: 1900, maximum: 2100 }
+        website: { type: ['string', 'null'], maxLength: 200 }
+        phone: { type: ['string', 'null'] }
+        email: { type: ['string', 'null'], format: email }
+        tin: { type: ['string', 'null'], pattern: '^[A-Z][0-9]{10}$' }
+        registrationNumber: { type: ['string', 'null'], maxLength: 20 }
+    TaxSetup:
+      type: object
+      required: [enabled, pricesIncludeTax]
+      description: "E-VAT. Off by default. When on, orders carry VAT 15%, NHIL 2.5% and GETFund 2.5% tax lines, inside the menu price when pricesIncludeTax is true, or added on top when false."
+      properties:
+        enabled: { type: boolean }
+        pricesIncludeTax: { type: boolean }
+        tin: { type: ['string', 'null'], pattern: '^[A-Z][0-9]{10}$' }
+    StaffPrefs:
+      type: object
+      required: [language, appearance, soundForNewOrders, notify]
+      properties:
+        language: { $ref: '#/components/schemas/Language' }
+        appearance: { type: string, enum: [light, dark, system] }
+        soundForNewOrders: { type: boolean }
+        notify:
+          type: object
+          required: [order, call, bill, guest_note, review]
+          description: Which kinds show in Notifications and on the badges for this person.
+          properties:
+            order: { type: boolean }
+            call: { type: boolean }
+            bill: { type: boolean }
+            guest_note: { type: boolean }
+            review: { type: boolean }
+    StaffProfilePatch:
+      type: object
+      minProperties: 1
+      properties:
+        firstName: { type: string, minLength: 1, maxLength: 40 }
+        lastName: { type: ['string', 'null'], maxLength: 40 }
+        email: { type: ['string', 'null'], format: email }
+        photoMediaId: { type: ['string', 'null'] }
+        prefs: { $ref: '#/components/schemas/StaffPrefs' }

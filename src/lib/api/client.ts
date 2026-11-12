@@ -54,7 +54,31 @@ import type {
   Wifi,
   WrittenReview,
   Currency,
+  BusinessPatch,
+  CustomerTag,
+  LoyaltyCustomerDetail,
+  LoyaltyScanLogEntry,
+  OwnerNotification,
+  OwnerNotificationKind,
+  Promo,
+  PromoInput,
+  PromoPatch,
+  StaffProfilePatch,
 } from './types';
+
+/** What a waiter-call update sends: a status, a reply the guest sees (it also resolves), or a snooze. */
+export type WaiterCallUpdate = {
+  status?: 'acknowledged' | 'resolved';
+  reply?: string;
+  snoozeMinutes?: number;
+};
+
+export type NotificationPage = {
+  items: OwnerNotification[];
+  unreadCount: number;
+  countsByKind: Record<string, number>;
+  nextCursor?: string | null;
+};
 
 export type TokenSource = {
   guest: () => string | null;
@@ -159,12 +183,16 @@ export type ApiClient = {
     filter?: { since?: string; until?: string },
   ): Promise<{ items: Order[]; nextCursor?: string | null }>;
   ownerCreateOrder(venueId: string, body: OwnerCreateOrderRequest, call: Call): Promise<Order>;
-  ownerSetOrderStatus(orderId: string, body: { status: Order['status'] }): Promise<Order>;
-  ownerListWaiterCalls(venueId: string): Promise<{ items: WaiterCall[] }>;
-  ownerUpdateWaiterCall(
-    id: string,
-    body: { status: 'acknowledged' | 'resolved' },
-  ): Promise<WaiterCall>;
+  ownerSetOrderStatus(
+    orderId: string,
+    body: { status: Order['status']; cancelReason?: string },
+  ): Promise<Order>;
+  /** Open calls by default (snoozed ones hidden). open false with since gives the day's history. */
+  ownerListWaiterCalls(
+    venueId: string,
+    query?: { open?: boolean; since?: string },
+  ): Promise<{ items: WaiterCall[] }>;
+  ownerUpdateWaiterCall(id: string, body: WaiterCallUpdate): Promise<WaiterCall>;
   ownerGetLoyalty(venueId: string): Promise<LoyaltyProgram>;
   ownerSetLoyalty(venueId: string, body: LoyaltyProgram): Promise<LoyaltyProgram>;
   ownerListLoyaltyMembers(
@@ -181,8 +209,19 @@ export type ApiClient = {
   ): Promise<LoyaltyAnalyticsReport>;
   ownerListLoyaltyCustomers(
     venueId: string,
-    query?: { search?: string; wantsOffers?: boolean },
-  ): Promise<{ items: LoyaltyCustomerSummary[]; totalCount: number }>;
+    query?: { search?: string; wantsOffers?: boolean; tag?: CustomerTag },
+  ): Promise<{
+    items: LoyaltyCustomerSummary[];
+    totalCount: number;
+    countsByTag?: Record<string, number>;
+  }>;
+  ownerGetLoyaltyCustomer(venueId: string, customerId: string): Promise<LoyaltyCustomerDetail>;
+  ownerStampLoyaltyCustomer(
+    venueId: string,
+    customerId: string,
+    call?: Call,
+  ): Promise<LoyaltyScanResult>;
+  ownerListLoyaltyScans(venueId: string, since?: string): Promise<{ items: LoyaltyScanLogEntry[] }>;
   ownerScanLoyaltyCard(
     venueId: string,
     body: { qrPayload: string; action: 'stamp' | 'redeem' },
@@ -193,7 +232,12 @@ export type ApiClient = {
   ownerRefundTransaction(transactionId: string, call?: Call): Promise<VenueTransaction>;
   ownerListWrittenReviews(venueId: string): Promise<{ items: WrittenReview[] }>;
   ownerReplyToReview(reviewId: string, body: { text: string }, call?: Call): Promise<WrittenReview>;
-  ownerGetInsights(venueId: string, range?: InsightsReport['range']): Promise<InsightsReport>;
+  /** With range custom, pass the window too. */
+  ownerGetInsights(
+    venueId: string,
+    range?: InsightsReport['range'],
+    window?: { since: string; until: string },
+  ): Promise<InsightsReport>;
   ownerRecordManualPayment(
     orderId: string,
     body: { method: ManualPaymentMethod },
@@ -229,7 +273,7 @@ export type ApiClient = {
   ): Promise<CustomLink>;
   ownerDeleteCustomLink(venueId: string, linkId: string): Promise<void>;
   ownerGetBusiness(): Promise<{ business: Business; locations: Location[] }>;
-  ownerUpdateBusiness(body: { name: string }): Promise<Business>;
+  ownerUpdateBusiness(body: BusinessPatch): Promise<Business>;
   ownerCreateLocation(body: LocationInput): Promise<Location>;
   ownerUpdateLocation(locationId: string, body: LocationPatchInput): Promise<Location>;
   ownerListScannerDevices(venueId: string): Promise<{ items: ScannerDevice[] }>;
@@ -239,6 +283,23 @@ export type ApiClient = {
   ): Promise<ScannerDevice>;
   ownerRevokeScannerDevice(venueId: string, deviceId: string): Promise<void>;
   deleteAccount(body: { confirmText: string }): Promise<void>;
+  ownerListPromos(venueId: string): Promise<{ items: Promo[] }>;
+  ownerCreatePromo(venueId: string, body: PromoInput): Promise<Promo>;
+  ownerUpdatePromo(venueId: string, promoId: string, body: PromoPatch): Promise<Promo>;
+  ownerDeletePromo(venueId: string, promoId: string): Promise<void>;
+  ownerListNotifications(
+    venueId: string,
+    query?: { kind?: OwnerNotificationKind; unread?: boolean },
+  ): Promise<NotificationPage>;
+  /** Leave ids out to mark everything read. */
+  ownerMarkNotificationsRead(venueId: string, ids?: string[]): Promise<{ unreadCount: number }>;
+  updateMyProfile(body: StaffProfilePatch): Promise<StaffUser>;
+  /** Sends a code to the new number; the number changes only after confirmPhoneChange. */
+  requestPhoneChange(
+    phone: string,
+    call: Call,
+  ): Promise<{ expiresInSeconds: number; resendInSeconds: number }>;
+  confirmPhoneChange(body: { phone: string; code: string }): Promise<StaffUser>;
 };
 
 export type { Currency };

@@ -12,7 +12,12 @@ export function useWaiterCalls(venueId: string) {
   const key = ownerKeys.calls(venueId);
   const calls = useQuery({
     queryKey: key,
-    queryFn: () => api.ownerListWaiterCalls(venueId),
+    // The board has a Done column, so ask for every call of the last day, not only open ones.
+    queryFn: () =>
+      api.ownerListWaiterCalls(venueId, {
+        open: false,
+        since: new Date(Date.now() - 86_400_000).toISOString(),
+      }),
     enabled: Boolean(venueId),
     refetchInterval: POLL_MS.owner,
   });

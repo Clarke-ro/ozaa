@@ -78,3 +78,10 @@ If a Playwright or RNTL test needs to stub the network at the HTTP layer instead
 2. Set `EXPO_PUBLIC_API_MODE=http` and `EXPO_PUBLIC_API_URL=https://staging-api…/v1`.
 3. Run the whole Playwright suite against staging. Any difference is a server bug or a contract change, which goes in its own PR.
 4. Keep the mock: it stays the default for UI work, demos and tests.
+
+## Seeded history (owner screens)
+
+- `src/mocks/seedHistory.ts` adds 30 days of paid, served orders and guest visits for Mama's Kitchen, plus a visit for each of today's orders. Sales, Insights, Today's "vs yesterday" and the visit funnel all read these records, so they agree. Bean There and Auntie Ako's have no history, so they show what a new venue sees.
+- `src/mocks/seedMembers.ts` adds loyalty members whose stamps come from those same orders. Customers, Loyalty and Insights' repeat guests count the same people.
+- Promos (`mockOwnerPromoCalls.ts`) are applied when an order is placed, with `src/lib/promos.ts`, the same rules the server will use. Tax lines come from `src/lib/tax.ts` once a venue switches tax on.
+- Notifications (`mockOwnerNotificationCalls.ts`) are built from the last day's orders, calls, notes and reviews, with read state per staff member and kinds limited by role.

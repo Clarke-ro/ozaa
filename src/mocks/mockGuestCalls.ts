@@ -29,6 +29,11 @@ export function mockGuestCalls(ctx: MockContext) {
       const venue = venueBySlug(world, slug);
       const menu = world.menus[slug];
       if (!menu) throw new ApiError(404, 'order_not_found', 'Menu not found');
+      // Count this visit as "opened the menu" for the Insights funnel, once per visit.
+      const token = tokens.guest();
+      const visit = token ? world.sessions.get(token) : undefined;
+      if (visit && visit.slug === slug && !visit.menuOpenedAt)
+        visit.menuOpenedAt = new Date(now()).toISOString();
       if (call?.ifNoneMatch === etag(menu)) throw new ApiError(304, 'not_modified', 'Not modified');
       return { ...menu, venueId: venue.id };
     },
@@ -58,6 +63,7 @@ export function mockGuestCalls(ctx: MockContext) {
           session.tableCode ? { source: 'table' } : linkExtras(venue, body.fulfilment, food),
         );
         session.orderId = order.id;
+        session.orderedAt ??= order.createdAt;
         return order;
       });
     },

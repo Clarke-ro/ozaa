@@ -18,6 +18,8 @@ import ordersFile from './fixtures/orders.json';
 import venuesFile from './fixtures/venues.json';
 import wifiFile from './fixtures/wifi.json';
 import { DEMO_LOYALTY_PHONES, STAFF } from './demo';
+import { seedHistory } from './seedHistory';
+import { seedMembers } from './seedMembers';
 import { kitchenQueue } from './kitchenQueue';
 import type { LiveOrder, World } from './worldTypes';
 import { seedOwnerDesk } from './seedOwnerDesk';
@@ -158,8 +160,6 @@ export function createWorld(now: number): World {
     orders,
     calls: [],
     seatedCodes: {},
-    yesterdayPesewas: {},
-    visitorBase: {},
     written: [],
     transactions: [],
     loyalty,
@@ -204,6 +204,13 @@ export function createWorld(now: number): World {
       ],
     },
     devices: [],
+    tax: {},
+    promos: [],
+    noAutoStamp: new Set(),
+    notificationReads: new Map(),
+    scanLog: [],
+    profiles: new Map(),
+    phoneChanges: new Map(),
     quotes: new Map(),
     payments: new Map(),
     idempotency: new Map(),
@@ -214,5 +221,7 @@ export function createWorld(now: number): World {
     seq: 100,
   };
   seedOwnerDesk(world, now);
+  seedHistory(world, now);
+  seedMembers(world);
   return world;
 }

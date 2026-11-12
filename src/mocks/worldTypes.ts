@@ -8,6 +8,10 @@ import type {
   Offer,
   Order,
   PaymentSettings,
+  Promo,
+  StaffPrefs,
+  TaxSetup,
+  LoyaltyScanLogEntry,
   ScannerDevice,
   StaffMember,
   StoreNotices,
@@ -19,9 +23,17 @@ import type {
   WrittenReview,
 } from '@/lib/api/types';
 
+import type { HandledBy } from '@/lib/sales';
+
 /** The shape of the mock's in-memory world. */
 
-export type LiveOrder = { order: Order; receivedAt: number; manual: boolean };
+export type LiveOrder = {
+  order: Order;
+  receivedAt: number;
+  manual: boolean;
+  /** Who took or served it, for Sales "by staff". Guest orders nobody touched have none. */
+  handledBy?: HandledBy;
+};
 
 export type World = {
   venues: Record<string, VenuePublic>;
@@ -35,7 +47,6 @@ export type World = {
   orders: LiveOrder[];
   calls: (WaiterCall & { venueId: string })[];
   seatedCodes: Record<string, string[]>;
-  yesterdayPesewas: Record<string, number>;
   written: (WrittenReview & { venueId: string })[];
   transactions: (VenueTransaction & { venueId: string })[];
   loyalty: Record<string, VenueLoyalty>;
@@ -45,6 +56,29 @@ export type World = {
   customLinks: (CustomLink & { venueId: string })[];
   business: { business: Business; locations: Location[] };
   devices: (ScannerDevice & { venueId: string })[];
+  /** E-VAT setup by venue id. Kept off the public venue: the TIN is the owner's business. */
+  tax: Record<string, TaxSetup>;
+  promos: (Promo & { venueId: string })[];
+  /** Venues that switched off the automatic stamp on paid orders. */
+  noAutoStamp: Set<string>;
+  /** Notification ids each staff member (by phone) has read. */
+  notificationReads: Map<string, Set<string>>;
+  scanLog: (LoyaltyScanLogEntry & { venueId: string })[];
+  /** Profile extras by staff phone: the parts StaffMember doesn't hold. */
+  profiles: Map<
+    string,
+    {
+      firstName: string;
+      lastName: string | null;
+      email: string | null;
+      photo: import('@/lib/api/types').Image | null;
+      /** The number after a confirmed change. Sign-in still uses the original in the mock. */
+      phone: string;
+      prefs: StaffPrefs;
+    }
+  >;
+  /** Pending phone changes: new number by current phone. */
+  phoneChanges: Map<string, string>;
   quotes: Map<
     string,
     { orderId: string; share: number; tip: number; lineIds: string[]; expiresAt: number }
@@ -63,10 +97,17 @@ export type World = {
   otpFails: Map<string, number>;
   sessions: Map<
     string,
-    { slug: string; tableCode: string | null; orderId: string | null; startedAt: string }
+    {
+      slug: string;
+      tableCode: string | null;
+      orderId: string | null;
+      startedAt: string;
+      /** First time this visit opened the menu (Insights funnel). */
+      menuOpenedAt?: string;
+      /** When this visit placed its first order. */
+      orderedAt?: string;
+    }
   >;
-  /** Sample visits already counted today, so the demo isn't empty. Real visits add to it. */
-  visitorBase: Record<string, number>;
   access: Map<string, { phone: string; purpose: 'owner_login' | 'guest_loyalty' }>;
   refresh: Map<string, string>;
   seq: number;

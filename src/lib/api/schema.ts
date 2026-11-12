@@ -1176,7 +1176,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Update business name. */
+        /** Update business details. Owners only. */
         patch: operations["ownerUpdateBusiness"];
         trace?: never;
     };
@@ -1292,8 +1292,186 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Delete account and personal data. */
+        /**
+         * Delete account and personal data.
+         * @description Removes the owner's login, profile and venues from the app. Paid orders, payments and tax lines are kept for 6 years with the personal data removed, because Ghana tax law requires the records.
+         */
         delete: operations["deleteAccount"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/promos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Every promo, with its state worked out now in the venue's time zone. */
+        get: operations["ownerListPromos"];
+        put?: never;
+        /** Add a promo. Owners and managers only. */
+        post: operations["ownerCreatePromo"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/promos/{promoId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a promo. Orders that used it keep their discount. */
+        delete: operations["ownerDeletePromo"];
+        options?: never;
+        head?: never;
+        /** Change a promo, or switch it on or off. */
+        patch: operations["ownerUpdatePromo"];
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Newest first. Orders, waiter calls, bill requests, guest notes and reviews for this venue. Poll every 5 s with the orders board.
+         * @description Read state is kept per staff member. Staff only get kinds their role may see.
+         */
+        get: operations["ownerListNotifications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/notifications/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark some notifications, or all of them, as read for the signed-in staff member. */
+        post: operations["ownerMarkNotificationsRead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/loyalty/customers/{customerId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One loyalty member, their visits and what they agreed to. */
+        get: operations["ownerGetLoyaltyCustomer"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/loyalty/customers/{customerId}/stamp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add a stamp to a member found by name, phone or card code, when their card can't be scanned. Same cooldown as a scan. */
+        post: operations["ownerStampLoyaltyCustomer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/loyalty/scans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Stamps and rewards given at this venue since a moment, newest first. Drives "Today" on Scan and stamp. */
+        get: operations["ownerListLoyaltyScans"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Change the signed-in staff member's own name, email, photo and app preferences. The phone changes through /me/phone. */
+        patch: operations["updateMyProfile"];
+        trace?: never;
+    };
+    "/me/phone": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send a 6-digit code to the new number. The number only changes once the code is confirmed. */
+        post: operations["requestPhoneChange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/phone/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm the new number with the code sent to it. */
+        post: operations["confirmPhoneChange"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1373,7 +1551,12 @@ export interface components {
         StaffUser: {
             id: string;
             firstName: string;
+            lastName?: string | null;
             phone: components["schemas"]["GhanaPhone"];
+            /** Format: email */
+            email?: string | null;
+            photo?: components["schemas"]["Image"] | null;
+            prefs?: components["schemas"]["StaffPrefs"];
             venues: {
                 venueId: string;
                 name: string;
@@ -1599,6 +1782,7 @@ export interface components {
             wifi?: components["schemas"]["Wifi"];
             /** @description Every notice as the owner set it, including ones switched off or outside their times. */
             noticeSettings?: components["schemas"]["StoreNotices"];
+            tax?: components["schemas"]["TaxSetup"];
         };
         VenueSettingsPatch: {
             name?: string;
@@ -1628,6 +1812,7 @@ export interface components {
             menuStyle?: components["schemas"]["MenuStyle"];
             published?: boolean;
             onlineOrdering?: components["schemas"]["OnlineOrdering"];
+            tax?: components["schemas"]["TaxSetup"];
         };
         Wifi: {
             ssid: string;
@@ -1782,6 +1967,8 @@ export interface components {
             clientOrderId: string;
             lines: components["schemas"]["OrderLineInput"][];
             note?: string;
+            /** @description A promo code the guest typed. Fails with promo_not_valid when it doesn't apply now. Promos without a code apply on their own. */
+            promoCode?: string;
             /** @description Required for a menu-link order. Fails with online_ordering_off, method_off, too_far or no_venue_location when it can't be met. */
             fulfilment?: components["schemas"]["OnlineFulfilment"];
         };
@@ -1862,12 +2049,23 @@ export interface components {
             /** @description Included in totalPesewas. 0 or missing for pickup and table orders. */
             deliveryFeePesewas?: components["schemas"]["Pesewas"];
             etaMinutes?: number | null;
+            /** @description Promos the server applied when the order was placed, already taken off totalPesewas. Missing or empty means none. */
+            promoDiscounts?: components["schemas"]["AppliedPromo"][];
+            /** @description Why staff rejected or cancelled it. */
+            cancelReason?: string | null;
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
             updatedAt: string;
             /** Format: date-time */
             readyAt?: string | null;
+            /** Format: date-time */
+            servedAt?: string | null;
+        };
+        AppliedPromo: {
+            promoId: string;
+            name: string;
+            pesewas: components["schemas"]["Pesewas"];
         };
         OrderPage: {
             items: components["schemas"]["Order"][];
@@ -1969,6 +2167,17 @@ export interface components {
             createdAt: string;
             /** Format: date-time */
             acknowledgedAt?: string | null;
+            /** Format: date-time */
+            resolvedAt?: string | null;
+            /** @description The staff reply the guest sees on their phone. */
+            reply?: string | null;
+            /** Format: date-time */
+            repliedAt?: string | null;
+            /**
+             * Format: date-time
+             * @description Owner app only. Hidden from the queue until this moment.
+             */
+            snoozedUntil?: string | null;
         };
         /** @description Act 843. Store what was agreed, when, and the exact text version shown. */
         ConsentInput: {
@@ -2009,7 +2218,10 @@ export interface components {
             earn: components["schemas"]["LoyaltyEarnMode"];
             tiers: components["schemas"]["LoyaltyTierBand"][];
             rewards: components["schemas"]["RewardOffer"][];
+            /** @description Stamps older than this many days drop off the card. Null means they never expire. */
             expiryDays: number | null;
+            /** @description True adds a stamp on its own when a member's Cravins order is paid (Paystack succeeded). False means stamps only come from a scan. Missing means true. */
+            stampOnPaidOrder?: boolean;
             claimTtlSeconds: number;
             birthdayTreat: string | null;
             readonly memberCount?: number;
@@ -2238,6 +2450,13 @@ export interface components {
             billPesewas?: components["schemas"]["Pesewas"] | null;
             waiterCallId?: string | null;
             waiterReason?: components["schemas"]["WaiterReason"] | null;
+            /**
+             * Format: date-time
+             * @description When the table entered this status. Null for free tables.
+             */
+            since?: string | null;
+            /** @description The staff member who looks after this table, if one is set. */
+            waiterFirstName?: string | null;
         };
         VenueTransaction: {
             id: string;
@@ -2269,13 +2488,30 @@ export interface components {
         };
         InsightsReport: {
             /** @enum {string} */
-            range: "today" | "7d" | "30d" | "90d";
+            range: "today" | "7d" | "30d" | "90d" | "custom";
+            /** Format: date-time */
+            since?: string;
+            /** Format: date-time */
+            until?: string;
             currency: components["schemas"]["Currency"];
             salesPesewas: components["schemas"]["Pesewas"];
-            /** @description True until the ledger is real. Show the Sample label. */
+            /** @description True only for a demo venue. Show the Sample label then. */
             sample: boolean;
+            /** @description Table and menu-link QR scans. */
             scansCount?: number;
+            /** @description Visits that opened the menu. */
             menuViewsCount?: number;
+            /** @description Visits that placed an order. */
+            ordersCount?: number;
+            visitsByHour?: {
+                hour: number;
+                visits: number;
+            }[];
+            mood?: {
+                positive: number;
+                neutral: number;
+                negative: number;
+            };
             loyaltyMetrics?: {
                 enrolled?: number;
                 active?: number;
@@ -2317,6 +2553,39 @@ export interface components {
             /** @description Orders that weren't cancelled. */
             orderCount: number;
             valuePesewas: components["schemas"]["Pesewas"];
+            avgPesewas: components["schemas"]["Pesewas"];
+            refundsPesewas?: components["schemas"]["Pesewas"];
+            /** @description The same length of time just before since. Null when there is no since, or the venue had no orders then. */
+            previous: null | {
+                /** Format: date-time */
+                since: string;
+                /** Format: date-time */
+                until: string;
+                orderCount: number;
+                valuePesewas: components["schemas"]["Pesewas"];
+                avgPesewas: components["schemas"]["Pesewas"];
+            };
+            /** @description Hours of the day in the venue's time zone that had orders. */
+            byHour: {
+                hour: number;
+                orders: number;
+                pesewas: components["schemas"]["Pesewas"];
+            }[];
+            /** @description Orders each staff member took or moved to served. Guest QR orders nobody touched are left out. */
+            byStaff: {
+                staffId: string;
+                firstName: string;
+                role: components["schemas"]["StaffRole"];
+                orders: number;
+                pesewas: components["schemas"]["Pesewas"];
+            }[];
+            /** @description E-VAT and levies on these orders. Null until tax is set up in Settings. */
+            tax: null | {
+                vatPesewas: components["schemas"]["Pesewas"];
+                nhilPesewas: components["schemas"]["Pesewas"];
+                getfundPesewas: components["schemas"]["Pesewas"];
+                totalPesewas: components["schemas"]["Pesewas"];
+            };
             byStatus: {
                 received: number;
                 preparing: number;
@@ -2331,6 +2600,11 @@ export interface components {
                 onlinePesewas: components["schemas"]["Pesewas"];
                 inPersonPesewas: components["schemas"]["Pesewas"];
                 unpaidPesewas: components["schemas"]["Pesewas"];
+                byMethod?: {
+                    method: components["schemas"]["PaymentMethodUsed"];
+                    orders: number;
+                    pesewas: components["schemas"]["Pesewas"];
+                }[];
             };
             bySource: {
                 source: components["schemas"]["OrderSource"];
@@ -2423,6 +2697,15 @@ export interface components {
             wantsOffers: boolean;
             /** Format: date-time */
             lastStampAt: string;
+            /** @description Paid visits at this venue. */
+            visitCount?: number;
+            /** Format: date-time */
+            firstVisitAt?: string | null;
+            /** Format: date-time */
+            lastVisitAt?: string | null;
+            spentPesewas?: components["schemas"]["Pesewas"];
+            /** @description Worked out from activity, never typed in. */
+            tags?: components["schemas"]["CustomerTag"][];
         };
         LoyaltyAnalyticsReport: {
             /** @enum {string} */
@@ -2457,6 +2740,21 @@ export interface components {
              * @enum {string}
              */
             plan: "free" | "pro" | "business";
+            /** @description Shown on the menu link and Google profile. */
+            description?: string | null;
+            /** @description The first one is the main category. */
+            categories?: components["schemas"]["BusinessCategory"][];
+            cuisines?: string[];
+            priceRange?: number | null;
+            yearOpened?: number | null;
+            website?: string | null;
+            phone?: string | null;
+            /** Format: email */
+            email?: string | null;
+            /** @description Ghana Revenue Authority taxpayer number. Printed on receipts. */
+            tin?: string | null;
+            /** @description Office of the Registrar of Companies number. */
+            registrationNumber?: string | null;
         };
         Location: {
             id: string;
@@ -2471,6 +2769,14 @@ export interface components {
             postcode?: string | null;
             country: string;
             currency: components["schemas"]["Currency"];
+            /** @description The venue this location runs. Every /owner/venues/{venueId} call uses it. */
+            venueId?: string;
+            /** @description GhanaPostGPS code. */
+            digitalAddress?: string | null;
+            geo?: components["schemas"]["GeoPoint"] | null;
+            logo?: components["schemas"]["Image"] | null;
+            tableCount?: number;
+            staffCount?: number;
         };
         LocationInput: {
             name: string;
@@ -2489,6 +2795,8 @@ export interface components {
             city?: string;
             postcode?: string;
             country?: string;
+            digitalAddress?: string | null;
+            geo?: components["schemas"]["GeoPoint"] | null;
         };
         ScannerDevice: {
             id: string;
@@ -2500,6 +2808,187 @@ export interface components {
             /** Format: date-time */
             lastSeen: string;
             pairingCode?: string | null;
+        };
+        /**
+         * @description new: first visit in the last 30 days. regular: 5 or more visits. quiet: no visit for 30 days. reward_ready: a reward to claim.
+         * @enum {string}
+         */
+        CustomerTag: "new" | "regular" | "quiet" | "reward_ready";
+        LoyaltyCustomerDetail: components["schemas"]["LoyaltyCustomerSummary"] & {
+            stampsRequired: number;
+            nextReward?: string | null;
+            favouriteItem?: string | null;
+            /** @description Newest first, at most 20. */
+            visits: {
+                /** Format: date-time */
+                at: string;
+                orderId?: string | null;
+                orderNumber?: number | null;
+                tableCode?: string | null;
+                source?: components["schemas"]["OrderSource"];
+                /** @description The dishes, short. */
+                summary?: string;
+                totalPesewas: components["schemas"]["Pesewas"];
+                stampAdded: boolean;
+            }[];
+            consent: {
+                /** Format: date-time */
+                loyaltyAt: string;
+                textVersion: string;
+                marketing: boolean;
+                /** Format: date-time */
+                marketingAt?: string | null;
+            };
+        };
+        LoyaltyScanLogEntry: {
+            id: string;
+            /** Format: date-time */
+            at: string;
+            customerId: string;
+            customerName: string;
+            /** @enum {string} */
+            action: "stamp" | "reward";
+            stampsAfter?: number;
+            reward?: string | null;
+            /** @description Staff first name or the scanner device name. */
+            by?: string | null;
+        };
+        /** @enum {string} */
+        PromoKind: "percent_off" | "amount_off" | "free_item";
+        /** @enum {string} */
+        PromoChannel: "all" | "table" | "online";
+        /** @description A rule the server applies to the bill before the guest pays. The best single promo wins; promos never stack. */
+        PromoInput: {
+            name: string;
+            kind: components["schemas"]["PromoKind"];
+            /** @description percent_off only. Applies to drinks only when appliesTo is drinks. */
+            percent?: number | null;
+            /** @description amount_off only. */
+            amountPesewas?: components["schemas"]["Pesewas"] | null;
+            /** @description free_item only. One of this dish comes free when it is on the order. */
+            freeItemId?: string | null;
+            /**
+             * @description Missing means the whole order.
+             * @enum {string}
+             */
+            appliesTo?: "order" | "category";
+            /** @description With appliesTo category, only lines in this menu section are discounted. */
+            categoryId?: string | null;
+            minSpendPesewas?: components["schemas"]["Pesewas"] | null;
+            /** @description Null applies on its own. With a code, the guest must type it. */
+            code?: string | null;
+            channel: components["schemas"]["PromoChannel"];
+            /** @description Days it runs, 0 is Monday. Empty means every day. */
+            days?: number[];
+            /** @description Daily window in the venue's time zone. Null means all day. */
+            startTime?: string | null;
+            endTime?: string | null;
+            /** Format: date-time */
+            startsAt?: string | null;
+            /** Format: date-time */
+            endsAt?: string | null;
+            usageLimit?: number | null;
+            enabled: boolean;
+        };
+        /** @description Any PromoInput fields to change. */
+        PromoPatch: {
+            name?: string;
+            kind?: components["schemas"]["PromoKind"];
+            percent?: number | null;
+            amountPesewas?: components["schemas"]["Pesewas"] | null;
+            freeItemId?: string | null;
+            /** @enum {string} */
+            appliesTo?: "order" | "category";
+            categoryId?: string | null;
+            minSpendPesewas?: components["schemas"]["Pesewas"] | null;
+            code?: string | null;
+            channel?: components["schemas"]["PromoChannel"];
+            days?: number[];
+            startTime?: string | null;
+            endTime?: string | null;
+            /** Format: date-time */
+            startsAt?: string | null;
+            /** Format: date-time */
+            endsAt?: string | null;
+            usageLimit?: number | null;
+            enabled?: boolean;
+        };
+        Promo: components["schemas"]["PromoInput"] & {
+            id: string;
+            /**
+             * @description Worked out now. running: on and inside its dates (the daily window may still be closed). scheduled: starts later. ended: past endsAt or usage limit. off: switched off.
+             * @enum {string}
+             */
+            state: "running" | "scheduled" | "ended" | "off";
+            usageCount: number;
+            discountGivenPesewas?: components["schemas"]["Pesewas"];
+            /** Format: date-time */
+            createdAt: string;
+        };
+        /** @enum {string} */
+        OwnerNotificationKind: "order" | "call" | "bill" | "guest_note" | "review";
+        OwnerNotification: {
+            id: string;
+            kind: components["schemas"]["OwnerNotificationKind"];
+            /** @example Table 4 needs a waiter */
+            title: string;
+            /** @example Asked for water */
+            detail?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            readAt: string | null;
+            /** @description True while the order, call or bill behind it is still open. Drives "Needs you". */
+            needsAction: boolean;
+            target: {
+                /** @enum {string} */
+                type: "order" | "call" | "table" | "feedback" | "review";
+                id: string;
+            };
+        };
+        /** @enum {string} */
+        BusinessCategory: "restaurant" | "chop_bar" | "cafe" | "bar" | "lounge" | "fast_food" | "bakery" | "catering";
+        BusinessPatch: {
+            name?: string;
+            description?: string | null;
+            categories?: components["schemas"]["BusinessCategory"][];
+            cuisines?: string[];
+            priceRange?: number | null;
+            yearOpened?: number | null;
+            website?: string | null;
+            phone?: string | null;
+            /** Format: email */
+            email?: string | null;
+            tin?: string | null;
+            registrationNumber?: string | null;
+        };
+        /** @description E-VAT. Off by default. When on, orders carry VAT 15%, NHIL 2.5% and GETFund 2.5% tax lines, inside the menu price when pricesIncludeTax is true, or added on top when false. */
+        TaxSetup: {
+            enabled: boolean;
+            pricesIncludeTax: boolean;
+            tin?: string | null;
+        };
+        StaffPrefs: {
+            language: components["schemas"]["Language"];
+            /** @enum {string} */
+            appearance: "light" | "dark" | "system";
+            soundForNewOrders: boolean;
+            /** @description Which kinds show in Notifications and on the badges for this person. */
+            notify: {
+                order: boolean;
+                call: boolean;
+                bill: boolean;
+                guest_note: boolean;
+                review: boolean;
+            };
+        };
+        StaffProfilePatch: {
+            firstName?: string;
+            lastName?: string | null;
+            /** Format: email */
+            email?: string | null;
+            photoMediaId?: string | null;
+            prefs?: components["schemas"]["StaffPrefs"];
         };
     };
     responses: {
@@ -4145,6 +4634,8 @@ export interface operations {
         parameters: {
             query?: {
                 open?: boolean;
+                /** @description With open=false, only calls made at or after this moment (for example since midnight in the venue's time zone). Newest first. */
+                since?: string;
             };
             header?: never;
             path: {
@@ -4179,8 +4670,15 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    /** @enum {string} */
-                    status: "acknowledged" | "resolved";
+                    /**
+                     * @description acknowledged is "On my way": the guest sees the staff member's first name.
+                     * @enum {string}
+                     */
+                    status?: "acknowledged" | "resolved";
+                    /** @description A short message the guest sees on their phone, such as "Coming in 2 min". Resolves the call. */
+                    reply?: string;
+                    /** @description Hide the call from the queue for this long, then bring it back. The guest still sees it as waiting. */
+                    snoozeMinutes?: number;
                 };
             };
         };
@@ -4466,7 +4964,11 @@ export interface operations {
     ownerGetInsights: {
         parameters: {
             query?: {
-                range?: "today" | "7d" | "30d" | "90d";
+                range?: "today" | "7d" | "30d" | "90d" | "custom";
+                /** @description Required with range custom. */
+                since?: string;
+                /** @description Required with range custom. */
+                until?: string;
             };
             header?: never;
             path: {
@@ -4476,7 +4978,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Sample figures until the real ledger exists. The response says sample true. */
+            /** @description Worked out from the venue's real visits, orders and feedback. sample is only true for a demo venue. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -4728,6 +5230,7 @@ export interface operations {
             query?: {
                 search?: string;
                 wantsOffers?: boolean;
+                tag?: components["schemas"]["CustomerTag"];
             };
             header?: never;
             path: {
@@ -4737,7 +5240,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Enrolled loyalty customers. */
+            /** @description Enrolled loyalty customers, most recent visit first. `search` matches the name or the last 4 digits of the phone. totalCount is every member, before filters; countsByTag is per tag, before the tag filter. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -4746,6 +5249,9 @@ export interface operations {
                     "application/json": {
                         items: components["schemas"]["LoyaltyCustomerSummary"][];
                         totalCount: number;
+                        countsByTag?: {
+                            [key: string]: number;
+                        };
                     };
                 };
             };
@@ -4813,9 +5319,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    name: string;
-                };
+                "application/json": components["schemas"]["BusinessPatch"];
             };
         };
         responses: {
@@ -4997,6 +5501,344 @@ export interface operations {
                 };
                 content?: never;
             };
+        };
+    };
+    ownerListPromos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["Promo"][];
+                    };
+                };
+            };
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    ownerCreatePromo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PromoInput"];
+            };
+        };
+        responses: {
+            /** @description Created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Promo"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
+        };
+    };
+    ownerDeletePromo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+                promoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    ownerUpdatePromo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+                promoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PromoPatch"];
+            };
+        };
+        responses: {
+            /** @description Saved. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Promo"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["Unprocessable"];
+        };
+    };
+    ownerListNotifications: {
+        parameters: {
+            query?: {
+                kind?: components["schemas"]["OwnerNotificationKind"];
+                unread?: boolean;
+                cursor?: components["parameters"]["Cursor"];
+            };
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["OwnerNotification"][];
+                        unreadCount: number;
+                        /** @description Unread count per kind, for the filter chips. */
+                        countsByKind: {
+                            [key: string]: number;
+                        };
+                        nextCursor?: string | null;
+                    };
+                };
+            };
+        };
+    };
+    ownerMarkNotificationsRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Leave out to mark every notification read. */
+                    ids?: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description The new unread count. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        unreadCount: number;
+                    };
+                };
+            };
+        };
+    };
+    ownerGetLoyaltyCustomer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+                customerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoyaltyCustomerDetail"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    ownerStampLoyaltyCustomer: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description A new UUID per user action. Reuse it when retrying the same action. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                venueId: components["parameters"]["VenueId"];
+                customerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Stamp result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoyaltyScanResult"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    ownerListLoyaltyScans: {
+        parameters: {
+            query?: {
+                since?: string;
+            };
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["LoyaltyScanLogEntry"][];
+                    };
+                };
+            };
+        };
+    };
+    updateMyProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StaffProfilePatch"];
+            };
+        };
+        responses: {
+            /** @description Saved. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffUser"];
+                };
+            };
+            422: components["responses"]["Unprocessable"];
+        };
+    };
+    requestPhoneChange: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description A new UUID per user action. Reuse it when retrying the same action. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    phone: components["schemas"]["GhanaPhone"];
+                };
+            };
+        };
+        responses: {
+            /** @description Code sent. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 300 */
+                        expiresInSeconds: number;
+                        /** @example 30 */
+                        resendInSeconds: number;
+                    };
+                };
+            };
+            409: components["responses"]["Conflict"];
+            429: components["responses"]["TooManyRequests"];
+        };
+    };
+    confirmPhoneChange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    phone: components["schemas"]["GhanaPhone"];
+                    code: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Number changed. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffUser"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            429: components["responses"]["TooManyRequests"];
         };
     };
 }

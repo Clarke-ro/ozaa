@@ -74,20 +74,22 @@ export function settlePayment(
         : null;
     const momoPhone = isGhanaPhone(row.phone) ? ghanaPhone(row.phone) : null;
     const venue = venueById(world, live.order.venueId);
-    keepLoyalty(
-      world,
-      venue.id,
-      {
-        type: 'paid_visit',
-        orderId: live.order.id,
-        amountMinor: minor(live.order.totalPesewas),
-        currency: currencyCode(venue.currency),
-        paid: live.order.paymentStatus === 'paid',
-        loyaltyPhone,
-        momoPhone,
-      },
-      new Date(clock).toISOString(),
-    );
+    // The owner can turn the automatic stamp off and stamp only by scanning.
+    if (!world.noAutoStamp.has(venue.id))
+      keepLoyalty(
+        world,
+        venue.id,
+        {
+          type: 'paid_visit',
+          orderId: live.order.id,
+          amountMinor: minor(live.order.totalPesewas),
+          currency: currencyCode(venue.currency),
+          paid: live.order.paymentStatus === 'paid',
+          loyaltyPhone,
+          momoPhone,
+        },
+        new Date(clock).toISOString(),
+      );
   }
   return row.payment;
 }

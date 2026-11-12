@@ -5,10 +5,52 @@ import { rememberOpenOrder } from './openOrder';
 import { nextId, publicVenue, STAFF, venueBySlug } from './world';
 import { accessOf } from './mockRules';
 import type { MockContext } from './mockContext';
+import type { World } from './worldTypes';
+import type { StaffPrefs, StaffUser } from '@/lib/api/types';
+import { isGhanaPhone } from '@/lib/brand';
+import { mockUploadedImage } from './mediaRegistry';
 
-/** Mock calls: sign-in, tokens and the guest session. */
+const DEFAULT_PREFS: StaffPrefs = {
+  language: 'en',
+  appearance: 'system',
+  soundForNewOrders: true,
+  notify: { order: true, call: true, bill: true, guest_note: true, review: true },
+};
+
+/** The profile extras for a staff member, with defaults until they change something. */
+export function profileOf(world: World, phone: string) {
+  const staff = STAFF.find((person) => person.phone === phone);
+  return (
+    world.profiles.get(phone) ?? {
+      firstName: staff?.firstName ?? 'Owner',
+      lastName: null,
+      email: null,
+      photo: null,
+      phone,
+      prefs: DEFAULT_PREFS,
+    }
+  );
+}
+
+/** Mock calls: sign-in, tokens, the signed-in profile and the guest session. */
 export function mockAuthCalls(ctx: MockContext) {
-  const { world, tokens, now, gate } = ctx;
+  const { world, tokens, now, gate, remember } = ctx;
+  const meOf = (phone: string): StaffUser => {
+    const profile = profileOf(world, phone);
+    return {
+      id: `usr_${phone.slice(-4)}`,
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      phone: profile.phone,
+      email: profile.email,
+      photo: profile.photo,
+      prefs: profile.prefs,
+      venues: STAFF.filter((person) => person.phone === phone).flatMap((person) => {
+        const venue = world.venues[person.slug];
+        return venue ? [{ venueId: venue.id, name: venue.name, role: person.role }] : [];
+      }),
+    };
+  };
   const verifyOtp: ApiClient['verifyOtp'] = async (body) => {
     await gate();
     const fails = world.otpFails.get(body.phone) ?? 0;
@@ -63,16 +105,49 @@ export function mockAuthCalls(ctx: MockContext) {
     async getMe() {
       await gate();
       const row = accessOf(world, tokens);
-      const staff = STAFF.filter((person) => person.phone === row.phone);
-      return {
-        id: `usr_${row.phone.slice(-4)}`,
-        firstName: staff[0]?.firstName ?? 'Owner',
-        phone: row.phone,
-        venues: staff.flatMap((person) => {
-          const venue = world.venues[person.slug];
-          return venue ? [{ venueId: venue.id, name: venue.name, role: person.role }] : [];
-        }),
-      };
+      return meOf(row.phone);
+    },
+    async updateMyProfile(body) {
+      await gate();
+      const { phone } = accessOf(world, tokens);
+      const current = profileOf(world, phone);
+      if (body.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(body.email))
+        throw new ApiError(422, 'email_not_valid', 'Check the email address');
+      world.profiles.set(phone, {
+        ...current,
+        firstName: body.firstName?.trim() || current.firstName,
+        lastName: body.lastName === undefined ? current.lastName : body.lastName,
+        email: body.email === undefined ? current.email : body.email,
+        photo:
+          body.photoMediaId === undefined
+            ? current.photo
+            : body.photoMediaId === null
+              ? null
+              : (mockUploadedImage(body.photoMediaId) ?? current.photo),
+        prefs: body.prefs ?? current.prefs,
+      });
+      return meOf(phone);
+    },
+    async requestPhoneChange(phone, call) {
+      await gate();
+      const row = accessOf(world, tokens);
+      return remember(call.idempotencyKey, () => {
+        if (!isGhanaPhone(phone)) throw new ApiError(400, 'phone_not_valid', 'Check the number');
+        if (STAFF.some((person) => person.phone === phone) && phone !== row.phone)
+          throw new ApiError(409, 'phone_taken', 'Someone already signs in with that number');
+        world.phoneChanges.set(row.phone, phone);
+        return { expiresInSeconds: 300, resendInSeconds: 30 };
+      });
+    },
+    async confirmPhoneChange(body) {
+      await gate();
+      const { phone } = accessOf(world, tokens);
+      // The demo code stands in for the SMS code the real server sends to the new number.
+      if (world.phoneChanges.get(phone) !== body.phone || body.code !== DEMO_CODE)
+        throw new ApiError(401, 'code_wrong', 'That code is not right');
+      world.phoneChanges.delete(phone);
+      world.profiles.set(phone, { ...profileOf(world, phone), phone: body.phone });
+      return meOf(phone);
     },
     async createGuestSession(body) {
       await gate();
