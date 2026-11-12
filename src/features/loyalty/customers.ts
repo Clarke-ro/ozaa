@@ -1,6 +1,7 @@
 import type { CustomerTag, LoyaltyCustomerSummary } from '@/lib/api/types';
 import { DAY, type Member, type Programme } from './factsTypes';
-import { fold, maskPhone } from './factsWire';
+import { fold } from './factsFold';
+import { maskPhone } from './factsWire';
 
 const QUIET_DAYS = 30;
 const NEW_DAYS = 30;

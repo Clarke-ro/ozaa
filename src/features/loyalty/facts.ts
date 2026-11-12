@@ -37,16 +37,9 @@ import {
   type VenueLoyalty,
   type Wallet,
 } from './factsTypes';
-import {
-  factKey,
-  featured,
-  fold,
-  parseProgramme,
-  programmeFromWire,
-  seedVenueLoyalty,
-  toWire,
-  walletFromWire,
-} from './factsWire';
+import { factKey, featured, fold } from './factsFold';
+import { parseProgramme, programmeFromWire } from './factsParse';
+import { seedVenueLoyalty, toWire, walletFromWire } from './factsWire';
 
 export function apply(venue: VenueLoyalty, command: Command, now: string): Step {
   if (command.type === 'join') return join(venue, command, now);
