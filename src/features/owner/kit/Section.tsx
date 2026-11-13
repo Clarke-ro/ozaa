@@ -6,8 +6,6 @@ import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { cardStyle } from './cardStyle';
 
-const CHIP = tokens.space[10] + tokens.space[1];
-
 /**
  * One group of settings as a white card: a bold title (with an optional icon, a grey line under
  * it, a status badge and one small control on the right) inside the top of the card, then the
@@ -48,8 +46,9 @@ export function Section({
     title || action ? (
       <View style={[styles.head, Icon && styles.headIcon]}>
         {Icon ? (
-          <View style={[styles.chip, { backgroundColor: theme.tint }]}>
-            <Icon size={20} color={theme.badgeInk} />
+          // Canvas: a plain 22 px icon in a 32 px slot, no tinted bubble.
+          <View style={styles.chip}>
+            <Icon size={22} color={theme.text} />
           </View>
         ) : null}
         <View style={styles.words}>
@@ -128,14 +127,15 @@ const styles = StyleSheet.create({
     paddingTop: tokens.space[4],
     paddingBottom: tokens.space[1],
   },
-  headIcon: { paddingBottom: tokens.space[4] },
-  chip: {
-    width: CHIP,
-    height: CHIP,
-    borderRadius: tokens.radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
+  // Canvas integration row: at least 52 px, 20 px each side.
+  headIcon: {
+    minHeight: 76,
+    paddingTop: tokens.space[3],
+    paddingBottom: tokens.space[3],
+    paddingHorizontal: tokens.owner.controls.cardPadding,
+    gap: tokens.space[4],
   },
+  chip: { width: 32, alignItems: 'center', justifyContent: 'center' },
   words: { flex: 1, minWidth: 0, gap: 2 },
   titleRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: tokens.space[2] },
   title: { flexShrink: 1 },

@@ -4,6 +4,41 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-13 · The last ten screens laid out like the canvas
+
+**What we built**
+
+These screens now follow their canvas boards: Staff, Reviews, Feedback, Settings, Call details, Loyalty, Insights, QR codes and links, Integrations, and the sidebar rows.
+
+- **Figures:** big white figure cards on top.
+- **Filters:** chips with counts instead of tabs.
+- **Section titles:** above their cards, not inside.
+- **Buttons:** tinted for the main step on each card.
+
+**How it works**
+
+```
+kit/FigureRow     → Staff, Loyalty figure cards
+kit/Section       → plain sections put the title above the card (Settings, venue pages)
+ChipRow + counts  → Staff, Reviews, Feedback, Loyalty, Insights filters
+```
+
+Most changes are in shared pieces, so one change fixes many screens.
+
+**Files to look at**
+
+- `src/features/owner/kit/FigureRow.tsx` and `kit/Section.tsx`.
+- `screens/reviews/RatingSummary.tsx` and `reviewStats.ts`, with a test.
+- `screens/insights/FunnelCard.tsx` and `insightsModel.ts`: the share of the step before, and the drop-off tip.
+
+**New idea: don't draw what the data can't back up**
+
+The canvas shows "Agreed to offers", menu views per dish, and Google, Tripadvisor and WhatsApp connections. The app's contract has no data for these yet, so the screens leave them out instead of showing made-up numbers.
+
+**Try it yourself**
+
+In Insights, pick "This week". The funnel and the cards all change together, because they come from one report.
+
 ## 2026-11-13 · Orders, Floor, Calls, Menu and Sales laid out like the canvas
 
 **What we built**

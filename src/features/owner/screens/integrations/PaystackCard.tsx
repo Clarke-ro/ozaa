@@ -171,55 +171,68 @@ export function PaystackCard({
     >
       <SectionBody>
         <View style={styles.stack}>
-          <Text variant="body-strong">{t('ownerPay.whereTitle')}</Text>
-          {(['step1', 'step2', 'step3'] as const).map((step, index) => (
-            <Text key={step} variant="caption" style={{ color: theme.muted }}>
-              {index + 1}. {t(`ownerPay.${step}`)}
+          {/* Canvas: where the keys are, in one grey box with a link to Paystack. */}
+          <View style={[styles.where, { backgroundColor: theme.wash }]}>
+            <Text style={[styles.whereText, { color: theme.muted }]}>
+              {t('ownerPay.whereShort')}
             </Text>
-          ))}
-          <Button
-            label={t('ownerPay.openPaystack')}
-            tone="ghost"
-            size="md"
-            onPress={() => void Linking.openURL(PAYSTACK_KEYS_URL)}
-          />
-          <Segmented
-            label={t('ownerPay.mode')}
-            value={mode}
-            onChange={setMode}
-            options={[
-              { id: 'test', label: t('ownerPay.testMode') },
-              { id: 'live', label: t('ownerPay.liveMode') },
-            ]}
-          />
-          <Text variant="caption" style={{ color: theme.meta }}>
-            {mode === 'test' ? t('ownerPay.testHint') : t('ownerPay.liveOff')}
-          </Text>
-          <Field
-            label={t('ownerPay.publicKey')}
-            value={publicKey}
-            onChangeText={setPublicKey}
-            placeholder={mode === 'test' ? 'pk_test_…' : 'pk_live_…'}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-          <Field
-            label={t('ownerPay.secretKey')}
-            hint={t('ownerPay.secretHint')}
-            value={secretKey}
-            onChangeText={setSecretKey}
-            placeholder={mode === 'test' ? 'sk_test_…' : 'sk_live_…'}
-            autoCapitalize="none"
-            autoCorrect={false}
-            autoComplete="off"
-            secureTextEntry
-            error={error}
-          />
-          <Button
-            label={t('ownerPay.connect')}
-            loading={connect.isPending}
-            onPress={() => (check.ok ? connect.mutate() : setTried(true))}
-          />
+            <Button
+              label={t('ownerPay.openPaystack')}
+              tone="secondary"
+              onPress={() => void Linking.openURL(PAYSTACK_KEYS_URL)}
+              style={styles.small}
+            />
+          </View>
+          <View style={styles.mode}>
+            <Text style={[styles.label, { color: theme.muted }]}>{t('ownerPay.mode')}</Text>
+            <View style={styles.modeSwitch}>
+              <Segmented
+                label={t('ownerPay.mode')}
+                value={mode}
+                onChange={setMode}
+                options={[
+                  { id: 'test', label: t('ownerPay.testMode') },
+                  { id: 'live', label: t('ownerPay.liveMode') },
+                ]}
+              />
+            </View>
+            <Text variant="caption" style={{ color: theme.meta }}>
+              {mode === 'test' ? t('ownerPay.testHint') : t('ownerPay.liveOff')}
+            </Text>
+          </View>
+          <View style={styles.keys}>
+            <View style={styles.key}>
+              <Field
+                label={t('ownerPay.publicKey')}
+                value={publicKey}
+                onChangeText={setPublicKey}
+                placeholder={mode === 'test' ? 'pk_test_…' : 'pk_live_…'}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+            <View style={styles.key}>
+              <Field
+                label={t('ownerPay.secretKey')}
+                value={secretKey}
+                onChangeText={setSecretKey}
+                placeholder={mode === 'test' ? 'sk_test_…' : 'sk_live_…'}
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="off"
+                secureTextEntry
+                error={error}
+              />
+            </View>
+          </View>
+          <View style={[styles.foot, { borderTopColor: theme.wash }]}>
+            <Text style={[styles.footNote, { color: theme.meta }]}>{t('ownerPay.secretNote')}</Text>
+            <Button
+              label={t('ownerPay.connect')}
+              loading={connect.isPending}
+              onPress={() => (check.ok ? connect.mutate() : setTried(true))}
+            />
+          </View>
         </View>
       </SectionBody>
     </Section>
@@ -227,7 +240,33 @@ export function PaystackCard({
 }
 
 const styles = StyleSheet.create({
-  stack: { gap: tokens.space[3] },
+  stack: { gap: tokens.space[5] },
+  where: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: tokens.space[3],
+    paddingVertical: 14,
+    paddingHorizontal: tokens.space[4],
+    borderRadius: 14,
+  },
+  whereText: { flexGrow: 1, flexBasis: 260, fontSize: 14, lineHeight: 20 },
+  small: { minHeight: 40 },
+  mode: { gap: tokens.space[2] },
+  modeSwitch: { maxWidth: 320 },
+  label: { fontSize: 14, lineHeight: 20, fontFamily: 'Inter_600' },
+  keys: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.space[4] },
+  key: { flexGrow: 1, flexBasis: 240, minWidth: 0 },
+  foot: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: tokens.space[3],
+    paddingTop: tokens.space[4],
+    borderTopWidth: 1,
+  },
+  footNote: { flexGrow: 1, flexBasis: 240, fontSize: 13, lineHeight: 18 },
   row: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
   flex: { flex: 1 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.space[2] },

@@ -2353,9 +2353,9 @@
     }
   },
   "ownerPay": {
-    "lead": "How guests pay you. Online payments go straight to your own Paystack account; Cravins never holds your money.",
-    "paystack": "Paystack (card and MoMo)",
-    "ownAccount": "Your own Paystack account. Guests pay by card or MoMo (MTN, Telecel, AirtelTigo) and the money goes to you.",
+    "lead": "Connect Cravins to the services you already use",
+    "paystack": "Paystack",
+    "ownAccount": "Card and MoMo, paid straight into your own account",
     "whereTitle": "Where to find your keys",
     "step1": "Log in to your Paystack dashboard.",
     "step2": "Open Settings, then API Keys & Webhooks.",
@@ -2406,7 +2406,10 @@
       "live_not_enabled": "Live payments are switched off for now. Use your test keys.",
       "bank": "Add the account name and number, or switch bank transfer off.",
       "momo": "Pick the network and type the MoMo number, or switch MoMo off."
-    }
+    },
+    "paymentsTitle": "Payments",
+    "whereShort": "Your keys are in Paystack under Settings → API Keys & Webhooks.",
+    "secretNote": "Sent once to Cravins’s server, kept encrypted, and never shown again."
   },
   "ownerPromos": {
     "lead": "Discounts and codes. They come off the bill before the guest pays.",
