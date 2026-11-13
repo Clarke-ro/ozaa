@@ -2,17 +2,8 @@ import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import {
-  Building2,
-  CircleHelp,
-  Globe,
-  LogOut,
-  Smartphone,
-  Trash2,
-  Users,
-} from 'lucide-react-native';
+import { Building2, CircleHelp, LogOut, Smartphone, Trash2, Users } from 'lucide-react-native';
 import { api } from '@/lib/api';
-import { languageByCode } from '@/features/venue';
 import { useOwnerSession } from '@/features/session';
 import { OwnerPage } from '../../chrome/OwnerPage';
 import { useSignOut } from '../../chrome/useSignOut';
@@ -25,7 +16,7 @@ import { LanguageSheet } from './LanguageSheet';
 
 /** Who is signed in, the venue's people and devices, preferences, and the account. */
 export function SettingsScreen() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const router = useRouter();
   const role = useOwnerSession((state) => state.role) ?? 'owner';
   const venueId = useOwnerSession((state) => state.venueId);
@@ -35,6 +26,20 @@ export function SettingsScreen() {
     queryFn: () => api.ownerGetBusiness(),
   });
   const location = business.data?.locations.find((l) => l.id === venueId);
+  const desk = role === 'owner' || role === 'manager';
+  // The counts beside Staff and Scanner devices (canvas): "3 people", "1 phone".
+  const staff = useQuery({
+    queryKey: ownerKeys.staff(venueId ?? ''),
+    queryFn: () => api.ownerListStaff(venueId ?? ''),
+    enabled: Boolean(venueId) && desk,
+  });
+  const devices = useQuery({
+    queryKey: ownerKeys.devices(venueId ?? ''),
+    queryFn: () => api.ownerListScannerDevices(venueId ?? ''),
+    enabled: Boolean(venueId) && desk,
+  });
+  const staffCount = (staff.data?.items ?? []).filter((m) => m.status !== 'removed').length;
+  const deviceCount = devices.data?.items.length ?? 0;
   const [sheet, setSheet] = useState<'language' | 'signOut' | 'delete' | null>(null);
 
   const signOut = () => {
@@ -56,8 +61,6 @@ export function SettingsScreen() {
           label={t('ownerSettings.signOut')}
           onPress={() => setSheet('signOut')}
         />
-      </Section>
-      <Section>
         <LinkRow
           icon={Trash2}
           label={t('ownerSettings.delete')}
@@ -77,38 +80,33 @@ export function SettingsScreen() {
           value={location?.name}
           onPress={() => router.push('/owner/business')}
         />
-        {role === 'owner' || role === 'manager' ? (
+        {desk ? (
           <>
             <LinkRow
               icon={Users}
               label={t('owner.staff')}
+              value={staff.data ? t('ownerStaff.team', { count: staffCount }) : undefined}
               onPress={() => router.push('/owner/staff')}
             />
             <LinkRow
               icon={Smartphone}
               label={t('owner.devices')}
+              value={
+                devices.data ? t('ownerSettings.devicesCount', { count: deviceCount }) : undefined
+              }
               onPress={() => router.push('/owner/devices')}
             />
           </>
         ) : null}
-      </Section>
-
-      <Section title={t('ownerSettings.preferences')}>
-        <LinkRow
-          icon={Globe}
-          label={t('ownerSettings.language')}
-          value={languageByCode(i18n.language).label}
-          onPress={() => setSheet('language')}
-        />
       </Section>
     </>
   );
 
   return (
     <OwnerPage title={t('owner.settings')} subtitle={t('ownerLead.settings')}>
-      <ProfileSection />
+      <ProfileSection place={location?.name} />
       {mainSections}
-      <PrefsSection />
+      <PrefsSection onLanguage={() => setSheet('language')} />
       {accountSections}
 
       <LanguageSheet visible={sheet === 'language'} onClose={() => setSheet(null)} />

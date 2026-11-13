@@ -87,7 +87,7 @@ export function NavRow({
       ]}
     >
       <View>
-        <Icon color={iconInk} size={compact ? 24 : 20} strokeWidth={current ? 2.4 : 2} />
+        <Icon color={iconInk} size={compact ? 24 : 18} strokeWidth={current ? 2.4 : 1.75} />
         {shown && compact ? (
           <View style={[styles.dot, { backgroundColor: theme.fill, borderColor: theme.surface }]}>
             <Text variant="caption" style={[styles.micro, { color: theme.onFill }]}>
@@ -143,21 +143,18 @@ const styles = StyleSheet.create({
     borderRadius: RAIL_DOT / 2,
     borderWidth: 2,
   },
+  // Canvas sidebar row: 36 px tall, 10 px inside, 10 px corners, 18 px icon, 13.5 px label.
   row: {
-    minHeight: tokens.button.height.md - tokens.space[1],
+    minHeight: 36,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: tokens.space[3],
-    paddingHorizontal: tokens.space[3],
-    borderRadius: tokens.radius.sm,
+    gap: 10,
+    paddingHorizontal: 10,
+    borderRadius: 10,
     borderCurve: 'continuous',
   },
   iconOnly: { justifyContent: 'center', paddingHorizontal: 0 },
-  rowLabel: {
-    flex: 1,
-    fontSize: tokens.owner.type.nav.size,
-    lineHeight: tokens.owner.type.nav.line,
-  },
+  rowLabel: { flex: 1, fontSize: 13.5, lineHeight: 18 },
   tab: { flex: 1, minHeight: 48, alignItems: 'center', justifyContent: 'center', gap: 2 },
   tabLabel: { fontSize: tokens.owner.micro.size, lineHeight: tokens.owner.micro.line - 1 },
   pill: {

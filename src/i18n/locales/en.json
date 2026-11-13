@@ -772,7 +772,7 @@
     }
   },
   "ownerTables": {
-    "pageLead": "Share your menu link and print a QR code for every table.",
+    "pageLead": "Your menu link and a QR code for every table",
     "menuQrA11y": "QR code for your menu link",
     "copyShort": "Copy",
     "lead": "Each table gets its own QR code. Guests scan it to see the menu, order and pay.",
@@ -785,7 +785,7 @@
     "colour": "Card colour",
     "printOne": "Print {{name}}",
     "printAll_one": "Print 1 card",
-    "printAll_other": "Print all {{count}}",
+    "printAll_other": "Print all {{count}} tables",
     "share": "Share link",
     "download": "Download QR",
     "printOnWeb": "To print or download cards, open Cravins on a computer.",
@@ -825,7 +825,11 @@
     "embedHint": "Show your menu inside your own website.",
     "copyCode": "Copy code",
     "codeCopied": "Code copied",
-    "tableCodes": "Table QR codes"
+    "tableCodes": "Table QR codes",
+    "yourMenuLink": "Your menu link",
+    "tableCodesTitle": "Table QR codes",
+    "menuLinkUse": "For your bio, posters and WhatsApp",
+    "downloadQr": "Download QR"
   },
   "ownerFeedback": {
     "lead": "Private notes guests leave from the table. Only you and your managers see them.",
@@ -854,7 +858,8 @@
     "noArchived": "Nothing archived",
     "empty": "No new notes",
     "emptyBody": "When a guest leaves a private note from the table, it shows here.",
-    "anonymousName": "Anonymous guest"
+    "anonymousName": "Anonymous guest",
+    "show": "Show"
   },
   "ownerMenu": {
     "lead": "What guests see when they scan",
@@ -1224,7 +1229,11 @@
       "system": "Follow my device"
     },
     "notifyTitle": "Notifications",
-    "notifyNote": "Choose what shows in Notifications and on the badges for you."
+    "notifyNote": "Choose what shows in Notifications and on the badges for you.",
+    "editProfile": "Edit profile",
+    "doneEditing": "Done",
+    "devicesCount_one": "{{count}} phone",
+    "devicesCount_other": "{{count}} phones"
   },
   "ownerFloor": {
     "tableName": "Table {{name}}",
@@ -1311,7 +1320,7 @@
   "ownerLoyalty": {
     "scan": "Scan",
     "tabs": {
-      "program": "Program",
+      "program": "Programme",
       "members": "Members",
       "results": "Results"
     },
@@ -1352,7 +1361,12 @@
     "stampOnPaid": "Stamp paid Cravins orders",
     "stampOnPaidHint": "Members get a stamp on their own when they pay through Cravins.",
     "expire": "Stamps last 90 days",
-    "expireHint": "Older stamps drop off the card. Off keeps them forever."
+    "expireHint": "Older stamps drop off the card. Off keeps them forever.",
+    "scanCard": "Scan a card",
+    "stampsGiven": "Stamps given, 30 days",
+    "rewardsClaimed": "Rewards claimed, 30 days",
+    "guestsSee": "What guests see",
+    "previewLead": "Your stamp card"
   },
   "ownerBusiness": {
     "business": "Business",
@@ -1450,14 +1464,25 @@
     "summaryA11y": "Average {{avg}} stars from {{count}} reviews",
     "allAnswered": "All replied to",
     "empty": "No reviews yet",
-    "emptyBody": "When guests leave a review from the table, it shows here."
+    "emptyBody": "When guests leave a review from the table, it shows here.",
+    "average": "Average rating",
+    "waiting": "Waiting for your reply",
+    "reply": "Reply",
+    "filter": {
+      "reply": "Needs a reply",
+      "replied": "Replied",
+      "all": "All"
+    },
+    "stars_one": "{{count}} star",
+    "stars_other": "{{count}} stars",
+    "starRowA11y": "{{stars}} stars: {{count}}"
   },
   "ownerCharts": {
     "showNumbers": "Numbers",
     "showChart": "Chart"
   },
   "ownerInsights": {
-    "lead": "Who visited, what sold and when it got busy.",
+    "lead": "Who came, what they looked at, and whether they came back",
     "range": {
       "today": "Today",
       "7d": "Last 7 days",
@@ -1471,7 +1496,7 @@
     "dishHead": "Dish",
     "salesHead": "Sales",
     "sales": "Sales",
-    "topDishes": "Top dishes",
+    "topDishes": "Most ordered dishes",
     "sold_one": "1 sold",
     "sold_other": "{{count}} sold",
     "busy": "Busy hours",
@@ -1483,7 +1508,7 @@
     "returning_other": "{{count}} guests came back",
     "returningShort": "Returning",
     "firstVisit": "First visit",
-    "mood": "Feedback mood",
+    "mood": "Guest mood",
     "notes": "notes in this period",
     "funnel": "From scan to order",
     "noVisits": "No guest visits in this period yet.",
@@ -1497,7 +1522,29 @@
     "visits_other": "{{count}} visits",
     "readNotes": "Read the notes",
     "from": "From (YYYY-MM-DD)",
-    "to": "To (YYYY-MM-DD)"
+    "to": "To (YYYY-MM-DD)",
+    "stepLower": {
+      "scanned": "scanned a QR code",
+      "opened": "opened the menu",
+      "ordered": "placed an order"
+    },
+    "ofPrevious": {
+      "scans": "{{percent}}% of scans",
+      "views": "{{percent}}% of menu views"
+    },
+    "dropTip_one": "1 guest opened the menu but didn't order. Clear photos and prices help.",
+    "dropTip_other": "{{count}} guests opened the menu but didn't order. Clear photos and prices help.",
+    "ordered_one": "1 ordered",
+    "ordered_other": "{{count}} ordered",
+    "notesCount_one": "1 note",
+    "notesCount_other": "{{count}} notes",
+    "cameBack": "came back",
+    "cameBackRow": "Came back",
+    "cameBackA11y": "{{percent}}% of guests came back",
+    "guestsCount_one": "1 guest",
+    "guestsCount_other": "{{count}} guests",
+    "seeCustomers": "See customers",
+    "busiestTip": "Most guests arrive around {{hour}}."
   },
   "ownerLoyaltyResults": {
     "members": "Members",
@@ -1720,10 +1767,10 @@
     "removeBody": "They will be signed out and cannot sign in to this venue again unless you invite them.",
     "removeConfirm": "Remove",
     "can": {
-      "owner": "Everything, including payment settings and the team.",
-      "manager": "Everything except payment settings and the team.",
-      "waiter": "Orders and waiter calls.",
-      "kitchen": "Order status only.",
+      "owner": "Every screen, including payouts and staff.",
+      "manager": "Everything except payouts and staff.",
+      "waiter": "Today, floor, orders, calls and the register.",
+      "kitchen": "Orders only.",
       "viewer": "Can look, cannot change anything.",
       "staff_scanner": "Scans loyalty cards only."
     },
@@ -1733,7 +1780,20 @@
     "orders": "Orders today",
     "calls": "Calls today",
     "pickup": "Avg pick-up",
-    "joined": "Joined"
+    "joined": "Joined",
+    "inviteSomeone": "Invite someone",
+    "onShiftNow": "On shift now",
+    "inTeam": "In the team",
+    "invitesWaiting": "Invites waiting",
+    "ordersShort": "orders",
+    "callsShort": "calls",
+    "pickupShort": "pick-up",
+    "rolesTitle": "What each role can open",
+    "show": {
+      "all": "Everyone",
+      "onShift": "On shift",
+      "invited": "Invited"
+    }
   },
   "ownerDevices": {
     "pair": "Pair a phone",
@@ -1908,13 +1968,13 @@
     "business": "Your business name and every location you run.",
     "calls": "Guests asking for a waiter",
     "devices": "Phones and tablets that scan loyalty cards at the counter.",
-    "feedback": "Private notes guests leave after their meal.",
-    "loyalty": "Your stamp card, its members and how it is doing.",
+    "feedback": "Private notes guests leave after their meal",
+    "loyalty": "Your stamp card, its members and how it is doing",
     "ordering": "Pickup and delivery orders from your menu link.",
-    "reviews": "Public ratings and reviews, and your replies.",
+    "reviews": "Public ratings from guests, and your replies",
     "services": "What guests can do from the table, and your Wi-Fi details.",
-    "settings": "Your account, your venue and how the app behaves.",
-    "staff": "Who works here, what they can open and who is on shift.",
+    "settings": "Your account, your venue and how the app behaves",
+    "staff": "Who works here, what they can open and who is on shift",
     "customers": "Diners who joined your loyalty card. Phone numbers stay masked.",
     "floor": "Every table at a glance. Tap one to see its bill and act on it.",
     "scan": "Scan a guest's loyalty card to give a stamp or a reward.",
@@ -2293,9 +2353,9 @@
     }
   },
   "ownerPay": {
-    "lead": "How guests pay you. Online payments go straight to your own Paystack account; Cravins never holds your money.",
-    "paystack": "Paystack (card and MoMo)",
-    "ownAccount": "Your own Paystack account. Guests pay by card or MoMo (MTN, Telecel, AirtelTigo) and the money goes to you.",
+    "lead": "Connect Cravins to the services you already use",
+    "paystack": "Paystack",
+    "ownAccount": "Card and MoMo, paid straight into your own account",
     "whereTitle": "Where to find your keys",
     "step1": "Log in to your Paystack dashboard.",
     "step2": "Open Settings, then API Keys & Webhooks.",
@@ -2346,7 +2406,10 @@
       "live_not_enabled": "Live payments are switched off for now. Use your test keys.",
       "bank": "Add the account name and number, or switch bank transfer off.",
       "momo": "Pick the network and type the MoMo number, or switch MoMo off."
-    }
+    },
+    "paymentsTitle": "Payments",
+    "whereShort": "Your keys are in Paystack under Settings → API Keys & Webhooks.",
+    "secretNote": "Sent once to Cravins’s server, kept encrypted, and never shown again."
   },
   "ownerPromos": {
     "lead": "Discounts and codes. They come off the bill before the guest pays.",

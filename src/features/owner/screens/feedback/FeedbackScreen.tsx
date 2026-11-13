@@ -11,7 +11,7 @@ import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
-import { DeskTabs, EmptyCard, toast } from '../../kit';
+import { ChipRow, EmptyCard, toast } from '../../kit';
 import { AskCravinsAiScreen } from '../AskCravinsAiScreen';
 import { FeedbackCard } from './FeedbackCard';
 
@@ -20,7 +20,7 @@ type Tab = 'new' | 'archived' | 'ai';
 export function FeedbackScreen() {
   const theme = useTheme();
   const { t } = useTranslation();
-    const venueId = useOwnerSession((state) => state.venueId) ?? '';
+  const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const client = useQueryClient();
   const [tab, setTab] = useState<Tab>('new');
   const [search, setSearch] = useState('');
@@ -46,6 +46,12 @@ export function FeedbackScreen() {
     queryFn: () => api.ownerListFeedback(venueId, { state: 'new' }),
     enabled: Boolean(venueId),
   });
+  // Only for the count on the Archived chip (canvas).
+  const archivedAll = useQuery({
+    queryKey: [...ownerKeys.feedback(venueId), 'archived', ''],
+    queryFn: () => api.ownerListFeedback(venueId, { state: 'archived' }),
+    enabled: Boolean(venueId),
+  });
 
   const archive = useMutation({
     mutationFn: ({ id, archived }: { id: string; archived: boolean }) =>
@@ -57,48 +63,62 @@ export function FeedbackScreen() {
     onError: () => toast.error(t('ownerKit.saveFailed')),
   });
 
-  const items = list.data?.items ?? [];
+  // Newest first, as on the canvas.
+  const items = [...(list.data?.items ?? [])].sort((a, b) =>
+    b.createdAt.localeCompare(a.createdAt),
+  );
 
   return (
     <OwnerPage title={t('owner.feedback')} subtitle={t('ownerLead.feedback')}>
-      <DeskTabs
-        value={tab}
-        onChange={setTab}
-        tabs={[
-          { id: 'new', label: t('ownerFeedback.new'), count: unread.data?.items.length },
-          { id: 'archived', label: t('ownerFeedback.archivedTab') },
-          { id: 'ai', label: t('ownerFeedback.ask') },
-        ]}
-      />
+      <View style={styles.bar}>
+        <View style={styles.chips}>
+          <ChipRow<Tab>
+            label={t('ownerFeedback.show')}
+            value={tab}
+            onChange={setTab}
+            items={[
+              { id: 'new', label: t('ownerFeedback.new'), count: unread.data?.items.length },
+              {
+                id: 'archived',
+                label: t('ownerFeedback.archivedTab'),
+                count: archivedAll.data?.items.length,
+              },
+              { id: 'ai', label: t('ownerFeedback.ask') },
+            ]}
+          />
+        </View>
+        {tab === 'ai' ? null : (
+          <View
+            style={[styles.search, { borderColor: theme.line, backgroundColor: theme.surface }]}
+          >
+            <Search size={18} color={theme.muted} />
+            <TextInput
+              value={search}
+              onChangeText={setSearch}
+              placeholder={t('ownerFeedback.search')}
+              placeholderTextColor={theme.meta}
+              accessibilityLabel={t('ownerFeedback.search')}
+              returnKeyType="search"
+              style={[styles.input, { color: theme.text }]}
+            />
+            {search ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t('ownerFeedback.clear')}
+                onPress={() => setSearch('')}
+                style={styles.clear}
+              >
+                <X size={18} color={theme.muted} />
+              </Pressable>
+            ) : null}
+          </View>
+        )}
+      </View>
       {tab === 'ai' ? (
         <AskCravinsAiScreen venueId={venueId} />
       ) : (
         <>
           <View style={styles.toolbar}>
-            <View
-              style={[styles.search, { borderColor: theme.line, backgroundColor: theme.surface }]}
-            >
-              <Search size={18} color={theme.muted} />
-              <TextInput
-                value={search}
-                onChangeText={setSearch}
-                placeholder={t('ownerFeedback.search')}
-                placeholderTextColor={theme.meta}
-                accessibilityLabel={t('ownerFeedback.search')}
-                returnKeyType="search"
-                style={[styles.input, { color: theme.text }]}
-              />
-              {search ? (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={t('ownerFeedback.clear')}
-                  onPress={() => setSearch('')}
-                  style={styles.clear}
-                >
-                  <X size={18} color={theme.muted} />
-                </Pressable>
-              ) : null}
-            </View>
             <View style={styles.note}>
               <Shield size={14} color={theme.muted} />
               <Text variant="caption" style={{ color: theme.muted }}>
@@ -145,18 +165,23 @@ export function FeedbackScreen() {
 }
 
 const styles = StyleSheet.create({
+  // Canvas: the chips on the left and a 44 px rounded search on the right of one row.
+  bar: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: tokens.space[3] },
+  chips: { flexShrink: 1, minWidth: 0 },
   toolbar: { gap: tokens.space[2] },
   search: {
-    flex: 1,
+    marginLeft: 'auto',
+    flexBasis: 260,
+    flexGrow: 0,
     flexDirection: 'row',
     alignItems: 'center',
     gap: tokens.space[2],
-    minHeight: 44,
-    paddingLeft: tokens.space[3],
+    height: 44,
+    paddingLeft: tokens.space[4],
     borderWidth: 1,
-    borderRadius: tokens.radius.md,
+    borderRadius: tokens.radius.full,
   },
-  input: { flex: 1, minHeight: 42, fontFamily: 'Inter_400', fontSize: 15 },
+  input: { flex: 1, minWidth: 0, height: 42, fontFamily: 'Inter_400', fontSize: 15 },
   clear: {
     width: tokens.touchTarget,
     height: tokens.touchTarget,
@@ -164,5 +189,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   note: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
-  list: { gap: tokens.space[3] },
+  list: { gap: tokens.owner.controls.listGap },
 });

@@ -7,22 +7,26 @@ import { Star } from 'lucide-react-native';
 import { api } from '@/lib/api';
 import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
-import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
-import { EmptyCard, Segmented, toast } from '../../kit';
+import { ChipRow, EmptyCard, toast } from '../../kit';
+import { useOwnerLayout } from '../../chrome/layout';
+import { RatingSummary } from './RatingSummary';
 import { ReviewCard } from './ReviewCard';
 import { ownerKeys } from '../../data/keys';
 
-type Filter = 'all' | 'reply';
+type Filter = 'reply' | 'replied' | 'all';
+const FILTERS: readonly Filter[] = ['reply', 'replied', 'all'];
 
-/** Written reviews from guests, newest first, with the average and a reply on each. */
+/**
+ * Written reviews from guests (design canvas): the average and a bar per star level, chips for
+ * needs a reply / replied / all, then one card per review, newest first.
+ */
 export function ReviewsScreen() {
-  const theme = useTheme();
   const { t } = useTranslation();
-    const client = useQueryClient();
+  const client = useQueryClient();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
-  const [filter, setFilter] = useState<Filter>('all');
+  const [filter, setFilter] = useState<Filter>('reply');
+  const { wide } = useOwnerLayout();
   const key = ownerKeys.reviews(venueId);
   const reviews = useQuery({
     queryKey: key,
@@ -44,8 +48,12 @@ export function ReviewsScreen() {
     b.createdAt.localeCompare(a.createdAt),
   );
   const open = all.filter((r) => !r.reply);
-  const shown = filter === 'reply' ? open : all;
-  const average = all.length ? all.reduce((sum, r) => sum + r.stars, 0) / all.length : null;
+  const counts: Record<Filter, number> = {
+    reply: open.length,
+    replied: all.length - open.length,
+    all: all.length,
+  };
+  const shown = filter === 'reply' ? open : filter === 'replied' ? all.filter((r) => r.reply) : all;
 
   return (
     <OwnerPage title={t('owner.reviews')} subtitle={t('ownerLead.reviews')}>
@@ -54,63 +62,44 @@ export function ReviewsScreen() {
         error={reviews.isError}
         onRetry={() => void reviews.refetch()}
       >
-        <View style={styles.toolbar}>
-          {average != null ? (
-            <View
-              style={styles.summary}
-              accessible
-              accessibilityLabel={t('ownerReviews.summaryA11y', {
-                avg: average.toFixed(1),
-                count: all.length,
-              })}
-            >
-              <Star size={22} color={theme.ink} fill={theme.ink} />
-              <Text variant="display-m">{average.toFixed(1)}</Text>
-              <Text variant="body" style={{ color: theme.muted }}>
-                {t('ownerReviews.count', { count: all.length })}
-              </Text>
-            </View>
-          ) : (
-            <View />
-          )}
-          <View>
-            <Segmented<Filter>
+        <View style={styles.stack}>
+          {all.length > 0 ? <RatingSummary reviews={all} wide={wide} /> : null}
+          <View style={styles.list}>
+            <ChipRow<Filter>
               label={t('ownerReviews.show')}
               value={filter}
               onChange={setFilter}
-              options={[
-                { id: 'all', label: t('ownerReviews.all') },
-                { id: 'reply', label: t('ownerReviews.needsReply', { count: open.length }) },
-              ]}
+              items={FILTERS.map((id) => ({
+                id,
+                label: t(`ownerReviews.filter.${id}`),
+                count: counts[id],
+              }))}
             />
-          </View>
-        </View>
-        {shown.length === 0 ? (
-          <EmptyCard
-            icon={Star}
-            title={filter === 'reply' ? t('ownerReviews.allAnswered') : t('ownerReviews.empty')}
-            description={t('ownerReviews.emptyBody')}
-          />
-        ) : (
-          <View style={styles.list}>
-            {shown.map((review) => (
-              <View key={review.id}>
+            {shown.length === 0 ? (
+              <EmptyCard
+                icon={Star}
+                title={filter === 'reply' ? t('ownerReviews.allAnswered') : t('ownerReviews.empty')}
+                description={t('ownerReviews.emptyBody')}
+              />
+            ) : (
+              shown.map((review) => (
                 <ReviewCard
+                  key={review.id}
                   review={review}
                   sending={reply.isPending && reply.variables?.id === review.id}
                   onReply={(text) => reply.mutate({ id: review.id, text })}
                 />
-              </View>
-            ))}
+              ))
+            )}
           </View>
-        )}
+        </View>
       </DeskWait>
     </OwnerPage>
   );
 }
 
 const styles = StyleSheet.create({
-  toolbar: { gap: tokens.space[3] },
-  summary: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
-  list: { gap: tokens.space[3] },
+  // Canvas: 56 px from the rating cards to the chips; 10 px between cards.
+  stack: { gap: tokens.owner.controls.todayGap },
+  list: { gap: tokens.owner.controls.listGap },
 });

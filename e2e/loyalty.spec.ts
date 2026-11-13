@@ -75,7 +75,7 @@ test('guest loyalty wallet card, earn history, claim code QR, and owner confirma
   await page.waitForTimeout(800);
   await page.screenshot({ path: 'test-results/owner-loyalty-setup.png', fullPage: false });
 
-  await page.getByRole('radio', { name: 'Members', exact: true }).click();
+  await page.getByRole('tab', { name: 'Members', exact: true }).click();
   await page.waitForTimeout(800);
   await page.screenshot({
     path: 'test-results/owner-loyalty-confirm-members.png',

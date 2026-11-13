@@ -12,7 +12,9 @@ import {
 } from 'lucide-react-native';
 import type { FeedbackItem, FeedbackSentiment } from '@/lib/api/types';
 import { timeAgo } from '@/lib/time';
+import { STATUS_TONES } from '@/theme/palette';
 import { tokens } from '@/theme/tokens';
+import { cardStyle } from '../../kit';
 import { Text } from '@/ui/Text';
 import { useTheme, type Theme } from '@/ui/theme';
 
@@ -49,10 +51,10 @@ export function FeedbackCard({
   const who = item.contactName || t('ownerFeedback.anonymousName');
 
   return (
-    <View style={[styles.card, { borderColor: theme.line, backgroundColor: theme.surface }]}>
+    <View style={[cardStyle(theme), styles.card]}>
       <View style={styles.head}>
         <View
-          style={[styles.avatar, { backgroundColor: mood.bg }]}
+          style={styles.avatar}
           accessible
           accessibilityLabel={t(`ownerFeedback.mood.${item.sentiment}`)}
         >
@@ -62,7 +64,7 @@ export function FeedbackCard({
           <Text variant="body-strong" numberOfLines={1}>
             {who}
           </Text>
-          <Text variant="caption" style={{ color: theme.muted }}>
+          <Text variant="caption" style={{ color: theme.meta }}>
             {t(`ownerFeedback.mood.${item.sentiment}`)} · {timeAgo(item.createdAt, now, t)}
           </Text>
         </View>
@@ -75,8 +77,8 @@ export function FeedbackCard({
             <Star
               key={n}
               size={14}
-              color={n <= item.score ? theme.text : theme.line}
-              fill={n <= item.score ? theme.text : 'transparent'}
+              color={n <= item.score ? theme.ink : theme.line}
+              fill={n <= item.score ? theme.ink : 'transparent'}
             />
           ))}
         </View>
@@ -92,7 +94,12 @@ export function FeedbackCard({
         />
       ) : null}
 
-      <View style={[styles.actions, { borderColor: theme.line }]}>
+      <View style={[styles.actions, { borderColor: theme.wash }]}>
+        {item.contactPhone ? null : (
+          <Text variant="caption" style={[styles.flex, { color: theme.meta }]}>
+            {t('ownerFeedback.anonymous')}
+          </Text>
+        )}
         {item.contactPhone ? (
           <Action
             icon={Phone}
@@ -100,11 +107,7 @@ export function FeedbackCard({
             onPress={() => void Linking.openURL(`tel:${item.contactPhone}`)}
             accent
           />
-        ) : (
-          <Text variant="caption" style={[styles.flex, { color: theme.meta }]}>
-            {t('ownerFeedback.anonymous')}
-          </Text>
-        )}
+        ) : null}
         <Action
           icon={item.archived ? ArchiveRestore : Archive}
           label={item.archived ? t('ownerFeedback.restore') : t('ownerFeedback.archive')}
@@ -132,7 +135,9 @@ function Action({
   disabled?: boolean;
 }) {
   const theme = useTheme();
-  const ink = accent ? theme.ink : theme.text;
+  const tone = STATUS_TONES[theme.scheme].order;
+  // Canvas: "Call guest" is a tinted pill, "Archive" a white pill with a grey edge.
+  const ink = accent ? tone.ink : theme.text;
   return (
     <Pressable
       accessibilityRole="button"
@@ -142,7 +147,10 @@ function Action({
       onPress={onPress}
       style={({ pressed }) => [
         styles.action,
-        { opacity: disabled ? 0.5 : 1, backgroundColor: pressed ? theme.wash : undefined },
+        accent
+          ? { backgroundColor: tone.bg }
+          : { backgroundColor: theme.surface, borderColor: theme.line, borderWidth: 1 },
+        { opacity: disabled ? 0.5 : pressed ? 0.8 : 1 },
       ]}
     >
       <Icon size={16} color={ink} />
@@ -154,15 +162,7 @@ function Action({
 }
 
 const styles = StyleSheet.create({
-  card: {
-    gap: tokens.space[3],
-    paddingTop: tokens.space[4],
-    paddingHorizontal: tokens.space[4],
-    paddingBottom: tokens.space[1],
-    boxShadow: tokens.shadow.card,
-    borderRadius: tokens.radius.lg,
-    borderCurve: 'continuous',
-  },
+  card: { padding: tokens.owner.controls.cardPadding, gap: 14 },
   head: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
   avatar: {
     width: 40,
@@ -176,18 +176,18 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: tokens.space[1],
+    gap: tokens.space[2],
     justifyContent: 'flex-end',
-    borderTopWidth: StyleSheet.hairlineWidth,
-    paddingTop: tokens.space[1],
+    borderTopWidth: 1,
+    paddingTop: 14,
   },
   action: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: tokens.space[2],
-    minHeight: tokens.touchTarget,
-    paddingHorizontal: tokens.space[3],
-    borderRadius: tokens.radius.md,
+    height: 44,
+    paddingHorizontal: 18,
+    borderRadius: tokens.radius.full,
   },
   flex: { flex: 1 },
 });

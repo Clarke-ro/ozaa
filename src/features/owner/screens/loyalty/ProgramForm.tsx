@@ -63,7 +63,14 @@ export function useProgramEditor(venueId: string, program: LoyaltyProgram | unde
 }
 
 /** The stamp card rules in one column, with the live preview under the stamp settings. */
-export function ProgramForm({ editor }: { editor: ReturnType<typeof useProgramEditor> }) {
+export function ProgramForm({
+  editor,
+  preview = true,
+}: {
+  editor: ReturnType<typeof useProgramEditor>;
+  /** False when the guest preview sits beside the form instead (desktop). */
+  preview?: boolean;
+}) {
   const theme = useTheme();
   const { t } = useTranslation();
   const { draft, showErrors } = editor;
@@ -117,9 +124,11 @@ export function ProgramForm({ editor }: { editor: ReturnType<typeof useProgramEd
             value={f.halfway}
             onChange={(v) => draft.set('halfway', v)}
           />
-          <SectionBody>
-            <StampPreview stamps={f.stamps} reward={f.reward} />
-          </SectionBody>
+          {preview ? (
+            <SectionBody>
+              <StampPreview stamps={f.stamps} reward={f.reward} />
+            </SectionBody>
+          ) : null}
         </Section>
 
         <Section title={t('ownerLoyalty.gap')}>
@@ -175,7 +184,8 @@ export function ProgramForm({ editor }: { editor: ReturnType<typeof useProgramEd
 }
 
 const styles = StyleSheet.create({
-  stack: { gap: tokens.space[5] },
+  // Canvas: 40 px between the programme's sections.
+  stack: { gap: tokens.space[10] },
   row: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
   flex: { flex: 1 },
 });

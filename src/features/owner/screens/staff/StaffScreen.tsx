@@ -9,19 +9,35 @@ import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
+import { fontFamily, useTheme } from '@/ui/theme';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
-import { ConfirmDialog, EmptyCard, InfoRow, ModalSheet, SectionLabel, toast } from '../../kit';
-import { SummaryStrip } from '../../kit/SummaryStrip';
+import {
+  CardGrid,
+  ChipRow,
+  ConfirmDialog,
+  EmptyCard,
+  FigureRow,
+  InfoRow,
+  ModalSheet,
+  cardStyle,
+  toast,
+} from '../../kit';
+import { useOwnerLayout } from '../../chrome/layout';
 import { StaffCard } from './StaffCard';
 import { InviteSheet } from './InviteSheet';
 import { ownerKeys } from '../../data/keys';
 
-/** Who can sign in to this venue and what each person can do. */
+type Show = 'all' | 'onShift' | 'invited';
+const ROLES = ['owner', 'manager', 'waiter', 'kitchen'] as const;
+
+/**
+ * Who can sign in to this venue and what each person can do (design canvas): three figures, chips
+ * for everyone / on shift / invited, one row per person, then what each role can open.
+ */
 export function StaffScreen() {
   const theme = useTheme();
   const { t, i18n } = useTranslation();
-    const [now, setNow] = useState(() => Date.now());
+  const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 60_000);
     return () => clearInterval(id);
@@ -34,6 +50,8 @@ export function StaffScreen() {
     queryFn: () => api.ownerListStaff(venueId),
     enabled: Boolean(venueId),
   });
+  const { wide, desktop } = useOwnerLayout();
+  const [show, setShow] = useState<Show>('all');
   const [inviting, setInviting] = useState(false);
   const [open, setOpen] = useState<StaffMember | null>(null);
   const [confirm, setConfirm] = useState(false);
@@ -57,17 +75,20 @@ export function StaffScreen() {
       a.firstName.localeCompare(b.firstName),
   );
 
+  const counts: Record<Show, number> = {
+    all: members.length,
+    onShift: members.filter((m) => m.onShift).length,
+    invited: members.filter((m) => m.status === 'invited').length,
+  };
+  const shown = sorted.filter((m) =>
+    show === 'all' ? true : show === 'onShift' ? m.onShift : m.status === 'invited',
+  );
+
   return (
     <OwnerPage
-      title={t('owner.staff')} subtitle={t('ownerLead.staff')}
-      action={
-        <Button
-          label={t('ownerStaff.invite')}
-          tone="secondary"
-          size="md"
-          onPress={() => setInviting(true)}
-        />
-      }
+      title={t('owner.staff')}
+      subtitle={t('ownerLead.staff')}
+      action={<Button label={t('ownerStaff.inviteSomeone')} onPress={() => setInviting(true)} />}
     >
       <DeskWait
         loading={staff.isLoading}
@@ -84,26 +105,51 @@ export function StaffScreen() {
           />
         ) : (
           <View style={styles.stack}>
-            <SummaryStrip
+            <FigureRow
+              wide={wide}
               items={[
-                {
-                  label: t('ownerStaff.onShift'),
-                  value: String(members.filter((m) => m.onShift).length),
-                },
-                { label: t('ownerStaff.teamShort'), value: String(members.length) },
-                {
-                  label: t('ownerStaff.pending'),
-                  value: String(members.filter((m) => m.status === 'invited').length),
-                },
+                { label: t('ownerStaff.onShiftNow'), value: String(counts.onShift) },
+                { label: t('ownerStaff.inTeam'), value: String(counts.all) },
+                { label: t('ownerStaff.invitesWaiting'), value: String(counts.invited) },
               ]}
             />
-            <SectionLabel title={t('ownerStaff.team', { count: members.length })} caps />
-            <View style={styles.list}>
-              {sorted.map((m) => (
-                <View key={m.id}>
-                  <StaffCard member={m} now={now} onPress={() => setOpen(m)} />
-                </View>
-              ))}
+            <View style={styles.people}>
+              <ChipRow<Show>
+                label={t('ownerFloor.filter.label')}
+                value={show}
+                onChange={setShow}
+                items={(['all', 'onShift', 'invited'] as const).map((id) => ({
+                  id,
+                  label: t(`ownerStaff.show.${id}`),
+                  count: counts[id],
+                }))}
+              />
+              <View style={styles.list}>
+                {shown.map((m) => (
+                  <StaffCard
+                    key={m.id}
+                    member={m}
+                    now={now}
+                    wide={wide}
+                    onPress={() => setOpen(m)}
+                  />
+                ))}
+              </View>
+            </View>
+            <View style={styles.people}>
+              <Text variant="title" accessibilityRole="header">
+                {t('ownerStaff.rolesTitle')}
+              </Text>
+              <CardGrid columns={desktop ? 4 : 2} gap={tokens.owner.controls.listGap}>
+                {ROLES.map((role) => (
+                  <View key={role} style={[cardStyle(theme), styles.role]}>
+                    <Text style={styles.roleName}>{t(`ownerSettings.roles.${role}`)}</Text>
+                    <Text style={[styles.roleText, { color: theme.muted }]}>
+                      {t(`ownerStaff.can.${role}`)}
+                    </Text>
+                  </View>
+                ))}
+              </CardGrid>
             </View>
           </View>
         )}
@@ -154,6 +200,16 @@ export function StaffScreen() {
 }
 
 const styles = StyleSheet.create({
-  stack: { gap: tokens.space[3] },
-  list: { gap: tokens.space[3] },
+  // Canvas: 56 px between the figures, the people and the roles; 20 px under each heading.
+  stack: { gap: tokens.owner.controls.todayGap },
+  people: { gap: tokens.owner.controls.headGap },
+  list: { gap: tokens.owner.controls.listGap },
+  role: {
+    flex: 1,
+    gap: 4,
+    paddingVertical: 18,
+    paddingHorizontal: tokens.owner.controls.cardPadding,
+  },
+  roleName: { fontSize: 16, lineHeight: 22, fontFamily: fontFamily.strong },
+  roleText: { fontSize: 14, lineHeight: 20 },
 });

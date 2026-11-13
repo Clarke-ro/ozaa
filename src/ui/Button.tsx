@@ -24,6 +24,7 @@ export function Button({
   style,
   accessibilityHint,
   tint = 'order',
+  labelColor,
 }: {
   label: string;
   onPress: () => void;
@@ -35,6 +36,8 @@ export function Button({
   accessibilityHint?: string;
   /** With tone "tinted": the stage colour, e.g. "info" for "Mark ready" (STATUS_TONES). */
   tint?: StatusTone;
+  /** For a button whose background is set through `style`, e.g. the black "Print all". */
+  labelColor?: string;
 }) {
   const theme = useTheme();
   const off = disabled || loading;
@@ -54,6 +57,7 @@ export function Button({
           : tone === 'tinted'
             ? status.ink
             : theme.text;
+  const labelInk = labelColor ?? ink;
   return (
     <Pressable
       accessibilityRole="button"
@@ -89,9 +93,9 @@ export function Button({
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={ink} />
+        <ActivityIndicator color={labelInk} />
       ) : (
-        <Text variant="button" style={{ color: ink, textAlign: 'center' }}>
+        <Text variant="button" style={{ color: labelInk, textAlign: 'center' }}>
           {label}
         </Text>
       )}
