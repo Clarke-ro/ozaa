@@ -854,7 +854,8 @@
     "noArchived": "Nothing archived",
     "empty": "No new notes",
     "emptyBody": "When a guest leaves a private note from the table, it shows here.",
-    "anonymousName": "Anonymous guest"
+    "anonymousName": "Anonymous guest",
+    "show": "Show"
   },
   "ownerMenu": {
     "lead": "What guests see when they scan",
@@ -1450,7 +1451,18 @@
     "summaryA11y": "Average {{avg}} stars from {{count}} reviews",
     "allAnswered": "All replied to",
     "empty": "No reviews yet",
-    "emptyBody": "When guests leave a review from the table, it shows here."
+    "emptyBody": "When guests leave a review from the table, it shows here.",
+    "average": "Average rating",
+    "waiting": "Waiting for your reply",
+    "reply": "Reply",
+    "filter": {
+      "reply": "Needs a reply",
+      "replied": "Replied",
+      "all": "All"
+    },
+    "stars_one": "{{count}} star",
+    "stars_other": "{{count}} stars",
+    "starRowA11y": "{{stars}} stars: {{count}}"
   },
   "ownerCharts": {
     "showNumbers": "Numbers",
@@ -1720,10 +1732,10 @@
     "removeBody": "They will be signed out and cannot sign in to this venue again unless you invite them.",
     "removeConfirm": "Remove",
     "can": {
-      "owner": "Everything, including payment settings and the team.",
-      "manager": "Everything except payment settings and the team.",
-      "waiter": "Orders and waiter calls.",
-      "kitchen": "Order status only.",
+      "owner": "Every screen, including payouts and staff.",
+      "manager": "Everything except payouts and staff.",
+      "waiter": "Today, floor, orders, calls and the register.",
+      "kitchen": "Orders only.",
       "viewer": "Can look, cannot change anything.",
       "staff_scanner": "Scans loyalty cards only."
     },
@@ -1733,7 +1745,20 @@
     "orders": "Orders today",
     "calls": "Calls today",
     "pickup": "Avg pick-up",
-    "joined": "Joined"
+    "joined": "Joined",
+    "inviteSomeone": "Invite someone",
+    "onShiftNow": "On shift now",
+    "inTeam": "In the team",
+    "invitesWaiting": "Invites waiting",
+    "ordersShort": "orders",
+    "callsShort": "calls",
+    "pickupShort": "pick-up",
+    "rolesTitle": "What each role can open",
+    "show": {
+      "all": "Everyone",
+      "onShift": "On shift",
+      "invited": "Invited"
+    }
   },
   "ownerDevices": {
     "pair": "Pair a phone",
@@ -1908,13 +1933,13 @@
     "business": "Your business name and every location you run.",
     "calls": "Guests asking for a waiter",
     "devices": "Phones and tablets that scan loyalty cards at the counter.",
-    "feedback": "Private notes guests leave after their meal.",
+    "feedback": "Private notes guests leave after their meal",
     "loyalty": "Your stamp card, its members and how it is doing.",
     "ordering": "Pickup and delivery orders from your menu link.",
-    "reviews": "Public ratings and reviews, and your replies.",
+    "reviews": "Public ratings from guests, and your replies",
     "services": "What guests can do from the table, and your Wi-Fi details.",
     "settings": "Your account, your venue and how the app behaves.",
-    "staff": "Who works here, what they can open and who is on shift.",
+    "staff": "Who works here, what they can open and who is on shift",
     "customers": "Diners who joined your loyalty card. Phone numbers stay masked.",
     "floor": "Every table at a glance. Tap one to see its bill and act on it.",
     "scan": "Scan a guest's loyalty card to give a stamp or a reward.",

@@ -33,3 +33,4 @@ export { PeriodSelect } from './PeriodSelect';
 export { RankTable, type RankRow } from './RankTable';
 export { RowMenu, type RowAction } from './RowMenu';
 export { downloadCsv } from './downloadCsv';
+export { FigureRow, type Figure } from './FigureRow';
