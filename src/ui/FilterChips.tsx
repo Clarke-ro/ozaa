@@ -1,4 +1,5 @@
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { STATUS_TONES, type StatusTone } from '@/theme/palette';
 import { tokens } from '@/theme/tokens';
 import { Text } from './Text';
 import { fontFamily, useTheme } from './theme';
@@ -8,6 +9,8 @@ export type FilterChip<T extends string> = {
   label: string;
   /** Shown inside the chip, e.g. how many orders are in that stage. */
   count?: number;
+  /** Colours the count circle by stage, e.g. Floor's "Needs you" in red (owner app only). */
+  tone?: StatusTone;
 };
 
 /**
@@ -41,6 +44,23 @@ export function FilterChips<T extends string>({
     >
       {items.map((item) => {
         const on = item.id === value;
+        const pill = Boolean(theme.pill);
+        const tone = item.tone ? STATUS_TONES[theme.scheme][item.tone] : null;
+        // Owner canvas: the picked chip's count sits in a white circle; others in grey or the stage tint.
+        const countBg = pill
+          ? on
+            ? theme.surface
+            : (tone?.bg ?? theme.wash)
+          : on
+            ? theme.fill
+            : theme.wash;
+        const countInk = pill
+          ? on
+            ? theme.text
+            : (tone?.ink ?? theme.text)
+          : on
+            ? theme.onFill
+            : theme.muted;
         return (
           <Pressable
             key={item.id}
@@ -52,10 +72,8 @@ export function FilterChips<T extends string>({
             style={({ pressed }) => [
               styles.chip,
               // The owner app's chips are 40 px, as on its design canvas; guest pages keep 34.
-              theme.pill && {
-                height: tokens.owner.controls.chipHeight,
-                paddingHorizontal: tokens.space[4],
-              },
+              pill && styles.pillChip,
+              pill && item.count != null && styles.pillChipCount,
               {
                 borderColor: on ? theme.black : theme.line,
                 backgroundColor: on ? theme.black : pressed ? theme.wash : theme.surface,
@@ -65,15 +83,19 @@ export function FilterChips<T extends string>({
             <Text
               variant="caption"
               numberOfLines={1}
-              style={[styles.text, { color: on ? theme.white : theme.text }]}
+              style={[
+                styles.text,
+                pill && styles.pillText,
+                { color: on ? theme.white : pill ? theme.muted : theme.text },
+              ]}
             >
               {item.label}
             </Text>
             {item.count != null ? (
-              <View style={[styles.count, { backgroundColor: on ? theme.fill : theme.wash }]}>
+              <View style={[styles.count, pill && styles.pillCount, { backgroundColor: countBg }]}>
                 <Text
                   variant="caption"
-                  style={[styles.countText, { color: on ? theme.onFill : theme.muted }]}
+                  style={[styles.countText, pill && styles.pillCountText, { color: countInk }]}
                 >
                   {item.count}
                 </Text>
@@ -99,6 +121,17 @@ const styles = StyleSheet.create({
     borderRadius: tokens.radius.full,
     borderWidth: StyleSheet.hairlineWidth,
   },
+  // Owner canvas chip: 40 px tall, 1 px edge, 15 px label, the count in a 28 px circle.
+  pillChip: {
+    height: tokens.owner.controls.chipHeight,
+    paddingHorizontal: tokens.space[4],
+    borderWidth: 1,
+    gap: tokens.space[2],
+  },
+  pillChipCount: { paddingRight: 6 },
+  pillText: { fontSize: 15, lineHeight: 20, fontFamily: fontFamily.regular },
+  pillCount: { minWidth: 28, height: 28, paddingHorizontal: tokens.space[2] },
+  pillCountText: { fontSize: 13, lineHeight: 18 },
   text: { fontFamily: fontFamily.strong },
   count: {
     minWidth: 20,

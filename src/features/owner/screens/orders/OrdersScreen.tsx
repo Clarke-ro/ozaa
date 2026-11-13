@@ -13,18 +13,18 @@ import { Button } from '@/ui/Button';
 import { useOwnerLayout } from '../../chrome/layout';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
-import { orderTab, orderTabCounts, type OrderView } from '../../desk/ops';
+import { filterCounts, inFilter, type OrderFilter } from '../../desk/orderBoard';
 import { ORDER_RANGES, orderRange, type OrderRange } from '../../desk/orderRange';
 import { CardGrid, EmptyCard, PeriodSelect } from '../../kit';
 import { CreateOrderSheet } from './CreateOrderSheet';
 import { MarkPaidSheet } from './MarkPaidSheet';
 import { OrderCard } from './OrderCard';
-import { OrdersToolbar } from './OrdersToolbar';
+import { OrderBoard } from './OrderBoard';
+import { OrdersToolbar, type OrderLayout } from './OrdersToolbar';
 import { useOrderMove } from './useOrderMove';
 import { useVenuePay } from './useVenuePay';
 import { POLL_MS } from '@/lib/polling';
 
-const LIVE: OrderView[] = ['new', 'cooking', 'ready'];
 // Only a safety net while the venue loads; every venue has a zone in its opening hours.
 const FALLBACK_ZONE = 'Africa/Accra';
 // Ticket ages only need to move once every half minute.
@@ -41,8 +41,8 @@ export function OrdersScreen() {
   const { wide, desktop } = useOwnerLayout();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const role = useOwnerSession((state) => state.role) ?? 'waiter';
-  // Null until staff pick a stage; until then show the first stage that has tickets.
-  const [picked, setPicked] = useState<OrderView | null>(null);
+  const [filter, setFilter] = useState<OrderFilter>('open');
+  const [layout, setLayout] = useState<OrderLayout>('board');
   const [range, setRange] = useState<OrderRange>('today');
   const [creating, setCreating] = useState(false);
   const [paying, setPaying] = useState<Order | null>(null);
@@ -53,13 +53,13 @@ export function OrdersScreen() {
   }, []);
   const { venue, methods } = useVenuePay(venueId);
   // The range's days start at midnight where the venue is, not where this phone is.
-  const filter = orderRange(range, now, venue.data?.hours.timezone ?? FALLBACK_ZONE);
+  const period = orderRange(range, now, venue.data?.hours.timezone ?? FALLBACK_ZONE);
   // "All time" shares the cache with the chime and Today; a range gets its own entry under it,
   // so any save that refreshes the orders refreshes this list too.
   const key = range === 'all' ? ownerKeys.orders(venueId) : [...ownerKeys.orders(venueId), range];
   const orders = useQuery({
     queryKey: key,
-    queryFn: () => api.ownerListOrders(venueId, filter),
+    queryFn: () => api.ownerListOrders(venueId, period),
     enabled: Boolean(venueId),
     refetchInterval: POLL_MS.owner,
   });
@@ -69,15 +69,28 @@ export function OrdersScreen() {
   const move = useOrderMove(venueId, role);
 
   const all = orders.data?.items ?? [];
-  const counts = orderTabCounts(all);
-  const tab = picked ?? LIVE.find((id) => counts[id] > 0) ?? 'new';
-  const live = LIVE.includes(tab);
-  // Oldest first in the live tabs (who has waited longest), newest first once done.
+  const counts = filterCounts(all);
+  const live = filter === 'open';
+  const board = live && layout === 'board';
+  // Oldest first while still in the kitchen (who has waited longest), newest first once done.
   const shown = all
-    .filter((o) => tab === 'all' || orderTab(o.status) === tab)
+    .filter((o) => inFilter(o.status, filter))
     .sort((a, b) =>
       !live ? b.createdAt.localeCompare(a.createdAt) : a.createdAt.localeCompare(b.createdAt),
     );
+  const card = (order: Order) => (
+    <OrderCard
+      key={order.id}
+      order={order}
+      now={now}
+      currency={currency}
+      next={move.label(order)}
+      busy={move.busy(order)}
+      onNext={() => move.run(order)}
+      onOpen={() => router.push(`/owner/orders/${order.id}`)}
+      onMarkPaid={canCreate ? () => setPaying(order) : undefined}
+    />
+  );
 
   return (
     <OwnerPage
@@ -102,7 +115,13 @@ export function OrdersScreen() {
         </View>
       }
     >
-      <OrdersToolbar tab={tab} counts={counts} onTab={setPicked} />
+      <OrdersToolbar
+        filter={filter}
+        counts={counts}
+        onFilter={setFilter}
+        layout={layout}
+        onLayout={setLayout}
+      />
       <DeskWait
         loading={orders.isLoading}
         error={orders.isError}
@@ -111,25 +130,13 @@ export function OrdersScreen() {
         {shown.length === 0 ? (
           <EmptyCard
             icon={ClipboardList}
-            title={t(`ownerOrders.empty.${tab}`)}
+            title={t(`ownerOrders.empty.${filter}`)}
             description={t('ownerOrders.emptyBody')}
           />
+        ) : board ? (
+          <OrderBoard orders={shown} side={wide} renderCard={card} />
         ) : (
-          <CardGrid columns={desktop ? 3 : wide ? 2 : 1}>
-            {shown.map((order) => (
-              <OrderCard
-                key={order.id}
-                order={order}
-                now={now}
-                currency={currency}
-                next={move.label(order)}
-                busy={move.busy(order)}
-                onNext={() => move.run(order)}
-                onOpen={() => router.push(`/owner/orders/${order.id}`)}
-                onMarkPaid={canCreate ? () => setPaying(order) : undefined}
-              />
-            ))}
-          </CardGrid>
+          <CardGrid columns={desktop ? 3 : wide ? 2 : 1}>{shown.map(card)}</CardGrid>
         )}
       </DeskWait>
       {paying && venue.data ? (

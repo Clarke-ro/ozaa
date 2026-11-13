@@ -23,7 +23,7 @@ export function Segmented<T extends string>({
     <View
       accessibilityRole="radiogroup"
       accessibilityLabel={label}
-      style={[styles.track, { backgroundColor: theme.wash }]}
+      style={[styles.track, { backgroundColor: theme.line }]}
     >
       {options.map((option) => {
         const on = option.id === value;
@@ -44,9 +44,10 @@ export function Segmented<T extends string>({
             ]}
           >
             <Text
-              variant="body-strong"
               numberOfLines={1}
               style={{
+                fontSize: 14,
+                lineHeight: 20,
                 color: on ? theme.text : theme.muted,
                 fontFamily: on ? 'Inter_600' : 'Inter_400',
               }}
@@ -61,19 +62,20 @@ export function Segmented<T extends string>({
 }
 
 const styles = StyleSheet.create({
+  // Canvas switch: a rounded grey track, 3 px inset, 34 px white pill on the picked option.
   track: {
     flexDirection: 'row',
-    padding: 2,
-    borderRadius: tokens.radius.md,
-    borderCurve: 'continuous',
+    padding: 3,
+    borderRadius: tokens.radius.full,
   },
   segment: {
-    flex: 1,
-    minHeight: tokens.touchTarget - 4,
+    // Grow to share a wide track, but never squeeze a label narrower than its text.
+    flexGrow: 1,
+    minHeight: 34,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: tokens.space[2],
-    borderRadius: tokens.radius.sm + 2,
+    paddingHorizontal: tokens.space[4],
+    borderRadius: tokens.radius.full,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: 'transparent',
   },

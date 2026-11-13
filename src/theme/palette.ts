@@ -109,3 +109,30 @@ export const FLOOR_TONES: Record<
     calling: { bg: '#341414', ink: '#FECACA', edge: '#991B1B' },
   },
 };
+
+export type StatusTone = 'order' | 'info' | 'success' | 'alert' | 'bill';
+
+/**
+ * Tinted action buttons and count badges from the design canvas: each stage has its own colour
+ * ("Start cooking" orange, "Mark ready" blue, "Mark served" green, "On my way" red, "Open bill"
+ * amber). The label always names the action, so colour is never the only cue.
+ */
+export const STATUS_TONES: Record<
+  Scheme,
+  Record<StatusTone, { bg: string; ink: string; line: string }>
+> = {
+  light: {
+    order: { bg: '#FFE4D6', ink: '#A33200', line: '#D24000' },
+    info: { bg: '#DCE6FF', ink: '#1E40AF', line: '#1D4ED8' },
+    success: { bg: '#D3F5E0', ink: '#166534', line: '#15803D' },
+    alert: { bg: '#FDE2DF', ink: '#9F1C12', line: '#B42318' },
+    bill: { bg: '#FDEFC8', ink: '#8A4B05', line: '#B54708' },
+  },
+  dark: {
+    order: { bg: '#3A1A0C', ink: '#FFB08A', line: '#FF7A3D' },
+    info: { bg: '#16224A', ink: '#BFD3FE', line: '#6E95F5' },
+    success: { bg: '#0F2A1A', ink: '#A7F3C0', line: '#4ADE80' },
+    alert: { bg: '#341414', ink: '#FECACA', line: '#F87171' },
+    bill: { bg: '#2E2108', ink: '#FCD9A0', line: '#FBBF24' },
+  },
+};

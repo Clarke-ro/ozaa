@@ -43,11 +43,7 @@ export function FigureCard({
     </View>
   ) : null;
   const number = (
-    <Text
-      style={styles.value}
-      numberOfLines={1}
-      adjustsFontSizeToFit
-    >
+    <Text style={styles.value} numberOfLines={1} adjustsFontSizeToFit>
       {value}
     </Text>
   );

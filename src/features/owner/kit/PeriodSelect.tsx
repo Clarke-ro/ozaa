@@ -37,10 +37,10 @@ export function PeriodSelect<T extends string>({
         onPress={open}
         style={({ pressed }) => [
           styles.button,
-          { borderColor: theme.text, backgroundColor: pressed ? theme.wash : theme.surface },
+          { borderColor: theme.line, backgroundColor: pressed ? theme.wash : theme.surface },
         ]}
       >
-        <Text variant="body" numberOfLines={1}>
+        <Text numberOfLines={1} style={styles.label}>
           {current}
         </Text>
         <ChevronDown size={18} color={theme.text} />
@@ -77,12 +77,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: tokens.space[2],
-    minHeight: tokens.touchTarget - tokens.space[1],
-    paddingLeft: tokens.space[3],
-    paddingRight: tokens.space[2],
+    // Canvas: a 48 px pill with a light grey edge, like the secondary buttons.
+    minHeight: tokens.owner.controls.height,
+    paddingHorizontal: tokens.space[4],
     borderWidth: 1,
-    borderRadius: tokens.radius.sm,
+    borderRadius: tokens.radius.full,
   },
+  label: { fontSize: 15, lineHeight: 20 },
   item: {
     flexDirection: 'row',
     alignItems: 'center',

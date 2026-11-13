@@ -6,11 +6,12 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { hapticImpactLight } from '@/lib/haptics';
+import { STATUS_TONES, type StatusTone } from '@/theme/palette';
 import { tokens } from '@/theme/tokens';
 import { Text } from './Text';
 import { useTheme } from './theme';
 
-type Tone = 'primary' | 'secondary' | 'ghost' | 'destructive';
+type Tone = 'primary' | 'secondary' | 'ghost' | 'destructive' | 'tinted';
 type Size = 'lg' | 'md';
 
 export function Button({
@@ -22,6 +23,7 @@ export function Button({
   loading,
   style,
   accessibilityHint,
+  tint = 'order',
 }: {
   label: string;
   onPress: () => void;
@@ -31,9 +33,12 @@ export function Button({
   loading?: boolean;
   style?: StyleProp<ViewStyle>;
   accessibilityHint?: string;
+  /** With tone "tinted": the stage colour, e.g. "info" for "Mark ready" (STATUS_TONES). */
+  tint?: StatusTone;
 }) {
   const theme = useTheme();
   const off = disabled || loading;
+  const status = STATUS_TONES[theme.scheme][tint];
   const filled = tone === 'primary' || tone === 'destructive';
   // A red button's label is the page colour: white in light mode, near-black on the lighter
   // dark-mode red. Never the venue's on-accent colour, which is dark for a yellow venue.
@@ -46,7 +51,9 @@ export function Button({
         ? destructiveInk
         : filled
           ? theme.onFill
-          : theme.text;
+          : tone === 'tinted'
+            ? status.ink
+            : theme.text;
   return (
     <Pressable
       accessibilityRole="button"
@@ -75,6 +82,7 @@ export function Button({
           borderWidth: theme.pill ? 1 : 1.5,
           borderColor: theme.pill ? theme.line : theme.black,
         },
+        tone === 'tinted' && { backgroundColor: status.bg, opacity: pressed ? 0.8 : 1 },
         tone === 'ghost' && { backgroundColor: pressed ? theme.wash : 'transparent' },
         off && filled && { backgroundColor: theme.wash },
         style,

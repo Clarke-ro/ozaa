@@ -1486,14 +1486,15 @@
     "joinedTrend": "New members"
   },
   "ownerOrders": {
-    "lead": "Every ticket from tables and your menu link, by stage.",
+    "lead": "Every ticket from tables and your menu link",
     "tabs": {
       "new": "New",
       "cooking": "Cooking",
       "ready": "Ready",
       "served": "Served",
       "rejected": "Rejected",
-      "all": "All"
+      "all": "All",
+      "open": "Open"
     },
     "table": "Table {{code}}",
     "takeaway": "Takeaway",
@@ -1517,7 +1518,8 @@
       "ready": "Nothing waiting to go out",
       "served": "Nothing served yet",
       "rejected": "No rejected orders",
-      "all": "No orders yet"
+      "all": "No orders yet",
+      "open": "Nothing in the kitchen"
     },
     "emptyBody": "Orders from the tables show here as soon as guests send them.",
     "waited": "{{count}} min",
@@ -1602,7 +1604,14 @@
       "missing": "We can't find this order",
       "missingBody": "It may be from an earlier day. Go back to Orders and pick it from the list.",
       "backToOrders": "Back to Orders"
-    }
+    },
+    "view": {
+      "label": "Show as",
+      "board": "Board",
+      "list": "List"
+    },
+    "columnLabel": "{{stage}}, {{count}} orders",
+    "readyAgo": "ready {{time}}"
   },
   "ownerCalls": {
     "status": {
