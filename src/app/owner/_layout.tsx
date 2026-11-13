@@ -3,7 +3,7 @@ import { Redirect, Stack, usePathname } from 'expo-router';
 import { useColorScheme } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import { useOwnerSession } from '@/features/session';
-import { OwnerChrome } from '@/features/owner';
+import { OwnerChrome, useOwnerPrefs } from '@/features/owner';
 import { isOwnerQuery } from '@/lib/queryPersist';
 import { cravinsOwnerDarkTheme, cravinsOwnerTheme, ThemeProvider } from '@/ui/theme';
 
@@ -18,8 +18,11 @@ export default function OwnerLayout() {
   useEffect(() => {
     if (hydrated && !token) client.removeQueries({ predicate: (q) => isOwnerQuery(q.queryKey) });
   }, [hydrated, token, client]);
-  // The owner app follows the phone's light or dark setting. Guest pages stay light.
-  const theme = useColorScheme() === 'dark' ? cravinsOwnerDarkTheme : cravinsOwnerTheme;
+  // Light, dark, or the device's own setting, as chosen in Settings. Guest pages stay light.
+  const device = useColorScheme();
+  const appearance = useOwnerPrefs((state) => state.appearance);
+  const dark = appearance === 'system' ? device === 'dark' : appearance === 'dark';
+  const theme = dark ? cravinsOwnerDarkTheme : cravinsOwnerTheme;
   const login = path === '/owner/login';
   if (!hydrated) return null;
   if (!token && !login) return <Redirect href="/owner/login" />;

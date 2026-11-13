@@ -53,6 +53,11 @@ Pick Custom dates on Insights and enter a range from last year. Every card shoul
 **What we built**
 
 Customers has tag filters (Reward ready, Regulars, New, Quiet lately) worked out from what guests did, search by name or last 4 digits, and an export with visits and tags. Each customer page lists their real visits and exactly what they agreed to, and "Add a stamp" works there. Scan and stamp shows a phone code on a computer, finds guests without their card, and lists today's stamps. Loyalty has switches for stamping paid orders and for 90-day stamps. "Ask about your feedback" now answers from the real notes.
+## 2026-11-12 · Your profile and preferences (BUILD.md box 4c.8)
+
+**What we built**
+
+Settings starts with your profile: photo, first and last name, email, and your phone number, which only changes after you enter a code sent to the new number. Below that: Light, Dark or Follow my device, sound for new orders, and which notifications you get. Delete account now explains that paid orders and tax records stay for 6 years without your personal details.
 
 **How it works**
 
@@ -61,6 +66,8 @@ stamp (scan, lookup or customer page) ──► one loyalty record
                                          ├─► Customers (stamps, tags)
                                          ├─► Loyalty results
                                          └─► Scan and stamp "Today"
+pick Dark ──► saved on this device (instant) ──► saved on your profile (follows you)
+turn off "Guest notes" ──► profile ──► the server leaves them out of your feed and badges
 ```
 
 **Files to look at**
@@ -98,6 +105,16 @@ A TIN is a letter and ten digits. The code checks that with a "regular expressio
 **Try it yourself**
 
 Switch E-VAT on, place an order, then open Sales: the E-VAT card now shows totals.
+- `src/features/owner/screens/settings/ProfileSection.tsx`, `PhoneSheet.tsx`, `PrefsSection.tsx`.
+- `src/app/owner/_layout.tsx`: picks the light or dark theme.
+
+**New idea: confirm before you change**
+
+A phone number is how you sign in. If a typo changed it straight away, you'd be locked out. So the change waits until a code sent to the new number comes back.
+
+**Try it yourself**
+
+Turn off Orders under Notifications and watch the Notifications count in the sidebar drop.
 
 ---
 

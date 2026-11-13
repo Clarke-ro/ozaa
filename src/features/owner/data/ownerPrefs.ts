@@ -8,6 +8,9 @@ type OwnerPrefs = {
   setChime: (on: boolean) => void;
   /** The sidebar folded to icons. Kept so every page, and the next visit, opens the same way. */
   sidebarCollapsed: boolean;
+  /** Light, dark, or follow the device. Also saved on the profile so it follows the person. */
+  appearance: 'light' | 'dark' | 'system';
+  setAppearance: (appearance: 'light' | 'dark' | 'system') => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
 };
 
@@ -18,6 +21,8 @@ export const useOwnerPrefs = create<OwnerPrefs>()(
       chime: true,
       setChime: (on) => set({ chime: on }),
       sidebarCollapsed: false,
+      appearance: 'system',
+      setAppearance: (appearance) => set({ appearance }),
       setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
     }),
     { name: 'cravins-owner-prefs', storage: createJSONStorage(() => AsyncStorage) },

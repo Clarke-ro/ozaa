@@ -1,46 +1,35 @@
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
-  BellDot,
   Building2,
   CircleHelp,
   Globe,
   LogOut,
   Smartphone,
-  SunMoon,
   Trash2,
-  UserRound,
   Users,
-  Volume2,
 } from 'lucide-react-native';
 import { api } from '@/lib/api';
 import { languageByCode } from '@/features/venue';
 import { useOwnerSession } from '@/features/session';
-import { tokens } from '@/theme/tokens';
-import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
 import { OwnerPage } from '../../chrome/OwnerPage';
 import { useSignOut } from '../../chrome/useSignOut';
 import { ownerKeys } from '../../data/keys';
-import { ConfirmDialog, InfoRow, LinkRow, Section, StatusPill, SwitchRow } from '../../kit';
-import { useOwnerPrefs } from '../../data/ownerPrefs';
+import { ConfirmDialog, LinkRow, Section } from '../../kit';
 import { DeleteAccountSheet } from './DeleteAccountSheet';
+import { PrefsSection } from './PrefsSection';
+import { ProfileSection } from './ProfileSection';
 import { LanguageSheet } from './LanguageSheet';
 
 /** Who is signed in, the venue's people and devices, preferences, and the account. */
 export function SettingsScreen() {
-  const theme = useTheme();
   const { t, i18n } = useTranslation();
   const router = useRouter();
-  const firstName = useOwnerSession((state) => state.firstName) ?? '';
   const role = useOwnerSession((state) => state.role) ?? 'owner';
   const venueId = useOwnerSession((state) => state.venueId);
   const endSession = useSignOut();
-  const chime = useOwnerPrefs((state) => state.chime);
-  const setChime = useOwnerPrefs((state) => state.setChime);
   const business = useQuery({
     queryKey: ownerKeys.business(),
     queryFn: () => api.ownerGetBusiness(),
@@ -52,29 +41,6 @@ export function SettingsScreen() {
     setSheet(null);
     endSession();
   };
-
-  const profileBlock = (
-    <View style={[styles.profile, { backgroundColor: theme.surface, borderColor: theme.line }]}>
-      <View style={[styles.avatar, { backgroundColor: theme.tint }]}>
-        {firstName ? (
-          <Text variant="display-m" style={{ color: theme.badgeInk }}>
-            {firstName.slice(0, 1).toUpperCase()}
-          </Text>
-        ) : (
-          <UserRound size={28} color={theme.badgeInk} />
-        )}
-      </View>
-      <Text variant="title">{firstName}</Text>
-      <View style={styles.center}>
-        <StatusPill label={t(`ownerSettings.roles.${role}`)} tone="neutral" icon={false} />
-      </View>
-      {location ? (
-        <Text variant="caption" style={{ color: theme.muted }}>
-          {location.name}
-        </Text>
-      ) : null}
-    </View>
-  );
 
   const accountSections = (
     <>
@@ -134,30 +100,15 @@ export function SettingsScreen() {
           value={languageByCode(i18n.language).label}
           onPress={() => setSheet('language')}
         />
-        <InfoRow
-          icon={SunMoon}
-          label={t('ownerSettings.appearance')}
-          value={t('ownerSettings.appearanceValue')}
-        />
-        <LinkRow
-          icon={BellDot}
-          label={t('owner.notifications')}
-          onPress={() => router.push('/owner/notifications')}
-        />
-        <SwitchRow
-          icon={Volume2}
-          label={t('ownerSettings.chime')}
-          value={chime}
-          onChange={setChime}
-        />
       </Section>
     </>
   );
 
   return (
     <OwnerPage title={t('owner.settings')} subtitle={t('ownerLead.settings')}>
-      {profileBlock}
+      <ProfileSection />
       {mainSections}
+      <PrefsSection />
       {accountSections}
 
       <LanguageSheet visible={sheet === 'language'} onClose={() => setSheet(null)} />
@@ -177,24 +128,3 @@ export function SettingsScreen() {
     </OwnerPage>
   );
 }
-
-const styles = StyleSheet.create({
-  center: { alignItems: 'center' },
-  profile: {
-    alignItems: 'center',
-    gap: tokens.space[2],
-    paddingVertical: tokens.space[6],
-    paddingHorizontal: tokens.space[4],
-    borderWidth: 1,
-    boxShadow: tokens.shadow.card,
-    borderRadius: tokens.radius.lg,
-    borderCurve: 'continuous',
-  },
-  avatar: {
-    width: 72,
-    height: 72,
-    borderRadius: tokens.radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
