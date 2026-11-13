@@ -2,10 +2,11 @@ import { StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { BellOff, Clock, MessageSquareText } from 'lucide-react-native';
+import { BellOff, MessageSquareText } from 'lucide-react-native';
 import { api } from '@/lib/api';
 import type { WaiterCallUpdate } from '@/lib/api/client';
 import { useOwnerSession } from '@/features/session';
+import { STATUS_TONES } from '@/theme/palette';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
@@ -17,6 +18,8 @@ import { cardStyle, EmptyCard, SectionLabel, toast } from '../../kit';
 import { waitedLabel } from '../orders/orderPlace';
 import { useWaiterCalls } from './useWaiterCalls';
 import { quickReplies } from './quickReplies';
+import { callTimes } from './callBoard';
+import { SectionHead } from '../dashboard/SectionHead';
 
 // The words the Floor screen already uses for each table state.
 const FLOOR_WORD = {
@@ -114,7 +117,19 @@ export function CallDetailScreen({ callId }: { callId: string }) {
                     </View>
                   </View>
                 ) : null}
-                <Row label={t('ownerCalls.detail.reason')} value={reason} />
+                <Row
+                  label={t('ownerCalls.detail.reason')}
+                  value={reason}
+                  ink={
+                    STATUS_TONES[theme.scheme][
+                      call.reason === 'bill'
+                        ? 'bill'
+                        : call.reason === 'order_more'
+                          ? 'order'
+                          : 'alert'
+                    ].line
+                  }
+                />
                 <Row label={t('ownerCalls.detail.askedAt')} value={time(call.createdAt)} />
                 <Row
                   label={t('ownerCalls.detail.waiter')}
@@ -135,10 +150,11 @@ export function CallDetailScreen({ callId }: { callId: string }) {
                   {call.status === 'open' ? (
                     <Button
                       label={t('ownerCalls.detail.onMyWay')}
-                      tone="secondary"
-                      size="md"
+                      tone="tinted"
+                      tint="alert"
                       disabled={update.isPending}
                       onPress={() => update.mutate({ status: 'acknowledged' })}
+                      style={styles.pill}
                     />
                   ) : null}
                   {quickReplies(call.reason).map((key) => (
@@ -146,16 +162,15 @@ export function CallDetailScreen({ callId }: { callId: string }) {
                       key={key}
                       label={t(`ownerCalls.quick.${key}`)}
                       tone="secondary"
-                      size="md"
                       disabled={update.isPending}
                       onPress={() => update.mutate({ reply: t(`ownerCalls.quick.${key}`) })}
+                      style={styles.pill}
                     />
                   ))}
                   <View style={[styles.rule, { backgroundColor: theme.line }]} />
                   <Button
                     label={t('ownerCalls.detail.snooze')}
                     tone="ghost"
-                    size="md"
                     disabled={update.isPending}
                     onPress={() => update.mutate({ snoozeMinutes: 1 })}
                   />
@@ -174,26 +189,35 @@ export function CallDetailScreen({ callId }: { callId: string }) {
             ) : null}
 
             <View style={styles.group}>
-              <SectionLabel title={t('ownerCalls.detail.earlier', { table: call.tableCode })} />
+              <SectionHead
+                title={t('ownerCalls.detail.earlier', { table: call.tableCode })}
+                badge={earlier.length > 0 ? String(earlier.length) : undefined}
+              />
               {earlier.length === 0 ? (
                 <Text variant="body" style={{ color: theme.muted }}>
                   {t('ownerCalls.detail.noEarlier')}
                 </Text>
               ) : (
-                earlier.map((item) => (
-                  <View key={item.id} style={[cardStyle(theme), styles.earlier]}>
-                    <Clock size={16} color={theme.meta} />
-                    <Text variant="body" style={styles.time}>
-                      {time(item.createdAt)}
-                    </Text>
-                    <Text variant="body-strong" style={styles.flex} numberOfLines={1}>
-                      {t(`waiter.reasons.${item.reason}`)}
-                    </Text>
-                    <Text variant="caption" style={{ color: theme.muted }}>
-                      {t(`ownerCalls.status.${item.status}`)}
-                    </Text>
-                  </View>
-                ))
+                earlier.map((item) => {
+                  const took = callTimes(item).pickedUp;
+                  return (
+                    <View key={item.id} style={[cardStyle(theme), styles.earlier]}>
+                      <Text style={[styles.time, { color: theme.meta }]}>
+                        {time(item.createdAt)}
+                      </Text>
+                      <Text variant="body" style={styles.flex} numberOfLines={1}>
+                        {t(`waiter.reasons.${item.reason}`)}
+                      </Text>
+                      <Text style={[styles.time, { color: theme.meta }]}>
+                        {took != null
+                          ? item.staffFirstName
+                            ? t('ownerCalls.pickedUpBy', { count: took, name: item.staffFirstName })
+                            : t('ownerCalls.pickedUp', { count: took })
+                          : t(`ownerCalls.status.${item.status}`)}
+                      </Text>
+                    </View>
+                  );
+                })
               )}
             </View>
           </View>
@@ -203,19 +227,29 @@ export function CallDetailScreen({ callId }: { callId: string }) {
   );
 }
 
-function Row({ label, value, last }: { label: string; value: string; last?: boolean }) {
+function Row({
+  label,
+  value,
+  last,
+  ink,
+}: {
+  label: string;
+  value: string;
+  last?: boolean;
+  /** Colours the value, e.g. the reason in its call colour (canvas). */
+  ink?: string;
+}) {
   const theme = useTheme();
   return (
-    <View
-      style={[
-        styles.row,
-        !last && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: theme.line },
-      ]}
-    >
+    <View style={[styles.row, !last && { borderBottomWidth: 1, borderBottomColor: theme.wash }]}>
       <Text variant="body" style={[styles.flex, { color: theme.muted }]}>
         {label}
       </Text>
-      <Text variant="body-strong" numberOfLines={1}>
+      <Text
+        variant={ink ? 'body-strong' : 'body'}
+        numberOfLines={1}
+        style={ink ? { color: ink } : undefined}
+      >
         {value}
       </Text>
     </View>
@@ -223,8 +257,10 @@ function Row({ label, value, last }: { label: string; value: string; last?: bool
 }
 
 const styles = StyleSheet.create({
-  stack: { gap: tokens.space[6] },
-  group: { gap: tokens.space[3] },
+  // Canvas: 40 px between sections, 20 px under each heading.
+  stack: { gap: tokens.space[10] },
+  group: { gap: tokens.owner.controls.headGap },
+  pill: { minHeight: 40 },
   flex: { flex: 1, minWidth: 0 },
   message: {
     flexDirection: 'row',
@@ -237,7 +273,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: tokens.space[3],
     minHeight: 56,
-    paddingHorizontal: tokens.space[5],
+    paddingHorizontal: tokens.space[3],
   },
   replies: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: tokens.space[2] },
   rule: { width: StyleSheet.hairlineWidth, height: 28, marginHorizontal: tokens.space[1] },
@@ -245,8 +281,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: tokens.space[3],
-    minHeight: 60,
-    paddingHorizontal: tokens.space[5],
+    minHeight: 52,
+    paddingHorizontal: tokens.space[3],
   },
-  time: { width: 64 },
+  time: { fontSize: 13, lineHeight: 18 },
 });

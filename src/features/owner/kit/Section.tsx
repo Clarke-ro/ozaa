@@ -72,10 +72,15 @@ export function Section({
       </View>
     ) : null;
 
+  // Canvas: a plain section's title sits above its card (18 px, 20 px gap); sections with an
+  // icon or that fold keep their head inside the card, like an integration.
+  const outside = !collapsible && !Icon && Boolean(head);
+
   return (
-    <View style={styles.wrap}>
+    <View style={[styles.wrap, outside && styles.wrapOutside]}>
+      {outside ? <View style={styles.outsideHead}>{head}</View> : null}
       <View style={[styles.card, cardStyle(theme)]}>
-        {collapsible && head ? (
+        {outside ? null : collapsible && head ? (
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={title}
@@ -91,7 +96,7 @@ export function Section({
         {shown
           ? rows.map((row, index) => (
               <Fragment key={row.key ?? index}>
-                {index > 0 ? <View style={[styles.rule, { backgroundColor: theme.line }]} /> : null}
+                {index > 0 ? <View style={[styles.rule, { backgroundColor: theme.wash }]} /> : null}
                 {row}
               </Fragment>
             ))
@@ -108,6 +113,12 @@ export function Section({
 
 const styles = StyleSheet.create({
   wrap: { gap: tokens.space[2] },
+  wrapOutside: { gap: tokens.space[4] },
+  outsideHead: {
+    marginHorizontal: -tokens.space[4],
+    marginTop: -tokens.space[4],
+    marginBottom: -tokens.space[1],
+  },
   card: { overflow: 'hidden' },
   head: {
     flexDirection: 'row',
@@ -128,6 +139,6 @@ const styles = StyleSheet.create({
   words: { flex: 1, minWidth: 0, gap: 2 },
   titleRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: tokens.space[2] },
   title: { flexShrink: 1 },
-  rule: { height: StyleSheet.hairlineWidth, marginLeft: tokens.space[4] },
+  rule: { height: 1 },
   note: { paddingHorizontal: tokens.space[1] },
 });

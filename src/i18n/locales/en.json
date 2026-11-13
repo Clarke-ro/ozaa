@@ -1225,7 +1225,11 @@
       "system": "Follow my device"
     },
     "notifyTitle": "Notifications",
-    "notifyNote": "Choose what shows in Notifications and on the badges for you."
+    "notifyNote": "Choose what shows in Notifications and on the badges for you.",
+    "editProfile": "Edit profile",
+    "doneEditing": "Done",
+    "devicesCount_one": "{{count}} phone",
+    "devicesCount_other": "{{count}} phones"
   },
   "ownerFloor": {
     "tableName": "Table {{name}}",
@@ -1938,7 +1942,7 @@
     "ordering": "Pickup and delivery orders from your menu link.",
     "reviews": "Public ratings from guests, and your replies",
     "services": "What guests can do from the table, and your Wi-Fi details.",
-    "settings": "Your account, your venue and how the app behaves.",
+    "settings": "Your account, your venue and how the app behaves",
     "staff": "Who works here, what they can open and who is on shift",
     "customers": "Diners who joined your loyalty card. Phone numbers stay masked.",
     "floor": "Every table at a glance. Tap one to see its bill and act on it.",

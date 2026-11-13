@@ -110,7 +110,7 @@ export function LinkRow({
       onPress={onPress}
       style={({ pressed }) => [styles.pad, styles.row, pressed && { backgroundColor: theme.wash }]}
     >
-      {Icon ? <Icon size={20} color={destructive ? theme.error : theme.ink} /> : null}
+      {Icon ? <Icon size={18} color={destructive ? theme.error : theme.muted} /> : null}
       <Text variant="body" style={[styles.copy, { color: ink }]} numberOfLines={2}>
         {label}
       </Text>
