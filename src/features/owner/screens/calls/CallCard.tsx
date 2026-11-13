@@ -55,7 +55,7 @@ export function CallCard({
   const mainLabel = isBill
     ? t('ownerCalls.openBill')
     : call.reason === 'order_more'
-      ? t('ownerCalls.takeOrder')
+      ? t('ownerCalls.orderMoreAction')
       : t('owner.onTheWay');
   const onMain = isBill
     ? () => router.push(`/owner/floor?table=${encodeURIComponent(call.tableCode)}`)
