@@ -29,8 +29,8 @@ test('answering a call moves Calls, Floor, Today and the badge together', async 
   await signIn(page);
   await expect(page.getByRole('button', { name: 'Today', exact: true })).toBeVisible();
   await expect(page.getByText('Table 4 needs a waiter')).toBeVisible();
+  await expect.poll(() => badge(page, 'Calls')).toBeGreaterThan(0);
   const callsBefore = await badge(page, 'Calls');
-  expect(callsBefore).toBeGreaterThan(0);
 
   await nav(page, 'Calls');
   await page
@@ -51,8 +51,9 @@ test('answering a call moves Calls, Floor, Today and the badge together', async 
 test('starting an order moves it off New and lowers the Orders badge', async ({ page }) => {
   await signIn(page);
   await expect(page.getByRole('button', { name: 'Today', exact: true })).toBeVisible();
+  // The badge appears once the orders have loaded.
+  await expect.poll(() => badge(page, 'Orders')).toBeGreaterThan(0);
   const before = await badge(page, 'Orders');
-  expect(before).toBeGreaterThan(0);
   await nav(page, 'Orders');
   await page.getByRole('button', { name: 'Start cooking', exact: true }).first().click();
   // The sample kitchen moves other tickets on its own over time, so only "fewer" is certain.

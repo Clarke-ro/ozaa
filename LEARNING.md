@@ -4,6 +4,33 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-13 · Walking the owner app end to end (BUILD.md box 4c.9)
+
+**What we built**
+
+A test that uses the owner app the way you would: answer a call, start an order, switch location, stamp a guest, sign in as a waiter, and open a brand-new venue.
+
+**How it works**
+
+```
+sign in → click sidebar items (never type URLs, so the mock keeps its state)
+       → do the job → check every place that should change agrees
+```
+
+Answering Table 4's call must lower the Calls badge and also clear it from Floor and Today. That proves all three read one source.
+
+**Files to look at**
+
+- `e2e/owner-walkthrough.spec.ts`
+
+**New idea: waiting for the page, not for time**
+
+Data loads a moment after the page opens. `expect.poll(...)` checks again and again until the badge shows, instead of guessing with a fixed pause. Tests that guess pass on a fast laptop and fail on a slow one.
+
+**Try it yourself**
+
+Run `npx playwright test e2e/owner-walkthrough.spec.ts`, then break one thing (for example hide the Calls badge) and watch which test catches it.
+
 ## 2026-11-12 · Menu and links tidy-up (BUILD.md box 4c.4)
 
 **What we built**
