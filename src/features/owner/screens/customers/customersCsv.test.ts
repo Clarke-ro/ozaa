@@ -14,8 +14,8 @@ const base = {
 describe('customersCsv', () => {
   it('starts with a header row, then one row per customer', () => {
     const lines = customersCsv([base]).split('\n');
-    expect(lines[0]).toBe('Phone,Name,Stamps,Rewards Available,Marketing Opt-In,Last Stamp');
-    expect(lines[1]).toBe('"024 *** 4567","Kofi Mensah",8,1,YES,"2026-11-09T10:00:00Z"');
+    expect(lines[0]).toBe('Phone,Name,Visits,Stamps,Rewards Available,Marketing Opt-In,Last Visit,Tags');
+    expect(lines[1]).toBe('"024 *** 4567","Kofi Mensah",0,8,1,YES,"2026-11-09T10:00:00Z",""');
   });
 
   it('doubles quotes inside a name so the file still opens', () => {

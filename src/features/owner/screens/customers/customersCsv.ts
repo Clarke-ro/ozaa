@@ -1,6 +1,6 @@
 import type { LoyaltyCustomerSummary } from '@/lib/api/types';
 
-const HEADER = 'Phone,Name,Stamps,Rewards Available,Marketing Opt-In,Last Stamp';
+const HEADER = 'Phone,Name,Visits,Stamps,Rewards Available,Marketing Opt-In,Last Visit,Tags';
 
 // CSV wraps text in quotes; a quote inside the text is written twice, or the row breaks.
 const quoted = (text: string) => `"${text.replace(/"/g, '""')}"`;
@@ -14,10 +14,12 @@ export function customersCsv(items: readonly LoyaltyCustomerSummary[]): string {
     [
       quoted(c.phoneMasked),
       quoted(c.name ?? ''),
+      c.visitCount ?? 0,
       c.stamps,
       c.rewardsAvailable,
       c.wantsOffers ? 'YES' : 'NO',
-      quoted(c.lastStampAt),
+      quoted(c.lastVisitAt ?? c.lastStampAt),
+      quoted((c.tags ?? []).join(' ')),
     ].join(','),
   );
   return [HEADER, ...rows].join('\n');
