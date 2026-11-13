@@ -1,52 +1,70 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { STATUS_TONES, type StatusTone } from '@/theme/palette';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
+import { fontFamily, useTheme } from '@/ui/theme';
 import { CardGrid } from '../../kit';
 import type { FloorGroup } from './floorGroups';
 
-/**
- * One band of the room: its name and how many tables are in it, then the tables. Busy bands are
- * a grid of cards; the free band is a row of small chips (`compact`), since nothing is due there.
- */
+const BAND_TONE: Record<FloorGroup, StatusTone> = {
+  attention: 'alert',
+  eating: 'info',
+  free: 'success',
+};
+
+/** One band of the room (canvas): its name with a count in the band's colour, then the tables. */
 export function FloorBand({
   group,
   count,
   columns,
-  compact,
   children,
 }: {
   group: FloorGroup;
   count: number;
   columns: number;
-  compact?: boolean;
   children: ReactNode;
 }) {
   const theme = useTheme();
   const { t } = useTranslation();
+  const tone = STATUS_TONES[theme.scheme][BAND_TONE[group]];
   return (
     <View style={styles.band}>
       <View style={styles.head}>
-        <Text variant="title" accessibilityRole="header">
+        <Text
+          accessibilityRole="header"
+          accessibilityLabel={`${t(`ownerFloor.group.${group}`)}, ${t('ownerFloor.tables', { count })}`}
+          style={styles.title}
+        >
           {t(`ownerFloor.group.${group}`)}
         </Text>
-        <Text variant="caption" style={{ color: theme.muted }}>
-          {t('ownerFloor.tables', { count })}
-        </Text>
+        <View style={[styles.count, { backgroundColor: tone.bg }]}>
+          <Text style={[styles.countText, { color: tone.ink }]}>{count}</Text>
+        </View>
       </View>
-      {compact ? (
-        <View style={styles.chips}>{children}</View>
-      ) : (
-        <CardGrid columns={columns}>{children}</CardGrid>
-      )}
+      <CardGrid columns={columns} gap={tokens.owner.controls.listGap}>
+        {children}
+      </CardGrid>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  band: { gap: tokens.space[3] },
-  head: { flexDirection: 'row', alignItems: 'baseline', gap: tokens.space[2] },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.space[2] },
+  band: { gap: tokens.owner.controls.headGap },
+  head: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  title: {
+    fontSize: tokens.owner.type.title.size,
+    lineHeight: tokens.owner.type.title.line,
+    fontFamily: fontFamily.strong,
+  },
+  count: {
+    minWidth: 28,
+    height: 24,
+    paddingHorizontal: 9,
+    borderRadius: tokens.radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  countText: { fontSize: 13, lineHeight: 18, fontFamily: fontFamily.strong },
 });

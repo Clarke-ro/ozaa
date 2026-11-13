@@ -7,7 +7,11 @@ import { tokens } from '@/theme/tokens';
 import { percentChange } from '../../desk/salesCompare';
 import { CardGrid, FigureCard, type Trend } from '../../kit';
 
-type Key = 'value' | 'orders' | 'average' | 'completed' | 'inProgress' | 'cancelled' | 'discounts';
+type Key = 'value' | 'orders' | 'average' | 'discounts' | 'refunds';
+
+// The five figures on the canvas, in its order. How orders ended up has its own card below.
+const KEYS: readonly Key[] = ['value', 'orders', 'average', 'discounts', 'refunds'];
+const GROW: Record<Key, number> = { value: 1.4, orders: 1, average: 1.2, discounts: 1, refunds: 1 };
 
 /** Whole-pesewa average order value; zero orders means no average, shown as zero. */
 function average(r: SalesReport): number {
@@ -15,10 +19,9 @@ function average(r: SalesReport): number {
 }
 
 /**
- * Sales' figure cards. Order value, orders, average order and completed carry the change
- * against the period before when there is one. Wide screens: order value twice as wide with
- * orders and average order beside it, then four in a row. Phones: order value across the full
- * width, the rest two by two.
+ * Sales' five figure cards in one row (design canvas): order value, orders, average order,
+ * discounts and refunds. The first three carry the change against the period before, the last
+ * two a short note. Phones show them two by two.
  */
 export function SalesFigures({
   report: r,
@@ -38,10 +41,8 @@ export function SalesFigures({
     value: money(r.valuePesewas),
     orders: String(r.orderCount),
     average: money(average(r)),
-    completed: String(r.byStatus.served),
-    inProgress: String(r.byStatus.received + r.byStatus.preparing + r.byStatus.ready),
-    cancelled: String(r.byStatus.cancelled),
     discounts: money(r.discountsPesewas),
+    refunds: money(r.refundsPesewas ?? 0),
   };
   const trend = (now: number, before: number | undefined): Trend | null => {
     if (before === undefined) return null;
@@ -52,7 +53,6 @@ export function SalesFigures({
     value: trend(r.valuePesewas, previous?.valuePesewas),
     orders: trend(r.orderCount, previous?.orderCount),
     average: previous ? trend(average(r), average(previous)) : null,
-    completed: trend(r.byStatus.served, previous?.byStatus.served),
   };
   const card = (key: Key) => (
     <FigureCard
@@ -61,45 +61,27 @@ export function SalesFigures({
       label={t(`ownerSales.stats.${key}`)}
       value={values[key]}
       trend={trends[key]}
-      note={t(`ownerSales.notes.${key}`)}
+      note={trends[key] ? undefined : t(`ownerSales.notes.${key}`)}
+      compact
     />
   );
 
+  // Money needs more room than counts, so a five-figure amount is never cut off.
   if (wide) {
     return (
-      <View style={styles.stack}>
-        <View style={styles.row}>
-          <View style={styles.double}>{card('value')}</View>
-          {card('orders')}
-          {card('average')}
-        </View>
-        <View style={styles.row}>
-          {card('completed')}
-          {card('inProgress')}
-          {card('cancelled')}
-          {card('discounts')}
-        </View>
+      <View style={styles.row}>
+        {KEYS.map((key) => (
+          <View key={key} style={[styles.cell, { flexGrow: GROW[key] }]}>
+            {card(key)}
+          </View>
+        ))}
       </View>
     );
   }
-  return (
-    <View style={styles.stack}>
-      <View style={styles.row}>{card('value')}</View>
-      <CardGrid columns={2}>
-        {card('orders')}
-        {card('average')}
-        {card('completed')}
-        {card('inProgress')}
-        {card('cancelled')}
-        {card('discounts')}
-      </CardGrid>
-    </View>
-  );
+  return <CardGrid columns={2}>{KEYS.map(card)}</CardGrid>;
 }
 
 const styles = StyleSheet.create({
-  stack: { gap: tokens.space[3] },
-  row: { flexDirection: 'row', gap: tokens.space[3] },
-  // Takes the room of two cards plus the gap between them.
-  double: { flex: 2, flexDirection: 'row' },
+  row: { flexDirection: 'row', gap: tokens.owner.controls.listGap },
+  cell: { flexBasis: 0, minWidth: 0, flexDirection: 'row' },
 });

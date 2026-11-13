@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
+import type { WaiterCallUpdate } from '@/lib/api/client';
 import { ownerKeys } from '../../data/keys';
 import { toast } from '../../kit';
 import { POLL_MS } from '@/lib/polling';
@@ -21,10 +22,12 @@ export function useWaiterCalls(venueId: string) {
     enabled: Boolean(venueId),
     refetchInterval: POLL_MS.owner,
   });
+  // "On my way", "Done" or "Snooze 1 min", straight from a card on the board.
   const update = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: 'acknowledged' | 'resolved' }) =>
-      api.ownerUpdateWaiterCall(id, { status }),
-    onSuccess: () => {
+    mutationFn: ({ id, ...body }: { id: string } & WaiterCallUpdate) =>
+      api.ownerUpdateWaiterCall(id, body),
+    onSuccess: (_saved, body) => {
+      if (body.snoozeMinutes) toast.success(t('ownerCalls.snoozed'));
       void client.invalidateQueries({ queryKey: key });
       void client.invalidateQueries({ queryKey: ownerKeys.floor(venueId) });
       void client.invalidateQueries({ queryKey: ownerKeys.dashboard(venueId) });

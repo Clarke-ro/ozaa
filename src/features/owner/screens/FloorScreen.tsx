@@ -14,15 +14,21 @@ import { useOwnerLayout } from '../chrome/layout';
 import { DeskWait, OwnerPage } from '../chrome/OwnerPage';
 import { ownerKeys } from '../data/keys';
 import { ticketAge } from '../desk/ops';
-import { EmptyCard } from '../kit';
+import { ChipRow, EmptyCard } from '../kit';
+import type { StatusTone } from '@/theme/palette';
 import { useWaiterCalls } from './calls/useWaiterCalls';
 import { FloorBand } from './floor/FloorBand';
 import { FloorCard } from './floor/FloorCard';
-import { groupTables, toneCounts } from './floor/floorGroups';
+import {
+  FLOOR_FILTERS,
+  floorFilterCounts,
+  groupTables,
+  inFloorFilter,
+  tablesInUse,
+  type FloorFilter,
+} from './floor/floorGroups';
 import { FreeTile } from './floor/FreeTile';
-import { RoomCard } from './floor/RoomCard';
 import { TableDetail } from './floor/TableDetail';
-import { TablePanel } from './floor/TablePanel';
 import { useFloorActions } from './floor/useFloorActions';
 import { MarkPaidSheet } from './orders/MarkPaidSheet';
 import { useVenuePay } from './orders/useVenuePay';
@@ -30,14 +36,19 @@ import { POLL_MS } from '@/lib/polling';
 
 // Minutes since ordering only need to move once every half minute.
 const TICK_MS = 30_000;
-// The side panel on a desktop: room for a bill and its buttons.
-const PANEL = 360;
+// Chip count colours from the canvas: calls red, eating blue, bills amber, free green.
+const FILTER_TONE: Partial<Record<FloorFilter, StatusTone>> = {
+  calling: 'alert',
+  eating: 'info',
+  paying: 'bill',
+  free: 'success',
+};
 
 /**
- * The room, sorted by who needs you: a summary of the room on top, then the tables in three bands
- * (needs you, eating, free). A table that needs someone carries its one action on the card itself,
- * so a call or a bill takes one tap. Desktops show the picked table in a panel beside the room;
- * smaller screens open it in a sheet.
+ * The room, as on the design canvas: "5 of 9 tables in use" under the title, chips to show one
+ * kind of table, then the tables in three bands (needs you, eating, free). A table that needs
+ * someone carries its one action on the card as a tinted button, so a call or a bill takes one
+ * tap. Tapping a table opens its bill in a sheet.
  */
 export function FloorScreen() {
   const { t } = useTranslation();
@@ -47,6 +58,7 @@ export function FloorScreen() {
   // A link like /owner/floor?table=tbl_4 (from a notification) opens that table straight away.
   const params = useLocalSearchParams<{ table?: string }>();
   const [picked, setPicked] = useState<string | null>(params.table ?? null);
+  const [filter, setFilter] = useState<FloorFilter>('all');
   const [paying, setPaying] = useState<Order | null>(null);
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -74,6 +86,7 @@ export function FloorScreen() {
   });
 
   const items = floor.data?.items ?? [];
+  const counts = floorFilterCounts(items);
   const orderOf = (table: FloorTable) =>
     orders.data?.items.find((item) => item.id === table.orderId) ?? null;
   // How long the table has been like this, from the server: since the call, or since the order moved.
@@ -96,6 +109,7 @@ export function FloorScreen() {
       return {
         label: next === 'acknowledged' ? t('owner.onTheWay') : t('owner.doneCall'),
         busy: actions.answering,
+        tint: 'alert' as const,
         onPress: () => actions.answerCall(id, next),
       };
     }
@@ -104,6 +118,7 @@ export function FloorScreen() {
       return {
         label: t('ownerOrders.markPaid.open'),
         busy: false,
+        tint: 'bill' as const,
         onPress: () => setPaying(order),
       };
     }
@@ -116,21 +131,31 @@ export function FloorScreen() {
     role,
     actions,
     onMarkPaid: (order: Order) => {
-      // One sheet at a time: on smaller screens close the table, then ask how it was paid.
-      if (!desktop) setPicked(null);
+      // One sheet at a time: close the table, then ask how it was paid.
+      setPicked(null);
       setPaying(order);
     },
   };
 
   const room = (
     <View style={styles.room}>
-      {groupTables(items).map((group) => (
+      {groupTables(items.filter((item) => inFloorFilter(item.status, filter))).map((group) => (
         <FloorBand
           key={group.id}
           group={group.id}
           count={group.tables.length}
-          columns={wide ? 3 : 2}
-          compact={group.id === 'free'}
+          // Canvas grids: calls get wider cards (3 across), eating and free tables 4 across.
+          columns={
+            desktop
+              ? group.id === 'attention'
+                ? 3
+                : 4
+              : wide
+                ? 2
+                : group.id === 'attention'
+                  ? 1
+                  : 2
+          }
         >
           {group.tables.map((item) =>
             group.id === 'free' ? (
@@ -159,7 +184,14 @@ export function FloorScreen() {
   );
 
   return (
-    <OwnerPage title={t('owner.floor')} subtitle={t('ownerLead.floor')}>
+    <OwnerPage
+      title={t('owner.floor')}
+      subtitle={
+        items.length > 0
+          ? t('ownerFloor.inUseLead', { count: tablesInUse(items), total: items.length })
+          : t('ownerLead.floor')
+      }
+    >
       <DeskWait
         loading={floor.isLoading}
         error={floor.isError}
@@ -173,23 +205,22 @@ export function FloorScreen() {
           />
         ) : (
           <View style={styles.stack}>
-            <RoomCard counts={toneCounts(items)} />
-            {desktop ? (
-              <View style={styles.split}>
-                <View style={styles.main}>{room}</View>
-                <View style={styles.panel}>
-                  <TablePanel table={table} {...detail} />
-                </View>
-              </View>
-            ) : (
-              room
-            )}
+            <ChipRow<FloorFilter>
+              label={t('ownerFloor.filter.label')}
+              value={filter}
+              onChange={setFilter}
+              items={FLOOR_FILTERS.map((id) => ({
+                id,
+                label: t(`ownerFloor.filter.${id}`),
+                count: counts[id],
+                tone: FILTER_TONE[id],
+              }))}
+            />
+            {room}
           </View>
         )}
       </DeskWait>
-      {table && !desktop ? (
-        <TableDetail table={table} {...detail} onClose={() => setPicked(null)} />
-      ) : null}
+      {table ? <TableDetail table={table} {...detail} onClose={() => setPicked(null)} /> : null}
       {paying ? (
         <MarkPaidSheet
           order={paying}
@@ -207,9 +238,7 @@ export function FloorScreen() {
 }
 
 const styles = StyleSheet.create({
-  stack: { gap: tokens.space[6] },
-  room: { gap: tokens.space[6] },
-  split: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.space[6] },
-  main: { flex: 1, minWidth: 0 },
-  panel: { width: PANEL },
+  // Canvas: 24 px more between the chips and each band than the page's 32 px section gap.
+  stack: { gap: tokens.space[12] + tokens.space[2] },
+  room: { gap: tokens.space[12] + tokens.space[2] },
 });

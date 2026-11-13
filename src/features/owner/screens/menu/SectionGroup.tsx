@@ -1,18 +1,16 @@
-import { Fragment } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Pencil, Plus } from 'lucide-react-native';
+import { Eye, EyeOff, GripVertical, Pencil, Plus } from 'lucide-react-native';
 import type { MenuCategory, MenuItem } from '@/lib/api/types';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
-import { cardStyle, RowMenu, StatusPill } from '../../kit';
+import { fontFamily, useTheme } from '@/ui/theme';
 import { MenuItemRow } from './MenuItemRow';
 
 /**
- * One menu section as a white card: its name and dish count (and "Hidden" when guests can't see
- * it) with a ⋮ menu to add a dish here or edit the section, then its dishes as rows split by thin
- * lines. An empty section says so and offers to add the first dish.
+ * One menu section as on the design canvas: its name with a grey count, three small icons on
+ * the right (rename, hide from guests, reorder sections), then each dish as its own card. An
+ * empty section shows a dashed "Add the first dish".
  */
 export function SectionGroup({
   section,
@@ -22,6 +20,8 @@ export function SectionGroup({
   currency,
   onAddDish,
   onEditSection,
+  onHideSection,
+  onSections,
   onEditDish,
   onToggleDish,
 }: {
@@ -34,35 +34,58 @@ export function SectionGroup({
   currency: string;
   onAddDish: () => void;
   onEditSection: () => void;
+  onHideSection: () => void;
+  onSections: () => void;
   onEditDish: (item: MenuItem) => void;
   onToggleDish: (item: MenuItem) => void;
 }) {
   const theme = useTheme();
   const { t } = useTranslation();
+  const hidden = section?.hidden === true;
+  const icon = (label: string, Icon: typeof Pencil, onPress: () => void) => (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={onPress}
+      style={({ pressed, hovered }) => [
+        styles.icon,
+        (pressed || hovered) && { backgroundColor: theme.wash },
+      ]}
+    >
+      <Icon size={18} color={theme.muted} />
+    </Pressable>
+  );
   return (
-    <View style={[styles.card, cardStyle(theme)]}>
-      <View style={[styles.head, { borderBottomColor: theme.line }]}>
-        <View style={styles.title}>
-          <Text variant="title" numberOfLines={1} style={styles.name} accessibilityRole="header">
-            {name}
-          </Text>
-          <Text
-            variant="body-strong"
-            style={{ color: theme.ink }}
-            accessibilityLabel={t('ownerMenu.dishCount', { count: total })}
-          >
-            {`(${total})`}
-          </Text>
-          {section?.hidden ? <StatusPill label={t('ownerMenu.hidden')} tone="neutral" boxed /> : null}
+    <View style={styles.group}>
+      <View style={styles.head}>
+        <Text
+          accessibilityRole="header"
+          numberOfLines={1}
+          style={[styles.name, hidden && { color: theme.muted }]}
+        >
+          {name}
+        </Text>
+        <View
+          accessibilityLabel={t('ownerMenu.dishCount', { count: total })}
+          style={[styles.count, { backgroundColor: theme.wash }]}
+        >
+          <Text style={styles.countText}>{total}</Text>
         </View>
+        {hidden ? (
+          <Text style={[styles.hidden, { color: theme.meta }]}>{t('ownerMenu.hidden')}</Text>
+        ) : null}
         {section ? (
-          <RowMenu
-            label={t('ownerMenu.sectionActions', { name })}
-            actions={[
-              { label: t('ownerMenu.addHere'), icon: Plus, onPress: onAddDish },
-              { label: t('ownerMenu.editSectionShort'), icon: Pencil, onPress: onEditSection },
-            ]}
-          />
+          <View style={styles.icons}>
+            {icon(t('ownerMenu.renameSection', { name }), Pencil, onEditSection)}
+            {icon(
+              hidden
+                ? t('ownerMenu.showSectionA11y', { name })
+                : t('ownerMenu.hideSectionA11y', { name }),
+              hidden ? EyeOff : Eye,
+              onHideSection,
+            )}
+            {icon(t('ownerMenu.reorderSections'), GripVertical, onSections)}
+          </View>
         ) : null}
       </View>
       {dishes.length === 0 ? (
@@ -70,50 +93,64 @@ export function SectionGroup({
           accessibilityRole="button"
           accessibilityLabel={t('ownerMenu.live.addTo', { name })}
           onPress={onAddDish}
-          style={({ pressed }) => [styles.empty, pressed && { backgroundColor: theme.wash }]}
+          style={({ pressed }) => [
+            styles.empty,
+            { borderColor: theme.line },
+            pressed && { backgroundColor: theme.wash },
+          ]}
         >
-          <Plus size={18} color={theme.ink} />
-          <Text variant="body-strong" style={{ color: theme.ink }}>
-            {t('ownerMenu.addFirst')}
-          </Text>
+          <Plus size={18} color={theme.muted} />
+          <Text style={[styles.emptyText, { color: theme.muted }]}>{t('ownerMenu.addFirst')}</Text>
         </Pressable>
       ) : (
-        dishes.map((item, index) => (
-          <Fragment key={item.id}>
-            {index > 0 ? <View style={[styles.rule, { backgroundColor: theme.line }]} /> : null}
+        <View style={styles.rows}>
+          {dishes.map((item) => (
             <MenuItemRow
+              key={item.id}
               item={item}
               currency={currency}
               onToggle={() => onToggleDish(item)}
               onEdit={() => onEditDish(item)}
             />
-          </Fragment>
-        ))
+          ))}
+        </View>
       )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { overflow: 'hidden' },
-  head: {
-    flexDirection: 'row',
+  group: { gap: tokens.space[4] },
+  head: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  name: { flexShrink: 1, fontSize: 17, lineHeight: 24, fontFamily: fontFamily.strong },
+  count: {
+    minWidth: 28,
+    height: 24,
+    paddingHorizontal: 9,
+    borderRadius: tokens.radius.full,
     alignItems: 'center',
-    gap: tokens.space[3],
-    paddingLeft: tokens.space[4],
-    paddingRight: tokens.space[3],
-    paddingVertical: tokens.space[2],
-    minHeight: tokens.touchTarget + tokens.space[3],
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    justifyContent: 'center',
   },
-  title: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
-  name: { flexShrink: 1 },
-  rule: { height: StyleSheet.hairlineWidth, marginLeft: tokens.space[4] },
+  countText: { fontSize: 13, lineHeight: 18, fontFamily: fontFamily.strong },
+  hidden: { fontSize: 14, lineHeight: 20 },
+  icons: { marginLeft: 'auto', flexDirection: 'row', gap: 2 },
+  icon: {
+    width: 36,
+    height: 36,
+    borderRadius: tokens.radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rows: { gap: tokens.space[3] },
   empty: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: tokens.space[2],
-    minHeight: tokens.touchTarget + tokens.space[4],
+    gap: 10,
+    minHeight: 80,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderRadius: tokens.owner.controls.cardRadius,
   },
+  emptyText: { fontSize: 16, lineHeight: 22 },
 });

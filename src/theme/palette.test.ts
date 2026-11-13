@@ -1,5 +1,5 @@
 import { contrast } from '@/features/theming';
-import { FLOOR_TONES, NEUTRALS } from './palette';
+import { FLOOR_TONES, NEUTRALS, STATUS_TONES, type StatusTone } from './palette';
 
 // Body text is 15-17 px, so every text role needs 4.5:1 on both surfaces it sits on.
 describe.each(['light', 'dark'] as const)('%s neutrals', (scheme) => {
@@ -46,4 +46,12 @@ describe.each(['light', 'dark'] as const)('%s floor tones', (scheme) => {
       expect(contrast(ink, bg)).toBeGreaterThanOrEqual(4.5);
     },
   );
+});
+
+// Tinted action buttons ("Start cooking", "On my way") carry a 15 px label on their tint.
+describe.each(['light', 'dark'] as const)('%s status tones', (scheme) => {
+  it.each(Object.keys(STATUS_TONES[scheme]) as StatusTone[])('%s ink reads at 4.5:1', (tone) => {
+    const { bg, ink } = STATUS_TONES[scheme][tone];
+    expect(contrast(ink, bg)).toBeGreaterThanOrEqual(4.5);
+  });
 });

@@ -1,5 +1,12 @@
 import type { FloorStatus } from '../../floor/floorStatus';
-import { floorGroupOf, groupTables, toneCounts } from './floorGroups';
+import {
+  floorFilterCounts,
+  floorGroupOf,
+  groupTables,
+  inFloorFilter,
+  tablesInUse,
+  toneCounts,
+} from './floorGroups';
 
 const table = (id: string, status: FloorStatus) => ({ id, status });
 
@@ -64,5 +71,29 @@ describe('toneCounts', () => {
 
   it('gives zero for every colour in an empty room', () => {
     expect(toneCounts([])).toEqual({ free: 0, occupied: 0, paying: 0, calling: 0 });
+  });
+});
+
+describe('floor filter chips', () => {
+  const room = [
+    { status: 'needs_waiter' as const },
+    { status: 'ordered' as const },
+    { status: 'seated' as const },
+    { status: 'waiting_to_pay' as const },
+    { status: 'free' as const },
+    { status: 'free' as const },
+  ];
+
+  it('counts each chip, with eating covering seated and ordered', () => {
+    expect(floorFilterCounts(room)).toEqual({ all: 6, calling: 1, eating: 2, paying: 1, free: 2 });
+  });
+
+  it('keeps a chip to its own tables', () => {
+    expect(room.filter((t) => inFloorFilter(t.status, 'eating'))).toHaveLength(2);
+    expect(room.filter((t) => inFloorFilter(t.status, 'all'))).toHaveLength(6);
+  });
+
+  it('says how many tables are in use', () => {
+    expect(tablesInUse(room)).toBe(4);
   });
 });

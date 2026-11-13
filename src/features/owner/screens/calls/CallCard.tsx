@@ -1,21 +1,30 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { ChevronRight, Clock, MessageSquareText } from 'lucide-react-native';
-import { REASON_ICON } from '@/features/waiter';
+import { AlarmClock, ChevronRight, MessageSquare, MessageSquareText } from 'lucide-react-native';
 import type { WaiterCall } from '@/lib/api/types';
+import { STATUS_TONES, type StatusTone } from '@/theme/palette';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
+import { fontFamily, useTheme } from '@/ui/theme';
 import { ticketAge } from '../../desk/ops';
-import { cardStyle, CodeTile, StatusPill } from '../../kit';
-import { AGE_TONE, waitedLabel } from '../orders/orderPlace';
+import { cardStyle } from '../../kit';
+import { waitedLabel } from '../orders/orderPlace';
+
+/** The colour of what a guest asked for (canvas): a bill amber, ordering more orange, the rest red. */
+function reasonTone(call: WaiterCall): StatusTone {
+  if (call.status === 'acknowledged') return 'info';
+  if (call.reason === 'bill') return 'bill';
+  if (call.reason === 'order_more') return 'order';
+  return 'alert';
+}
 
 /**
- * One guest call as a card on the board: the table in big type, what they asked for, any note,
- * how long they have waited (amber after 10 minutes, red after 20) and who is on it. "On my way"
- * and "Done" are outlined, never filled: the board has no single most important call.
+ * One guest call as a card (design canvas): "Table 4 ›" opens the call, the wait on the right
+ * (red once late), what they asked for in its colour, who is on it, then the actions. Waiting
+ * calls get a tinted "On my way" with "Done" beside it, plus Reply and Snooze under a line;
+ * calls someone is on get one green "Done".
  */
 export function CallCard({
   call,
@@ -23,119 +32,190 @@ export function CallCard({
   busy,
   onAcknowledge,
   onResolve,
+  onSnooze,
 }: {
   call: WaiterCall;
   now: number;
   busy: boolean;
   onAcknowledge: () => void;
   onResolve: () => void;
+  onSnooze: () => void;
 }) {
   const theme = useTheme();
-  const { t, i18n } = useTranslation();
-  const Icon = REASON_ICON[call.reason];
-  const open = call.status === 'open';
-  const live = call.status !== 'resolved';
-  const age = ticketAge(call.createdAt, now);
-  const time = new Date(call.createdAt).toLocaleTimeString(i18n.language, {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-  const late = live && age.tone !== 'ok';
+  const { t } = useTranslation();
   const router = useRouter();
+  const tones = STATUS_TONES[theme.scheme];
+  const open = call.status === 'open';
+  const age = ticketAge(call.createdAt, now);
+  const late = age.tone !== 'ok';
+  const tone = tones[reasonTone(call)];
+  const openCall = () => router.push(`/owner/calls/${call.id}`);
+  // A bill call opens the table's bill on the Floor; anything else is "On my way" (or "Take order").
+  const isBill = call.reason === 'bill';
+  const mainLabel = isBill
+    ? t('ownerCalls.openBill')
+    : call.reason === 'order_more'
+      ? t('ownerCalls.orderMoreAction')
+      : t('owner.onTheWay');
+  const onMain = isBill
+    ? () => router.push(`/owner/floor?table=${encodeURIComponent(call.tableCode)}`)
+    : onAcknowledge;
+  const who = call.reply
+    ? t('ownerCalls.replied', { name: call.staffFirstName ?? '', reply: call.reply })
+    : call.staffFirstName
+      ? t('ownerCalls.by', { name: call.staffFirstName })
+      : null;
 
   return (
     <View
-      style={[cardStyle(theme), styles.card, open && { borderColor: theme.error, borderWidth: 1 }]}
+      style={[
+        cardStyle(theme),
+        styles.card,
+        // A late call gets a red edge as well as red minutes, so it stands out on a full board.
+        open && late && { borderColor: tones.alert.line, borderWidth: 1.5 },
+      ]}
     >
-      {/* The top of the card opens the call's own page: the full message, replies and history. */}
-      <Pressable
-        accessibilityRole="link"
-        accessibilityLabel={t('ownerCalls.openA11y', {
-          table: call.tableCode,
-          reason: t(`waiter.reasons.${call.reason}`),
-        })}
-        onPress={() => router.push(`/owner/calls/${call.id}`)}
-        style={({ pressed }) => [styles.head, pressed && { opacity: 0.7 }]}
-      >
-        <CodeTile code={call.tableCode} size={tokens.touchTarget} tone={open ? 'alert' : 'wash'} />
-        <View style={styles.words}>
-          <Text variant="body-strong" numberOfLines={1}>
+      <View style={styles.head}>
+        <Pressable
+          accessibilityRole="link"
+          accessibilityLabel={t('ownerCalls.openA11y', {
+            table: call.tableCode,
+            reason: t(`waiter.reasons.${call.reason}`),
+          })}
+          onPress={openCall}
+          style={({ pressed }) => [styles.title, pressed && { opacity: 0.7 }]}
+        >
+          <Text style={styles.table} numberOfLines={1}>
             {t('ownerOrders.table', { code: call.tableCode })}
           </Text>
-          <View style={styles.reason}>
-            <Icon size={14} color={theme.muted} />
-            <Text variant="caption" numberOfLines={1} style={{ color: theme.muted }}>
-              {t(`waiter.reasons.${call.reason}`)}
-            </Text>
-          </View>
-        </View>
-        {live ? (
-          <View accessibilityLabel={t('ownerOrders.waitedLabel', { count: age.minutes })}>
-            <StatusPill
-              label={waitedLabel(age.minutes, t)}
-              tone={late ? AGE_TONE[age.tone] : 'neutral'}
-              boxed
-            />
-          </View>
-        ) : (
-          <View style={styles.time}>
-            <Clock size={14} color={theme.meta} />
-            <Text variant="caption" style={{ color: theme.meta }}>
-              {time}
-            </Text>
-          </View>
-        )}
-        {/* A message from the guest shows as an icon with a dot, so every card stays the same size. */}
+          <ChevronRight size={18} color={theme.text} />
+        </Pressable>
+        {/* A message from the guest: an icon with a red dot, opening the call to read it. */}
         {call.note ? (
-          <View accessibilityLabel={t('ownerCalls.hasMessage')}>
-            <MessageSquareText size={18} color={theme.text} />
-            <View style={[styles.msgDot, { backgroundColor: theme.error }]} />
-          </View>
-        ) : null}
-        <ChevronRight size={18} color={theme.meta} />
-      </Pressable>
-
-      {call.reply ? (
-        <Text variant="caption" numberOfLines={1} style={{ color: theme.muted }}>
-          {t('ownerCalls.replied', { name: call.staffFirstName ?? '', reply: call.reply })}
-        </Text>
-      ) : call.staffFirstName ? (
-        <Text variant="caption" style={{ color: theme.muted }}>
-          {t('ownerCalls.by', { name: call.staffFirstName })}
-        </Text>
-      ) : null}
-
-      {live ? (
-        <View style={styles.actions}>
-          {open ? (
-            <Button
-              label={t('owner.onTheWay')}
-              size="md"
-              tone="secondary"
-              loading={busy}
-              onPress={onAcknowledge}
+          <Pressable
+            accessibilityRole="link"
+            accessibilityLabel={t('ownerCalls.hasMessage')}
+            onPress={openCall}
+            style={styles.msg}
+          >
+            <MessageSquareText size={20} color={theme.text} />
+            <View
+              style={[
+                styles.dot,
+                { backgroundColor: tones.alert.line, borderColor: theme.surface },
+              ]}
             />
-          ) : null}
-          <Button
-            label={t('owner.doneCall')}
-            size="md"
-            // With "On my way" beside it, Done is the quieter choice; alone it gets the outline.
-            tone={open ? 'ghost' : 'secondary'}
-            disabled={busy}
-            onPress={onResolve}
-          />
-        </View>
-      ) : null}
+          </Pressable>
+        ) : null}
+        <Text
+          accessibilityLabel={t('ownerOrders.waitedLabel', { count: age.minutes })}
+          style={[
+            styles.sub,
+            late
+              ? { color: tones.alert.line, fontFamily: fontFamily.strong }
+              : { color: theme.meta },
+          ]}
+        >
+          {waitedLabel(age.minutes, t)}
+        </Text>
+      </View>
+
+      <View style={styles.what}>
+        <Text style={[styles.reason, { color: tone.line }]} numberOfLines={1}>
+          {t(`waiter.reasons.${call.reason}`)}
+        </Text>
+        {who ? (
+          <Text style={[styles.sub, { color: theme.meta }]} numberOfLines={1}>
+            {who}
+          </Text>
+        ) : null}
+      </View>
+
+      {open ? (
+        <>
+          <View style={styles.actions}>
+            <Button
+              label={mainLabel}
+              tone="tinted"
+              tint={reasonTone(call)}
+              loading={busy}
+              onPress={onMain}
+              style={[styles.grow, styles.short]}
+            />
+            <Button
+              label={t('owner.doneCall')}
+              tone="secondary"
+              disabled={busy}
+              onPress={onResolve}
+              style={styles.short}
+            />
+          </View>
+          <View style={[styles.foot, { borderTopColor: theme.wash }]}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={openCall}
+              style={({ pressed }) => [styles.link, pressed && { backgroundColor: theme.wash }]}
+            >
+              <MessageSquare size={16} color={theme.muted} />
+              <Text style={[styles.sub, { color: theme.muted }]}>
+                {t('ownerCalls.detail.reply')}
+              </Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              disabled={busy}
+              onPress={onSnooze}
+              style={({ pressed }) => [styles.link, pressed && { backgroundColor: theme.wash }]}
+            >
+              <AlarmClock size={16} color={theme.muted} />
+              <Text style={[styles.sub, { color: theme.muted }]}>
+                {t('ownerCalls.detail.snooze')}
+              </Text>
+            </Pressable>
+          </View>
+        </>
+      ) : (
+        <Button
+          label={t('owner.doneCall')}
+          tone="tinted"
+          tint="success"
+          loading={busy}
+          onPress={onResolve}
+          style={styles.short}
+        />
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  msgDot: { position: 'absolute', top: -2, right: -3, width: 8, height: 8, borderRadius: 4 },
-  card: { padding: tokens.space[4], gap: tokens.space[3] },
-  head: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
-  words: { flex: 1, minWidth: 0, gap: 2 },
-  reason: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[1] },
-  time: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[1] },
-  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.space[2] },
+  card: { flex: 1, padding: tokens.owner.controls.cardPadding, gap: 14 },
+  head: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
+  title: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 32 },
+  table: { flexShrink: 1, fontSize: 17, lineHeight: 22, fontFamily: fontFamily.strong },
+  msg: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
+  dot: {
+    position: 'absolute',
+    top: 3,
+    right: 3,
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+    borderWidth: 2,
+  },
+  what: { gap: 2 },
+  reason: { fontSize: 16, lineHeight: 22, fontFamily: fontFamily.strong },
+  sub: { fontSize: 14, lineHeight: 20 },
+  actions: { flexDirection: 'row', gap: tokens.space[2], marginTop: 'auto' },
+  grow: { flex: 1 },
+  short: { minHeight: 44 },
+  foot: { flexDirection: 'row', gap: 4, paddingTop: 10, borderTopWidth: 1 },
+  link: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    height: 36,
+    paddingHorizontal: 10,
+    borderRadius: tokens.radius.full,
+  },
 });

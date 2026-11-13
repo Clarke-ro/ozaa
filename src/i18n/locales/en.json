@@ -857,7 +857,7 @@
     "anonymousName": "Anonymous guest"
   },
   "ownerMenu": {
-    "lead": "What guests see when they scan. Changes show on the guest menu straight away.",
+    "lead": "What guests see when they scan",
     "moreActions": "More menu actions",
     "addHere": "Add a dish here",
     "editSectionShort": "Edit section",
@@ -1066,7 +1066,13 @@
     },
     "showTitle": "Show on the menu",
     "popular": "Popular",
-    "popularHint": "Adds a Popular tag guests see on the dish."
+    "popularHint": "Adds a Popular tag guests see on the dish.",
+    "addSection": "Add a section",
+    "renameSection": "Rename {{name}}",
+    "hideSectionA11y": "Hide {{name}} from guests",
+    "showSectionA11y": "Show {{name}} to guests",
+    "reorderSections": "Reorder sections",
+    "previewTitle": "Guest preview"
   },
   "ownerBranding": {
     "lead": "How your page looks to guests: colour, words, photos and the order of the buttons.",
@@ -1242,6 +1248,22 @@
     "group": {
       "attention": "Needs you",
       "eating": "Eating",
+      "free": "Free"
+    },
+    "stage": {
+      "received": "New order",
+      "preparing": "Cooking",
+      "ready": "Ready to serve",
+      "served": "Served"
+    },
+    "noOrder": "No order yet",
+    "inUseLead": "{{count}} of {{total}} tables in use",
+    "filter": {
+      "label": "Show",
+      "all": "All tables",
+      "calling": "Needs you",
+      "eating": "Eating",
+      "paying": "Waiting to pay",
       "free": "Free"
     }
   },
@@ -1486,14 +1508,15 @@
     "joinedTrend": "New members"
   },
   "ownerOrders": {
-    "lead": "Every ticket from tables and your menu link, by stage.",
+    "lead": "Every ticket from tables and your menu link",
     "tabs": {
       "new": "New",
       "cooking": "Cooking",
       "ready": "Ready",
       "served": "Served",
       "rejected": "Rejected",
-      "all": "All"
+      "all": "All",
+      "open": "Open"
     },
     "table": "Table {{code}}",
     "takeaway": "Takeaway",
@@ -1517,7 +1540,8 @@
       "ready": "Nothing waiting to go out",
       "served": "Nothing served yet",
       "rejected": "No rejected orders",
-      "all": "No orders yet"
+      "all": "No orders yet",
+      "open": "Nothing in the kitchen"
     },
     "emptyBody": "Orders from the tables show here as soon as guests send them.",
     "waited": "{{count}} min",
@@ -1602,7 +1626,14 @@
       "missing": "We can't find this order",
       "missingBody": "It may be from an earlier day. Go back to Orders and pick it from the list.",
       "backToOrders": "Back to Orders"
-    }
+    },
+    "view": {
+      "label": "Show as",
+      "board": "Board",
+      "list": "List"
+    },
+    "columnLabel": "{{stage}}, {{count}} orders",
+    "readyAgo": "ready {{time}}"
   },
   "ownerCalls": {
     "status": {
@@ -1658,7 +1689,19 @@
       "order_more": "Coming to take your order",
       "clean_table": "Coming to clear the table"
     },
-    "snoozed": "Snoozed. It comes back in 1 min."
+    "snoozed": "Snoozed. It comes back in 1 min.",
+    "quickStrip": "Quick replies guests see on their phone",
+    "avgLong": "Average pick-up",
+    "late_one": "{{count}} late",
+    "late_other": "{{count}} late",
+    "pickedUp_one": "Picked up in {{count}} min",
+    "pickedUp_other": "Picked up in {{count}} min",
+    "pickedUpBy_one": "Picked up in {{count}} min by {{name}}",
+    "pickedUpBy_other": "Picked up in {{count}} min by {{name}}",
+    "doneIn_one": "done in {{count}} min",
+    "doneIn_other": "done in {{count}} min",
+    "openBill": "Open bill",
+    "orderMoreAction": "Take the order"
   },
   "ownerStaff": {
     "invite": "Invite",
@@ -1863,7 +1906,7 @@
   "ownerLead": {
     "branding": "How your guest page looks: colour, font, photos and buttons.",
     "business": "Your business name and every location you run.",
-    "calls": "Guests asking for a waiter, and how fast each call was picked up.",
+    "calls": "Guests asking for a waiter",
     "devices": "Phones and tablets that scan loyalty cards at the counter.",
     "feedback": "Private notes guests leave after their meal.",
     "loyalty": "Your stamp card, its members and how it is doing.",
@@ -2170,13 +2213,16 @@
     }
   },
   "ownerSales": {
-    "lead": "Order value, orders and how they were paid, compared with the period before.",
+    "lead": "Order value and how it was paid, compared with the period before",
     "vs": {
       "all": "vs before",
       "today": "vs yesterday",
       "yesterday": "vs the day before",
       "7d": "vs previous 7 days",
-      "30d": "vs previous 30 days"
+      "30d": "vs previous 30 days",
+      "week": "vs last week",
+      "month": "vs last month",
+      "custom": "vs the days before"
     },
     "statusMix": "How orders ended up",
     "soldShare_one": "1 sold · {{percent}}% of order value",
@@ -2188,7 +2234,8 @@
       "completed": "Completed",
       "inProgress": "In progress",
       "cancelled": "Cancelled",
-      "discounts": "Discounts given"
+      "discounts": "Discounts given",
+      "refunds": "Refunds"
     },
     "notes": {
       "value": "Cancelled orders not counted",
@@ -2197,7 +2244,8 @@
       "completed": "Served or handed over",
       "inProgress": "New, cooking or ready",
       "cancelled": "Rejected or cancelled",
-      "discounts": "From sale prices"
+      "discounts": "From sale prices",
+      "refunds": "Money given back"
     },
     "overTime": "Order value by day",
     "overTimeSummary": "Order value for each day in the range",
@@ -2233,7 +2281,16 @@
     "tax": "E-VAT and levies",
     "taxOff": "Tax isn't set up, so orders carry no VAT lines.",
     "taxSetUp": "Set up tax",
-    "noPrevious": "No earlier period to compare with."
+    "noPrevious": "No earlier period to compare with.",
+    "export": "Export CSV",
+    "range": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "week": "This week",
+      "month": "This month",
+      "30d": "Last 30 days",
+      "custom": "Pick dates"
+    }
   },
   "ownerPay": {
     "lead": "How guests pay you. Online payments go straight to your own Paystack account; Cravins never holds your money.",

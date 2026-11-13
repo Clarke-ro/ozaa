@@ -28,7 +28,10 @@ export function LiveMenu({
   onAddDish,
   onEditSection,
   onReorder,
+  stacked,
 }: Omit<PreviewActions, 'onReorder'> & {
+  /** In the Menu's side column: the settings go under the phone, never beside it. */
+  stacked?: boolean;
   audience: Audience;
   venue: VenueSettings;
   sections: MenuCategory[];
@@ -40,7 +43,7 @@ export function LiveMenu({
     section: MenuCategory;
     dishes: MenuItem[];
   } | null>(null);
-  const wide = width >= SIDE_BY_SIDE;
+  const wide = !stacked && width >= SIDE_BY_SIDE;
   const actions: PreviewActions = {
     onEditDish,
     onAddDish,

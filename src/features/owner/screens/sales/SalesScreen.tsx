@@ -9,9 +9,15 @@ import { useOwnerLayout } from '../../chrome/layout';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
 import { formatWhen } from '../../desk/noticeForm';
-import { ORDER_RANGES, orderRange, type OrderRange } from '../../desk/orderRange';
-import { previousOrderRange } from '../../desk/salesCompare';
-import { PeriodSelect } from '../../kit';
+import {
+  previousSalesRange,
+  SALES_RANGES,
+  salesRange,
+  type SalesRangeId,
+} from '../../desk/salesRange';
+import { ChipRow, downloadCsv, Field } from '../../kit';
+import { Button } from '@/ui/Button';
+import { salesCsv } from './salesCsv';
 import { BySource, HowPaid, StatusMix, TopDishes } from './SalesCards';
 import { SalesFigures } from './SalesFigures';
 import { SalesTrend } from './SalesTrend';
@@ -23,8 +29,11 @@ import { useTheme } from '@/ui/theme';
 const FALLBACK_ZONE = 'Africa/Accra';
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+const isDay = (v: string) => /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v));
+
 /**
- * Sales as an analytics page: the period picker on the right of the title, figure cards that
+ * Sales as an analytics page (design canvas): Export CSV on the right of the title, a row of date
+ * chips under it (Today to Last 30 days, then Pick dates for any days), figure cards that
  * compare with the period just before, order value as a line over every day of the period, then
  * the breakdowns two by two on wide screens (top dishes and how it was paid, where orders came
  * from and how they ended up).
@@ -34,7 +43,12 @@ export function SalesScreen() {
   const { t } = useTranslation();
   const { wide } = useOwnerLayout();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
-  const [range, setRange] = useState<OrderRange>('30d');
+  const [range, setRange] = useState<SalesRangeId>('30d');
+  // Picked dates are typed as YYYY-MM-DD; both days are included.
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
+  const customOk = isDay(from) && isDay(to) && from <= to;
+  const picked = { id: range, from, to };
   const venue = useQuery({
     queryKey: ownerKeys.venue(venueId),
     queryFn: () => api.ownerGetVenue(venueId),
@@ -43,24 +57,25 @@ export function SalesScreen() {
   const zone = venue.data?.hours.timezone ?? FALLBACK_ZONE;
   // The moment the page opened: day boundaries only move at midnight, and reopening refreshes it.
   const [openedAt] = useState(() => Date.now());
-  const filter = orderRange(range, openedAt, zone);
-  const before = previousOrderRange(range, openedAt, zone);
+  const filter = salesRange(picked, openedAt, zone);
+  const before = previousSalesRange(picked, openedAt, zone);
+  const ready = Boolean(venueId) && (range !== 'custom' || customOk);
   const sales = useQuery({
-    queryKey: [...ownerKeys.sales(venueId), range],
+    queryKey: [...ownerKeys.sales(venueId), range, from, to],
     queryFn: () => api.ownerGetSales(venueId, filter),
-    enabled: Boolean(venueId),
+    enabled: ready,
   });
   const previous = useQuery({
-    queryKey: [...ownerKeys.sales(venueId), range, 'previous'],
+    queryKey: [...ownerKeys.sales(venueId), range, from, to, 'previous'],
     queryFn: () => api.ownerGetSales(venueId, before ?? {}),
-    enabled: Boolean(venueId) && before !== null,
+    enabled: ready && before !== null,
   });
   const r = sales.data;
   // The chart's first and last day in the venue's calendar; the last is today unless the range
   // ends earlier (yesterday ends at today's midnight).
   const day = (iso: string) => formatWhen(iso, zone).slice(0, 10);
-  const from = filter.since ? day(filter.since) : null;
-  const to = filter.since
+  const chartFrom = filter.since ? day(filter.since) : null;
+  const chartTo = filter.since
     ? day(
         filter.until
           ? new Date(Date.parse(filter.until) - DAY_MS).toISOString()
@@ -81,16 +96,49 @@ export function SalesScreen() {
       title={t('owner.sales')}
       subtitle={t('ownerSales.lead')}
       action={
-        <PeriodSelect<OrderRange>
-          label={t('ownerOrders.range.label')}
-          value={range}
-          onChange={setRange}
-          options={ORDER_RANGES.map((id) => ({ id, label: t(`ownerOrders.range.${id}`) }))}
+        <Button
+          label={t('ownerSales.export')}
+          tone="secondary"
+          disabled={!r || r.days.length === 0}
+          onPress={() =>
+            r
+              ? void downloadCsv(salesCsv(r), `cravins-sales-${range}.csv`, t('owner.sales'))
+              : undefined
+          }
         />
       }
     >
+      <ChipRow<SalesRangeId>
+        label={t('ownerOrders.range.label')}
+        value={range}
+        onChange={setRange}
+        items={[...SALES_RANGES, 'custom' as const].map((id) => ({
+          id,
+          label: t(`ownerSales.range.${id}`),
+        }))}
+      />
+      {range === 'custom' ? (
+        <View style={[styles.dates, wide && styles.row]}>
+          <View style={wide ? styles.flex : undefined}>
+            <Field
+              label={t('ownerInsights.from')}
+              placeholder="2026-11-01"
+              value={from}
+              onChangeText={setFrom}
+            />
+          </View>
+          <View style={wide ? styles.flex : undefined}>
+            <Field
+              label={t('ownerInsights.to')}
+              placeholder="2026-11-12"
+              value={to}
+              onChangeText={setTo}
+            />
+          </View>
+        </View>
+      ) : null}
       <DeskWait
-        loading={sales.isLoading}
+        loading={sales.isLoading && ready}
         error={sales.isError}
         onRetry={() => void sales.refetch()}
       >
@@ -102,12 +150,12 @@ export function SalesScreen() {
               vsLabel={t(`ownerSales.vs.${range}`)}
               wide={wide}
             />
-            {range !== 'all' && r.previous === null ? (
+            {r.previous === null ? (
               <Text variant="caption" style={{ color: theme.muted }}>
                 {t('ownerSales.noPrevious')}
               </Text>
             ) : null}
-            <SalesTrend report={r} from={from} to={to} />
+            <SalesTrend report={r} from={chartFrom} to={chartTo} />
             {pair(<TopDishes report={r} />, <HowPaid report={r} />)}
             {pair(<ByMethod report={r} />, <ByHour report={r} />)}
             {pair(<BySource report={r} />, <StatusMix report={r} />)}
@@ -121,6 +169,7 @@ export function SalesScreen() {
 
 const styles = StyleSheet.create({
   stack: { gap: tokens.space[4] },
+  dates: { gap: tokens.space[3] },
   pair: { gap: tokens.space[4] },
   row: { flexDirection: 'row', alignItems: 'flex-start' },
   flex: { flex: 1, minWidth: 0 },

@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import type { WaiterCall } from '@/lib/api/types';
+import { tokens } from '@/theme/tokens';
 import { CardGrid, FigureCard } from '../../kit';
 
 /**
@@ -8,12 +9,15 @@ import { CardGrid, FigureCard } from '../../kit';
  */
 export function CallFigures({
   waiting,
+  late,
   coming,
   avg,
   top,
   columns,
 }: {
   waiting: number;
+  /** Waiting calls past 10 minutes. */
+  late: number;
   coming: number;
   /** Average minutes to pick up a call, or null with none picked up yet. */
   avg: number | null;
@@ -23,25 +27,29 @@ export function CallFigures({
 }) {
   const { t } = useTranslation();
   return (
-    <CardGrid columns={columns}>
+    <CardGrid columns={columns} gap={tokens.owner.controls.listGap}>
       <FigureCard
         order="labelFirst"
+        tall
         label={t('ownerCalls.status.open')}
         value={String(waiting)}
-        note={waiting > 0 ? t('ownerCalls.answerSoon') : undefined}
+        aside={late > 0 ? t('ownerCalls.late', { count: late }) : undefined}
       />
       <FigureCard
         order="labelFirst"
+        tall
         label={t('ownerCalls.status.acknowledged')}
         value={String(coming)}
       />
       <FigureCard
         order="labelFirst"
-        label={t('ownerCalls.avgShort')}
+        tall
+        label={t('ownerCalls.avgLong')}
         value={avg == null ? '–' : t('ownerCalls.minutes', { count: avg })}
       />
       <FigureCard
         order="labelFirst"
+        tall
         label={t('ownerCalls.topReason')}
         value={top ? t(`waiter.reasons.${top}`) : '–'}
       />

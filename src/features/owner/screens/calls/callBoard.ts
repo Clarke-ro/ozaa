@@ -36,3 +36,14 @@ export function topReason(calls: readonly WaiterCall[]): WaiterCall['reason'] | 
   }
   return best?.reason ?? null;
 }
+
+/** Whole minutes from the call to someone picking it up, and to it being done. Null if not yet. */
+export function callTimes(call: Pick<WaiterCall, 'createdAt' | 'acknowledgedAt' | 'resolvedAt'>): {
+  pickedUp: number | null;
+  done: number | null;
+} {
+  const from = Date.parse(call.createdAt);
+  const mins = (at?: string | null) =>
+    at ? Math.max(0, Math.floor((Date.parse(at) - from) / 60_000)) : null;
+  return { pickedUp: mins(call.acknowledgedAt), done: mins(call.resolvedAt) };
+}

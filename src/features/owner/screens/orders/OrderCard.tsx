@@ -1,32 +1,34 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { ChevronRight, MessageSquareText } from 'lucide-react-native';
 import type { Order } from '@/lib/api/types';
 import { pesewas } from '@/lib/brand';
 import { formatMoney } from '@/lib/money';
+import { STATUS_TONES, type StatusTone } from '@/theme/palette';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
-import { cardStyle, CodeTile, StatusPill } from '../../kit';
+import { fontFamily, useTheme } from '@/ui/theme';
+import { cardStyle } from '../../kit';
 import { ticketAge } from '../../desk/ops';
-import {
-  AGE_TONE,
-  orderPlace,
-  PAID_TONE,
-  paidLabel,
-  STATUS_TONE,
-  waitedLabel,
-} from './orderPlace';
+import { orderPlace, paidLabel, waitedLabel } from './orderPlace';
 
 // Enough dishes to cook from at a glance; the rest are one tap away on the order's page.
 const PREVIEW_LINES = 4;
 
+/** The next step's button takes the colour of the stage it moves the ticket out of (canvas). */
+const NEXT_TINT: Record<Order['status'], StatusTone> = {
+  received: 'order',
+  preparing: 'info',
+  ready: 'success',
+  served: 'success',
+  cancelled: 'alert',
+};
+
 /**
- * One ticket as its own card: where it goes and how long it has waited, the dishes to cook (with
- * add-ons and notes), what it costs and whether it is paid, and the one next step. The top of the
- * card opens the full order.
+ * One ticket, as on the design canvas: where it goes and how long it has waited, the dishes with
+ * their quantity on the right, the total and whether it is paid, then the next step as a tinted
+ * button and "Mark paid" beside it. The top of the card opens the full order.
  */
 export function OrderCard({
   order,
@@ -54,14 +56,20 @@ export function OrderCard({
   const [hovered, setHovered] = useState(false);
   const live = order.status !== 'served' && order.status !== 'cancelled';
   const age = ticketAge(order.createdAt, now);
-  const { where, tile } = orderPlace(order, t);
+  const { where } = orderPlace(order, t);
   const time = new Date(order.createdAt).toLocaleTimeString(i18n.language, {
     hour: '2-digit',
     minute: '2-digit',
   });
   const shown = order.lines.slice(0, PREVIEW_LINES);
   const hidden = order.lines.length - shown.length;
-  const canMarkPaid = onMarkPaid && order.paymentStatus !== 'paid' && order.status !== 'cancelled';
+  // As on the canvas, "Mark paid" sits beside the first step only; later it lives on the order page.
+  const canMarkPaid = onMarkPaid && order.paymentStatus !== 'paid' && order.status === 'received';
+  const tones = STATUS_TONES[theme.scheme];
+  // Amber past 10 minutes, red past 20 (ticketAge); otherwise a quiet grey.
+  const ageInk =
+    age.tone === 'very_late' ? tones.alert.line : age.tone === 'late' ? tones.bill.line : null;
+  const paid = order.paymentStatus === 'paid';
 
   return (
     <View style={[cardStyle(theme), styles.card]}>
@@ -72,142 +80,123 @@ export function OrderCard({
         onPress={onOpen}
         onHoverIn={() => setHovered(true)}
         onHoverOut={() => setHovered(false)}
-        style={({ pressed }) => [
-          styles.top,
-          (pressed || hovered) && { backgroundColor: theme.wash },
-        ]}
+        style={({ pressed }) => [styles.top, (pressed || hovered) && { opacity: 0.7 }]}
       >
         <View style={styles.head}>
-          <CodeTile
-            code={tile}
-            size={tokens.touchTarget}
-            tone={order.status === 'received' ? 'tint' : 'wash'}
-          />
           <View style={styles.flex}>
-            <Text variant="body-strong" numberOfLines={1}>
+            <Text style={styles.where} numberOfLines={1}>
               {where}
             </Text>
-            <Text variant="caption" numberOfLines={1} style={{ color: theme.muted }}>
+            <Text style={[styles.sub, { color: theme.meta }]} numberOfLines={1}>
               #{order.number} · {time}
             </Text>
           </View>
           {live ? (
-            <View accessibilityLabel={t('ownerOrders.waitedLabel', { count: age.minutes })}>
-              <StatusPill label={waitedLabel(age.minutes, t)} tone={AGE_TONE[age.tone]} boxed />
-            </View>
+            <Text
+              accessibilityLabel={t('ownerOrders.waitedLabel', { count: age.minutes })}
+              style={[
+                styles.sub,
+                ageInk ? { color: ageInk, fontFamily: fontFamily.strong } : { color: theme.meta },
+              ]}
+            >
+              {waitedLabel(age.minutes, t)}
+            </Text>
           ) : (
-            <StatusPill
-              label={t(`statusLabel.${order.status}`)}
-              tone={STATUS_TONE[order.status]}
-              boxed
-            />
+            <Text style={[styles.sub, { color: theme.meta }]}>
+              {t(`statusLabel.${order.status}`)}
+            </Text>
           )}
-          <ChevronRight size={18} color={theme.meta} />
         </View>
 
-        <View style={[styles.lines, { borderTopColor: theme.line }]}>
-          {shown.map((line) => (
-            <View key={line.id} style={styles.line}>
-              <Text variant="body-strong" style={styles.qty}>
-                {line.quantity}×
-              </Text>
-              <View style={styles.flex}>
-                <Text variant="body" numberOfLines={1}>
-                  {line.name}
-                </Text>
-                {line.modifiers?.length ? (
-                  <Text variant="caption" numberOfLines={1} style={{ color: theme.muted }}>
-                    + {line.modifiers.map((m) => m.name).join(', ')}
+        <View style={styles.lines}>
+          {shown.map((line) => {
+            const extra = [...(line.modifiers ?? []).map((m) => m.name), line.note]
+              .filter(Boolean)
+              .join(' · ');
+            return (
+              <View key={line.id} style={styles.line}>
+                <View style={styles.flex}>
+                  <Text style={styles.dish} numberOfLines={1}>
+                    {line.name}
                   </Text>
-                ) : null}
-                {line.note ? (
-                  <View style={[styles.note, { backgroundColor: theme.warningTint }]}>
-                    <MessageSquareText size={14} color={theme.text} />
-                    <Text variant="caption" numberOfLines={2} style={styles.shrink}>
-                      {line.note}
+                  {extra ? (
+                    <Text style={[styles.sub, { color: theme.meta }]} numberOfLines={2}>
+                      {extra}
                     </Text>
-                  </View>
-                ) : null}
+                  ) : null}
+                </View>
+                <Text style={[styles.dish, styles.qty]}>{line.quantity}×</Text>
               </View>
-            </View>
-          ))}
+            );
+          })}
           {hidden > 0 ? (
-            <Text variant="caption" style={[styles.more, { color: theme.muted }]}>
+            <Text style={[styles.sub, { color: theme.meta }]}>
               {t('ownerOrders.moreDishes', { count: hidden })}
             </Text>
           ) : null}
         </View>
       </Pressable>
 
-      <View style={[styles.foot, { borderTopColor: theme.line }]}>
-        <View style={styles.sum}>
-          <Text variant="body-strong" style={styles.num}>
-            {formatMoney(pesewas(order.totalPesewas), currency)}
-          </Text>
-          <StatusPill
-            label={paidLabel(order, t)}
-            tone={PAID_TONE[order.paymentStatus]}
-            icon={false}
-          />
-        </View>
-        {next || canMarkPaid ? (
-          <View style={styles.actions}>
-            {next ? (
-              // Outlined, not filled: "Create order" in the header is this screen's one filled button.
-              <Button label={next} size="md" tone="secondary" loading={busy} onPress={onNext} />
-            ) : null}
-            {canMarkPaid ? (
-              <Button
-                label={t('ownerOrders.markPaid.open')}
-                size="md"
-                tone="ghost"
-                onPress={onMarkPaid}
-              />
-            ) : null}
-          </View>
-        ) : null}
+      <View style={[styles.sum, { borderTopColor: theme.wash }]}>
+        <Text style={[styles.where, styles.num]}>
+          {formatMoney(pesewas(order.totalPesewas), currency)}
+        </Text>
+        <Text
+          style={[
+            styles.sub,
+            paid ? { color: theme.success, fontFamily: fontFamily.strong } : { color: theme.meta },
+          ]}
+        >
+          {paidLabel(order, t)}
+        </Text>
       </View>
+
+      {next || canMarkPaid ? (
+        <View style={styles.actions}>
+          {next ? (
+            <Button
+              label={next}
+              tone="tinted"
+              tint={NEXT_TINT[order.status]}
+              loading={busy}
+              onPress={onNext}
+              style={styles.flex}
+            />
+          ) : null}
+          {canMarkPaid ? (
+            <Button
+              label={t('ownerOrders.markPaid.open')}
+              tone="secondary"
+              onPress={onMarkPaid}
+              style={!next && styles.flex}
+            />
+          ) : null}
+        </View>
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { flex: 1, overflow: 'hidden' },
-  top: { flex: 1, padding: tokens.space[4], gap: tokens.space[3] },
-  head: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
+  // Canvas ticket: 20 px padding, 16 px between parts.
+  card: { padding: tokens.owner.controls.cardPadding, gap: tokens.space[4] },
+  top: { gap: tokens.space[4] },
+  head: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.space[3] },
   flex: { flex: 1, minWidth: 0 },
-  shrink: { flexShrink: 1 },
-  lines: {
-    gap: tokens.space[2],
-    paddingTop: tokens.space[3],
-    borderTopWidth: StyleSheet.hairlineWidth,
-  },
-  line: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.space[2] },
-  // A fixed column, so the dish names line up under each other.
-  qty: { minWidth: tokens.space[6], fontVariant: ['tabular-nums'] },
-  note: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    gap: tokens.space[1],
-    marginTop: tokens.space[1],
-    paddingHorizontal: tokens.space[2],
-    paddingVertical: tokens.space[1],
-    borderRadius: tokens.radius.sm,
-  },
-  more: { paddingLeft: tokens.space[6] + tokens.space[2] },
-  foot: {
-    gap: tokens.space[3],
-    paddingHorizontal: tokens.space[4],
-    paddingVertical: tokens.space[3],
-    borderTopWidth: StyleSheet.hairlineWidth,
-  },
+  where: { fontSize: 17, lineHeight: 22, fontFamily: fontFamily.strong },
+  sub: { fontSize: 14, lineHeight: 20 },
+  lines: { gap: 10 },
+  line: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.space[3] },
+  dish: { fontSize: 16, lineHeight: 22 },
+  qty: { fontFamily: fontFamily.strong, fontVariant: ['tabular-nums'] },
   sum: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: tokens.space[2],
+    paddingTop: 14,
+    borderTopWidth: 1,
   },
   num: { fontVariant: ['tabular-nums'] },
-  actions: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: tokens.space[2] },
+  actions: { flexDirection: 'row', gap: tokens.space[2] },
 });

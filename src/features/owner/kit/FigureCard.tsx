@@ -19,6 +19,9 @@ export function FigureCard({
   note,
   trend,
   order,
+  aside,
+  tall,
+  compact,
   onPress,
 }: {
   label: string;
@@ -26,6 +29,12 @@ export function FigureCard({
   note?: string;
   trend?: Trend | null;
   order: 'labelFirst' | 'valueFirst';
+  /** A short red word beside the number, e.g. "1 late" on Calls (canvas). */
+  aside?: string;
+  /** The taller card with a 34 px number, as on Calls (canvas). */
+  tall?: boolean;
+  /** Sales' five-across card (canvas): 15 px label, 28 px number, the change or note at the bottom. */
+  compact?: boolean;
   onPress?: () => void;
 }) {
   const theme = useTheme();
@@ -37,33 +46,54 @@ export function FigureCard({
   const trendRow = trend ? (
     <View style={styles.trend}>
       <Arrow size={14} color={trendInk} />
-      <Text variant="caption" style={[styles.trendText, { color: trendInk }]} numberOfLines={1}>
+      <Text
+        variant="caption"
+        style={[styles.trendText, compact && styles.small, { color: trendInk }]}
+        numberOfLines={2}
+      >
         {trendText}
       </Text>
     </View>
   ) : null;
-  const number = (
+  const figure = (
     <Text
-      style={styles.value}
+      style={[styles.value, tall && styles.tallValue, compact && styles.compactValue]}
       numberOfLines={1}
       adjustsFontSizeToFit
     >
       {value}
     </Text>
   );
+  const number = aside ? (
+    <View style={styles.asideRow}>
+      {figure}
+      <Text style={[styles.aside, { color: theme.error }]}>{aside}</Text>
+    </View>
+  ) : (
+    figure
+  );
   const body =
     order === 'labelFirst' ? (
       <>
-        <Text style={[styles.label, { color: theme.muted }]} numberOfLines={2}>
+        <Text
+          style={[styles.label, compact && styles.compactLabel, { color: theme.muted }]}
+          numberOfLines={2}
+        >
           {label}
         </Text>
         {number}
-        {trendRow}
-        {note ? (
-          <Text variant="caption" style={{ color: theme.muted }} numberOfLines={2}>
-            {note}
-          </Text>
-        ) : null}
+        <View style={compact ? styles.bottom : styles.notes}>
+          {trendRow}
+          {note ? (
+            <Text
+              variant="caption"
+              style={[{ color: theme.muted }, compact && styles.small]}
+              numberOfLines={2}
+            >
+              {note}
+            </Text>
+          ) : null}
+        </View>
       </>
     ) : (
       <>
@@ -78,7 +108,11 @@ export function FigureCard({
 
   if (!onPress) {
     return (
-      <View style={[styles.card, cardStyle(theme)]} accessible accessibilityLabel={spoken}>
+      <View
+        style={[styles.card, cardStyle(theme), tall && styles.tall, compact && styles.compact]}
+        accessible
+        accessibilityLabel={aside ? `${spoken}, ${aside}` : spoken}
+      >
         {body}
       </View>
     );
@@ -91,6 +125,8 @@ export function FigureCard({
       style={({ pressed }) => [
         styles.card,
         cardStyle(theme),
+        tall && styles.tall,
+        compact && styles.compact,
         pressed && { backgroundColor: theme.wash },
       ]}
     >
@@ -118,6 +154,17 @@ const styles = StyleSheet.create({
     lineHeight: tokens.owner.type.figure.line,
     fontVariant: ['tabular-nums'],
   },
-  trend: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[1] },
-  trendText: { fontFamily: fontFamily.strong },
+  tall: { minHeight: 128, gap: tokens.space[3] },
+  compact: { minHeight: 140 },
+  compactLabel: { fontSize: 15, lineHeight: 20 },
+  compactValue: { fontSize: 28, lineHeight: 34 },
+  notes: { gap: tokens.space[2] },
+  bottom: { marginTop: 'auto', gap: tokens.space[1] },
+  small: { fontSize: 13, lineHeight: 18 },
+  tallValue: { fontSize: 34, lineHeight: 40 },
+  asideRow: { flexDirection: 'row', alignItems: 'baseline', gap: 10 },
+  aside: { fontSize: 14, lineHeight: 20, fontFamily: fontFamily.strong },
+  trend: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.space[1] },
+  // flexShrink lets a long trend wrap inside the card instead of running past it.
+  trendText: { fontFamily: fontFamily.strong, flexShrink: 1 },
 });
