@@ -48,6 +48,11 @@ A percentage is "part ÷ whole". With zero scans, that's a division by zero, whi
 **Try it yourself**
 
 Pick Custom dates on Insights and enter a range from last year. Every card should show its empty message.
+## 2026-11-12 · Guests: customers, stamps and notes (BUILD.md box 4c.6)
+
+**What we built**
+
+Customers has tag filters (Reward ready, Regulars, New, Quiet lately) worked out from what guests did, search by name or last 4 digits, and an export with visits and tags. Each customer page lists their real visits and exactly what they agreed to, and "Add a stamp" works there. Scan and stamp shows a phone code on a computer, finds guests without their card, and lists today's stamps. Loyalty has switches for stamping paid orders and for 90-day stamps. "Ask about your feedback" now answers from the real notes.
 ## 2026-11-12 · Your profile and preferences (BUILD.md box 4c.8)
 
 **What we built**
@@ -57,12 +62,27 @@ Settings starts with your profile: photo, first and last name, email, and your p
 **How it works**
 
 ```
+stamp (scan, lookup or customer page) ──► one loyalty record
+                                         ├─► Customers (stamps, tags)
+                                         ├─► Loyalty results
+                                         └─► Scan and stamp "Today"
 pick Dark ──► saved on this device (instant) ──► saved on your profile (follows you)
 turn off "Guest notes" ──► profile ──► the server leaves them out of your feed and badges
 ```
 
 **Files to look at**
 
+- `src/features/owner/screens/scan/GuestLookup.tsx` and `ScanLog.tsx`.
+- `src/features/owner/screens/customers/CustomerDetailScreen.tsx`.
+- `src/lib/feedbackSummary.ts` and its test.
+
+**New idea: one hour cool-down**
+
+A stamp can't be added twice within an hour for the same guest. That stops a double tap, or a second scan, from giving two stamps for one visit.
+
+**Try it yourself**
+
+Stamp a guest from their page, then press "Add a stamp" again straight away and read the message.
 - `src/features/owner/screens/settings/ProfileSection.tsx`, `PhoneSheet.tsx`, `PrefsSection.tsx`.
 - `src/app/owner/_layout.tsx`: picks the light or dark theme.
 

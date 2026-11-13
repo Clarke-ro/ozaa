@@ -52,9 +52,24 @@ export function CustomerCard({
           {name}
         </Text>
         <View style={styles.meta}>
-          <Text variant="caption" style={{ color: theme.muted }}>
-            {t('ownerMembers.stamps', { count: customer.stamps })}
+          <Text variant="caption" numberOfLines={1} style={{ color: theme.muted }}>
+            {[
+              customer.phoneMasked,
+              t('ownerMembers.visits', { count: customer.visitCount ?? 0 }),
+              t('ownerMembers.stamps', { count: customer.stamps }),
+            ].join(' · ')}
           </Text>
+          {(customer.tags ?? [])
+            .filter((tag) => tag !== 'reward_ready')
+            .map((tag) => (
+              <Text
+                key={tag}
+                variant="caption"
+                style={[styles.tag, { backgroundColor: theme.wash }]}
+              >
+                {t(`ownerMembers.tags.${tag}`)}
+              </Text>
+            ))}
           {ready ? (
             <View style={[styles.ready, { backgroundColor: theme.tint }]}>
               <Gift size={12} color={theme.badgeInk} />
@@ -71,6 +86,12 @@ export function CustomerCard({
 }
 
 const styles = StyleSheet.create({
+  tag: {
+    paddingHorizontal: tokens.space[2],
+    paddingVertical: 2,
+    borderRadius: tokens.radius.sm,
+    overflow: 'hidden',
+  },
   card: {
     flex: 1,
     flexDirection: 'row',

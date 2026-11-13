@@ -3,39 +3,43 @@ import { Platform, Pressable, Share, StyleSheet, TextInput, View } from 'react-n
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import type { CustomerTag } from '@/lib/api/types';
+import { FilterChips } from '@/ui/FilterChips';
 import { Search, Users, X } from 'lucide-react-native';
 import { api } from '@/lib/api';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
-import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
 import { useOwnerLayout } from '../../chrome/layout';
 import { DeskWait } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
-import { CardGrid, EmptyCard, SectionLabel, Toggle } from '../../kit';
+import { CardGrid, EmptyCard } from '../../kit';
 import { CustomerCard } from './CustomerCard';
 import { customersCsv } from './customersCsv';
 
 /**
- * Loyalty members: search, an offers filter and a CSV export on top, then one small card per
+ * Loyalty members: search (name or last 4 digits), tag chips and a CSV export, then one card per
  * member (two across on wide screens). A card opens that member's own page. Used by Customers
  * and by Loyalty > Members.
  */
+type TagFilter = 'all' | CustomerTag;
+const TAGS: readonly CustomerTag[] = ['reward_ready', 'regular', 'new', 'quiet'];
+
 export function CustomerList({ venueId }: { venueId: string }) {
   const theme = useTheme();
   const { t } = useTranslation();
   const router = useRouter();
   const { wide } = useOwnerLayout();
   const [search, setSearch] = useState('');
-  const [offersOnly, setOffersOnly] = useState(false);
+  const [tag, setTag] = useState<TagFilter>('all');
   const query = useDebouncedValue(search.trim());
   const customers = useQuery({
-    queryKey: [...ownerKeys.loyaltyCustomers(venueId), query, offersOnly],
+    queryKey: [...ownerKeys.loyaltyCustomers(venueId), query, tag],
     queryFn: () =>
       api.ownerListLoyaltyCustomers(venueId, {
         search: query || undefined,
-        wantsOffers: offersOnly ? true : undefined,
+        tag: tag === 'all' ? undefined : tag,
       }),
     enabled: Boolean(venueId),
     placeholderData: keepPreviousData,
@@ -67,7 +71,9 @@ export function CustomerList({ venueId }: { venueId: string }) {
     >
       <View style={styles.stack}>
         <View style={styles.controls}>
-          <View style={[styles.search, { backgroundColor: theme.surface, borderColor: theme.line }]}>
+          <View
+            style={[styles.search, { backgroundColor: theme.surface, borderColor: theme.line }]}
+          >
             <Search size={18} color={theme.meta} />
             <TextInput
               value={search}
@@ -88,16 +94,6 @@ export function CustomerList({ venueId }: { venueId: string }) {
               </Pressable>
             ) : null}
           </View>
-          <View style={[styles.filter, { backgroundColor: theme.surface, borderColor: theme.line }]}>
-            <Text variant="caption" style={styles.filterLabel}>
-              {t('ownerMembers.optInShort')}
-            </Text>
-            <Toggle
-              value={offersOnly}
-              onChange={setOffersOnly}
-              label={t('ownerMembers.optInFilter')}
-            />
-          </View>
           <Button
             label={t('ownerMembers.export')}
             tone="secondary"
@@ -107,13 +103,33 @@ export function CustomerList({ venueId }: { venueId: string }) {
           />
         </View>
 
-        <SectionLabel title={t('ownerMembers.count', { count: total })} caps />
+        {/* Tags come from what guests did (visits, rewards, time away), never typed in. */}
+        <FilterChips<TagFilter>
+          label={t('ownerMembers.filter')}
+          value={tag}
+          onChange={setTag}
+          gutter={0}
+          items={[
+            { id: 'all', label: t('ownerMembers.tags.all'), count: total },
+            ...TAGS.map((id) => ({
+              id,
+              label: t(`ownerMembers.tags.${id}`),
+              count: customers.data?.countsByTag?.[id] ?? 0,
+            })),
+          ]}
+        />
 
         {items.length === 0 ? (
           <EmptyCard
             icon={Users}
-            title={search ? t('ownerMembers.noMatchTitle') : t('ownerMembers.emptyTitle')}
-            description={search ? t('ownerMembers.noMatchBody') : t('ownerMembers.emptyBody')}
+            title={
+              search || tag !== 'all'
+                ? t('ownerMembers.noMatchTitle')
+                : t('ownerMembers.emptyTitle')
+            }
+            description={
+              search || tag !== 'all' ? t('ownerMembers.noMatchBody') : t('ownerMembers.emptyBody')
+            }
           />
         ) : (
           <CardGrid columns={wide ? 2 : 1}>
@@ -148,14 +164,4 @@ const styles = StyleSheet.create({
     borderRadius: tokens.radius.md,
   },
   input: { flex: 1, fontFamily: fontFamily.regular, fontSize: tokens.owner.type.body.size },
-  filter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[2],
-    height: CONTROL_HEIGHT,
-    paddingHorizontal: tokens.space[3],
-    borderWidth: 1,
-    borderRadius: tokens.radius.md,
-  },
-  filterLabel: { fontFamily: fontFamily.strong },
 });
