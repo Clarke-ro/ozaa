@@ -28,7 +28,11 @@ export function LocationEditor({
   const [email, setEmail] = useState(location?.email ?? '');
   const [separate, setSeparate] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
-  const valid = Boolean(name.trim() && country.trim());
+  // GhanaPostGPS codes look like GA-123-4567; riders use them to find the venue.
+  const [digital, setDigital] = useState(location?.digitalAddress ?? '');
+  const digitalOk =
+    !digital.trim() || /^[A-Z]{2}-\d{3,4}-\d{4}$/.test(digital.trim().toUpperCase());
+  const valid = Boolean(name.trim() && country.trim()) && digitalOk;
 
   const save = useMutation({
     mutationFn: () => {
@@ -44,6 +48,7 @@ export function LocationEditor({
             ...base,
             phone: phone.trim(),
             email: email.trim(),
+            digitalAddress: digital.trim().toUpperCase() || null,
           })
         : api.ownerCreateLocation({ ...base, isSeparateBusiness: separate });
     },
@@ -99,6 +104,17 @@ export function LocationEditor({
           textContentType="postalCode"
         />
       </View>
+      {location ? (
+        <Field
+          label={t('ownerBusiness.digitalAddress')}
+          hint={t('ownerBusiness.digitalAddressHint')}
+          placeholder="GA-123-4567"
+          value={digital}
+          onChangeText={setDigital}
+          autoCapitalize="characters"
+          error={digitalOk ? undefined : t('ownerBusiness.digitalAddressError')}
+        />
+      ) : null}
       <Field
         label={t('ownerBusiness.country')}
         value={country}

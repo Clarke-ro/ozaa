@@ -88,6 +88,7 @@ export type TaxSetup = Schemas['TaxSetup'];
 export type StaffPrefs = Schemas['StaffPrefs'];
 export type StaffProfilePatch = Schemas['StaffProfilePatch'];
 export type Image = Schemas['Image'];
+export type OpeningHours = Schemas['OpeningHours'];
 export type TaxLine = Schemas['TaxLine'];
 export type OtpPurpose = 'owner_login' | 'guest_loyalty';
 
