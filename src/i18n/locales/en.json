@@ -1243,6 +1243,22 @@
       "attention": "Needs you",
       "eating": "Eating",
       "free": "Free"
+    },
+    "stage": {
+      "received": "New order",
+      "preparing": "Cooking",
+      "ready": "Ready to serve",
+      "served": "Served"
+    },
+    "noOrder": "No order yet",
+    "inUseLead": "{{count}} of {{total}} tables in use",
+    "filter": {
+      "label": "Show",
+      "all": "All tables",
+      "calling": "Needs you",
+      "eating": "Eating",
+      "paying": "Waiting to pay",
+      "free": "Free"
     }
   },
   "ownerShell": {

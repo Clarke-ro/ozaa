@@ -1,16 +1,14 @@
-import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { FLOOR_TONES } from '@/theme/palette';
+import { STATUS_TONES } from '@/theme/palette';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
-
-const DOT = tokens.space[2];
+import { fontFamily, useTheme } from '@/ui/theme';
+import { cardStyle } from '../../kit';
 
 /**
- * A free table as a small chip: a green dot and the code. Nothing to do at a free table, so it
- * takes little room and the tables that need someone keep the space.
+ * A free table as a short card (canvas): its name on top and "Free" in green at the bottom.
+ * Nothing to do at a free table, so it is lower than the busy cards.
  */
 export function FreeTile({
   code,
@@ -25,40 +23,37 @@ export function FreeTile({
 }) {
   const theme = useTheme();
   const { t } = useTranslation();
-  const [hovered, setHovered] = useState(false);
+  const name = label ?? t('ownerFloor.tableName', { name: code });
+  const free = t('owner.free');
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ selected }}
-      accessibilityLabel={`${label ?? t('ownerFloor.tableName', { name: code })}, ${t('owner.free')}`}
+      accessibilityLabel={`${name}, ${free}`}
       onPress={onPress}
-      onHoverIn={() => setHovered(true)}
-      onHoverOut={() => setHovered(false)}
-      style={({ pressed }) => [
+      style={({ pressed, hovered }) => [
+        cardStyle(theme),
         styles.tile,
-        {
-          backgroundColor: pressed || hovered ? theme.wash : theme.surface,
-          borderColor: selected ? theme.text : theme.line,
-          borderWidth: selected ? 2 : StyleSheet.hairlineWidth,
-        },
+        selected && { borderColor: theme.text },
+        (pressed || hovered) && { backgroundColor: theme.wash },
       ]}
     >
-      <View style={[styles.dot, { backgroundColor: FLOOR_TONES[theme.scheme].free.edge }]} />
-      <Text variant="body-strong">{code}</Text>
+      <Text style={styles.name} numberOfLines={1}>
+        {name}
+      </Text>
+      <Text style={[styles.free, { color: STATUS_TONES[theme.scheme].success.line }]}>{free}</Text>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   tile: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[2],
-    minHeight: tokens.touchTarget,
-    minWidth: tokens.space[16] + tokens.space[4],
-    paddingHorizontal: tokens.space[3],
-    borderRadius: tokens.radius.md,
-    borderCurve: 'continuous',
+    flex: 1,
+    minHeight: 96,
+    justifyContent: 'space-between',
+    paddingVertical: 18,
+    paddingHorizontal: tokens.owner.controls.cardPadding,
   },
-  dot: { width: DOT, height: DOT, borderRadius: tokens.radius.full },
+  name: { fontSize: 17, lineHeight: 22, fontFamily: fontFamily.strong },
+  free: { fontSize: 15, lineHeight: 20, fontFamily: fontFamily.strong },
 });

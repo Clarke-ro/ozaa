@@ -1,24 +1,31 @@
-import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { FloorTable } from '@/lib/api/types';
 import { pesewas } from '@/lib/brand';
 import { formatMoney } from '@/lib/money';
-import { FLOOR_TONES } from '@/theme/palette';
+import { STATUS_TONES, type StatusTone } from '@/theme/palette';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
-import { STATUS_LABEL, TONE_OF } from './floorLook';
-import { TONE_ICON } from './toneIcon';
+import { cardStyle } from '../../kit';
+import { STATUS_LABEL } from './floorLook';
 
-const SELECTED_BORDER = 2;
+// A kitchen ticket is late past 10 minutes (desk/ops ticketAge), so the minutes turn red.
+const LATE_MINUTES = 10;
+
+/** What the card says about a table with an order: where that order is in the kitchen. */
+const ORDER_WORD: Record<string, { key: string; tone: StatusTone | null }> = {
+  received: { key: 'ownerFloor.stage.received', tone: 'order' },
+  preparing: { key: 'ownerFloor.stage.preparing', tone: 'info' },
+  ready: { key: 'ownerFloor.stage.ready', tone: 'success' },
+  served: { key: 'ownerFloor.stage.served', tone: null },
+};
 
 /**
- * A table someone is sitting at: its code and bill, the status word, where the order is in the
- * kitchen and how long ago it came in, and, when the table needs someone, the one thing to do
- * about it ("On my way" for a call, "Mark paid" for a bill) right on the card. The rest of the
- * table opens beside the room (desktop) or in a sheet.
+ * A table someone is sitting at, as on the design canvas: its name and bill on top, then at the
+ * bottom what is going on in the table's colour ("Cooking", "Needs a waiter") with a grey line
+ * under it, and the one thing to do as a tinted button when the table needs someone.
  */
 export function FloorCard({
   table,
@@ -29,113 +36,107 @@ export function FloorCard({
   quick,
 }: {
   table: FloorTable;
-  /** Minutes since the table's order came in, or null with no order. */
+  /** Minutes since the call or the order, or null with neither. */
   minutes: number | null;
   currency: string;
   selected: boolean;
   onPress: () => void;
-  quick?: { label: string; busy: boolean; onPress: () => void };
+  quick?: { label: string; busy: boolean; onPress: () => void; tint: StatusTone };
 }) {
   const theme = useTheme();
   const { t } = useTranslation();
-  const [hovered, setHovered] = useState(false);
-  const tone = TONE_OF[table.status];
-  const look = FLOOR_TONES[theme.scheme][tone];
-  const Icon = TONE_ICON[tone];
-  const word = t(STATUS_LABEL[table.status]);
+  const tones = STATUS_TONES[theme.scheme];
+  const name = table.label ?? t('ownerFloor.tableName', { name: table.code });
   const bill = table.billPesewas ? formatMoney(pesewas(table.billPesewas), currency) : null;
-  const order = [
-    table.orderNumber != null ? t('ownerFloor.orderNumber', { number: table.orderNumber }) : null,
-    table.orderStatus ? t(`statusLabel.${table.orderStatus}`) : null,
-    minutes != null ? t('ownerCalls.minutes', { count: minutes }) : null,
-  ].filter(Boolean);
+  const mins = minutes != null ? t('ownerCalls.minutes', { count: minutes }) : null;
+
+  let word = t(STATUS_LABEL[table.status]);
+  let wordInk = theme.muted;
+  let sub: string | null = null;
+  let late = false;
+  if (table.status === 'needs_waiter') {
+    wordInk = tones.alert.line;
+    const reason = table.waiterReason ? t(`waiter.reasons.${table.waiterReason}`) : null;
+    sub = [reason, mins].filter(Boolean).join(' · ');
+  } else if (table.status === 'waiting_to_pay') {
+    wordInk = tones.bill.line;
+    sub =
+      table.orderNumber != null ? t('ownerFloor.orderNumber', { number: table.orderNumber }) : null;
+  } else if (table.status === 'ordered' && table.orderStatus) {
+    const stage = ORDER_WORD[table.orderStatus];
+    if (stage) {
+      word = t(stage.key);
+      wordInk = stage.tone ? tones[stage.tone].line : theme.muted;
+    }
+    sub = [
+      table.orderNumber != null ? t('ownerFloor.orderNumber', { number: table.orderNumber }) : null,
+      mins,
+    ]
+      .filter(Boolean)
+      .join(' · ');
+    late = table.orderStatus === 'preparing' && minutes != null && minutes >= LATE_MINUTES;
+  } else if (table.status === 'seated') {
+    sub = t('ownerFloor.noOrder');
+  }
 
   return (
-    <View
-      style={[
-        styles.card,
-        {
-          backgroundColor: hovered ? theme.wash : theme.surface,
-          borderColor: selected ? theme.text : theme.line,
-        },
-        selected && styles.selected,
-      ]}
-    >
-      {/* The status colour is an edge, not the whole card: calm to scan, still quick to read. */}
-      <View style={[styles.edge, { backgroundColor: look.edge }]} />
+    <View style={[cardStyle(theme), styles.card, selected && { borderColor: theme.text }]}>
       <Pressable
         accessibilityRole="button"
         accessibilityState={{ selected }}
-        accessibilityLabel={[table.label ?? t('ownerFloor.tableName', { name: table.code }), word, bill]
-          .filter(Boolean)
-          .join(', ')}
+        accessibilityLabel={[name, word, bill].filter(Boolean).join(', ')}
         onPress={onPress}
-        onHoverIn={() => setHovered(true)}
-        onHoverOut={() => setHovered(false)}
-        style={styles.body}
+        style={({ pressed, hovered }) => [styles.body, (pressed || hovered) && { opacity: 0.7 }]}
       >
         <View style={styles.top}>
-          <Text variant="display-m" numberOfLines={1} style={styles.flex}>
-            {table.code}
+          <Text style={[styles.name, styles.flex]} numberOfLines={1}>
+            {name}
           </Text>
-          {bill ? (
-            <Text variant="body-strong" style={styles.num}>
-              {bill}
+          {bill ? <Text style={[styles.name, styles.num]}>{bill}</Text> : null}
+        </View>
+        <View style={styles.state}>
+          <Text style={[styles.word, { color: wordInk }]} numberOfLines={1}>
+            {word}
+          </Text>
+          {sub ? (
+            <Text
+              style={[styles.sub, { color: late ? tones.alert.line : theme.meta }]}
+              numberOfLines={1}
+            >
+              {sub}
             </Text>
           ) : null}
         </View>
-        <View style={styles.state}>
-          <Icon size={16} color={look.ink} strokeWidth={2.4} />
-          <Text variant="caption" numberOfLines={1} style={[styles.word, { color: look.ink }]}>
-            {word}
-          </Text>
-        </View>
-        {order.length > 0 ? (
-          <Text variant="caption" numberOfLines={1} style={{ color: theme.muted }}>
-            {order.join(' · ')}
-          </Text>
-        ) : null}
       </Pressable>
       {quick ? (
-        <View style={styles.quick}>
-          <Button
-            label={quick.label}
-            size="md"
-            tone="secondary"
-            loading={quick.busy}
-            onPress={quick.onPress}
-          />
-        </View>
+        <Button
+          label={quick.label}
+          tone="tinted"
+          tint={quick.tint}
+          loading={quick.busy}
+          onPress={quick.onPress}
+          style={styles.quick}
+        />
       ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  // Canvas table card: at least 150 px, 20 px padding, the status pushed to the bottom.
   card: {
     flex: 1,
-    borderRadius: tokens.radius.md,
-    borderCurve: 'continuous',
-    borderWidth: StyleSheet.hairlineWidth,
-    overflow: 'hidden',
+    minHeight: 150,
+    padding: tokens.owner.controls.cardPadding,
+    gap: 14,
   },
-  selected: { borderWidth: SELECTED_BORDER },
-  edge: { position: 'absolute', left: 0, top: 0, bottom: 0, width: tokens.owner.statusEdge },
-  body: {
-    flex: 1,
-    gap: tokens.space[1],
-    padding: tokens.space[3],
-    paddingLeft: tokens.space[3] + tokens.owner.statusEdge,
-  },
-  top: { flexDirection: 'row', alignItems: 'baseline', gap: tokens.space[2] },
-  flex: { flex: 1 },
+  body: { flex: 1, gap: 14 },
+  top: { flexDirection: 'row', alignItems: 'baseline', gap: tokens.space[3] },
+  flex: { flex: 1, minWidth: 0 },
+  name: { fontSize: 17, lineHeight: 22, fontFamily: fontFamily.strong },
   num: { fontVariant: ['tabular-nums'] },
-  state: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[1] },
-  word: { fontFamily: fontFamily.strong, flexShrink: 1 },
-  quick: {
-    flexDirection: 'row',
-    paddingLeft: tokens.space[3] + tokens.owner.statusEdge,
-    paddingRight: tokens.space[3],
-    paddingBottom: tokens.space[3],
-  },
+  state: { marginTop: 'auto', gap: 2 },
+  word: { fontSize: 16, lineHeight: 22, fontFamily: fontFamily.strong },
+  sub: { fontSize: 14, lineHeight: 20 },
+  quick: { minHeight: 44 },
 });

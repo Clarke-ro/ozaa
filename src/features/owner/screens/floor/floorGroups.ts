@@ -50,3 +50,35 @@ export function toneCounts(tables: readonly { status: FloorStatus }[]): Record<F
   for (const table of tables) counts[TONE_OF[table.status]] += 1;
   return counts;
 }
+
+/** The chips above the Floor (canvas): every table, or one kind. */
+export type FloorFilter = 'all' | 'calling' | 'eating' | 'paying' | 'free';
+export const FLOOR_FILTERS: readonly FloorFilter[] = ['all', 'calling', 'eating', 'paying', 'free'];
+
+const FILTER_OF: Record<FloorStatus, Exclude<FloorFilter, 'all'>> = {
+  needs_waiter: 'calling',
+  seated: 'eating',
+  ordered: 'eating',
+  waiting_to_pay: 'paying',
+  free: 'free',
+};
+
+export function inFloorFilter(status: FloorStatus, filter: FloorFilter): boolean {
+  return filter === 'all' || FILTER_OF[status] === filter;
+}
+
+export function floorFilterCounts(
+  tables: readonly { status: FloorStatus }[],
+): Record<FloorFilter, number> {
+  const counts: Record<FloorFilter, number> = { all: 0, calling: 0, eating: 0, paying: 0, free: 0 };
+  for (const table of tables) {
+    counts.all += 1;
+    counts[FILTER_OF[table.status]] += 1;
+  }
+  return counts;
+}
+
+/** Tables with someone at them, for "5 of 9 tables in use". */
+export function tablesInUse(tables: readonly { status: FloorStatus }[]): number {
+  return tables.filter((table) => table.status !== 'free').length;
+}
