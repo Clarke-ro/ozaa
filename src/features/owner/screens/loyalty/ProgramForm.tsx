@@ -66,7 +66,7 @@ export function useProgramEditor(venueId: string, program: LoyaltyProgram | unde
 export function ProgramForm({ editor }: { editor: ReturnType<typeof useProgramEditor> }) {
   const theme = useTheme();
   const { t } = useTranslation();
-    const { draft, showErrors } = editor;
+  const { draft, showErrors } = editor;
   const f = draft.value;
   const missingReward = showErrors && f.enabled && !f.reward.trim();
 
@@ -78,6 +78,18 @@ export function ProgramForm({ editor }: { editor: ReturnType<typeof useProgramEd
             label={t('ownerLoyalty.on')}
             value={f.enabled}
             onChange={(v) => draft.set('enabled', v)}
+          />
+          <SwitchRow
+            label={t('ownerLoyalty.stampOnPaid')}
+            hint={t('ownerLoyalty.stampOnPaidHint')}
+            value={f.stampOnPaid}
+            onChange={(v) => draft.set('stampOnPaid', v)}
+          />
+          <SwitchRow
+            label={t('ownerLoyalty.expire')}
+            hint={t('ownerLoyalty.expireHint')}
+            value={f.expiryDays !== null}
+            onChange={(v) => draft.set('expiryDays', v ? 90 : null)}
           />
           <InputRow
             label={t('ownerLoyalty.reward')}

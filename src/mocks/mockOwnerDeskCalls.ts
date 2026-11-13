@@ -4,6 +4,7 @@ import type { SalesReport } from '@/lib/api/types';
 import { replyFor, writtenFor } from './ownerDesk';
 import { insightsFor } from './ownerInsights';
 import { previousWindow, salesReport } from '@/lib/sales';
+import { feedbackSummary } from '@/lib/feedbackSummary';
 import { venueById } from './world';
 import { accessOf } from './mockRules';
 import type { MockContext } from './mockContext';
@@ -104,50 +105,15 @@ export function mockOwnerDeskCalls(ctx: MockContext) {
     async ownerAskFeedbackAi(venueId, body) {
       await gate();
       const nowTime = now();
+      // Notes still inside the privacy delay stay out, as on the Feedback list.
       const items = (world.feedback ?? []).filter(
         (fb) => fb.venueId === venueId && new Date(fb.visibleAfter).getTime() <= nowTime,
       );
-      if (items.length === 0) {
-        return {
-          reply:
-            "I haven't found any feedback yet for this location. Once diners leave feedback via the suggestion box, I will summarise trends and complaints here.",
-          suggestions: [
-            'Summarise my recent feedback',
-            'What are my biggest complaints?',
-            'What are customers loving?',
-            'How has feedback changed this month?',
-          ],
-        };
-      }
-      const q = body.question.toLowerCase();
-      if (q.includes('complaint') || q.includes('biggest')) {
-        return {
-          reply:
-            'Based on recent feedback, 1 customer noted that kelewele was too salty and requested faster bill settlement, while another mentioned a 25-minute wait during Friday peak dinner. Overall complaints are low at under 15% of submissions.',
-          suggestions: [
-            'How can we speed up Friday wait times?',
-            'Summarise positive comments',
-            'View unhappy customer contact notes',
-          ],
-        };
-      }
-      if (q.includes('loving') || q.includes('love') || q.includes('positive')) {
-        return {
-          reply:
-            'Guests consistently praise the grilled lake tilapia with spicy shito and the smoky firewood jollof rice. Several guests specifically mentioned warm hospitality from floor staff.',
-          suggestions: ['What are our top dishes by rating?', 'Show recent 5-star comments'],
-        };
-      }
       return {
-        reply:
-          'Analyzed ' +
-          items.length +
-          ' feedback submissions: 75% positive, 15% neutral, and 10% negative. Top praise focuses on food seasoning and vibe. Suggestions center on peak-hour billing speed.',
-        suggestions: [
-          'What are my biggest complaints?',
-          'What are customers loving?',
-          'Summarise my recent feedback',
-        ],
+        reply: feedbackSummary(items, body.question),
+        suggestions: items.length
+          ? ['What are my biggest complaints?', 'What are guests loving?', 'Summarise my notes']
+          : [],
       };
     },
   } satisfies Partial<ApiClient>;

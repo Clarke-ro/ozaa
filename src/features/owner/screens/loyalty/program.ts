@@ -12,6 +12,10 @@ export type ProgramForm = {
   birthday: string;
   winbackDays: number;
   winback: string;
+  /** Add a stamp on its own when a member's Cravins order is paid. */
+  stampOnPaid: boolean;
+  /** Stamps older than this drop off; null keeps them forever. */
+  expiryDays: number | null;
 };
 
 export const STAMPS = { min: 2, max: 50 } as const;
@@ -29,6 +33,8 @@ export function formFrom(p: LoyaltyProgram | undefined): ProgramForm {
     birthday: p?.automations?.birthdayReward ?? '',
     winbackDays: p?.automations?.winbackDays ?? 30,
     winback: p?.automations?.winbackReward ?? '',
+    stampOnPaid: p?.stampOnPaidOrder ?? true,
+    expiryDays: p?.expiryDays ?? null,
   };
 }
 
@@ -47,6 +53,8 @@ export function programFrom(
       ...p,
       enabled: f.enabled,
       stampsRequired: stamps,
+      stampOnPaidOrder: f.stampOnPaid,
+      expiryDays: f.expiryDays,
       secondTierReward: text(f.halfway),
       cooldown: f.cooldown,
       rewards: reward
