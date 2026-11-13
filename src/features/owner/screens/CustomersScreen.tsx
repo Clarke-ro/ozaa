@@ -8,7 +8,7 @@ export function CustomersScreen() {
   const { t } = useTranslation();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   return (
-    <OwnerPage title={t('owner.customers')} subtitle={t('ownerLead.customers')}>
+    <OwnerPage width="mid" title={t('owner.customers')} subtitle={t('ownerLead.customers')}>
       <CustomerList venueId={venueId} />
     </OwnerPage>
   );

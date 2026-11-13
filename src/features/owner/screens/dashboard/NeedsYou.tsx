@@ -1,9 +1,10 @@
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useMarkRead, useOwnerFeed } from '../../data/useOwnerFeed';
-import { SectionLabel } from '../../kit';
 import { tokens } from '@/theme/tokens';
 import { FeedRow } from '../notifications/FeedRow';
+import { Band } from './Band';
+import { SectionHead } from './SectionHead';
 
 const MAX = 5;
 
@@ -19,20 +20,23 @@ export function NeedsYou() {
   if (waiting.length === 0) return null;
   const now = feed.dataUpdatedAt;
   return (
-    <View style={styles.group}>
-      <SectionLabel title={t('ownerNotes.pinned')} />
-      {waiting.slice(0, MAX).map((item) => (
-        <FeedRow
-          key={item.id}
-          item={item}
-          now={now}
-          onOpen={(row) => {
-            if (row.readAt === null) markRead.mutate([row.id]);
-          }}
-        />
-      ))}
-    </View>
+    <Band>
+      <SectionHead title={t('ownerNotes.pinned')} badge={String(waiting.length)} />
+      <View style={styles.group}>
+        {waiting.slice(0, MAX).map((item) => (
+          <FeedRow
+            key={item.id}
+            item={item}
+            now={now}
+            compact
+            onOpen={(row) => {
+              if (row.readAt === null) markRead.mutate([row.id]);
+            }}
+          />
+        ))}
+      </View>
+    </Band>
   );
 }
 
-const styles = StyleSheet.create({ group: { gap: tokens.space[2] } });
+const styles = StyleSheet.create({ group: { gap: tokens.owner.controls.listGap } });

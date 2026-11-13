@@ -30,6 +30,7 @@ export function LoyaltyScreen() {
 
   return (
     <OwnerPage
+      width="mid"
       title={t('owner.loyalty')}
       subtitle={t('ownerLead.loyalty')}
       action={

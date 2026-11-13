@@ -114,7 +114,7 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
     <OwnerPage
       title={order ? t('ownerOrders.detail.title', { number: order.number }) : t('owner.orders')}
       subtitle={order && place ? place.where : undefined}
-      width="wide"
+
       back={{ label: t('owner.orders'), onPress: back }}
       action={
         order && next ? (

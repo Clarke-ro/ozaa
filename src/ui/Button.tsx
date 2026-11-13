@@ -62,12 +62,18 @@ export function Button({
       style={({ pressed }) => [
         styles.base,
         { minHeight: tokens.button.height[size] },
+        // The owner app's buttons are pills, 48 px tall, with a light grey edge when secondary.
+        theme.pill && {
+          minHeight: tokens.owner.controls.height,
+          borderRadius: tokens.radius.full,
+          paddingHorizontal: tokens.space[5],
+        },
         tone === 'primary' && { backgroundColor: pressed ? theme.pressed : theme.fill },
         tone === 'destructive' && { backgroundColor: theme.error, opacity: pressed ? 0.85 : 1 },
         tone === 'secondary' && {
           backgroundColor: pressed ? theme.wash : theme.surface,
-          borderWidth: 1.5,
-          borderColor: theme.black,
+          borderWidth: theme.pill ? 1 : 1.5,
+          borderColor: theme.pill ? theme.line : theme.black,
         },
         tone === 'ghost' && { backgroundColor: pressed ? theme.wash : 'transparent' },
         off && filled && { backgroundColor: theme.wash },

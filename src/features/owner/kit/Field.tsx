@@ -16,7 +16,7 @@ export function Field({
   const theme = useTheme();
   return (
     <View style={styles.wrap}>
-      <Text variant="body-strong" style={{ fontSize: 14 }}>
+      <Text variant="body-strong" style={{ fontSize: 14, lineHeight: 20, color: theme.muted }}>
         {label}
       </Text>
       <TextInput
@@ -47,13 +47,19 @@ const useStyles = makeStyles((theme) => ({
   // Grows to share a row with another field, but keeps its own height in a column.
   wrap: { gap: tokens.space[2], flexGrow: 1, flexShrink: 1, flexBasis: 'auto', minWidth: 120 },
   input: {
-    minHeight: 48,
+    // Canvas fields: 48 px pills with 15 px text; a multi-line box keeps 16 px corners.
+    minHeight: tokens.owner.controls.height,
     borderWidth: 1,
-    borderRadius: tokens.radius.md,
-    paddingHorizontal: tokens.space[3],
+    borderRadius: tokens.radius.full,
+    paddingHorizontal: tokens.space[4] + 2,
     fontFamily: 'Inter_400',
-    fontSize: 16,
+    fontSize: 15,
     backgroundColor: theme.surface,
   },
-  multi: { minHeight: 96, paddingTop: tokens.space[3], textAlignVertical: 'top' },
+  multi: {
+    minHeight: 96,
+    borderRadius: tokens.owner.controls.cardRadius,
+    paddingTop: tokens.space[3],
+    textAlignVertical: 'top',
+  },
 }));

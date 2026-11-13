@@ -38,7 +38,8 @@ export function OwnerPage({
   action?: ReactNode;
   /** Pinned under the scroll area, e.g. a SaveBar. */
   footer?: ReactNode;
-  width?: 'form' | 'wide';
+  /** Column width from the canvas: form 900 (Today, Floor, Calls, settings), mid 1000 (Menu, Tables, Sales, Insights, Loyalty), wide 1240 (Orders). */
+  width?: 'form' | 'mid' | 'wide';
   /** Show the bell in the phone bar. Wide screens use the sidebar's Notifications row instead. */
   bell?: boolean;
   /** For a page opened from another page: a Back link above the title on wide screens. */
@@ -63,7 +64,7 @@ export function OwnerPage({
         keyboardDismissMode="on-drag"
       >
         <PageHeader title={title} subtitle={subtitle} action={action} bell={false} back={back} />
-        <View style={styles.body}>{children}</View>
+        <View style={[styles.body, wide && styles.bodyWide]}>{children}</View>
       </ScrollView>
       {footer}
     </KeyboardAvoidingView>
@@ -79,6 +80,11 @@ const styles = StyleSheet.create({
     width: '100%',
     alignSelf: 'center',
   },
-  pageWide: { paddingTop: tokens.space[8], gap: tokens.space[6] },
-  body: { gap: tokens.space[4] },
+  // Canvas spacing on wide screens: 40 px above the title, 32 px between the header and each section.
+  pageWide: {
+    paddingTop: tokens.owner.controls.pagePadding,
+    gap: tokens.owner.controls.sectionGap,
+  },
+  body: { gap: tokens.space[6] },
+  bodyWide: { gap: tokens.owner.controls.sectionGap },
 });

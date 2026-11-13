@@ -47,6 +47,8 @@ export type Theme = {
   scrim: string;
   /** Missing = the brand scale from tokens.type. */
   type?: TypeScale;
+  /** Owner app controls: pill buttons and fields, 48 px tall, grey-edged secondary (design canvas). */
+  pill?: boolean;
   derived: DerivedTheme;
 };
 
@@ -114,9 +116,13 @@ const OWNER_TYPE: TypeScale = {
   caption: o.caption,
   button: o.button,
 };
-const owner = { type: OWNER_TYPE, displayFont: 'Inter_600' };
+const owner = { type: OWNER_TYPE, displayFont: 'Inter_600', pill: true };
 export const cravinsOwnerTheme: Theme = { ...cravinsTheme, ...owner, bg: NEUTRALS.light.canvas };
-export const cravinsOwnerDarkTheme: Theme = { ...cravinsDarkTheme, ...owner, bg: NEUTRALS.dark.canvas };
+export const cravinsOwnerDarkTheme: Theme = {
+  ...cravinsDarkTheme,
+  ...owner,
+  bg: NEUTRALS.dark.canvas,
+};
 
 const ThemeContext = createContext<Theme>(cravinsTheme);
 

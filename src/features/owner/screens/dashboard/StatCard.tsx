@@ -1,10 +1,13 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
+import { fontFamily, useTheme } from '@/ui/theme';
 import { cardStyle } from '../../kit/cardStyle';
 
-/** One small white stat card on Today: the number on top, what it counts under it. */
+const c = tokens.owner.controls;
+const t = tokens.owner.type;
+
+/** One small white stat card on Today: what it counts on top, the big number under it (canvas). */
 export function StatCard({
   label,
   value,
@@ -18,19 +21,22 @@ export function StatCard({
   const theme = useTheme();
   const body = (
     <>
-      <Text variant="display-m" style={styles.value} numberOfLines={1} adjustsFontSizeToFit>
+      {/* Same height as the dark card's top line, so the numbers line up across the row. */}
+      <View style={styles.top}>
+        <Text style={[styles.label, { color: theme.muted }]} numberOfLines={2}>
+          {label}
+        </Text>
+      </View>
+      <Text style={styles.value} numberOfLines={1} adjustsFontSizeToFit>
         {value}
-      </Text>
-      <Text variant="caption" style={[styles.label, { color: theme.muted }]} numberOfLines={2}>
-        {label}
       </Text>
     </>
   );
-  const spoken = `${value} ${label}`;
+  const spoken = `${label} ${value}`;
 
   if (!onPress) {
     return (
-      <View style={[styles.card, cardStyle(theme)]} accessible accessibilityLabel={spoken}>
+      <View style={[cardStyle(theme), styles.card]} accessible accessibilityLabel={spoken}>
         {body}
       </View>
     );
@@ -41,8 +47,8 @@ export function StatCard({
       accessibilityLabel={spoken}
       onPress={onPress}
       style={({ pressed }) => [
-        styles.card,
         cardStyle(theme),
+        styles.card,
         pressed && { backgroundColor: theme.wash },
       ]}
     >
@@ -55,10 +61,17 @@ const styles = StyleSheet.create({
   card: {
     flex: 1,
     minWidth: 0,
-    padding: tokens.space[4],
-    gap: tokens.space[3],
-    justifyContent: 'space-between',
+    minHeight: c.statMinHeight,
+    paddingVertical: c.statPadding,
+    paddingHorizontal: c.cardPadding,
+    gap: c.statGap,
   },
-  value: { fontVariant: ['tabular-nums'] },
-  label: { fontSize: tokens.owner.type.nav.size, lineHeight: tokens.owner.type.nav.line },
+  top: { minHeight: 30, justifyContent: 'center' },
+  label: { fontSize: t.body.size, lineHeight: 20, fontFamily: fontFamily.strong },
+  value: {
+    fontSize: t.hero.size,
+    lineHeight: t.hero.line,
+    fontFamily: fontFamily.strong,
+    fontVariant: ['tabular-nums'],
+  },
 });

@@ -11,5 +11,5 @@ export function Band({ children }: { children: ReactNode }) {
 }
 
 const styles = StyleSheet.create({
-  band: { gap: tokens.space[3] },
+  band: { gap: tokens.owner.controls.headGap },
 });

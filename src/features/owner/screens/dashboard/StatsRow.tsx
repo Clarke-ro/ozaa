@@ -51,8 +51,8 @@ export function StatsRow({ dashboard: d }: { dashboard: OwnerDashboard }) {
 }
 
 const styles = StyleSheet.create({
-  stack: { gap: tokens.space[2] },
-  row: { flexDirection: 'row', gap: tokens.space[2] },
+  stack: { gap: tokens.owner.controls.listGap },
+  row: { flexDirection: 'row', gap: tokens.owner.controls.listGap },
   // The dark card takes two parts of the row and the three small cards three, so the dark card
   // is about twice as wide as one small card.
   heroWide: { flex: 2 },

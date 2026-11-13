@@ -51,6 +51,11 @@ export function FilterChips<T extends string>({
             onPress={() => onChange(item.id)}
             style={({ pressed }) => [
               styles.chip,
+              // The owner app's chips are 40 px, as on its design canvas; guest pages keep 34.
+              theme.pill && {
+                height: tokens.owner.controls.chipHeight,
+                paddingHorizontal: tokens.space[4],
+              },
               {
                 borderColor: on ? theme.black : theme.line,
                 backgroundColor: on ? theme.black : pressed ? theme.wash : theme.surface,
