@@ -11,7 +11,9 @@ import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
-import { EmptyCard, SectionLabel, toast } from '../../kit';
+import { EmptyCard, toast } from '../../kit';
+import { Text } from '@/ui/Text';
+import { useOwnerLayout } from '../../chrome/layout';
 import { AddTablesSheet } from './AddTablesSheet';
 import { EmbedCard } from './EmbedCard';
 import { MenuLinkCard } from './MenuLinkCard';
@@ -25,6 +27,7 @@ import { CARD_ACCENTS } from './TableCardPreview';
  * pick a table, style its card and print it.
  */
 export function TablesScreen() {
+  const { desktop } = useOwnerLayout();
   const { t } = useTranslation();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const client = useQueryClient();
@@ -83,26 +86,25 @@ export function TablesScreen() {
       subtitle={t('ownerTables.pageLead')}
       action={
         items.length > 0 ? (
-          <Button
-            label={t('ownerTables.addShort')}
-            tone="secondary"
-            size="md"
-            onPress={() => setAdding(true)}
-          />
+          <Button label={t('ownerTables.addShort')} onPress={() => setAdding(true)} />
         ) : null
       }
     >
       <View style={styles.stack}>
         {venue.data ? (
           <View style={styles.group}>
-            <SectionLabel title={t('ownerTables.menuLink')} caps />
+            <Text variant="title" accessibilityRole="header">
+              {t('ownerTables.yourMenuLink')}
+            </Text>
             <MenuLinkCard slug={venue.data.slug} venueName={venueName} />
             <EmbedCard slug={venue.data.slug} venueName={venueName} />
           </View>
         ) : null}
 
         <View style={styles.group}>
-          <SectionLabel title={t('ownerTables.tableCodes')} caps />
+          <Text variant="title" accessibilityRole="header">
+            {t('ownerTables.tableCodesTitle')}
+          </Text>
           <DeskWait
             loading={tables.isLoading}
             error={tables.isError}
@@ -130,6 +132,7 @@ export function TablesScreen() {
                 cta={cta}
                 onPrint={print}
                 onShare={() => void share()}
+                side={desktop}
               />
             )}
           </DeskWait>
@@ -147,6 +150,7 @@ export function TablesScreen() {
 }
 
 const styles = StyleSheet.create({
-  stack: { gap: tokens.space[6] },
-  group: { gap: tokens.space[3] },
+  // Canvas: 56 px between the menu link and the table codes, 20 px under each heading.
+  stack: { gap: tokens.owner.controls.todayGap },
+  group: { gap: tokens.owner.controls.headGap },
 });

@@ -772,7 +772,7 @@
     }
   },
   "ownerTables": {
-    "pageLead": "Share your menu link and print a QR code for every table.",
+    "pageLead": "Your menu link and a QR code for every table",
     "menuQrA11y": "QR code for your menu link",
     "copyShort": "Copy",
     "lead": "Each table gets its own QR code. Guests scan it to see the menu, order and pay.",
@@ -785,7 +785,7 @@
     "colour": "Card colour",
     "printOne": "Print {{name}}",
     "printAll_one": "Print 1 card",
-    "printAll_other": "Print all {{count}}",
+    "printAll_other": "Print all {{count}} tables",
     "share": "Share link",
     "download": "Download QR",
     "printOnWeb": "To print or download cards, open Cravins on a computer.",
@@ -825,7 +825,11 @@
     "embedHint": "Show your menu inside your own website.",
     "copyCode": "Copy code",
     "codeCopied": "Code copied",
-    "tableCodes": "Table QR codes"
+    "tableCodes": "Table QR codes",
+    "yourMenuLink": "Your menu link",
+    "tableCodesTitle": "Table QR codes",
+    "menuLinkUse": "For your bio, posters and WhatsApp",
+    "downloadQr": "Download QR"
   },
   "ownerFeedback": {
     "lead": "Private notes guests leave from the table. Only you and your managers see them.",
