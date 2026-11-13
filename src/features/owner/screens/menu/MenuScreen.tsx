@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { useWindowDimensions } from 'react-native';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { MenuCategory, MenuItem } from '@/lib/api/types';
 import { useOwnerSession } from '@/features/session';
 import { Button } from '@/ui/Button';
+import { Text } from '@/ui/Text';
+import { tokens } from '@/theme/tokens';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ConfirmDialog, Segmented } from '../../kit';
 import { DishEditor } from './DishEditor';
@@ -13,8 +15,9 @@ import { SectionEditor } from './SectionEditor';
 import { SectionsSheet } from './SectionsSheet';
 import { useMenuDesk } from './useMenuDesk';
 
-// From this width the phone preview and its side panel fit together, so the menu opens live.
-const LIVE_FIRST = 960;
+// From this window width the dish list and the guest preview fit side by side (canvas: a 600 px
+// list, 40 px gap, a 360 px preview, beside the 248 px sidebar).
+const SIDE_BY_SIDE = 1280;
 
 type Pending =
   | { kind: 'item'; item: MenuItem }
@@ -22,7 +25,8 @@ type Pending =
   | { kind: 'soldOut'; items: MenuItem[] };
 
 /**
- * The menu builder: a live phone preview for online ordering or for walk-in guests, or the list;
+ * The menu builder (design canvas): on a desktop the dish list on the left and the guest preview
+ * (online ordering or walk-in) on the right; on smaller screens a switch between them;
  * the dish and section editors; and the confirmations for deleting and for marking everything
  * sold out.
  */
@@ -31,9 +35,12 @@ export function MenuScreen() {
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const desk = useMenuDesk(venueId);
   const { width } = useWindowDimensions();
-  // Online and walk-in are the two live previews; List is the plain editor.
+  const split = width >= SIDE_BY_SIDE;
+  // Side by side, the list is always there and the switch picks the preview; on smaller screens
+  // the switch picks between the list and the two previews.
   const [picked, setPicked] = useState<Audience | 'list' | null>(null);
-  const mode = picked ?? (width >= LIVE_FIRST ? 'online' : 'list');
+  const mode = picked ?? 'list';
+  const [audience, setAudience] = useState<Audience>('online');
   // The section a new dish goes into, from "Add a dish here".
   const [addTo, setAddTo] = useState<string | undefined>(undefined);
   const [editingItem, setEditingItem] = useState<MenuItem | null | undefined>(undefined);
@@ -58,6 +65,38 @@ export function MenuScreen() {
     setPending(null);
   };
 
+  const list = (
+    <MenuListView
+      sections={sections}
+      dishes={all}
+      currency={desk.currency}
+      busy={desk.setAll.isPending}
+      onAddDish={addDish}
+      onEditDish={setEditingItem}
+      onToggleDish={(item) => desk.toggle.mutate(item)}
+      onEditSection={setEditingSection}
+      onHideSection={(section) => desk.hideSection.mutate(section)}
+      onNewSection={() => setEditingSection(null)}
+      onSections={() => setSectionsOpen(true)}
+      onAllOff={(items) => setPending({ kind: 'soldOut', items })}
+      onAllOn={(items) => desk.setAll.mutate({ items, available: true })}
+    />
+  );
+  const preview = (who: Audience, stacked: boolean) =>
+    desk.venue.data ? (
+      <LiveMenu
+        audience={who}
+        stacked={stacked}
+        venue={desk.venue.data}
+        sections={sections}
+        dishes={all}
+        onEditDish={setEditingItem}
+        onAddDish={addDish}
+        onEditSection={setEditingSection}
+        onReorder={(dishes, orderedIds) => desk.reorderDishes.mutate({ dishes, orderedIds })}
+      />
+    ) : null;
+
   return (
     <OwnerPage
       width="mid"
@@ -77,42 +116,39 @@ export function MenuScreen() {
         error={desk.menu.isError || desk.venue.isError}
         onRetry={() => void desk.menu.refetch()}
       >
-        <Segmented
-          label={t('ownerMenu.live.mode')}
-          value={mode}
-          onChange={setPicked}
-          options={[
-            { id: 'online', label: t('ownerMenu.live.online') },
-            { id: 'walkin', label: t('ownerMenu.live.walkIn') },
-            { id: 'list', label: t('ownerMenu.live.list') },
-          ]}
-        />
-        {mode !== 'list' && desk.venue.data ? (
-          <LiveMenu
-            audience={mode}
-            venue={desk.venue.data}
-            sections={sections}
-            dishes={all}
-            onEditDish={setEditingItem}
-            onAddDish={addDish}
-            onEditSection={setEditingSection}
-            onReorder={(dishes, orderedIds) => desk.reorderDishes.mutate({ dishes, orderedIds })}
-          />
+        {split ? (
+          <View style={styles.split}>
+            <View style={styles.list}>{list}</View>
+            <View style={styles.aside}>
+              <Text variant="title" accessibilityRole="header">
+                {t('ownerMenu.previewTitle')}
+              </Text>
+              <Segmented
+                label={t('ownerMenu.live.mode')}
+                value={audience}
+                onChange={setAudience}
+                options={[
+                  { id: 'online', label: t('ownerMenu.live.online') },
+                  { id: 'walkin', label: t('ownerMenu.live.walkIn') },
+                ]}
+              />
+              {preview(audience, true)}
+            </View>
+          </View>
         ) : (
-          <MenuListView
-            sections={sections}
-            dishes={all}
-            currency={desk.currency}
-            busy={desk.setAll.isPending}
-            onAddDish={addDish}
-            onEditDish={setEditingItem}
-            onToggleDish={(item) => desk.toggle.mutate(item)}
-            onEditSection={setEditingSection}
-            onNewSection={() => setEditingSection(null)}
-            onSections={() => setSectionsOpen(true)}
-            onAllOff={(items) => setPending({ kind: 'soldOut', items })}
-            onAllOn={(items) => desk.setAll.mutate({ items, available: true })}
-          />
+          <>
+            <Segmented
+              label={t('ownerMenu.live.mode')}
+              value={mode}
+              onChange={setPicked}
+              options={[
+                { id: 'list', label: t('ownerMenu.live.list') },
+                { id: 'online', label: t('ownerMenu.live.online') },
+                { id: 'walkin', label: t('ownerMenu.live.walkIn') },
+              ]}
+            />
+            {mode === 'list' ? list : preview(mode, false)}
+          </>
         )}
       </DeskWait>
 
@@ -194,3 +230,9 @@ export function MenuScreen() {
     </OwnerPage>
   );
 }
+
+const styles = StyleSheet.create({
+  split: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.space[10] },
+  list: { flex: 1, maxWidth: 600, minWidth: 0 },
+  aside: { width: 360, gap: tokens.space[4] },
+});

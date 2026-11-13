@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
-import type { Menu, MenuItem } from '@/lib/api/types';
+import type { Menu, MenuCategory, MenuItem } from '@/lib/api/types';
 import { ownerKeys } from '../../data/keys';
 import { toast } from '../../kit';
 import { dishPositions, moveSection, sortSections } from './reorder';
@@ -72,6 +72,20 @@ export function useMenuDesk(venueId: string) {
   const removeSection = useMutation({
     mutationFn: (id: string) => api.ownerDeleteCategory(venueId, id),
     onSuccess: () => toast.success(t('ownerMenu.deleted')),
+    onError: failed,
+    onSettled: refresh,
+  });
+
+  // The eye on a section header: hide a whole section from guests, or show it again.
+  const hideSection = useMutation({
+    mutationFn: (section: MenuCategory) =>
+      api.ownerUpdateCategory(venueId, section.id, {
+        name: section.name,
+        kind: section.kind,
+        hidden: !section.hidden,
+        schedule: section.schedule,
+        position: section.position,
+      }),
     onError: failed,
     onSettled: refresh,
   });
@@ -153,6 +167,7 @@ export function useMenuDesk(venueId: string) {
     setAll,
     removeItem,
     removeSection,
+    hideSection,
     move,
     reorderSections,
     reorderDishes,

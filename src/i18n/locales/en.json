@@ -857,7 +857,7 @@
     "anonymousName": "Anonymous guest"
   },
   "ownerMenu": {
-    "lead": "What guests see when they scan. Changes show on the guest menu straight away.",
+    "lead": "What guests see when they scan",
     "moreActions": "More menu actions",
     "addHere": "Add a dish here",
     "editSectionShort": "Edit section",
@@ -1066,7 +1066,13 @@
     },
     "showTitle": "Show on the menu",
     "popular": "Popular",
-    "popularHint": "Adds a Popular tag guests see on the dish."
+    "popularHint": "Adds a Popular tag guests see on the dish.",
+    "addSection": "Add a section",
+    "renameSection": "Rename {{name}}",
+    "hideSectionA11y": "Hide {{name}} from guests",
+    "showSectionA11y": "Show {{name}} to guests",
+    "reorderSections": "Reorder sections",
+    "previewTitle": "Guest preview"
   },
   "ownerBranding": {
     "lead": "How your page looks to guests: colour, words, photos and the order of the buttons.",

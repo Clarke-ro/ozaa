@@ -8,16 +8,18 @@ import { formatMoney } from '@/lib/money';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { VenueImage } from '@/ui/VenueImage';
-import { useTheme } from '@/ui/theme';
-import { StatusPill, Toggle } from '../../kit';
+import { fontFamily, useTheme } from '@/ui/theme';
+import { STATUS_TONES } from '@/theme/palette';
+import { cardStyle, StatusPill, Toggle } from '../../kit';
 
 const LOW_STOCK = 5;
-const THUMB = tokens.space[12] + tokens.space[2];
+// Canvas dish card: a 60 px photo with 10 px corners.
+const THUMB = 60;
 
 /**
- * One dish as a row inside its section card: photo, name and a line of description, any state
- * worth a glance (sold out, hidden, a few left, popular) as small pills, the price on the right,
- * and the on-the-menu switch. Tap the row to edit; delete lives in the editor.
+ * One dish as its own card (design canvas): photo, name with a "Popular" tag, the price under
+ * it, any state worth a glance (sold out, hidden, a few left), and the on-the-menu switch.
+ * Tap the card to edit; delete lives in the editor.
  */
 export function MenuItemRow({
   item,
@@ -39,10 +41,10 @@ export function MenuItemRow({
     item.available && item.stockCount != null && item.stockCount <= LOW_STOCK
       ? t('ownerMenu.left', { count: item.stockCount })
       : null;
-  const description = item.description?.en?.trim();
+  const popular = STATUS_TONES[theme.scheme].order;
 
   return (
-    <View style={styles.row}>
+    <View style={[cardStyle(theme), styles.row]}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t('ownerMenu.editA11y', { name: item.name.en })}
@@ -57,14 +59,28 @@ export function MenuItemRow({
           )}
         </View>
         <View style={styles.copy}>
-          <Text variant="body-strong" numberOfLines={1} style={off && { color: theme.muted }}>
-            {item.name.en}
-          </Text>
-          {description ? (
-            <Text variant="caption" numberOfLines={1} style={{ color: theme.muted }}>
-              {description}
+          <View style={styles.nameRow}>
+            <Text numberOfLines={1} style={[styles.name, off && { color: theme.muted }]}>
+              {item.name.en}
             </Text>
-          ) : null}
+            {item.badges.includes('popular') ? (
+              <View style={[styles.tag, { backgroundColor: popular.bg }]}>
+                <Text style={[styles.tagText, { color: popular.ink }]}>
+                  {t('ownerMenu.filter.popular')}
+                </Text>
+              </View>
+            ) : null}
+          </View>
+          <View style={styles.priceRow}>
+            <Text style={[styles.price, sale && { color: theme.ink }]}>
+              {money(sale ? unitPrice(item) : item.pricePesewas)}
+            </Text>
+            {sale ? (
+              <Text variant="caption" style={[styles.num, styles.was, { color: theme.meta }]}>
+                {money(item.pricePesewas)}
+              </Text>
+            ) : null}
+          </View>
           <View style={styles.pills}>
             {/* Red only for sold out, which guests notice; hidden is the owner's choice. */}
             {!item.available ? <StatusPill label={t('owner.soldOut')} tone="error" boxed /> : null}
@@ -72,20 +88,7 @@ export function MenuItemRow({
               <StatusPill label={t('ownerMenu.statusHidden')} tone="neutral" boxed />
             ) : null}
             {few ? <StatusPill label={few} tone="waiting" boxed /> : null}
-            {item.badges.includes('popular') ? (
-              <StatusPill label={t('ownerMenu.filter.popular')} tone="neutral" boxed />
-            ) : null}
           </View>
-        </View>
-        <View style={styles.price}>
-          <Text variant="body-strong" style={[styles.num, sale && { color: theme.ink }]}>
-            {money(sale ? unitPrice(item) : item.pricePesewas)}
-          </Text>
-          {sale ? (
-            <Text variant="caption" style={[styles.num, styles.was, { color: theme.meta }]}>
-              {money(item.pricePesewas)}
-            </Text>
-          ) : null}
         </View>
       </Pressable>
       <Toggle
@@ -101,23 +104,35 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: tokens.space[3],
-    paddingVertical: tokens.space[3],
-    paddingHorizontal: tokens.space[4],
+    gap: 14,
+    minHeight: 80,
+    paddingVertical: 10,
+    paddingLeft: 10,
+    paddingRight: 18,
   },
-  main: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
+  main: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 14 },
   thumb: {
     width: THUMB,
     height: THUMB,
-    borderRadius: tokens.radius.sm,
+    borderRadius: 10,
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
   },
   dim: { opacity: 0.5 },
-  copy: { flex: 1, minWidth: 0, gap: 2 },
+  copy: { flex: 1, minWidth: 0, gap: 4 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
+  name: { flexShrink: 1, fontSize: 16, lineHeight: 22, fontFamily: fontFamily.strong },
+  tag: { paddingHorizontal: tokens.space[2], paddingVertical: 2, borderRadius: tokens.radius.full },
+  tagText: { fontSize: 12, lineHeight: 16, fontFamily: fontFamily.strong },
+  priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: tokens.space[2] },
+  price: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontFamily: fontFamily.strong,
+    fontVariant: ['tabular-nums'],
+  },
   pills: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.space[1] },
-  price: { alignItems: 'flex-end' },
   num: { fontVariant: ['tabular-nums'] },
   was: { textDecorationLine: 'line-through' },
 });

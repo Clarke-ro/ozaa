@@ -4,6 +4,43 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-13 · Orders, Floor, Calls, Menu and Sales laid out like the canvas
+
+**What we built**
+
+Five screens now follow their canvas boards:
+
+- **Orders** is a board with New, Cooking and Ready columns.
+- **Floor** has chips with counts and white table cards.
+- **Calls** has chips and a grid of call cards with Reply and Snooze.
+- **Menu** shows the dish list beside the phone preview.
+- **Sales** has date chips, including This week, This month and Pick dates.
+
+Each card's next step is a button tinted in its stage's colour, for example orange "Start cooking", blue "Mark ready" and red "On my way".
+
+**How it works**
+
+```
+STATUS_TONES (palette.ts)  →  Button tone="tinted" tint="info"
+     order · info · success · alert · bill   →   chips, column lines, count badges
+```
+
+Each colour is written once in `palette.ts`, and a test checks that every label reads clearly on its tint.
+
+**Files to look at**
+
+- `src/theme/palette.ts` (`STATUS_TONES`) and `palette.test.ts`.
+- `src/features/owner/desk/orderBoard.ts` and `desk/salesRange.ts`, both with tests.
+- `screens/orders/OrderBoard.tsx`, `screens/floor/FloorCard.tsx`, `screens/calls/CallCard.tsx`, `screens/menu/SectionGroup.tsx`.
+
+**New idea: colour plus words**
+
+Colour helps you scan, but some people can't see it well. So every tinted button also says what it does, and every count has a label.
+
+**Try it yourself**
+
+In Sales, pick "This week", then look at the change line. It compares with last week, worked out in `previousSalesRange`.
+
 ## 2026-11-13 · The canvas sizes in the code (part of Phase 4c)
 
 **What we built**

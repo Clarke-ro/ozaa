@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { UtensilsCrossed } from 'lucide-react-native';
+import { Plus, UtensilsCrossed } from 'lucide-react-native';
 import type { MenuCategory, MenuItem } from '@/lib/api/types';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { EmptyCard } from '../../kit';
-import { filterCounts, filterDishes, type DishFilter } from './deskFilter';
+import { filterDishes } from './deskFilter';
 import { groupDishes } from './groupDishes';
 import { MenuToolbar } from './MenuToolbar';
 import { SectionGroup } from './SectionGroup';
@@ -26,6 +26,7 @@ export function MenuListView({
   onEditDish,
   onToggleDish,
   onEditSection,
+  onHideSection,
   onNewSection,
   onSections,
   onAllOff,
@@ -39,6 +40,7 @@ export function MenuListView({
   onEditDish: (item: MenuItem) => void;
   onToggleDish: (item: MenuItem) => void;
   onEditSection: (section: MenuCategory) => void;
+  onHideSection: (section: MenuCategory) => void;
   onNewSection: () => void;
   onSections: () => void;
   /** With the dishes the list shows right now. */
@@ -47,11 +49,11 @@ export function MenuListView({
 }) {
   const theme = useTheme();
   const { t } = useTranslation();
-  const [status, setStatus] = useState<DishFilter>('all');
+  const [section, setSection] = useState('all');
   const [query, setQuery] = useState('');
   const order = sections.map((s) => s.id);
-  const shown = filterDishes(dishes, order, { status, section: 'all', query });
-  const filtering = status !== 'all' || query.trim() !== '';
+  const shown = filterDishes(dishes, order, { status: 'all', section, query });
+  const filtering = section !== 'all' || query.trim() !== '';
   const groups = groupDishes(shown, order, { keepEmpty: !filtering });
   const total = (id: string) => dishes.filter((d) => d.categoryId === id).length;
 
@@ -72,9 +74,12 @@ export function MenuListView({
       <MenuToolbar
         query={query}
         onQuery={setQuery}
-        status={status}
-        onStatus={setStatus}
-        counts={filterCounts(dishes)}
+        section={section}
+        onSection={setSection}
+        chips={[
+          { id: 'all', label: t('ownerMenu.filter.all'), count: dishes.length },
+          ...sections.map((x) => ({ id: x.id, label: x.name.en, count: total(x.id) })),
+        ]}
         busy={busy}
         onSections={onSections}
         onAllOff={() => onAllOff(shown)}
@@ -92,33 +97,60 @@ export function MenuListView({
           description={t('ownerMenu.noMatchBody')}
           actionLabel={t('ownerMenu.showAll')}
           onAction={() => {
-            setStatus('all');
+            setSection('all');
             setQuery('');
           }}
         />
       ) : (
         groups.map(({ sectionId, dishes: inSection }) => {
-          const section = sections.find((s) => s.id === sectionId);
+          const sec = sections.find((s) => s.id === sectionId);
           return (
             <SectionGroup
               key={sectionId}
-              section={section}
-              name={section?.name.en ?? t('ownerMenu.noSection')}
+              section={sec}
+              name={sec?.name.en ?? t('ownerMenu.noSection')}
               total={total(sectionId)}
               dishes={inSection}
               currency={currency}
               onAddDish={() => onAddDish(sectionId)}
-              onEditSection={() => section && onEditSection(section)}
+              onEditSection={() => sec && onEditSection(sec)}
+              onHideSection={() => sec && onHideSection(sec)}
+              onSections={onSections}
               onEditDish={onEditDish}
               onToggleDish={onToggleDish}
             />
           );
         })
       )}
+      {filtering ? null : (
+        <Pressable
+          accessibilityRole="button"
+          onPress={onNewSection}
+          style={({ pressed }) => [
+            styles.addSection,
+            { borderColor: theme.line },
+            pressed && { backgroundColor: theme.wash },
+          ]}
+        >
+          <Plus size={18} color={theme.text} />
+          <Text variant="button">{t('ownerMenu.addSection')}</Text>
+        </Pressable>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  stack: { gap: tokens.space[4] },
+  // Canvas: 24 px between the toolbar, each section and the add button.
+  stack: { gap: tokens.space[6] },
+  addSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    minHeight: 56,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderRadius: tokens.owner.controls.cardRadius,
+  },
 });
