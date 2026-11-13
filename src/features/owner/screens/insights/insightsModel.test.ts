@@ -1,4 +1,4 @@
-import { funnelSteps, busiestHour, moodTotals, shortMoney } from './insightsModel';
+import { busiestHour, funnelSteps, menuDropOff, moodTotals, shortMoney } from './insightsModel';
 
 test('mood totals add up each day', () => {
   expect(
@@ -43,4 +43,11 @@ test('mood uses the server totals when sent', () => {
     neutral: 1,
     negative: 2,
   });
+});
+
+test('each funnel step also says its share of the step before, and how many dropped off', () => {
+  const steps = funnelSteps({ scansCount: 412, menuViewsCount: 318, ordersCount: 96 });
+  expect(steps.map((s) => s.ofPrevious)).toEqual([null, 77, 30]);
+  expect(menuDropOff({ menuViewsCount: 318, ordersCount: 96 })).toBe(222);
+  expect(menuDropOff({ menuViewsCount: 0, ordersCount: 0 })).toBe(0);
 });

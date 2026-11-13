@@ -31,15 +31,30 @@ export function shortMoney(minor: number, currency: string): string {
   return `${symbol}${k >= 100 ? Math.round(k) : Math.round(k * 10) / 10}k`;
 }
 
-/** Each funnel step as a share of the first (scans), rounded; zero scans gives zeros, not NaN. */
+/**
+ * Each funnel step as a share of the first (scans), and as a share of the step just before it
+ * ("77% of scans", "30% of menu views" on the canvas). Rounded; zero gives zero, not NaN.
+ */
 export function funnelSteps(
   r: Pick<InsightsReport, 'scansCount' | 'menuViewsCount' | 'ordersCount'>,
 ) {
   const scans = r.scansCount ?? 0;
-  const pct = (n: number) => (scans > 0 ? Math.round((n / scans) * 100) : 0);
+  const views = r.menuViewsCount ?? 0;
+  const orders = r.ordersCount ?? 0;
+  const share = (n: number, of: number) => (of > 0 ? Math.round((n / of) * 100) : 0);
   return [
-    { key: 'scanned', count: scans, percent: scans > 0 ? 100 : 0 },
-    { key: 'opened', count: r.menuViewsCount ?? 0, percent: pct(r.menuViewsCount ?? 0) },
-    { key: 'ordered', count: r.ordersCount ?? 0, percent: pct(r.ordersCount ?? 0) },
+    { key: 'scanned', count: scans, percent: scans > 0 ? 100 : 0, ofPrevious: null },
+    { key: 'opened', count: views, percent: share(views, scans), ofPrevious: share(views, scans) },
+    {
+      key: 'ordered',
+      count: orders,
+      percent: share(orders, scans),
+      ofPrevious: share(orders, views),
+    },
   ] as const;
+}
+
+/** Guests who opened the menu but did not order, for the tip under the funnel. Never below zero. */
+export function menuDropOff(r: Pick<InsightsReport, 'menuViewsCount' | 'ordersCount'>): number {
+  return Math.max(0, (r.menuViewsCount ?? 0) - (r.ordersCount ?? 0));
 }

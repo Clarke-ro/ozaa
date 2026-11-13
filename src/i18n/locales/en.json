@@ -1316,7 +1316,7 @@
   "ownerLoyalty": {
     "scan": "Scan",
     "tabs": {
-      "program": "Program",
+      "program": "Programme",
       "members": "Members",
       "results": "Results"
     },
@@ -1357,7 +1357,12 @@
     "stampOnPaid": "Stamp paid Cravins orders",
     "stampOnPaidHint": "Members get a stamp on their own when they pay through Cravins.",
     "expire": "Stamps last 90 days",
-    "expireHint": "Older stamps drop off the card. Off keeps them forever."
+    "expireHint": "Older stamps drop off the card. Off keeps them forever.",
+    "scanCard": "Scan a card",
+    "stampsGiven": "Stamps given, 30 days",
+    "rewardsClaimed": "Rewards claimed, 30 days",
+    "guestsSee": "What guests see",
+    "previewLead": "Your stamp card"
   },
   "ownerBusiness": {
     "business": "Business",
@@ -1473,7 +1478,7 @@
     "showChart": "Chart"
   },
   "ownerInsights": {
-    "lead": "Who visited, what sold and when it got busy.",
+    "lead": "Who came, what they looked at, and whether they came back",
     "range": {
       "today": "Today",
       "7d": "Last 7 days",
@@ -1487,7 +1492,7 @@
     "dishHead": "Dish",
     "salesHead": "Sales",
     "sales": "Sales",
-    "topDishes": "Top dishes",
+    "topDishes": "Most ordered dishes",
     "sold_one": "1 sold",
     "sold_other": "{{count}} sold",
     "busy": "Busy hours",
@@ -1499,7 +1504,7 @@
     "returning_other": "{{count}} guests came back",
     "returningShort": "Returning",
     "firstVisit": "First visit",
-    "mood": "Feedback mood",
+    "mood": "Guest mood",
     "notes": "notes in this period",
     "funnel": "From scan to order",
     "noVisits": "No guest visits in this period yet.",
@@ -1513,7 +1518,29 @@
     "visits_other": "{{count}} visits",
     "readNotes": "Read the notes",
     "from": "From (YYYY-MM-DD)",
-    "to": "To (YYYY-MM-DD)"
+    "to": "To (YYYY-MM-DD)",
+    "stepLower": {
+      "scanned": "scanned a QR code",
+      "opened": "opened the menu",
+      "ordered": "placed an order"
+    },
+    "ofPrevious": {
+      "scans": "{{percent}}% of scans",
+      "views": "{{percent}}% of menu views"
+    },
+    "dropTip_one": "1 guest opened the menu but didn't order. Clear photos and prices help.",
+    "dropTip_other": "{{count}} guests opened the menu but didn't order. Clear photos and prices help.",
+    "ordered_one": "1 ordered",
+    "ordered_other": "{{count}} ordered",
+    "notesCount_one": "1 note",
+    "notesCount_other": "{{count}} notes",
+    "cameBack": "came back",
+    "cameBackRow": "Came back",
+    "cameBackA11y": "{{percent}}% of guests came back",
+    "guestsCount_one": "1 guest",
+    "guestsCount_other": "{{count}} guests",
+    "seeCustomers": "See customers",
+    "busiestTip": "Most guests arrive around {{hour}}."
   },
   "ownerLoyaltyResults": {
     "members": "Members",
@@ -1938,7 +1965,7 @@
     "calls": "Guests asking for a waiter",
     "devices": "Phones and tablets that scan loyalty cards at the counter.",
     "feedback": "Private notes guests leave after their meal",
-    "loyalty": "Your stamp card, its members and how it is doing.",
+    "loyalty": "Your stamp card, its members and how it is doing",
     "ordering": "Pickup and delivery orders from your menu link.",
     "reviews": "Public ratings from guests, and your replies",
     "services": "What guests can do from the table, and your Wi-Fi details.",

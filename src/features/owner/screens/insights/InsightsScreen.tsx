@@ -3,64 +3,63 @@ import { StyleSheet, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
-import type { InsightsReport } from '@/lib/api/types';
 import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
 import { useOwnerLayout } from '../../chrome/layout';
 import { DeskWait, OwnerPage, SkeletonBlock } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
-import { Field, PeriodSelect, StatusPill } from '../../kit';
-import {
-  BusyHours,
-  Funnel,
-  GuestsSplit,
-  MoodSplit,
-  SalesLine,
-  TopDishesTable,
-  VisitsByHour,
-} from './InsightCards';
-import { InsightFigures } from './InsightFigures';
-import { busiestHour } from './insightsModel';
+import { SALES_RANGES, salesRange, type SalesRangeId } from '../../desk/salesRange';
+import { ChipRow, Field, StatusPill } from '../../kit';
+import { SalesLine } from './InsightCards';
+import { FunnelCard } from './FunnelCard';
+import { ReturningCard, WhenCard } from './GuestCards';
+import { MoodList, TopDishesList } from './InsightLists';
 
-type Range = InsightsReport['range'];
-const RANGES: readonly Range[] = ['today', '7d', '30d', '90d', 'custom'];
-const DAY_MS = 86_400_000;
+// Only a safety net while the venue loads; every venue has a zone in its opening hours.
+const FALLBACK_ZONE = 'Africa/Accra';
 const isDay = (v: string) => /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v));
 
 /**
- * Insights as an analytics page: the period picker on the right of the title, the headline
- * figures (four across on wide screens), sales as a line, then the
- * breakdowns two by two on wide screens: top dishes and busy hours, returning guests and
- * and feedback mood, with the scan-to-order funnel and visits by hour on top.
+ * Insights as on the design canvas: the same date chips as Sales, then "From scan to order",
+ * the dishes ordered most beside returning guests, when guests come beside their mood, and sales
+ * over the period. Each section is a title above a white card.
  */
 export function InsightsScreen() {
   const { t } = useTranslation();
   const { wide } = useOwnerLayout();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
-  const [range, setRange] = useState<Range>('30d');
-  // Custom dates are typed as YYYY-MM-DD; the end day is included, so the window runs to the next midnight.
+  const [range, setRange] = useState<SalesRangeId>('30d');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const customOk = isDay(from) && isDay(to) && from <= to;
+  const venue = useQuery({
+    queryKey: ownerKeys.venue(venueId),
+    queryFn: () => api.ownerGetVenue(venueId),
+    enabled: Boolean(venueId),
+  });
+  const zone = venue.data?.hours.timezone ?? FALLBACK_ZONE;
+  const [openedAt] = useState(() => Date.now());
+  // The report has its own names for today and 30 days; every other chip asks for its exact
+  // window as "custom", worked out in the venue's time zone like Sales.
+  const apiRange = range === 'today' || range === '30d' ? range : 'custom';
+  const span = salesRange({ id: range, from, to }, openedAt, zone);
+  // Open-ended ranges (this week, this month) run until now.
   const window =
-    range === 'custom' && customOk
-      ? {
-          since: new Date(from).toISOString(),
-          until: new Date(Date.parse(to) + DAY_MS).toISOString(),
-        }
+    apiRange === 'custom' && span.since
+      ? { since: span.since, until: span.until ?? new Date(openedAt).toISOString() }
       : undefined;
+  const ready = Boolean(venueId) && (range !== 'custom' || customOk);
   const report = useQuery({
-    queryKey: [...ownerKeys.insights(venueId, range), from, to],
-    queryFn: () => api.ownerGetInsights(venueId, range, window),
-    enabled: Boolean(venueId) && (range !== 'custom' || customOk),
+    queryKey: [...ownerKeys.insights(venueId, apiRange), range, from, to],
+    queryFn: () => api.ownerGetInsights(venueId, apiRange, window),
+    enabled: ready,
   });
   const r = report.data;
-  const peak = r ? busiestHour(r.peakHours) : null;
 
-  const pair = (a: ReactNode, b: ReactNode) => (
+  const pair = (a: (style: object) => ReactNode, b: (style: object) => ReactNode) => (
     <View style={[styles.pair, wide && styles.row]}>
-      <View style={wide ? styles.flex : undefined}>{a}</View>
-      <View style={wide ? styles.flex : undefined}>{b}</View>
+      {a(wide ? styles.wideA : {})}
+      {b(wide ? styles.flex : {})}
     </View>
   );
 
@@ -70,17 +69,18 @@ export function InsightsScreen() {
       title={t('owner.insights')}
       subtitle={t('ownerInsights.lead')}
       action={
-        <View style={styles.actions}>
-          {r?.sample ? <StatusPill label={t('ownerDash.sample')} tone="neutral" boxed /> : null}
-          <PeriodSelect<Range>
-            label={t('ownerDash.rangeLabel')}
-            value={range}
-            onChange={setRange}
-            options={RANGES.map((id) => ({ id, label: t(`ownerInsights.range.${id}`) }))}
-          />
-        </View>
+        r?.sample ? <StatusPill label={t('ownerDash.sample')} tone="neutral" boxed /> : undefined
       }
     >
+      <ChipRow<SalesRangeId>
+        label={t('ownerDash.rangeLabel')}
+        value={range}
+        onChange={setRange}
+        items={[...SALES_RANGES, 'custom' as const].map((id) => ({
+          id,
+          label: t(`ownerSales.range.${id}`),
+        }))}
+      />
       {range === 'custom' ? (
         <View style={styles.dates}>
           <Field
@@ -98,18 +98,31 @@ export function InsightsScreen() {
         </View>
       ) : null}
       <DeskWait
-        loading={report.isLoading && (range !== 'custom' || customOk)}
+        loading={report.isLoading && ready}
         error={report.isError}
         onRetry={() => void report.refetch()}
         skeleton={<SkeletonBlock height={260} />}
       >
         {r ? (
           <View style={styles.stack}>
-            <InsightFigures report={r} peak={peak} columns={wide ? 4 : 2} />
-            {pair(<Funnel report={r} />, <VisitsByHour report={r} />)}
+            <FunnelCard report={r} />
+            {pair(
+              (s) => (
+                <TopDishesList report={r} style={s} />
+              ),
+              (s) => (
+                <ReturningCard report={r} style={s} />
+              ),
+            )}
+            {pair(
+              (s) => (
+                <WhenCard report={r} style={s} />
+              ),
+              (s) => (
+                <MoodList report={r} style={s} />
+              ),
+            )}
             <SalesLine report={r} />
-            {pair(<TopDishesTable report={r} />, <BusyHours report={r} />)}
-            {pair(<GuestsSplit report={r} />, <MoodSplit report={r} />)}
           </View>
         ) : null}
       </DeskWait>
@@ -118,10 +131,11 @@ export function InsightsScreen() {
 }
 
 const styles = StyleSheet.create({
-  stack: { gap: tokens.space[4] },
-  pair: { gap: tokens.space[4] },
-  row: { flexDirection: 'row', alignItems: 'flex-start' },
-  flex: { flex: 1, minWidth: 0 },
+  // Canvas: 56 px between sections; side-by-side sections 24 px apart, the left one wider.
+  stack: { gap: tokens.owner.controls.todayGap },
+  pair: { gap: tokens.owner.controls.todayGap },
+  row: { flexDirection: 'row', alignItems: 'stretch', gap: tokens.space[6] },
+  wideA: { flex: 1.5 },
+  flex: { flex: 1 },
   dates: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.space[3] },
-  actions: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
 });

@@ -7,7 +7,6 @@ export { DeskTabs, type DeskTab } from './DeskTabs';
 export { EmptyCard } from './EmptyCard';
 export { Field } from './Field';
 export { IconTile } from './IconTile';
-export { MetricStrip, type Metric } from './MetricStrip';
 export { ModalSheet } from './ModalSheet';
 export { CravinsMark } from './CravinsMark';
 export { Panel } from './Panel';

@@ -8,6 +8,9 @@ export const SHADOW_INK = '#000000';
 /** Frosted white over a photo or the game board, so dark text and icons stay readable. */
 export const PHOTO_VEIL = 'rgba(255,255,255,0.92)';
 
+/** The phone drawn around owner previews (design canvas): a black body with a grey rim. */
+export const PHONE_FRAME = { body: '#0B0B0C', rim: '#9A9A9F' } as const;
+
 /** QR codes sit on white in both schemes: phone cameras read dark-on-light most reliably. */
 export const QR_PAPER = '#FFFFFF';
 
