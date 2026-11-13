@@ -2,7 +2,9 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
+import { fontFamily, useTheme } from '@/ui/theme';
+
+const c = tokens.owner.controls;
 
 /**
  * The day's main number in a dark card, the first thing on Today ("Sales today GH₵1,250").
@@ -32,7 +34,7 @@ export function HeroCard({
   return (
     <View style={[styles.card, { backgroundColor: bg }]}>
       <View style={styles.top}>
-        <Text variant="body" style={{ color: ink }} numberOfLines={1}>
+        <Text variant="body-strong" style={{ color: ink }} numberOfLines={1}>
           {label}
         </Text>
         {onPress ? (
@@ -48,16 +50,11 @@ export function HeroCard({
             <Text variant="caption" style={[styles.pillText, { color: ink }]}>
               {link}
             </Text>
-            <ChevronRight size={16} color={ink} />
+            <ChevronRight size={14} color={ink} />
           </Pressable>
         ) : null}
       </View>
-      <Text
-        variant="display-l"
-        style={[styles.value, { color: ink }]}
-        numberOfLines={1}
-        adjustsFontSizeToFit
-      >
+      <Text style={[styles.value, { color: ink }]} numberOfLines={1} adjustsFontSizeToFit>
         {value}
       </Text>
       {note ? (
@@ -73,11 +70,11 @@ const styles = StyleSheet.create({
   card: {
     // Grows to the row's height next to the small cards; basis stays auto so it never collapses.
     flexGrow: 1,
-    borderRadius: tokens.radius.lg,
+    minHeight: c.statMinHeight,
+    borderRadius: c.cardRadius,
     borderCurve: 'continuous',
-    padding: tokens.space[5],
-    gap: tokens.space[3],
-    justifyContent: 'space-between',
+    padding: c.statPadding,
+    gap: c.statGap,
   },
   top: {
     flexDirection: 'row',
@@ -89,14 +86,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 2,
-    paddingLeft: tokens.space[3],
-    paddingRight: tokens.space[2],
-    paddingVertical: tokens.space[1],
+    height: 30,
+    paddingHorizontal: tokens.space[3],
     borderRadius: tokens.radius.full,
     overflow: 'hidden',
   },
   pillFill: { opacity: 0.16, borderRadius: tokens.radius.full },
   pillText: { fontFamily: 'Inter_600' },
-  value: { fontVariant: ['tabular-nums'] },
+  value: {
+    fontSize: tokens.owner.type.hero.size,
+    lineHeight: tokens.owner.type.hero.line,
+    fontFamily: fontFamily.strong,
+    fontVariant: ['tabular-nums'],
+  },
   note: { opacity: 0.8 },
 });

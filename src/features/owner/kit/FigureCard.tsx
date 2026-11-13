@@ -8,8 +8,8 @@ import { cardStyle } from './cardStyle';
 export type Trend = { percent: number; label: string };
 
 /**
- * One figure in a white card on a report page. `labelFirst` puts a small capital label over the
- * number with a grey note under it (Sales); `valueFirst` puts the number on top and what it
+ * One figure in a white card on a report page. `labelFirst` puts the label (16 px, grey, as on the
+ * design canvas) over the number with a grey note under it (Sales, Calls); `valueFirst` puts the number on top and what it
  * counts under it (Insights). `trend` adds the change against the period before, with an arrow
  * as well as green or red so it never rests on colour alone. Tappable when `onPress` is given.
  */
@@ -44,8 +44,7 @@ export function FigureCard({
   ) : null;
   const number = (
     <Text
-      variant="display-m"
-      style={[styles.value, order === 'labelFirst' && styles.small]}
+      style={styles.value}
       numberOfLines={1}
       adjustsFontSizeToFit
     >
@@ -55,8 +54,8 @@ export function FigureCard({
   const body =
     order === 'labelFirst' ? (
       <>
-        <Text variant="caption" style={[styles.caps, { color: theme.text }]} numberOfLines={2}>
-          {label.toUpperCase()}
+        <Text style={[styles.label, { color: theme.muted }]} numberOfLines={2}>
+          {label}
         </Text>
         {number}
         {trendRow}
@@ -101,11 +100,24 @@ export function FigureCard({
 }
 
 const styles = StyleSheet.create({
-  card: { flex: 1, minWidth: 0, padding: tokens.space[4], gap: tokens.space[2] },
-  caps: { fontFamily: fontFamily.strong, letterSpacing: tokens.owner.type.caps.letterSpacing },
-  value: { fontVariant: ['tabular-nums'] },
+  // Canvas figure card: 20 px padding, 16 px label, 30 px number.
+  card: {
+    flex: 1,
+    minWidth: 0,
+    padding: tokens.owner.controls.cardPadding,
+    gap: tokens.space[2],
+  },
+  label: {
+    fontFamily: fontFamily.strong,
+    fontSize: tokens.owner.type.body.size,
+    lineHeight: 20,
+  },
+  value: {
+    fontFamily: fontFamily.strong,
+    fontSize: tokens.owner.type.figure.size,
+    lineHeight: tokens.owner.type.figure.line,
+    fontVariant: ['tabular-nums'],
+  },
   trend: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[1] },
   trendText: { fontFamily: fontFamily.strong },
-  // Sales sets its figures smaller than Insights, as the reference dashboard does (design/reference).
-  small: { fontSize: tokens.owner.type.figure.size, lineHeight: tokens.owner.type.figure.line },
 });

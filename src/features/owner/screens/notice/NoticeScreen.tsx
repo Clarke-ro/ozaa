@@ -21,7 +21,7 @@ type Drafts = Record<NoticeKind, NoticeDraft>;
 /** Store notice: a scrolling banner and a popup on the guest pages, side by side on desktop. */
 export function NoticeScreen() {
   const { t } = useTranslation();
-    const venueId = useOwnerSession((state) => state.venueId) ?? '';
+  const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const venue = useQuery({
     queryKey: ownerKeys.venue(venueId),
     queryFn: () => api.ownerGetVenue(venueId),
@@ -61,7 +61,9 @@ export function NoticeScreen() {
 
   return (
     <OwnerPage
-      title={t('owner.notice')} subtitle={t('ownerNotice.lead')}
+      width="mid"
+      title={t('owner.notice')}
+      subtitle={t('ownerNotice.lead')}
       footer={
         <SaveBar
           visible={draft.dirty}

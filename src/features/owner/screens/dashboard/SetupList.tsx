@@ -11,6 +11,8 @@ import { Band } from './Band';
 import { cardStyle } from '../../kit/cardStyle';
 import { SectionHead } from './SectionHead';
 
+const c = tokens.owner.controls;
+
 /**
  * "Complete your setup": how far along in a small orange badge, then one card row per step still
  * to do. A finished step drops off the list, and the whole section is gone once every step is
@@ -47,7 +49,7 @@ export function SetupList() {
                 pressed && { backgroundColor: theme.wash },
               ]}
             >
-              <Circle size={20} color={theme.meta} />
+              <Circle size={22} color={theme.meta} />
               <Text variant="body" numberOfLines={2} style={styles.label}>
                 {label}
               </Text>
@@ -61,14 +63,18 @@ export function SetupList() {
 }
 
 const styles = StyleSheet.create({
-  rows: { gap: tokens.space[2] },
+  rows: { gap: c.listGap },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: tokens.space[3],
-    minHeight: tokens.touchTarget + tokens.space[1],
-    paddingHorizontal: tokens.space[4],
+    gap: tokens.space[4],
+    minHeight: c.rowMinHeight,
+    paddingHorizontal: c.cardPadding,
     paddingVertical: tokens.space[2],
   },
-  label: { flex: 1 },
+  label: {
+    flex: 1,
+    fontSize: tokens.owner.type.rowLabel.size,
+    lineHeight: tokens.owner.type.rowLabel.line,
+  },
 });
