@@ -53,7 +53,7 @@ export function CallsScreen() {
   );
 
   return (
-    <OwnerPage title={t('owner.calls')} subtitle={t('ownerLead.calls')} width="wide">
+    <OwnerPage title={t('owner.calls')} subtitle={t('ownerLead.calls')}>
       <CallFigures
         waiting={board.open.length}
         coming={board.acknowledged.length}

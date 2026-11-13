@@ -31,9 +31,7 @@ export function SectionHead({
         </Text>
         {badge ? (
           <View style={[styles.badge, { backgroundColor: theme.fill }]}>
-            <Text variant="caption" style={[styles.badgeText, { color: theme.onFill }]}>
-              {badge}
-            </Text>
+            <Text style={[styles.badgeText, { color: theme.onFill }]}>{badge}</Text>
           </View>
         ) : null}
         {meta ? (
@@ -65,15 +63,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: tokens.space[3],
-    minHeight: tokens.touchTarget,
   },
-  heading: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2], flexShrink: 1 },
+  heading: { flexDirection: 'row', alignItems: 'center', gap: 10, flexShrink: 1 },
+  // Canvas badge: 13/18 semibold, 2 px by 9 px padding, fully round.
   badge: {
-    paddingHorizontal: tokens.space[2],
+    paddingHorizontal: 9,
     paddingVertical: 2,
     borderRadius: tokens.radius.full,
   },
-  badgeText: { fontFamily: fontFamily.strong },
+  badgeText: { fontFamily: fontFamily.strong, fontSize: 13, lineHeight: 18 },
   link: {
     flexDirection: 'row',
     alignItems: 'center',

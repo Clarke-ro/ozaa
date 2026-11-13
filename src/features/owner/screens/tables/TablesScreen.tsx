@@ -78,6 +78,7 @@ export function TablesScreen() {
 
   return (
     <OwnerPage
+      width="mid"
       title={t('owner.tables')}
       subtitle={t('ownerTables.pageLead')}
       action={

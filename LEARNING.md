@@ -4,6 +4,37 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-13 · The canvas sizes in the code (part of Phase 4c)
+
+**What we built**
+
+The owner app now uses the measurements from the design canvas: 24 px page titles, 16 px body text, 18 px section titles, 30 px figures (38 px on Today), 48 px pill buttons and fields, 40 px chips, cards with 16 px corners and 20 px padding, a 40 px page margin, and columns 900, 1000 or 1240 px wide. Today matches its board: label over number, a count badge on "Needs you", and one-line rows.
+
+**How it works**
+
+```
+design/tokens.json  →  npm run gen:tokens  →  src/theme/tokens.ts
+  owner.type / owner.controls / owner.page        ↓
+                         Button, Field, chips, cards, OwnerPage read them
+```
+
+The numbers are written once, in `tokens.json`. Components read them, so a change there reaches every screen.
+
+**Files to look at**
+
+- `design/tokens.json`, the `owner` block.
+- `src/ui/Button.tsx`: the `pill` look the owner theme turns on.
+- `src/features/owner/kit/FigureCard.tsx`, `cardStyle.ts`, `Field.tsx`.
+- `src/features/owner/screens/dashboard/`: `StatCard`, `HeroCard`, `NeedsYou`.
+
+**New idea: design tokens**
+
+A token is a named design value, like `controls.height = 48`. Code says "the control height", not "48". Designers and code then share one source of truth.
+
+**Try it yourself**
+
+Change `owner.controls.cardRadius` to 8 in `tokens.json`, run `npm run gen:tokens`, and see every owner card get sharper corners.
+
 ## 2026-11-12 · Menu and links tidy-up (BUILD.md box 4c.4)
 
 **What we built**

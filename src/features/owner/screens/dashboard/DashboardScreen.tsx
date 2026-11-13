@@ -91,5 +91,6 @@ export function DashboardScreen() {
 
 const styles = StyleSheet.create({
   location: { flexDirection: 'row' },
-  stack: { gap: tokens.space[8] },
+  // The canvas puts 56 px between Today's sections.
+  stack: { gap: tokens.owner.controls.todayGap },
 });

@@ -66,6 +66,7 @@ export function InsightsScreen() {
 
   return (
     <OwnerPage
+      width="mid"
       title={t('owner.insights')}
       subtitle={t('ownerInsights.lead')}
       action={
@@ -104,11 +105,7 @@ export function InsightsScreen() {
       >
         {r ? (
           <View style={styles.stack}>
-            <InsightFigures
-              report={r}
-              peak={peak}
-              columns={wide ? 4 : 2}
-            />
+            <InsightFigures report={r} peak={peak} columns={wide ? 4 : 2} />
             {pair(<Funnel report={r} />, <VisitsByHour report={r} />)}
             <SalesLine report={r} />
             {pair(<TopDishesTable report={r} />, <BusyHours report={r} />)}

@@ -60,6 +60,7 @@ export function MenuScreen() {
 
   return (
     <OwnerPage
+      width="mid"
       title={t('owner.menu')}
       subtitle={t('ownerMenu.lead')}
       action={

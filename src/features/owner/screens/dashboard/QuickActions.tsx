@@ -24,7 +24,7 @@ const SHORTCUTS: readonly OwnerNavId[] = [
   'feedback',
   'scan',
 ];
-const TILE = tokens.space[16] + tokens.space[6];
+const TILE = tokens.owner.controls.tileMinHeight;
 
 /**
  * A grid of square-ish tiles, an icon over a name: four across on wide screens, two on phones.
@@ -66,7 +66,7 @@ export function QuickActions() {
                     pressed && { backgroundColor: theme.wash },
                   ]}
                 >
-                  <Icon size={22} color={theme.text} />
+                  <Icon size={24} color={theme.text} />
                   <Text
                     variant="caption"
                     numberOfLines={2}
@@ -88,21 +88,21 @@ export function QuickActions() {
 }
 
 const styles = StyleSheet.create({
-  grid: { gap: tokens.space[2] },
-  row: { flexDirection: 'row', gap: tokens.space[2] },
+  grid: { gap: tokens.owner.controls.listGap },
+  row: { flexDirection: 'row', gap: tokens.owner.controls.listGap },
   tile: {
     flex: 1,
     minWidth: 0,
     minHeight: TILE,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: tokens.space[2],
+    gap: 14,
     padding: tokens.space[3],
   },
   label: {
     textAlign: 'center',
-    fontSize: tokens.owner.type.nav.size,
-    lineHeight: tokens.owner.type.nav.line,
+    fontSize: tokens.owner.type.body.size,
+    lineHeight: tokens.owner.type.body.line,
   },
   filler: { flex: 1 },
 });

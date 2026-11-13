@@ -159,7 +159,7 @@ export function FloorScreen() {
   );
 
   return (
-    <OwnerPage title={t('owner.floor')} subtitle={t('ownerLead.floor')} width="wide">
+    <OwnerPage title={t('owner.floor')} subtitle={t('ownerLead.floor')}>
       <DeskWait
         loading={floor.isLoading}
         error={floor.isError}

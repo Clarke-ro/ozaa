@@ -53,5 +53,5 @@ const styles = StyleSheet.create({
     marginTop: tokens.space[2],
   },
   caps: { fontFamily: 'Inter_600', letterSpacing: 0.8 },
-  title: { fontSize: 20, lineHeight: 26 },
+  title: { fontSize: tokens.owner.type.title.size, lineHeight: tokens.owner.type.title.line },
 });
