@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "astro",
   "git": { "deploymentEnabled": { "main": true, "**": false } },
-  "ignoreCommand": "[ \"$VERCEL_GIT_PREVIOUS_SHA\" != \"$VERCEL_GIT_COMMIT_SHA\" ] && git diff --quiet \"${VERCEL_GIT_PREVIOUS_SHA:-HEAD^}\" HEAD -- .",
+  "ignoreCommand": "bash scripts/vercel-skip.sh",
   "installCommand": "npm ci",
   "buildCommand": "npm run build",
   "outputDirectory": "dist"
