@@ -19,6 +19,8 @@ export function FigureCard({
   note,
   trend,
   order,
+  aside,
+  tall,
   onPress,
 }: {
   label: string;
@@ -26,6 +28,10 @@ export function FigureCard({
   note?: string;
   trend?: Trend | null;
   order: 'labelFirst' | 'valueFirst';
+  /** A short red word beside the number, e.g. "1 late" on Calls (canvas). */
+  aside?: string;
+  /** The taller card with a 34 px number, as on Calls (canvas). */
+  tall?: boolean;
   onPress?: () => void;
 }) {
   const theme = useTheme();
@@ -42,10 +48,18 @@ export function FigureCard({
       </Text>
     </View>
   ) : null;
-  const number = (
-    <Text style={styles.value} numberOfLines={1} adjustsFontSizeToFit>
+  const figure = (
+    <Text style={[styles.value, tall && styles.tallValue]} numberOfLines={1} adjustsFontSizeToFit>
       {value}
     </Text>
+  );
+  const number = aside ? (
+    <View style={styles.asideRow}>
+      {figure}
+      <Text style={[styles.aside, { color: theme.error }]}>{aside}</Text>
+    </View>
+  ) : (
+    figure
   );
   const body =
     order === 'labelFirst' ? (
@@ -74,7 +88,11 @@ export function FigureCard({
 
   if (!onPress) {
     return (
-      <View style={[styles.card, cardStyle(theme)]} accessible accessibilityLabel={spoken}>
+      <View
+        style={[styles.card, cardStyle(theme), tall && styles.tall]}
+        accessible
+        accessibilityLabel={aside ? `${spoken}, ${aside}` : spoken}
+      >
         {body}
       </View>
     );
@@ -114,6 +132,10 @@ const styles = StyleSheet.create({
     lineHeight: tokens.owner.type.figure.line,
     fontVariant: ['tabular-nums'],
   },
+  tall: { minHeight: 128, gap: tokens.space[3] },
+  tallValue: { fontSize: 34, lineHeight: 40 },
+  asideRow: { flexDirection: 'row', alignItems: 'baseline', gap: 10 },
+  aside: { fontSize: 14, lineHeight: 20, fontFamily: fontFamily.strong },
   trend: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[1] },
   trendText: { fontFamily: fontFamily.strong },
 });

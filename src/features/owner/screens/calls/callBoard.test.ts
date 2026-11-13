@@ -1,5 +1,5 @@
 import type { WaiterCall } from '@/lib/api/types';
-import { callBoard, topReason } from './callBoard';
+import { callBoard, topReason, callTimes } from './callBoard';
 
 const call = (
   id: string,
@@ -51,5 +51,26 @@ describe('topReason', () => {
 
   it('gives null with no calls', () => {
     expect(topReason([])).toBeNull();
+  });
+});
+
+describe('callTimes', () => {
+  const base = { createdAt: '2026-11-13T08:00:00Z' };
+  it('gives minutes to pick up and to finish', () => {
+    expect(
+      callTimes({
+        ...base,
+        acknowledgedAt: '2026-11-13T08:02:00Z',
+        resolvedAt: '2026-11-13T08:05:30Z',
+      }),
+    ).toEqual({ pickedUp: 2, done: 5 });
+  });
+  it('leaves out what has not happened', () => {
+    expect(
+      callTimes({ ...base, acknowledgedAt: null, resolvedAt: '2026-11-13T08:01:00Z' }),
+    ).toEqual({
+      pickedUp: null,
+      done: 1,
+    });
   });
 });

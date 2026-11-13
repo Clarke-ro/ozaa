@@ -1683,7 +1683,19 @@
       "order_more": "Coming to take your order",
       "clean_table": "Coming to clear the table"
     },
-    "snoozed": "Snoozed. It comes back in 1 min."
+    "snoozed": "Snoozed. It comes back in 1 min.",
+    "quickStrip": "Quick replies guests see on their phone",
+    "avgLong": "Average pick-up",
+    "late_one": "{{count}} late",
+    "late_other": "{{count}} late",
+    "pickedUp_one": "Picked up in {{count}} min",
+    "pickedUp_other": "Picked up in {{count}} min",
+    "pickedUpBy_one": "Picked up in {{count}} min by {{name}}",
+    "pickedUpBy_other": "Picked up in {{count}} min by {{name}}",
+    "doneIn_one": "done in {{count}} min",
+    "doneIn_other": "done in {{count}} min",
+    "openBill": "Open bill",
+    "takeOrder": "Take order"
   },
   "ownerStaff": {
     "invite": "Invite",
@@ -1888,7 +1900,7 @@
   "ownerLead": {
     "branding": "How your guest page looks: colour, font, photos and buttons.",
     "business": "Your business name and every location you run.",
-    "calls": "Guests asking for a waiter, and how fast each call was picked up.",
+    "calls": "Guests asking for a waiter",
     "devices": "Phones and tablets that scan loyalty cards at the counter.",
     "feedback": "Private notes guests leave after their meal.",
     "loyalty": "Your stamp card, its members and how it is doing.",
