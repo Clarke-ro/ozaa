@@ -11,6 +11,7 @@ import { Button } from '@/ui/Button';
 import { useDraft } from '../../data/useDraft';
 import { ownerKeys } from '../../data/keys';
 import { Chips, Field, Segmented, SectionLabel, toast } from '../../kit';
+import { CategoryPicker } from './CategoryPicker';
 
 const CATEGORIES: readonly BusinessCategory[] = [
   'restaurant',
@@ -100,16 +101,19 @@ export function BusinessDetails({ business, tax }: { business: Business; tax?: R
       />
       <View style={styles.block}>
         <Label>{t('ownerBusiness.category')}</Label>
-        <Chips<BusinessCategory>
-          label={t('ownerBusiness.category')}
+        <CategoryPicker
+          all={CATEGORIES}
           selected={f.categories}
           onChange={(v) => draft.set('categories', v)}
-          options={CATEGORIES.map((id) => ({ id, label: t(`ownerBusiness.categories.${id}`) }))}
         />
+        <Text variant="caption" style={{ color: theme.meta }}>
+          {t('ownerBusiness.categoryHint')}
+        </Text>
       </View>
       <View style={styles.block}>
         <Label>{t('ownerBusiness.cuisines')}</Label>
         <Chips<string>
+          filled
           label={t('ownerBusiness.cuisines')}
           selected={f.cuisines}
           onChange={(v) => draft.set('cuisines', v)}
@@ -128,52 +132,69 @@ export function BusinessDetails({ business, tax }: { business: Business; tax?: R
           onChange={(v) => draft.set('priceRange', v)}
           options={['1', '2', '3', '4'].map((id) => ({ id, label: '₵'.repeat(Number(id)) }))}
         />
+        {f.priceRange ? (
+          <Text variant="caption" style={{ color: theme.meta }}>
+            {t(`ownerBusiness.spend.${f.priceRange}`)}
+          </Text>
+        ) : null}
       </View>
       <View style={styles.row}>
-        <Field
-          label={t('ownerBusiness.yearOpened')}
-          keyboardType="number-pad"
-          value={f.yearOpened}
-          onChangeText={(v) => draft.set('yearOpened', v)}
-        />
-        <Field
-          label={t('ownerBusiness.website')}
-          autoCapitalize="none"
-          value={f.website}
-          onChangeText={(v) => draft.set('website', v)}
-        />
+        <View style={styles.half}>
+          <Field
+            label={t('ownerBusiness.yearOpened')}
+            keyboardType="number-pad"
+            value={f.yearOpened}
+            onChangeText={(v) => draft.set('yearOpened', v)}
+          />
+        </View>
+        <View style={styles.half}>
+          <Field
+            label={t('ownerBusiness.website')}
+            autoCapitalize="none"
+            value={f.website}
+            onChangeText={(v) => draft.set('website', v)}
+          />
+        </View>
       </View>
       <SectionLabel title={t('ownerBusiness.contactTax')} />
       <View style={styles.row}>
-        <Field
-          label={t('ownerBusiness.phone')}
-          keyboardType="phone-pad"
-          value={f.phone}
-          onChangeText={(v) => draft.set('phone', v)}
-        />
-        <Field
-          label={t('ownerBusiness.email')}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          value={f.email}
-          onChangeText={(v) => draft.set('email', v)}
-        />
+        <View style={styles.half}>
+          <Field
+            label={t('ownerBusiness.phone')}
+            keyboardType="phone-pad"
+            value={f.phone}
+            onChangeText={(v) => draft.set('phone', v)}
+          />
+        </View>
+        <View style={styles.half}>
+          <Field
+            label={t('ownerBusiness.email')}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            value={f.email}
+            onChangeText={(v) => draft.set('email', v)}
+          />
+        </View>
       </View>
       <View style={styles.row}>
-        <Field
-          label={t('ownerBusiness.tin')}
-          hint={t('ownerBusiness.tinHint')}
-          autoCapitalize="characters"
-          value={f.tin}
-          onChangeText={(v) => draft.set('tin', v)}
-          error={tinBad ? t('ownerBusiness.tinError') : undefined}
-        />
-        <Field
-          label={t('ownerBusiness.registration')}
-          hint={t('ownerBusiness.registrationHint')}
-          value={f.registrationNumber}
-          onChangeText={(v) => draft.set('registrationNumber', v)}
-        />
+        <View style={styles.half}>
+          <Field
+            label={t('ownerBusiness.tin')}
+            hint={t('ownerBusiness.tinHint')}
+            autoCapitalize="characters"
+            value={f.tin}
+            onChangeText={(v) => draft.set('tin', v)}
+            error={tinBad ? t('ownerBusiness.tinError') : undefined}
+          />
+        </View>
+        <View style={styles.half}>
+          <Field
+            label={t('ownerBusiness.registration')}
+            hint={t('ownerBusiness.registrationHint')}
+            value={f.registrationNumber}
+            onChangeText={(v) => draft.set('registrationNumber', v)}
+          />
+        </View>
       </View>
       {tax}
       {draft.dirty ? (
@@ -203,6 +224,8 @@ const styles = StyleSheet.create({
   stack: { gap: tokens.space[4] },
   block: { gap: tokens.space[2] },
   price: { maxWidth: 320 },
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.space[3] },
+  row: { flexDirection: 'row', flexWrap: 'wrap', gap: 20 },
+  // Canvas: each pair splits the width evenly, so every field in a row is the same length.
+  half: { flexGrow: 1, flexShrink: 1, flexBasis: 240, minWidth: 0 },
   end: { alignItems: 'flex-end' },
 });
