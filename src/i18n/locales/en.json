@@ -2746,7 +2746,9 @@
     "tripadvisorSub": "Guests can review you on Tripadvisor",
     "whatsapp": "WhatsApp Business",
     "whatsappSub": "Order alerts and replies to guests on WhatsApp",
-    "soon": "Coming soon"
+    "soon": "Coming soon",
+    "notConnected": "Not connected",
+    "connectedMode": "Connected · {{mode}}"
   },
   "ownerPromos": {
     "lead": "Discounts and codes. They come off the bill before the guest pays.",

@@ -8,12 +8,13 @@ import { fontFamily, useTheme } from '@/ui/theme';
 import { cardStyle, Toggle } from '../../kit';
 
 /**
- * One integration as a card (design canvas): a plain icon, the name and what it does, its status in
+ * One integration as a card (design canvas): a brand mark or plain icon, the name and what it does, its status in
  * words and a switch on the right; when switched on, its details sit under a light line. A row with
  * no switch can show a grey badge instead, e.g. "Coming soon".
  */
 export function IntegrationCard({
   icon: Icon,
+  logo,
   title,
   subtitle,
   status,
@@ -22,7 +23,9 @@ export function IntegrationCard({
   badge,
   children,
 }: {
-  icon: LucideIcon;
+  icon?: LucideIcon;
+  /** A brand mark drawn instead of a plain icon (Paystack, Google…). */
+  logo?: ReactNode;
   title: string;
   subtitle: string;
   /** "On", "Off", "Connected"… shown before the switch. */
@@ -37,7 +40,7 @@ export function IntegrationCard({
     <View style={[cardStyle(theme), styles.card]}>
       <View style={styles.head}>
         <View style={styles.icon}>
-          <Icon size={22} color={theme.text} />
+          {logo ?? (Icon ? <Icon size={22} color={theme.text} /> : null)}
         </View>
         <View style={styles.words}>
           <Text style={styles.title}>{title}</Text>
