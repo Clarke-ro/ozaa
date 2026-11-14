@@ -107,6 +107,54 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '429': { $ref: '#/components/responses/TooManyRequests' }
+  /auth/pin:
+    put:
+      tags: [auth]
+      operationId: setStaffPin
+      summary: Set or change the signed-in staff member's 4-digit PIN for quick sign-in on this device.
+      description: "Needs a session from the SMS code first. The server keeps only a slow hash of the PIN and never sends it back."
+      security: [{ ownerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pin, deviceId]
+              properties:
+                pin: { type: string, pattern: '^[0-9]{4}$', writeOnly: true }
+                deviceId: { type: string, description: The device the PIN works on. Other devices still need the SMS code. }
+      responses:
+        '204':
+          description: Saved.
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /auth/pin/login:
+    post:
+      tags: [auth]
+      operationId: loginWithPin
+      summary: Sign in with a 4-digit PIN on a device where this person already signed in by SMS.
+      description: "Five wrong PINs in a row clear the PIN; the person then signs in with the SMS code and sets a new one."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone, pin, deviceId]
+              properties:
+                phone: { $ref: '#/components/schemas/GhanaPhone' }
+                pin: { type: string, pattern: '^[0-9]{4}$', writeOnly: true }
+                deviceId: { type: string }
+      responses:
+        '200':
+          description: Signed in.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthTokens' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
   /auth/refresh:
     post:
       tags: [auth]
@@ -1837,6 +1885,20 @@ paths:
       responses:
         '204':
           description: Revoked.
+  /owner/venues/{venueId}/staff/{staffId}/reset-pin:
+    post:
+      tags: [owner-venue]
+      operationId: ownerResetStaffPin
+      summary: Clear someone's sign-in PIN. They sign in with an SMS code next time and set a new one.
+      description: Owner only.
+      security: [{ ownerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/VenueId' }
+        - { in: path, name: staffId, required: true, schema: { type: string } }
+      responses:
+        '204':
+          description: Cleared. hasPin is false from now.
+        '404': { $ref: '#/components/responses/NotFound' }
   /owner/venues/{venueId}/staff/{staffId}/sign-out:
     post:
       tags: [owner-venue]
@@ -2379,6 +2441,7 @@ components:
           type: array
           items: { type: string }
           description: The tables they look after. Empty or missing means every table.
+        hasPin: { type: boolean, description: True when they have set a sign-in PIN. The PIN itself is never sent. }
 
     ServiceId:
       type: string

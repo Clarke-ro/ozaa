@@ -38,6 +38,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/pin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set or change the signed-in staff member's 4-digit PIN for quick sign-in on this device.
+         * @description Needs a session from the SMS code first. The server keeps only a slow hash of the PIN and never sends it back.
+         */
+        put: operations["setStaffPin"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/pin/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sign in with a 4-digit PIN on a device where this person already signed in by SMS.
+         * @description Five wrong PINs in a row clear the PIN; the person then signs in with the SMS code and sets a new one.
+         */
+        post: operations["loginWithPin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/refresh": {
         parameters: {
             query?: never;
@@ -1286,6 +1326,26 @@ export interface paths {
         patch: operations["ownerUpdateStaff"];
         trace?: never;
     };
+    "/owner/venues/{venueId}/staff/{staffId}/reset-pin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Clear someone's sign-in PIN. They sign in with an SMS code next time and set a new one.
+         * @description Owner only.
+         */
+        post: operations["ownerResetStaffPin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/owner/venues/{venueId}/staff/{staffId}/sign-out": {
         parameters: {
             query?: never;
@@ -1624,6 +1684,8 @@ export interface components {
             };
             /** @description The tables they look after. Empty or missing means every table. */
             tableCodes?: string[];
+            /** @description True when they have set a sign-in PIN. The PIN itself is never sent. */
+            hasPin?: boolean;
         };
         /**
          * @description Video menu is roadmap only and is not in this list.
@@ -3186,6 +3248,65 @@ export interface operations {
         };
         responses: {
             /** @description Logged in. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthTokens"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            429: components["responses"]["TooManyRequests"];
+        };
+    };
+    setStaffPin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    pin: string;
+                    /** @description The device the PIN works on. Other devices still need the SMS code. */
+                    deviceId: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Saved. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    loginWithPin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    phone: components["schemas"]["GhanaPhone"];
+                    pin: string;
+                    deviceId: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Signed in. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -5549,6 +5670,28 @@ export interface operations {
             };
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+        };
+    };
+    ownerResetStaffPin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+                staffId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cleared. hasPin is false from now. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["NotFound"];
         };
     };
     ownerSignOutStaff: {
