@@ -8,7 +8,8 @@ import { Button } from '@/ui/Button';
 import { FilterChips } from '@/ui/FilterChips';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { useMarkRead, useOwnerFeed } from '../../data/useOwnerFeed';
-import { EmptyCard, SectionLabel } from '../../kit';
+import { EmptyCard } from '../../kit';
+import { SectionHead } from '../dashboard/SectionHead';
 import { FeedRow } from './FeedRow';
 
 type Filter = 'all' | OwnerNotificationKind;
@@ -44,7 +45,6 @@ export function NotificationsScreen() {
           <Button
             label={t('ownerNotes.markAll')}
             tone="secondary"
-            size="md"
             loading={markRead.isPending}
             onPress={() => markRead.mutate(undefined)}
           />
@@ -76,7 +76,7 @@ export function NotificationsScreen() {
             />
             {needs.length > 0 ? (
               <View style={styles.group}>
-                <SectionLabel title={t('ownerNotes.pinned')} />
+                <SectionHead title={t('ownerNotes.pinned')} badge={String(needs.length)} />
                 {needs.map((item) => (
                   <FeedRow key={item.id} item={item} now={now} onOpen={open} />
                 ))}
@@ -84,7 +84,7 @@ export function NotificationsScreen() {
             ) : null}
             {rest.length > 0 ? (
               <View style={styles.group}>
-                <SectionLabel title={t('ownerNotes.today')} />
+                <SectionHead title={t('ownerNotes.today')} />
                 {rest.map((item) => (
                   <FeedRow key={item.id} item={item} now={now} onOpen={open} />
                 ))}
@@ -105,6 +105,7 @@ export function NotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
-  stack: { gap: tokens.space[6] },
-  group: { gap: tokens.space[2] },
+  // Canvas: 40 px between the chips and each group, 16 px under a title, 10 px between rows.
+  stack: { gap: tokens.space[10] },
+  group: { gap: tokens.owner.controls.listGap },
 });

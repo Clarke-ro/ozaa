@@ -1067,7 +1067,10 @@
       "walkInTitle": "Walk-in guests",
       "walkInBody": "Guests at a table scan its QR code and land on this page. Tap Menu in the preview to edit the dine-in menu.",
       "editServices": "Edit services",
-      "tableCodes": "Table QR codes"
+      "tableCodes": "Table QR codes",
+      "changesNote": "Changes show here and on the guest menu straight away.",
+      "publishedShort": "Published · guests can order",
+      "unpublishedShort": "Not published · guests cannot see it"
     },
     "showTitle": "Show on the menu",
     "popular": "Popular",
@@ -1544,7 +1547,9 @@
     "guestsCount_one": "1 guest",
     "guestsCount_other": "{{count}} guests",
     "seeCustomers": "See customers",
-    "busiestTip": "Most guests arrive around {{hour}}."
+    "busiestTip": "Most guests arrive around {{hour}}.",
+    "scanNote": "Every scan of a table or menu code",
+    "improveMenu": "Improve menu"
   },
   "ownerLoyaltyResults": {
     "members": "Members",
@@ -1864,7 +1869,7 @@
     }
   },
   "ownerLinks": {
-    "lead": "Extra buttons on your guest page. Switch one off to hide it without deleting it.",
+    "lead": "Extra buttons on your guest page, like reservations or your website",
     "count_one": "1 link",
     "count_other": "{{count}} links",
     "add": "Add a link",
@@ -1909,7 +1914,13 @@
       "end": "Use YYYY-MM-DD, on or after the From date."
     },
     "moveUp": "Move {{title}} up",
-    "moveDown": "Move {{title}} down"
+    "moveDown": "Move {{title}} down",
+    "placementTitle": {
+      "button": "Buttons on your guest page",
+      "banner": "Banner",
+      "menu": "On the menu"
+    },
+    "footnote": "Switch one off to hide it without deleting it. Use the arrows to change the order."
   },
   "about": {
     "hours": "Opening hours",
@@ -1982,7 +1993,7 @@
   },
   "ownerNotes": {
     "title": "Notifications",
-    "lead": "Orders, waiter calls, bills and guest notes from today, newest first.",
+    "lead": "Orders, waiter calls, bills and guest notes, newest first",
     "pinned": "Needs you",
     "new": "New",
     "earlier": "Earlier",

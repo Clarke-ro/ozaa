@@ -10,7 +10,6 @@ import { DeskWait, OwnerPage, SkeletonBlock } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
 import { SALES_RANGES, salesRange, type SalesRangeId } from '../../desk/salesRange';
 import { ChipRow, Field, StatusPill } from '../../kit';
-import { SalesLine } from './InsightCards';
 import { FunnelCard } from './FunnelCard';
 import { ReturningCard, WhenCard } from './GuestCards';
 import { MoodList, TopDishesList } from './InsightLists';
@@ -20,9 +19,9 @@ const FALLBACK_ZONE = 'Africa/Accra';
 const isDay = (v: string) => /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v));
 
 /**
- * Insights as on the design canvas: the same date chips as Sales, then "From scan to order",
+ * the dishes ordered most beside returning guests, then when guests come beside their mood.
  * the dishes ordered most beside returning guests, when guests come beside their mood, and sales
- * over the period. Each section is a title above a white card.
+ * Each section is a title above a white card.
  */
 export function InsightsScreen() {
   const { t } = useTranslation();
@@ -105,7 +104,7 @@ export function InsightsScreen() {
       >
         {r ? (
           <View style={styles.stack}>
-            <FunnelCard report={r} />
+            <FunnelCard report={r} wide={wide} />
             {pair(
               (s) => (
                 <TopDishesList report={r} style={s} />
@@ -122,7 +121,6 @@ export function InsightsScreen() {
                 <MoodList report={r} style={s} />
               ),
             )}
-            <SalesLine report={r} />
           </View>
         ) : null}
       </DeskWait>

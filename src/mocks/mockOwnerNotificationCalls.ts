@@ -1,7 +1,7 @@
 import type { ApiClient } from '@/lib/api/client';
 import type { OwnerNotification, StaffRole } from '@/lib/api/types';
 import { notificationFeed } from '@/lib/notificationFeed';
-import { STAFF } from './world';
+import { STAFF } from './demo';
 import { accessOf } from './mockRules';
 import type { MockContext } from './mockContext';
 import type { World } from './worldTypes';
@@ -17,6 +17,20 @@ const ROLE_KINDS: Record<StaffRole, OwnerNotification['kind'][]> = {
   viewer: ['order', 'guest_note', 'review'],
   staff_scanner: [],
 };
+
+// The first time someone opens their feed they have already seen anything older than half an
+// hour that needs nothing from them, as on the design canvas: a few new rows in bold, the rest
+// read. Kept per phone, so marking more as read still works as before.
+const SEEN_AFTER_MS = 30 * 60_000;
+
+function seedReads(world: World, venueId: string, phone: string, now: number) {
+  if (world.notificationReads.has(phone)) return;
+  const read = new Set<string>();
+  world.notificationReads.set(phone, read);
+  for (const item of feedFor(world, venueId, phone, now)) {
+    if (!item.needsAction && now - Date.parse(item.createdAt) > SEEN_AFTER_MS) read.add(item.id);
+  }
+}
 
 /** The last day's notifications for this venue, as this staff member may see them. */
 export function feedFor(world: World, venueId: string, phone: string, now: number) {
@@ -47,6 +61,7 @@ export function mockOwnerNotificationCalls(ctx: MockContext) {
     async ownerListNotifications(venueId, query) {
       await gate();
       const { phone } = accessOf(world, tokens);
+      seedReads(world, venueId, phone, now());
       const all = feedFor(world, venueId, phone, now());
       const countsByKind: Record<string, number> = {};
       for (const item of all)

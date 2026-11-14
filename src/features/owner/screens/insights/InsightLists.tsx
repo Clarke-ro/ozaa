@@ -7,6 +7,11 @@ import type { InsightsReport } from '@/lib/api/types';
 import { STATUS_TONES } from '@/theme/palette';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
+import { VenueImage } from '@/ui/VenueImage';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '@/lib/api';
+import { useOwnerSession } from '@/features/session';
+import { ownerKeys } from '../../data/keys';
 import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
 import { TitledSection } from '../../kit';
@@ -16,6 +21,7 @@ type Props = { report: InsightsReport; style?: object };
 
 /** A row with a label, a figure on the right and a thin bar under them (canvas lists). */
 function BarRow({
+  photo,
   icon: Icon,
   iconInk,
   label,
@@ -24,6 +30,8 @@ function BarRow({
   ink,
   first,
 }: {
+  /** A dish photo on the left (canvas "Most viewed dishes"). */
+  photo?: string | null;
   icon?: LucideIcon;
   iconInk?: string;
   label: string;
@@ -39,6 +47,11 @@ function BarRow({
       accessible
       accessibilityLabel={`${label}: ${value}`}
     >
+      {photo !== undefined ? (
+        <View style={[styles.thumb, { backgroundColor: theme.wash }]}>
+          {photo ? <VenueImage url={photo} alt={label} style={StyleSheet.absoluteFill} /> : null}
+        </View>
+      ) : null}
       {Icon ? <Icon size={20} color={iconInk ?? theme.muted} /> : null}
       <View style={styles.flex}>
         <View style={styles.top}>
@@ -62,6 +75,21 @@ function BarRow({
 export function TopDishesList({ report: r, style }: Props) {
   const theme = useTheme();
   const { t } = useTranslation();
+  const venueId = useOwnerSession((state) => state.venueId) ?? '';
+  const venue = useQuery({
+    queryKey: ownerKeys.venue(venueId),
+    queryFn: () => api.ownerGetVenue(venueId),
+    enabled: Boolean(venueId),
+  });
+  const slug = venue.data?.slug ?? '';
+  // Photos come from the menu; the report only names the dish.
+  const menu = useQuery({
+    queryKey: ownerKeys.menu(slug),
+    queryFn: () => api.getMenu(slug),
+    enabled: Boolean(slug),
+  });
+  const photoOf = (name: string) =>
+    menu.data?.items.find((i) => i.name.en === name)?.photo?.url ?? null;
   const top = [...r.topItems].sort((a, b) => b.count - a.count).slice(0, 5);
   const most = Math.max(1, ...top.map((d) => d.count));
   return (
@@ -75,6 +103,7 @@ export function TopDishesList({ report: r, style }: Props) {
           <BarRow
             key={d.name}
             first={i === 0}
+            photo={photoOf(d.name)}
             label={d.name}
             value={t('ownerInsights.ordered', { count: d.count })}
             share={(d.count / most) * 100}
@@ -143,7 +172,8 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     paddingHorizontal: tokens.owner.controls.cardPadding,
   },
-  row: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3], paddingVertical: 12 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 12 },
+  thumb: { width: 48, height: 48, borderRadius: 10, overflow: 'hidden' },
   flex: { flex: 1, minWidth: 0, gap: 6 },
   top: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
   name: { fontSize: 15, lineHeight: 20, fontFamily: fontFamily.strong },

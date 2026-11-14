@@ -3,6 +3,10 @@ import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import type { MenuCategory, MenuItem, VenueSettings } from '@/lib/api/types';
 import { tokens } from '@/theme/tokens';
 import { MenuRail } from './MenuRail';
+import { MenuLinkStatus } from './MenuLinkStatus';
+import { useTranslation } from 'react-i18next';
+import { Text } from '@/ui/Text';
+import { useTheme } from '@/ui/theme';
 import { PhonePreview, type PreviewActions } from './PhonePreview';
 import { ReorderSheet } from './ReorderSheet';
 import { WalkInPreview } from './WalkInPreview';
@@ -39,6 +43,8 @@ export function LiveMenu({
   onReorder: (dishes: MenuItem[], orderedIds: string[]) => void;
 }) {
   const { width } = useWindowDimensions();
+  const theme = useTheme();
+  const { t } = useTranslation();
   const [reordering, setReordering] = useState<{
     section: MenuCategory;
     dishes: MenuItem[];
@@ -59,9 +65,19 @@ export function LiveMenu({
           <WalkInPreview venue={venue} sections={sections} dishes={dishes} actions={actions} />
         )}
       </View>
-      <View style={wide ? styles.railCol : null}>
-        {audience === 'online' ? <MenuRail venue={venue} /> : <WalkInRail venue={venue} />}
-      </View>
+      {stacked ? (
+        // Canvas: under the phone, a one-line note and the menu link card.
+        <View style={styles.under}>
+          <Text style={[styles.caption, { color: theme.meta }]}>
+            {t('ownerMenu.live.changesNote')}
+          </Text>
+          <MenuLinkStatus venue={venue} />
+        </View>
+      ) : (
+        <View style={wide ? styles.railCol : null}>
+          {audience === 'online' ? <MenuRail venue={venue} /> : <WalkInRail venue={venue} />}
+        </View>
+      )}
       {reordering ? (
         <ReorderSheet
           section={reordering.section}
@@ -82,4 +98,6 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'flex-start' },
   phoneCol: { flex: 1 },
   railCol: { width: 360 },
+  under: { gap: tokens.space[4] },
+  caption: { fontSize: 14, lineHeight: 20, textAlign: 'center' },
 });

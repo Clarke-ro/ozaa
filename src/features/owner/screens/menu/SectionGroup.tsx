@@ -95,8 +95,8 @@ export function SectionGroup({
           onPress={onAddDish}
           style={({ pressed }) => [
             styles.empty,
-            { borderColor: theme.line },
-            pressed && { backgroundColor: theme.wash },
+            // Canvas: the first-dish button is white with a dashed edge; "Add a section" stays clear.
+            { borderColor: theme.line, backgroundColor: pressed ? theme.wash : theme.surface },
           ]}
         >
           <Plus size={18} color={theme.muted} />
