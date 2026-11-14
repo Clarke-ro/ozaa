@@ -2350,7 +2350,32 @@
       "month": "This month",
       "30d": "Last 30 days",
       "custom": "Pick dates"
-    }
+    },
+    "byDay": "By day",
+    "bestDay": "Best day:",
+    "bestDayDetail_one": "{{amount}} from 1 order",
+    "bestDayDetail_other": "{{amount}} from {{count}} orders",
+    "otherDishes": "Other dishes",
+    "soldShareLong_one": "1 sold · {{percent}}% of order value",
+    "soldShareLong_other": "{{count}} sold · {{percent}}% of order value",
+    "soldShareShort_one": "1 sold · {{percent}}%",
+    "soldShareShort_other": "{{count}} sold · {{percent}}%",
+    "shareTitle": "Share of order value",
+    "orderValueLower": "order value",
+    "payments": "Payments",
+    "paymentsNote": "How each order was paid is on its order page.",
+    "orderStatus": "Order status",
+    "source": {
+      "table": "Walk-in",
+      "pickup": "Online pickup",
+      "delivery": "Online delivery"
+    },
+    "byHourTitle": "Sales by hour",
+    "byStaffTitle": "By staff member",
+    "peakTip": "{{hour}} brings in the most money",
+    "taxTitle": "Tax",
+    "taxOffTitle": "Turn on E-VAT to see your tax totals",
+    "taxOffBody": "Sales before tax, VAT and levies for each period, ready for your monthly return."
   },
   "ownerPay": {
     "lead": "Connect Cravins to the services you already use",

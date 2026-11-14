@@ -9,7 +9,7 @@ import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
-import { InsightSection } from './InsightSection';
+import { TitledSection } from '../../kit';
 import { moodTotals } from './insightsModel';
 
 type Props = { report: InsightsReport; style?: object };
@@ -65,7 +65,7 @@ export function TopDishesList({ report: r, style }: Props) {
   const top = [...r.topItems].sort((a, b) => b.count - a.count).slice(0, 5);
   const most = Math.max(1, ...top.map((d) => d.count));
   return (
-    <InsightSection title={t('ownerInsights.topDishes')} style={style} cardStyle={styles.listCard}>
+    <TitledSection title={t('ownerInsights.topDishes')} style={style} cardStyle={styles.listCard}>
       {top.length === 0 ? (
         <Text variant="body" style={[styles.empty, { color: theme.muted }]}>
           {t('ownerDash.noTrend')}
@@ -82,7 +82,7 @@ export function TopDishesList({ report: r, style }: Props) {
           />
         ))
       )}
-    </InsightSection>
+    </TitledSection>
   );
 }
 
@@ -100,7 +100,7 @@ export function MoodList({ report: r, style }: Props) {
     { key: 'negative', icon: Frown, ink: tones.alert.line, count: mood.negative },
   ] as const;
   return (
-    <InsightSection title={t('ownerInsights.mood')} style={style} cardStyle={styles.moodCard}>
+    <TitledSection title={t('ownerInsights.mood')} style={style} cardStyle={styles.moodCard}>
       {total === 0 ? (
         <Text variant="body" style={[styles.empty, { color: theme.muted }]}>
           {t('ownerDash.noTrend')}
@@ -128,7 +128,7 @@ export function MoodList({ report: r, style }: Props) {
           />
         </>
       )}
-    </InsightSection>
+    </TitledSection>
   );
 }
 

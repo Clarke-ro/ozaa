@@ -5,7 +5,7 @@ import type { InsightsReport } from '@/lib/api/types';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
-import { InsightSection } from './InsightSection';
+import { TitledSection } from '../../kit';
 import { funnelSteps, menuDropOff } from './insightsModel';
 
 /**
@@ -19,7 +19,7 @@ export function FunnelCard({ report: r }: { report: InsightsReport }) {
   const dropped = menuDropOff(r);
   const n = (v: number) => v.toLocaleString(i18n.language);
   return (
-    <InsightSection title={t('ownerInsights.funnel')} cardStyle={styles.card}>
+    <TitledSection title={t('ownerInsights.funnel')} cardStyle={styles.card}>
       {steps[0].count === 0 ? (
         <Text variant="body" style={{ color: theme.muted }}>
           {t('ownerInsights.noVisits')}
@@ -61,7 +61,7 @@ export function FunnelCard({ report: r }: { report: InsightsReport }) {
           ) : null}
         </>
       )}
-    </InsightSection>
+    </TitledSection>
   );
 }
 

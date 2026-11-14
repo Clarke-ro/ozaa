@@ -24,9 +24,9 @@ export function BarChart({
 }) {
   const theme = useTheme();
   const c = {
-    // White bars with a fine edge: clear on the grey Today panel and on white cards alike.
-    bar: theme.surface,
-    edge: theme.line,
+    // Canvas bars: the brand colour at 30% (#F2C6B0 on white), the picked bar in full colour.
+    bar: `${theme.fill}4D`,
+    edge: 'transparent',
     active: theme.fill,
     text: theme.text,
     muted: theme.muted,
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
   plot: { flexDirection: 'row', alignItems: 'flex-end', gap: 2 },
   guide: { position: 'absolute', left: 0, right: 0, height: StyleSheet.hairlineWidth },
   col: { flex: 1, height: '100%', justifyContent: 'flex-end', alignItems: 'center' },
-  bar: { width: '78%', maxWidth: 36, borderTopLeftRadius: 4, borderTopRightRadius: 4 },
+  bar: { width: '78%', maxWidth: 36, borderTopLeftRadius: 6, borderTopRightRadius: 6 },
   axis: { flexDirection: 'row', gap: 2, borderTopWidth: 1, paddingTop: tokens.space[1] },
   tick: { flex: 1, textAlign: 'center', fontSize: 11 },
 });
