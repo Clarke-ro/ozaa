@@ -1819,7 +1819,13 @@
       "list": "List"
     },
     "columnLabel": "{{stage}}, {{count}} orders",
-    "readyAgo": "ready {{time}}"
+    "readyAgo": "ready {{time}}",
+    "print": {
+      "button": "Print",
+      "placed": "Ordered {{time}}",
+      "footer": "Printed from Cravins",
+      "blocked": "Your browser blocked the print window. Allow pop-ups for Cravins and try again."
+    }
   },
   "ownerCalls": {
     "status": {

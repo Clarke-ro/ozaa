@@ -11,8 +11,8 @@ describe('readEnv', () => {
       EXPO_PUBLIC_MOCK_FAST: '0',
       EXPO_PUBLIC_SITE_URL: 'https://cravins.app',
       EXPO_PUBLIC_MAP_TILES: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-      EXPO_PUBLIC_SUPPORT_EMAIL: '',
-      EXPO_PUBLIC_SUPPORT_WHATSAPP: '',
+      EXPO_PUBLIC_SUPPORT_EMAIL: 'support@cravins.app',
+      EXPO_PUBLIC_SUPPORT_WHATSAPP: '233200000000',
       live: [],
     });
   });

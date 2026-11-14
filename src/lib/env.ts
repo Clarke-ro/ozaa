@@ -15,9 +15,13 @@ const schema = z.object({
    * light use with credit shown; a busy launch needs a tile provider (Clarke's choice).
    */
   EXPO_PUBLIC_MAP_TILES: z._default(z.string(), 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'),
-  /** Help page "Email us" and "WhatsApp us". Empty hides the button. Set by Clarke, not in code. */
-  EXPO_PUBLIC_SUPPORT_EMAIL: z._default(z.string(), ''),
-  EXPO_PUBLIC_SUPPORT_WHATSAPP: z._default(z.string(), ''),
+  /** Help page "Email us" (Clarke, 2026-11-14). Override in the build settings. */
+  EXPO_PUBLIC_SUPPORT_EMAIL: z._default(z.string(), 'support@cravins.app'),
+  /**
+   * Help page "WhatsApp us", digits with the country code. A DEMO number until Clarke has the
+   * real support line: replace it in the build settings before launch.
+   */
+  EXPO_PUBLIC_SUPPORT_WHATSAPP: z._default(z.string(), '233200000000'),
 });
 
 export type Env = z.infer<typeof schema> & { live: string[] };
