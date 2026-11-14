@@ -14,7 +14,16 @@ import { amountDue } from './orderSteps';
  * worked out: subtotal, sale savings, taxes, delivery, total, paid and still to pay. Nothing here
  * is added up on the phone; the server total wins (AGENTS.md, money rules).
  */
-export function OrderBill({ order, currency }: { order: Order; currency: string }) {
+export function OrderBill({
+  order,
+  currency,
+  part = 'all',
+}: {
+  order: Order;
+  currency: string;
+  /** The canvas shows the dishes and the sums as two cards; 'all' keeps them together. */
+  part?: 'all' | 'lines' | 'sums';
+}) {
   const theme = useTheme();
   const { t } = useTranslation();
   const money = (amount: number) => formatMoney(pesewas(amount), currency);
@@ -23,66 +32,72 @@ export function OrderBill({ order, currency }: { order: Order; currency: string 
 
   return (
     <View>
-      {order.lines.map((line, index) => (
-        <View
-          key={line.id}
-          style={[
-            styles.line,
-            index > 0 && { borderTopColor: theme.line, borderTopWidth: StyleSheet.hairlineWidth },
-          ]}
-        >
-          <Text variant="body-strong" style={[styles.qty, styles.num]}>
-            {line.quantity}×
-          </Text>
-          <View style={styles.flex}>
-            <Text variant="body-strong">{line.name}</Text>
-            <Text variant="caption" style={{ color: theme.muted }}>
-              {t('ownerOrders.detail.each', { price: money(line.unitPricePesewas) })}
+      {part !== 'sums' &&
+        order.lines.map((line, index) => (
+          <View
+            key={line.id}
+            style={[
+              styles.line,
+              index > 0 && { borderTopColor: theme.line, borderTopWidth: StyleSheet.hairlineWidth },
+            ]}
+          >
+            <Text variant="body-strong" style={[styles.qty, styles.num]}>
+              {line.quantity}×
             </Text>
-            {line.modifiers?.map((m) => (
-              <Text key={m.name} variant="caption" style={{ color: theme.muted }}>
-                {m.pricePesewas > 0
-                  ? t('ownerOrders.detail.addOnPriced', { name: m.name, price: money(m.pricePesewas) })
-                  : t('ownerOrders.detail.addOn', { name: m.name })}
+            <View style={styles.flex}>
+              <Text variant="body-strong">{line.name}</Text>
+              <Text variant="caption" style={{ color: theme.muted }}>
+                {t('ownerOrders.detail.each', { price: money(line.unitPricePesewas) })}
               </Text>
-            ))}
-            {line.note ? (
-              <View style={[styles.note, { backgroundColor: theme.warningTint }]}>
-                <MessageSquareText size={14} color={theme.text} />
-                <Text variant="caption" style={styles.shrink}>
-                  {line.note}
+              {line.modifiers?.map((m) => (
+                <Text key={m.name} variant="caption" style={{ color: theme.muted }}>
+                  {m.pricePesewas > 0
+                    ? t('ownerOrders.detail.addOnPriced', {
+                        name: m.name,
+                        price: money(m.pricePesewas),
+                      })
+                    : t('ownerOrders.detail.addOn', { name: m.name })}
                 </Text>
-              </View>
-            ) : null}
+              ))}
+              {line.note ? (
+                <View style={[styles.note, { backgroundColor: theme.warningTint }]}>
+                  <MessageSquareText size={14} color={theme.text} />
+                  <Text variant="caption" style={styles.shrink}>
+                    {line.note}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+            <Text variant="body" style={styles.num}>
+              {money(line.totalPesewas)}
+            </Text>
           </View>
-          <Text variant="body" style={styles.num}>
-            {money(line.totalPesewas)}
-          </Text>
-        </View>
-      ))}
-
-      <View style={[styles.sums, { borderTopColor: theme.line }]}>
-        <Sum label={t('ownerOrders.detail.subtotal')} value={money(order.subtotalPesewas)} />
-        {saved > 0 ? (
-          <Sum
-            label={t('ownerOrders.detail.saved')}
-            value={t('ownerOrders.detail.minus', { amount: money(saved) })}
-          />
-        ) : null}
-        {order.taxes.map((tax) => (
-          <Sum key={tax.code} label={tax.label} value={money(tax.amountPesewas)} />
         ))}
-        {order.deliveryFeePesewas ? (
-          <Sum label={t('ownerOrders.detail.delivery')} value={money(order.deliveryFeePesewas)} />
-        ) : null}
-        <Sum label={t('ownerOrders.detail.total')} value={money(order.totalPesewas)} strong />
-        {order.paidPesewas > 0 ? (
-          <Sum label={t('ownerOrders.detail.paidSoFar')} value={money(order.paidPesewas)} />
-        ) : null}
-        {due > 0 && order.status !== 'cancelled' ? (
-          <Sum label={t('ownerOrders.detail.due')} value={money(due)} strong />
-        ) : null}
-      </View>
+
+      {part === 'lines' ? null : (
+        <View style={[styles.sums, part === 'all' && styles.ruled, { borderTopColor: theme.line }]}>
+          <Sum label={t('ownerOrders.detail.subtotal')} value={money(order.subtotalPesewas)} />
+          {saved > 0 ? (
+            <Sum
+              label={t('ownerOrders.detail.saved')}
+              value={t('ownerOrders.detail.minus', { amount: money(saved) })}
+            />
+          ) : null}
+          {order.taxes.map((tax) => (
+            <Sum key={tax.code} label={tax.label} value={money(tax.amountPesewas)} />
+          ))}
+          {order.deliveryFeePesewas ? (
+            <Sum label={t('ownerOrders.detail.delivery')} value={money(order.deliveryFeePesewas)} />
+          ) : null}
+          <Sum label={t('ownerOrders.detail.total')} value={money(order.totalPesewas)} strong />
+          {order.paidPesewas > 0 ? (
+            <Sum label={t('ownerOrders.detail.paidSoFar')} value={money(order.paidPesewas)} />
+          ) : null}
+          {due > 0 && order.status !== 'cancelled' ? (
+            <Sum label={t('ownerOrders.detail.due')} value={money(due)} strong />
+          ) : null}
+        </View>
+      )}
     </View>
   );
 }
@@ -123,11 +138,8 @@ const styles = StyleSheet.create({
     paddingVertical: tokens.space[1],
     borderRadius: tokens.radius.sm,
   },
-  sums: {
-    gap: tokens.space[2],
-    paddingTop: tokens.space[3],
-    borderTopWidth: StyleSheet.hairlineWidth,
-  },
+  sums: { gap: tokens.space[2] },
+  ruled: { paddingTop: tokens.space[3], borderTopWidth: StyleSheet.hairlineWidth },
   sum: { flexDirection: 'row', justifyContent: 'space-between', gap: tokens.space[3] },
   num: { fontVariant: ['tabular-nums'] },
 });

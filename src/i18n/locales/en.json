@@ -1773,7 +1773,28 @@
       "eta": "Ready in about",
       "missing": "We can't find this order",
       "missingBody": "It may be from an earlier day. Go back to Orders and pick it from the list.",
-      "backToOrders": "Back to Orders"
+      "backToOrders": "Back to Orders",
+      "heading": "{{where}} · #{{number}}",
+      "orderedAgo": "Ordered {{ago}}",
+      "items": "Items",
+      "timeline": "Timeline",
+      "stillToPay": "Still to pay {{amount}}",
+      "cancel": "Cancel order",
+      "cancelTitle": "Cancel this order?",
+      "cancelBody": "The kitchen stops it and the guest sees it as cancelled. This can't be undone.",
+      "notYet": "Not yet",
+      "step": {
+        "received": "Ordered",
+        "preparing": "Started cooking",
+        "ready": "Ready",
+        "served": "Served",
+        "cancelled": "Cancelled"
+      },
+      "from": {
+        "table": "From the table QR code",
+        "pickup": "Pickup, from the menu link",
+        "delivery": "Delivery, from the menu link"
+      }
     },
     "view": {
       "label": "Show as",

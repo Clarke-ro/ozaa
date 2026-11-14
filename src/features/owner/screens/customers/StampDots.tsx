@@ -36,7 +36,7 @@ export function StampDots({
       >
         {Array.from({ length: required }, (_, i) =>
           i < onCard ? (
-            <View key={i} style={[styles.dot, { backgroundColor: theme.ink }]}>
+            <View key={i} style={[styles.dot, { backgroundColor: theme.text }]}>
               <Check size={16} color={theme.surface} strokeWidth={3} />
             </View>
           ) : (
