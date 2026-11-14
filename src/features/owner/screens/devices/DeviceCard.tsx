@@ -8,6 +8,7 @@ import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
 import { cardStyle } from '../../kit';
+import { useOwnerLayout } from '../../chrome/layout';
 
 /**
  * One paired phone or tablet as a row (design canvas): a plain icon, its name, its model and that
@@ -26,8 +27,16 @@ export function DeviceCard({
   const { t } = useTranslation();
   const tablet = /ipad|tab/i.test(`${device.name} ${device.platform ?? ''}`);
   const Icon = tablet ? Tablet : Smartphone;
+  // Phones: the "Used …" line and Remove beside the name left it no room at all, so the time
+  // goes under the name and only Remove stays on the right.
+  const { wide } = useOwnerLayout();
+  const used = (
+    <Text style={[styles.sub, { color: theme.meta }]}>
+      {t('ownerDevices.used', { when: timeAgo(device.lastSeen, now, t) })}
+    </Text>
+  );
   return (
-    <View style={[cardStyle(theme), styles.row]}>
+    <View style={[cardStyle(theme), styles.row, !wide && styles.rowPhone]}>
       <Icon size={24} color={theme.text} />
       <View style={styles.words}>
         <Text style={styles.name} numberOfLines={1}>
@@ -36,16 +45,15 @@ export function DeviceCard({
         <Text style={[styles.sub, { color: theme.meta }]} numberOfLines={1}>
           {[device.platform, t('ownerDevices.scanOnly')].filter(Boolean).join(' · ')}
         </Text>
+        {wide ? null : used}
       </View>
-      <Text style={[styles.sub, { color: theme.meta }]}>
-        {t('ownerDevices.used', { when: timeAgo(device.lastSeen, now, t) })}
-      </Text>
+      {wide ? used : null}
       <Button
         label={t('ownerDevices.remove')}
         tone="secondary"
         labelColor={theme.error}
         onPress={onRemove}
-        style={[styles.remove, { borderColor: theme.errorTint }]}
+        style={[styles.remove, !wide && styles.removePhone, { borderColor: theme.errorTint }]}
       />
     </View>
   );
@@ -65,4 +73,6 @@ const styles = StyleSheet.create({
   name: { fontSize: 18, lineHeight: 24, fontFamily: fontFamily.strong },
   sub: { fontSize: 16, lineHeight: 22 },
   remove: { minHeight: 52, paddingHorizontal: tokens.space[6] },
+  rowPhone: { minHeight: 0, paddingHorizontal: tokens.space[4], gap: tokens.space[3] },
+  removePhone: { minHeight: 44, paddingHorizontal: tokens.space[4] },
 });
