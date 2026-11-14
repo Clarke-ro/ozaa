@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { usePathname, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -17,10 +18,10 @@ import { isTabRoot } from './nav';
 import { NotificationBell } from './NotificationBell';
 
 const BACK = tokens.space[10];
-// The page title is 30 px tall and starts 16 px down the page. Between these two scroll points
+// The page title is 30 px tall and starts 4 px down the page. Between these two scroll points
 // it slides under the bar, so the bar's own small title fades in over the same distance.
-const TITLE_FROM = 12;
-const TITLE_TO = 44;
+const TITLE_FROM = 4;
+const TITLE_TO = 34;
 
 /**
  * Phones only: a slim bar above the page, like an iOS navigation bar with a large title.
@@ -36,9 +37,12 @@ export function PhoneBar({
   bell,
   title,
   scrollY,
+  start,
 }: {
   bell: boolean;
   title: string;
+  /** Tab pages only: what sits on the left, e.g. Today's location switcher. It stays put, so the small title doesn't come in over it. */
+  start?: ReactNode;
   /** How far the page has scrolled, from OwnerPage. */
   scrollY: SharedValue<number>;
 }) {
@@ -62,11 +66,21 @@ export function PhoneBar({
   });
   const edge = useAnimatedStyle(() => ({ opacity: progress(scrollY.get()) }));
 
+  // A tab with nothing for the bar to hold (Orders, Menu) gets no bar at all: its title starts
+  // right under the status bar, iOS large-title style (Clarke, 2026-11-14).
+  if (root && !start && !bell) {
+    return <View style={{ height: insets.top + tokens.space[3], backgroundColor: theme.bg }} />;
+  }
+
   return (
     <View
       style={[styles.bar, { paddingTop: insets.top + tokens.space[2], backgroundColor: theme.bg }]}
     >
-      {root ? null : (
+      {root ? (
+        start ? (
+          <View style={styles.start}>{start}</View>
+        ) : null
+      ) : (
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={t('owner.back')}
@@ -81,16 +95,18 @@ export function PhoneBar({
         </Pressable>
       )}
       {/* The small title. Screen readers already have the page's own header, so it stays silent. */}
-      <Animated.View
-        pointerEvents="none"
-        accessibilityElementsHidden
-        importantForAccessibility="no-hide-descendants"
-        style={[styles.title, root ? styles.titleRoot : styles.titleDetail, titleIn]}
-      >
-        <Text variant="body-strong" numberOfLines={1} style={styles.titleText}>
-          {title}
-        </Text>
-      </Animated.View>
+      {root && start ? null : (
+        <Animated.View
+          pointerEvents="none"
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+          style={[styles.title, root ? styles.titleRoot : styles.titleDetail, titleIn]}
+        >
+          <Text variant="body-strong" numberOfLines={1} style={styles.titleText}>
+            {title}
+          </Text>
+        </Animated.View>
+      )}
       <View style={styles.spacer} />
       {bell ? <NotificationBell /> : null}
       <Animated.View
@@ -122,6 +138,7 @@ const styles = StyleSheet.create({
   titleRoot: { left: tokens.space[4], right: tokens.space[16] },
   titleDetail: { left: tokens.space[4] + BACK + tokens.space[3], right: tokens.space[16] },
   titleText: { fontSize: 17, lineHeight: 22, fontFamily: fontFamily.strong },
+  start: { flexShrink: 1, minWidth: 0, marginRight: tokens.space[3] },
   spacer: { flex: 1 },
   edge: { position: 'absolute', left: 0, right: 0, bottom: 0, height: StyleSheet.hairlineWidth },
 });

@@ -1,3 +1,4 @@
+import { createContext, useContext } from 'react';
 import { ActivityIndicator, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import { hapticImpactLight } from '@/lib/haptics';
 import { STATUS_TONES, type StatusTone } from '@/theme/palette';
@@ -7,6 +8,12 @@ import { Text } from './Text';
 import { useTheme } from './theme';
 
 type Tone = 'primary' | 'secondary' | 'ghost' | 'destructive' | 'tinted';
+
+/**
+ * Slim buttons for a phone's page header: 40 px instead of 48, with a 14 px label, so the
+ * title row stays light (Clarke, 2026-11-14). PageHeader turns it on; nothing else needs to.
+ */
+export const SlimButtons = createContext(false);
 type Size = 'lg' | 'md';
 
 export function Button({
@@ -35,6 +42,7 @@ export function Button({
   labelColor?: string;
 }) {
   const theme = useTheme();
+  const slim = useContext(SlimButtons);
   const off = disabled || loading;
   const status = STATUS_TONES[theme.scheme][tint];
   const filled = tone === 'primary' || tone === 'destructive';
@@ -74,6 +82,7 @@ export function Button({
           borderRadius: tokens.radius.full,
           paddingHorizontal: tokens.space[5],
         },
+        slim && { minHeight: 40, paddingHorizontal: tokens.space[4], paddingVertical: 0 },
         tone === 'primary' && { backgroundColor: pressed ? theme.pressed : theme.fill },
         tone === 'destructive' && { backgroundColor: theme.error, opacity: pressed ? 0.85 : 1 },
         tone === 'secondary' && {
@@ -90,7 +99,13 @@ export function Button({
       {loading ? (
         <ActivityIndicator color={labelInk} />
       ) : (
-        <Text variant="button" style={{ color: labelInk, textAlign: 'center' }}>
+        <Text
+          variant="button"
+          style={[
+            { color: labelInk, textAlign: 'center' },
+            slim && { fontSize: 14, lineHeight: 18 },
+          ]}
+        >
           {label}
         </Text>
       )}

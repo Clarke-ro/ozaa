@@ -75,7 +75,9 @@ const styles = StyleSheet.create({
     gap: c.statGap,
   },
   compact: {
-    minHeight: 0,
+    // Taller than wide on a phone, with the number at the bottom, so the three read as tiles.
+    minHeight: 124,
+    justifyContent: 'space-between',
     paddingVertical: tokens.space[4],
     paddingHorizontal: tokens.space[4],
     gap: tokens.space[2],

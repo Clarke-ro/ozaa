@@ -4,11 +4,10 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import type { MenuCategory, MenuItem } from '@/lib/api/types';
 import { useOwnerSession } from '@/features/session';
-import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
 import { tokens } from '@/theme/tokens';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
-import { ConfirmDialog, Segmented } from '../../kit';
+import { ConfirmDialog, HeaderAdd, Segmented } from '../../kit';
 import { LiveMenu, type Audience } from './live/LiveMenu';
 import { MenuListView } from './MenuListView';
 import { SectionEditor } from './SectionEditor';
@@ -101,9 +100,8 @@ export function MenuScreen() {
       title={t('owner.menu')}
       subtitle={t('ownerMenu.lead')}
       action={
-        <Button
+        <HeaderAdd
           label={t('ownerMenu.addDish')}
-          size="md"
           onPress={() => addDish()}
           disabled={sections.length === 0}
         />

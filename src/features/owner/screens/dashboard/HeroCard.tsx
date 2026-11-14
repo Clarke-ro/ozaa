@@ -18,6 +18,7 @@ export function HeroCard({
   note,
   link,
   onPress,
+  compact,
 }: {
   label: string;
   value: string;
@@ -26,6 +27,8 @@ export function HeroCard({
   link: string;
   /** Missing when this person may not open the page behind the number. */
   onPress?: () => void;
+  /** Phones: no 192 px minimum and tighter padding, so the card is only as tall as its words. */
+  compact?: boolean;
 }) {
   const theme = useTheme();
   const dark = theme.scheme === 'dark';
@@ -33,7 +36,7 @@ export function HeroCard({
   const ink = dark ? theme.text : theme.white;
 
   return (
-    <View style={[styles.card, { backgroundColor: bg }]}>
+    <View style={[styles.card, compact && styles.compact, { backgroundColor: bg }]}>
       <View style={styles.top}>
         <Text variant="body-strong" style={{ color: ink }} numberOfLines={1}>
           {label}
@@ -55,10 +58,15 @@ export function HeroCard({
           </PressableScale>
         ) : null}
       </View>
-      <Text style={[styles.value, { color: ink }]} numberOfLines={1} adjustsFontSizeToFit>
+      <Text
+        style={[styles.value, compact && styles.compactValue, { color: ink }]}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+      >
         {value}
       </Text>
-      {note ? (
+      {/* Phones skip the sentence: the number and View sales say enough. */}
+      {note && !compact ? (
         <Text variant="caption" style={[styles.note, { color: ink }]} numberOfLines={2}>
           {note}
         </Text>
@@ -101,4 +109,6 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
   },
   note: { opacity: 0.8 },
+  compact: { minHeight: 0, padding: tokens.space[4], gap: tokens.space[2] },
+  compactValue: { fontSize: 32, lineHeight: 38, letterSpacing: -0.5 },
 });

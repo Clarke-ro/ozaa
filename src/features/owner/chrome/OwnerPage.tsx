@@ -20,7 +20,8 @@ export function useGutter() {
  * Every owner screen sits in this. The page starts with its own header (a bold title, a grey
  * line under it, the screen's one action on the right), then the content, in one centred column
  * on the page colour. Wide screens have no bar above it and no bell: the sidebar's Notifications
- * row and its count do that job. Phones get a slim bar with the Cravins mark (or Back) and the bell.
+ * row and its count do that job. Phones get a slim bar with Back (or a page's own `barStart`) and
+ * the bell, and no grey line under the title.
  * `width="form"` keeps settings and Today at a readable width; `wide` is for long lists.
  */
 export function OwnerPage({
@@ -31,9 +32,12 @@ export function OwnerPage({
   width = 'form',
   bell,
   back,
+  barStart,
+  compactTitle,
   children,
 }: {
   title: string;
+  /** The grey line under the title. Wide screens only: phones keep the space for content. */
   subtitle?: string;
   /** The screen's single main action, shown on the right of the title. */
   action?: ReactNode;
@@ -45,6 +49,10 @@ export function OwnerPage({
   bell?: boolean;
   /** For a page opened from another page: a Back link above the title on wide screens. */
   back?: { label: string; onPress: () => void };
+  /** Phones: what sits at the left of the top bar on a tab, e.g. Today's location switcher. */
+  barStart?: ReactNode;
+  /** A smaller title on phones, for a long one like Today's greeting. */
+  compactTitle?: boolean;
   children: ReactNode;
 }) {
   const theme = useTheme();
@@ -63,7 +71,14 @@ export function OwnerPage({
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={[styles.fill, { backgroundColor: theme.bg }]}
     >
-      {wide ? null : <PhoneBar bell={mayNotify && Boolean(bell)} title={title} scrollY={scrollY} />}
+      {wide ? null : (
+        <PhoneBar
+          bell={mayNotify && Boolean(bell)}
+          title={title}
+          scrollY={scrollY}
+          start={barStart}
+        />
+      )}
       <Animated.ScrollView
         onScroll={onScroll}
         scrollEventThrottle={16}
@@ -71,7 +86,15 @@ export function OwnerPage({
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
       >
-        <PageHeader title={title} subtitle={subtitle} action={action} bell={false} back={back} />
+        <PageHeader
+          title={title}
+          // Phones drop the grey line under the title: the title and the content say enough.
+          subtitle={wide ? subtitle : undefined}
+          action={action}
+          bell={false}
+          back={back}
+          compact={compactTitle && !wide}
+        />
         <View style={[styles.body, wide && styles.bodyWide]}>{children}</View>
       </Animated.ScrollView>
       {footer}
@@ -82,9 +105,10 @@ export function OwnerPage({
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   page: {
-    paddingTop: tokens.space[4],
+    // Phones: the title starts just under the bar, iOS large-title style.
+    paddingTop: tokens.space[1],
     paddingBottom: tokens.space[16] + tokens.space[8],
-    gap: tokens.space[5],
+    gap: tokens.space[4],
     width: '100%',
     alignSelf: 'center',
   },
@@ -93,6 +117,6 @@ const styles = StyleSheet.create({
     paddingTop: tokens.owner.controls.pagePadding,
     gap: tokens.owner.controls.sectionGap,
   },
-  body: { gap: tokens.space[6] },
+  body: { gap: tokens.space[5] },
   bodyWide: { gap: tokens.owner.controls.sectionGap },
 });

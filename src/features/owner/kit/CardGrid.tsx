@@ -21,6 +21,8 @@ export function CardGrid({
   children: ReactNode;
 }) {
   const cards = Children.toArray(children);
+  // One column: a plain stack, where every card stretches to the full width on its own.
+  if (columns <= 1) return <View style={{ gap }}>{cards}</View>;
   const rows: ReactNode[][] = [];
   for (let i = 0; i < cards.length; i += columns) rows.push(cards.slice(i, i + columns));
   return (

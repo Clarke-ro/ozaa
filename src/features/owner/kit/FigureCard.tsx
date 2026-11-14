@@ -1,6 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 import { PressableScale } from '@/ui/PressableScale';
 import { Minus, TrendingDown, TrendingUp } from 'lucide-react-native';
+import { useOwnerLayout } from '../chrome/layout';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
@@ -45,6 +46,8 @@ export function FigureCard({
   onPress?: () => void;
 }) {
   const theme = useTheme();
+  // 16 px inside on phones, 20 on wide screens.
+  const { cardPad } = useOwnerLayout();
   const up = trend ? trend.percent > 0 : false;
   const down = trend ? trend.percent < 0 : false;
   const Arrow = up ? TrendingUp : down ? TrendingDown : Minus;
@@ -121,7 +124,13 @@ export function FigureCard({
   if (!onPress) {
     return (
       <View
-        style={[styles.card, cardStyle(theme), tall && styles.tall, compact && styles.compact]}
+        style={[
+          styles.card,
+          { padding: cardPad },
+          cardStyle(theme),
+          tall && styles.tall,
+          compact && styles.compact,
+        ]}
         accessible
         accessibilityLabel={aside ? `${spoken}, ${aside}` : spoken}
       >
@@ -136,6 +145,7 @@ export function FigureCard({
       onPress={onPress}
       style={({ pressed }) => [
         styles.card,
+        { padding: cardPad },
         cardStyle(theme),
         tall && styles.tall,
         compact && styles.compact,

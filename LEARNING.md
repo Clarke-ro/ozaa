@@ -4,6 +4,43 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-14 · A cleaner phone layout and a kitchen board
+
+**What we built**
+
+- **Headers:** page titles start higher. Tabs with nothing to put in the top bar (Orders, Menu) have no bar. The grey line under each title is gone on phones. Header buttons are slimmer, and "add" buttons are a round orange +.
+- **Today:** the location switcher sits at the top beside the bell. The greeting is smaller, and the line under it is gone. The sales card is shorter. The three small cards are taller tiles.
+- **Orders:** one row of chips (Open, Served, Rejected, All). Open shows New, Cooking and Ready, each with its two oldest tickets. Tap a stage's heading to see every ticket in it on its own page.
+- **Cards:** 16 px inside on phones instead of 20. Figure rows (Loyalty, Staff, Customers) fit three small tiles in one row.
+- **Integrations:** the switch sits top right, and the status goes under the name.
+
+**How it works**
+
+```
+Orders (Open) → New ●2  >  → /owner/orders/stage/new → every new ticket
+                Cooking ●2 >
+                Ready ●1   >
+```
+
+`useOrderDesk` loads the orders and wires the buttons. Orders and the stage page both use it, so a ticket behaves the same on both.
+
+**Files to look at**
+
+- `src/features/owner/screens/orders/useOrderDesk.tsx`: the shared order logic.
+- `src/features/owner/screens/orders/OrderBoard.tsx`: the three stages.
+- `src/app/owner/orders/stage/[stage].tsx`: checks the stage in the URL.
+- `src/ui/Button.tsx`: `SlimButtons`, the slim header buttons.
+
+**New idea: React context**
+
+`SlimButtons` is a context: a value a parent sets once that every child can read. PageHeader sets it on phones, and every Button inside goes slim. No screen had to change.
+
+**Try it yourself**
+
+In `OrderBoard.tsx`, change `side ? 3 : 2` to `side ? 3 : 1`, then reload Orders on your phone to see one ticket per stage.
+
+---
+
 ## 2026-11-14 · iPhone-style header and motion
 
 **What we built**
