@@ -2406,7 +2406,15 @@
     "showKind": {
       "banner": "Show the banner",
       "popup": "Show the popup"
-    }
+    },
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "noTime": "No time set",
+    "done": "Done",
+    "day": "Day",
+    "time": "Time",
+    "save": "Save notice",
+    "clear": "Clear"
   },
   "notOpen": {
     "title": "Not open yet",

@@ -6,16 +6,18 @@ import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { Field, Section, SectionBody, SwitchRow } from '../../kit';
 import type { NoticeDraft } from '../../desk/noticeForm';
+import { WhenPicker } from './WhenPicker';
 
 export type NoticeKind = 'banner' | 'popup';
 type NoticeField = 'title' | 'text' | 'starts' | 'ends';
 
-/** One notice: show or hide, the words, optional start and end times, and a small preview. */
+/** One notice: show or hide, the words, start and end times picked from a sheet, and a small preview. */
 export function NoticeCard({
   kind,
   draft,
   onDraft,
   error,
+  timeZone,
   inlinePreview = true,
 }: {
   kind: NoticeKind;
@@ -62,22 +64,22 @@ export function NoticeCard({
           />
           <View style={styles.row}>
             <View style={styles.flex}>
-              <Field
+              <WhenPicker
                 label={t('ownerNotice.starts')}
                 value={draft.starts}
-                onChangeText={set('starts')}
-                placeholder="2026-11-04 18:00"
-                autoCapitalize="none"
+                onChange={set('starts')}
+                timeZone={timeZone}
+                defaultTime="18:00"
                 error={error('starts')}
               />
             </View>
             <View style={styles.flex}>
-              <Field
+              <WhenPicker
                 label={t('ownerNotice.ends')}
                 value={draft.ends}
-                onChangeText={set('ends')}
-                placeholder="2026-11-04 23:00"
-                autoCapitalize="none"
+                onChange={set('ends')}
+                timeZone={timeZone}
+                defaultTime="23:00"
                 error={error('ends')}
               />
             </View>
