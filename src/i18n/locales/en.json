@@ -1446,7 +1446,17 @@
       "90": "90 days",
       "365": "1 year",
       "never": "Never"
-    }
+    },
+    "previewCount": "{{count}} of {{total}}",
+    "previewNext_one": "1 more stamp for {{reward}}.",
+    "previewNext_other": "{{count}} more stamps for {{reward}}.",
+    "previewShow": "Show my card",
+    "previewShowSub": "Staff scan it to add a stamp",
+    "previewRewards": "Your rewards",
+    "toGo_one": "1 to go",
+    "toGo_other": "{{count}} to go",
+    "ready": "Ready",
+    "previewNote": "A sample member part-way round your card. Changes show as you make them."
   },
   "ownerBusiness": {
     "business": "Business",
