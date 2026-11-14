@@ -1,13 +1,8 @@
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  type StyleProp,
-  type ViewStyle,
-} from 'react-native';
+import { ActivityIndicator, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import { hapticImpactLight } from '@/lib/haptics';
 import { STATUS_TONES, type StatusTone } from '@/theme/palette';
 import { tokens } from '@/theme/tokens';
+import { PressableScale } from './PressableScale';
 import { Text } from './Text';
 import { useTheme } from './theme';
 
@@ -59,7 +54,7 @@ export function Button({
             : theme.text;
   const labelInk = labelColor ?? ink;
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityHint={accessibilityHint}
@@ -99,7 +94,7 @@ export function Button({
           {label}
         </Text>
       )}
-    </Pressable>
+    </PressableScale>
   );
 }
 

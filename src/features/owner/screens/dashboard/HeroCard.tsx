@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { PressableScale } from '@/ui/PressableScale';
 import { ChevronRight } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
@@ -38,7 +39,7 @@ export function HeroCard({
           {label}
         </Text>
         {onPress ? (
-          <Pressable
+          <PressableScale
             accessibilityRole="link"
             accessibilityLabel={link}
             onPress={onPress}
@@ -51,7 +52,7 @@ export function HeroCard({
               {link}
             </Text>
             <ChevronRight size={14} color={ink} />
-          </Pressable>
+          </PressableScale>
         ) : null}
       </View>
       <Text style={[styles.value, { color: ink }]} numberOfLines={1} adjustsFontSizeToFit>

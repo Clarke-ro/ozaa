@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
+import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import type { Order } from '@/lib/api/types';
 import { STATUS_TONES, type StatusTone } from '@/theme/palette';
@@ -56,7 +57,19 @@ export function OrderBoard({
                 {t(`ownerOrders.empty.${id}`)}
               </Text>
             ) : (
-              list.map((order) => <View key={order.id}>{renderCard(order)}</View>)
+              // A ticket that moves stage fades out of one column and into the next, and the
+              // cards around it slide to close or open the gap instead of jumping (apple-motion §7).
+              // Reanimated skips all three when Reduce Motion is on.
+              list.map((order) => (
+                <Animated.View
+                  key={order.id}
+                  entering={FadeIn.duration(tokens.motion.enter)}
+                  exiting={FadeOut.duration(tokens.motion.exit)}
+                  layout={LinearTransition.duration(tokens.motion.enter)}
+                >
+                  {renderCard(order)}
+                </Animated.View>
+              ))
             )}
           </View>
         );

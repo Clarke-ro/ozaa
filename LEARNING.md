@@ -4,6 +4,46 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-14 · iPhone-style header and motion
+
+**What we built**
+
+The owner app on a phone now moves and responds more like an iPhone app.
+
+- **Header:** the Cravins name and FREE badge are gone from the top bar. The page's big title says where you are. Scroll down and the title moves up into the bar.
+- **Press:** buttons, cards and tabs shrink a little under your finger and spring back.
+- **Switches:** the knob slides and the colour fades. The white pill in Segmented slides to the option you pick.
+- **Sheets:** short forms (Invite someone) rise from the bottom edge, with rounded top corners.
+- **Orders:** a ticket that changes stage fades into its new column, and the other cards slide to make room.
+
+If Reduce Motion is on in the phone's settings, nothing slides or shrinks. Colours still change.
+
+**How it works**
+
+```
+finger down → PressableScale shrinks to 0.97 in 120 ms
+finger up   → it springs back to 1 from wherever it is
+page scroll → OwnerPage tracks scrollY → PhoneBar fades the small title in
+```
+
+All the timings live in `design/tokens.json` under `motion`.
+
+**Files to look at**
+
+- `src/ui/PressableScale.tsx`: the press feedback every button and card uses.
+- `src/features/owner/chrome/PhoneBar.tsx`: the header and its scroll title.
+- `src/features/owner/kit/Toggle.tsx` and `Segmented.tsx`: sliding controls.
+
+**New idea: a shared value**
+
+`useSharedValue` holds a number on the UI thread, which draws the screen. The animation reads it there, so it stays smooth even while JavaScript is busy loading orders.
+
+**Try it yourself**
+
+In `design/tokens.json`, change `pressScale` from 0.97 to 0.9, run `npm run gen:tokens`, and press a button. Then put it back.
+
+---
+
 ## 2026-11-14 · The owner app on a phone
 
 **What we built**

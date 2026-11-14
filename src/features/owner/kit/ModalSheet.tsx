@@ -10,6 +10,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, { Easing, SlideInDown } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
@@ -32,6 +33,8 @@ export interface ModalSheetProps {
 
 // On a tablet or desktop a full-screen form would stretch edge to edge, so it becomes a large centred panel.
 const WIDE = 840;
+// iOS's sheet curve: quick to start, long gentle landing, never an ease-in (emil-animate-expo).
+const SHEET_EASE = Easing.bezier(0.32, 0.72, 0, 1);
 
 export function ModalSheet({
   visible,
@@ -47,8 +50,10 @@ export function ModalSheet({
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  if (!visible) return null;
   const full = fullScreen && width < WIDE;
+  // Phones: a short sheet rises from the bottom edge, in thumb reach, like an iOS sheet. Wider
+  // screens keep the centred panel.
+  const bottom = !full && width < WIDE;
 
   const header = (
     <View
@@ -101,7 +106,8 @@ export function ModalSheet({
             {
               borderTopColor: theme.line,
               backgroundColor: theme.surface,
-              paddingBottom: full ? Math.max(insets.bottom, tokens.space[3]) : tokens.space[3],
+              paddingBottom:
+                full || bottom ? Math.max(insets.bottom, tokens.space[3]) : tokens.space[3],
             },
           ]}
         >
@@ -113,7 +119,12 @@ export function ModalSheet({
 
   if (full) {
     return (
-      <Modal visible animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
+      <Modal
+        visible={visible}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={onClose}
+      >
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           accessibilityViewIsModal
@@ -125,29 +136,40 @@ export function ModalSheet({
     );
   }
 
+  // The Modal stays mounted while closing, so it fades out instead of vanishing in one frame.
   return (
-    <Modal transparent visible animationType="fade" onRequestClose={onClose}>
-      <View style={[styles.backdrop, { backgroundColor: theme.scrim }]}>
+    <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}>
+      <View
+        style={[styles.backdrop, bottom && styles.backdropBottom, { backgroundColor: theme.scrim }]}
+      >
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={t('common.close')}
           style={StyleSheet.absoluteFill}
           onPress={onClose}
         />
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          accessibilityViewIsModal
-          style={[
-            styles.card,
-            {
-              maxWidth: fullScreen ? 720 : maxWidth,
-              backgroundColor: theme.surface,
-              borderColor: theme.line,
-            },
-          ]}
+        <Animated.View
+          // The sheet travels up from the edge it belongs to while the dim fades in (apple-motion
+          // §7, §12). Reanimated skips this when Reduce Motion is on, leaving only the fade.
+          entering={
+            bottom
+              ? SlideInDown.duration(tokens.motion.sheet.duration).easing(SHEET_EASE)
+              : undefined
+          }
+          style={[styles.holder, { maxWidth: bottom ? undefined : fullScreen ? 720 : maxWidth }]}
         >
-          {body}
-        </KeyboardAvoidingView>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            accessibilityViewIsModal
+            style={[
+              styles.card,
+              bottom && styles.cardBottom,
+              { backgroundColor: theme.surface, borderColor: theme.line },
+            ]}
+          >
+            {body}
+          </KeyboardAvoidingView>
+        </Animated.View>
       </View>
     </Modal>
   );
@@ -156,9 +178,13 @@ export function ModalSheet({
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   backdrop: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: tokens.space[4] },
+  backdropBottom: { justifyContent: 'flex-end', padding: 0, paddingTop: tokens.space[12] },
+  holder: { width: '100%', maxHeight: '92%' },
   card: {
     width: '100%',
-    maxHeight: '92%',
+    // Shrinks inside the holder's 92% cap; the ScrollView inside takes up the slack.
+    flexShrink: 1,
+    minHeight: 0,
     borderRadius: tokens.radius.lg,
     borderCurve: 'continuous',
     borderWidth: StyleSheet.hairlineWidth,
@@ -168,6 +194,13 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     shadowOffset: { width: 0, height: 8 },
     elevation: 8,
+  },
+  // iOS sheet corners: 20 px on top, square where it meets the bottom edge.
+  cardBottom: {
+    borderRadius: 0,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderBottomWidth: 0,
   },
   header: {
     flexDirection: 'row',

@@ -1,10 +1,19 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Pressable, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { hapticSelection } from '@/lib/haptics';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { SHADOW_INK } from '@/theme/palette';
 import { useOwnerLayout } from '../chrome/layout';
+
+type Frame = { x: number; width: number };
 
 /** iOS-style segmented control for a few mutually exclusive choices (date ranges, filters). */
 export function Segmented<T extends string>({
@@ -26,17 +35,46 @@ export function Segmented<T extends string>({
   // Phones: a third of a ~300 px track is about 95 px, too short for "As you arrange" on one
   // line, so labels may take two lines there and the side padding tightens.
   const { wide } = useOwnerLayout();
+  const reduce = useReducedMotion();
+  // Where each option sits in the track, measured once laid out, so the white pill can slide
+  // to the picked one instead of jumping (apple-motion §7: it moves along the path you see).
+  const [frames, setFrames] = useState<Record<string, Frame>>({});
+  const picked = frames[value];
+  const x = useSharedValue(0);
+  const w = useSharedValue(0);
+  useEffect(() => {
+    if (!picked) return;
+    // The first placement and Reduce Motion snap; later choices slide.
+    const snap = reduce || w.get() === 0;
+    const go = (to: number) => (snap ? to : withTiming(to, { duration: tokens.motion.toggle }));
+    x.set(go(picked.x));
+    w.set(go(picked.width));
+  }, [picked, reduce, x, w]);
+  const pill = useAnimatedStyle(() => ({ left: x.get(), width: w.get() }));
+  const measure = (id: T) => (e: LayoutChangeEvent) => {
+    const { x: left, width } = e.nativeEvent.layout;
+    setFrames((all) =>
+      all[id]?.x === left && all[id]?.width === width ? all : { ...all, [id]: { x: left, width } },
+    );
+  };
   return (
     <View
       accessibilityRole="radiogroup"
       accessibilityLabel={label}
       style={[styles.track, { backgroundColor: theme.track }]}
     >
+      {picked ? (
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.pill, styles.on, { backgroundColor: theme.surface }, pill]}
+        />
+      ) : null}
       {options.map((option) => {
         const on = option.id === value;
         return (
           <Pressable
             key={option.id}
+            onLayout={measure(option.id)}
             accessibilityRole="radio"
             accessibilityLabel={option.label}
             accessibilityState={{ checked: on }}
@@ -49,7 +87,8 @@ export function Segmented<T extends string>({
               styles.segment,
               !wide && styles.phone,
               equal && styles.equal,
-              on && [styles.on, { backgroundColor: theme.surface }],
+              // Until the track is measured, the picked option draws its own pill.
+              on && !picked && [styles.on, { backgroundColor: theme.surface }],
             ]}
           >
             <Text
@@ -93,6 +132,8 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   equal: { flexBasis: 0 },
+  // The sliding white pill: the same 3 px inset as the track, full height of the options.
+  pill: { position: 'absolute', top: 3, bottom: 3, borderRadius: tokens.radius.full },
   // Still shrinks if the words together are wider than the track; the label then wraps.
   phone: { paddingHorizontal: tokens.space[2], flexShrink: 1, minWidth: 0 },
   on: {

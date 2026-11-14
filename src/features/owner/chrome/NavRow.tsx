@@ -1,8 +1,9 @@
 import { useCallback, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { usePathname, useRouter, type Href } from 'expo-router';
 import { hapticSelection } from '@/lib/haptics';
 import { tokens } from '@/theme/tokens';
+import { PressableScale } from '@/ui/PressableScale';
 import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
 import type { OwnerNavId } from './nav';
@@ -64,7 +65,9 @@ export function NavRow({
   const value = shown ? { text: shown } : undefined;
 
   return (
-    <Pressable
+    <PressableScale
+      // A phone tab gives a little more under the thumb than a card; sidebar rows stay still.
+      scale={compact ? 0.92 : 1}
       accessibilityRole={compact ? 'tab' : 'button'}
       accessibilityLabel={label}
       accessibilityValue={value}
@@ -83,7 +86,6 @@ export function NavRow({
         !compact && (pressed || hovered) && { backgroundColor: theme.wash },
         // The open page sits in a pale orange pill, the one place the sidebar uses the brand colour.
         !compact && current && { backgroundColor: theme.tint },
-        compact && pressed && { opacity: 0.7 },
       ]}
     >
       <View>
@@ -125,7 +127,7 @@ export function NavRow({
           </Text>
         </View>
       ) : null}
-    </Pressable>
+    </PressableScale>
   );
 }
 

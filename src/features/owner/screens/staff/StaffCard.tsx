@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { PressableScale } from '@/ui/PressableScale';
 import { useTranslation } from 'react-i18next';
 import { ChevronRight } from 'lucide-react-native';
 import type { StaffMember } from '@/lib/api/types';
@@ -87,7 +88,7 @@ export function StaffCard({
     ) : null;
 
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityLabel={[name, t(`ownerSettings.roles.${member.role}`), seen]
         .filter(Boolean)
@@ -121,7 +122,7 @@ export function StaffCard({
           ) : null}
         </>
       )}
-    </Pressable>
+    </PressableScale>
   );
 }
 

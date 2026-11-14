@@ -77,6 +77,11 @@ const styles = StyleSheet.create({
   },
   head: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
   words: { flex: 1, gap: tokens.space[1] },
-  title: { fontSize: tokens.owner.pageTitle.size, lineHeight: tokens.owner.pageTitle.line },
+  // Large type reads loose, so it is tracked in a little (apple-motion §15); body text stays at 0.
+  title: {
+    fontSize: tokens.owner.pageTitle.size,
+    lineHeight: tokens.owner.pageTitle.line,
+    letterSpacing: -0.3,
+  },
   side: { flexShrink: 0 },
 });

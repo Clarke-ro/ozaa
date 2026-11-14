@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { PressableScale } from '@/ui/PressableScale';
 import { Minus, TrendingDown, TrendingUp } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
@@ -129,7 +130,7 @@ export function FigureCard({
     );
   }
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityLabel={spoken}
       onPress={onPress}
@@ -142,7 +143,7 @@ export function FigureCard({
       ]}
     >
       {body}
-    </Pressable>
+    </PressableScale>
   );
 }
 
