@@ -11,19 +11,22 @@ export function Segmented<T extends string>({
   value,
   onChange,
   label,
+  equal,
 }: {
   options: readonly { id: T; label: string }[];
   value: T;
   onChange: (id: T) => void;
   /** What the choice is about, read by screen readers. */
   label: string;
+  /** Every option the same width (canvas, on full-width controls). Small controls size to their words. */
+  equal?: boolean;
 }) {
   const theme = useTheme();
   return (
     <View
       accessibilityRole="radiogroup"
       accessibilityLabel={label}
-      style={[styles.track, { backgroundColor: theme.line }]}
+      style={[styles.track, { backgroundColor: theme.track }]}
     >
       {options.map((option) => {
         const on = option.id === value;
@@ -40,7 +43,8 @@ export function Segmented<T extends string>({
             }}
             style={[
               styles.segment,
-              on && [styles.on, { backgroundColor: theme.surface, borderColor: theme.line }],
+              equal && styles.equal,
+              on && [styles.on, { backgroundColor: theme.surface }],
             ]}
           >
             <Text
@@ -62,7 +66,7 @@ export function Segmented<T extends string>({
 }
 
 const styles = StyleSheet.create({
-  // Canvas switch: a rounded grey track, 3 px inset, 34 px white pill on the picked option.
+  // Canvas switch: a warm grey track, 3 px inset, a 38 px white pill on the picked option.
   track: {
     flexDirection: 'row',
     padding: 3,
@@ -71,7 +75,7 @@ const styles = StyleSheet.create({
   segment: {
     // Grow to share a wide track, but never squeeze a label narrower than its text.
     flexGrow: 1,
-    minHeight: 34,
+    minHeight: 38,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: tokens.space[4],
@@ -79,6 +83,7 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: 'transparent',
   },
+  equal: { flexBasis: 0 },
   on: {
     shadowColor: SHADOW_INK,
     shadowOpacity: 0.06,

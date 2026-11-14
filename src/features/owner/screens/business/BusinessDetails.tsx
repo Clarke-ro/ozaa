@@ -123,6 +123,7 @@ export function BusinessDetails({ business, tax }: { business: Business; tax?: R
         <Label>{t('ownerBusiness.priceRange')}</Label>
         {/* No "not set" choice: a business that never picked one simply has none highlighted. */}
         <Segmented
+          equal
           label={t('ownerBusiness.priceRange')}
           value={f.priceRange}
           onChange={(v) => draft.set('priceRange', v)}

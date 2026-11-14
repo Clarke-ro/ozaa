@@ -41,6 +41,7 @@ export function TableCardControls({
   return (
     <View style={styles.controls}>
       <Segmented
+        equal
         label={t('ownerTables.format')}
         value={template}
         onChange={onTemplate}

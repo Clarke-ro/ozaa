@@ -113,6 +113,7 @@ export function ColourSection({
       <View style={styles.block}>
         <FieldLabel>{t('ownerBranding.tint')}</FieldLabel>
         <Segmented<Tint>
+          equal
           label={t('ownerBranding.tint')}
           value={tint}
           onChange={onTint}
