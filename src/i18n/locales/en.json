@@ -342,7 +342,12 @@
     "leaveBody": "Your stamps and rewards at {{venue}} will be erased. You can't undo this.",
     "leaveConfirm": "Delete card",
     "leaveFailed": "That didn't go through and your card is still here. Check the connection and try again.",
-    "pointsCounter": "{{counter}} pts"
+    "pointsCounter": "{{counter}} pts",
+    "introCount": "0 of {{total}}",
+    "introGoal_one": "Collect {{count}} stamp for {{reward}}.",
+    "introGoal_other": "Collect {{count}} stamps for {{reward}}.",
+    "introPoints": "Collect points for {{reward}}.",
+    "introFree": "Free. Just your phone number, no app to install."
   },
   "review": {
     "title": "Leave a review",
