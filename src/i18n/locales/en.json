@@ -788,7 +788,7 @@
     "tent": "Tent card",
     "stand": "Stand",
     "sticker": "Sticker",
-    "colour": "Card colour",
+    "colour": "Colour",
     "printOne": "Print {{name}}",
     "printAll_one": "Print 1 card",
     "printAll_other": "Print all {{count}} tables",
@@ -835,7 +835,39 @@
     "yourMenuLink": "Your menu link",
     "tableCodesTitle": "Table QR codes",
     "menuLinkUse": "For your bio, posters and WhatsApp",
-    "downloadQr": "Download QR"
+    "downloadQr": "Download QR",
+    "style": "Style",
+    "styles": {
+      "folded_tent": "Tent card",
+      "acrylic_stand": "Stand",
+      "sticker": "Sticker"
+    },
+    "notes": {
+      "folded_tent": "Folds in half and stands on the table. Prints on A5 card.",
+      "acrylic_stand": "Slides into an acrylic stand. Prints on A6 card.",
+      "sticker": "Round sticker for the table top. Prints 10 cm wide."
+    },
+    "styleNote": "{{note}} Every table gets its own number and QR code.",
+    "accents": {
+      "orange": "Orange",
+      "venue": "Venue colour",
+      "black": "Black",
+      "red": "Red",
+      "pink": "Pink",
+      "purple": "Purple",
+      "blue": "Blue",
+      "teal": "Teal",
+      "green": "Green",
+      "gold": "Gold",
+      "brown": "Brown",
+      "slate": "Slate"
+    },
+    "pdfAll": "Download all as PDF",
+    "pdfHint": "In the print window, choose Save as PDF.",
+    "scanToOrder": "Scan to order",
+    "allTables": "All tables",
+    "downloadOne": "Download {{name}}",
+    "previewLabel": "Preview of the card style, shown for the first table"
   },
   "ownerFeedback": {
     "lead": "Private notes guests leave from the table. Only you and your managers see them.",

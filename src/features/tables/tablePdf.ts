@@ -7,7 +7,21 @@ export type TableCardSettings = {
   template: TableCardTemplate;
   accentColor: string;
   ctaText: string;
+  /** The short line on stands and stickers, such as "Scan to order". */
+  shortText: string;
+  /** The venue's logo; the card leaves the space out when there is none. */
+  logoUrl?: string | null;
 };
+
+/** The paper each style prints on (canvas notes): tent A5 folded, stand A6, sticker 10 cm round. */
+export const PAGE_SIZE: Record<TableCardTemplate, string> = {
+  folded_tent: 'A5',
+  acrylic_stand: 'A6',
+  sticker: '110mm 110mm',
+};
+
+const FALLBACK = '#D24000';
+const HEX = /^#[0-9A-Fa-f]{6}$/;
 
 // Names come from the owner and are printed as HTML, so escape them before they go in.
 function escapeHtml(text: string): string {
@@ -18,180 +32,84 @@ function escapeHtml(text: string): string {
     .replace(/"/g, '&quot;');
 }
 
+/** One face of a tent card: logo, venue, black table pill, QR, the line under it. */
+function tentFace(
+  venue: string,
+  label: string,
+  qr: string,
+  cta: string,
+  logo: string,
+  accent: string,
+) {
+  return `<div class="tent" style="border-top-color:${accent}">${logo}<div class="venue">${venue}</div><div class="pill">${label}</div><div class="qr">${qr}</div><div class="cta">${cta}</div></div>`;
+}
+
+/**
+ * Print-ready table cards in the canvas styles. A QR code must stay black on white for phone
+ * cameras, so only the accent bar, header or ring takes the colour.
+ */
 export function generateTableCardHtml(
   tables: Table[],
   rawSettings: TableCardSettings,
   rawVenueName: string,
 ): string {
-  const venueName = escapeHtml(rawVenueName);
-  const settings = { ...rawSettings, ctaText: escapeHtml(rawSettings.ctaText) };
-  const cardsHtml = tables
+  const venue = escapeHtml(rawVenueName);
+  const cta = escapeHtml(rawSettings.ctaText);
+  const short = escapeHtml(rawSettings.shortText);
+  // The colour goes into CSS, so only a plain hex code is let through.
+  const accent = HEX.test(rawSettings.accentColor) ? rawSettings.accentColor : FALLBACK;
+  const template = rawSettings.template;
+  const logo = rawSettings.logoUrl
+    ? `<img class="logo" src="${escapeHtml(rawSettings.logoUrl)}" alt="">`
+    : '';
+
+  const cards = tables
     .map((table) => {
-      const qr = table.qrUrl ? qrSvg(table.qrUrl, 200) : '';
+      const qr = table.qrUrl ? qrSvg(table.qrUrl, 220) : '';
       const label = escapeHtml(table.label || `Table ${table.code}`);
-
-      if (settings.template === 'sticker') {
-        return `
-        <div class="card sticker">
-          <div class="header" style="background-color: ${settings.accentColor};">
-            <h1>${venueName}</h1>
-          </div>
-          <div class="qr-box">${qr}</div>
-          <div class="table-badge">${label}</div>
-          <div class="cta">${settings.ctaText}</div>
-        </div>
-        `;
+      if (template === 'sticker') {
+        return `<div class="page"><div class="sticker" style="border-color:${accent}"><div class="kicker">${short}</div><div class="qr">${qr}</div><div class="big">${label}</div><div class="small">${venue}</div></div></div>`;
       }
-
-      if (settings.template === 'acrylic_stand') {
-        return `
-        <div class="card acrylic">
-          <div class="top-brand">
-            <span class="dot" style="background-color: ${settings.accentColor};"></span>
-            <h2>${venueName}</h2>
-          </div>
-          <div class="table-title">${label}</div>
-          <div class="qr-box">${qr}</div>
-          <div class="cta-pill" style="color: ${settings.accentColor}; border-color: ${settings.accentColor};">
-            ${settings.ctaText}
-          </div>
-          <div class="footer-note">No app download required · Scan with camera</div>
-        </div>
-        `;
+      if (template === 'acrylic_stand') {
+        return `<div class="page"><div class="stand"><div class="head" style="background:${accent}"><div class="venue">${venue}</div><div class="big">${label}</div></div><div class="qr">${qr}</div><div class="small">${short}</div></div></div>`;
       }
-
-      // Default: folded_tent (with fold line indicator)
-      return `
-      <div class="tent-card-page">
-        <!-- Back Face (Inverted when folded) -->
-        <div class="card tent-side back">
-          <div class="header-band" style="background-color: ${settings.accentColor};"></div>
-          <div class="brand">${venueName}</div>
-          <div class="table-badge">${label}</div>
-          <div class="qr-box">${qr}</div>
-          <div class="cta">${settings.ctaText}</div>
-        </div>
-
-        <div class="fold-line">
-          <span>✁ FOLD LINE ✁</span>
-        </div>
-
-        <!-- Front Face -->
-        <div class="card tent-side front">
-          <div class="header-band" style="background-color: ${settings.accentColor};"></div>
-          <div class="brand">${venueName}</div>
-          <div class="table-badge">${label}</div>
-          <div class="qr-box">${qr}</div>
-          <div class="cta">${settings.ctaText}</div>
-          <div class="footer-note">Powered by Cravins</div>
-        </div>
-      </div>
-      `;
+      // A tent folds in half, so the top face is printed upside down to read right once folded.
+      const face = tentFace(venue, label, qr, cta, logo, accent);
+      return `<div class="page fold"><div class="flip">${face}</div><div class="line"></div>${face}</div>`;
     })
     .join('\n');
 
-  return `
-<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8" />
-  <title>${venueName} - Table Cards</title>
-  <style>
-    @page {
-      size: A6;
-      margin: 8mm;
-    }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      color: #111111;
-      background: #FFFFFF;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-    }
-    .card {
-      border: 1.5px solid #E4E4E7;
-      border-radius: 12px;
-      padding: 16px;
-      text-align: center;
-      box-sizing: border-box;
-      page-break-after: always;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-    .header-band {
-      width: 100%;
-      height: 8px;
-      border-radius: 4px;
-      margin-bottom: 12px;
-    }
-    .brand {
-      font-size: 18px;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-      margin-bottom: 4px;
-    }
-    .table-badge {
-      display: inline-block;
-      font-size: 24px;
-      font-weight: 800;
-      background: #111111;
-      color: #FFFFFF;
-      padding: 4px 16px;
-      border-radius: 8px;
-      margin: 8px 0;
-    }
-    .qr-box {
-      margin: 12px 0;
-    }
-    .cta {
-      font-size: 14px;
-      font-weight: 600;
-      margin-top: 6px;
-    }
-    .cta-pill {
-      font-size: 13px;
-      font-weight: 700;
-      border: 1.5px solid;
-      padding: 6px 14px;
-      border-radius: 20px;
-      margin-top: 10px;
-    }
-    .footer-note {
-      font-size: 10px;
-      color: #71717A;
-      margin-top: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .fold-line {
-      border-top: 1px dashed #A1A1AA;
-      text-align: center;
-      margin: 20px 0;
-      color: #71717A;
-      font-size: 9px;
-      letter-spacing: 1px;
-    }
-    .tent-card-page {
-      page-break-after: always;
-    }
-    .tent-side {
-      border: 1px solid #E4E4E7;
-      border-radius: 8px;
-      padding: 14px;
-      margin: 6px 0;
-    }
-    .tent-side.back {
-      transform: rotate(180deg);
-    }
-  </style>
+<meta charset="utf-8" />
+<title>${venue} - Table cards</title>
+<style>
+@page { size: ${PAGE_SIZE[template]}; margin: 0; }
+body { margin: 0; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: #111111; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.page { page-break-after: always; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; box-sizing: border-box; padding: 6mm; }
+.fold { justify-content: space-around; }
+.flip { transform: rotate(180deg); }
+.line { width: 100%; border-top: 1px dashed #A1A1AA; }
+.tent { width: 100mm; background: #FFFFFF; border-top: 6px solid; border-radius: 4px; padding: 6mm; display: flex; flex-direction: column; align-items: center; gap: 3mm; text-align: center; }
+.logo { width: 12mm; height: 12mm; object-fit: contain; }
+.venue { font-size: 16pt; font-weight: 600; }
+.pill { font-size: 13pt; font-weight: 600; color: #FFFFFF; background: #111111; padding: 1mm 4mm; border-radius: 4mm; }
+.qr svg { width: 60mm; height: 60mm; display: block; }
+.cta { font-size: 9pt; color: #52525B; }
+.stand { width: 90mm; border: 1px solid #E4E4E7; border-radius: 4mm; overflow: hidden; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.stand .head { align-self: stretch; padding: 5mm 4mm; color: #FFFFFF; }
+.stand .venue { font-size: 13pt; } .stand .big { font-size: 20pt; font-weight: 600; }
+.stand .qr { margin: 5mm 0 3mm; } .stand .qr svg { width: 55mm; height: 55mm; }
+.small { font-size: 8pt; color: #52525B; margin-bottom: 5mm; }
+.sticker { width: 100mm; height: 100mm; box-sizing: border-box; border-radius: 50%; border: 7mm solid; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.5mm; text-align: center; }
+.kicker { font-size: 8pt; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #52525B; }
+.sticker .qr svg { width: 45mm; height: 45mm; }
+.sticker .big { font-size: 15pt; font-weight: 600; } .sticker .small { margin: 0; }
+</style>
 </head>
 <body>
-  ${cardsHtml}
+${cards}
 </body>
-</html>
-  `.trim();
+</html>`;
 }
