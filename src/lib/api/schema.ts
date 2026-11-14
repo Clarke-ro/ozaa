@@ -1279,6 +1279,30 @@ export interface paths {
         delete: operations["ownerRevokeStaff"];
         options?: never;
         head?: never;
+        /**
+         * Change a staff member's role or the tables they look after.
+         * @description Owner only, like the rest of staff. Nobody can be made owner here, and the owner's own role can't be changed (409).
+         */
+        patch: operations["ownerUpdateStaff"];
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/staff/{staffId}/sign-out": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * End someone's shift by signing them out on every device. They sign in again with an SMS code.
+         * @description Owner only. Signing out the owner is refused (409); they use Sign out in Settings.
+         */
+        post: operations["ownerSignOutStaff"];
+        delete?: never;
+        options?: never;
+        head?: never;
         patch?: never;
         trace?: never;
     };
@@ -1386,7 +1410,11 @@ export interface paths {
         get: operations["ownerGetLoyaltyCustomer"];
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Remove a member from this venue's loyalty card (Act 843 erasure on request).
+         * @description Deletes their card, stamps, rewards and consent records at this venue. Paid orders stay for tax, with the member's name and phone removed.
+         */
+        delete: operations["ownerRemoveLoyaltyCustomer"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1591,7 +1619,11 @@ export interface components {
                 callsAnswered: number;
                 /** @description Average time to answer a waiter call. */
                 avgPickupMinutes?: number | null;
+                /** @description Tips on succeeded payments for orders at their tables today. Only succeeded payments count. */
+                tipsPesewas?: components["schemas"]["Pesewas"];
             };
+            /** @description The tables they look after. Empty or missing means every table. */
+            tableCodes?: string[];
         };
         /**
          * @description Video menu is roadmap only and is not in this list.
@@ -1622,6 +1654,12 @@ export interface components {
                 /** Format: date */
                 date: string;
                 closed: boolean;
+                /** @description What the day is, e.g. Christmas Day. Shown to guests. */
+                name?: string;
+                /** @description Only when closed is false. */
+                opens?: string;
+                /** @description Only when closed is false. */
+                closes?: string;
             }[];
         };
         /** @description Output of deriveTheme (design/prototype/theme.js). The app works it out locally for previews; the server value wins. */
@@ -5479,6 +5517,63 @@ export interface operations {
             };
         };
     };
+    ownerUpdateStaff: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+                staffId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    role?: "manager" | "waiter" | "kitchen" | "viewer" | "staff_scanner";
+                    /** @description The tables this person looks after. Empty means every table. */
+                    tableCodes?: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description Saved. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffMember"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    ownerSignOutStaff: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+                staffId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Signed out. onShift is false from now. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
     deleteAccount: {
         parameters: {
             query?: never;
@@ -5694,6 +5789,28 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["LoyaltyCustomerDetail"];
                 };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    ownerRemoveLoyaltyCustomer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+                customerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             404: components["responses"]["NotFound"];
         };
