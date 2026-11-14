@@ -10,6 +10,11 @@ export type OwnerLayout = {
   desktop: boolean;
   /** Left and right page margin. */
   gutter: number;
+  /**
+   * Padding inside a card. Phones use 16 instead of the canvas's 20, so cards feel a little
+   * tighter on a small screen than on the web (Clarke, 2026-11-14).
+   */
+  cardPad: number;
 };
 
 /**
@@ -24,5 +29,11 @@ export function useOwnerLayout(): OwnerLayout {
       : width >= o.tabletFrom
         ? tokens.space[6]
         : tokens.space[4];
-  return { wide: width >= o.wideFrom, desktop: width >= o.desktopFrom, gutter };
+  const wide = width >= o.wideFrom;
+  return {
+    wide,
+    desktop: width >= o.desktopFrom,
+    gutter,
+    cardPad: wide ? o.controls.cardPadding : tokens.space[4],
+  };
 }

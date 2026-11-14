@@ -1,5 +1,5 @@
 import type { Order } from '@/lib/api/types';
-import { boardColumns, filterCounts, inFilter } from './orderBoard';
+import { boardColumns, filterCounts, inFilter, isBoardColumn } from './orderBoard';
 
 const order = (id: string, status: Order['status'], createdAt: string) =>
   ({ id, status, createdAt }) as Pick<Order, 'id' | 'status' | 'createdAt'>;
@@ -34,5 +34,18 @@ describe('order board', () => {
     expect(cols.new.map((o) => o.id)).toEqual(['b', 'a']);
     expect(cols.cooking.map((o) => o.id)).toEqual(['c']);
     expect(cols.ready.map((o) => o.id)).toEqual(['d']);
+  });
+});
+
+describe('isBoardColumn', () => {
+  it('accepts the three kitchen stages from a URL', () => {
+    expect(['new', 'cooking', 'ready'].every(isBoardColumn)).toBe(true);
+  });
+
+  it('turns away anything else', () => {
+    expect(isBoardColumn('served')).toBe(false);
+    expect(isBoardColumn('')).toBe(false);
+    expect(isBoardColumn(undefined)).toBe(false);
+    expect(isBoardColumn(['new'])).toBe(false);
   });
 });

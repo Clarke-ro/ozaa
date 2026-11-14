@@ -9,6 +9,11 @@ export const ORDER_FILTERS: readonly OrderFilter[] = ['open', 'served', 'rejecte
 export type BoardColumn = 'new' | 'cooking' | 'ready';
 export const BOARD_COLUMNS: readonly BoardColumn[] = ['new', 'cooking', 'ready'];
 
+/** A route param is a board column ("new", "cooking", "ready"), or not. */
+export function isBoardColumn(value: unknown): value is BoardColumn {
+  return typeof value === 'string' && (BOARD_COLUMNS as readonly string[]).includes(value);
+}
+
 export function inFilter(status: Order['status'], filter: OrderFilter): boolean {
   if (filter === 'all') return true;
   const tab = orderTab(status);

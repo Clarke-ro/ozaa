@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { PressableScale } from '@/ui/PressableScale';
 import { tokens } from '@/theme/tokens';
 import { useTheme } from '@/ui/theme';
 
@@ -27,7 +28,7 @@ export function DeskCard({
   };
   if (!onPress) return <View style={[styles.card, look, style]}>{children}</View>;
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
@@ -39,7 +40,7 @@ export function DeskCard({
       ]}
     >
       {children}
-    </Pressable>
+    </PressableScale>
   );
 }
 

@@ -45,6 +45,7 @@ export function StatsRow({ dashboard: d }: { dashboard: OwnerDashboard }) {
           note={note}
           link={t('ownerDash.viewSales')}
           onPress={go(hero)}
+          compact={!wide}
         />
       </View>
       <View style={[styles.row, wide && styles.smallWide]}>{small}</View>

@@ -4,6 +4,83 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-14 · A cleaner phone layout and a kitchen board
+
+**What we built**
+
+- **Headers:** page titles start higher. Tabs with nothing to put in the top bar (Orders, Menu) have no bar. The grey line under each title is gone on phones. Header buttons are slimmer, and "add" buttons are a round orange +.
+- **Today:** the location switcher sits at the top beside the bell. The greeting is smaller, and the line under it is gone. The sales card is shorter. The three small cards are taller tiles.
+- **Orders:** one row of chips (Open, Served, Rejected, All). Open shows New, Cooking and Ready, each with its two oldest tickets. Tap a stage's heading to see every ticket in it on its own page.
+- **Cards:** 16 px inside on phones instead of 20. Figure rows (Loyalty, Staff, Customers) fit three small tiles in one row.
+- **Integrations:** the switch sits top right, and the status goes under the name.
+
+**How it works**
+
+```
+Orders (Open) → New ●2  >  → /owner/orders/stage/new → every new ticket
+                Cooking ●2 >
+                Ready ●1   >
+```
+
+`useOrderDesk` loads the orders and wires the buttons. Orders and the stage page both use it, so a ticket behaves the same on both.
+
+**Files to look at**
+
+- `src/features/owner/screens/orders/useOrderDesk.tsx`: the shared order logic.
+- `src/features/owner/screens/orders/OrderBoard.tsx`: the three stages.
+- `src/app/owner/orders/stage/[stage].tsx`: checks the stage in the URL.
+- `src/ui/Button.tsx`: `SlimButtons`, the slim header buttons.
+
+**New idea: React context**
+
+`SlimButtons` is a context: a value a parent sets once that every child can read. PageHeader sets it on phones, and every Button inside goes slim. No screen had to change.
+
+**Try it yourself**
+
+In `OrderBoard.tsx`, change `side ? 3 : 2` to `side ? 3 : 1`, then reload Orders on your phone to see one ticket per stage.
+
+---
+
+## 2026-11-14 · iPhone-style header and motion
+
+**What we built**
+
+The owner app on a phone now moves and responds more like an iPhone app.
+
+- **Header:** the Cravins name and FREE badge are gone from the top bar. The page's big title says where you are. Scroll down and the title moves up into the bar.
+- **Press:** buttons, cards and tabs shrink a little under your finger and spring back.
+- **Switches:** the knob slides and the colour fades. The white pill in Segmented slides to the option you pick.
+- **Sheets:** short forms (Invite someone) rise from the bottom edge, with rounded top corners.
+- **Orders:** a ticket that changes stage fades into its new column, and the other cards slide to make room.
+
+If Reduce Motion is on in the phone's settings, nothing slides or shrinks. Colours still change.
+
+**How it works**
+
+```
+finger down → PressableScale shrinks to 0.97 in 120 ms
+finger up   → it springs back to 1 from wherever it is
+page scroll → OwnerPage tracks scrollY → PhoneBar fades the small title in
+```
+
+All the timings live in `design/tokens.json` under `motion`.
+
+**Files to look at**
+
+- `src/ui/PressableScale.tsx`: the press feedback every button and card uses.
+- `src/features/owner/chrome/PhoneBar.tsx`: the header and its scroll title.
+- `src/features/owner/kit/Toggle.tsx` and `Segmented.tsx`: sliding controls.
+
+**New idea: a shared value**
+
+`useSharedValue` holds a number on the UI thread, which draws the screen. The animation reads it there, so it stays smooth even while JavaScript is busy loading orders.
+
+**Try it yourself**
+
+In `design/tokens.json`, change `pressScale` from 0.97 to 0.9, run `npm run gen:tokens`, and press a button. Then put it back.
+
+---
+
 ## 2026-11-14 · The owner app on a phone
 
 **What we built**

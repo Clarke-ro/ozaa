@@ -1,6 +1,8 @@
+import { useContext } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import { Check, ChevronDown } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
+import { SlimButtons } from '@/ui/Button';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { AnchoredMenu, useAnchoredMenu } from './AnchoredMenu';
@@ -24,6 +26,8 @@ export function PeriodSelect<T extends string>({
   onChange: (next: T) => void;
 }) {
   const theme = useTheme();
+  // Matches the slim header buttons beside it on a phone.
+  const slim = useContext(SlimButtons);
   const { anchor, at, open, close } = useAnchoredMenu();
   const current = options.find((o) => o.id === value)?.label ?? '';
 
@@ -37,6 +41,7 @@ export function PeriodSelect<T extends string>({
         onPress={open}
         style={({ pressed }) => [
           styles.button,
+          slim && styles.slim,
           { borderColor: theme.line, backgroundColor: pressed ? theme.wash : theme.surface },
         ]}
       >
@@ -83,6 +88,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: tokens.radius.full,
   },
+  slim: { minHeight: 40, paddingHorizontal: tokens.space[3], gap: tokens.space[1] },
   label: { fontSize: 15, lineHeight: 20 },
   item: {
     flexDirection: 'row',

@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react-native';
 import { TrendingDown, TrendingUp } from 'lucide-react-native';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { PressableScale } from '@/ui/PressableScale';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
@@ -38,12 +39,7 @@ export function StatTile({
           {label}
         </Text>
         {Icon ? (
-          <View
-            style={[
-              styles.icon,
-              { backgroundColor: alert ? theme.errorTint : theme.wash },
-            ]}
-          >
+          <View style={[styles.icon, { backgroundColor: alert ? theme.errorTint : theme.wash }]}>
             <Icon size={16} color={alert ? theme.error : theme.ink} />
           </View>
         ) : null}
@@ -72,17 +68,14 @@ export function StatTile({
   ];
   if (!onPress) return <View style={look}>{body}</View>;
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityLabel={`${label}: ${value}${note ? `, ${note}` : ''}`}
       onPress={onPress}
-      style={({ pressed }) => [
-        look,
-        pressed && { backgroundColor: theme.wash, transform: [{ scale: 0.99 }] },
-      ]}
+      style={({ pressed }) => [look, pressed && { backgroundColor: theme.wash }]}
     >
       {body}
-    </Pressable>
+    </PressableScale>
   );
 }
 

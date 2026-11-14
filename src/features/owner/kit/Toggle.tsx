@@ -1,9 +1,27 @@
-import { makeStyles } from '@/ui/makeStyles';
-import { Pressable, View } from 'react-native';
-import { useTheme } from '@/ui/theme';
+import { useEffect } from 'react';
+import { Pressable, StyleSheet } from 'react-native';
+import Animated, {
+  interpolateColor,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { hapticImpactLight } from '@/lib/haptics';
+import { tokens } from '@/theme/tokens';
+import { useTheme } from '@/ui/theme';
 
-/** On/off switch drawn to match owner-services.png (orange track, white knob). */
+const WIDTH = 52;
+const KNOB = 24;
+const PAD = 3;
+// How far the knob travels: the track minus the knob and the padding on both sides.
+const TRAVEL = WIDTH - KNOB - PAD * 2;
+
+/**
+ * On/off switch drawn to match owner-services.png (orange track, white knob). The knob slides and
+ * the track colour fades in the same 180 ms as the tap's haptic, so sight and touch agree
+ * (apple-motion §13). With Reduce Motion on, it changes at once.
+ */
 export function Toggle({
   value,
   onChange,
@@ -15,8 +33,23 @@ export function Toggle({
   label: string;
   disabled?: boolean;
 }) {
-  const styles = useStyles();
   const theme = useTheme();
+  const reduce = useReducedMotion();
+  const on = useSharedValue(value ? 1 : 0);
+
+  // Follows `value`, so a switch flipped by a save or a reset also moves, not only a tap.
+  useEffect(() => {
+    const target = value ? 1 : 0;
+    on.set(reduce ? target : withTiming(target, { duration: tokens.motion.toggle }));
+  }, [value, reduce, on]);
+
+  const off = theme.line;
+  const fill = theme.fill;
+  const track = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(on.get(), [0, 1], [off, fill]),
+  }));
+  const knob = useAnimatedStyle(() => ({ transform: [{ translateX: on.get() * TRAVEL }] }));
+
   return (
     <Pressable
       accessibilityRole="switch"
@@ -28,17 +61,22 @@ export function Toggle({
         void hapticImpactLight();
         onChange(!value);
       }}
-      style={[
-        styles.track,
-        { backgroundColor: value ? theme.fill : theme.line, opacity: disabled ? 0.5 : 1 },
-      ]}
+      style={{ opacity: disabled ? 0.5 : 1 }}
     >
-      <View style={[styles.knob, { alignSelf: value ? 'flex-end' : 'flex-start' }]} />
+      <Animated.View style={[styles.track, track]}>
+        <Animated.View style={[styles.knob, { backgroundColor: theme.onFill }, knob]} />
+      </Animated.View>
     </Pressable>
   );
 }
 
-const useStyles = makeStyles((theme) => ({
-  track: { width: 52, height: 30, borderRadius: 15, padding: 3, justifyContent: 'center' },
-  knob: { width: 24, height: 24, borderRadius: 12, backgroundColor: theme.onFill },
-}));
+const styles = StyleSheet.create({
+  track: {
+    width: WIDTH,
+    height: KNOB + PAD * 2,
+    borderRadius: (KNOB + PAD * 2) / 2,
+    padding: PAD,
+    justifyContent: 'center',
+  },
+  knob: { width: KNOB, height: KNOB, borderRadius: KNOB / 2 },
+});

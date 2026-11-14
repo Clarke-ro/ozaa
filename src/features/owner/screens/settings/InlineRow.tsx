@@ -19,7 +19,8 @@ export function InlineRow({
   return (
     <View style={styles.row}>
       <Icon size={18} color={theme.muted} />
-      <Text variant="body" style={styles.label} numberOfLines={1}>
+      {/* Two lines rather than "Stamps on a full …" when the control beside it is wide. */}
+      <Text variant="body" style={styles.label} numberOfLines={2}>
         {label}
       </Text>
       {children}

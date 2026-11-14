@@ -21,7 +21,8 @@ export function OrdersToolbar({
   counts: Record<OrderFilter, number>;
   onFilter: (id: OrderFilter) => void;
   layout: OrderLayout;
-  onLayout: (id: OrderLayout) => void;
+  /** Missing on phones, which always show the board for open orders. */
+  onLayout?: (id: OrderLayout) => void;
 }) {
   const { t } = useTranslation();
   return (
@@ -38,7 +39,7 @@ export function OrdersToolbar({
           }))}
         />
       </View>
-      {filter === 'open' ? (
+      {filter === 'open' && onLayout ? (
         <View style={styles.end}>
           <Segmented<OrderLayout>
             label={t('ownerOrders.view.label')}

@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { PressableScale } from '@/ui/PressableScale';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
@@ -53,14 +54,14 @@ export function StatCard({
     );
   }
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityLabel={spoken}
       onPress={onPress}
       style={({ pressed }) => [look, pressed && { backgroundColor: theme.wash }]}
     >
       {body}
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -74,7 +75,9 @@ const styles = StyleSheet.create({
     gap: c.statGap,
   },
   compact: {
-    minHeight: 0,
+    // Taller than wide on a phone, with the number at the bottom, so the three read as tiles.
+    minHeight: 124,
+    justifyContent: 'space-between',
     paddingVertical: tokens.space[4],
     paddingHorizontal: tokens.space[4],
     gap: tokens.space[2],
@@ -86,6 +89,8 @@ const styles = StyleSheet.create({
     lineHeight: t.hero.line,
     fontFamily: fontFamily.strong,
     fontVariant: ['tabular-nums'],
+    // Big numbers are tracked in a little, as large type is on iOS.
+    letterSpacing: -0.5,
   },
   compactValue: { fontSize: t.figure.size, lineHeight: t.figure.line },
 });

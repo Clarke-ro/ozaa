@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { PressableScale } from '@/ui/PressableScale';
 import { useRouter, type Href } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useOwnerSession } from '@/features/session';
@@ -55,7 +56,7 @@ export function QuickActions() {
               const Icon = NAV_ICONS[id];
               const label = t(`owner.${id}`);
               return (
-                <Pressable
+                <PressableScale
                   key={id}
                   accessibilityRole="button"
                   accessibilityLabel={label}
@@ -74,7 +75,7 @@ export function QuickActions() {
                   >
                     {label}
                   </Text>
-                </Pressable>
+                </PressableScale>
               );
             })}
             {Array.from({ length: across - row.length }, (_, i) => (

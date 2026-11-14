@@ -1872,6 +1872,12 @@
       "list": "List"
     },
     "columnLabel": "{{stage}}, {{count}} orders",
+    "seeStage": "Opens every ticket in this stage",
+    "stageTitle": {
+      "new": "New orders",
+      "cooking": "Cooking",
+      "ready": "Ready to serve"
+    },
     "readyAgo": "ready {{time}}",
     "print": {
       "button": "Print",

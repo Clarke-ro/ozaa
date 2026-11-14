@@ -58,13 +58,10 @@ export function DashboardScreen() {
       title={title}
       subtitle={name ? t('ownerDash.howToday', { venue: name }) : undefined}
       bell
+      compactTitle
+      // Phones: the location sits at the top, in the bar. Wide screens have it in the sidebar.
+      barStart={<LocationSwitcher variant="chip" />}
     >
-      {/* Wide screens have the location at the top of the sidebar. */}
-      {wide ? null : (
-        <View style={styles.location}>
-          <LocationSwitcher variant="chip" />
-        </View>
-      )}
       <DeskWait
         loading={desk.isLoading}
         error={desk.isError}
@@ -77,7 +74,7 @@ export function DashboardScreen() {
         }
       >
         {d ? (
-          <View style={styles.stack}>
+          <View style={wide ? styles.stack : styles.stackPhone}>
             <StatsRow dashboard={d} />
             <NeedsYou />
             <SetupList />
@@ -90,7 +87,7 @@ export function DashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  location: { flexDirection: 'row' },
-  // The canvas puts 56 px between Today's sections.
+  // The canvas puts 56 px between Today's sections; phones use 32 so more fits on one screen.
   stack: { gap: tokens.owner.controls.todayGap },
+  stackPhone: { gap: tokens.space[8] },
 });

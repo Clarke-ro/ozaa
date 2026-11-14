@@ -4,6 +4,8 @@ export { OwnerChrome } from './chrome/OwnerChrome';
 export { DashboardScreen } from './screens/dashboard/DashboardScreen';
 export { FloorScreen } from './screens/FloorScreen';
 export { OrdersScreen } from './screens/orders/OrdersScreen';
+export { OrderStageScreen } from './screens/orders/OrderStageScreen';
+export { isBoardColumn } from './desk/orderBoard';
 export { OrderDetailScreen } from './screens/orders/OrderDetailScreen';
 export { CallsScreen } from './screens/calls/CallsScreen';
 export { CallDetailScreen } from './screens/calls/CallDetailScreen';
