@@ -6,8 +6,8 @@ import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
 
 /**
- * "Still stuck?" with Email us and WhatsApp us. The support address and number come from the
- * build settings, never from the code. Until Clarke sets them, the card says who to ask instead.
+ * "Still stuck?" with Email us and WhatsApp us. The address and number come from the build
+ * settings (src/lib/env.ts); if a build clears both, the card says who to ask instead.
  */
 export function StillStuck() {
   const { t } = useTranslation();

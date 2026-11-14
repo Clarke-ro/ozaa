@@ -10,9 +10,13 @@ const schema = z.object({
   EXPO_PUBLIC_MOCK_FAST: z._default(z.enum(['0', '1']), '0'),
   /** Where guest links point when the app is not running on a web page (native share). */
   EXPO_PUBLIC_SITE_URL: z._default(z.string().check(z.url()), 'https://cravins.app'),
-  /** Help page "Email us" and "WhatsApp us". Empty hides the button. Set by Clarke, not in code. */
-  EXPO_PUBLIC_SUPPORT_EMAIL: z._default(z.string(), ''),
-  EXPO_PUBLIC_SUPPORT_WHATSAPP: z._default(z.string(), ''),
+  /** Help page "Email us" (Clarke, 2026-11-14). Override in the build settings. */
+  EXPO_PUBLIC_SUPPORT_EMAIL: z._default(z.string(), 'support@cravins.app'),
+  /**
+   * Help page "WhatsApp us", digits with the country code. A DEMO number until Clarke has the
+   * real support line: replace it in the build settings before launch.
+   */
+  EXPO_PUBLIC_SUPPORT_WHATSAPP: z._default(z.string(), '233200000000'),
 });
 
 export type Env = z.infer<typeof schema> & { live: string[] };
