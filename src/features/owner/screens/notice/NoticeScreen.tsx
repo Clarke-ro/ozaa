@@ -11,6 +11,8 @@ import { useDraft } from '../../data/useDraft';
 import { useSaveVenue } from '../../data/useSaveVenue';
 import { SaveBar } from '../../kit';
 import { checkNotice, draftOf, type NoticeDraft } from '../../desk/noticeForm';
+import { useOwnerLayout } from '../../chrome/layout';
+import { NoticePreview } from './NoticePreview';
 import { NoticeCard, type NoticeKind } from './NoticeCard';
 
 // Every venue has opening hours with a zone; this is only a safety net while it loads.
@@ -20,6 +22,7 @@ type Drafts = Record<NoticeKind, NoticeDraft>;
 
 /** Store notice: a scrolling banner and a popup on the guest pages, side by side on desktop. */
 export function NoticeScreen() {
+  const { desktop } = useOwnerLayout();
   const { t } = useTranslation();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const venue = useQuery({
@@ -81,18 +84,26 @@ export function NoticeScreen() {
         error={venue.isError}
         onRetry={() => void venue.refetch()}
       >
-        <View style={styles.stack}>
-          {(['banner', 'popup'] as const).map((kind) => (
-            <View key={kind}>
-              <NoticeCard
-                kind={kind}
-                draft={current[kind]}
-                onDraft={(next) => draft.set(kind, next)}
-                timeZone={zone}
-                error={errorFor(kind)}
-              />
+        <View style={[styles.split, desktop && styles.row]}>
+          <View style={[styles.stack, desktop && styles.form]}>
+            {(['banner', 'popup'] as const).map((kind) => (
+              <View key={kind}>
+                <NoticeCard
+                  kind={kind}
+                  draft={current[kind]}
+                  onDraft={(next) => draft.set(kind, next)}
+                  timeZone={zone}
+                  error={errorFor(kind)}
+                  inlinePreview={!desktop}
+                />
+              </View>
+            ))}
+          </View>
+          {desktop && venue.data ? (
+            <View style={styles.aside}>
+              <NoticePreview venue={venue.data} banner={current.banner} popup={current.popup} />
             </View>
-          ))}
+          ) : null}
         </View>
       </DeskWait>
     </OwnerPage>
@@ -100,5 +111,10 @@ export function NoticeScreen() {
 }
 
 const styles = StyleSheet.create({
-  stack: { gap: tokens.space[5] },
+  // Canvas: the two notices on the left, the phone preview (360 px) on the right, 24 px apart.
+  split: { gap: tokens.space[6] },
+  row: { flexDirection: 'row', alignItems: 'flex-start' },
+  form: { flex: 1, minWidth: 0 },
+  aside: { width: 360 },
+  stack: { gap: tokens.space[8] },
 });

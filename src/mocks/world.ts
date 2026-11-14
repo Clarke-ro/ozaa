@@ -20,6 +20,7 @@ import wifiFile from './fixtures/wifi.json';
 import { DEMO_LOYALTY_PHONES, STAFF } from './demo';
 import { seedHistory } from './seedHistory';
 import { seedMembers } from './seedMembers';
+import { seedPromos } from './seedPromos';
 import { kitchenQueue } from './kitchenQueue';
 import type { LiveOrder, World } from './worldTypes';
 import { seedOwnerDesk } from './seedOwnerDesk';
@@ -223,5 +224,6 @@ export function createWorld(now: number): World {
   seedOwnerDesk(world, now);
   seedHistory(world, now);
   seedMembers(world);
+  seedPromos(world, now);
   return world;
 }

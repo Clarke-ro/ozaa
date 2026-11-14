@@ -16,8 +16,11 @@ export function NoticeCard({
   draft,
   onDraft,
   error,
+  inlinePreview = true,
 }: {
   kind: NoticeKind;
+  /** False when the phone preview sits beside the cards (desktop). */
+  inlinePreview?: boolean;
   draft: NoticeDraft;
   onDraft: (draft: NoticeDraft) => void;
   timeZone: string;
@@ -31,7 +34,7 @@ export function NoticeCard({
     <Section title={t(`ownerNotice.${kind}.title`)}>
       <SwitchRow
         icon={Icon}
-        label={t('ownerNotice.show')}
+        label={t(`ownerNotice.showKind.${kind}`)}
         value={draft.enabled}
         onChange={(enabled) => onDraft({ ...draft, enabled })}
       />
@@ -79,7 +82,7 @@ export function NoticeCard({
               />
             </View>
           </View>
-          {draft.text.trim() ? (
+          {inlinePreview && draft.text.trim() ? (
             <View
               accessibilityLabel={t('ownerNotice.preview')}
               style={[

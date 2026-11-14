@@ -35,7 +35,7 @@ test('a running promo comes off the bill the server works out, and counts its us
 test('switched off, it stops applying; a wrong code is refused', async () => {
   const { api } = await signedInMock();
   const { id } = await api.getVenue('mamas-kitchen');
-  const promo = await api.ownerCreatePromo(id, { ...happyHour, code: 'FRIDAY10' });
+  const promo = await api.ownerCreatePromo(id, { ...happyHour, code: 'TESTCODE10' });
   const dish = (await api.getMenu('mamas-kitchen')).items[0]!;
   const place = (promoCode: string | undefined, key: string) =>
     api.ownerCreateOrder(
@@ -48,9 +48,9 @@ test('switched off, it stops applying; a wrong code is refused', async () => {
       { idempotencyKey: key },
     );
   await expect(place('NOPE', 'k1')).rejects.toMatchObject({ code: 'promo_not_valid' });
-  expect((await place('FRIDAY10', 'k2')).promoDiscounts).toHaveLength(1);
+  expect((await place('TESTCODE10', 'k2')).promoDiscounts).toHaveLength(1);
   await api.ownerUpdatePromo(id, promo.id, { enabled: false });
-  await expect(place('FRIDAY10', 'k3')).rejects.toMatchObject({ code: 'promo_not_valid' });
+  await expect(place('TESTCODE10', 'k3')).rejects.toMatchObject({ code: 'promo_not_valid' });
   expect((await api.ownerListPromos(id)).items[0]?.state).toBe('off');
 });
 

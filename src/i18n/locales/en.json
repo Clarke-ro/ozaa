@@ -2252,7 +2252,7 @@
     "placeholderLong": "Prices are placeholders until launch. Card payments to your venue go straight to your own Paystack account; Cravins never holds them."
   },
   "ownerNotice": {
-    "lead": "A short message on your guest pages, such as a closing time or tonight’s offer.",
+    "lead": "A short message on your guest pages, like a closing time or tonight’s offer",
     "banner": {
       "title": "Scrolling banner",
       "note": "Runs across the top of your home and menu pages.",
@@ -2279,6 +2279,14 @@
       "text": "Type a message of up to 280 characters, or switch this off.",
       "starts": "Type the start like 2026-11-04 18:00, or leave it empty.",
       "ends": "Type the end like 2026-11-04 23:00, after the start, or leave it empty."
+    },
+    "guestsSee": "What guests see",
+    "atYourTable": "At your table",
+    "ok": "OK",
+    "previewNote": "The banner scrolls across the top of every guest page. The popup shows once per visit.",
+    "showKind": {
+      "banner": "Show the banner",
+      "popup": "Show the popup"
     }
   },
   "notOpen": {
