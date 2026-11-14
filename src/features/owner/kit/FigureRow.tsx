@@ -9,7 +9,8 @@ export type Figure = { label: string; value: string };
 
 /**
  * A row of white figure cards from the design canvas (Staff, Loyalty): the label in grey on top,
- * the number under it, at least 128 px tall. Phones show them two by two.
+ * the number under it, at least 128 px tall. Phones show them two by two; an odd last card
+ * takes the full width.
  */
 export function FigureRow({
   items,
@@ -24,7 +25,7 @@ export function FigureRow({
 }) {
   const theme = useTheme();
   return (
-    <CardGrid columns={wide ? items.length : 2} gap={tokens.owner.controls.listGap}>
+    <CardGrid columns={wide ? items.length : 2} gap={tokens.owner.controls.listGap} stretchLast>
       {items.map((item) => (
         <View
           key={item.label}

@@ -86,6 +86,7 @@ const styles = StyleSheet.create({
   words: { flexGrow: 1, flexShrink: 1, flexBasis: 220, minWidth: 0, gap: 4 },
   url: { fontSize: 17, lineHeight: 22, fontFamily: fontFamily.strong },
   hint: { fontSize: 14, lineHeight: 20 },
-  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.space[2] },
+  // maxWidth keeps the buttons inside the card on a phone, where they wrap onto a second line.
+  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.space[2], maxWidth: '100%' },
   short: { minHeight: 44 },
 });

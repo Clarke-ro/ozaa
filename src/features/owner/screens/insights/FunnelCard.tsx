@@ -62,8 +62,11 @@ export function FunnelCard({ report: r, wide }: { report: InsightsReport; wide: 
           ]}
         >
           <Info size={20} color={theme.ink} />
-          <Text style={styles.tipText}>{t('ownerInsights.dropTip', { count: dropped })}</Text>
-          <Text style={styles.link}>{t('ownerInsights.improveMenu')}</Text>
+          {/* Phones stack the link under the sentence, so the sentence keeps the full width. */}
+          <View style={[styles.tipWords, !wide && styles.tipStack]}>
+            <Text style={styles.tipText}>{t('ownerInsights.dropTip', { count: dropped })}</Text>
+            <Text style={styles.link}>{t('ownerInsights.improveMenu')}</Text>
+          </View>
           <ChevronRight size={18} color={theme.text} />
         </Pressable>
       ) : null}
@@ -94,6 +97,8 @@ const styles = StyleSheet.create({
     paddingLeft: tokens.owner.controls.cardPadding,
     paddingRight: tokens.space[4],
   },
-  tipText: { flex: 1, fontSize: 15, lineHeight: 22 },
+  tipWords: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  tipStack: { flexDirection: 'column', alignItems: 'flex-start', gap: 4, paddingVertical: 14 },
+  tipText: { flexGrow: 1, flexShrink: 1, fontSize: 15, lineHeight: 22 },
   link: { fontSize: 15, lineHeight: 20, fontFamily: fontFamily.strong },
 });

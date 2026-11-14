@@ -31,7 +31,9 @@ export function StatsRow({ dashboard: d }: { dashboard: OwnerDashboard }) {
 
   const small = cards.map((f) => {
     const text = figureText(f, d.currency, t);
-    return <StatCard key={f.key} label={text.label} value={text.value} onPress={go(f)} />;
+    return (
+      <StatCard key={f.key} label={text.label} value={text.value} onPress={go(f)} compact={!wide} />
+    );
   });
 
   return (

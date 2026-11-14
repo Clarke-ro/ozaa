@@ -4,6 +4,49 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-14 · The owner app on a phone
+
+**What we built**
+
+The canvas redesign was checked at 1440 px wide. This pass checks every owner page at 360 and 375 px, the width of most Android phones in Ghana, and fixes what broke there. Desktop and tablet look the same as before.
+
+- **Today:** the three small figure cards are shorter, with a smaller number.
+- **Figure cards (Staff, Customers, Loyalty, Billing):** an odd last card fills the row instead of leaving a gap.
+- **Sales:** order value gets its own row, so "GH₵39,280" is never cut off. Long amounts in the half-width cards step down in size.
+- **Switches (Branding and others):** a long option like "As you arrange" wraps onto two lines instead of becoming "As you …".
+- **Floor:** the bill drops under "Table 12" instead of cutting it to "Tabl…".
+- **Business, Scanner devices, Staff:** buttons and times move under the name, so the name shows.
+- **QR codes and links:** the three buttons wrap inside the card.
+- **Insights:** "Improve menu" sits under its sentence.
+
+**How it works**
+
+```
+useOwnerLayout()  →  wide?  (840 px and up: sidebar)
+        │
+        ├─ yes → the canvas layout, unchanged
+        └─ no  → the phone layout for that card
+```
+
+Each card asks the same hook, so every screen switches at the same width.
+
+**Files to look at**
+
+- `src/features/owner/chrome/layout.ts`: the one place the widths live.
+- `src/features/owner/kit/CardGrid.tsx`: `stretchLast` for the odd last card.
+- `src/features/owner/kit/Segmented.tsx`: two-line labels on phones.
+- `src/features/owner/screens/staff/StaffCard.tsx`: one card, two layouts.
+
+**New idea: flex-wrap**
+
+A row with `flexWrap: 'wrap'` puts items side by side while they fit, then starts a new line. On FloorCard, the name and the bill share a line on a tablet. On a phone they don't fit, so the bill moves down. You don't need an `if` for that.
+
+**Try it yourself**
+
+Open `/owner/floor` in the browser and drag the window narrower. Watch the bill jump under the table name once the card gets too thin.
+
+---
+
 ## 2026-11-14 · Every canvas board, full height
 
 **What we built**

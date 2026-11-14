@@ -21,7 +21,7 @@ function average(r: SalesReport): number {
 /**
  * Sales' five figure cards in one row (design canvas): order value, orders, average order,
  * discounts and refunds. The first three carry the change against the period before, the last
- * two a short note. Phones show them two by two.
+ * two a short note. Phones show order value on its own row, then the rest two by two.
  */
 export function SalesFigures({
   report: r,
@@ -54,7 +54,7 @@ export function SalesFigures({
     orders: trend(r.orderCount, previous?.orderCount),
     average: previous ? trend(average(r), average(previous)) : null,
   };
-  const card = (key: Key) => (
+  const card = (key: Key, narrow?: boolean) => (
     <FigureCard
       key={key}
       order="labelFirst"
@@ -63,6 +63,7 @@ export function SalesFigures({
       trend={trends[key]}
       note={trends[key] ? undefined : t(`ownerSales.notes.${key}`)}
       compact
+      narrow={narrow}
     />
   );
 
@@ -78,10 +79,21 @@ export function SalesFigures({
       </View>
     );
   }
-  return <CardGrid columns={2}>{KEYS.map(card)}</CardGrid>;
+  // Phones: order value, the biggest amount, gets the whole width so it is never cut off; the
+  // other four sit two by two under it.
+  const [first, ...rest] = KEYS;
+  return (
+    <View style={styles.stack}>
+      {first ? card(first) : null}
+      <CardGrid columns={2} gap={tokens.owner.controls.listGap}>
+        {rest.map((key) => card(key, true))}
+      </CardGrid>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: tokens.owner.controls.listGap },
   cell: { flexBasis: 0, minWidth: 0, flexDirection: 'row' },
+  stack: { gap: tokens.owner.controls.listGap },
 });

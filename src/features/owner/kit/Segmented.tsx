@@ -4,6 +4,7 @@ import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { SHADOW_INK } from '@/theme/palette';
+import { useOwnerLayout } from '../chrome/layout';
 
 /** iOS-style segmented control for a few mutually exclusive choices (date ranges, filters). */
 export function Segmented<T extends string>({
@@ -22,6 +23,9 @@ export function Segmented<T extends string>({
   equal?: boolean;
 }) {
   const theme = useTheme();
+  // Phones: a third of a ~300 px track is about 95 px, too short for "As you arrange" on one
+  // line, so labels may take two lines there and the side padding tightens.
+  const { wide } = useOwnerLayout();
   return (
     <View
       accessibilityRole="radiogroup"
@@ -43,15 +47,18 @@ export function Segmented<T extends string>({
             }}
             style={[
               styles.segment,
+              !wide && styles.phone,
               equal && styles.equal,
               on && [styles.on, { backgroundColor: theme.surface }],
             ]}
           >
             <Text
-              numberOfLines={1}
+              // Phones: a long label wraps to two centred lines instead of losing its end.
+              numberOfLines={wide ? 1 : 2}
               style={{
                 fontSize: 14,
                 lineHeight: 20,
+                textAlign: 'center',
                 color: on ? theme.text : theme.muted,
                 fontFamily: on ? 'Inter_600' : 'Inter_400',
               }}
@@ -67,10 +74,12 @@ export function Segmented<T extends string>({
 
 const styles = StyleSheet.create({
   // Canvas switch: a warm grey track, 3 px inset, a 38 px white pill on the picked option.
+  // A two-line phone label makes the track taller; a fixed 22 px radius (half the one-line
+  // height) keeps the same corners instead of turning into a long oval.
   track: {
     flexDirection: 'row',
     padding: 3,
-    borderRadius: tokens.radius.full,
+    borderRadius: 22,
   },
   segment: {
     // Grow to share a wide track, but never squeeze a label narrower than its text.
@@ -84,6 +93,8 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   equal: { flexBasis: 0 },
+  // Still shrinks if the words together are wider than the track; the label then wraps.
+  phone: { paddingHorizontal: tokens.space[2], flexShrink: 1, minWidth: 0 },
   on: {
     shadowColor: SHADOW_INK,
     shadowOpacity: 0.06,

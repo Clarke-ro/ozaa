@@ -12,11 +12,17 @@ export function StatCard({
   label,
   value,
   onPress,
+  compact,
 }: {
   label: string;
   value: string;
   /** Missing when this person may not open the page behind the number. */
   onPress?: () => void;
+  /**
+   * Phones: three cards share about 340 px, so the canvas's 192 px height and 38 px number
+   * leave a tall empty card. Compact keeps the same look at phone size.
+   */
+  compact?: boolean;
 }) {
   const theme = useTheme();
   const body = (
@@ -27,16 +33,21 @@ export function StatCard({
           {label}
         </Text>
       </View>
-      <Text style={styles.value} numberOfLines={1} adjustsFontSizeToFit>
+      <Text
+        style={[styles.value, compact && styles.compactValue]}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+      >
         {value}
       </Text>
     </>
   );
   const spoken = `${label} ${value}`;
+  const look = [cardStyle(theme), styles.card, compact && styles.compact];
 
   if (!onPress) {
     return (
-      <View style={[cardStyle(theme), styles.card]} accessible accessibilityLabel={spoken}>
+      <View style={look} accessible accessibilityLabel={spoken}>
         {body}
       </View>
     );
@@ -46,11 +57,7 @@ export function StatCard({
       accessibilityRole="button"
       accessibilityLabel={spoken}
       onPress={onPress}
-      style={({ pressed }) => [
-        cardStyle(theme),
-        styles.card,
-        pressed && { backgroundColor: theme.wash },
-      ]}
+      style={({ pressed }) => [look, pressed && { backgroundColor: theme.wash }]}
     >
       {body}
     </Pressable>
@@ -66,6 +73,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: c.cardPadding,
     gap: c.statGap,
   },
+  compact: {
+    minHeight: 0,
+    paddingVertical: tokens.space[4],
+    paddingHorizontal: tokens.space[4],
+    gap: tokens.space[2],
+  },
   top: { minHeight: 30, justifyContent: 'center' },
   label: { fontSize: t.body.size, lineHeight: 20, fontFamily: fontFamily.strong },
   value: {
@@ -74,4 +87,5 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.strong,
     fontVariant: ['tabular-nums'],
   },
+  compactValue: { fontSize: t.figure.size, lineHeight: t.figure.line },
 });
