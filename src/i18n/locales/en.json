@@ -1214,7 +1214,9 @@
     "email": "Email",
     "emailHint": "hello@…",
     "website": "Website",
-    "websiteHint": "mamas.kitchen"
+    "websiteHint": "mamas.kitchen",
+    "footnote": "Filled-in links show as icons under \"Follow us\" on your guest page. Empty ones stay hidden.",
+    "save": "Save links"
   },
   "ownerSettings": {
     "profile": "Your profile",
@@ -1545,7 +1547,7 @@
     "locationPhone": "Phone"
   },
   "ownerServices": {
-    "wifi": "Wi-Fi",
+    "wifi": "Wi-Fi for guests",
     "wifiNote": "Guests see a button to join with one tap.",
     "network": "Network name",
     "networkMissing": "Add the network name.",
@@ -2428,7 +2430,7 @@
     "perKm": "Fee per km ({{currency}})",
     "maxKm": "Furthest (km)",
     "freeOver": "Free from ({{currency}})",
-    "freeOverHint": "Optional. Empty means never free.",
+    "freeOverHint": "Leave empty to always charge",
     "example": "Example: {{km}} km away with {{food}} of food, delivery is {{fee}}.",
     "free": "free",
     "noPin": "Delivery fees use the distance from your venue. Stand in your venue and tap the button to set its place on the map.",
@@ -2444,7 +2446,18 @@
     "setPin": "Use my current location",
     "movePin": "Update the venue location",
     "mainHint": "Guests order from your menu link for pickup or delivery",
-    "footnote": "Online orders arrive on Orders with a Pickup or Delivery tag. Guests leave a name and phone on the order only."
+    "footnote": "Online orders arrive on Orders with a Pickup or Delivery tag. Guests leave a name and phone on the order only.",
+    "readyIn": "Ready in",
+    "readyInHint": "How long guests wait before collecting",
+    "min": "min",
+    "km": "km",
+    "fee": "Delivery fee",
+    "feeHint": "The least a delivery costs",
+    "perKmShort": "Extra per km",
+    "perKmHint": "Leave at 0 for one flat fee",
+    "freeOverShort": "Free delivery over",
+    "upTo": "Deliver up to",
+    "from": "From {{place}}"
   },
   "linkOrder": {
     "title": "How do you want it?",
