@@ -7,10 +7,8 @@ import { SearchX } from 'lucide-react-native';
 import { api } from '@/lib/api';
 import type { Order } from '@/lib/api/types';
 import { useOwnerSession } from '@/features/session';
-import { DEFAULT_CURRENCY, formatMoney } from '@/lib/money';
-import { pesewas } from '@/lib/brand';
+import { DEFAULT_CURRENCY } from '@/lib/money';
 import { timeAgo } from '@/lib/time';
-import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
@@ -20,7 +18,6 @@ import {
   cardStyle,
   ConfirmDialog,
   EmptyCard,
-  StatusPill,
   TitledSection,
   toast,
   ToneTag,
@@ -30,9 +27,10 @@ import { SectionHead } from '../dashboard/SectionHead';
 import { MarkPaidSheet } from './MarkPaidSheet';
 import { OrderBill } from './OrderBill';
 import { OrderContact } from './OrderContact';
-import { orderPlace, PAID_TONE, paidLabel } from './orderPlace';
-import { amountDue, orderSteps } from './orderSteps';
+import { orderPlace, paidLabel } from './orderPlace';
+import { orderSteps } from './orderSteps';
 import { StepRows } from './StepRows';
+import { OrderPayment } from './OrderPayment';
 import { useOrderMove } from './useOrderMove';
 import { useVenuePay } from './useVenuePay';
 import { POLL_MS } from '@/lib/polling';
@@ -148,36 +146,12 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
             <TitledSection title={t('ownerOrders.detail.total')} cardStyle={styles.cardPad}>
               <OrderBill order={order} currency={currency} part="sums" />
             </TitledSection>
-            <TitledSection title={t('ownerOrders.detail.payment')} cardStyle={styles.card}>
-              <View style={styles.row}>
-                <View style={styles.flex}>
-                  <Text variant="body">
-                    {order.paymentMethod
-                      ? t(`ownerOrders.method.${order.paymentMethod}`)
-                      : paidLabel(order, t)}
-                  </Text>
-                  {order.paymentStatus !== 'paid' &&
-                  amountDue(order) > 0 &&
-                  order.status !== 'cancelled' ? (
-                    <Text variant="caption" style={{ color: theme.muted }}>
-                      {t('ownerOrders.detail.stillToPay', {
-                        amount: formatMoney(pesewas(amountDue(order)), currency),
-                      })}
-                    </Text>
-                  ) : null}
-                </View>
-                {canMarkPaid ? (
-                  <Button
-                    label={t('ownerOrders.markPaid.open')}
-                    tone="secondary"
-                    onPress={() => setPaying(true)}
-                    style={styles.short}
-                  />
-                ) : (
-                  <StatusPill label={paidLabel(order, t)} tone={PAID_TONE[order.paymentStatus]} />
-                )}
-              </View>
-            </TitledSection>
+            <OrderPayment
+              order={order}
+              currency={currency}
+              canMarkPaid={canMarkPaid}
+              onMarkPaid={() => setPaying(true)}
+            />
             {order.contact ? (
               <TitledSection title={t('ownerOrders.detail.about')} cardStyle={styles.cardPad}>
                 <OrderContact order={order} />
