@@ -2013,8 +2013,9 @@
     "pairTitle": "Pair a device",
     "step1": "Open the Cravins app on the scanner phone",
     "step2": "Tap Pair with a venue",
-    "step3": "Get a pairing code here and enter it. It works once.",
-    "footnote": "Scanner devices can only scan loyalty cards and add stamps. They can’t see sales or change settings."
+    "step3": "Scan this code, or type the numbers in. It works once.",
+    "footnote": "Scanner devices can only scan loyalty cards and add stamps. They can’t see sales or change settings.",
+    "defaultName": "Scanner device {{n}}"
   },
   "ownerSetup": {
     "progress": "Step {{step}} of {{total}}",
