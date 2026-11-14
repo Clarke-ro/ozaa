@@ -12,7 +12,16 @@ import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
 import { useDraft } from '../../data/useDraft';
 import { useSaveVenue } from '../../data/useSaveVenue';
-import { InfoRow, SaveBar, Section, SectionBody, Stepper, SwitchRow, toast } from '../../kit';
+import {
+  InfoRow,
+  StatusPill,
+  SaveBar,
+  Section,
+  SectionBody,
+  Stepper,
+  SwitchRow,
+  toast,
+} from '../../kit';
 import { WifiSection } from './WifiSection';
 
 type Toggle = ServiceSettings['services'][number];
@@ -21,7 +30,7 @@ const SECTIONS: Toggle['section'][] = ['table', 'rewards', 'fun', 'more'];
 /** What guests can do from the table (each switch saves at once), and the venue Wi-Fi. */
 export function ServicesScreen() {
   const { t } = useTranslation();
-    const client = useQueryClient();
+  const client = useQueryClient();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const key = ownerKeys.services(venueId);
   const services = useQuery({
@@ -72,7 +81,8 @@ export function ServicesScreen() {
 
   return (
     <OwnerPage
-      title={t('owner.services')} subtitle={t('ownerLead.services')}
+      title={t('owner.services')}
+      subtitle={t('ownerLead.services')}
       footer={
         <SaveBar
           visible={draft.dirty}
@@ -104,7 +114,14 @@ export function ServicesScreen() {
                         <InfoRow
                           key={item.id}
                           label={t(`services.${item.id}.title`)}
-                          value={t('ownerServices.later')}
+                          trailing={
+                            <StatusPill
+                              label={t('ownerServices.laterShort')}
+                              tone="neutral"
+                              boxed
+                              icon={false}
+                            />
+                          }
                         />
                       ) : (
                         <SwitchRow

@@ -1,16 +1,18 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Smartphone, Tablet, Trash2 } from 'lucide-react-native';
+import { Smartphone, Tablet } from 'lucide-react-native';
 import type { ScannerDevice } from '@/lib/api/types';
 import { timeAgo } from '@/lib/time';
 import { tokens } from '@/theme/tokens';
+import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
+import { fontFamily, useTheme } from '@/ui/theme';
+import { cardStyle } from '../../kit';
 
-// Seen in the last few minutes counts as in use right now.
-const ACTIVE_MS = 5 * 60_000;
-
-/** One paired scanner: what it is, when it was paired and last used, and a clear Remove. */
+/**
+ * One paired phone or tablet as a row (design canvas): a plain icon, its name, its model and that
+ * it can only scan, when it was last used, and a red-edged Remove.
+ */
 export function DeviceCard({
   device,
   now,
@@ -21,97 +23,46 @@ export function DeviceCard({
   onRemove: () => void;
 }) {
   const theme = useTheme();
-  const { t, i18n } = useTranslation();
-  const active = now - Date.parse(device.lastSeen) < ACTIVE_MS;
-  // Tablets scan from the counter; phones from the floor. The name is the owner's own label.
+  const { t } = useTranslation();
   const tablet = /ipad|tab/i.test(`${device.name} ${device.platform ?? ''}`);
   const Icon = tablet ? Tablet : Smartphone;
-  const paired = new Date(device.pairedAt).toLocaleDateString(i18n.language, {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
-
   return (
-    <View style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.line }]}>
-      <View style={styles.head}>
-        <View style={styles.icon}>
-          <Icon size={22} color={theme.ink} />
-        </View>
-        <View style={styles.flex}>
-          <Text variant="body-strong" numberOfLines={2}>
-            {device.name}
-          </Text>
-          <Text variant="caption" numberOfLines={1} style={{ color: theme.muted }}>
-            {[device.platform, t('ownerDevices.paired', { date: paired })]
-              .filter(Boolean)
-              .join(' · ')}
-          </Text>
-        </View>
+    <View style={[cardStyle(theme), styles.row]}>
+      <Icon size={20} color={theme.text} />
+      <View style={styles.words}>
+        <Text style={styles.name} numberOfLines={1}>
+          {device.name}
+        </Text>
+        <Text style={[styles.sub, { color: theme.meta }]} numberOfLines={1}>
+          {[device.platform, t('ownerDevices.scanOnly')].filter(Boolean).join(' · ')}
+        </Text>
       </View>
-      <View style={[styles.foot, { borderColor: theme.line }]}>
-        <View style={styles.seen}>
-          <View style={[styles.dot, { backgroundColor: active ? theme.success : theme.meta }]} />
-          <Text variant="caption" style={{ color: active ? theme.success : theme.muted }}>
-            {active
-              ? t('ownerDevices.activeNow')
-              : t('ownerDevices.lastSeen', { when: timeAgo(device.lastSeen, now, t) })}
-          </Text>
-        </View>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t('ownerDevices.removeTitle', { name: device.name })}
-          onPress={onRemove}
-          style={({ pressed }) => [
-            styles.remove,
-            { backgroundColor: pressed ? theme.errorTint : undefined },
-          ]}
-        >
-          <Trash2 size={16} color={theme.error} />
-          <Text variant="body-strong" style={{ color: theme.error }}>
-            {t('ownerDevices.remove')}
-          </Text>
-        </Pressable>
-      </View>
+      <Text style={[styles.sub, { color: theme.meta }]}>
+        {t('ownerDevices.used', { when: timeAgo(device.lastSeen, now, t) })}
+      </Text>
+      <Button
+        label={t('ownerDevices.remove')}
+        tone="secondary"
+        labelColor={theme.error}
+        onPress={onRemove}
+        style={[styles.remove, { borderColor: theme.errorTint }]}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    gap: tokens.space[3],
-    paddingTop: tokens.space[4],
-    paddingHorizontal: tokens.space[4],
-    paddingBottom: tokens.space[1],
-    boxShadow: tokens.shadow.card,
-    borderRadius: tokens.radius.lg,
-    borderCurve: 'continuous',
-  },
-  head: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
-  icon: {
-    width: 44,
-    height: 44,
-    borderRadius: tokens.radius.md,
-    borderCurve: 'continuous',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  flex: { flex: 1, gap: 2 },
-  foot: {
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    borderTopWidth: StyleSheet.hairlineWidth,
-    paddingTop: tokens.space[1],
+    gap: tokens.space[4],
+    minHeight: 64,
+    paddingVertical: 10,
+    paddingLeft: tokens.owner.controls.cardPadding,
+    paddingRight: tokens.space[2],
   },
-  seen: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
-  dot: { width: 8, height: 8, borderRadius: 4 },
-  remove: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[2],
-    minHeight: tokens.touchTarget,
-    paddingHorizontal: tokens.space[3],
-    borderRadius: tokens.radius.md,
-  },
+  words: { flex: 1, minWidth: 0, gap: 2 },
+  name: { fontSize: 16, lineHeight: 22, fontFamily: fontFamily.strong },
+  sub: { fontSize: 14, lineHeight: 20 },
+  remove: { minHeight: 40 },
 });

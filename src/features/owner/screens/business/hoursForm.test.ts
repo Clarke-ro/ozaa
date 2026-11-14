@@ -1,4 +1,4 @@
-import { daysFrom, weeklyFrom } from './hoursForm';
+import { addClosedDay, daysFrom, hoursOn, isDate, weeklyFrom } from './hoursForm';
 
 test('a day with no slots is closed; one slot is kept', () => {
   const days = daysFrom({
@@ -17,4 +17,31 @@ test('saving checks open days only and names the first bad one', () => {
   const result = weeklyFrom(days);
   expect(result.ok && result.weekly[2]).toEqual([{ opens: '09:00', closes: '22:00' }]);
   expect(result.ok && result.weekly[0]).toEqual([]);
+});
+
+describe('closed days', () => {
+  it('rejects dates that are not on the calendar', () => {
+    expect(isDate('2026-02-30')).toBe(false);
+    expect(isDate('25/12/2026')).toBe(false);
+    expect(isDate('2026-12-25')).toBe(true);
+  });
+  it('adds a day in date order and never twice', () => {
+    const one = addClosedDay([{ date: '2027-01-01', closed: true }], '2026-12-25');
+    expect(one?.map((c) => c.date)).toEqual(['2026-12-25', '2027-01-01']);
+    expect(addClosedDay(one ?? [], '2026-12-25')).toHaveLength(2);
+    expect(addClosedDay([], 'soon')).toBeNull();
+  });
+});
+
+describe('hoursOn', () => {
+  const week = Array.from({ length: 7 }, (_, i) =>
+    i === 6 ? [] : [{ opens: '11:00', closes: '22:00' }],
+  );
+  const hours = { timezone: 'Africa/Accra', weekly: week };
+  it('reads Monday as day 0', () => {
+    expect(hoursOn(hours, new Date(2026, 10, 9))).toBe('11:00 to 22:00'); // a Monday
+  });
+  it('gives null on a closed day', () => {
+    expect(hoursOn(hours, new Date(2026, 10, 15))).toBeNull(); // a Sunday
+  });
 });

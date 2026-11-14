@@ -13,6 +13,7 @@ import { CallCard } from './CallCard';
 import { CallDoneRow } from './CallDoneRow';
 import { CallFigures } from './CallFigures';
 import { QuickReplyStrip } from './QuickReplyStrip';
+import { ReasonCounts } from './ReasonCounts';
 import { useWaiterCalls } from './useWaiterCalls';
 
 // Waits only need to move once every half minute.
@@ -96,6 +97,7 @@ export function CallsScreen() {
           )}
           {tab === 'open' ? <QuickReplyStrip /> : null}
         </View>
+        <ReasonCounts calls={all} columns={desktop ? 6 : wide ? 3 : 2} />
       </DeskWait>
     </OwnerPage>
   );

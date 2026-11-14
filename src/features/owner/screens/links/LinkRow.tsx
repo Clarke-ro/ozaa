@@ -1,14 +1,12 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, ChevronUp, Link as LinkIcon } from 'lucide-react-native';
+import { ChevronDown, ChevronUp, Link as LinkIcon, Pencil } from 'lucide-react-native';
 import type { CustomLink } from '@/lib/api/types';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { cardStyle, Toggle } from '../../kit';
 import { LINK_ICONS } from './icons';
-
-const CHIP = tokens.space[8] + tokens.space[1];
 
 function host(url: string): string {
   try {
@@ -49,9 +47,8 @@ export function LinkRow({
         onPress={onEdit}
         style={({ pressed }) => [styles.main, pressed && { opacity: 0.6 }]}
       >
-        <View style={[styles.chip, { backgroundColor: on ? theme.tint : theme.wash }]}>
-          <Icon size={18} color={on ? theme.badgeInk : theme.meta} />
-        </View>
+        {/* Canvas: a plain 20 px icon, no tinted bubble. */}
+        <Icon size={20} color={on ? theme.text : theme.meta} />
         <View style={styles.flex}>
           <Text variant="body-strong" style={!on && { color: theme.muted }} numberOfLines={1}>
             {link.title}
@@ -83,6 +80,14 @@ export function LinkRow({
           </Pressable>
         );
       })}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t('ownerLinks.editA11y', { title: link.title })}
+        onPress={onEdit}
+        style={({ pressed }) => [styles.move, pressed && { backgroundColor: theme.wash }]}
+      >
+        <Pencil size={18} color={theme.muted} />
+      </Pressable>
       <Toggle
         value={on}
         onChange={onToggle}
@@ -96,23 +101,23 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: tokens.space[3],
-    minHeight: tokens.touchTarget + tokens.space[4],
-    paddingHorizontal: tokens.space[4],
+    gap: tokens.space[2],
+    minHeight: 76,
+    paddingLeft: tokens.space[2],
+    paddingRight: tokens.space[3],
     paddingVertical: tokens.space[3],
   },
-  main: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
-  chip: {
-    width: CHIP,
-    height: CHIP,
-    borderRadius: tokens.radius.full,
+  main: {
+    flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: tokens.space[4],
+    paddingLeft: tokens.space[2],
   },
   flex: { flex: 1, gap: 2 },
   move: {
-    width: tokens.touchTarget,
-    height: tokens.touchTarget,
+    width: 40,
+    height: 40,
     borderRadius: tokens.radius.full,
     alignItems: 'center',
     justifyContent: 'center',

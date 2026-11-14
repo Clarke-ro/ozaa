@@ -10,6 +10,9 @@ const schema = z.object({
   EXPO_PUBLIC_MOCK_FAST: z._default(z.enum(['0', '1']), '0'),
   /** Where guest links point when the app is not running on a web page (native share). */
   EXPO_PUBLIC_SITE_URL: z._default(z.string().check(z.url()), 'https://cravins.app'),
+  /** Help page "Email us" and "WhatsApp us". Empty hides the button. Set by Clarke, not in code. */
+  EXPO_PUBLIC_SUPPORT_EMAIL: z._default(z.string(), ''),
+  EXPO_PUBLIC_SUPPORT_WHATSAPP: z._default(z.string(), ''),
 });
 
 export type Env = z.infer<typeof schema> & { live: string[] };
@@ -29,6 +32,8 @@ const fromBuild: Source = {
   EXPO_PUBLIC_MOCK_FAIL_RATE: process.env.EXPO_PUBLIC_MOCK_FAIL_RATE,
   EXPO_PUBLIC_MOCK_FAST: process.env.EXPO_PUBLIC_MOCK_FAST,
   EXPO_PUBLIC_SITE_URL: process.env.EXPO_PUBLIC_SITE_URL,
+  EXPO_PUBLIC_SUPPORT_EMAIL: process.env.EXPO_PUBLIC_SUPPORT_EMAIL,
+  EXPO_PUBLIC_SUPPORT_WHATSAPP: process.env.EXPO_PUBLIC_SUPPORT_WHATSAPP,
 };
 
 export function readEnv(source: Source = fromBuild): Env {

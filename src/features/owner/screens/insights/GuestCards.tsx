@@ -8,8 +8,7 @@ import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
-import { BarChart, hourLabel } from '../../kit';
-import { InsightSection } from './InsightSection';
+import { BarChart, hourLabel, TitledSection } from '../../kit';
 
 type Props = { report: InsightsReport; style?: object };
 
@@ -28,7 +27,7 @@ export function ReturningCard({ report: r, style }: Props) {
   const radius = (RING - STROKE) / 2;
   const around = 2 * Math.PI * radius;
   return (
-    <InsightSection title={t('ownerInsights.guests')} style={style} cardStyle={styles.card}>
+    <TitledSection title={t('ownerInsights.guests')} style={style} cardStyle={styles.card}>
       <View
         style={styles.ring}
         accessible
@@ -74,7 +73,7 @@ export function ReturningCard({ report: r, style }: Props) {
         onPress={() => router.push('/owner/customers')}
         style={styles.button}
       />
-    </InsightSection>
+    </TitledSection>
   );
 }
 
@@ -96,7 +95,7 @@ export function WhenCard({ report: r, style }: Props) {
   const hours = r.visitsByHour ?? [];
   const busiest = [...hours].sort((a, b) => b.visits - a.visits)[0];
   return (
-    <InsightSection
+    <TitledSection
       title={t('ownerInsights.whenGuestsCome')}
       style={style}
       cardStyle={styles.whenCard}
@@ -122,7 +121,7 @@ export function WhenCard({ report: r, style }: Props) {
           ) : null}
         </>
       )}
-    </InsightSection>
+    </TitledSection>
   );
 }
 

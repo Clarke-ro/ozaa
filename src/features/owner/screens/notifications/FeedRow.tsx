@@ -95,9 +95,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: tokens.space[4],
-    minHeight: 72,
-    paddingHorizontal: tokens.space[5],
-    paddingVertical: tokens.space[3],
+    minHeight: 64,
+    paddingHorizontal: tokens.owner.controls.cardPadding,
+    paddingVertical: 10,
   },
   compact: { minHeight: tokens.owner.controls.rowMinHeight, paddingVertical: tokens.space[2] },
   compactTitle: {

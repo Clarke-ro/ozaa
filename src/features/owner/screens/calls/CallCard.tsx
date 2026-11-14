@@ -122,7 +122,7 @@ export function CallCard({
 
       <View style={styles.what}>
         <Text style={[styles.reason, { color: tone.line }]} numberOfLines={1}>
-          {t(`waiter.reasons.${call.reason}`)}
+          {t(`ownerCalls.reasonShort.${call.reason}`)}
         </Text>
         {who ? (
           <Text style={[styles.sub, { color: theme.meta }]} numberOfLines={1}>

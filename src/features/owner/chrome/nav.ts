@@ -198,8 +198,8 @@ export function isCurrent(pathname: string, href: string): boolean {
   return matches(pathname, href);
 }
 
-// Pages every signed-in person may open: the More list and the Help page.
-const OPEN_TO_ALL = ['/owner/more', '/owner/help'];
+// Pages every signed-in person may open: the More list, Help and their own profile.
+const OPEN_TO_ALL = ['/owner/more', '/owner/help', '/owner/profile'];
 
 /** Pages that moved. An old link keeps working for whoever may open the new page; its route redirects. */
 const MOVED: Readonly<Record<string, string>> = {

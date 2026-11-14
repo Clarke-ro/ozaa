@@ -56,7 +56,7 @@ export function FloorCard({
   let late = false;
   if (table.status === 'needs_waiter') {
     wordInk = tones.alert.line;
-    const reason = table.waiterReason ? t(`waiter.reasons.${table.waiterReason}`) : null;
+    const reason = table.waiterReason ? t(`ownerFloor.askedFor.${table.waiterReason}`) : null;
     sub = [reason, mins].filter(Boolean).join(' · ');
   } else if (table.status === 'waiting_to_pay') {
     wordInk = tones.bill.line;

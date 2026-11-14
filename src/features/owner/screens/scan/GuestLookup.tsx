@@ -41,19 +41,28 @@ export function GuestLookup({
   return (
     <View style={[cardStyle(theme), styles.card]}>
       <Text variant="body-strong">{t('ownerScan.lookupTitle')}</Text>
-      <TextInput
-        accessibilityLabel={t('ownerScan.lookupLabel')}
-        placeholder={t('ownerScan.lookupHint')}
-        placeholderTextColor={theme.meta}
-        value={text}
-        onChangeText={setText}
-        onSubmitEditing={() => text.trim() && onCode(text.trim())}
-        autoCorrect={false}
-        style={[
-          styles.input,
-          { borderColor: theme.line, color: theme.text, backgroundColor: theme.surface },
-        ]}
-      />
+      <View style={styles.findRow}>
+        <TextInput
+          accessibilityLabel={t('ownerScan.lookupLabel')}
+          placeholder={t('ownerScan.lookupHint')}
+          placeholderTextColor={theme.meta}
+          value={text}
+          onChangeText={setText}
+          onSubmitEditing={() => text.trim() && onCode(text.trim())}
+          autoCorrect={false}
+          style={[
+            styles.input,
+            styles.flex,
+            { borderColor: theme.line, color: theme.text, backgroundColor: theme.surface },
+          ]}
+        />
+        <Button
+          label={t('ownerScan.find')}
+          tone="secondary"
+          disabled={!text.trim()}
+          onPress={() => onCode(text.trim())}
+        />
+      </View>
       {query.length >= 2 && found.data && items.length === 0 ? (
         <Text variant="caption" style={{ color: theme.muted }}>
           {t('ownerScan.noMatch')}
@@ -83,6 +92,7 @@ export function GuestLookup({
 }
 
 const styles = StyleSheet.create({
+  findRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
   card: { padding: tokens.space[5], gap: tokens.space[3] },
   input: {
     minHeight: tokens.touchTarget + 4,

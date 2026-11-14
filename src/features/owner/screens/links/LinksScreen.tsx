@@ -11,7 +11,8 @@ import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
-import { AddDashed, EmptyCard, SectionLabel, toast } from '../../kit';
+import { AddDashed, EmptyCard, toast } from '../../kit';
+import { Button } from '@/ui/Button';
 import { LinkEditor } from './LinkEditor';
 import { LinkRow } from './LinkRow';
 import { moveLink } from './moveLink';
@@ -71,7 +72,11 @@ export function LinksScreen() {
   const items = [...(links.data?.items ?? [])].sort((a, b) => a.sortOrder - b.sortOrder);
 
   return (
-    <OwnerPage title={t('owner.links')} subtitle={t('ownerLinks.lead')}>
+    <OwnerPage
+      title={t('owner.links')}
+      subtitle={t('ownerLinks.lead')}
+      action={<Button label={t('ownerLinks.add')} onPress={() => setEditing(null)} />}
+    >
       <DeskWait
         loading={links.isLoading}
         error={links.isError}
@@ -92,7 +97,9 @@ export function LinksScreen() {
               if (!group.length) return null;
               return (
                 <View key={placement} style={styles.group}>
-                  <SectionLabel title={t(`ownerLinks.placement.${placement}`)} caps />
+                  <Text variant="title" accessibilityRole="header">
+                    {t(`ownerLinks.placementTitle.${placement}`)}
+                  </Text>
                   <View style={styles.list}>
                     {group.map((link, index) => (
                       <LinkRow
@@ -115,10 +122,8 @@ export function LinksScreen() {
               );
             })}
             <View style={styles.group}>
-              <Text variant="caption" style={[styles.count, { color: theme.muted }]}>
-                {t('ownerLinks.count', { count: items.length })}
-              </Text>
               <AddDashed label={t('ownerLinks.add')} onPress={() => setEditing(null)} />
+              <Text style={[styles.note, { color: theme.meta }]}>{t('ownerLinks.footnote')}</Text>
             </View>
           </View>
         )}
@@ -137,7 +142,7 @@ export function LinksScreen() {
 
 const styles = StyleSheet.create({
   stack: { gap: tokens.space[6] },
-  group: { gap: tokens.space[3] },
-  list: { gap: tokens.space[2] },
-  count: { alignSelf: 'flex-end' },
+  group: { gap: tokens.space[4] },
+  list: { gap: tokens.owner.controls.listGap },
+  note: { fontSize: 14, lineHeight: 20 },
 });

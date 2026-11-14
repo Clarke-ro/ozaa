@@ -189,6 +189,7 @@ describe('canOpen', () => {
   it('keeps More and Help open to every role', () => {
     expect(canOpen('kitchen', '/owner/more')).toBe(true);
     expect(canOpen('staff_scanner', '/owner/help')).toBe(true);
+    expect(canOpen('waiter', '/owner/profile')).toBe(true);
   });
 
   it('blocks owner pages the nav does not know about', () => {

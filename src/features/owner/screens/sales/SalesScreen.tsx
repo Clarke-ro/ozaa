@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -18,10 +18,11 @@ import {
 import { ChipRow, downloadCsv, Field } from '../../kit';
 import { Button } from '@/ui/Button';
 import { salesCsv } from './salesCsv';
-import { BySource, HowPaid, StatusMix, TopDishes } from './SalesCards';
 import { SalesFigures } from './SalesFigures';
-import { SalesTrend } from './SalesTrend';
-import { ByHour, ByMethod, ByStaff, TaxCard } from './SalesBreakdowns';
+import { SalesByDay } from './SalesByDay';
+import { SalesDishes } from './SalesDishes';
+import { SalesMix } from './SalesMix';
+import { SalesHourStaff, SalesTax } from './SalesHourStaff';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 
@@ -82,13 +83,6 @@ export function SalesScreen() {
           : new Date(openedAt).toISOString(),
       )
     : null;
-
-  const pair = (a: ReactNode, b: ReactNode) => (
-    <View style={[styles.pair, wide && styles.row]}>
-      <View style={wide ? styles.flex : undefined}>{a}</View>
-      <View style={wide ? styles.flex : undefined}>{b}</View>
-    </View>
-  );
 
   return (
     <OwnerPage
@@ -155,11 +149,16 @@ export function SalesScreen() {
                 {t('ownerSales.noPrevious')}
               </Text>
             ) : null}
-            <SalesTrend report={r} from={chartFrom} to={chartTo} />
-            {pair(<TopDishes report={r} />, <HowPaid report={r} />)}
-            {pair(<ByMethod report={r} />, <ByHour report={r} />)}
-            {pair(<BySource report={r} />, <StatusMix report={r} />)}
-            {pair(<ByStaff report={r} />, <TaxCard report={r} />)}
+            <SalesByDay report={r} from={chartFrom} to={chartTo} />
+            <View style={styles.section}>
+              <Text variant="title" accessibilityRole="header">
+                {t('ownerSales.topItems')}
+              </Text>
+              <SalesDishes report={r} wide={wide} />
+            </View>
+            <SalesMix report={r} wide={wide} />
+            <SalesHourStaff report={r} wide={wide} />
+            <SalesTax report={r} />
           </View>
         ) : null}
       </DeskWait>
@@ -168,9 +167,10 @@ export function SalesScreen() {
 }
 
 const styles = StyleSheet.create({
-  stack: { gap: tokens.space[4] },
+  // Canvas: 56 px between Sales' sections, 20 px under each title.
+  stack: { gap: tokens.owner.controls.todayGap },
+  section: { gap: tokens.owner.controls.headGap },
   dates: { gap: tokens.space[3] },
-  pair: { gap: tokens.space[4] },
   row: { flexDirection: 'row', alignItems: 'flex-start' },
   flex: { flex: 1, minWidth: 0 },
 });

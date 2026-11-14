@@ -11,26 +11,32 @@ import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
 import { fontFamily, useTheme } from '@/ui/theme';
-import { useOwnerLayout } from '../../chrome/layout';
 import { DeskWait } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
-import { CardGrid, EmptyCard } from '../../kit';
+import { EmptyCard } from '../../kit';
+import { Text } from '@/ui/Text';
 import { CustomerCard } from './CustomerCard';
 import { customersCsv } from './customersCsv';
 
 /**
- * Loyalty members: search (name or last 4 digits), tag chips and a CSV export, then one card per
- * member (two across on wide screens). A card opens that member's own page. Used by Customers
- * and by Loyalty > Members.
+ * Loyalty members (design canvas): a full-width search (name or last 4 digits), tag chips with
+ * counts, then one row per member and a note about what is shown. Customers puts Export CSV in
+ * its header; Loyalty > Members keeps it beside the search. A row opens that member's page.
  */
 type TagFilter = 'all' | CustomerTag;
 const TAGS: readonly CustomerTag[] = ['reward_ready', 'regular', 'new', 'quiet'];
 
-export function CustomerList({ venueId }: { venueId: string }) {
+export function CustomerList({
+  venueId,
+  showExport = true,
+}: {
+  venueId: string;
+  /** False when the page has its own Export CSV in the header. */
+  showExport?: boolean;
+}) {
   const theme = useTheme();
   const { t } = useTranslation();
   const router = useRouter();
-  const { wide } = useOwnerLayout();
   const [search, setSearch] = useState('');
   const [tag, setTag] = useState<TagFilter>('all');
   const query = useDebouncedValue(search.trim());
@@ -45,6 +51,12 @@ export function CustomerList({ venueId }: { venueId: string }) {
     placeholderData: keepPreviousData,
   });
   const items = customers.data?.items ?? [];
+  const program = useQuery({
+    queryKey: ownerKeys.loyalty(venueId),
+    queryFn: () => api.ownerGetLoyalty(venueId),
+    enabled: Boolean(venueId),
+  });
+  const [now] = useState(() => Date.now());
   const total = customers.data?.totalCount ?? items.length;
 
   const exportCsv = async () => {
@@ -94,13 +106,14 @@ export function CustomerList({ venueId }: { venueId: string }) {
               </Pressable>
             ) : null}
           </View>
-          <Button
-            label={t('ownerMembers.export')}
-            tone="secondary"
-            size="md"
-            onPress={() => void exportCsv()}
-            disabled={items.length === 0}
-          />
+          {showExport ? (
+            <Button
+              label={t('ownerMembers.export')}
+              tone="secondary"
+              onPress={() => void exportCsv()}
+              disabled={items.length === 0}
+            />
+          ) : null}
         </View>
 
         {/* Tags come from what guests did (visits, rewards, time away), never typed in. */}
@@ -132,25 +145,30 @@ export function CustomerList({ venueId }: { venueId: string }) {
             }
           />
         ) : (
-          <CardGrid columns={wide ? 2 : 1}>
+          <View style={styles.rows}>
             {items.map((customer) => (
               <CustomerCard
                 key={customer.id}
                 customer={customer}
+                now={now}
+                stampsRequired={program.data?.stampsRequired}
                 onOpen={() => router.push(`/owner/customers/${customer.id}`)}
               />
             ))}
-          </CardGrid>
+          </View>
         )}
+        <Text style={[styles.note, { color: theme.meta }]}>{t('ownerMembers.footnote')}</Text>
       </View>
     </DeskWait>
   );
 }
 
-const CONTROL_HEIGHT = tokens.touchTarget;
+const CONTROL_HEIGHT = tokens.owner.controls.height;
 
 const styles = StyleSheet.create({
   stack: { gap: tokens.space[4] },
+  rows: { gap: tokens.owner.controls.listGap },
+  note: { fontSize: 14, lineHeight: 20 },
   controls: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: tokens.space[2] },
   search: {
     flexGrow: 1,
@@ -158,10 +176,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: tokens.space[2],
+    // Canvas search: a 48 px pill.
     height: CONTROL_HEIGHT,
-    paddingHorizontal: tokens.space[3],
+    paddingHorizontal: tokens.owner.controls.cardPadding,
     borderWidth: 1,
-    borderRadius: tokens.radius.md,
+    borderRadius: tokens.radius.full,
   },
   input: { flex: 1, fontFamily: fontFamily.regular, fontSize: tokens.owner.type.body.size },
 });

@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Gift, Percent, Pencil, Ticket } from 'lucide-react-native';
+import { Gift, Percent, Pencil, Ticket, Clock } from 'lucide-react-native';
 import { api } from '@/lib/api';
 import type { Promo, PromoInput } from '@/lib/api/types';
 import { formatMoney } from '@/lib/money';
 import { useOwnerSession } from '@/features/session';
+import { STATUS_TONES, type StatusTone } from '@/theme/palette';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
 import { FilterChips } from '@/ui/FilterChips';
@@ -14,15 +15,17 @@ import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
-import { cardStyle, EmptyCard, StatusPill, Toggle, toast, type PillTone } from '../../kit';
+import { cardStyle, EmptyCard, Toggle, toast } from '../../kit';
 import { PromoSheet } from './PromoSheet';
 
 type Filter = 'all' | Promo['state'];
-const TONE: Record<Promo['state'], PillTone> = {
+// The canvas groups promos by state, live ones first.
+const GROUPS: readonly Promo['state'][] = ['running', 'scheduled', 'off', 'ended'];
+const STATE_TONE: Record<Promo['state'], StatusTone | 'neutral'> = {
   running: 'success',
-  scheduled: 'accent',
-  ended: 'neutral',
+  scheduled: 'info',
   off: 'neutral',
+  ended: 'neutral',
 };
 
 /**
@@ -35,6 +38,8 @@ export function PromosScreen() {
   const client = useQueryClient();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const [filter, setFilter] = useState<Filter>('all');
+  const status = STATUS_TONES[theme.scheme];
+  const tones = { ...status, neutral: { bg: theme.wash, ink: theme.muted, line: theme.line } };
   const [editing, setEditing] = useState<Promo | 'new' | null>(null);
   const venue = useQuery({
     queryKey: ownerKeys.venue(venueId),
@@ -108,7 +113,7 @@ export function PromosScreen() {
     <OwnerPage
       title={t('owner.promos')}
       subtitle={t('ownerPromos.lead')}
-      action={<Button label={t('ownerPromos.new')} size="md" onPress={() => setEditing('new')} />}
+      action={<Button label={t('ownerPromos.new')} onPress={() => setEditing('new')} />}
     >
       <DeskWait
         loading={promos.isLoading}
@@ -139,48 +144,72 @@ export function PromosScreen() {
                 })),
               ]}
             />
-            {shown.map((promo) => {
-              const Icon =
-                promo.kind === 'percent_off' ? Percent : promo.kind === 'free_item' ? Gift : Ticket;
+            {GROUPS.filter((state) => filter === 'all' || filter === state).map((state) => {
+              const group = shown.filter((p) => p.state === state);
+              if (group.length === 0) return null;
               return (
-                <View key={promo.id} style={[cardStyle(theme), styles.card]}>
-                  <Icon size={22} color={theme.text} />
-                  <View style={styles.copy}>
-                    <View style={styles.titleRow}>
-                      <Text variant="body-strong" numberOfLines={1} style={styles.shrink}>
-                        {promo.name}
-                      </Text>
-                      {promo.code ? (
-                        <StatusPill label={promo.code} tone="neutral" icon={false} boxed />
-                      ) : null}
-                      <StatusPill
-                        label={t(`ownerPromos.states.${promo.state}`)}
-                        tone={TONE[promo.state]}
-                        icon={false}
-                        boxed
-                      />
-                    </View>
-                    <Text variant="caption" numberOfLines={2} style={{ color: theme.muted }}>
-                      {summary(promo)}
-                    </Text>
-                  </View>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={t('ownerPromos.editA11y', { name: promo.name })}
-                    onPress={() => setEditing(promo)}
-                    style={({ pressed }) => [
-                      styles.icon,
-                      pressed && { backgroundColor: theme.wash },
-                    ]}
-                  >
-                    <Pencil size={18} color={theme.muted} />
-                  </Pressable>
-                  <Toggle
-                    label={t('ownerPromos.onA11y', { name: promo.name })}
-                    value={promo.enabled}
-                    disabled={flip.isPending}
-                    onChange={() => flip.mutate(promo)}
-                  />
+                <View key={state} style={styles.group}>
+                  <Text variant="title" accessibilityRole="header">
+                    {t(`ownerPromos.states.${state}`)}
+                  </Text>
+                  {group.map((promo) => {
+                    // Canvas icons: a gift for a free dish, a clock for a timed deal, a ticket for a code.
+                    const Icon =
+                      promo.kind === 'free_item'
+                        ? Gift
+                        : promo.startTime
+                          ? Clock
+                          : promo.code
+                            ? Ticket
+                            : Percent;
+                    return (
+                      <View key={promo.id} style={[cardStyle(theme), styles.card]}>
+                        <Icon size={22} color={theme.text} />
+                        <View style={styles.copy}>
+                          <View style={styles.titleRow}>
+                            <Text variant="body-strong" numberOfLines={1} style={styles.shrink}>
+                              {promo.name}
+                            </Text>
+                            <View
+                              style={[
+                                styles.tag,
+                                { backgroundColor: tones[STATE_TONE[promo.state]].bg },
+                              ]}
+                            >
+                              <Text
+                                style={[
+                                  styles.tagText,
+                                  { color: tones[STATE_TONE[promo.state]].ink },
+                                ]}
+                              >
+                                {t(`ownerPromos.states.${promo.state}`)}
+                              </Text>
+                            </View>
+                          </View>
+                          <Text variant="caption" numberOfLines={2} style={{ color: theme.muted }}>
+                            {summary(promo)}
+                          </Text>
+                        </View>
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityLabel={t('ownerPromos.editA11y', { name: promo.name })}
+                          onPress={() => setEditing(promo)}
+                          style={({ pressed }) => [
+                            styles.icon,
+                            pressed && { backgroundColor: theme.wash },
+                          ]}
+                        >
+                          <Pencil size={18} color={theme.muted} />
+                        </Pressable>
+                        <Toggle
+                          label={t('ownerPromos.onA11y', { name: promo.name })}
+                          value={promo.enabled}
+                          disabled={flip.isPending}
+                          onChange={() => flip.mutate(promo)}
+                        />
+                      </View>
+                    );
+                  })}
                 </View>
               );
             })}
@@ -208,7 +237,10 @@ export function PromosScreen() {
 }
 
 const styles = StyleSheet.create({
-  stack: { gap: tokens.space[3] },
+  stack: { gap: tokens.space[8] },
+  group: { gap: tokens.owner.controls.listGap },
+  tag: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: tokens.radius.full },
+  tagText: { fontSize: 12, lineHeight: 16, fontFamily: 'Inter_600' },
   card: {
     flexDirection: 'row',
     alignItems: 'center',

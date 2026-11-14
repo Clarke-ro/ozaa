@@ -22,7 +22,7 @@ export function CallDoneRow({ call }: { call: WaiterCall }) {
       : null,
     done != null ? t('ownerCalls.doneIn', { count: done }) : null,
   ].filter(Boolean);
-  const reason = t(`waiter.reasons.${call.reason}`);
+  const reason = t(`ownerCalls.reasonShort.${call.reason}`);
   return (
     <Pressable
       accessibilityRole="link"

@@ -4,6 +4,39 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-14 · Every canvas board, full height
+
+**What we built**
+
+A second pass over the whole canvas, top to bottom this time, not just the first screen of each board. Sales, Insights, Notifications, Menu, Links, Calls, Loyalty, Integrations and Customers changed again. Help and Profile are new pages. Staff members and dishes now open on their own pages, like the canvas.
+
+**How it works**
+
+```
+canvas board → screenshot (1440 wide, full height)
+app page     → screenshot (same size)
+side by side → fix what differs → check again
+```
+
+When the canvas shows something the contract can't do yet (reset a PIN, give a waiter tables, remove a loyalty guest), the page leaves it out. Nothing pretends to work.
+
+**Files to look at**
+
+- `src/features/owner/screens/help/helpTopics.ts`: the questions and the search, with a test.
+- `src/features/owner/screens/profile/`: your profile page and `splitName.ts`.
+- `src/features/owner/screens/business/hoursForm.ts`: closed days and "open today".
+- `src/features/owner/screens/menu/useDishForm.ts`: the dish form's state, now separate from how it looks.
+
+**New idea: a hook keeps the logic, the screen keeps the look**
+
+`useDishForm` holds every field, the checks and the save. `DishForm` only draws boxes and buttons. When the dish editor moved from a sheet to a page, only the drawing changed. The rules for prices and stock stayed exactly the same.
+
+**Try it yourself**
+
+Add a question to `HELP_GROUPS` in `helpTopics.ts`, put its words in `en.json` under `ownerHelp.q`, then search for it on the Help page.
+
+---
+
 ## 2026-11-13 · The last ten screens laid out like the canvas
 
 **What we built**

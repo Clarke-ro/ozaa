@@ -8,21 +8,28 @@ import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
 import { useDraft } from '../../data/useDraft';
 import { tokens } from '@/theme/tokens';
-import { InputRow, PhotoField, SaveBar, Section, SectionBody, toast } from '../../kit';
-import { BUTTON_KEYS, ButtonsSection } from './ButtonsSection';
+import { toast } from '../../kit';
+import { Button } from '@/ui/Button';
+import { useOwnerLayout } from '../../chrome/layout';
+import { BrandPhotos } from './BrandPhotos';
+import { ColourSection } from './ColourSection';
+import { BUTTON_KEYS, HomeOrderSection } from './HomeOrderSection';
+import { TypeSection } from './TypeSection';
+import { WordsSection } from './WordsSection';
 import { GuestPreview } from './GuestPreview';
-import { buttonLook, isHex, type Tint } from './look';
-import { LookSection, type FontPair } from './LookSection';
-import { MenuStyleSection } from './MenuStyleSection';
+import { isHex, type Tint } from './look';
+import { MenuSection } from './MenuSection';
+import type { FontPair } from '@/ui/theme';
 import { menuStyleOf } from '@/lib/menuStyle';
 
 /**
- * How the guest page looks, on one page: photos, colour and font, menu style, words, buttons,
- * then a preview of the guest page with the unsaved changes.
+ * How the guest pages look (canvas): photos, colour, type and theme, words, menu and the order of
+ * the home buttons, beside "What guests see", a phone drawn with the unsaved changes.
  */
 export function BrandingScreen() {
   const { t } = useTranslation();
   const client = useQueryClient();
+  const { desktop } = useOwnerLayout();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const venue = useQuery({
     queryKey: ownerKeys.venue(venueId),
@@ -46,7 +53,6 @@ export function BrandingScreen() {
     undefined,
   );
   const f = draft.value;
-  const look = buttonLook(f.accent, f.tint);
   // The guest page as it will look after Save: the saved venue with the draft laid over it.
   const previewVenue = v
     ? {
@@ -91,92 +97,79 @@ export function BrandingScreen() {
   });
 
   const submit = () => {
+    if (!dirty) return;
     if (!isHex(f.accent)) return toast.error(t('ownerBranding.hexError'));
     if (!f.name.trim()) return toast.error(t('ownerBranding.nameMissing'));
     save.mutate();
   };
 
+  const form = (
+    <View style={styles.stack}>
+      <BrandPhotos
+        venueId={venueId}
+        coverUrl={banner?.url ?? v?.banner?.url ?? null}
+        logoUrl={logo ? logo.url : (v?.logo?.url ?? null)}
+        onCover={setBanner}
+        onLogo={setLogo}
+      />
+      <ColourSection
+        accent={f.accent}
+        onAccent={(hex) => draft.set('accent', hex)}
+        tint={f.tint}
+        onTint={(tint) => draft.set('tint', tint)}
+      />
+      <TypeSection
+        font={f.font}
+        onFont={(font) => draft.set('font', font)}
+        scheme={f.menuStyle.colorScheme}
+        onScheme={(colorScheme) => draft.set('menuStyle', { ...f.menuStyle, colorScheme })}
+      />
+      <WordsSection value={f} onChange={(key, text) => draft.set(key, text)} />
+      <MenuSection style={f.menuStyle} onChange={(next) => draft.set('menuStyle', next)} />
+      <HomeOrderSection order={f.order} onOrder={(order) => draft.set('order', order)} />
+      <View style={styles.saveRow}>
+        <Button label={t('ownerBranding.saveBranding')} loading={save.isPending} onPress={submit} />
+        {dirty ? <Button label={t('ownerKit.discard')} tone="ghost" onPress={reset} /> : null}
+      </View>
+    </View>
+  );
+  const preview = previewVenue ? (
+    <GuestPreview
+      venue={previewVenue}
+      accent={isHex(f.accent) ? f.accent : null}
+      font={f.font}
+      dark={f.menuStyle.colorScheme === 'dark'}
+    />
+  ) : null;
+
   return (
-    <OwnerPage
-      title={t('owner.branding')}
-      subtitle={t('ownerLead.branding')}
-      footer={<SaveBar visible={dirty} saving={save.isPending} onDiscard={reset} onSave={submit} />}
-    >
+    <OwnerPage width="mid" title={t('owner.branding')} subtitle={t('ownerLead.branding')}>
       <DeskWait
         loading={venue.isLoading}
         error={venue.isError}
         onRetry={() => void venue.refetch()}
       >
-        {/* One page, top to bottom: photos and look first, then words, buttons, and the preview. */}
-        <View style={styles.stack}>
-          <Section title={t('ownerBranding.photos')}>
-            <SectionBody>
-              <PhotoField
-                venueId={venueId}
-                kind="banner"
-                label={t('owner.bannerPhoto')}
-                url={banner?.url ?? v?.banner?.url ?? null}
-                onChange={(id, url) => setBanner(id ? { id, url } : undefined)}
-              />
-              <PhotoField
-                venueId={venueId}
-                kind="logo"
-                label={t('owner.logoPhoto')}
-                url={logo ? logo.url : (v?.logo?.url ?? null)}
-                onChange={(id, url) => setLogo({ id, url })}
-              />
-            </SectionBody>
-          </Section>
-          <LookSection
-            accent={f.accent}
-            onAccent={(hex) => draft.set('accent', hex)}
-            font={f.font}
-            onFont={(font) => draft.set('font', font)}
-          />
-          <MenuStyleSection style={f.menuStyle} onChange={(next) => draft.set('menuStyle', next)} />
-          <Section title={t('ownerBranding.words')}>
-            <InputRow
-              label={t('ownerBranding.name')}
-              value={f.name}
-              onChangeText={(text) => draft.set('name', text)}
-              maxLength={60}
-            />
-            <InputRow
-              label={t('ownerBranding.tagline')}
-              value={f.tagline}
-              onChangeText={(text) => draft.set('tagline', text)}
-              placeholder={t('ownerLoyalty.optional')}
-              maxLength={100}
-            />
-            <InputRow
-              label={t('ownerBranding.description')}
-              value={f.description}
-              onChangeText={(text) => draft.set('description', text)}
-              multiline
-            />
-          </Section>
-          <ButtonsSection
-            order={f.order}
-            onOrder={(order) => draft.set('order', order)}
-            tint={f.tint}
-            onTint={(tint) => draft.set('tint', tint)}
-            readable={look.readable}
-          />
-          {previewVenue ? (
-            <Section title={t('ownerBranding.tabs.preview')}>
-              <GuestPreview
-                venue={previewVenue}
-                accent={isHex(f.accent) ? f.accent : null}
-                font={f.font}
-              />
-            </Section>
-          ) : null}
-        </View>
+        {desktop ? (
+          <View style={styles.split}>
+            <View style={styles.form}>{form}</View>
+            <View style={styles.aside}>{preview}</View>
+          </View>
+        ) : (
+          <View style={styles.stack}>
+            {form}
+            {preview}
+          </View>
+        )}
       </DeskWait>
     </OwnerPage>
   );
 }
 
 const styles = StyleSheet.create({
-  stack: { gap: tokens.space[5] },
+  stack: { gap: tokens.owner.controls.sectionGap },
+  // Canvas: a form up to 560 px and a 360 px "What guests see" column, 32 px apart.
+  split: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.owner.controls.sectionGap },
+  form: { flex: 1, maxWidth: 560, minWidth: 0 },
+  aside: { width: 360 },
+  saveRow: { flexDirection: 'row', gap: 10 },
 });

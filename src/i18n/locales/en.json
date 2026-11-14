@@ -342,7 +342,12 @@
     "leaveBody": "Your stamps and rewards at {{venue}} will be erased. You can't undo this.",
     "leaveConfirm": "Delete card",
     "leaveFailed": "That didn't go through and your card is still here. Check the connection and try again.",
-    "pointsCounter": "{{counter}} pts"
+    "pointsCounter": "{{counter}} pts",
+    "introCount": "0 of {{total}}",
+    "introGoal_one": "Collect {{count}} stamp for {{reward}}.",
+    "introGoal_other": "Collect {{count}} stamps for {{reward}}.",
+    "introPoints": "Collect points for {{reward}}.",
+    "introFree": "Free. Just your phone number, no app to install."
   },
   "review": {
     "title": "Leave a review",
@@ -705,7 +710,8 @@
     },
     "unsaved": "Unsaved changes",
     "discard": "Discard",
-    "save": "Save"
+    "save": "Save",
+    "cancel": "Cancel"
   },
   "ownerDash": {
     "greet": {
@@ -1067,7 +1073,10 @@
       "walkInTitle": "Walk-in guests",
       "walkInBody": "Guests at a table scan its QR code and land on this page. Tap Menu in the preview to edit the dine-in menu.",
       "editServices": "Edit services",
-      "tableCodes": "Table QR codes"
+      "tableCodes": "Table QR codes",
+      "changesNote": "Changes show here and on the guest menu straight away.",
+      "publishedShort": "Published · guests can order",
+      "unpublishedShort": "Not published · guests cannot see it"
     },
     "showTitle": "Show on the menu",
     "popular": "Popular",
@@ -1077,7 +1086,12 @@
     "hideSectionA11y": "Hide {{name}} from guests",
     "showSectionA11y": "Show {{name}} to guests",
     "reorderSections": "Reorder sections",
-    "previewTitle": "Guest preview"
+    "previewTitle": "Guest preview",
+    "details": "Details",
+    "extras": "Extras",
+    "saveDish": "Save dish",
+    "dishMissing": "This dish isn't on the menu",
+    "dishMissingBody": "It may have been deleted. Go back to the menu."
   },
   "ownerBranding": {
     "lead": "How your page looks to guests: colour, words, photos and the order of the buttons.",
@@ -1143,7 +1157,31 @@
       "light": "Light",
       "dark": "Dark",
       "auto": "Follow phone"
-    }
+    },
+    "photosTitle": "Photos",
+    "cover": "Cover photo",
+    "logo": "Logo",
+    "changeCover": "Change cover",
+    "changeLogo": "Change logo",
+    "colourTitle": "Colour",
+    "readsWell": "{{ink}} button text reads well ({{ratio}}:1)",
+    "readsBadly": "{{ink}} button text is too hard to read ({{ratio}}:1). Pick a darker colour or Auto.",
+    "tintHint": "Auto picks the colour that is easiest to read on your venue colour.",
+    "typeTitle": "Type and theme",
+    "schemeHint": "Follow phone matches each guest's phone setting.",
+    "menuTitle": "Menu",
+    "dishOrder": "Dish order",
+    "sortShort": {
+      "manual": "As you arrange",
+      "popular_first": "Popular first",
+      "name": "A to Z"
+    },
+    "layout": "Menu layout",
+    "about": "About us",
+    "homeOrder": "Guest home order",
+    "saveBranding": "Save branding",
+    "guestsSee": "What guests see",
+    "previewNote": "Changes show here as you make them."
   },
   "ownerPages": {
     "businessLead": "Your business name and every location you run on Cravins.",
@@ -1274,6 +1312,14 @@
       "eating": "Eating",
       "paying": "Waiting to pay",
       "free": "Free"
+    },
+    "askedFor": {
+      "water": "Asked for water",
+      "bill": "Asked for the bill",
+      "cutlery": "Asked for cutlery",
+      "order_more": "Wants to order more",
+      "clean_table": "Asked to clear the table",
+      "other": "Asked for something else"
     }
   },
   "ownerShell": {
@@ -1333,8 +1379,8 @@
     "stamps": "Stamps needed",
     "halfway": "Halfway treat",
     "optional": "Optional",
-    "gap": "Between stamps",
-    "gapNote": "The shortest time before the same guest can get another stamp.",
+    "gap": "Time between stamps",
+    "gapNote": "Stops a guest collecting several stamps in one visit.",
     "cooldown": {
       "none": "None",
       "1h": "1 hour",
@@ -1366,7 +1412,41 @@
     "stampsGiven": "Stamps given, 30 days",
     "rewardsClaimed": "Rewards claimed, 30 days",
     "guestsSee": "What guests see",
-    "previewLead": "Your stamp card"
+    "previewLead": "Your stamp card",
+    "onShort": "Loyalty is on",
+    "earnWith": "Earn with",
+    "earn": {
+      "stamps": "Stamps",
+      "points": "Points"
+    },
+    "fullCard": "Stamps on a full card",
+    "rewardsTitle": "Rewards",
+    "atStamps_one": "At 1 stamp",
+    "atStamps_other": "At {{count}} stamps",
+    "editReward": "Edit {{name}}",
+    "editRewardTitle": "Edit reward",
+    "addReward": "Add a reward",
+    "removeReward": "Remove",
+    "saveReward": "Save",
+    "rewardCost": "Stamps it costs",
+    "tiersTitle": "Tiers",
+    "tier": {
+      "bronze": "Bronze",
+      "silver": "Silver",
+      "gold": "Gold"
+    },
+    "fromFirst": "From the first stamp",
+    "fromStamps_one": "From 1 stamp",
+    "fromStamps_other": "From {{count}} stamps",
+    "editTier": "Edit {{name}} tier",
+    "tierFrom": "Starts at (stamps)",
+    "stampsLast": "Stamps last",
+    "expiry": {
+      "30": "30 days",
+      "90": "90 days",
+      "365": "1 year",
+      "never": "Never"
+    }
   },
   "ownerBusiness": {
     "business": "Business",
@@ -1379,7 +1459,7 @@
     "use": "Switch to this",
     "switched": "Now showing {{name}}",
     "added": "Location added",
-    "locationName": "Name",
+    "locationName": "Location name",
     "locationNameHint": "Mama’s Kitchen, Osu",
     "needName": "Add a name.",
     "needCountry": "Add the country.",
@@ -1422,8 +1502,8 @@
     "taxTitle": "E-VAT",
     "taxNote": "When on, orders carry VAT 15%, NHIL 2.5% and GETFund 2.5%. Sales shows the totals.",
     "taxOn": "Charge E-VAT on orders",
-    "taxInside": "Prices include tax",
-    "taxInsideHint": "Off adds the tax on top of menu prices.",
+    "taxInside": "Prices include VAT and levies",
+    "taxInsideHint": "Receipts show the tax inside each price. Off adds it on top.",
     "hours": "Opening hours",
     "opens": "Opens",
     "closes": "Closes",
@@ -1433,7 +1513,36 @@
     "saveHours": "Save hours",
     "digitalAddress": "Digital address",
     "digitalAddressHint": "Your GhanaPostGPS code. Helps riders find you.",
-    "digitalAddressError": "Use the GhanaPostGPS form, like GA-123-4567"
+    "digitalAddressError": "Use the GhanaPostGPS form, like GA-123-4567",
+    "cuisinesPick": "Pick all that fit. Guests can find you by these.",
+    "tables_one": "{{count}} table",
+    "tables_other": "{{count}} tables",
+    "staff_one": "{{count}} staff",
+    "staff_other": "{{count}} staff",
+    "openToday": "Open today {{hours}}",
+    "closedToday": "Closed today",
+    "street": "Street address",
+    "digital": "Digital address",
+    "digitalHint": "Your GhanaPostGPS code. Helps riders find you.",
+    "digitalError": "Use a GhanaPostGPS code, like GA-123-4567.",
+    "saveLocation": "Save location",
+    "to": "to",
+    "dayFull": {
+      "0": "Monday",
+      "1": "Tuesday",
+      "2": "Wednesday",
+      "3": "Thursday",
+      "4": "Friday",
+      "5": "Saturday",
+      "6": "Sunday"
+    },
+    "closedDays": "Closed days",
+    "noClosedDays": "No closed days yet. Add public holidays here.",
+    "addClosed": "Add a closed day",
+    "closedDate": "Date",
+    "dateError": "Use a date like 2026-12-25.",
+    "removeClosed": "Remove {{date}}",
+    "locationPhone": "Phone"
   },
   "ownerServices": {
     "wifi": "Wi-Fi",
@@ -1448,7 +1557,8 @@
     "gameStamp": "Stamp for a high score",
     "gameStampHint": "Guests who beat the target get a loyalty stamp.",
     "targetScore": "Target score",
-    "later": "Coming later. Guests do not see it yet."
+    "later": "Coming later. Guests do not see it yet.",
+    "laterShort": "Coming later"
   },
   "ownerReviews": {
     "yourReply": "Your reply",
@@ -1544,7 +1654,9 @@
     "guestsCount_one": "1 guest",
     "guestsCount_other": "{{count}} guests",
     "seeCustomers": "See customers",
-    "busiestTip": "Most guests arrive around {{hour}}."
+    "busiestTip": "Most guests arrive around {{hour}}.",
+    "scanNote": "Every scan of a table or menu code",
+    "improveMenu": "Improve menu"
   },
   "ownerLoyaltyResults": {
     "members": "Members",
@@ -1672,7 +1784,28 @@
       "eta": "Ready in about",
       "missing": "We can't find this order",
       "missingBody": "It may be from an earlier day. Go back to Orders and pick it from the list.",
-      "backToOrders": "Back to Orders"
+      "backToOrders": "Back to Orders",
+      "heading": "{{where}} · #{{number}}",
+      "orderedAgo": "Ordered {{ago}}",
+      "items": "Items",
+      "timeline": "Timeline",
+      "stillToPay": "Still to pay {{amount}}",
+      "cancel": "Cancel order",
+      "cancelTitle": "Cancel this order?",
+      "cancelBody": "The kitchen stops it and the guest sees it as cancelled. This can't be undone.",
+      "notYet": "Not yet",
+      "step": {
+        "received": "Ordered",
+        "preparing": "Started cooking",
+        "ready": "Ready",
+        "served": "Served",
+        "cancelled": "Cancelled"
+      },
+      "from": {
+        "table": "From the table QR code",
+        "pickup": "Pickup, from the menu link",
+        "delivery": "Delivery, from the menu link"
+      }
     },
     "view": {
       "label": "Show as",
@@ -1748,7 +1881,16 @@
     "doneIn_one": "done in {{count}} min",
     "doneIn_other": "done in {{count}} min",
     "openBill": "Open bill",
-    "orderMoreAction": "Take the order"
+    "orderMoreAction": "Take the order",
+    "byReason": "Today by reason",
+    "reasonShort": {
+      "water": "Water",
+      "bill": "Bill",
+      "cutlery": "Cutlery",
+      "order_more": "Order more",
+      "clean_table": "Clean table",
+      "other": "Other"
+    }
   },
   "ownerStaff": {
     "invite": "Invite",
@@ -1793,7 +1935,16 @@
       "all": "Everyone",
       "onShift": "On shift",
       "invited": "Invited"
-    }
+    },
+    "joinedOn": "Joined {{date}}",
+    "ordersToday": "Orders today",
+    "callsAnswered": "Calls answered",
+    "avgReply": "Average reply",
+    "role": "Role",
+    "removeFromStaff": "Remove from staff",
+    "missing": "This person isn't on the team",
+    "missingBody": "They may have been removed. Go back to see who works here.",
+    "invitedTag": "Invited"
   },
   "ownerDevices": {
     "pair": "Pair a phone",
@@ -1817,7 +1968,15 @@
     "removeBody": "It will stop scanning straight away. You can pair it again later.",
     "remove": "Remove",
     "paired": "Paired {{date}}",
-    "activeNow": "Active now"
+    "activeNow": "Active now",
+    "scanOnly": "Scan and stamp only",
+    "used": "Used {{when}}",
+    "pairedTitle": "Paired",
+    "pairTitle": "Pair a device",
+    "step1": "Open the Cravins app on the scanner phone",
+    "step2": "Tap Pair with a venue",
+    "step3": "Get a pairing code here and enter it. It works once.",
+    "footnote": "Scanner devices can only scan loyalty cards and add stamps. They can’t see sales or change settings."
   },
   "ownerSetup": {
     "progress": "Step {{step}} of {{total}}",
@@ -1864,7 +2023,7 @@
     }
   },
   "ownerLinks": {
-    "lead": "Extra buttons on your guest page. Switch one off to hide it without deleting it.",
+    "lead": "Extra buttons on your guest page, like reservations or your website",
     "count_one": "1 link",
     "count_other": "{{count}} links",
     "add": "Add a link",
@@ -1909,7 +2068,13 @@
       "end": "Use YYYY-MM-DD, on or after the From date."
     },
     "moveUp": "Move {{title}} up",
-    "moveDown": "Move {{title}} down"
+    "moveDown": "Move {{title}} down",
+    "placementTitle": {
+      "button": "Buttons on your guest page",
+      "banner": "Banner",
+      "menu": "On the menu"
+    },
+    "footnote": "Switch one off to hide it without deleting it. Use the arrows to change the order."
   },
   "about": {
     "hours": "Opening hours",
@@ -1931,7 +2096,7 @@
     }
   },
   "ownerScan": {
-    "title": "Scan & stamp",
+    "title": "Scan and stamp",
     "aim": "Fit the guest's QR code inside the corners",
     "webTitle": "Scan with the Cravins app",
     "webBody": "Camera scanning works in the app on a phone. On a computer, type the code under the guest's QR card below.",
@@ -1954,35 +2119,36 @@
     "phoneTitle": "Scan with your phone",
     "phoneBody": "A computer can't scan loyalty cards. Point your phone camera at this code to open the scanner, or use a paired scanner phone.",
     "pair": "Pair a scanner phone",
-    "lookupTitle": "Find a guest without their card",
+    "lookupTitle": "No phone to hand? Type their phone or card code",
     "lookupLabel": "Name, last 4 digits or card code",
-    "lookupHint": "Name, last 4 digits, or a card code and Enter",
+    "lookupHint": "e.g. 024 400 0099, a name or a card code",
     "noMatch": "No member matches that.",
     "today": "Today",
     "noneToday": "No stamps or rewards given today yet.",
     "stampTo_one": "Stamp · {{count}} on the card",
-    "stampTo_other": "Stamp · {{count}} on the card"
+    "stampTo_other": "Stamp · {{count}} on the card",
+    "find": "Find guest"
   },
   "ownerLead": {
-    "branding": "How your guest page looks: colour, font, photos and buttons.",
+    "branding": "How your guest pages look",
     "business": "Your business name and every location you run.",
     "calls": "Guests asking for a waiter",
-    "devices": "Phones and tablets that scan loyalty cards at the counter.",
+    "devices": "Phones and tablets your team uses to stamp loyalty cards",
     "feedback": "Private notes guests leave after their meal",
     "loyalty": "Your stamp card, its members and how it is doing",
     "ordering": "Pickup and delivery orders from your menu link.",
     "reviews": "Public ratings from guests, and your replies",
-    "services": "What guests can do from the table, and your Wi-Fi details.",
+    "services": "What guests can do from the table, and your Wi-Fi details",
     "settings": "Your account, your venue and how the app behaves",
     "staff": "Who works here, what they can open and who is on shift",
-    "customers": "Diners who joined your loyalty card. Phone numbers stay masked.",
+    "customers": "Guests who joined your loyalty card",
     "floor": "Every table at a glance. Tap one to see its bill and act on it.",
-    "scan": "Scan a guest's loyalty card to give a stamp or a reward.",
-    "socials": "Your social media links on the guest page."
+    "scan": "Scan a guest's loyalty card to add a stamp or give a reward",
+    "socials": "Your social pages and contact details on the guest page"
   },
   "ownerNotes": {
     "title": "Notifications",
-    "lead": "Orders, waiter calls, bills and guest notes from today, newest first.",
+    "lead": "Orders, waiter calls, bills and guest notes, newest first",
     "pinned": "Needs you",
     "new": "New",
     "earlier": "Earlier",
@@ -2108,7 +2274,36 @@
     "favourite": "Favourite",
     "spent": "Spent",
     "counterStamp": "Stamp at the counter",
-    "rewardReady": "A reward is ready to claim"
+    "rewardReady": "A reward is ready to claim",
+    "figures": {
+      "members": "Members",
+      "new": "New, last 30 days",
+      "cameBack": "Came back more than once"
+    },
+    "tagOne": {
+      "regular": "Regular",
+      "reward_ready": "Reward ready",
+      "new": "New",
+      "quiet": "Quiet lately"
+    },
+    "stampsOf_one": "{{count}} of {{total}} stamps",
+    "stampsOf_other": "{{count}} of {{total}} stamps",
+    "footnote": "Only guests who joined your loyalty card are listed. Phone numbers stay hidden apart from the last digits.",
+    "since": "Member since {{date}}",
+    "lastVisitAgo": "Last visit {{ago}}",
+    "average": "Average",
+    "stampsTitle": "Stamps",
+    "leftFor_one": "One more stamp for {{reward}}",
+    "leftFor_other": "{{count}} more stamps for {{reward}}",
+    "agreed": "Agreed",
+    "notAgreed": "Not agreed",
+    "loyaltyCard": "Loyalty card",
+    "consentAt": "{{date}} · Consent text {{version}}",
+    "marketing": "Marketing messages",
+    "marketingCan": "You can send offers to this guest",
+    "marketingCant": "You can't send offers to this guest",
+    "consentShort": "Consent",
+    "stampAdded": "Stamp added"
   },
   "ownerAi": {
     "title": "Cravins feedback assistant",
@@ -2152,7 +2347,7 @@
   },
   "ownerBilling": {
     "title": "Billing",
-    "lead": "Your plan and what each plan includes.",
+    "lead": "Your Cravins plan and invoices",
     "free": "Free",
     "price": "Price",
     "current": "Your plan",
@@ -2161,10 +2356,22 @@
     "perMonth": "{{price}} a month",
     "placeholder": "These are placeholder prices from the Cravins pricing page.",
     "included": "included",
-    "notIncluded": "not included"
+    "notIncluded": "not included",
+    "usageTitle": "Your plan",
+    "tables": "Tables",
+    "locations": "Locations",
+    "staff": "Staff",
+    "plansTitle": "Plans",
+    "invoicesTitle": "Invoices",
+    "noInvoices": "No invoices yet",
+    "onPlan": "You are on the {{plan}} plan",
+    "aMonth": "a month",
+    "upgrade": "Upgrade to {{plan}}",
+    "talk": "Talk to us",
+    "placeholderLong": "Prices are placeholders until launch. Card payments to your venue go straight to your own Paystack account; Cravins never holds them."
   },
   "ownerNotice": {
-    "lead": "A short message on your guest pages, such as a closing time or tonight’s offer.",
+    "lead": "A short message on your guest pages, like a closing time or tonight’s offer",
     "banner": {
       "title": "Scrolling banner",
       "note": "Runs across the top of your home and menu pages.",
@@ -2191,6 +2398,14 @@
       "text": "Type a message of up to 280 characters, or switch this off.",
       "starts": "Type the start like 2026-11-04 18:00, or leave it empty.",
       "ends": "Type the end like 2026-11-04 23:00, after the start, or leave it empty."
+    },
+    "guestsSee": "What guests see",
+    "atYourTable": "At your table",
+    "ok": "OK",
+    "previewNote": "The banner scrolls across the top of every guest page. The popup shows once per visit.",
+    "showKind": {
+      "banner": "Show the banner",
+      "popup": "Show the popup"
     }
   },
   "notOpen": {
@@ -2198,7 +2413,7 @@
     "body": "This menu isn’t open yet. Please check back soon or ask a member of staff."
   },
   "ownerOrdering": {
-    "lead": "Let people order from your menu link for pickup or delivery. Table QR orders don’t change.",
+    "lead": "Pickup and delivery orders from your menu link",
     "main": "Take online orders",
     "mainOn": "On. Your menu link takes orders.",
     "mainOff": "Off. Your menu link shows the menu only.",
@@ -2227,7 +2442,9 @@
     },
     "pinSet": "Your venue is on the map. Delivery distance starts here.",
     "setPin": "Use my current location",
-    "movePin": "Update the venue location"
+    "movePin": "Update the venue location",
+    "mainHint": "Guests order from your menu link for pickup or delivery",
+    "footnote": "Online orders arrive on Orders with a Pickup or Delivery tag. Guests leave a name and phone on the order only."
   },
   "linkOrder": {
     "title": "How do you want it?",
@@ -2350,7 +2567,32 @@
       "month": "This month",
       "30d": "Last 30 days",
       "custom": "Pick dates"
-    }
+    },
+    "byDay": "By day",
+    "bestDay": "Best day:",
+    "bestDayDetail_one": "{{amount}} from 1 order",
+    "bestDayDetail_other": "{{amount}} from {{count}} orders",
+    "otherDishes": "Other dishes",
+    "soldShareLong_one": "1 sold · {{percent}}% of order value",
+    "soldShareLong_other": "{{count}} sold · {{percent}}% of order value",
+    "soldShareShort_one": "1 sold · {{percent}}%",
+    "soldShareShort_other": "{{count}} sold · {{percent}}%",
+    "shareTitle": "Share of order value",
+    "orderValueLower": "order value",
+    "payments": "Payments",
+    "paymentsNote": "How each order was paid is on its order page.",
+    "orderStatus": "Order status",
+    "source": {
+      "table": "Walk-in",
+      "pickup": "Online pickup",
+      "delivery": "Online delivery"
+    },
+    "byHourTitle": "Sales by hour",
+    "byStaffTitle": "By staff member",
+    "peakTip": "{{hour}} brings in the most money",
+    "taxTitle": "Tax",
+    "taxOffTitle": "Turn on E-VAT to see your tax totals",
+    "taxOffBody": "Sales before tax, VAT and levies for each period, ready for your monthly return."
   },
   "ownerPay": {
     "lead": "Connect Cravins to the services you already use",
@@ -2409,7 +2651,23 @@
     },
     "paymentsTitle": "Payments",
     "whereShort": "Your keys are in Paystack under Settings → API Keys & Webhooks.",
-    "secretNote": "Sent once to Cravins’s server, kept encrypted, and never shown again."
+    "secretNote": "Sent once to Cravins’s server, kept encrypted, and never shown again.",
+    "on": "On",
+    "off": "Off",
+    "cashSub": "Staff mark the order paid at the table",
+    "bankSub": "Guests see your account details to send to",
+    "saveBank": "Save bank details",
+    "bankNote": "Guests see the bank, account name and last 4 digits on their bill. Staff mark the order paid when the money arrives.",
+    "saveMomo": "Save MoMo details",
+    "listingsTitle": "Reviews and listings",
+    "messagesTitle": "Messages",
+    "google": "Google Business Profile",
+    "googleSub": "Guests can review you on Google in one tap",
+    "tripadvisor": "Tripadvisor",
+    "tripadvisorSub": "Guests can review you on Tripadvisor",
+    "whatsapp": "WhatsApp Business",
+    "whatsappSub": "Order alerts and replies to guests on WhatsApp",
+    "soon": "Coming soon"
   },
   "ownerPromos": {
     "lead": "Discounts and codes. They come off the bill before the guest pays.",
@@ -2479,5 +2737,67 @@
       "minSpend": "Enter an amount, like 100",
       "codeTaken": "Another promo already uses this code"
     }
+  },
+  "ownerHelp": {
+    "lead": "Answers to common questions",
+    "search": "Search help",
+    "noMatch": "No answers match that. Try another word.",
+    "groups": {
+      "start": "Getting started",
+      "money": "Money",
+      "guests": "Guests"
+    },
+    "q": {
+      "order": {
+        "question": "How do guests order from the table?",
+        "answer": "Each table has its own QR code. Guests scan it, see your menu and order. The order appears on Orders straight away.",
+        "link": "Print table codes"
+      },
+      "prices": {
+        "question": "How do I change prices or hide a dish?",
+        "answer": "Open Menu, tap the dish and change the price, or switch it off when it runs out.",
+        "link": "Open Menu"
+      },
+      "staff": {
+        "question": "How do I add my staff?",
+        "answer": "Invite them from Staff with their phone number. Waiters only see the floor and calls.",
+        "link": "Open Staff"
+      },
+      "payouts": {
+        "question": "How do card and MoMo payments reach me?",
+        "answer": "You connect your own Paystack account. Guests pay through Paystack and the money settles straight to your bank or MoMo. Cravins never holds it.",
+        "link": "Connect Paystack"
+      },
+      "notPaid": {
+        "question": "Why does an order say \"Not paid\"?",
+        "answer": "Only a payment Paystack confirms counts. If a guest closes the page early, the order stays unpaid until they pay or you mark it cash.",
+        "link": "Open Orders"
+      },
+      "stamps": {
+        "question": "How do loyalty stamps work?",
+        "answer": "Guests join with their phone number. Scan their card on a scanner device to add a stamp after each visit.",
+        "link": "Open Loyalty"
+      },
+      "reviews": {
+        "question": "Can I only ask happy guests for Google reviews?",
+        "answer": "No. Google doesn't allow that, so every guest sees the review button. Private feedback still reaches you on Feedback.",
+        "link": "Open Reviews"
+      }
+    },
+    "stuck": "Still stuck?",
+    "stuckBody": "Message us and we reply within a working day.",
+    "stuckFallback": "For now, ask the person who set up Cravins for you.",
+    "email": "Email us",
+    "whatsapp": "WhatsApp us"
+  },
+  "ownerProfile": {
+    "title": "Your profile",
+    "lead": "Your name, phone and language",
+    "changePhoto": "Change photo",
+    "details": "Details",
+    "name": "Name",
+    "phoneHint": "We text a code to confirm a new number",
+    "moreLanguages": "More languages are coming.",
+    "deleteBody": "Deletes your venues, menus and staff. Paid orders stay on record for tax for 6 years."
   }
 }

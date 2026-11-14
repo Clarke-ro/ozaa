@@ -1,29 +1,49 @@
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Check, Minus } from 'lucide-react-native';
 import { api } from '@/lib/api';
+import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
+import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
+import { useOwnerLayout } from '../../chrome/layout';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
-import { cardStyle, DeskCard, StatusPill } from '../../kit';
-import { PLANS, PLANS_ARE_PLACEHOLDERS, monthlyPrice, type PlanInfo } from './plans';
+import { cardStyle, FigureRow, toast } from '../../kit';
+import { monthlyPrice, PLANS, PLANS_ARE_PLACEHOLDERS, type PlanInfo } from './plans';
 
-/** The plan you are on in its own card, then every plan side by side on wide screens. */
+/**
+ * Billing as on the design canvas: what this business uses now (tables, locations, staff), the
+ * plans side by side with the current one outlined, invoices, and a note that prices are
+ * placeholders. Plans come from the website's pricing page, so the two never disagree.
+ */
 export function BillingScreen() {
   const { t } = useTranslation();
   const theme = useTheme();
-  const { width } = useWindowDimensions();
-  const threeCol = width >= 900;
+  const { wide, desktop } = useOwnerLayout();
+  const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const business = useQuery({
     queryKey: ownerKeys.business(),
     queryFn: () => api.ownerGetBusiness(),
   });
+  const tables = useQuery({
+    queryKey: ownerKeys.tables(venueId),
+    queryFn: () => api.ownerListTables(venueId),
+    enabled: Boolean(venueId),
+  });
+  const staff = useQuery({
+    queryKey: ownerKeys.staff(venueId),
+    queryFn: () => api.ownerListStaff(venueId),
+    enabled: Boolean(venueId),
+  });
+  const planId = business.data?.business.plan;
+  const tier = PLANS.findIndex((p) => p.id === planId);
 
   return (
-    <OwnerPage title={t('ownerBilling.title')} subtitle={t('ownerBilling.lead')}>
+    <OwnerPage width="mid" title={t('ownerBilling.title')} subtitle={t('ownerBilling.lead')}>
       <DeskWait
         loading={business.isPending}
         error={business.isError}
@@ -31,17 +51,55 @@ export function BillingScreen() {
       >
         {business.data ? (
           <View style={styles.stack}>
-            <CurrentPlan planId={business.data.business.plan} />
-            <View style={[styles.list, threeCol && styles.row]}>
-              {PLANS.map((plan) => (
-                <View key={plan.id} style={threeCol ? styles.col : undefined}>
-                  <PlanCard plan={plan} current={plan.id === business.data.business.plan} />
-                </View>
-              ))}
+            <View style={styles.section}>
+              <Text variant="title" accessibilityRole="header">
+                {t('ownerBilling.usageTitle')}
+              </Text>
+              <FigureRow
+                wide={wide}
+                size={30}
+                items={[
+                  {
+                    label: t('ownerBilling.tables'),
+                    value: String(tables.data?.items.length ?? '–'),
+                  },
+                  {
+                    label: t('ownerBilling.locations'),
+                    value: String(business.data.locations.length),
+                  },
+                  {
+                    label: t('ownerBilling.staff'),
+                    value: String(
+                      staff.data?.items.filter((m) => m.status !== 'removed').length ?? '–',
+                    ),
+                  },
+                ]}
+              />
+            </View>
+            <View style={styles.section}>
+              <Text variant="title" accessibilityRole="header">
+                {t('ownerBilling.plansTitle')}
+              </Text>
+              <View style={[styles.plans, desktop && styles.row]}>
+                {PLANS.map((plan, i) => (
+                  <PlanCard key={plan.id} plan={plan} place={i - tier} />
+                ))}
+              </View>
+            </View>
+            <View style={styles.section}>
+              <Text variant="title" accessibilityRole="header">
+                {t('ownerBilling.invoicesTitle')}
+              </Text>
+              <View style={[cardStyle(theme), styles.invoices]}>
+                <Text variant="body">{t('ownerBilling.noInvoices')}</Text>
+                <Text style={[styles.sub, { color: theme.meta }]}>
+                  {t('ownerBilling.onPlan', { plan: PLANS[tier]?.name ?? '' })}
+                </Text>
+              </View>
             </View>
             {PLANS_ARE_PLACEHOLDERS ? (
-              <Text variant="caption" style={{ color: theme.meta }}>
-                {t('ownerBilling.placeholder')}
+              <Text style={[styles.sub, { color: theme.meta }]}>
+                {t('ownerBilling.placeholderLong')}
               </Text>
             ) : null}
           </View>
@@ -51,60 +109,29 @@ export function BillingScreen() {
   );
 }
 
-/** The plan the business is on, in its own card at the top: name, Active, and what it costs. */
-function CurrentPlan({ planId }: { planId: PlanInfo['id'] }) {
+/**
+ * One plan (canvas): name, price a month, what it includes, then a button: the current plan says
+ * so, the next one up is the page's filled button, the rest are outlined. Billing is not live,
+ * so upgrading only says that, and "Talk to us" opens Help.
+ */
+function PlanCard({ plan, place }: { plan: PlanInfo; place: number }) {
   const { t } = useTranslation();
   const theme = useTheme();
-  const plan = PLANS.find((p) => p.id === planId);
-  if (!plan) return null;
-  const price =
-    plan.monthly === 0
-      ? t('ownerBilling.free')
-      : t('ownerBilling.perMonth', { price: monthlyPrice(plan) });
+  const router = useRouter();
+  const current = place === 0;
   return (
-    <View style={[styles.current, cardStyle(theme)]}>
-      <View style={styles.head}>
-        <View style={styles.name}>
-          <Text variant="caption" style={[styles.caps, { color: theme.muted }]}>
-            {t('ownerBilling.yourPlan').toUpperCase()}
-          </Text>
-          <Text variant="display-m">{plan.name}</Text>
-        </View>
-        <StatusPill label={t('ownerPay.active')} tone="success" boxed />
-      </View>
-      <View style={[styles.line, { borderTopColor: theme.line }]}>
-        <Text variant="body" style={{ color: theme.muted }}>
-          {t('ownerBilling.price')}
-        </Text>
-        <Text variant="body-strong">{price}</Text>
-      </View>
-      <Text variant="caption" style={{ color: theme.muted }}>
-        {t('ownerBilling.notLive')}
-      </Text>
-    </View>
-  );
-}
-
-function PlanCard({ plan, current }: { plan: PlanInfo; current: boolean }) {
-  const { t } = useTranslation();
-  const theme = useTheme();
-  const price =
-    plan.monthly === 0 ? null : t('ownerBilling.perMonth', { price: monthlyPrice(plan) });
-  return (
-    <DeskCard
-      tone={current ? 'selected' : 'plain'}
-      style={[styles.card, current && { borderColor: theme.ink }]}
+    <View
+      style={[
+        cardStyle(theme),
+        styles.card,
+        current && { borderColor: theme.text, borderWidth: 2 },
+      ]}
     >
-      <View style={styles.head}>
-        <View style={styles.name}>
-          <Text variant="title">{plan.name}</Text>
-          <Text variant="caption" style={{ color: theme.meta }}>
-            {plan.blurb}
-          </Text>
-        </View>
-        {current ? <StatusPill label={t('ownerBilling.yourPlan')} tone="accent" boxed /> : null}
-      </View>
-      {price ? <Text variant="body-strong">{price}</Text> : null}
+      <Text style={styles.name}>{plan.name}</Text>
+      <Text>
+        <Text style={styles.price}>{monthlyPrice(plan)}</Text>
+        <Text style={[styles.sub, { color: theme.meta }]}>{` ${t('ownerBilling.aMonth')}`}</Text>
+      </Text>
       <View style={styles.features}>
         {plan.features.map((feature) => {
           const Icon = feature.included ? Check : Minus;
@@ -115,37 +142,57 @@ function PlanCard({ plan, current }: { plan: PlanInfo; current: boolean }) {
               accessible
               accessibilityLabel={`${feature.label}: ${feature.included ? t('ownerBilling.included') : t('ownerBilling.notIncluded')}`}
             >
-              <Icon size={16} color={feature.included ? theme.success : theme.muted} />
-              <Text
-                variant="caption"
-                style={{ color: feature.included ? theme.text : theme.muted }}
-              >
+              <Icon size={18} color={feature.included ? theme.success : theme.meta} />
+              <Text style={[styles.featureText, !feature.included && { color: theme.meta }]}>
                 {feature.label}
               </Text>
             </View>
           );
         })}
       </View>
-    </DeskCard>
+      {current ? (
+        <View style={[styles.yours, { backgroundColor: theme.wash }]}>
+          <Text variant="button">{t('ownerBilling.current')}</Text>
+        </View>
+      ) : place === 1 ? (
+        <Button
+          label={t('ownerBilling.upgrade', { plan: plan.name })}
+          onPress={() => toast.success(t('ownerBilling.notLive'))}
+        />
+      ) : (
+        <Button
+          label={t('ownerBilling.talk')}
+          tone="secondary"
+          onPress={() => router.push('/owner/help')}
+        />
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  stack: { gap: tokens.space[3] },
-  list: { gap: tokens.space[3] },
-  row: { flexDirection: 'row', alignItems: 'stretch', gap: tokens.space[4] },
-  col: { flex: 1, minWidth: 0 },
-  card: { flex: 1, gap: tokens.space[3] },
-  head: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.space[3] },
-  name: { flex: 1, gap: 2 },
-  features: { gap: tokens.space[2] },
-  feature: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
-  current: { padding: tokens.space[4], gap: tokens.space[3] },
-  caps: { fontFamily: fontFamily.strong, letterSpacing: tokens.owner.type.caps.letterSpacing },
-  line: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingTop: tokens.space[3],
-    borderTopWidth: StyleSheet.hairlineWidth,
+  stack: { gap: tokens.space[10] },
+  section: { gap: tokens.space[4] },
+  plans: { gap: tokens.space[4] },
+  row: { flexDirection: 'row', alignItems: 'stretch' },
+  card: { flex: 1, padding: tokens.owner.controls.cardPadding, gap: tokens.space[4] },
+  name: { fontSize: 17, lineHeight: 22, fontFamily: fontFamily.strong },
+  price: { fontSize: 30, lineHeight: 36, fontFamily: fontFamily.strong },
+  sub: { fontSize: 14, lineHeight: 20 },
+  features: { flex: 1, gap: 10 },
+  feature: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  featureText: { flex: 1, fontSize: 15, lineHeight: 22 },
+  yours: {
+    height: 48,
+    borderRadius: tokens.radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  invoices: {
+    minHeight: 64,
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: tokens.owner.controls.cardPadding,
+    gap: 2,
   },
 });

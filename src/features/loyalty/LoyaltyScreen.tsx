@@ -226,7 +226,11 @@ export function LoyaltyScreen({ slug }: { slug: string }) {
                 onOpenSample={() => void openSample()}
               />
             ) : (
-              <LoyaltyIntro venueName={placeName} onJoin={() => setJoining(true)} />
+              <LoyaltyIntro
+                venueName={placeName}
+                programme={programme}
+                onJoin={() => setJoining(true)}
+              />
             )}
             {/* Rewards and tiers only mean something once you have a card, so a visitor sees how to earn. */}
             {programme ? <HowToEarn programme={programme} gameMinScore={gameMinScore} /> : null}

@@ -1,44 +1,71 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { SearchX } from 'lucide-react-native';
 import { api } from '@/lib/api';
+import type { Order } from '@/lib/api/types';
 import { useOwnerSession } from '@/features/session';
 import { DEFAULT_CURRENCY } from '@/lib/money';
+import { timeAgo } from '@/lib/time';
+import { useTheme } from '@/ui/theme';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
-import { useOwnerLayout } from '../../chrome/layout';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
-import { EmptyCard, InfoRow, Section, SectionBody, StatusPill } from '../../kit';
+import {
+  cardStyle,
+  ConfirmDialog,
+  EmptyCard,
+  TitledSection,
+  toast,
+  ToneTag,
+} from '../../kit';
+import type { StatusTone } from '@/theme/palette';
+import { SectionHead } from '../dashboard/SectionHead';
 import { MarkPaidSheet } from './MarkPaidSheet';
 import { OrderBill } from './OrderBill';
 import { OrderContact } from './OrderContact';
-import { orderPlace, PAID_TONE, paidLabel } from './orderPlace';
+import { orderPlace, paidLabel } from './orderPlace';
 import { orderSteps } from './orderSteps';
-import { OrderTimeline } from './OrderTimeline';
+import { StepRows } from './StepRows';
+import { OrderPayment } from './OrderPayment';
 import { useOrderMove } from './useOrderMove';
 import { useVenuePay } from './useVenuePay';
 import { POLL_MS } from '@/lib/polling';
 
-// The side column on a desktop: wide enough for the timeline and the pay button, no wider.
-const SIDE_COLUMN = 340;
+// Canvas tag colours: new orange, cooking blue, ready and served green; paid green, owed amber.
+const STAGE_TAG: Record<Order['status'], StatusTone> = {
+  received: 'order',
+  preparing: 'info',
+  ready: 'success',
+  served: 'success',
+  cancelled: 'alert',
+};
+const PAID_TAG: Record<Order['paymentStatus'], StatusTone> = {
+  unpaid: 'bill',
+  part_paid: 'bill',
+  paid: 'success',
+  refunded: 'alert',
+};
 
 /**
- * One order on its own page: the dishes with prices and the sums on the left; where it is in the
- * kitchen, how it is paid and who it is for on the right (stacked on smaller screens). The next
- * kitchen step is the page's one filled button. The order comes from the same live list as
- * Orders, so it stays current and costs no extra call.
+ * One order on its own page (canvas): its kitchen and payment state with the next step, the
+ * dishes, the sums the server worked out, payment, the timeline, and Cancel for owners and
+ * managers. The order comes from the same live list as Orders, so it costs no extra call.
  */
 export function OrderDetailScreen({ orderId }: { orderId: string }) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const router = useRouter();
-  const { desktop } = useOwnerLayout();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const role = useOwnerSession((state) => state.role) ?? 'waiter';
   const [paying, setPaying] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  // Read the clock once so the page stays pure; "2 min ago" refreshes with the order poll.
+  const [now] = useState(() => Date.now());
+  const theme = useTheme();
+  const client = useQueryClient();
   const { venue, methods } = useVenuePay(venueId);
   const orders = useQuery({
     queryKey: ownerKeys.orders(venueId),
@@ -56,76 +83,34 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
     order.status !== 'cancelled';
   const back = () => (router.canGoBack() ? router.back() : router.replace('/owner/orders'));
 
+  const cancel = useMutation({
+    mutationFn: (id: string) => api.ownerSetOrderStatus(id, { status: 'cancelled' }),
+    onSuccess: () => {
+      setCancelling(false);
+      void client.invalidateQueries({ queryKey: ownerKeys.orders(venueId) });
+    },
+    onError: () => toast.error(t('ownerKit.saveFailed')),
+  });
   const place = order ? orderPlace(order, t) : null;
-  const placed = order
-    ? new Date(order.createdAt).toLocaleString(i18n.language, {
-        weekday: 'short',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
-    : '';
   const next = order ? move.label(order) : null;
-
-  const side = order ? (
-    <View style={[styles.column, desktop && { width: SIDE_COLUMN }]}>
-      <Section title={t('ownerOrders.detail.progress')}>
-        <SectionBody>
-          <OrderTimeline steps={orderSteps(order)} />
-        </SectionBody>
-      </Section>
-      <Section title={t('ownerOrders.detail.payment')}>
-        <SectionBody>
-          <View style={styles.pay}>
-            <StatusPill
-              label={paidLabel(order, t)}
-              tone={PAID_TONE[order.paymentStatus]}
-              icon={false}
-            />
-            {canMarkPaid ? (
-              <Button
-                label={t('ownerOrders.markPaid.open')}
-                size="md"
-                tone="secondary"
-                onPress={() => setPaying(true)}
-              />
-            ) : null}
-          </View>
-        </SectionBody>
-      </Section>
-      <Section title={t('ownerOrders.detail.about')}>
-        <InfoRow label={t('ownerOrders.detail.where')} value={place?.where} />
-        <InfoRow label={t('ownerOrders.detail.placed')} value={placed} />
-        {order.etaMinutes != null && order.status !== 'served' && order.status !== 'cancelled' ? (
-          <InfoRow
-            label={t('ownerOrders.detail.eta')}
-            value={t('ownerCalls.minutes', { count: order.etaMinutes })}
-          />
-        ) : null}
-        {order.contact ? (
-          <SectionBody>
-            <OrderContact order={order} />
-          </SectionBody>
-        ) : null}
-      </Section>
-    </View>
-  ) : null;
+  const live = order != null && order.status !== 'served' && order.status !== 'cancelled';
+  const mayCancel = live && (role === 'owner' || role === 'manager');
+  const items = order ? order.lines.reduce((sum, line) => sum + line.quantity, 0) : 0;
+  const source = order?.source && order.source !== 'table' ? order.source : 'table';
 
   return (
     <OwnerPage
-      title={order ? t('ownerOrders.detail.title', { number: order.number }) : t('owner.orders')}
-      subtitle={order && place ? place.where : undefined}
-
-      back={{ label: t('owner.orders'), onPress: back }}
-      action={
-        order && next ? (
-          <Button
-            label={next}
-            size="md"
-            loading={move.busy(order)}
-            onPress={() => move.run(order)}
-          />
-        ) : undefined
+      title={
+        order && place
+          ? t('ownerOrders.detail.heading', { where: place.where, number: order.number })
+          : t('owner.orders')
       }
+      subtitle={
+        order
+          ? t('ownerOrders.detail.orderedAgo', { ago: timeAgo(order.createdAt, now, t) })
+          : undefined
+      }
+      back={{ label: t('owner.orders'), onPress: back }}
     >
       <DeskWait
         loading={orders.isLoading}
@@ -133,15 +118,60 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
         onRetry={() => void orders.refetch()}
       >
         {order ? (
-          <View style={[styles.layout, desktop && styles.row]}>
-            <View style={[styles.column, styles.main]}>
-              <Section title={t('ownerOrders.detail.dishes')}>
-                <SectionBody>
-                  <OrderBill order={order} currency={currency} />
-                </SectionBody>
-              </Section>
+          <View style={styles.stack}>
+            <View style={styles.head}>
+              <View style={styles.pills}>
+                <ToneTag label={t(`statusLabel.${order.status}`)} tone={STAGE_TAG[order.status]} />
+                <ToneTag label={paidLabel(order, t)} tone={PAID_TAG[order.paymentStatus]} />
+              </View>
+              {next ? (
+                <Button
+                  label={next}
+                  loading={move.busy(order)}
+                  onPress={() => move.run(order)}
+                  style={styles.short}
+                />
+              ) : null}
             </View>
-            {side}
+            <View style={styles.group}>
+              <SectionHead
+                title={t('ownerOrders.detail.items')}
+                badge={String(items)}
+                badgeTone="neutral"
+              />
+              <View style={[cardStyle(theme), styles.card]}>
+                <OrderBill order={order} currency={currency} part="lines" />
+              </View>
+            </View>
+            <TitledSection title={t('ownerOrders.detail.total')} cardStyle={styles.cardPad}>
+              <OrderBill order={order} currency={currency} part="sums" />
+            </TitledSection>
+            <OrderPayment
+              order={order}
+              currency={currency}
+              canMarkPaid={canMarkPaid}
+              onMarkPaid={() => setPaying(true)}
+            />
+            {order.contact ? (
+              <TitledSection title={t('ownerOrders.detail.about')} cardStyle={styles.cardPad}>
+                <OrderContact order={order} />
+              </TitledSection>
+            ) : null}
+            <TitledSection title={t('ownerOrders.detail.timeline')} cardStyle={styles.card}>
+              <StepRows
+                steps={orderSteps(order)}
+                firstNote={t(`ownerOrders.detail.from.${source}`)}
+              />
+            </TitledSection>
+            {mayCancel ? (
+              <Button
+                label={t('ownerOrders.detail.cancel')}
+                tone="secondary"
+                labelColor={theme.error}
+                onPress={() => setCancelling(true)}
+                style={[styles.short, styles.start]}
+              />
+            ) : null}
           </View>
         ) : (
           <EmptyCard
@@ -162,20 +192,33 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
           onClose={() => setPaying(false)}
         />
       ) : null}
+      <ConfirmDialog
+        visible={cancelling}
+        title={t('ownerOrders.detail.cancelTitle')}
+        message={t('ownerOrders.detail.cancelBody')}
+        confirmLabel={t('ownerOrders.detail.cancel')}
+        onConfirm={() => order && cancel.mutate(order.id)}
+        onCancel={() => setCancelling(false)}
+      />
     </OwnerPage>
   );
 }
 
 const styles = StyleSheet.create({
-  layout: { gap: tokens.space[4] },
-  row: { flexDirection: 'row', alignItems: 'flex-start' },
-  main: { flex: 1, minWidth: 0 },
-  column: { gap: tokens.space[4] },
-  pay: {
+  stack: { gap: tokens.owner.controls.sectionGap },
+  group: { gap: tokens.space[4] },
+  head: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: tokens.space[2],
+    gap: tokens.space[3],
   },
+  pills: { flexDirection: 'row', gap: tokens.space[2] },
+  card: { paddingVertical: 2, paddingHorizontal: tokens.owner.controls.cardPadding },
+  cardPad: { padding: tokens.owner.controls.cardPadding },
+  row: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3], minHeight: 60 },
+  flex: { flex: 1, minWidth: 0, gap: 2 },
+  short: { minHeight: 40 },
+  start: { alignSelf: 'flex-start' },
 });

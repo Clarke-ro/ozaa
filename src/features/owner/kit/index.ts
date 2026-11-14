@@ -33,3 +33,6 @@ export { RankTable, type RankRow } from './RankTable';
 export { RowMenu, type RowAction } from './RowMenu';
 export { downloadCsv } from './downloadCsv';
 export { FigureRow, type Figure } from './FigureRow';
+export { TitledSection } from './TitledSection';
+export { BarList, type BarRow } from './BarList';
+export { ToneTag } from './ToneTag';

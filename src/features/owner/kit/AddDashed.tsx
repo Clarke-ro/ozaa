@@ -17,11 +17,12 @@ export function AddDashed({ label, onPress }: { label: string; onPress: () => vo
       onPress={onPress}
       style={({ pressed }) => [
         styles.box,
-        { borderColor: theme.ink, backgroundColor: pressed ? theme.tint : 'transparent' },
+        // Canvas: a grey dashed edge, black words, no fill.
+        { borderColor: theme.line, backgroundColor: pressed ? theme.wash : 'transparent' },
       ]}
     >
-      <Plus size={20} color={theme.ink} />
-      <Text variant="body-strong" style={{ color: theme.ink }}>
+      <Plus size={20} color={theme.text} />
+      <Text variant="button" style={{ color: theme.text }}>
         {label}
       </Text>
     </Pressable>
@@ -34,9 +35,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: tokens.space[2],
-    minHeight: tokens.touchTarget + tokens.space[5],
-    borderWidth: 1.5,
+    minHeight: 56,
+    borderWidth: 1,
     borderStyle: 'dashed',
-    borderRadius: tokens.radius.md,
+    borderRadius: tokens.owner.controls.cardRadius,
   },
 });

@@ -47,3 +47,22 @@ export function callTimes(call: Pick<WaiterCall, 'createdAt' | 'acknowledgedAt' 
     at ? Math.max(0, Math.floor((Date.parse(at) - from) / 60_000)) : null;
   return { pickedUp: mins(call.acknowledgedAt), done: mins(call.resolvedAt) };
 }
+
+const REASONS: readonly WaiterCall['reason'][] = [
+  'water',
+  'bill',
+  'cutlery',
+  'order_more',
+  'clean_table',
+  'other',
+];
+
+/** How many calls of each kind came in, every reason listed (canvas "Today by reason"). */
+export function reasonCounts(
+  calls: readonly Pick<WaiterCall, 'reason'>[],
+): { reason: WaiterCall['reason']; count: number }[] {
+  return REASONS.map((reason) => ({
+    reason,
+    count: calls.filter((c) => c.reason === reason).length,
+  }));
+}

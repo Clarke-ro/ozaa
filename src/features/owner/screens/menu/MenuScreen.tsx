@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import type { MenuCategory, MenuItem } from '@/lib/api/types';
 import { useOwnerSession } from '@/features/session';
@@ -8,7 +9,6 @@ import { Text } from '@/ui/Text';
 import { tokens } from '@/theme/tokens';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ConfirmDialog, Segmented } from '../../kit';
-import { DishEditor } from './DishEditor';
 import { LiveMenu, type Audience } from './live/LiveMenu';
 import { MenuListView } from './MenuListView';
 import { SectionEditor } from './SectionEditor';
@@ -34,6 +34,7 @@ export function MenuScreen() {
   const { t } = useTranslation();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const desk = useMenuDesk(venueId);
+  const router = useRouter();
   const { width } = useWindowDimensions();
   const split = width >= SIDE_BY_SIDE;
   // Side by side, the list is always there and the switch picks the preview; on smaller screens
@@ -41,9 +42,6 @@ export function MenuScreen() {
   const [picked, setPicked] = useState<Audience | 'list' | null>(null);
   const mode = picked ?? 'list';
   const [audience, setAudience] = useState<Audience>('online');
-  // The section a new dish goes into, from "Add a dish here".
-  const [addTo, setAddTo] = useState<string | undefined>(undefined);
-  const [editingItem, setEditingItem] = useState<MenuItem | null | undefined>(undefined);
   const [editingSection, setEditingSection] = useState<MenuCategory | null | undefined>(undefined);
   const [sectionsOpen, setSectionsOpen] = useState(false);
   const [pending, setPending] = useState<Pending | null>(null);
@@ -52,10 +50,10 @@ export function MenuScreen() {
   // Food sections first, then drinks, each in the order guests see them.
   const sections = [...desk.sectionsOf('food'), ...desk.sectionsOf('drinks')];
   const sectionCount = (id: string) => all.filter((i) => i.categoryId === id).length;
-  const addDish = (sectionId?: string) => {
-    setAddTo(sectionId);
-    setEditingItem(null);
-  };
+  // Dishes open on their own page (canvas), so the menu keeps its scroll place behind them.
+  const addDish = (sectionId?: string) =>
+    router.push(sectionId ? `/owner/menu/dish/new?section=${sectionId}` : '/owner/menu/dish/new');
+  const editDish = (item: MenuItem) => router.push(`/owner/menu/dish/${item.id}`);
 
   const confirm = () => {
     if (!pending) return;
@@ -72,7 +70,7 @@ export function MenuScreen() {
       currency={desk.currency}
       busy={desk.setAll.isPending}
       onAddDish={addDish}
-      onEditDish={setEditingItem}
+      onEditDish={editDish}
       onToggleDish={(item) => desk.toggle.mutate(item)}
       onEditSection={setEditingSection}
       onHideSection={(section) => desk.hideSection.mutate(section)}
@@ -90,7 +88,7 @@ export function MenuScreen() {
         venue={desk.venue.data}
         sections={sections}
         dishes={all}
-        onEditDish={setEditingItem}
+        onEditDish={editDish}
         onAddDish={addDish}
         onEditSection={setEditingSection}
         onReorder={(dishes, orderedIds) => desk.reorderDishes.mutate({ dishes, orderedIds })}
@@ -178,29 +176,6 @@ export function MenuScreen() {
           onClose={() => setEditingSection(undefined)}
           onSaved={() => {
             setEditingSection(undefined);
-            void desk.refresh();
-          }}
-        />
-      ) : null}
-      {editingItem !== undefined ? (
-        <DishEditor
-          key={editingItem?.id ?? 'new-dish'}
-          item={editingItem}
-          sections={sections}
-          defaultSectionId={addTo ?? sections[0]?.id}
-          venueId={venueId}
-          currency={desk.currency}
-          onClose={() => setEditingItem(undefined)}
-          onDelete={
-            editingItem
-              ? () => {
-                  setPending({ kind: 'item', item: editingItem });
-                  setEditingItem(undefined);
-                }
-              : undefined
-          }
-          onSaved={() => {
-            setEditingItem(undefined);
             void desk.refresh();
           }}
         />
