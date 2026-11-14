@@ -13,3 +13,10 @@ test('auto always picks a readable label', () => {
 test('forcing white text on a pale colour is flagged', () => {
   expect(buttonLook('#FFC21A', 'light').readable).toBe(false);
 });
+
+test('gives the contrast ratio the colour card shows', () => {
+  const look = buttonLook('#111111', 'light');
+  expect(look.ink).toBe('#FFFFFF');
+  expect(look.ratio).toBeGreaterThan(17);
+  expect(look.ratio).toBeLessThan(19);
+});

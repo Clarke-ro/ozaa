@@ -1146,7 +1146,31 @@
       "light": "Light",
       "dark": "Dark",
       "auto": "Follow phone"
-    }
+    },
+    "photosTitle": "Photos",
+    "cover": "Cover photo",
+    "logo": "Logo",
+    "changeCover": "Change cover",
+    "changeLogo": "Change logo",
+    "colourTitle": "Colour",
+    "readsWell": "{{ink}} button text reads well ({{ratio}}:1)",
+    "readsBadly": "{{ink}} button text is too hard to read ({{ratio}}:1). Pick a darker colour or Auto.",
+    "tintHint": "Auto picks the colour that is easiest to read on your venue colour.",
+    "typeTitle": "Type and theme",
+    "schemeHint": "Follow phone matches each guest's phone setting.",
+    "menuTitle": "Menu",
+    "dishOrder": "Dish order",
+    "sortShort": {
+      "manual": "As you arrange",
+      "popular_first": "Popular first",
+      "name": "A to Z"
+    },
+    "layout": "Menu layout",
+    "about": "About us",
+    "homeOrder": "Guest home order",
+    "saveBranding": "Save branding",
+    "guestsSee": "What guests see",
+    "previewNote": "Changes show here as you make them."
   },
   "ownerPages": {
     "businessLead": "Your business name and every location you run on Cravins.",
@@ -2036,7 +2060,7 @@
     "find": "Find guest"
   },
   "ownerLead": {
-    "branding": "How your guest page looks: colour, font, photos and buttons.",
+    "branding": "How your guest pages look",
     "business": "Your business name and every location you run.",
     "calls": "Guests asking for a waiter",
     "devices": "Phones and tablets your team uses to stamp loyalty cards",

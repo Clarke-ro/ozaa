@@ -13,7 +13,7 @@ const SORTS: FullMenuStyle['itemSort'][] = [
   'price_high',
 ];
 
-/** How the guest menu looks: dish order, list or grid, and light or dark pages. */
+/** Menu-page panel: dish order (all five), list or grid, and light or dark pages. */
 export function MenuStyleSection({
   style,
   onChange,

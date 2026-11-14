@@ -17,13 +17,14 @@ export function normaliseHex(text: string): string {
   return isHex(withHash) ? withHash.toUpperCase() : t;
 }
 
-/** The text colour on the guest page's main button, and whether that choice is hard to read. */
+/** The text colour on the guest page's main button, its contrast ratio, and whether it reads well. */
 export function buttonLook(
   accent: string,
   tint: Tint,
-): { fill: string; ink: string; readable: boolean } {
+): { fill: string; ink: string; readable: boolean; ratio: number } {
   const derived = deriveTheme(isHex(accent) ? accent : null);
   const ink = tint === 'light' ? WHITE : tint === 'dark' ? INK : derived.onAccent;
+  const ratio = contrast(ink, derived.fill);
   // Button labels are 16 px, so they need the full 4.5:1.
-  return { fill: derived.fill, ink, readable: contrast(ink, derived.fill) >= 4.5 };
+  return { fill: derived.fill, ink, readable: ratio >= 4.5, ratio };
 }
