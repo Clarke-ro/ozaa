@@ -55,6 +55,16 @@
             "closes": "22:00"
           }
         ]
+      ],
+      "exceptions": [
+        {
+          "date": "2026-12-25",
+          "closed": true
+        },
+        {
+          "date": "2027-01-01",
+          "closed": true
+        }
       ]
     },
     "theme": {
