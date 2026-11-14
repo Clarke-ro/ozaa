@@ -2637,6 +2637,11 @@ components:
         buttonTint: { type: string, enum: [auto, light, dark] }
         stylePreset: { type: string, enum: [default, classic, editorial, modern] }
         buttonOrder: { type: array, items: { type: string } }
+        sectionOrder:
+          type: array
+          maxItems: 5
+          items: { type: string, enum: [table, rewards, fun, more, socials] }
+          description: "The order of the sections on the guest home (Branding > Guest home order). Sections left out keep their usual place after these."
         socials: { $ref: '#/components/schemas/SocialLinks' }
         menuStyle: { $ref: '#/components/schemas/MenuStyle' }
         onlineOrdering:
@@ -2676,6 +2681,11 @@ components:
         buttonTint: { type: string, enum: [auto, light, dark] }
         stylePreset: { type: string, enum: [default, classic, editorial, modern] }
         buttonOrder: { type: array, items: { type: string } }
+        sectionOrder:
+          type: array
+          maxItems: 5
+          items: { type: string, enum: [table, rewards, fun, more, socials] }
+          description: "The order of the sections on the guest home (Branding > Guest home order). Sections left out keep their usual place after these."
         socials: { $ref: '#/components/schemas/SocialLinks' }
         noticeSettings: { $ref: '#/components/schemas/StoreNotices' }
         menuStyle: { $ref: '#/components/schemas/MenuStyle' }

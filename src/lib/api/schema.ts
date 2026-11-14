@@ -1869,6 +1869,8 @@ export interface components {
             /** @enum {string} */
             stylePreset?: "default" | "classic" | "editorial" | "modern";
             buttonOrder?: string[];
+            /** @description The order of the sections on the guest home (Branding > Guest home order). Sections left out keep their usual place after these. */
+            sectionOrder?: ("table" | "rewards" | "fun" | "more" | "socials")[];
             socials?: components["schemas"]["SocialLinks"];
             menuStyle?: components["schemas"]["MenuStyle"];
             /** @description Missing means online ordering is off. */
@@ -1907,6 +1909,8 @@ export interface components {
             /** @enum {string} */
             stylePreset?: "default" | "classic" | "editorial" | "modern";
             buttonOrder?: string[];
+            /** @description The order of the sections on the guest home (Branding > Guest home order). Sections left out keep their usual place after these. */
+            sectionOrder?: ("table" | "rewards" | "fun" | "more" | "socials")[];
             socials?: components["schemas"]["SocialLinks"];
             noticeSettings?: components["schemas"]["StoreNotices"];
             menuStyle?: components["schemas"]["MenuStyle"];
