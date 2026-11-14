@@ -5,7 +5,6 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { SearchX } from 'lucide-react-native';
 import { api } from '@/lib/api';
-import type { Order } from '@/lib/api/types';
 import { useOwnerSession } from '@/features/session';
 import { DEFAULT_CURRENCY } from '@/lib/money';
 import { timeAgo } from '@/lib/time';
@@ -14,41 +13,19 @@ import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
-import {
-  cardStyle,
-  ConfirmDialog,
-  EmptyCard,
-  TitledSection,
-  toast,
-  ToneTag,
-} from '../../kit';
-import type { StatusTone } from '@/theme/palette';
+import { cardStyle, ConfirmDialog, EmptyCard, TitledSection, toast } from '../../kit';
 import { SectionHead } from '../dashboard/SectionHead';
 import { MarkPaidSheet } from './MarkPaidSheet';
 import { OrderBill } from './OrderBill';
 import { OrderContact } from './OrderContact';
-import { orderPlace, paidLabel } from './orderPlace';
+import { orderPlace } from './orderPlace';
 import { orderSteps } from './orderSteps';
 import { StepRows } from './StepRows';
+import { OrderHead } from './OrderHead';
 import { OrderPayment } from './OrderPayment';
 import { useOrderMove } from './useOrderMove';
 import { useVenuePay } from './useVenuePay';
 import { POLL_MS } from '@/lib/polling';
-
-// Canvas tag colours: new orange, cooking blue, ready and served green; paid green, owed amber.
-const STAGE_TAG: Record<Order['status'], StatusTone> = {
-  received: 'order',
-  preparing: 'info',
-  ready: 'success',
-  served: 'success',
-  cancelled: 'alert',
-};
-const PAID_TAG: Record<Order['paymentStatus'], StatusTone> = {
-  unpaid: 'bill',
-  part_paid: 'bill',
-  paid: 'success',
-  refunded: 'alert',
-};
 
 /**
  * One order on its own page (canvas): its kitchen and payment state with the next step, the
@@ -119,20 +96,13 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
       >
         {order ? (
           <View style={styles.stack}>
-            <View style={styles.head}>
-              <View style={styles.pills}>
-                <ToneTag label={t(`statusLabel.${order.status}`)} tone={STAGE_TAG[order.status]} />
-                <ToneTag label={paidLabel(order, t)} tone={PAID_TAG[order.paymentStatus]} />
-              </View>
-              {next ? (
-                <Button
-                  label={next}
-                  loading={move.busy(order)}
-                  onPress={() => move.run(order)}
-                  style={styles.short}
-                />
-              ) : null}
-            </View>
+            <OrderHead
+              order={order}
+              next={next}
+              busy={move.busy(order)}
+              onNext={() => move.run(order)}
+              currency={currency}
+            />
             <View style={styles.group}>
               <SectionHead
                 title={t('ownerOrders.detail.items')}

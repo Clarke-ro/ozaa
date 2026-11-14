@@ -107,6 +107,54 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '429': { $ref: '#/components/responses/TooManyRequests' }
+  /auth/pin:
+    put:
+      tags: [auth]
+      operationId: setStaffPin
+      summary: Set or change the signed-in staff member's 4-digit PIN for quick sign-in on this device.
+      description: "Needs a session from the SMS code first. The server keeps only a slow hash of the PIN and never sends it back."
+      security: [{ ownerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pin, deviceId]
+              properties:
+                pin: { type: string, pattern: '^[0-9]{4}$', writeOnly: true }
+                deviceId: { type: string, description: The device the PIN works on. Other devices still need the SMS code. }
+      responses:
+        '204':
+          description: Saved.
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /auth/pin/login:
+    post:
+      tags: [auth]
+      operationId: loginWithPin
+      summary: Sign in with a 4-digit PIN on a device where this person already signed in by SMS.
+      description: "Five wrong PINs in a row clear the PIN; the person then signs in with the SMS code and sets a new one."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone, pin, deviceId]
+              properties:
+                phone: { $ref: '#/components/schemas/GhanaPhone' }
+                pin: { type: string, pattern: '^[0-9]{4}$', writeOnly: true }
+                deviceId: { type: string }
+      responses:
+        '200':
+          description: Signed in.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthTokens' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
   /auth/refresh:
     post:
       tags: [auth]
@@ -1790,6 +1838,39 @@ paths:
           description: Revoked.
 
   /owner/venues/{venueId}/staff/{staffId}:
+    patch:
+      tags: [owner-venue]
+      operationId: ownerUpdateStaff
+      summary: Change a staff member's role or the tables they look after.
+      description: "Owner only, like the rest of staff. Nobody can be made owner here, and the owner's own role can't be changed (409)."
+      security: [{ ownerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/VenueId' }
+        - { in: path, name: staffId, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                role:
+                  type: string
+                  enum: [manager, waiter, kitchen, viewer, staff_scanner]
+                tableCodes:
+                  type: array
+                  maxItems: 200
+                  items: { type: string }
+                  description: The tables this person looks after. Empty means every table.
+      responses:
+        '200':
+          description: Saved.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StaffMember' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
     delete:
       tags: [owner-venue]
       operationId: ownerRevokeStaff
@@ -1804,6 +1885,35 @@ paths:
       responses:
         '204':
           description: Revoked.
+  /owner/venues/{venueId}/staff/{staffId}/reset-pin:
+    post:
+      tags: [owner-venue]
+      operationId: ownerResetStaffPin
+      summary: Clear someone's sign-in PIN. They sign in with an SMS code next time and set a new one.
+      description: Owner only.
+      security: [{ ownerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/VenueId' }
+        - { in: path, name: staffId, required: true, schema: { type: string } }
+      responses:
+        '204':
+          description: Cleared. hasPin is false from now.
+        '404': { $ref: '#/components/responses/NotFound' }
+  /owner/venues/{venueId}/staff/{staffId}/sign-out:
+    post:
+      tags: [owner-venue]
+      operationId: ownerSignOutStaff
+      summary: End someone's shift by signing them out on every device. They sign in again with an SMS code.
+      description: Owner only. Signing out the owner is refused (409); they use Sign out in Settings.
+      security: [{ ownerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/VenueId' }
+        - { in: path, name: staffId, required: true, schema: { type: string } }
+      responses:
+        '204':
+          description: Signed out. onShift is false from now.
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
 
   /auth/account:
     delete:
@@ -1969,6 +2079,19 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/LoyaltyCustomerDetail' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [owner-loyalty]
+      operationId: ownerRemoveLoyaltyCustomer
+      summary: Remove a member from this venue's loyalty card (Act 843 erasure on request).
+      description: "Deletes their card, stamps, rewards and consent records at this venue. Paid orders stay for tax, with the member's name and phone removed."
+      security: [{ ownerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/VenueId' }
+        - { in: path, name: customerId, required: true, schema: { type: string } }
+      responses:
+        '204':
+          description: Removed.
         '404': { $ref: '#/components/responses/NotFound' }
   /owner/venues/{venueId}/loyalty/customers/{customerId}/stamp:
     post:
@@ -2311,6 +2434,14 @@ components:
             ordersHandled: { type: integer, description: Orders they moved to a new status. }
             callsAnswered: { type: integer }
             avgPickupMinutes: { type: ['integer', 'null'], description: Average time to answer a waiter call. }
+            tipsPesewas:
+              allOf: [{ $ref: '#/components/schemas/Pesewas' }]
+              description: Tips on succeeded payments for orders at their tables today. Only succeeded payments count.
+        tableCodes:
+          type: array
+          items: { type: string }
+          description: The tables they look after. Empty or missing means every table.
+        hasPin: { type: boolean, description: True when they have set a sign-in PIN. The PIN itself is never sent. }
 
     ServiceId:
       type: string
@@ -2347,9 +2478,13 @@ components:
           items:
             type: object
             required: [date, closed]
+            description: "A day that differs from the week, such as a public holiday. Closed all day, or open with its own hours when closed is false."
             properties:
               date: { type: string, format: date }
               closed: { type: boolean }
+              name: { type: string, maxLength: 40, description: "What the day is, e.g. Christmas Day. Shown to guests." }
+              opens: { type: string, pattern: '^[0-2][0-9]:[0-5][0-9]$', description: Only when closed is false. }
+              closes: { type: string, pattern: '^[0-2][0-9]:[0-5][0-9]$', description: Only when closed is false. }
     DerivedTheme:
       type: object
       description: Output of deriveTheme (design/prototype/theme.js). The app works it out locally for previews; the server value wins.
@@ -2502,6 +2637,11 @@ components:
         buttonTint: { type: string, enum: [auto, light, dark] }
         stylePreset: { type: string, enum: [default, classic, editorial, modern] }
         buttonOrder: { type: array, items: { type: string } }
+        sectionOrder:
+          type: array
+          maxItems: 5
+          items: { type: string, enum: [table, rewards, fun, more, socials] }
+          description: "The order of the sections on the guest home (Branding > Guest home order). Sections left out keep their usual place after these."
         socials: { $ref: '#/components/schemas/SocialLinks' }
         menuStyle: { $ref: '#/components/schemas/MenuStyle' }
         onlineOrdering:
@@ -2541,6 +2681,11 @@ components:
         buttonTint: { type: string, enum: [auto, light, dark] }
         stylePreset: { type: string, enum: [default, classic, editorial, modern] }
         buttonOrder: { type: array, items: { type: string } }
+        sectionOrder:
+          type: array
+          maxItems: 5
+          items: { type: string, enum: [table, rewards, fun, more, socials] }
+          description: "The order of the sections on the guest home (Branding > Guest home order). Sections left out keep their usual place after these."
         socials: { $ref: '#/components/schemas/SocialLinks' }
         noticeSettings: { $ref: '#/components/schemas/StoreNotices' }
         menuStyle: { $ref: '#/components/schemas/MenuStyle' }
