@@ -12,12 +12,18 @@ export function Stepper({
   min,
   max,
   onChange,
+  unit,
+  step = 1,
 }: {
   label: string;
   value: number;
   min: number;
   max: number;
   onChange: (n: number) => void;
+  /** Shown after the number, e.g. "min" or "km". */
+  unit?: string;
+  /** How far one tap moves, e.g. 5 for minutes. */
+  step?: number;
 }) {
   const theme = useTheme();
   const set = (n: number) => {
@@ -33,13 +39,13 @@ export function Stepper({
       accessibilityLabel={label}
       accessibilityValue={{ min, max, now: value }}
       onAccessibilityAction={(e) =>
-        set(e.nativeEvent.actionName === 'increment' ? value + 1 : value - 1)
+        set(e.nativeEvent.actionName === 'increment' ? value + step : value - step)
       }
       accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
       style={[styles.wrap, { borderColor: theme.line }]}
     >
       <Pressable
-        onPress={() => set(value - 1)}
+        onPress={() => set(value - step)}
         disabled={value <= min}
         style={styles.btn}
         importantForAccessibility="no"
@@ -47,10 +53,10 @@ export function Stepper({
         <Minus size={18} color={value <= min ? theme.meta : theme.text} />
       </Pressable>
       <Text variant="body-strong" style={styles.value}>
-        {value}
+        {unit ? `${value} ${unit}` : value}
       </Text>
       <Pressable
-        onPress={() => set(value + 1)}
+        onPress={() => set(value + step)}
         disabled={value >= max}
         style={styles.btn}
         importantForAccessibility="no"

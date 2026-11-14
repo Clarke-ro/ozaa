@@ -32,7 +32,7 @@ export { NotificationsScreen } from './screens/notifications/NotificationsScreen
 export { SettingsScreen } from './screens/settings/SettingsScreen';
 export { ProfileScreen } from './screens/profile/ProfileScreen';
 export { HelpScreen } from './screens/help/HelpScreen';
-export { SocialsScreen } from './screens/SocialsScreen';
+export { SocialsScreen } from './screens/socials/SocialsScreen';
 export { ComingSoonScreen } from './screens/ComingSoonScreen';
 export { BillingScreen } from './screens/billing/BillingScreen';
 export { CustomersScreen } from './screens/CustomersScreen';
