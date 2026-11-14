@@ -1277,6 +1277,14 @@
       "eating": "Eating",
       "paying": "Waiting to pay",
       "free": "Free"
+    },
+    "askedFor": {
+      "water": "Asked for water",
+      "bill": "Asked for the bill",
+      "cutlery": "Asked for cutlery",
+      "order_more": "Wants to order more",
+      "clean_table": "Asked to clear the table",
+      "other": "Asked for something else"
     }
   },
   "ownerShell": {
@@ -1336,8 +1344,8 @@
     "stamps": "Stamps needed",
     "halfway": "Halfway treat",
     "optional": "Optional",
-    "gap": "Between stamps",
-    "gapNote": "The shortest time before the same guest can get another stamp.",
+    "gap": "Time between stamps",
+    "gapNote": "Stops a guest collecting several stamps in one visit.",
     "cooldown": {
       "none": "None",
       "1h": "1 hour",
@@ -1369,7 +1377,41 @@
     "stampsGiven": "Stamps given, 30 days",
     "rewardsClaimed": "Rewards claimed, 30 days",
     "guestsSee": "What guests see",
-    "previewLead": "Your stamp card"
+    "previewLead": "Your stamp card",
+    "onShort": "Loyalty is on",
+    "earnWith": "Earn with",
+    "earn": {
+      "stamps": "Stamps",
+      "points": "Points"
+    },
+    "fullCard": "Stamps on a full card",
+    "rewardsTitle": "Rewards",
+    "atStamps_one": "At 1 stamp",
+    "atStamps_other": "At {{count}} stamps",
+    "editReward": "Edit {{name}}",
+    "editRewardTitle": "Edit reward",
+    "addReward": "Add a reward",
+    "removeReward": "Remove",
+    "saveReward": "Save",
+    "rewardCost": "Stamps it costs",
+    "tiersTitle": "Tiers",
+    "tier": {
+      "bronze": "Bronze",
+      "silver": "Silver",
+      "gold": "Gold"
+    },
+    "fromFirst": "From the first stamp",
+    "fromStamps_one": "From 1 stamp",
+    "fromStamps_other": "From {{count}} stamps",
+    "editTier": "Edit {{name}} tier",
+    "tierFrom": "Starts at (stamps)",
+    "stampsLast": "Stamps last",
+    "expiry": {
+      "30": "30 days",
+      "90": "90 days",
+      "365": "1 year",
+      "never": "Never"
+    }
   },
   "ownerBusiness": {
     "business": "Business",
@@ -1753,7 +1795,16 @@
     "doneIn_one": "done in {{count}} min",
     "doneIn_other": "done in {{count}} min",
     "openBill": "Open bill",
-    "orderMoreAction": "Take the order"
+    "orderMoreAction": "Take the order",
+    "byReason": "Today by reason",
+    "reasonShort": {
+      "water": "Water",
+      "bill": "Bill",
+      "cutlery": "Cutlery",
+      "order_more": "Order more",
+      "clean_table": "Clean table",
+      "other": "Other"
+    }
   },
   "ownerStaff": {
     "invite": "Invite",

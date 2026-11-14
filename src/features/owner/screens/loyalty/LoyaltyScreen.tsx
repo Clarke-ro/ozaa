@@ -72,7 +72,9 @@ export function LoyaltyScreen() {
                 <GuestPreview
                   venueId={venueId}
                   stamps={editor.draft.value.stamps}
-                  reward={editor.draft.value.reward}
+                  reward={
+                    editor.draft.value.rewards[editor.draft.value.rewards.length - 1]?.title ?? ''
+                  }
                 />
               </View>
             </View>

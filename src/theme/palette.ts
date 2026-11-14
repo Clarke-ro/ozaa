@@ -8,6 +8,9 @@ export const SHADOW_INK = '#000000';
 /** Frosted white over a photo or the game board, so dark text and icons stay readable. */
 export const PHOTO_VEIL = 'rgba(255,255,255,0.92)';
 
+/** Loyalty tier dots (design canvas). Each tier also has its name beside the dot. */
+export const TIER_DOTS = { bronze: '#B08D57', silver: '#9CA3AF', gold: '#C9A227' } as const;
+
 /** The phone drawn around owner previews (design canvas): a black body with a grey rim. */
 export const PHONE_FRAME = { body: '#0B0B0C', rim: '#9A9A9F' } as const;
 

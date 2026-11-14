@@ -1,5 +1,5 @@
 import type { WaiterCall } from '@/lib/api/types';
-import { callBoard, topReason, callTimes } from './callBoard';
+import { callBoard, callTimes, reasonCounts, topReason } from './callBoard';
 
 const call = (
   id: string,
@@ -72,5 +72,23 @@ describe('callTimes', () => {
       pickedUp: null,
       done: 1,
     });
+  });
+});
+
+describe('reasonCounts', () => {
+  it('counts every reason, zeros included, in the canvas order', () => {
+    const counts = reasonCounts([
+      { reason: 'water' },
+      { reason: 'bill' },
+      { reason: 'water' },
+    ] as Pick<WaiterCall, 'reason'>[]);
+    expect(counts).toEqual([
+      { reason: 'water', count: 2 },
+      { reason: 'bill', count: 1 },
+      { reason: 'cutlery', count: 0 },
+      { reason: 'order_more', count: 0 },
+      { reason: 'clean_table', count: 0 },
+      { reason: 'other', count: 0 },
+    ]);
   });
 });
