@@ -1,9 +1,12 @@
+import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
 import type { Business, BusinessCategory, BusinessPatch } from '@/lib/api/types';
 import { tokens } from '@/theme/tokens';
+import { Text } from '@/ui/Text';
+import { useTheme } from '@/ui/theme';
 import { Button } from '@/ui/Button';
 import { useDraft } from '../../data/useDraft';
 import { ownerKeys } from '../../data/keys';
@@ -19,18 +22,29 @@ const CATEGORIES: readonly BusinessCategory[] = [
   'bakery',
   'catering',
 ];
+// The canvas cuisine chips. Saved as plain words, so a cuisine typed elsewhere still shows.
+const CUISINES = [
+  'Ghanaian',
+  'West African',
+  'Continental',
+  'Grills',
+  'Seafood',
+  'Vegetarian',
+  'Breakfast',
+];
 // Ghana Revenue Authority TINs are a letter and ten digits, like C0012345678.
 const TIN = /^[A-Z]\d{10}$/;
 
 /** The business itself: what it is, how to reach it, and its tax and registration numbers. */
-export function BusinessDetails({ business }: { business: Business }) {
+export function BusinessDetails({ business, tax }: { business: Business; tax?: ReactNode }) {
+  const theme = useTheme();
   const { t } = useTranslation();
   const client = useQueryClient();
   const draft = useDraft({
     name: business.name,
     description: business.description ?? '',
     categories: (business.categories ?? []) as BusinessCategory[],
-    cuisines: (business.cuisines ?? []).join(', '),
+    cuisines: business.cuisines ?? [],
     priceRange: String(business.priceRange ?? ''),
     yearOpened: business.yearOpened ? String(business.yearOpened) : '',
     website: business.website ?? '',
@@ -58,10 +72,7 @@ export function BusinessDetails({ business }: { business: Business }) {
       name: f.name.trim(),
       description: f.description.trim() || null,
       categories: f.categories,
-      cuisines: f.cuisines
-        .split(',')
-        .map((c) => c.trim())
-        .filter(Boolean),
+      cuisines: f.cuisines,
       priceRange: f.priceRange ? Number(f.priceRange) : null,
       yearOpened: Number.isFinite(year) ? year : null,
       website: f.website.trim() || null,
@@ -87,27 +98,37 @@ export function BusinessDetails({ business }: { business: Business }) {
         value={f.description}
         onChangeText={(v) => draft.set('description', v)}
       />
-      <Chips<BusinessCategory>
-        label={t('ownerBusiness.category')}
-        selected={f.categories}
-        onChange={(v) => draft.set('categories', v)}
-        options={CATEGORIES.map((id) => ({ id, label: t(`ownerBusiness.categories.${id}`) }))}
-      />
-      <Field
-        label={t('ownerBusiness.cuisines')}
-        hint={t('ownerBusiness.cuisinesHint')}
-        value={f.cuisines}
-        onChangeText={(v) => draft.set('cuisines', v)}
-      />
-      <Segmented
-        label={t('ownerBusiness.priceRange')}
-        value={f.priceRange || '0'}
-        onChange={(v) => draft.set('priceRange', v === '0' ? '' : v)}
-        options={['0', '1', '2', '3', '4'].map((id) => ({
-          id,
-          label: id === '0' ? t('ownerBusiness.notSet') : '₵'.repeat(Number(id)),
-        }))}
-      />
+      <View style={styles.block}>
+        <Label>{t('ownerBusiness.category')}</Label>
+        <Chips<BusinessCategory>
+          label={t('ownerBusiness.category')}
+          selected={f.categories}
+          onChange={(v) => draft.set('categories', v)}
+          options={CATEGORIES.map((id) => ({ id, label: t(`ownerBusiness.categories.${id}`) }))}
+        />
+      </View>
+      <View style={styles.block}>
+        <Label>{t('ownerBusiness.cuisines')}</Label>
+        <Chips<string>
+          label={t('ownerBusiness.cuisines')}
+          selected={f.cuisines}
+          onChange={(v) => draft.set('cuisines', v)}
+          options={[...new Set([...CUISINES, ...f.cuisines])].map((id) => ({ id, label: id }))}
+        />
+        <Text variant="caption" style={{ color: theme.meta }}>
+          {t('ownerBusiness.cuisinesPick')}
+        </Text>
+      </View>
+      <View style={[styles.block, styles.price]}>
+        <Label>{t('ownerBusiness.priceRange')}</Label>
+        {/* No "not set" choice: a business that never picked one simply has none highlighted. */}
+        <Segmented
+          label={t('ownerBusiness.priceRange')}
+          value={f.priceRange}
+          onChange={(v) => draft.set('priceRange', v)}
+          options={['1', '2', '3', '4'].map((id) => ({ id, label: '₵'.repeat(Number(id)) }))}
+        />
+      </View>
       <View style={styles.row}>
         <Field
           label={t('ownerBusiness.yearOpened')}
@@ -154,6 +175,7 @@ export function BusinessDetails({ business }: { business: Business }) {
           onChangeText={(v) => draft.set('registrationNumber', v)}
         />
       </View>
+      {tax}
       {draft.dirty ? (
         <View style={styles.end}>
           <Button
@@ -168,8 +190,19 @@ export function BusinessDetails({ business }: { business: Business }) {
   );
 }
 
+function Label({ children }: { children: string }) {
+  const theme = useTheme();
+  return (
+    <Text variant="body-strong" style={{ fontSize: 14, lineHeight: 20, color: theme.muted }}>
+      {children}
+    </Text>
+  );
+}
+
 const styles = StyleSheet.create({
   stack: { gap: tokens.space[4] },
+  block: { gap: tokens.space[2] },
+  price: { maxWidth: 320 },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.space[3] },
   end: { alignItems: 'flex-end' },
 });

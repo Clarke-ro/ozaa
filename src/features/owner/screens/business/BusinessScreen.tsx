@@ -7,17 +7,22 @@ import { api } from '@/lib/api';
 import type { Location } from '@/lib/api/types';
 import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
-import { Text } from '@/ui/Text';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
-import { toast } from '../../kit';
-import { AddLocationCard, LocationCard } from './LocationCard';
+import { AddDashed, cardStyle, toast } from '../../kit';
+import { SectionHead } from '../dashboard/SectionHead';
+import { useTheme } from '@/ui/theme';
+import { ClosedDays } from './ClosedDays';
+import { hoursOn } from './hoursForm';
+import { LocationCard } from './LocationCard';
+import { LocationDetails } from './LocationDetails';
 import { LocationEditor } from './LocationEditor';
 import { BusinessDetails } from './BusinessDetails';
 import { HoursSection } from './HoursSection';
 import { TaxSection } from './TaxSection';
 
 export function BusinessScreen() {
+  const theme = useTheme();
   const { t } = useTranslation();
   const venueId = useOwnerSession((state) => state.venueId);
   const switchVenue = useOwnerSession((state) => state.switchVenue);
@@ -33,39 +38,52 @@ export function BusinessScreen() {
   );
   const locations = data.data?.locations ?? [];
   const business = data.data?.business;
+  const current = locations.find((l) => l.id === venueId);
+  const hours = hoursOn(venue.data?.hours, new Date());
+  const todayLabel = hours
+    ? t('ownerBusiness.openToday', { hours })
+    : t('ownerBusiness.closedToday');
 
   return (
     <OwnerPage title={t('owner.business')} subtitle={t('ownerLead.business')}>
       <DeskWait loading={data.isLoading} error={data.isError} onRetry={() => void data.refetch()}>
-        {business ? <BusinessDetails key={business.name} business={business} /> : null}
+        {business ? (
+          <BusinessDetails
+            key={business.name}
+            business={business}
+            tax={venue.data ? <TaxSection venue={venue.data} tin={business.tin ?? null} /> : null}
+          />
+        ) : null}
 
-        <View style={styles.stack}>
-          <Text variant="body-strong" style={styles.label}>
-            {t('ownerBusiness.locationsLabel')}
-          </Text>
-          <View style={styles.list}>
-            {locations.map((location) => (
-              <View key={location.id}>
-                <LocationCard
-                  location={location}
-                  active={location.id === venueId}
-                  onEdit={() => setEditing(location)}
-                  onSwitch={() => {
-                    switchVenue(location.id);
-                    toast.success(t('ownerBusiness.switched', { name: location.name }));
-                  }}
-                />
-              </View>
+        <View style={styles.list}>
+          <SectionHead
+            title={t('ownerBusiness.locationsLabel')}
+            badge={String(locations.length)}
+            badgeTone="neutral"
+          />
+          <View style={[cardStyle(theme), styles.card]}>
+            {locations.map((location, i) => (
+              <LocationCard
+                key={location.id}
+                location={location}
+                first={i === 0}
+                active={location.id === venueId}
+                today={location.id === venueId && venue.data ? todayLabel : undefined}
+                onEdit={() => setEditing(location)}
+                onSwitch={() => {
+                  switchVenue(location.id);
+                  toast.success(t('ownerBusiness.switched', { name: location.name }));
+                }}
+              />
             ))}
-            <View>
-              <AddLocationCard onPress={() => setEditing(null)} />
-            </View>
           </View>
+          <AddDashed label={t('ownerBusiness.addLocation')} onPress={() => setEditing(null)} />
         </View>
+        {current ? <LocationDetails key={current.id} location={current} /> : null}
         {venue.data ? (
           <>
-            <TaxSection venue={venue.data} tin={business?.tin ?? null} />
             <HoursSection key={venue.data.id} venue={venue.data} />
+            <ClosedDays venue={venue.data} />
           </>
         ) : null}
       </DeskWait>
@@ -81,7 +99,6 @@ export function BusinessScreen() {
 }
 
 const styles = StyleSheet.create({
-  stack: { gap: tokens.space[3] },
-  list: { gap: tokens.space[3] },
-  label: { fontSize: tokens.type.caption.size + 1 },
+  list: { gap: tokens.owner.controls.listGap },
+  card: { overflow: 'hidden' },
 });

@@ -174,6 +174,16 @@ export function createWorld(now: number): World {
         name: "Mama's Hospitality Group",
         ownerId: 'usr_ama',
         plan: 'free',
+        description: 'A family-run group serving home-style Ghanaian food in Accra since 2014.',
+        categories: ['restaurant'],
+        cuisines: ['Ghanaian', 'Grills', 'Seafood'],
+        priceRange: 2,
+        yearOpened: 2014,
+        website: 'mamasosu.com',
+        phone: '0300000000',
+        email: 'mama@mamasosu.com',
+        tin: 'C0000000000',
+        registrationNumber: 'CS000000000',
       },
       locations: [
         {
@@ -188,6 +198,7 @@ export function createWorld(now: number): World {
           email: 'mama@mamasosu.com',
           phone: '+233240000001',
           postcode: 'GA-042-1234',
+          digitalAddress: 'GA-123-4567',
         },
         {
           id: 'ven_bean',

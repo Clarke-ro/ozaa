@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, TextInput, View } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
@@ -7,20 +7,22 @@ import type { VenueSettings } from '@/lib/api/types';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
+import { fontFamily, useTheme } from '@/ui/theme';
 import { ownerKeys } from '../../data/keys';
-import { cardStyle, Field, SectionLabel, Toggle, toast } from '../../kit';
+import { TitledSection, Toggle, toast } from '../../kit';
 import { daysFrom, weeklyFrom, type DayDraft } from './hoursForm';
 
-/** The open location's week: each day open or closed, with its times. Guests see these hours. */
+/** The open location's week, one line a day (canvas): name, opens "to" closes, and a switch. */
 export function HoursSection({ venue }: { venue: VenueSettings }) {
   const theme = useTheme();
   const { t } = useTranslation();
   const client = useQueryClient();
   const [days, setDays] = useState<DayDraft[]>(() => daysFrom(venue.hours));
+  const [dirty, setDirty] = useState(false);
   const [bad, setBad] = useState<number | null>(null);
   const set = (i: number, patch: Partial<DayDraft>) => {
     setDays((now) => now.map((d, j) => (j === i ? { ...d, ...patch } : d)));
+    setDirty(true);
     setBad(null);
   };
   const save = useMutation({
@@ -28,6 +30,7 @@ export function HoursSection({ venue }: { venue: VenueSettings }) {
       api.ownerUpdateVenue(venue.id, { hours: { ...venue.hours, weekly } }),
     onSuccess: () => {
       toast.success(t('ownerKit.saved'));
+      setDirty(false);
       void client.invalidateQueries({ queryKey: ownerKeys.venue(venue.id) });
     },
     onError: () => toast.error(t('ownerKit.saveFailed')),
@@ -37,83 +40,85 @@ export function HoursSection({ venue }: { venue: VenueSettings }) {
     if (result.ok) save.mutate(result.weekly);
     else setBad(result.day);
   };
+  const time = (i: number, key: 'opens' | 'closes', label: string) => (
+    <TextInput
+      accessibilityLabel={`${t(`ownerBusiness.dayFull.${i}`)}, ${label}`}
+      value={days[i]?.[key]}
+      placeholder={key === 'opens' ? '11:00' : '22:00'}
+      placeholderTextColor={theme.meta}
+      onChangeText={(text) => set(i, { [key]: text })}
+      maxLength={5}
+      style={[
+        styles.time,
+        { color: theme.text, borderColor: bad === i ? theme.error : theme.line },
+      ]}
+    />
+  );
 
   return (
-    <View style={styles.group}>
-      <SectionLabel title={t('ownerBusiness.hours')} />
-      <View style={cardStyle(theme)}>
-        {days.map((day, i) => (
-          <View
-            key={i}
-            style={[
-              styles.row,
-              i > 0 && { borderTopColor: theme.line, borderTopWidth: StyleSheet.hairlineWidth },
-            ]}
-          >
-            <Text variant="body" style={styles.day}>
-              {t(`ownerPromos.dayNames.${i}`)}
-            </Text>
+    <TitledSection title={t('ownerBusiness.hours')} cardStyle={styles.card}>
+      {days.map((day, i) => (
+        <View
+          key={i}
+          style={[styles.row, i > 0 && { borderTopWidth: 1, borderTopColor: theme.line }]}
+        >
+          <Text variant="body" style={styles.day}>
+            {t(`ownerBusiness.dayFull.${i}`)}
+          </Text>
+          {day.open ? (
             <View style={styles.times}>
-              {day.open ? (
-                <>
-                  <Field
-                    label={t('ownerBusiness.opens')}
-                    value={day.opens}
-                    placeholder="11:00"
-                    onChangeText={(opens) => set(i, { opens })}
-                    error={bad === i ? t('ownerBusiness.timeError') : undefined}
-                  />
-                  <Field
-                    label={t('ownerBusiness.closes')}
-                    value={day.closes}
-                    placeholder="22:00"
-                    onChangeText={(closes) => set(i, { closes })}
-                  />
-                </>
-              ) : (
-                <Text variant="body" style={{ color: theme.muted }}>
-                  {t('ownerBusiness.closed')}
-                </Text>
-              )}
+              {time(i, 'opens', t('ownerBusiness.opens'))}
+              <Text variant="caption" style={{ color: theme.muted }}>
+                {t('ownerBusiness.to')}
+              </Text>
+              {time(i, 'closes', t('ownerBusiness.closes'))}
             </View>
-            <Toggle
-              label={t('ownerBusiness.openOn', { day: t(`ownerPromos.dayNames.${i}`) })}
-              value={day.open}
-              onChange={(open) => set(i, { open })}
-            />
-          </View>
-        ))}
-      </View>
-      <View style={styles.end}>
-        <Button
-          label={t('ownerBusiness.saveHours')}
-          tone="secondary"
-          size="md"
-          loading={save.isPending}
-          onPress={submit}
-        />
-      </View>
-    </View>
+          ) : (
+            <Text variant="caption" style={{ color: theme.muted }}>
+              {t('ownerBusiness.closed')}
+            </Text>
+          )}
+          <Toggle
+            label={t('ownerBusiness.openOn', { day: t(`ownerBusiness.dayFull.${i}`) })}
+            value={day.open}
+            onChange={(open) => set(i, { open })}
+          />
+        </View>
+      ))}
+      {bad !== null ? (
+        <Text variant="caption" style={[styles.error, { color: theme.error }]}>
+          {t('ownerBusiness.timeError')}
+        </Text>
+      ) : null}
+      {dirty ? (
+        <View style={styles.end}>
+          <Button
+            label={t('ownerBusiness.saveHours')}
+            tone="secondary"
+            loading={save.isPending}
+            onPress={submit}
+          />
+        </View>
+      ) : null}
+    </TitledSection>
   );
 }
 
 const styles = StyleSheet.create({
-  group: { gap: tokens.space[3] },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[4],
-    minHeight: 64,
-    paddingHorizontal: tokens.space[5],
-    paddingVertical: tokens.space[2],
+  card: { paddingVertical: 2, paddingHorizontal: tokens.space[4] },
+  row: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3], minHeight: 50 },
+  day: { flex: 1 },
+  times: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
+  time: {
+    width: 72,
+    height: 34,
+    borderWidth: 1,
+    borderRadius: 17,
+    textAlign: 'center',
+    fontFamily: fontFamily.regular,
+    fontSize: 14,
+    padding: 0,
   },
-  day: { width: 56 },
-  times: {
-    flex: 1,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: tokens.space[2],
-    alignItems: 'center',
-  },
-  end: { alignItems: 'flex-end' },
+  error: { paddingBottom: tokens.space[2] },
+  end: { alignItems: 'flex-end', paddingBottom: tokens.space[3] },
 });
