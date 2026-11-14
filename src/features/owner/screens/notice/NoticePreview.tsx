@@ -1,16 +1,17 @@
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { VenueSettings } from '@/lib/api/types';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
-import { fontFamily, useTheme } from '@/ui/theme';
+import { fontFamily, ThemeProvider, themeFromAccent, useTheme, type FontPair } from '@/ui/theme';
+import { languageByCode, VenueHomeBody } from '@/features/venue';
 import type { NoticeDraft } from '../../desk/noticeForm';
 import { PhoneFrame } from '../menu/live/PhoneFrame';
 
 /**
- * "What guests see" beside the notice (design canvas): a phone with the banner across the top in
- * the venue colour and, when it is on, the popup over a dimmed page. Shows the words being typed,
- * before they are saved.
+ * "What guests see" beside the notice (design canvas): the real guest home in a phone, with the
+ * banner across the top in the venue colour and, when it is on, the popup over a dimmed page.
+ * Shows the words being typed, before they are saved.
  */
 export function NoticePreview({
   venue,
@@ -22,7 +23,13 @@ export function NoticePreview({
   popup: NoticeDraft;
 }) {
   const theme = useTheme();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  // The guest page in its own colour and font, always light like a guest's first visit.
+  const guest = themeFromAccent(
+    venue.theme.accent,
+    (venue.theme.fontPair ?? 'cravins') as FontPair,
+    'light',
+  );
   const showBanner = banner.enabled && banner.text.trim();
   const showPopup = popup.enabled && popup.text.trim();
   return (
@@ -30,40 +37,48 @@ export function NoticePreview({
       <Text variant="title" accessibilityRole="header">
         {t('ownerNotice.guestsSee')}
       </Text>
-      <PhoneFrame label={t('ownerNotice.guestsSee')}>
-        <View style={styles.screen}>
-          {showBanner ? (
-            <View style={[styles.banner, { backgroundColor: theme.fill }]}>
-              <Text style={[styles.bannerText, { color: theme.onFill }]} numberOfLines={1}>
-                {banner.text}
-              </Text>
-            </View>
-          ) : null}
-          <View style={styles.page}>
-            <Text style={styles.venue}>{venue.name}</Text>
-            <Text style={[styles.small, { color: theme.muted }]}>
-              {t('ownerNotice.atYourTable')}
-            </Text>
-          </View>
-          {showPopup ? (
-            <View style={[styles.dim, { backgroundColor: theme.scrim }]}>
-              <View style={[styles.popup, { backgroundColor: theme.surface }]}>
-                {popup.title.trim() ? (
-                  <Text style={[styles.kicker, { color: theme.ink }]}>
-                    {popup.title.toUpperCase()}
+      <ThemeProvider theme={guest}>
+        <PhoneFrame label={t('ownerNotice.guestsSee')}>
+          <View style={styles.screen} pointerEvents="none" accessibilityElementsHidden>
+            {showBanner ? (
+              <View style={[styles.banner, { backgroundColor: guest.fill }]}>
+                {/* The banner scrolls on guest pages; here the words repeat to show that. */}
+                <Text style={[styles.bannerText, { color: guest.onFill }]} numberOfLines={1}>
+                  {`${banner.text.trim()} · ${banner.text.trim()} · ${banner.text.trim()}`}
+                </Text>
+              </View>
+            ) : null}
+            <ScrollView style={styles.fill} scrollEnabled={false}>
+              <VenueHomeBody
+                venue={venue}
+                tableCode={null}
+                topInset={showBanner ? 0 : tokens.space[8]}
+                languageLabel={languageByCode(i18n.language).label}
+                onOpen={() => undefined}
+              />
+            </ScrollView>
+            {showPopup ? (
+              <View style={[styles.dim, { backgroundColor: guest.scrim }]}>
+                <View style={[styles.popup, { backgroundColor: guest.surface }]}>
+                  {popup.title.trim() ? (
+                    <Text style={[styles.kicker, { color: guest.ink }]}>
+                      {popup.title.toUpperCase()}
+                    </Text>
+                  ) : null}
+                  <Text style={[styles.popupText, { fontFamily: guest.displayFont }]}>
+                    {popup.text}
                   </Text>
-                ) : null}
-                <Text style={styles.popupText}>{popup.text}</Text>
-                <View style={[styles.ok, { backgroundColor: theme.fill }]}>
-                  <Text style={[styles.okText, { color: theme.onFill }]}>
-                    {t('ownerNotice.ok')}
-                  </Text>
+                  <View style={[styles.ok, { backgroundColor: guest.fill }]}>
+                    <Text style={[styles.okText, { color: guest.onFill }]}>
+                      {t('ownerNotice.ok')}
+                    </Text>
+                  </View>
                 </View>
               </View>
-            </View>
-          ) : null}
-        </View>
-      </PhoneFrame>
+            ) : null}
+          </View>
+        </PhoneFrame>
+      </ThemeProvider>
       <Text style={[styles.caption, { color: theme.meta }]}>{t('ownerNotice.previewNote')}</Text>
     </View>
   );
@@ -71,12 +86,11 @@ export function NoticePreview({
 
 const styles = StyleSheet.create({
   wrap: { gap: tokens.space[4] },
-  screen: { flex: 1, paddingTop: tokens.space[10] },
-  banner: { paddingVertical: 6, paddingHorizontal: tokens.space[3] },
+  screen: { flex: 1 },
+  fill: { flex: 1 },
+  // Below the phone's camera island, like the banner on a real guest page.
+  banner: { marginTop: 44, paddingVertical: 8, paddingHorizontal: tokens.space[3] },
   bannerText: { fontSize: 12, lineHeight: 16, fontFamily: fontFamily.strong },
-  page: { padding: tokens.space[4], gap: 4 },
-  venue: { fontSize: 18, lineHeight: 24, fontFamily: fontFamily.strong },
-  small: { fontSize: 13, lineHeight: 18 },
   dim: {
     position: 'absolute',
     top: 0,
