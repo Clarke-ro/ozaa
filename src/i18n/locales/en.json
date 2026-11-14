@@ -1587,6 +1587,12 @@
     "dateError": "Use a date like 2026-12-25.",
     "removeClosed": "Remove {{date}}",
     "locationPhone": "Phone",
+    "map": {
+      "label": "Map of your location",
+      "move": "Move the pin",
+      "done": "Done",
+      "tapHere": "Tap where your door is"
+    },
     "categoryHint": "Pick every type that fits. The first one shows on Google.",
     "addCategory": "Add a category",
     "removeCategory": "Remove {{name}}",
