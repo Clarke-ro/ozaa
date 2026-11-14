@@ -2037,7 +2037,7 @@
     "services": "What guests can do from the table, and your Wi-Fi details.",
     "settings": "Your account, your venue and how the app behaves",
     "staff": "Who works here, what they can open and who is on shift",
-    "customers": "Diners who joined your loyalty card. Phone numbers stay masked.",
+    "customers": "Guests who joined your loyalty card",
     "floor": "Every table at a glance. Tap one to see its bill and act on it.",
     "scan": "Scan a guest's loyalty card to give a stamp or a reward.",
     "socials": "Your social media links on the guest page."
@@ -2170,7 +2170,21 @@
     "favourite": "Favourite",
     "spent": "Spent",
     "counterStamp": "Stamp at the counter",
-    "rewardReady": "A reward is ready to claim"
+    "rewardReady": "A reward is ready to claim",
+    "figures": {
+      "members": "Members",
+      "new": "New, last 30 days",
+      "cameBack": "Came back more than once"
+    },
+    "tagOne": {
+      "regular": "Regular",
+      "reward_ready": "Reward ready",
+      "new": "New",
+      "quiet": "Quiet lately"
+    },
+    "stampsOf_one": "{{count}} of {{total}} stamps",
+    "stampsOf_other": "{{count}} of {{total}} stamps",
+    "footnote": "Only guests who joined your loyalty card are listed. Phone numbers stay hidden apart from the last digits."
   },
   "ownerAi": {
     "title": "Cravins feedback assistant",
@@ -2214,7 +2228,7 @@
   },
   "ownerBilling": {
     "title": "Billing",
-    "lead": "Your plan and what each plan includes.",
+    "lead": "Your Cravins plan and invoices",
     "free": "Free",
     "price": "Price",
     "current": "Your plan",
@@ -2223,7 +2237,19 @@
     "perMonth": "{{price}} a month",
     "placeholder": "These are placeholder prices from the Cravins pricing page.",
     "included": "included",
-    "notIncluded": "not included"
+    "notIncluded": "not included",
+    "usageTitle": "Your plan",
+    "tables": "Tables",
+    "locations": "Locations",
+    "staff": "Staff",
+    "plansTitle": "Plans",
+    "invoicesTitle": "Invoices",
+    "noInvoices": "No invoices yet",
+    "onPlan": "You are on the {{plan}} plan",
+    "aMonth": "a month",
+    "upgrade": "Upgrade to {{plan}}",
+    "talk": "Talk to us",
+    "placeholderLong": "Prices are placeholders until launch. Card payments to your venue go straight to your own Paystack account; Cravins never holds them."
   },
   "ownerNotice": {
     "lead": "A short message on your guest pages, such as a closing time or tonight’s offer.",

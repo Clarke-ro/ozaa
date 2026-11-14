@@ -1,118 +1,119 @@
-import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { ChevronRight, Gift } from 'lucide-react-native';
-import type { LoyaltyCustomerSummary } from '@/lib/api/types';
+import { ChevronRight } from 'lucide-react-native';
+import type { CustomerTag, LoyaltyCustomerSummary } from '@/lib/api/types';
+import { timeAgo } from '@/lib/time';
+import { STATUS_TONES, type StatusTone } from '@/theme/palette';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
+import { fontFamily, useTheme } from '@/ui/theme';
 import { cardStyle } from '../../kit';
 import { initialsOf } from './initials';
 
-const AVATAR = tokens.space[10];
+// The tag colours on the canvas: regulars green, a reward ready orange, new blue, quiet amber.
+const TAG_TONE: Record<CustomerTag, StatusTone> = {
+  regular: 'success',
+  reward_ready: 'order',
+  new: 'info',
+  quiet: 'bill',
+};
+// One tag per row, the most useful first.
+const TAG_ORDER: readonly CustomerTag[] = ['reward_ready', 'regular', 'new', 'quiet'];
 
 /**
- * One loyalty member as a small card: initials, name, stamp count, and a badge when a reward is
- * ready. Everything else (phone, visits, offers consent) is on their own page, one tap away.
+ * One loyalty member as a row (design canvas): initials, name with one coloured tag, the masked
+ * phone, visits and stamps, and when they last came on the right. Opens their own page.
  */
 export function CustomerCard({
   customer,
+  stampsRequired,
+  now,
   onOpen,
 }: {
   customer: LoyaltyCustomerSummary;
+  /** Stamps on a full card, for "7 of 8 stamps"; missing while the programme loads. */
+  stampsRequired?: number;
+  now: number;
   onOpen: () => void;
 }) {
   const theme = useTheme();
   const { t } = useTranslation();
-  const [hovered, setHovered] = useState(false);
   const name = customer.name || customer.phoneMasked;
-  const ready = customer.rewardsAvailable > 0;
-
+  const tags = customer.tags ?? [];
+  const tag = TAG_ORDER.find(
+    (x) => tags.includes(x) || (x === 'reward_ready' && customer.rewardsAvailable > 0),
+  );
+  const tone = tag ? STATUS_TONES[theme.scheme][TAG_TONE[tag]] : null;
+  const stamps = stampsRequired
+    ? t('ownerMembers.stampsOf', { count: customer.stamps, total: stampsRequired })
+    : t('ownerMembers.stamps', { count: customer.stamps });
+  const last = customer.lastVisitAt ?? customer.lastStampAt;
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={name}
       accessibilityHint={t('ownerMembers.openHint')}
       onPress={onOpen}
-      onHoverIn={() => setHovered(true)}
-      onHoverOut={() => setHovered(false)}
-      style={({ pressed }) => [
+      style={({ pressed, hovered }) => [
         cardStyle(theme),
-        styles.card,
+        styles.row,
         (pressed || hovered) && { backgroundColor: theme.wash },
       ]}
     >
-      <View style={[styles.avatar, { backgroundColor: theme.tint }]}>
-        <Text variant="body-strong" style={{ color: theme.badgeInk }}>
-          {initialsOf(customer)}
-        </Text>
+      <View style={[styles.avatar, { backgroundColor: theme.wash }]}>
+        <Text style={styles.initials}>{initialsOf(customer)}</Text>
       </View>
       <View style={styles.words}>
-        <Text variant="body-strong" numberOfLines={1}>
-          {name}
-        </Text>
-        <View style={styles.meta}>
-          <Text variant="caption" numberOfLines={1} style={{ color: theme.muted }}>
-            {[
-              customer.phoneMasked,
-              t('ownerMembers.visits', { count: customer.visitCount ?? 0 }),
-              t('ownerMembers.stamps', { count: customer.stamps }),
-            ].join(' · ')}
+        <View style={styles.top}>
+          <Text style={styles.name} numberOfLines={1}>
+            {name}
           </Text>
-          {(customer.tags ?? [])
-            .filter((tag) => tag !== 'reward_ready')
-            .map((tag) => (
-              <Text
-                key={tag}
-                variant="caption"
-                style={[styles.tag, { backgroundColor: theme.wash }]}
-              >
-                {t(`ownerMembers.tags.${tag}`)}
-              </Text>
-            ))}
-          {ready ? (
-            <View style={[styles.ready, { backgroundColor: theme.tint }]}>
-              <Gift size={12} color={theme.badgeInk} />
-              <Text variant="caption" style={{ color: theme.badgeInk }}>
-                {t('ownerMembers.rewardShort', { count: customer.rewardsAvailable })}
+          {tag && tone ? (
+            <View style={[styles.tag, { backgroundColor: tone.bg }]}>
+              <Text style={[styles.tagText, { color: tone.ink }]}>
+                {t(`ownerMembers.tagOne.${tag}`)}
               </Text>
             </View>
           ) : null}
         </View>
+        <Text style={[styles.sub, { color: theme.meta }]} numberOfLines={1}>
+          {[
+            customer.phoneMasked,
+            t('ownerMembers.visits', { count: customer.visitCount ?? 0 }),
+            stamps,
+          ].join(' · ')}
+        </Text>
       </View>
+      {last ? (
+        <Text style={[styles.sub, { color: theme.meta }]}>{timeAgo(last, now, t)}</Text>
+      ) : null}
       <ChevronRight size={18} color={theme.meta} />
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  tag: {
-    paddingHorizontal: tokens.space[2],
-    paddingVertical: 2,
-    borderRadius: tokens.radius.sm,
-    overflow: 'hidden',
-  },
-  card: {
-    flex: 1,
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: tokens.space[3],
-    padding: tokens.space[4],
+    gap: tokens.space[4],
+    minHeight: 80,
+    paddingVertical: 14,
+    paddingLeft: tokens.owner.controls.cardPadding,
+    paddingRight: tokens.space[4],
   },
   avatar: {
-    width: AVATAR,
-    height: AVATAR,
-    borderRadius: AVATAR / 2,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  initials: { fontSize: 15, lineHeight: 20, fontFamily: fontFamily.strong },
   words: { flex: 1, minWidth: 0, gap: 2 },
-  meta: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: tokens.space[2] },
-  ready: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[1],
-    paddingHorizontal: tokens.space[2],
-    borderRadius: tokens.radius.full,
-  },
+  top: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: tokens.space[2] },
+  name: { fontSize: 16, lineHeight: 22, fontFamily: fontFamily.strong },
+  tag: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: tokens.radius.full },
+  tagText: { fontSize: 13, lineHeight: 16, fontFamily: fontFamily.strong },
+  sub: { fontSize: 14, lineHeight: 20 },
 });
