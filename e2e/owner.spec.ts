@@ -78,10 +78,8 @@ test('owner screens on phone (390x844): every tab and every More item opens, wit
     await page.getByRole('button', { name: label, exact: true }).click();
     await waitLoaded(page);
     if (name === 'owner-tables') {
-      await page
-        .getByRole('radio', { name: /Table 1/ })
-        .first()
-        .click();
+      // The canvas shows every table's card under All tables, with its own Print and Download.
+      await expect(page.getByRole('heading', { name: 'All tables' })).toBeVisible();
     }
     await page.screenshot({ path: `test-results/${name}-phone.png`, fullPage: false });
     // Detail screens get a back button that returns to More. Setup stands alone (no tab bar),
