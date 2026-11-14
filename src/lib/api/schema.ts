@@ -38,6 +38,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/pin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set or change the signed-in staff member's 4-digit PIN for quick sign-in on this device.
+         * @description Needs a session from the SMS code first. The server keeps only a slow hash of the PIN and never sends it back.
+         */
+        put: operations["setStaffPin"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/pin/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sign in with a 4-digit PIN on a device where this person already signed in by SMS.
+         * @description Five wrong PINs in a row clear the PIN; the person then signs in with the SMS code and sets a new one.
+         */
+        post: operations["loginWithPin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/refresh": {
         parameters: {
             query?: never;
@@ -1279,6 +1319,50 @@ export interface paths {
         delete: operations["ownerRevokeStaff"];
         options?: never;
         head?: never;
+        /**
+         * Change a staff member's role or the tables they look after.
+         * @description Owner only, like the rest of staff. Nobody can be made owner here, and the owner's own role can't be changed (409).
+         */
+        patch: operations["ownerUpdateStaff"];
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/staff/{staffId}/reset-pin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Clear someone's sign-in PIN. They sign in with an SMS code next time and set a new one.
+         * @description Owner only.
+         */
+        post: operations["ownerResetStaffPin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/staff/{staffId}/sign-out": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * End someone's shift by signing them out on every device. They sign in again with an SMS code.
+         * @description Owner only. Signing out the owner is refused (409); they use Sign out in Settings.
+         */
+        post: operations["ownerSignOutStaff"];
+        delete?: never;
+        options?: never;
+        head?: never;
         patch?: never;
         trace?: never;
     };
@@ -1386,7 +1470,11 @@ export interface paths {
         get: operations["ownerGetLoyaltyCustomer"];
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Remove a member from this venue's loyalty card (Act 843 erasure on request).
+         * @description Deletes their card, stamps, rewards and consent records at this venue. Paid orders stay for tax, with the member's name and phone removed.
+         */
+        delete: operations["ownerRemoveLoyaltyCustomer"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1591,7 +1679,13 @@ export interface components {
                 callsAnswered: number;
                 /** @description Average time to answer a waiter call. */
                 avgPickupMinutes?: number | null;
+                /** @description Tips on succeeded payments for orders at their tables today. Only succeeded payments count. */
+                tipsPesewas?: components["schemas"]["Pesewas"];
             };
+            /** @description The tables they look after. Empty or missing means every table. */
+            tableCodes?: string[];
+            /** @description True when they have set a sign-in PIN. The PIN itself is never sent. */
+            hasPin?: boolean;
         };
         /**
          * @description Video menu is roadmap only and is not in this list.
@@ -1622,6 +1716,12 @@ export interface components {
                 /** Format: date */
                 date: string;
                 closed: boolean;
+                /** @description What the day is, e.g. Christmas Day. Shown to guests. */
+                name?: string;
+                /** @description Only when closed is false. */
+                opens?: string;
+                /** @description Only when closed is false. */
+                closes?: string;
             }[];
         };
         /** @description Output of deriveTheme (design/prototype/theme.js). The app works it out locally for previews; the server value wins. */
@@ -1769,6 +1869,8 @@ export interface components {
             /** @enum {string} */
             stylePreset?: "default" | "classic" | "editorial" | "modern";
             buttonOrder?: string[];
+            /** @description The order of the sections on the guest home (Branding > Guest home order). Sections left out keep their usual place after these. */
+            sectionOrder?: ("table" | "rewards" | "fun" | "more" | "socials")[];
             socials?: components["schemas"]["SocialLinks"];
             menuStyle?: components["schemas"]["MenuStyle"];
             /** @description Missing means online ordering is off. */
@@ -1807,6 +1909,8 @@ export interface components {
             /** @enum {string} */
             stylePreset?: "default" | "classic" | "editorial" | "modern";
             buttonOrder?: string[];
+            /** @description The order of the sections on the guest home (Branding > Guest home order). Sections left out keep their usual place after these. */
+            sectionOrder?: ("table" | "rewards" | "fun" | "more" | "socials")[];
             socials?: components["schemas"]["SocialLinks"];
             noticeSettings?: components["schemas"]["StoreNotices"];
             menuStyle?: components["schemas"]["MenuStyle"];
@@ -3148,6 +3252,65 @@ export interface operations {
         };
         responses: {
             /** @description Logged in. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthTokens"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            429: components["responses"]["TooManyRequests"];
+        };
+    };
+    setStaffPin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    pin: string;
+                    /** @description The device the PIN works on. Other devices still need the SMS code. */
+                    deviceId: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Saved. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    loginWithPin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    phone: components["schemas"]["GhanaPhone"];
+                    pin: string;
+                    deviceId: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Signed in. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -5479,6 +5642,85 @@ export interface operations {
             };
         };
     };
+    ownerUpdateStaff: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+                staffId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    role?: "manager" | "waiter" | "kitchen" | "viewer" | "staff_scanner";
+                    /** @description The tables this person looks after. Empty means every table. */
+                    tableCodes?: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description Saved. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffMember"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    ownerResetStaffPin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+                staffId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cleared. hasPin is false from now. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    ownerSignOutStaff: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+                staffId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Signed out. onShift is false from now. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
     deleteAccount: {
         parameters: {
             query?: never;
@@ -5694,6 +5936,28 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["LoyaltyCustomerDetail"];
                 };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    ownerRemoveLoyaltyCustomer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+                customerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             404: components["responses"]["NotFound"];
         };
