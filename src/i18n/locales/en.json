@@ -1493,7 +1493,8 @@
     "gameStamp": "Stamp for a high score",
     "gameStampHint": "Guests who beat the target get a loyalty stamp.",
     "targetScore": "Target score",
-    "later": "Coming later. Guests do not see it yet."
+    "later": "Coming later. Guests do not see it yet.",
+    "laterShort": "Coming later"
   },
   "ownerReviews": {
     "yourReply": "Your reply",
@@ -2043,13 +2044,13 @@
     "loyalty": "Your stamp card, its members and how it is doing",
     "ordering": "Pickup and delivery orders from your menu link.",
     "reviews": "Public ratings from guests, and your replies",
-    "services": "What guests can do from the table, and your Wi-Fi details.",
+    "services": "What guests can do from the table, and your Wi-Fi details",
     "settings": "Your account, your venue and how the app behaves",
     "staff": "Who works here, what they can open and who is on shift",
     "customers": "Guests who joined your loyalty card",
     "floor": "Every table at a glance. Tap one to see its bill and act on it.",
     "scan": "Scan a guest's loyalty card to add a stamp or give a reward",
-    "socials": "Your social media links on the guest page."
+    "socials": "Your social pages and contact details on the guest page"
   },
   "ownerNotes": {
     "title": "Notifications",

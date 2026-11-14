@@ -19,16 +19,18 @@ const STACK_AT = 1.35;
 /** A labelled text input inside a Section. The label is also the accessibility name. */
 export function InputRow({
   label,
+  icon: Icon,
   error,
   multiline,
   ...input
-}: TextInputProps & { label: string; error?: string }) {
+}: TextInputProps & { label: string; icon?: LucideIcon; error?: string }) {
   const theme = useTheme();
   const { fontScale } = useWindowDimensions();
   const stacked = multiline || fontScale > STACK_AT;
   return (
     <View style={styles.pad}>
       <View style={[styles.line, stacked && styles.stacked]}>
+        {Icon && !stacked ? <Icon size={18} color={theme.text} /> : null}
         <Text variant="body" style={stacked ? undefined : styles.label}>
           {label}
         </Text>
@@ -37,9 +39,11 @@ export function InputRow({
           placeholderTextColor={theme.meta}
           multiline={multiline}
           {...input}
+          // Canvas: the value sits in its own rounded field beside the label.
           style={[
             styles.input,
-            { color: theme.text, textAlign: stacked ? 'left' : 'right' },
+            styles.field,
+            { color: theme.text, borderColor: theme.line, backgroundColor: theme.surface },
             multiline && styles.multi,
             input.style,
           ]}
@@ -174,9 +178,20 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
   line: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
   stacked: { flexDirection: 'column', alignItems: 'stretch', gap: tokens.space[1] },
-  label: { flexShrink: 0, maxWidth: '45%' },
-  input: { flex: 1, minHeight: 28, fontFamily: 'Inter_400', fontSize: 16, padding: 0 },
-  multi: { minHeight: 72, textAlignVertical: 'top' },
+  label: { flexShrink: 0, width: 110, maxWidth: '45%' },
+  input: { flex: 1, minHeight: 28, fontFamily: 'Inter_400', fontSize: 15, padding: 0 },
+  field: {
+    minHeight: 40,
+    paddingHorizontal: tokens.space[3],
+    borderWidth: 1,
+    borderRadius: tokens.radius.full,
+  },
+  multi: {
+    minHeight: 72,
+    paddingVertical: tokens.space[2],
+    borderRadius: tokens.owner.controls.cardRadius,
+    textAlignVertical: 'top',
+  },
   copy: { flex: 1, gap: 2 },
   value: { maxWidth: '45%' },
   body: { gap: tokens.space[3] },
