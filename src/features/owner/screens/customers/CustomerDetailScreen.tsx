@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -8,18 +9,20 @@ import { pesewas } from '@/lib/brand';
 import { formatMoney } from '@/lib/money';
 import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
-import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
-import { CardGrid, cardStyle, EmptyCard, FigureCard, SectionLabel, toast } from '../../kit';
-
-const BAR = tokens.space[2];
+import { useOwnerLayout } from '../../chrome/layout';
+import { EmptyCard, FigureRow, TitledSection, toast } from '../../kit';
+import { timeAgo } from '@/lib/time';
+import { ConsentCard } from './ConsentCard';
+import { CustomerHead } from './CustomerHead';
+import { StampDots } from './StampDots';
 
 /**
- * One loyalty member: their card, figures, every recent visit (from real orders) and exactly
- * what they agreed to, with the consent text version. The phone stays masked (Act 843).
+ * One loyalty member (canvas): their card, figures, stamps, recent visits (from real orders) and
+ * exactly what they agreed to, with the consent text version. The phone stays masked (Act 843).
  * "Add a stamp" stamps them here when their card can't be scanned; once an hour at most.
  */
 export function CustomerDetailScreen({ customerId }: { customerId: string }) {
@@ -27,6 +30,9 @@ export function CustomerDetailScreen({ customerId }: { customerId: string }) {
   const { t, i18n } = useTranslation();
   const router = useRouter();
   const client = useQueryClient();
+  const { desktop } = useOwnerLayout();
+  // Read the clock once, so the page stays pure; "2 days ago" doesn't need to tick.
+  const [now] = useState(() => Date.now());
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const key = [...ownerKeys.loyaltyCustomers(venueId), 'detail', customerId];
   const detail = useQuery({
@@ -57,23 +63,23 @@ export function CustomerDetailScreen({ customerId }: { customerId: string }) {
   const money = (v: number) => formatMoney(pesewas(v), venue.data?.currency);
   const date = (iso: string) =>
     new Date(iso).toLocaleDateString(i18n.language, { dateStyle: 'medium' });
-  const onCard = c ? Math.min(c.stamps, c.stampsRequired) : 0;
+
+  const avg = c && c.visitCount ? Math.round((c.spentPesewas ?? 0) / c.visitCount) : null;
+  const last = c ? (c.lastVisitAt ?? c.lastStampAt) : null;
+  const visitDay = (iso: string) =>
+    new Date(iso).toLocaleDateString(i18n.language, {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+    });
 
   return (
     <OwnerPage
       title={c ? c.name || c.phoneMasked : t('owner.customers')}
-      subtitle={c ? c.phoneMasked : undefined}
-      back={{ label: t('owner.customers'), onPress: back }}
-      action={
-        c ? (
-          <Button
-            label={t('ownerMembers.addStamp')}
-            size="md"
-            loading={stamp.isPending}
-            onPress={() => stamp.mutate()}
-          />
-        ) : undefined
+      subtitle={
+        last ? t('ownerMembers.lastVisitAgo', { ago: timeAgo(last, now, t) }) : undefined
       }
+      back={{ label: t('owner.customers'), onPress: back }}
     >
       <DeskWait
         loading={detail.isLoading}
@@ -82,129 +88,64 @@ export function CustomerDetailScreen({ customerId }: { customerId: string }) {
       >
         {c ? (
           <View style={styles.stack}>
-            <CardGrid columns={4}>
-              <FigureCard
-                order="labelFirst"
-                label={t('ownerMembers.visitsTitle')}
-                value={String(c.visitCount ?? 0)}
-              />
-              <FigureCard
-                order="labelFirst"
-                label={t('ownerMembers.spent')}
-                value={money(c.spentPesewas ?? 0)}
-              />
-              <FigureCard
-                order="labelFirst"
-                label={t('ownerMembers.currentStamps')}
-                value={String(c.stamps)}
-              />
-              <FigureCard
-                order="labelFirst"
-                label={t('ownerMembers.favourite')}
-                value={c.favouriteItem ?? '—'}
-              />
-            </CardGrid>
-
             <View style={styles.group}>
-              <SectionLabel title={t('ownerMembers.card')} />
-              <View style={[cardStyle(theme), styles.pad]}>
-                <Text variant="body">
-                  {c.stamps >= c.stampsRequired
-                    ? t('ownerMembers.rewardReady')
-                    : t('ownerMembers.progress', { count: onCard, total: c.stampsRequired })}
-                </Text>
-                <View
-                  accessibilityRole="progressbar"
-                  accessibilityValue={{ min: 0, max: c.stampsRequired, now: onCard }}
-                  style={[styles.track, { backgroundColor: theme.wash }]}
-                >
-                  <View
-                    style={[
-                      styles.fill,
-                      {
-                        backgroundColor: theme.fill,
-                        width: `${(onCard / c.stampsRequired) * 100}%`,
-                      },
-                    ]}
-                  />
-                </View>
-                {c.nextReward ? (
-                  <Text variant="caption" style={{ color: theme.muted }}>
-                    {c.nextReward}
-                  </Text>
-                ) : null}
-              </View>
+              <CustomerHead
+                customer={c}
+                stamping={stamp.isPending}
+                onStamp={() => stamp.mutate()}
+              />
+              <FigureRow
+                wide={desktop}
+                items={[
+                  { label: t('ownerMembers.visitsTitle'), value: String(c.visitCount ?? 0) },
+                  { label: t('ownerMembers.spent'), value: money(c.spentPesewas ?? 0) },
+                  { label: t('ownerMembers.average'), value: avg === null ? '—' : money(avg) },
+                  { label: t('ownerMembers.favourite'), value: c.favouriteItem ?? '—' },
+                ]}
+              />
             </View>
-
-            <View style={styles.group}>
-              <SectionLabel title={t('ownerMembers.visitsTitle')} />
+            <StampDots
+              stamps={c.stamps}
+              required={c.stampsRequired}
+              reward={c.nextReward ?? null}
+            />
+            <TitledSection title={t('ownerMembers.visitsTitle')} cardStyle={styles.list}>
               {c.visits.length === 0 ? (
-                <Text variant="body" style={{ color: theme.muted }}>
+                <Text variant="body" style={[styles.row, { color: theme.muted }]}>
                   {t('ownerMembers.noVisits')}
                 </Text>
-              ) : (
-                <View style={cardStyle(theme)}>
-                  {c.visits.map((visit, index) => (
-                    <View
-                      key={`${visit.at}-${index}`}
-                      style={[
-                        styles.row,
-                        index > 0 && {
-                          borderTopColor: theme.line,
-                          borderTopWidth: StyleSheet.hairlineWidth,
-                        },
-                      ]}
-                    >
-                      <View style={styles.flex}>
-                        <Text variant="body-strong">{date(visit.at)}</Text>
-                        <Text variant="caption" numberOfLines={1} style={{ color: theme.muted }}>
-                          {[
-                            visit.tableCode
-                              ? t('ownerOrders.table', { code: visit.tableCode })
-                              : null,
-                            visit.summary || t('ownerMembers.counterStamp'),
-                          ]
-                            .filter(Boolean)
-                            .join(' · ')}
-                        </Text>
-                      </View>
-                      {visit.totalPesewas > 0 ? (
-                        <Text variant="body-strong">{money(visit.totalPesewas)}</Text>
-                      ) : null}
-                    </View>
-                  ))}
-                </View>
-              )}
-            </View>
-
-            <View style={styles.group}>
-              <SectionLabel title={t('ownerMembers.consentTitle')} />
-              <View style={cardStyle(theme)}>
-                <View style={styles.row}>
-                  <View style={styles.flex}>
-                    <Text variant="body-strong">{t('ownerMembers.loyaltyAgreed')}</Text>
-                    <Text variant="caption" style={{ color: theme.muted }}>
-                      {t('ownerMembers.loyaltyAgreedAt', {
-                        date: date(c.consent.loyaltyAt),
-                        version: c.consent.textVersion,
-                      })}
-                    </Text>
-                  </View>
-                </View>
+              ) : null}
+              {c.visits.map((visit, index) => (
                 <View
+                  key={`${visit.at}-${index}`}
                   style={[
                     styles.row,
-                    { borderTopColor: theme.line, borderTopWidth: StyleSheet.hairlineWidth },
+                    index > 0 && { borderTopColor: theme.line, borderTopWidth: 1 },
                   ]}
                 >
-                  <Text variant="body-strong" style={styles.flex}>
-                    {c.consent.marketing
-                      ? t('ownerMembers.marketingYes')
-                      : t('ownerMembers.marketingNo')}
-                  </Text>
+                  <View style={styles.flex}>
+                    <Text variant="body">{visitDay(visit.at)}</Text>
+                    <Text variant="caption" numberOfLines={1} style={{ color: theme.muted }}>
+                      {[
+                        visit.tableCode
+                          ? t('ownerOrders.table', { code: visit.tableCode })
+                          : visit.source && visit.source !== 'table'
+                            ? t(`ownerOrders.source.${visit.source}`)
+                            : null,
+                        visit.summary || t('ownerMembers.counterStamp'),
+                        visit.stampAdded ? t('ownerMembers.stampAdded') : null,
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </Text>
+                  </View>
+                  {visit.totalPesewas > 0 ? (
+                    <Text variant="body-strong">{money(visit.totalPesewas)}</Text>
+                  ) : null}
                 </View>
-              </View>
-            </View>
+              ))}
+            </TitledSection>
+            <ConsentCard consent={c.consent} date={date} />
           </View>
         ) : (
           <EmptyCard
@@ -221,17 +162,15 @@ export function CustomerDetailScreen({ customerId }: { customerId: string }) {
 }
 
 const styles = StyleSheet.create({
-  stack: { gap: tokens.space[6] },
-  group: { gap: tokens.space[3] },
-  pad: { padding: tokens.space[5], gap: tokens.space[3] },
+  stack: { gap: tokens.owner.controls.sectionGap },
+  group: { gap: tokens.space[5] },
+  list: { paddingVertical: 2, paddingHorizontal: tokens.owner.controls.cardPadding },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: tokens.space[3],
-    minHeight: 64,
-    paddingHorizontal: tokens.space[5],
+    minHeight: 56,
+    paddingVertical: tokens.space[2],
   },
   flex: { flex: 1, minWidth: 0, gap: 2 },
-  track: { height: BAR, borderRadius: BAR / 2, overflow: 'hidden' },
-  fill: { height: BAR, borderRadius: BAR / 2 },
 });

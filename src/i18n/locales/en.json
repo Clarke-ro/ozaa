@@ -2247,7 +2247,22 @@
     },
     "stampsOf_one": "{{count}} of {{total}} stamps",
     "stampsOf_other": "{{count}} of {{total}} stamps",
-    "footnote": "Only guests who joined your loyalty card are listed. Phone numbers stay hidden apart from the last digits."
+    "footnote": "Only guests who joined your loyalty card are listed. Phone numbers stay hidden apart from the last digits.",
+    "since": "Member since {{date}}",
+    "lastVisitAgo": "Last visit {{ago}}",
+    "average": "Average",
+    "stampsTitle": "Stamps",
+    "leftFor_one": "One more stamp for {{reward}}",
+    "leftFor_other": "{{count}} more stamps for {{reward}}",
+    "agreed": "Agreed",
+    "notAgreed": "Not agreed",
+    "loyaltyCard": "Loyalty card",
+    "consentAt": "{{date}} · Consent text {{version}}",
+    "marketing": "Marketing messages",
+    "marketingCan": "You can send offers to this guest",
+    "marketingCant": "You can't send offers to this guest",
+    "consentShort": "Consent",
+    "stampAdded": "Stamp added"
   },
   "ownerAi": {
     "title": "Cravins feedback assistant",

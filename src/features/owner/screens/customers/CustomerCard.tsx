@@ -1,24 +1,15 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { ChevronRight } from 'lucide-react-native';
-import type { CustomerTag, LoyaltyCustomerSummary } from '@/lib/api/types';
+import type { LoyaltyCustomerSummary } from '@/lib/api/types';
 import { timeAgo } from '@/lib/time';
-import { STATUS_TONES, type StatusTone } from '@/theme/palette';
+import { STATUS_TONES } from '@/theme/palette';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
 import { cardStyle } from '../../kit';
 import { initialsOf } from './initials';
-
-// The tag colours on the canvas: regulars green, a reward ready orange, new blue, quiet amber.
-const TAG_TONE: Record<CustomerTag, StatusTone> = {
-  regular: 'success',
-  reward_ready: 'order',
-  new: 'info',
-  quiet: 'bill',
-};
-// One tag per row, the most useful first.
-const TAG_ORDER: readonly CustomerTag[] = ['reward_ready', 'regular', 'new', 'quiet'];
+import { pickTag, TAG_TONE } from './customerTag';
 
 /**
  * One loyalty member as a row (design canvas): initials, name with one coloured tag, the masked
@@ -39,10 +30,7 @@ export function CustomerCard({
   const theme = useTheme();
   const { t } = useTranslation();
   const name = customer.name || customer.phoneMasked;
-  const tags = customer.tags ?? [];
-  const tag = TAG_ORDER.find(
-    (x) => tags.includes(x) || (x === 'reward_ready' && customer.rewardsAvailable > 0),
-  );
+  const tag = pickTag(customer);
   const tone = tag ? STATUS_TONES[theme.scheme][TAG_TONE[tag]] : null;
   const stamps = stampsRequired
     ? t('ownerMembers.stampsOf', { count: customer.stamps, total: stampsRequired })
