@@ -29,6 +29,7 @@ export function TypeSection({
       <View style={styles.block}>
         <FieldLabel>{t('ownerBranding.font')}</FieldLabel>
         <Segmented<FontPair>
+          equal
           label={t('ownerBranding.font')}
           value={font}
           onChange={onFont}
@@ -38,6 +39,7 @@ export function TypeSection({
       <View style={styles.block}>
         <FieldLabel>{t('ownerBranding.menuStyle.scheme')}</FieldLabel>
         <Segmented<Scheme>
+          equal
           label={t('ownerBranding.menuStyle.scheme')}
           value={scheme}
           onChange={onScheme}

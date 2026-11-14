@@ -36,6 +36,7 @@ export function MenuStyleSection({
           />
           <Text variant="body-strong">{t('ownerBranding.menuStyle.layout')}</Text>
           <Segmented
+            equal
             label={t('ownerBranding.menuStyle.layout')}
             value={style.layout}
             onChange={(layout) => onChange({ ...style, layout })}
@@ -46,6 +47,7 @@ export function MenuStyleSection({
           />
           <Text variant="body-strong">{t('ownerBranding.menuStyle.scheme')}</Text>
           <Segmented
+            equal
             label={t('ownerBranding.menuStyle.scheme')}
             value={style.colorScheme}
             onChange={(colorScheme) => onChange({ ...style, colorScheme })}

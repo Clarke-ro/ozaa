@@ -35,6 +35,8 @@ export type Theme = {
   meta: string;
   line: string;
   wash: string;
+  /** Segmented-control groove. */
+  track: string;
   white: string;
   black: string;
   success: string;
@@ -84,6 +86,7 @@ export function themeFromAccent(
     meta: n.meta,
     line: n.line,
     wash: n.wash,
+    track: n.track,
     white: n.bg,
     black: n.text,
     success: n.success,

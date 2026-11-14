@@ -25,6 +25,7 @@ export function MenuSection({
       <View style={styles.block}>
         <FieldLabel>{t('ownerBranding.dishOrder')}</FieldLabel>
         <Segmented<Sort>
+          equal
           label={t('ownerBranding.dishOrder')}
           value={style.itemSort}
           onChange={(itemSort) => onChange({ ...style, itemSort })}
@@ -34,6 +35,7 @@ export function MenuSection({
       <View style={styles.block}>
         <FieldLabel>{t('ownerBranding.layout')}</FieldLabel>
         <Segmented<Layout>
+          equal
           label={t('ownerBranding.layout')}
           value={style.layout}
           onChange={(layout) => onChange({ ...style, layout })}
