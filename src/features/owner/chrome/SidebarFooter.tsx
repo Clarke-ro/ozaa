@@ -28,7 +28,10 @@ export function SidebarFooter({ collapsed }: { collapsed: boolean }) {
     : sessionName;
   const roleLabel = t(`ownerSettings.roles.${role}`);
   const photo = me.data?.photo?.url;
-  const here = isCurrent(path, '/owner/settings') || isCurrent(path, '/owner/help');
+  const here =
+    isCurrent(path, '/owner/settings') ||
+    isCurrent(path, '/owner/help') ||
+    isCurrent(path, '/owner/profile');
 
   return (
     <View style={[styles.foot, { borderTopColor: theme.line }]}>

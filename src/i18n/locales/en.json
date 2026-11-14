@@ -2628,5 +2628,67 @@
       "minSpend": "Enter an amount, like 100",
       "codeTaken": "Another promo already uses this code"
     }
+  },
+  "ownerHelp": {
+    "lead": "Answers to common questions",
+    "search": "Search help",
+    "noMatch": "No answers match that. Try another word.",
+    "groups": {
+      "start": "Getting started",
+      "money": "Money",
+      "guests": "Guests"
+    },
+    "q": {
+      "order": {
+        "question": "How do guests order from the table?",
+        "answer": "Each table has its own QR code. Guests scan it, see your menu and order. The order appears on Orders straight away.",
+        "link": "Print table codes"
+      },
+      "prices": {
+        "question": "How do I change prices or hide a dish?",
+        "answer": "Open Menu, tap the dish and change the price, or switch it off when it runs out.",
+        "link": "Open Menu"
+      },
+      "staff": {
+        "question": "How do I add my staff?",
+        "answer": "Invite them from Staff with their phone number. Waiters only see the floor and calls.",
+        "link": "Open Staff"
+      },
+      "payouts": {
+        "question": "How do card and MoMo payments reach me?",
+        "answer": "You connect your own Paystack account. Guests pay through Paystack and the money settles straight to your bank or MoMo. Cravins never holds it.",
+        "link": "Connect Paystack"
+      },
+      "notPaid": {
+        "question": "Why does an order say \"Not paid\"?",
+        "answer": "Only a payment Paystack confirms counts. If a guest closes the page early, the order stays unpaid until they pay or you mark it cash.",
+        "link": "Open Orders"
+      },
+      "stamps": {
+        "question": "How do loyalty stamps work?",
+        "answer": "Guests join with their phone number. Scan their card on a scanner device to add a stamp after each visit.",
+        "link": "Open Loyalty"
+      },
+      "reviews": {
+        "question": "Can I only ask happy guests for Google reviews?",
+        "answer": "No. Google doesn't allow that, so every guest sees the review button. Private feedback still reaches you on Feedback.",
+        "link": "Open Reviews"
+      }
+    },
+    "stuck": "Still stuck?",
+    "stuckBody": "Message us and we reply within a working day.",
+    "stuckFallback": "For now, ask the person who set up Cravins for you.",
+    "email": "Email us",
+    "whatsapp": "WhatsApp us"
+  },
+  "ownerProfile": {
+    "title": "Your profile",
+    "lead": "Your name, phone and language",
+    "changePhoto": "Change photo",
+    "details": "Details",
+    "name": "Name",
+    "phoneHint": "We text a code to confirm a new number",
+    "moreLanguages": "More languages are coming.",
+    "deleteBody": "Deletes your venues, menus and staff. Paid orders stay on record for tax for 6 years."
   }
 }

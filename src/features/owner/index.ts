@@ -28,6 +28,8 @@ export { LinksScreen as CustomLinksScreen } from './screens/links/LinksScreen';
 export { ScanStampScreen } from './screens/ScanStampScreen';
 export { NotificationsScreen } from './screens/notifications/NotificationsScreen';
 export { SettingsScreen } from './screens/settings/SettingsScreen';
+export { ProfileScreen } from './screens/profile/ProfileScreen';
+export { HelpScreen } from './screens/help/HelpScreen';
 export { SocialsScreen } from './screens/SocialsScreen';
 export { ComingSoonScreen } from './screens/ComingSoonScreen';
 export { BillingScreen } from './screens/billing/BillingScreen';

@@ -10,6 +10,8 @@ describe('readEnv', () => {
       EXPO_PUBLIC_MOCK_FAIL_RATE: 0,
       EXPO_PUBLIC_MOCK_FAST: '0',
       EXPO_PUBLIC_SITE_URL: 'https://cravins.app',
+      EXPO_PUBLIC_SUPPORT_EMAIL: '',
+      EXPO_PUBLIC_SUPPORT_WHATSAPP: '',
       live: [],
     });
   });
