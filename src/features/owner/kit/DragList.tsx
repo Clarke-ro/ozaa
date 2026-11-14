@@ -23,6 +23,7 @@ export function DragList<T extends { key: string; label: string }>({
   renderRow,
   rowHeight = ROW,
   handle = 'grip',
+  gripSide = 'end',
 }: {
   items: readonly T[];
   onOrder: (keys: string[]) => void;
@@ -32,6 +33,8 @@ export function DragList<T extends { key: string; label: string }>({
   rowHeight?: number;
   /** The grip lines, or a four-way move arrow. */
   handle?: 'grip' | 'move';
+  /** Where the grip sits. Custom links (canvas) put it first. */
+  gripSide?: 'start' | 'end';
 }) {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -76,6 +79,14 @@ export function DragList<T extends { key: string; label: string }>({
     );
   }, [order, onOrder, dy, STEP]);
   const keys = order.split('|');
+  const grip = (index: number, lifted: boolean) => (
+    <View
+      {...handlers[index]?.panHandlers}
+      style={[styles.grip, gripSide === 'start' && styles.gripStart, { height: rowHeight }]}
+    >
+      <Handle size={gripSide === 'start' ? 16 : 20} color={lifted ? theme.ink : theme.meta} />
+    </View>
+  );
 
   return (
     <View style={[styles.list, { height: items.length * STEP - GAP }]}>
@@ -97,6 +108,7 @@ export function DragList<T extends { key: string; label: string }>({
             }}
             style={[
               styles.row,
+              gripSide === 'start' && styles.rowStart,
               {
                 top: index * STEP,
                 height: rowHeight,
@@ -109,6 +121,7 @@ export function DragList<T extends { key: string; label: string }>({
               },
             ]}
           >
+            {gripSide === 'start' ? grip(index, lifted) : null}
             {renderRow ? (
               renderRow(item, index)
             ) : (
@@ -121,9 +134,7 @@ export function DragList<T extends { key: string; label: string }>({
                 </Text>
               </>
             )}
-            <View {...handlers[index]?.panHandlers} style={[styles.grip, { height: rowHeight }]}>
-              <Handle size={20} color={lifted ? theme.ink : theme.meta} />
-            </View>
+            {gripSide === 'end' ? grip(index, lifted) : null}
           </Animated.View>
         );
       })}
@@ -146,6 +157,8 @@ const styles = StyleSheet.create({
     borderCurve: 'continuous',
     borderWidth: StyleSheet.hairlineWidth,
   },
+  rowStart: { paddingStart: 0, borderRadius: tokens.owner.controls.cardRadius },
+  gripStart: { width: 40 },
   num: { width: 16, fontVariant: ['tabular-nums'] },
   flex: { flex: 1 },
   grip: {
