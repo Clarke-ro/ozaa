@@ -74,7 +74,8 @@ export function Sidebar() {
         {navGroups(role).map(({ group, items }, index) => (
           <View
             key={group}
-            style={[styles.group, index > 0 && [styles.ruled, { borderTopColor: theme.line }]]}
+            // Canvas: open, groups are split by their names alone; folded, by a thin line.
+            style={[styles.group, collapsed && index > 0 && [styles.ruled, { borderTopColor: theme.wash }]]}
           >
             {/* The main group needs no label; the groups after it are named. Folded, the line between groups is enough. */}
             {collapsed || group === 'main' ? null : (
@@ -132,14 +133,16 @@ const styles = StyleSheet.create({
   },
   scroll: { flex: 1 },
   list: { paddingTop: tokens.space[2], paddingBottom: tokens.space[4] },
-  group: { gap: 2, paddingBottom: tokens.space[3] },
+  group: { gap: 2 },
   ruled: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: tokens.space[4] },
   groupLabel: {
     fontFamily: fontFamily.strong,
     fontSize: tokens.owner.type.caps.size,
     lineHeight: tokens.owner.type.caps.line,
     letterSpacing: tokens.owner.type.caps.letterSpacing,
-    paddingHorizontal: tokens.space[3],
-    paddingBottom: tokens.space[2],
+    // Canvas: 16 px above a group name, 10 px in from the edge, 4 px under it.
+    paddingTop: tokens.space[4],
+    paddingHorizontal: 10,
+    paddingBottom: 4,
   },
 });

@@ -12,6 +12,7 @@ export function SectionHead({
   title,
   meta,
   badge,
+  badgeTone = 'brand',
   action,
   onAction,
 }: {
@@ -19,6 +20,8 @@ export function SectionHead({
   meta?: string;
   /** A short value in a small orange pill, for progress. */
   badge?: string;
+  /** A grey count instead of the orange one (canvas: "Earlier today 1"). */
+  badgeTone?: 'brand' | 'neutral';
   action?: string;
   onAction?: () => void;
 }) {
@@ -30,8 +33,20 @@ export function SectionHead({
           {title}
         </Text>
         {badge ? (
-          <View style={[styles.badge, { backgroundColor: theme.fill }]}>
-            <Text style={[styles.badgeText, { color: theme.onFill }]}>{badge}</Text>
+          <View
+            style={[
+              styles.badge,
+              { backgroundColor: badgeTone === 'brand' ? theme.fill : theme.wash },
+            ]}
+          >
+            <Text
+              style={[
+                styles.badgeText,
+                { color: badgeTone === 'brand' ? theme.onFill : theme.text },
+              ]}
+            >
+              {badge}
+            </Text>
           </View>
         ) : null}
         {meta ? (

@@ -150,8 +150,7 @@ export function CallDetailScreen({ callId }: { callId: string }) {
                   {call.status === 'open' ? (
                     <Button
                       label={t('ownerCalls.detail.onMyWay')}
-                      tone="tinted"
-                      tint="alert"
+                      tone="secondary"
                       disabled={update.isPending}
                       onPress={() => update.mutate({ status: 'acknowledged' })}
                       style={styles.pill}
@@ -170,7 +169,7 @@ export function CallDetailScreen({ callId }: { callId: string }) {
                   <View style={[styles.rule, { backgroundColor: theme.line }]} />
                   <Button
                     label={t('ownerCalls.detail.snooze')}
-                    tone="ghost"
+                    tone="secondary"
                     disabled={update.isPending}
                     onPress={() => update.mutate({ snoozeMinutes: 1 })}
                   />
@@ -192,6 +191,7 @@ export function CallDetailScreen({ callId }: { callId: string }) {
               <SectionHead
                 title={t('ownerCalls.detail.earlier', { table: call.tableCode })}
                 badge={earlier.length > 0 ? String(earlier.length) : undefined}
+                badgeTone="neutral"
               />
               {earlier.length === 0 ? (
                 <Text variant="body" style={{ color: theme.muted }}>
@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: tokens.space[3],
     minHeight: 56,
-    paddingHorizontal: tokens.space[3],
+    paddingHorizontal: tokens.owner.controls.cardPadding,
   },
   replies: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: tokens.space[2] },
   rule: { width: StyleSheet.hairlineWidth, height: 28, marginHorizontal: tokens.space[1] },
@@ -281,8 +281,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: tokens.space[3],
-    minHeight: 52,
-    paddingHorizontal: tokens.space[3],
+    minHeight: 64,
+    paddingHorizontal: tokens.owner.controls.cardPadding,
   },
-  time: { fontSize: 13, lineHeight: 18 },
+  time: { fontSize: 15, lineHeight: 20, minWidth: 80 },
 });

@@ -14,12 +14,16 @@ import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { guestKeys } from '@/lib/queryKeys';
 import { ownerKeys } from '../../data/keys';
-import { Chips, Field, Section, SectionBody, SwitchRow, toast } from '../../kit';
+import { Chips, Field, toast } from '../../kit';
+import { IntegrationCard } from './IntegrationCard';
 
 type Network = NonNullable<ManualPayments['momo']['network']>;
 const NETWORKS: Network[] = ['mtn', 'vod', 'atl'];
 
-/** Cash, card machine, bank transfer and MoMo to the venue's number. Staff mark these paid by hand. */
+/**
+ * Cash, card machine, bank transfer and MoMo to the venue's number, each as its own card with a
+ * switch (design canvas). Staff mark these orders paid by hand.
+ */
 export function ManualPaymentsCard({
   venueId,
   settings,
@@ -41,7 +45,7 @@ export function ManualPaymentsCard({
   const dirty = JSON.stringify(next) !== JSON.stringify(saved);
 
   const save = useMutation({
-    mutationFn: () => api.ownerSetManualPayments(venueId, next),
+    mutationFn: (body: ManualPayments) => api.ownerSetManualPayments(venueId, body),
     onSuccess: (result) => {
       client.setQueryData(ownerKeys.paymentSettings(venueId), result);
       void client.invalidateQueries({ queryKey: ownerKeys.venue(venueId) });
@@ -55,35 +59,58 @@ export function ManualPaymentsCard({
   const error = (field: 'bank' | 'momo') =>
     tried && !check.ok && check.field === field ? t(`ownerPay.err.${field}`) : undefined;
 
+  // Switching a method saves straight away; bank and MoMo details save with their own button.
+  const flip = (changes: Partial<ManualPayments>) => {
+    const after = { ...draft, ...changes };
+    setDraft(after);
+    const quick = { ...after, momo: { ...after.momo, number: momoNumber } };
+    if (checkManualPayments(quick).ok) save.mutate(quick);
+  };
+  const saveRow = (label: string, note: string) => (
+    <View style={styles.foot}>
+      <Text style={[styles.note, { color: theme.meta }]}>{note}</Text>
+      <Button
+        label={label}
+        loading={save.isPending}
+        disabled={!dirty}
+        onPress={() => (check.ok ? save.mutate(next) : setTried(true))}
+      />
+    </View>
+  );
+  const onOff = (on: boolean) => (on ? t('ownerPay.on') : t('ownerPay.off'));
+
   return (
-    <Section
-      title={t('ownerPay.manual')}
-      subtitle={t('ownerPay.manualNote')}
-      icon={Banknote}
-      collapsible
-    >
-      <SwitchRow
+    <>
+      <IntegrationCard
         icon={Banknote}
-        label={t('ownerPay.cash')}
-        value={draft.cash}
-        onChange={(cash) => set({ cash })}
+        title={t('ownerPay.cash')}
+        subtitle={t('ownerPay.cashSub')}
+        status={onOff(draft.cash)}
+        on={draft.cash}
+        onToggle={(cash) => flip({ cash })}
       />
-      <SwitchRow
+      <IntegrationCard
         icon={CreditCard}
-        label={t('ownerPay.cardMachine')}
-        hint={t('ownerPay.cardMachineHint')}
-        value={draft.cardMachine}
-        onChange={(cardMachine) => set({ cardMachine })}
+        title={t('ownerPay.cardMachine')}
+        subtitle={t('ownerPay.cardMachineHint')}
+        status={onOff(draft.cardMachine)}
+        on={draft.cardMachine}
+        onToggle={(cardMachine) => flip({ cardMachine })}
       />
-      <SwitchRow
+      <IntegrationCard
         icon={Landmark}
-        label={t('ownerPay.bank')}
-        value={draft.bankTransfer.enabled}
-        onChange={(enabled) => set({ bankTransfer: { ...draft.bankTransfer, enabled } })}
-      />
-      {draft.bankTransfer.enabled ? (
-        <SectionBody>
-          <View style={styles.stack}>
+        title={t('ownerPay.bank')}
+        subtitle={t('ownerPay.bankSub')}
+        status={onOff(draft.bankTransfer.enabled)}
+        on={draft.bankTransfer.enabled}
+        onToggle={(enabled) =>
+          enabled
+            ? set({ bankTransfer: { ...draft.bankTransfer, enabled } })
+            : flip({ bankTransfer: { ...draft.bankTransfer, enabled } })
+        }
+      >
+        <View style={styles.pair}>
+          <View style={styles.half}>
             <Field
               label={t('ownerPay.bankName')}
               value={draft.bankTransfer.bankName ?? ''}
@@ -92,6 +119,8 @@ export function ManualPaymentsCard({
               }
               placeholder="GCB Bank"
             />
+          </View>
+          <View style={styles.half}>
             <Field
               label={t('ownerPay.accountName')}
               value={draft.bankTransfer.accountName ?? ''}
@@ -99,35 +128,43 @@ export function ManualPaymentsCard({
                 set({ bankTransfer: { ...draft.bankTransfer, accountName } })
               }
             />
-            <Field
-              label={t('ownerPay.accountNumber')}
-              value={draft.bankTransfer.accountNumber ?? ''}
-              onChangeText={(accountNumber) =>
-                set({ bankTransfer: { ...draft.bankTransfer, accountNumber } })
-              }
-              keyboardType="number-pad"
-              error={error('bank')}
-            />
           </View>
-        </SectionBody>
-      ) : null}
-      <SwitchRow
+        </View>
+        <View style={styles.half}>
+          <Field
+            label={t('ownerPay.accountNumber')}
+            value={draft.bankTransfer.accountNumber ?? ''}
+            onChangeText={(accountNumber) =>
+              set({ bankTransfer: { ...draft.bankTransfer, accountNumber } })
+            }
+            keyboardType="number-pad"
+            placeholder="1234567890"
+            error={error('bank')}
+          />
+        </View>
+        {saveRow(t('ownerPay.saveBank'), t('ownerPay.bankNote'))}
+      </IntegrationCard>
+      <IntegrationCard
         icon={Smartphone}
-        label={t('ownerPay.momo')}
-        hint={t('ownerPay.momoHint')}
-        value={draft.momo.enabled}
-        onChange={(enabled) => set({ momo: { ...draft.momo, enabled } })}
-      />
-      {draft.momo.enabled ? (
-        <SectionBody>
-          <View style={styles.stack}>
-            <Chips
-              single
-              label={t('ownerPay.network')}
-              options={NETWORKS.map((id) => ({ id, label: t(`ownerPay.networks.${id}`) }))}
-              selected={draft.momo.network ? [draft.momo.network] : []}
-              onChange={(ids) => set({ momo: { ...draft.momo, network: ids[0] } })}
-            />
+        title={t('ownerPay.momo')}
+        subtitle={t('ownerPay.momoHint')}
+        status={onOff(draft.momo.enabled)}
+        on={draft.momo.enabled}
+        onToggle={(enabled) =>
+          enabled
+            ? set({ momo: { ...draft.momo, enabled } })
+            : flip({ momo: { ...draft.momo, enabled } })
+        }
+      >
+        <Chips
+          single
+          label={t('ownerPay.network')}
+          options={NETWORKS.map((id) => ({ id, label: t(`ownerPay.networks.${id}`) }))}
+          selected={draft.momo.network ? [draft.momo.network] : []}
+          onChange={(ids) => set({ momo: { ...draft.momo, network: ids[0] } })}
+        />
+        <View style={styles.pair}>
+          <View style={styles.half}>
             <Field
               label={t('ownerPay.momoNumber')}
               value={momoText}
@@ -136,35 +173,30 @@ export function ManualPaymentsCard({
               placeholder="024 123 4567"
               error={error('momo')}
             />
+          </View>
+          <View style={styles.half}>
             <Field
               label={t('ownerPay.momoName')}
-              hint={t('ownerPay.momoNameHint')}
               value={draft.momo.name ?? ''}
               onChangeText={(name) => set({ momo: { ...draft.momo, name } })}
             />
           </View>
-        </SectionBody>
-      ) : null}
-      {dirty ? (
-        <SectionBody>
-          <Button
-            label={t('ownerPay.saveManual')}
-            tone="secondary"
-            loading={save.isPending}
-            onPress={() => (check.ok ? save.mutate() : setTried(true))}
-          />
-        </SectionBody>
-      ) : null}
-      {tried && !check.ok ? (
-        <Text variant="caption" style={[styles.pad, { color: theme.error }]}>
-          {t(`ownerPay.err.${check.field}`)}
-        </Text>
-      ) : null}
-    </Section>
+        </View>
+        {saveRow(t('ownerPay.saveMomo'), t('ownerPay.momoNameHint'))}
+      </IntegrationCard>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  stack: { gap: tokens.space[3] },
-  pad: { paddingHorizontal: tokens.space[4] },
+  pair: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.space[4] },
+  half: { flexGrow: 1, flexBasis: 240, minWidth: 0 },
+  foot: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: tokens.space[3],
+  },
+  note: { flexGrow: 1, flexBasis: 240, fontSize: 13, lineHeight: 18 },
 });
