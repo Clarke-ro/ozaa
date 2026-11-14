@@ -1873,7 +1873,15 @@
     "removeBody": "It will stop scanning straight away. You can pair it again later.",
     "remove": "Remove",
     "paired": "Paired {{date}}",
-    "activeNow": "Active now"
+    "activeNow": "Active now",
+    "scanOnly": "Scan and stamp only",
+    "used": "Used {{when}}",
+    "pairedTitle": "Paired",
+    "pairTitle": "Pair a device",
+    "step1": "Open the Cravins app on the scanner phone",
+    "step2": "Tap Pair with a venue",
+    "step3": "Get a pairing code here and enter it. It works once.",
+    "footnote": "Scanner devices can only scan loyalty cards and add stamps. They can’t see sales or change settings."
   },
   "ownerSetup": {
     "progress": "Step {{step}} of {{total}}",
@@ -1993,7 +2001,7 @@
     }
   },
   "ownerScan": {
-    "title": "Scan & stamp",
+    "title": "Scan and stamp",
     "aim": "Fit the guest's QR code inside the corners",
     "webTitle": "Scan with the Cravins app",
     "webBody": "Camera scanning works in the app on a phone. On a computer, type the code under the guest's QR card below.",
@@ -2016,20 +2024,21 @@
     "phoneTitle": "Scan with your phone",
     "phoneBody": "A computer can't scan loyalty cards. Point your phone camera at this code to open the scanner, or use a paired scanner phone.",
     "pair": "Pair a scanner phone",
-    "lookupTitle": "Find a guest without their card",
+    "lookupTitle": "No phone to hand? Type their phone or card code",
     "lookupLabel": "Name, last 4 digits or card code",
-    "lookupHint": "Name, last 4 digits, or a card code and Enter",
+    "lookupHint": "e.g. 024 400 0099, a name or a card code",
     "noMatch": "No member matches that.",
     "today": "Today",
     "noneToday": "No stamps or rewards given today yet.",
     "stampTo_one": "Stamp · {{count}} on the card",
-    "stampTo_other": "Stamp · {{count}} on the card"
+    "stampTo_other": "Stamp · {{count}} on the card",
+    "find": "Find guest"
   },
   "ownerLead": {
     "branding": "How your guest page looks: colour, font, photos and buttons.",
     "business": "Your business name and every location you run.",
     "calls": "Guests asking for a waiter",
-    "devices": "Phones and tablets that scan loyalty cards at the counter.",
+    "devices": "Phones and tablets your team uses to stamp loyalty cards",
     "feedback": "Private notes guests leave after their meal",
     "loyalty": "Your stamp card, its members and how it is doing",
     "ordering": "Pickup and delivery orders from your menu link.",
@@ -2039,7 +2048,7 @@
     "staff": "Who works here, what they can open and who is on shift",
     "customers": "Guests who joined your loyalty card",
     "floor": "Every table at a glance. Tap one to see its bill and act on it.",
-    "scan": "Scan a guest's loyalty card to give a stamp or a reward.",
+    "scan": "Scan a guest's loyalty card to add a stamp or give a reward",
     "socials": "Your social media links on the guest page."
   },
   "ownerNotes": {
@@ -2294,7 +2303,7 @@
     "body": "This menu isn’t open yet. Please check back soon or ask a member of staff."
   },
   "ownerOrdering": {
-    "lead": "Let people order from your menu link for pickup or delivery. Table QR orders don’t change.",
+    "lead": "Pickup and delivery orders from your menu link",
     "main": "Take online orders",
     "mainOn": "On. Your menu link takes orders.",
     "mainOff": "Off. Your menu link shows the menu only.",
@@ -2323,7 +2332,9 @@
     },
     "pinSet": "Your venue is on the map. Delivery distance starts here.",
     "setPin": "Use my current location",
-    "movePin": "Update the venue location"
+    "movePin": "Update the venue location",
+    "mainHint": "Guests order from your menu link for pickup or delivery",
+    "footnote": "Online orders arrive on Orders with a Pickup or Delivery tag. Guests leave a name and phone on the order only."
   },
   "linkOrder": {
     "title": "How do you want it?",

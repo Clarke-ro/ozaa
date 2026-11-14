@@ -27,7 +27,7 @@ const EXAMPLE_FOOD = 5000;
 export function OnlineOrderingScreen() {
   const theme = useTheme();
   const { t } = useTranslation();
-    const venueId = useOwnerSession((state) => state.venueId) ?? '';
+  const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const venue = useQuery({
     queryKey: ownerKeys.venue(venueId),
     queryFn: () => api.ownerGetVenue(venueId),
@@ -71,7 +71,8 @@ export function OnlineOrderingScreen() {
 
   return (
     <OwnerPage
-      title={t('owner.ordering')} subtitle={t('ownerLead.ordering')}
+      title={t('owner.ordering')}
+      subtitle={t('ownerLead.ordering')}
       footer={
         <SaveBar
           visible={draft.dirty}
@@ -93,6 +94,7 @@ export function OnlineOrderingScreen() {
           <SwitchRow
             icon={ShoppingBag}
             label={t('ownerOrdering.main')}
+            hint={t('ownerOrdering.mainHint')}
             value={f.enabled}
             onChange={(on) => draft.set('enabled', on)}
           />
@@ -207,6 +209,9 @@ export function OnlineOrderingScreen() {
             </Section>
           </View>
         </View>
+        <Text variant="caption" style={{ color: theme.meta }}>
+          {t('ownerOrdering.footnote')}
+        </Text>
       </DeskWait>
     </OwnerPage>
   );

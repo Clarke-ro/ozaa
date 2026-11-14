@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Button } from '@/ui/Button';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Smartphone } from 'lucide-react-native';
@@ -27,16 +28,20 @@ export function ScanOnPhone() {
       <View style={styles.copy}>
         <View style={styles.title}>
           <Smartphone size={22} color={theme.text} />
-          <Text variant="title">{t('ownerScan.phoneTitle')}</Text>
+          <Text variant="body-strong" style={styles.heading}>
+            {t('ownerScan.phoneTitle')}
+          </Text>
         </View>
-        <Text variant="body" style={{ color: theme.muted }}>
+        <Text variant="caption" style={{ color: theme.muted }}>
           {t('ownerScan.phoneBody')}
         </Text>
-        <Pressable accessibilityRole="link" onPress={() => router.push('/owner/devices')}>
-          <Text variant="body-strong" style={{ color: theme.ink }}>
-            {t('ownerScan.pair')}
-          </Text>
-        </Pressable>
+        {/* Canvas: a white pill, not a link. */}
+        <Button
+          label={t('ownerScan.pair')}
+          tone="secondary"
+          onPress={() => router.push('/owner/devices')}
+          style={styles.pair}
+        />
       </View>
     </View>
   );
@@ -47,8 +52,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     alignItems: 'center',
-    gap: tokens.space[6],
-    padding: tokens.space[6],
+    gap: tokens.space[5],
+    padding: tokens.space[4],
   },
   qr: {
     padding: tokens.space[2],
@@ -57,4 +62,6 @@ const styles = StyleSheet.create({
   },
   copy: { flexGrow: 1, flexBasis: 280, gap: tokens.space[2] },
   title: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
+  heading: { fontSize: 17, lineHeight: 22 },
+  pair: { alignSelf: 'flex-start', minHeight: 40, marginTop: tokens.space[2] },
 });

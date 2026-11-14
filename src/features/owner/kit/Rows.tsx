@@ -71,7 +71,7 @@ export function SwitchRow({
   const theme = useTheme();
   return (
     <View style={[styles.pad, styles.row]}>
-      {Icon ? <Icon size={20} color={theme.ink} /> : null}
+      {Icon ? <Icon size={18} color={theme.text} /> : null}
       <View style={styles.copy}>
         <Text variant="body">{label}</Text>
         {hint ? (
@@ -144,7 +144,7 @@ export function InfoRow({
       accessibilityLabel={value ? `${label}, ${value}` : label}
       style={[styles.pad, styles.row]}
     >
-      {Icon ? <Icon size={20} color={theme.ink} /> : null}
+      {Icon ? <Icon size={18} color={theme.text} /> : null}
       <View style={styles.copy}>
         <Text variant="body">{label}</Text>
         {value ? (
