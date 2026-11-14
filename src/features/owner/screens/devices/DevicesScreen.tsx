@@ -6,7 +6,6 @@ import { Smartphone } from 'lucide-react-native';
 import { api } from '@/lib/api';
 import type { ScannerDevice } from '@/lib/api/types';
 import { useOwnerSession } from '@/features/session';
-import { Button } from '@/ui/Button';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { tokens } from '@/theme/tokens';
 import { cardStyle, ConfirmDialog, EmptyCard, toast } from '../../kit';
@@ -14,12 +13,13 @@ import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
 import { SectionHead } from '../dashboard/SectionHead';
 import { DeviceCard } from './DeviceCard';
+import { PairCode } from './PairCode';
 import { PairSheet } from './PairSheet';
 import { ownerKeys } from '../../data/keys';
 
 /**
- * Scanner devices (design canvas): the paired phones and tablets with a Remove each, then how to
- * pair one in three steps and a button for the one-time code, then what they can do.
+ * Scanner devices (design canvas): the paired phones and tablets with a Remove each, then the
+ * one-time pairing code beside the three steps, then what scanner devices can do.
  */
 export function DevicesScreen() {
   const { t } = useTranslation();
@@ -84,22 +84,17 @@ export function DevicesScreen() {
             {t('ownerDevices.pairTitle')}
           </Text>
           <View style={[cardStyle(theme), styles.pairCard]}>
-            {(['step1', 'step2', 'step3'] as const).map((step, i) => (
-              <View key={step} style={styles.step}>
-                <View style={[styles.num, { backgroundColor: theme.text }]}>
-                  <Text style={[styles.numText, { color: theme.surface }]}>{i + 1}</Text>
+            <PairCode venueId={venueId} count={items.length} />
+            <View style={styles.steps}>
+              {(['step1', 'step2', 'step3'] as const).map((step, i) => (
+                <View key={step} style={styles.step}>
+                  <View style={[styles.num, { backgroundColor: theme.text }]}>
+                    <Text style={[styles.numText, { color: theme.surface }]}>{i + 1}</Text>
+                  </View>
+                  <Text style={styles.stepText}>{t(`ownerDevices.${step}`)}</Text>
                 </View>
-                <Text variant="body" style={styles.flex}>
-                  {t(`ownerDevices.${step}`)}
-                </Text>
-              </View>
-            ))}
-            <Button
-              label={t('ownerDevices.getCode')}
-              tone="secondary"
-              onPress={() => setPairing(true)}
-              style={styles.codeBtn}
-            />
+              ))}
+            </View>
           </View>
           <Text style={[styles.note, { color: theme.meta }]}>{t('ownerDevices.footnote')}</Text>
         </View>
@@ -121,11 +116,18 @@ export function DevicesScreen() {
 
 const styles = StyleSheet.create({
   list: { gap: tokens.owner.controls.listGap, marginBottom: tokens.space[6] },
-  pairCard: { padding: tokens.owner.controls.cardPadding, gap: tokens.space[3] },
-  step: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
-  num: { width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  numText: { fontSize: 13, lineHeight: 16, fontFamily: fontFamily.strong },
-  flex: { flex: 1 },
-  codeBtn: { alignSelf: 'flex-start', marginTop: tokens.space[2] },
-  note: { fontSize: 14, lineHeight: 20 },
+  // Canvas: the code panel on the left, the three numbered steps beside it.
+  pairCard: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: tokens.space[8],
+    padding: tokens.owner.controls.cardPadding,
+  },
+  steps: { flexGrow: 1, flexBasis: 260, gap: tokens.space[5] },
+  step: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[4] },
+  num: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  numText: { fontSize: 15, lineHeight: 18, fontFamily: fontFamily.strong },
+  stepText: { flex: 1, fontSize: 17, lineHeight: 24 },
+  note: { fontSize: 15, lineHeight: 22 },
 });
