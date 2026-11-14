@@ -7,14 +7,13 @@ import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
 import { VenueImage } from '@/ui/VenueImage';
 import { fontFamily, useTheme } from '@/ui/theme';
-import { StatusPill } from '../../kit';
+import { cardStyle, StatusPill } from '../../kit';
 
 /** Canvas location row: logo, name, address, tables and staff, then In use or Switch, and Edit. */
 export function LocationCard({
   location,
   active,
   today,
-  first,
   onSwitch,
   onEdit,
 }: {
@@ -22,7 +21,6 @@ export function LocationCard({
   active: boolean;
   /** "Open today 11:00 to 22:00" for the location in use; other locations' hours aren't loaded. */
   today?: string;
-  first: boolean;
   onSwitch: () => void;
   onEdit: () => void;
 }) {
@@ -45,10 +43,14 @@ export function LocationCard({
     today,
   ].filter(Boolean);
   return (
-    <View style={[styles.row, !first && { borderTopWidth: 1, borderTopColor: theme.line }]}>
+    <View style={[cardStyle(theme), styles.row]}>
       <View style={[styles.logo, { backgroundColor: theme.wash, borderColor: theme.line }]}>
         {location.logo ? (
-          <VenueImage url={location.logo.url} alt="" style={StyleSheet.absoluteFill} />
+          <VenueImage
+            url={location.logo.url}
+            alt=""
+            style={[StyleSheet.absoluteFill, { borderRadius: 35 }]}
+          />
         ) : (
           <Text style={[styles.initials, { color: theme.muted }]}>{initials}</Text>
         )}
@@ -100,28 +102,28 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: tokens.space[3],
-    paddingHorizontal: tokens.space[4],
-    paddingVertical: tokens.space[3],
-    minHeight: 72,
+    paddingHorizontal: tokens.space[5],
+    paddingVertical: tokens.space[5],
+    gap: tokens.space[5],
   },
+  // Canvas: a 70 px round logo, or the initials on a soft square.
   logo: {
-    width: 44,
-    height: 44,
-    borderRadius: 10,
+    width: 70,
+    height: 70,
+    borderRadius: 20,
     borderWidth: 1,
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  initials: { fontSize: 14, fontFamily: fontFamily.strong },
+  initials: { fontSize: 18, fontFamily: fontFamily.strong },
   flex: { flex: 1, minWidth: 0, gap: 2 },
   place: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[1] },
-  short: { minHeight: 36 },
+  short: { minHeight: 48 },
   edit: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',

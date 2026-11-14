@@ -1542,7 +1542,16 @@
     "closedDate": "Date",
     "dateError": "Use a date like 2026-12-25.",
     "removeClosed": "Remove {{date}}",
-    "locationPhone": "Phone"
+    "locationPhone": "Phone",
+    "categoryHint": "Pick every type that fits. The first one shows on Google.",
+    "addCategory": "Add a category",
+    "removeCategory": "Remove {{name}}",
+    "spend": {
+      "1": "Average spend per guest: under GH₵ 50",
+      "2": "Average spend per guest: GH₵ 50 to 120",
+      "3": "Average spend per guest: GH₵ 120 to 250",
+      "4": "Average spend per guest: over GH₵ 250"
+    }
   },
   "ownerServices": {
     "wifi": "Wi-Fi",

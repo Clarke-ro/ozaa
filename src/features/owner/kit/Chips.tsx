@@ -15,6 +15,7 @@ export function Chips<T extends string | number>({
   onChange,
   label,
   single,
+  filled,
 }: {
   options: readonly { id: T; label: string }[];
   selected: readonly T[];
@@ -22,6 +23,8 @@ export function Chips<T extends string | number>({
   /** What is being picked, read by screen readers. */
   label: string;
   single?: boolean;
+  /** Canvas cuisine chips: a picked chip is solid in the brand colour, with no tick. */
+  filled?: boolean;
 }) {
   const theme = useTheme();
   return (
@@ -46,17 +49,25 @@ export function Chips<T extends string | number>({
             }}
             style={({ pressed }) => [
               styles.chip,
+              styles.size,
+              filled && styles.big,
               {
-                borderColor: on ? theme.ink : theme.line,
-                backgroundColor: on ? theme.tint : pressed ? theme.wash : theme.surface,
+                borderColor: on ? (filled ? theme.fill : theme.ink) : theme.line,
+                backgroundColor: on
+                  ? filled
+                    ? theme.fill
+                    : theme.tint
+                  : pressed
+                    ? theme.wash
+                    : theme.surface,
               },
             ]}
           >
-            {on ? <Check size={14} color={theme.badgeInk} strokeWidth={3} /> : null}
+            {on && !filled ? <Check size={14} color={theme.badgeInk} strokeWidth={3} /> : null}
             <Text
               variant="body"
               style={{
-                color: on ? theme.badgeInk : theme.text,
+                color: on ? (filled ? theme.onFill : theme.badgeInk) : theme.text,
                 fontFamily: on ? 'Inter_600' : 'Inter_400',
               }}
             >
@@ -75,9 +86,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: tokens.space[1],
-    minHeight: 40,
-    paddingHorizontal: tokens.space[3],
     borderWidth: 1,
     borderRadius: tokens.radius.full,
   },
+  size: { minHeight: 40, paddingHorizontal: tokens.space[3] },
+  // Canvas cuisine chips are a touch larger: 48 px tall, 20 px either side.
+  big: { minHeight: 48, paddingHorizontal: 20 },
 });
