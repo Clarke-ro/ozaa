@@ -705,7 +705,8 @@
     },
     "unsaved": "Unsaved changes",
     "discard": "Discard",
-    "save": "Save"
+    "save": "Save",
+    "cancel": "Cancel"
   },
   "ownerDash": {
     "greet": {
@@ -1080,7 +1081,12 @@
     "hideSectionA11y": "Hide {{name}} from guests",
     "showSectionA11y": "Show {{name}} to guests",
     "reorderSections": "Reorder sections",
-    "previewTitle": "Guest preview"
+    "previewTitle": "Guest preview",
+    "details": "Details",
+    "extras": "Extras",
+    "saveDish": "Save dish",
+    "dishMissing": "This dish isn't on the menu",
+    "dishMissingBody": "It may have been deleted. Go back to the menu."
   },
   "ownerBranding": {
     "lead": "How your page looks to guests: colour, words, photos and the order of the buttons.",
@@ -1924,7 +1930,16 @@
       "all": "Everyone",
       "onShift": "On shift",
       "invited": "Invited"
-    }
+    },
+    "joinedOn": "Joined {{date}}",
+    "ordersToday": "Orders today",
+    "callsAnswered": "Calls answered",
+    "avgReply": "Average reply",
+    "role": "Role",
+    "removeFromStaff": "Remove from staff",
+    "missing": "This person isn't on the team",
+    "missingBody": "They may have been removed. Go back to see who works here.",
+    "invitedTag": "Invited"
   },
   "ownerDevices": {
     "pair": "Pair a phone",

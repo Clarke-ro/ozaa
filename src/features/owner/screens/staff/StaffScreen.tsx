@@ -1,27 +1,17 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Users } from 'lucide-react-native';
 import { api } from '@/lib/api';
-import type { StaffMember } from '@/lib/api/types';
 import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
-import {
-  CardGrid,
-  ChipRow,
-  ConfirmDialog,
-  EmptyCard,
-  FigureRow,
-  InfoRow,
-  ModalSheet,
-  cardStyle,
-  toast,
-} from '../../kit';
+import { CardGrid, ChipRow, EmptyCard, FigureRow, cardStyle } from '../../kit';
 import { useOwnerLayout } from '../../chrome/layout';
 import { StaffCard } from './StaffCard';
 import { InviteSheet } from './InviteSheet';
@@ -36,13 +26,12 @@ const ROLES = ['owner', 'manager', 'waiter', 'kitchen'] as const;
  */
 export function StaffScreen() {
   const theme = useTheme();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 60_000);
     return () => clearInterval(id);
   }, []);
-  const client = useQueryClient();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const key = ownerKeys.staff(venueId);
   const staff = useQuery({
@@ -53,19 +42,7 @@ export function StaffScreen() {
   const { wide, desktop } = useOwnerLayout();
   const [show, setShow] = useState<Show>('all');
   const [inviting, setInviting] = useState(false);
-  const [open, setOpen] = useState<StaffMember | null>(null);
-  const [confirm, setConfirm] = useState(false);
-
-  const remove = useMutation({
-    mutationFn: (id: string) => api.ownerRevokeStaff(venueId, id),
-    onSuccess: () => {
-      toast.success(t('ownerStaff.removed'));
-      setConfirm(false);
-      setOpen(null);
-      void client.invalidateQueries({ queryKey: key });
-    },
-    onError: () => toast.error(t('ownerKit.saveFailed')),
-  });
+  const router = useRouter();
 
   const members = (staff.data?.items ?? []).filter((m) => m.status !== 'removed');
   const sorted = [...members].sort(
@@ -131,7 +108,7 @@ export function StaffScreen() {
                     member={m}
                     now={now}
                     wide={wide}
-                    onPress={() => setOpen(m)}
+                    onPress={() => router.push(`/owner/staff/${m.id}`)}
                   />
                 ))}
               </View>
@@ -156,45 +133,6 @@ export function StaffScreen() {
       </DeskWait>
 
       {inviting ? <InviteSheet venueId={venueId} onClose={() => setInviting(false)} /> : null}
-      {open ? (
-        <ModalSheet
-          visible
-          onClose={() => setOpen(null)}
-          title={[open.firstName, open.lastName].filter(Boolean).join(' ')}
-          subtitle={`${t(`ownerSettings.roles.${open.role}`)} · ${open.phoneMasked}`}
-        >
-          {open.joinedAt ? (
-            <InfoRow
-              label={t('ownerStaff.joined')}
-              value={new Date(open.joinedAt).toLocaleDateString(i18n.language, {
-                day: 'numeric',
-                month: 'short',
-                year: 'numeric',
-              })}
-            />
-          ) : null}
-          <Text variant="body" style={{ color: theme.muted }}>
-            {t(`ownerStaff.can.${open.role}`)}
-          </Text>
-          {open.role === 'owner' ? null : (
-            <Button
-              label={t('ownerStaff.remove', { name: open.firstName })}
-              tone="secondary"
-              onPress={() => setConfirm(true)}
-            />
-          )}
-        </ModalSheet>
-      ) : null}
-      <ConfirmDialog
-        visible={confirm && open !== null}
-        destructive
-        title={t('ownerStaff.removeTitle', { name: open?.firstName ?? '' })}
-        message={t('ownerStaff.removeBody')}
-        confirmLabel={t('ownerStaff.removeConfirm')}
-        loading={remove.isPending}
-        onCancel={() => setConfirm(false)}
-        onConfirm={() => open && remove.mutate(open.id)}
-      />
     </OwnerPage>
   );
 }
