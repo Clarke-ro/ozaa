@@ -101,7 +101,7 @@ export function ManualPaymentsCard({
         icon={Landmark}
         title={t('ownerPay.bank')}
         subtitle={t('ownerPay.bankSub')}
-        status={onOff(draft.bankTransfer.enabled)}
+        status={draft.bankTransfer.enabled ? t('ownerPay.on') : t('ownerPay.notConnected')}
         on={draft.bankTransfer.enabled}
         onToggle={(enabled) =>
           enabled
@@ -148,7 +148,7 @@ export function ManualPaymentsCard({
         icon={Smartphone}
         title={t('ownerPay.momo')}
         subtitle={t('ownerPay.momoHint')}
-        status={onOff(draft.momo.enabled)}
+        status={draft.momo.enabled ? t('ownerPay.on') : t('ownerPay.notConnected')}
         on={draft.momo.enabled}
         onToggle={(enabled) =>
           enabled

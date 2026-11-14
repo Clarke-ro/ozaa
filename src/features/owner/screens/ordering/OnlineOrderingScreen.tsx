@@ -16,7 +16,8 @@ import { ownerKeys } from '../../data/keys';
 import { useDraft } from '../../data/useDraft';
 import { useSaveVenue } from '../../data/useSaveVenue';
 import { checkOrdering, orderingDraftOf, type OrderingDraft } from '../../desk/orderingForm';
-import { Field, SaveBar, Section, SectionBody, SwitchRow, toast } from '../../kit';
+import { SaveBar, Section, SectionBody, Stepper, SwitchRow, toast } from '../../kit';
+import { MoneyInput, SettingRow } from './SettingRow';
 import { Button } from '@/ui/Button';
 import { hereOnce } from '@/lib/here';
 
@@ -45,6 +46,8 @@ export function OnlineOrderingScreen() {
   const error = (field: string) =>
     showErrors && !check.ok && check.field === field ? t(`ownerOrdering.err.${field}`) : undefined;
   const money = (amount: number) => formatMoney(pesewas(amount), v?.currency);
+  // "GH₵" for the money boxes: the currency's own symbol, without the number.
+  const symbol = money(0).replace(/[\d.,\s]/g, '');
   const example = check.ok ? deliveryQuote(check.settings, EXAMPLE_KM, EXAMPLE_FOOD) : null;
   const noPin = f.deliveryOn && (v?.location.lat == null || v.location.lng == null);
 
@@ -111,14 +114,21 @@ export function OnlineOrderingScreen() {
               />
               {f.pickupOn ? (
                 <SectionBody>
-                  <Field
-                    label={t('ownerOrdering.prep')}
-                    value={f.prepMinutes}
-                    onChangeText={(text) => draft.set('prepMinutes', text)}
-                    keyboardType="number-pad"
-                    placeholder="20"
+                  <SettingRow
+                    label={t('ownerOrdering.readyIn')}
+                    hint={t('ownerOrdering.readyInHint')}
                     error={error('prep')}
-                  />
+                  >
+                    <Stepper
+                      label={t('ownerOrdering.readyIn')}
+                      value={Number.parseInt(f.prepMinutes, 10) || 0}
+                      min={5}
+                      max={180}
+                      step={5}
+                      unit={t('ownerOrdering.min')}
+                      onChange={(n) => draft.set('prepMinutes', String(n))}
+                    />
+                  </SettingRow>
                 </SectionBody>
               ) : null}
             </Section>
@@ -135,50 +145,58 @@ export function OnlineOrderingScreen() {
               {f.deliveryOn ? (
                 <SectionBody>
                   <View style={styles.stack}>
-                    <View style={styles.row}>
-                      <View style={styles.flex}>
-                        <Field
-                          label={t('ownerOrdering.minimumFee', { currency: v?.currency })}
-                          value={f.minimumFee}
-                          onChangeText={(text) => draft.set('minimumFee', text)}
-                          keyboardType="decimal-pad"
-                          placeholder="10.00"
-                          error={error('minimumFee')}
-                        />
-                      </View>
-                      <View style={styles.flex}>
-                        <Field
-                          label={t('ownerOrdering.perKm', { currency: v?.currency })}
-                          value={f.perKm}
-                          onChangeText={(text) => draft.set('perKm', text)}
-                          keyboardType="decimal-pad"
-                          placeholder="2.50"
-                          error={error('perKm')}
-                        />
-                      </View>
-                    </View>
-                    <View style={styles.row}>
-                      <View style={styles.flex}>
-                        <Field
-                          label={t('ownerOrdering.maxKm')}
-                          value={f.maxKm}
-                          onChangeText={(text) => draft.set('maxKm', text)}
-                          keyboardType="decimal-pad"
-                          placeholder="8"
-                          error={error('maxKm')}
-                        />
-                      </View>
-                      <View style={styles.flex}>
-                        <Field
-                          label={t('ownerOrdering.freeOver', { currency: v?.currency })}
-                          value={f.freeOver}
-                          onChangeText={(text) => draft.set('freeOver', text)}
-                          keyboardType="decimal-pad"
-                          placeholder="200.00"
-                          error={error('freeOver')}
-                        />
-                      </View>
-                    </View>
+                    <SettingRow
+                      label={t('ownerOrdering.fee')}
+                      hint={t('ownerOrdering.feeHint')}
+                      error={error('minimumFee')}
+                    >
+                      <MoneyInput
+                        label={t('ownerOrdering.fee')}
+                        currency={symbol}
+                        value={f.minimumFee}
+                        onChange={(text) => draft.set('minimumFee', text)}
+                        placeholder="10"
+                      />
+                    </SettingRow>
+                    <SettingRow
+                      label={t('ownerOrdering.perKmShort')}
+                      hint={t('ownerOrdering.perKmHint')}
+                      error={error('perKm')}
+                    >
+                      <MoneyInput
+                        label={t('ownerOrdering.perKmShort')}
+                        currency={symbol}
+                        value={f.perKm}
+                        onChange={(text) => draft.set('perKm', text)}
+                        placeholder="0"
+                      />
+                    </SettingRow>
+                    <SettingRow
+                      label={t('ownerOrdering.freeOverShort')}
+                      hint={t('ownerOrdering.freeOverHint')}
+                      error={error('freeOver')}
+                    >
+                      <MoneyInput
+                        label={t('ownerOrdering.freeOverShort')}
+                        currency={symbol}
+                        value={f.freeOver}
+                        onChange={(text) => draft.set('freeOver', text)}
+                      />
+                    </SettingRow>
+                    <SettingRow
+                      label={t('ownerOrdering.upTo')}
+                      hint={t('ownerOrdering.from', { place: v?.name ?? '' })}
+                      error={error('maxKm')}
+                    >
+                      <Stepper
+                        label={t('ownerOrdering.upTo')}
+                        value={Number.parseFloat(f.maxKm) || 0}
+                        min={1}
+                        max={50}
+                        unit={t('ownerOrdering.km')}
+                        onChange={(n) => draft.set('maxKm', String(n))}
+                      />
+                    </SettingRow>
                     {example?.ok ? (
                       <Text variant="caption" style={{ color: theme.meta }}>
                         {t('ownerOrdering.example', {
@@ -219,8 +237,6 @@ export function OnlineOrderingScreen() {
 
 const styles = StyleSheet.create({
   methods: { gap: tokens.space[5] },
-  stack: { gap: tokens.space[3] },
-  row: { flexDirection: 'row', gap: tokens.space[3] },
-  flex: { flex: 1, minWidth: 0 },
+  stack: { gap: tokens.space[1] },
   pin: { gap: tokens.space[2], alignItems: 'flex-start' },
 });

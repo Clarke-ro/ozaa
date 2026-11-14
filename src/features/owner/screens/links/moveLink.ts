@@ -1,21 +1,24 @@
 /**
- * Move one link up or down. Returns only the links whose position changed, with their new
- * sortOrder, numbered 0, 1, 2 … in the new order, so one save puts every link in place.
+ * Put links in a new order (from a drag). Returns only the links whose position changed, with
+ * their new sortOrder numbered 0, 1, 2 … so one save puts every link in place.
  */
-export function moveLink<T extends { id: string; sortOrder: number }>(
+export function reorderLinks<T extends { id: string; sortOrder: number }>(
   links: readonly T[],
-  id: string,
-  step: -1 | 1,
+  ids: readonly string[],
 ): { id: string; sortOrder: number }[] {
-  const ordered = [...links].sort((a, b) => a.sortOrder - b.sortOrder);
-  const from = ordered.findIndex((link) => link.id === id);
-  const to = from + step;
-  if (from < 0 || to < 0 || to >= ordered.length) return [];
-  const [moved] = ordered.splice(from, 1);
-  if (!moved) return [];
-  ordered.splice(to, 0, moved);
-  return ordered
-    .map((link, index) => ({ id: link.id, sortOrder: index, before: link.sortOrder }))
-    .filter((link) => link.sortOrder !== link.before)
-    .map(({ id: linkId, sortOrder }) => ({ id: linkId, sortOrder }));
+  const before = new Map(links.map((link) => [link.id, link.sortOrder]));
+  return ids
+    .map((id, index) => ({ id, sortOrder: index }))
+    .filter((link) => before.has(link.id) && before.get(link.id) !== link.sortOrder);
+}
+
+/** A link's address without the scheme, "www." or a trailing slash: mamas.kitchen/reserve. */
+export function shortUrl(url: string): string {
+  try {
+    const u = new URL(url);
+    const path = u.pathname === '/' ? '' : u.pathname.replace(/\/$/, '');
+    return `${u.host.replace(/^www\./, '')}${path}`;
+  } catch {
+    return url;
+  }
 }

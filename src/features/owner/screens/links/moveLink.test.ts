@@ -1,4 +1,4 @@
-import { moveLink } from './moveLink';
+import { reorderLinks, shortUrl } from './moveLink';
 
 const links = [
   { id: 'a', sortOrder: 0 },
@@ -6,27 +6,24 @@ const links = [
   { id: 'c', sortOrder: 2 },
 ];
 
-test('moving up swaps with the one above; only changed links come back', () => {
-  expect(moveLink(links, 'c', -1)).toEqual([
-    { id: 'c', sortOrder: 1 },
+test('dragging the last link to the top renumbers only the ones that moved', () => {
+  expect(reorderLinks(links, ['c', 'a', 'b'])).toEqual([
+    { id: 'c', sortOrder: 0 },
+    { id: 'a', sortOrder: 1 },
     { id: 'b', sortOrder: 2 },
   ]);
-});
-
-test('the first cannot go up and the last cannot go down', () => {
-  expect(moveLink(links, 'a', -1)).toEqual([]);
-  expect(moveLink(links, 'c', 1)).toEqual([]);
-});
-
-test('gaps or repeats in old numbers are cleaned up into 0, 1, 2', () => {
-  const messy = [
-    { id: 'a', sortOrder: 5 },
-    { id: 'b', sortOrder: 5 },
-    { id: 'c', sortOrder: 9 },
-  ];
-  expect(moveLink(messy, 'a', 1)).toEqual([
+  expect(reorderLinks(links, ['b', 'a', 'c'])).toEqual([
     { id: 'b', sortOrder: 0 },
     { id: 'a', sortOrder: 1 },
-    { id: 'c', sortOrder: 2 },
   ]);
+});
+
+test('the same order saves nothing', () => {
+  expect(reorderLinks(links, ['a', 'b', 'c'])).toEqual([]);
+});
+
+test('shortUrl keeps the host and path, without the scheme, www or a trailing slash', () => {
+  expect(shortUrl('https://www.instagram.com/mamaskitchen/')).toBe('instagram.com/mamaskitchen');
+  expect(shortUrl('https://mamas.kitchen/')).toBe('mamas.kitchen');
+  expect(shortUrl('not a url')).toBe('not a url');
 });

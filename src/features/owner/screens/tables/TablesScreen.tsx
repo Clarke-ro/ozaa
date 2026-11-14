@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { QrCode } from 'lucide-react-native';
 import { api } from '@/lib/api';
+import type { Table } from '@/lib/api/types';
 import { canPayOnline } from '@/lib/payments';
 import { generateTableCardHtml, type TableCardTemplate } from '@/features/tables';
 import { useOwnerSession } from '@/features/session';
@@ -17,14 +18,18 @@ import { useOwnerLayout } from '../../chrome/layout';
 import { AddTablesSheet } from './AddTablesSheet';
 import { EmbedCard } from './EmbedCard';
 import { MenuLinkCard } from './MenuLinkCard';
-import { printHtml, shareLink } from './qrActions';
+import { AllTables } from './AllTables';
+import { downloadQr, printHtml } from './qrActions';
+import { TableCard } from './TableCard';
 import { TableQrCard } from './TableQrCard';
 import { CARD_ACCENTS } from './TableCardPreview';
 
+// The canvas draws the All tables cards at 62% of the big preview.
+const CARD_IN_GRID = 0.62;
+
 /**
- * QR codes and links in one column: the menu's own QR code and link first (for posters and
- * bios), the website embed folded under it, then one card for the table QR codes, where you
- * pick a table, style its card and print it.
+ * QR codes and links (canvas): the menu's own QR code and link, the website embed, the table
+ * card style and colour with a preview, then every table's card with its own Print and Download.
  */
 export function TablesScreen() {
   const { desktop } = useOwnerLayout();
@@ -33,7 +38,6 @@ export function TablesScreen() {
   const client = useQueryClient();
   const [template, setTemplate] = useState<TableCardTemplate>('folded_tent');
   const [accent, setAccent] = useState<string>(CARD_ACCENTS[0].hex);
-  const [openId, setOpenId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
 
   const tables = useQuery({
@@ -58,26 +62,40 @@ export function TablesScreen() {
   });
 
   const items = tables.data?.items ?? [];
-  const open = items.find((table) => table.id === openId) ?? items[0] ?? null;
+  const first = items[0] ?? null;
   const venueName = venue.data?.name ?? '';
+  const venueAccent = venue.data?.theme.accent ?? CARD_ACCENTS[0].hex;
+  const logoUrl = venue.data?.logo?.url ?? null;
   // Printed cards only promise paying by phone where the venue takes payment online.
   const cta = t(canPayOnline(venue.data) ? 'ownerTables.cta' : 'ownerTables.ctaNoPay');
-  const name = (table: (typeof items)[number]) =>
-    table.label ?? t('ownerOrders.table', { code: table.code });
+  const shortText = t('ownerTables.scanToOrder');
+  const name = (table: Table) => table.label ?? t('ownerOrders.table', { code: table.code });
 
-  const print = (all: boolean) => {
-    const targets = all ? items : open ? [open] : [];
+  const print = (targets: Table[], pdf = false) => {
     const ok = printHtml(
-      generateTableCardHtml(targets, { template, accentColor: accent, ctaText: cta }, venueName),
+      generateTableCardHtml(
+        targets,
+        { template, accentColor: accent, ctaText: cta, shortText, logoUrl },
+        venueName,
+      ),
     );
     if (!ok) toast.error(t('ownerTables.popupBlocked'));
+    // Browsers save a PDF from the print window, so "Download as PDF" says where to click.
+    else if (pdf) toast.success(t('ownerTables.pdfHint'));
   };
-  const share = async () => {
-    if (!open?.qrUrl) return;
-    const result = await shareLink(open.qrUrl, `${venueName} · ${name(open)}`);
-    if (result === 'copied') toast.success(t('ownerTables.copied'));
-    if (result === 'failed') toast.error(t('ownerTables.shareFailed'));
-  };
+  const card = (table: Table, scale?: number) => (
+    <TableCard
+      template={template}
+      scale={scale}
+      accent={accent}
+      venueName={venueName}
+      label={name(table)}
+      qrUrl={table.qrUrl ?? ''}
+      cta={cta}
+      shortText={shortText}
+      logoUrl={logoUrl}
+    />
+  );
 
   return (
     <OwnerPage
@@ -110,7 +128,7 @@ export function TablesScreen() {
             error={tables.isError}
             onRetry={() => void tables.refetch()}
           >
-            {items.length === 0 || !open ? (
+            {items.length === 0 || !first ? (
               <EmptyCard
                 icon={QrCode}
                 title={t('ownerTables.emptyTitle')}
@@ -119,21 +137,31 @@ export function TablesScreen() {
                 onAction={() => setAdding(true)}
               />
             ) : (
-              <TableQrCard
-                tables={items}
-                open={open}
-                onOpen={setOpenId}
-                name={name}
-                venueName={venueName}
-                template={template}
-                onTemplate={setTemplate}
-                accent={accent}
-                onAccent={setAccent}
-                cta={cta}
-                onPrint={print}
-                onShare={() => void share()}
-                side={desktop}
-              />
+              <View style={styles.stack}>
+                <TableQrCard
+                  count={items.length}
+                  preview={card(first)}
+                  template={template}
+                  onTemplate={setTemplate}
+                  accent={accent}
+                  onAccent={setAccent}
+                  venueAccent={venueAccent}
+                  onPrintAll={() => print(items)}
+                  onPdfAll={() => print(items, true)}
+                  side={desktop}
+                />
+                <AllTables
+                  tables={items}
+                  styleLabel={t(`ownerTables.styles.${template}`)}
+                  name={name}
+                  renderCard={(table) => card(table, CARD_IN_GRID)}
+                  onPrint={(table) => print([table])}
+                  onDownload={(table) =>
+                    table.qrUrl &&
+                    downloadQr(table.qrUrl, `${venueName}-${table.code}`.replace(/\s+/g, '-'))
+                  }
+                />
+              </View>
             )}
           </DeskWait>
         </View>

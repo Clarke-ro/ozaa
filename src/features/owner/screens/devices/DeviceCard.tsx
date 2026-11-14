@@ -28,7 +28,7 @@ export function DeviceCard({
   const Icon = tablet ? Tablet : Smartphone;
   return (
     <View style={[cardStyle(theme), styles.row]}>
-      <Icon size={20} color={theme.text} />
+      <Icon size={24} color={theme.text} />
       <View style={styles.words}>
         <Text style={styles.name} numberOfLines={1}>
           {device.name}
@@ -56,13 +56,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: tokens.space[4],
-    minHeight: 64,
-    paddingVertical: 10,
-    paddingLeft: tokens.owner.controls.cardPadding,
-    paddingRight: tokens.space[2],
+    // Canvas: roomy rows, 100 px tall, 24 px in from each side.
+    minHeight: 100,
+    paddingVertical: tokens.space[4],
+    paddingHorizontal: tokens.space[6],
   },
   words: { flex: 1, minWidth: 0, gap: 2 },
-  name: { fontSize: 16, lineHeight: 22, fontFamily: fontFamily.strong },
-  sub: { fontSize: 14, lineHeight: 20 },
-  remove: { minHeight: 40 },
+  name: { fontSize: 18, lineHeight: 24, fontFamily: fontFamily.strong },
+  sub: { fontSize: 16, lineHeight: 22 },
+  remove: { minHeight: 52, paddingHorizontal: tokens.space[6] },
 });

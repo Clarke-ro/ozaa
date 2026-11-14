@@ -1,182 +1,112 @@
-import { Image, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Check } from 'lucide-react-native';
-import type { Table } from '@/lib/api/types';
-import { hapticSelection } from '@/lib/haptics';
 import type { TableCardTemplate } from '@/features/tables';
+import { hapticSelection } from '@/lib/haptics';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
-import { cravinsTheme, ThemeProvider, useTheme } from '@/ui/theme';
+import { fontFamily, useTheme } from '@/ui/theme';
 import { Segmented } from '../../kit';
-import { QrImage } from './QrImage';
-import { QR_PAPER } from '@/theme/palette';
 
-// Card accents. Names are read out by screen readers and shown under the selected swatch.
+// The canvas palette for printed cards. "Venue colour" is filled in from the venue's own accent.
 export const CARD_ACCENTS = [
-  { hex: '#D24000', name: 'Orange' },
-  { hex: '#111111', name: 'Black' },
-  { hex: '#047857', name: 'Green' },
-  { hex: '#1D4ED8', name: 'Blue' },
-  { hex: '#6D28D9', name: 'Purple' },
+  { id: 'orange', hex: '#D24000' },
+  { id: 'venue', hex: '' },
+  { id: 'black', hex: '#111111' },
+  { id: 'red', hex: '#B42318' },
+  { id: 'pink', hex: '#BE185D' },
+  { id: 'purple', hex: '#6D28D9' },
+  { id: 'blue', hex: '#1D4ED8' },
+  { id: 'teal', hex: '#0E7490' },
+  { id: 'green', hex: '#0F7A55' },
+  { id: 'gold', hex: '#A16207' },
+  { id: 'brown', hex: '#6B3E26' },
+  { id: 'slate', hex: '#475569' },
 ] as const;
 
-// A QR code must be dark on light or many phone cameras will not read it, so these never follow dark mode.
-const QR_INK = '#111111';
-const QR_SIZE = 168;
+const STYLES: TableCardTemplate[] = ['folded_tent', 'acrylic_stand', 'sticker'];
 
+/** Style (with what it prints on) and colour for the table cards, as on the canvas. */
 export function TableCardControls({
   template,
   onTemplate,
   accent,
   onAccent,
+  venueAccent,
 }: {
   template: TableCardTemplate;
   onTemplate: (template: TableCardTemplate) => void;
   accent: string;
   onAccent: (hex: string) => void;
+  venueAccent: string;
 }) {
   const theme = useTheme();
   const { t } = useTranslation();
-  const selected = CARD_ACCENTS.find((c) => c.hex === accent);
+  const swatches = CARD_ACCENTS.map((c) => ({ ...c, hex: c.id === 'venue' ? venueAccent : c.hex }));
+  const picked = swatches.find((c) => c.hex.toUpperCase() === accent.toUpperCase());
   return (
-    <View style={styles.controls}>
-      <Segmented
-        label={t('ownerTables.format')}
-        value={template}
-        onChange={onTemplate}
-        options={[
-          { id: 'folded_tent', label: t('ownerTables.tent') },
-          { id: 'acrylic_stand', label: t('ownerTables.stand') },
-          { id: 'sticker', label: t('ownerTables.sticker') },
-        ]}
-      />
-      <View
-        style={styles.swatchRow}
-        accessibilityRole="radiogroup"
-        accessibilityLabel={t('ownerTables.colour')}
-      >
-        {CARD_ACCENTS.map((c) => {
-          const on = c.hex === accent;
-          return (
-            <Pressable
-              key={c.hex}
-              accessibilityRole="radio"
-              accessibilityLabel={c.name}
-              accessibilityState={{ checked: on }}
-              onPress={() => {
-                void hapticSelection();
-                onAccent(c.hex);
-              }}
-              style={[styles.swatchHit, on && { borderColor: theme.text }]}
-            >
-              <View style={[styles.swatch, { backgroundColor: c.hex }]}>
-                {on ? <Check size={18} color={QR_PAPER} strokeWidth={3} /> : null}
-              </View>
-            </Pressable>
-          );
-        })}
-        <Text variant="caption" style={{ color: theme.muted }}>
-          {selected?.name}
+    <View style={styles.stack}>
+      <View style={styles.block}>
+        <Text style={styles.label}>{t('ownerTables.style')}</Text>
+        <Segmented
+          label={t('ownerTables.style')}
+          value={template}
+          onChange={onTemplate}
+          options={STYLES.map((id) => ({ id, label: t(`ownerTables.styles.${id}`) }))}
+        />
+        <Text variant="caption" style={{ color: theme.meta }}>
+          {t('ownerTables.styleNote', { note: t(`ownerTables.notes.${template}`) })}
         </Text>
+      </View>
+      <View style={styles.block}>
+        <Text style={styles.label}>
+          {t('ownerTables.colour')}
+          {picked ? (
+            <Text style={[styles.label, styles.thin, { color: theme.meta }]}>
+              {` · ${t(`ownerTables.accents.${picked.id}`)}`}
+            </Text>
+          ) : null}
+        </Text>
+        <View
+          style={styles.swatches}
+          accessibilityRole="radiogroup"
+          accessibilityLabel={t('ownerTables.colour')}
+        >
+          {swatches.map((c) => {
+            const on = c === picked;
+            return (
+              <Pressable
+                key={c.id}
+                accessibilityRole="radio"
+                accessibilityLabel={t(`ownerTables.accents.${c.id}`)}
+                accessibilityState={{ checked: on }}
+                onPress={() => {
+                  void hapticSelection();
+                  onAccent(c.hex);
+                }}
+                // Canvas: the picked swatch gets a dark ring with a white gap inside it.
+                style={[
+                  styles.swatch,
+                  { backgroundColor: c.hex },
+                  on && {
+                    borderWidth: 2,
+                    borderColor: theme.text,
+                    boxShadow: `inset 0 0 0 3px ${theme.surface}`,
+                  },
+                ]}
+              />
+            );
+          })}
+        </View>
       </View>
     </View>
   );
 }
 
-/** What the printed card will look like. Always drawn light, because it is a piece of paper. */
-export function TableCardPreview({
-  table,
-  venueName,
-  template,
-  accent,
-  cta,
-}: {
-  table: Table;
-  venueName: string;
-  template: TableCardTemplate;
-  accent: string;
-  cta: string;
-}) {
-  const label = table.label ?? `Table ${table.code}`;
-  return (
-    <ThemeProvider theme={cravinsTheme}>
-      <View
-        style={styles.stage}
-        accessible
-        accessibilityLabel={`${venueName}, ${label}, QR card preview`}
-      >
-        <View
-          style={[
-            styles.card,
-            template === 'sticker' && styles.sticker,
-            template === 'acrylic_stand' && styles.acrylic,
-          ]}
-        >
-          <View style={[styles.topBar, { backgroundColor: accent }]} />
-          <View style={styles.inner}>
-            <Image source={require('../../../../../assets/images/icon.png')} style={styles.logo} />
-            <Text variant="title" style={styles.center} numberOfLines={2}>
-              {venueName}
-            </Text>
-            <View style={[styles.badge, { backgroundColor: QR_INK }]}>
-              <Text variant="title" style={{ color: QR_PAPER }}>
-                {label}
-              </Text>
-            </View>
-            <QrImage url={table.qrUrl ?? ''} size={QR_SIZE} />
-            <Text variant="caption" style={[styles.center, { color: cravinsTheme.muted }]}>
-              {cta}
-            </Text>
-          </View>
-        </View>
-      </View>
-    </ThemeProvider>
-  );
-}
-
 const styles = StyleSheet.create({
-  controls: { gap: tokens.space[3] },
-  swatchRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[1], flexWrap: 'wrap' },
-  swatchHit: {
-    width: tokens.touchTarget,
-    height: tokens.touchTarget,
-    borderRadius: tokens.radius.full,
-    borderWidth: 2,
-    borderColor: 'transparent',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  swatch: {
-    width: 32,
-    height: 32,
-    borderRadius: tokens.radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stage: {
-    alignItems: 'center',
-    paddingVertical: tokens.space[4],
-    borderRadius: tokens.radius.md,
-    backgroundColor: cravinsTheme.wash,
-  },
-  card: {
-    width: '86%',
-    maxWidth: 300,
-    backgroundColor: QR_PAPER,
-    borderRadius: tokens.radius.lg,
-    borderWidth: 1,
-    borderColor: cravinsTheme.line,
-    overflow: 'hidden',
-  },
-  sticker: { borderRadius: 150, maxWidth: 260 },
-  acrylic: { borderRadius: tokens.radius.sm, borderWidth: 2 },
-  topBar: { height: 6 },
-  inner: { alignItems: 'center', gap: tokens.space[2], padding: tokens.space[5] },
-  logo: { width: 40, height: 40, borderRadius: tokens.radius.sm },
-  badge: {
-    paddingHorizontal: tokens.space[4],
-    paddingVertical: tokens.space[1],
-    borderRadius: tokens.radius.full,
-  },
-  center: { textAlign: 'center' },
+  stack: { gap: tokens.space[6] },
+  block: { gap: tokens.space[3] },
+  label: { fontSize: 16, lineHeight: 22, fontFamily: fontFamily.strong },
+  thin: { fontFamily: fontFamily.regular },
+  swatches: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.space[3] },
+  swatch: { width: 36, height: 36, borderRadius: 18 },
 });
