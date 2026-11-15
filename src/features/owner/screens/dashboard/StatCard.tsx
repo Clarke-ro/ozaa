@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native';
-import { PressableScale } from '@/ui/PressableScale';
 import { tokens } from '@/theme/tokens';
+import { PressableScale } from '@/ui/PressableScale';
 import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
 import { cardStyle } from '../../kit/cardStyle';
@@ -8,7 +8,11 @@ import { cardStyle } from '../../kit/cardStyle';
 const c = tokens.owner.controls;
 const t = tokens.owner.type;
 
-/** One small white stat card on Today: what it counts on top, the big number under it (canvas). */
+/**
+ * One small white stat card on Today. Wide screens follow the canvas: what it counts on top, the
+ * big number under it. Phones (`compact`) put the number first and the label under it in grey,
+ * in a short tile, so the three sit in one tidy band (Clarke's reference, 2026-11-14).
+ */
 export function StatCard({
   label,
   value,
@@ -19,14 +23,19 @@ export function StatCard({
   value: string;
   /** Missing when this person may not open the page behind the number. */
   onPress?: () => void;
-  /**
-   * Phones: three cards share about 340 px, so the canvas's 192 px height and 38 px number
-   * leave a tall empty card. Compact keeps the same look at phone size.
-   */
   compact?: boolean;
 }) {
   const theme = useTheme();
-  const body = (
+  const body = compact ? (
+    <>
+      <Text style={styles.small} numberOfLines={1} adjustsFontSizeToFit>
+        {value}
+      </Text>
+      <Text style={[styles.smallLabel, { color: theme.muted }]} numberOfLines={2}>
+        {label}
+      </Text>
+    </>
+  ) : (
     <>
       {/* Same height as the dark card's top line, so the numbers line up across the row. */}
       <View style={styles.top}>
@@ -34,11 +43,7 @@ export function StatCard({
           {label}
         </Text>
       </View>
-      <Text
-        style={[styles.value, compact && styles.compactValue]}
-        numberOfLines={1}
-        adjustsFontSizeToFit
-      >
+      <Text style={styles.value} numberOfLines={1} adjustsFontSizeToFit>
         {value}
       </Text>
     </>
@@ -75,12 +80,10 @@ const styles = StyleSheet.create({
     gap: c.statGap,
   },
   compact: {
-    // Taller than wide on a phone, with the number at the bottom, so the three read as tiles.
-    minHeight: 124,
-    justifyContent: 'space-between',
-    paddingVertical: tokens.space[4],
-    paddingHorizontal: tokens.space[4],
-    gap: tokens.space[2],
+    minHeight: 0,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    gap: 2,
   },
   top: { minHeight: 30, justifyContent: 'center' },
   label: { fontSize: t.body.size, lineHeight: 20, fontFamily: fontFamily.strong },
@@ -92,5 +95,12 @@ const styles = StyleSheet.create({
     // Big numbers are tracked in a little, as large type is on iOS.
     letterSpacing: -0.5,
   },
-  compactValue: { fontSize: t.figure.size, lineHeight: t.figure.line },
+  small: {
+    fontSize: 26,
+    lineHeight: 32,
+    fontFamily: fontFamily.strong,
+    fontVariant: ['tabular-nums'],
+    letterSpacing: -0.4,
+  },
+  smallLabel: { fontSize: 12, lineHeight: 16 },
 });

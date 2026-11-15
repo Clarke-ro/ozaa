@@ -93,10 +93,13 @@ export function OrderCard({
       >
         <View style={styles.head}>
           <View style={styles.flex}>
-            <Text style={styles.where} numberOfLines={1}>
+            <Text style={[styles.where, compact && styles.whereSm]} numberOfLines={1}>
               {where}
             </Text>
-            <Text style={[styles.sub, { color: theme.meta }]} numberOfLines={1}>
+            <Text
+              style={[styles.sub, compact && styles.subSm, { color: theme.meta }]}
+              numberOfLines={1}
+            >
               #{order.number} · {time}
             </Text>
           </View>
@@ -111,7 +114,7 @@ export function OrderCard({
               {waitedLabel(age.minutes, t)}
             </Text>
           ) : (
-            <Text style={[styles.sub, { color: theme.meta }]}>
+            <Text style={[styles.sub, compact && styles.subSm, { color: theme.meta }]}>
               {t(`statusLabel.${order.status}`)}
             </Text>
           )}
@@ -125,21 +128,26 @@ export function OrderCard({
             return (
               <View key={line.id} style={styles.line}>
                 <View style={styles.flex}>
-                  <Text style={styles.dish} numberOfLines={1}>
+                  <Text style={[styles.dish, compact && styles.dishSm]} numberOfLines={1}>
                     {line.name}
                   </Text>
                   {extra ? (
-                    <Text style={[styles.sub, { color: theme.meta }]} numberOfLines={2}>
+                    <Text
+                      style={[styles.sub, compact && styles.subSm, { color: theme.meta }]}
+                      numberOfLines={2}
+                    >
                       {extra}
                     </Text>
                   ) : null}
                 </View>
-                <Text style={[styles.dish, styles.qty]}>{line.quantity}×</Text>
+                <Text style={[styles.dish, compact && styles.dishSm, styles.qty]}>
+                  {line.quantity}×
+                </Text>
               </View>
             );
           })}
           {hidden > 0 ? (
-            <Text style={[styles.sub, { color: theme.meta }]}>
+            <Text style={[styles.sub, compact && styles.subSm, { color: theme.meta }]}>
               {t('ownerOrders.moreDishes', { count: hidden })}
             </Text>
           ) : null}
@@ -147,7 +155,7 @@ export function OrderCard({
       </Pressable>
 
       <View style={[styles.sum, { borderTopColor: theme.wash }]}>
-        <Text style={[styles.where, styles.num]}>
+        <Text style={[styles.where, compact && styles.whereSm, styles.num]}>
           {formatMoney(pesewas(order.totalPesewas), currency)}
         </Text>
         <Text
@@ -192,6 +200,10 @@ const styles = StyleSheet.create({
   top: { gap: tokens.space[4] },
   compact: { padding: tokens.space[4], gap: tokens.space[3] },
   compactTop: { gap: tokens.space[3] },
+  // Phones: one size down, so a long dish name never makes the card grow.
+  whereSm: { fontSize: 15, lineHeight: 20 },
+  dishSm: { fontSize: 14, lineHeight: 20 },
+  subSm: { fontSize: 13, lineHeight: 18 },
   head: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.space[3] },
   flex: { flex: 1, minWidth: 0 },
   where: { fontSize: 17, lineHeight: 22, fontFamily: fontFamily.strong },

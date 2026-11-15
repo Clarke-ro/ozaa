@@ -85,9 +85,17 @@ export function StaffScreen() {
             <FigureRow
               wide={wide}
               items={[
-                { label: t('ownerStaff.onShiftNow'), value: String(counts.onShift) },
+                {
+                  label: t('ownerStaff.onShiftNow'),
+                  short: t('ownerShort.onShift'),
+                  value: String(counts.onShift),
+                },
                 { label: t('ownerStaff.inTeam'), value: String(counts.all) },
-                { label: t('ownerStaff.invitesWaiting'), value: String(counts.invited) },
+                {
+                  label: t('ownerStaff.invitesWaiting'),
+                  short: t('ownerShort.invites'),
+                  value: String(counts.invited),
+                },
               ]}
             />
             <View style={styles.people}>

@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
-import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
-import Animated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { tokens } from '@/theme/tokens';
 import { useTheme } from '@/ui/theme';
 import { useOwnerSession } from '@/features/session';
@@ -60,28 +59,14 @@ export function OwnerPage({
   const role = useOwnerSession((state) => state.role) ?? 'waiter';
   const mayNotify = navFor(role).some((item) => item.id === 'notifications');
   const frame = { maxWidth: tokens.owner.page[width] + gutter * 2, paddingHorizontal: gutter };
-  // How far the page has scrolled, read on the UI thread so the phone bar follows the finger.
-  const scrollY = useSharedValue(0);
-  const onScroll = useAnimatedScrollHandler((e) => {
-    scrollY.set(e.contentOffset.y);
-  });
 
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={[styles.fill, { backgroundColor: theme.bg }]}
     >
-      {wide ? null : (
-        <PhoneBar
-          bell={mayNotify && Boolean(bell)}
-          title={title}
-          scrollY={scrollY}
-          start={barStart}
-        />
-      )}
-      <Animated.ScrollView
-        onScroll={onScroll}
-        scrollEventThrottle={16}
+      {wide ? null : <PhoneBar bell={mayNotify && Boolean(bell)} start={barStart} />}
+      <ScrollView
         contentContainerStyle={[styles.page, frame, wide && styles.pageWide]}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
@@ -96,7 +81,7 @@ export function OwnerPage({
           compact={compactTitle && !wide}
         />
         <View style={[styles.body, wide && styles.bodyWide]}>{children}</View>
-      </Animated.ScrollView>
+      </ScrollView>
       {footer}
     </KeyboardAvoidingView>
   );

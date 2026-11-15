@@ -4,6 +4,41 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-15 · Slimmer chips, cards and headers on a phone
+
+**What we built**
+
+- **No Back arrows:** a page's title is its header. Go back with the phone's own gesture (swipe from the left edge on iPhone, back on Android).
+- **Chips:** one slim chip across the app, 34 px tall with the count as a plain number ("New 2").
+- **Orders:** the chips are New, Cooking, Ready, Served, Rejected and All, with that list underneath.
+- **Today and Loyalty:** three short tiles, number first and label under it, like your reference.
+- **Menu:** a slimmer search box. The pencil, eye and grip are gone from section headings (they live in ⋮ → Sections). Each dish has a grip on its left for dragging, and you tap a dish to edit it.
+- **Integrations:** each mark sits in a soft square tile, with the switch top right.
+
+**How it works**
+
+```
+FilterChips (ui)  → phone? slim 34 px chip, count as text
+Chips (kit)       → phone? the same slim size
+DragList (kit)    → holds each dish row; drag the grip to move it
+```
+
+**Files to look at**
+
+- `src/ui/FilterChips.tsx`: the chip row every page uses.
+- `src/features/owner/desk/orderBoard.ts`: `PHONE_FILTERS`, with tests.
+- `src/features/owner/screens/menu/SectionGroup.tsx`: dishes in a drag list.
+
+**New idea: a font that isn't loaded**
+
+Loyalty's Results tiles asked for `Inter_500`, but the app only loads Inter 400 and 600, so the browser showed a serif instead. If text suddenly looks like Times, check the weight against `src/theme/fonts.ts`.
+
+**Try it yourself**
+
+In `FilterChips.tsx`, change the slim chip `height` from 34 to 30 and look at the Orders chips. Then put it back.
+
+---
+
 ## 2026-11-14 · A cleaner phone layout and a kitchen board
 
 **What we built**

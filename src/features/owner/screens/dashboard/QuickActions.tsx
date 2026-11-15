@@ -28,7 +28,8 @@ const SHORTCUTS: readonly OwnerNavId[] = [
 const TILE = tokens.owner.controls.tileMinHeight;
 
 /**
- * A grid of square-ish tiles, an icon over a name: four across on wide screens, two on phones.
+ * A grid of square-ish tiles, an icon over a name: four across on wide screens, three smaller
+ * ones on phones (Clarke's reference, 2026-11-14).
  * Only the pages this person may open (navFor also drops pages switched off in this build);
  * with none, the section is left out. The last row is padded so tiles keep one width.
  */
@@ -42,7 +43,7 @@ export function QuickActions() {
   const shown = SHORTCUTS.flatMap((id) => allowed.filter((item) => item.id === id));
   if (shown.length === 0) return null;
 
-  const across = wide ? 4 : 2;
+  const across = wide ? 4 : 3;
   const rows: (typeof shown)[] = [];
   for (let i = 0; i < shown.length; i += across) rows.push(shown.slice(i, i + across));
 
@@ -63,15 +64,16 @@ export function QuickActions() {
                   onPress={() => router.push(href as Href)}
                   style={({ pressed }) => [
                     styles.tile,
+                    !wide && styles.tilePhone,
                     cardStyle(theme),
                     pressed && { backgroundColor: theme.wash },
                   ]}
                 >
-                  <Icon size={24} color={theme.text} />
+                  <Icon size={wide ? 24 : 20} color={theme.text} />
                   <Text
                     variant="caption"
                     numberOfLines={2}
-                    style={[styles.label, { color: theme.muted }]}
+                    style={[styles.label, !wide && styles.labelPhone, { color: theme.muted }]}
                   >
                     {label}
                   </Text>
@@ -105,5 +107,7 @@ const styles = StyleSheet.create({
     fontSize: tokens.owner.type.body.size,
     lineHeight: tokens.owner.type.body.line,
   },
+  tilePhone: { minHeight: 84, gap: tokens.space[2], padding: 10 },
+  labelPhone: { fontSize: 12, lineHeight: 16 },
   filler: { flex: 1 },
 });

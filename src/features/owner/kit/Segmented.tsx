@@ -135,7 +135,8 @@ const styles = StyleSheet.create({
   // The sliding white pill: the same 3 px inset as the track, full height of the options.
   pill: { position: 'absolute', top: 3, bottom: 3, borderRadius: tokens.radius.full },
   // Still shrinks if the words together are wider than the track; the label then wraps.
-  phone: { paddingHorizontal: tokens.space[2], flexShrink: 1, minWidth: 0 },
+  // 40 px tall on a phone, a touch taller than the canvas's 38, so it isn't a thin strip.
+  phone: { paddingHorizontal: tokens.space[2], flexShrink: 1, minWidth: 0, minHeight: 40 },
   on: {
     shadowColor: SHADOW_INK,
     shadowOpacity: 0.06,

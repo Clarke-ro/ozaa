@@ -38,7 +38,7 @@ export function MenuToolbar({
     <View style={styles.stack}>
       <View style={styles.row}>
         <View style={[styles.search, { backgroundColor: theme.surface, borderColor: theme.line }]}>
-          <Search size={18} color={theme.muted} />
+          <Search size={16} color={theme.muted} />
           <TextInput
             value={query}
             onChangeText={onQuery}
@@ -89,23 +89,24 @@ export function MenuToolbar({
 }
 
 const styles = StyleSheet.create({
-  stack: { gap: tokens.space[6] },
+  // Search and the section chips read as one block, so they sit close together.
+  stack: { gap: tokens.space[3] },
   row: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
-  // Canvas search: 48 px pill, 1 px edge, 18 px inside.
+  // A 40 px pill, 1 px edge: slimmer than the canvas's 48 so the list starts higher.
   search: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    height: tokens.owner.controls.height,
-    paddingHorizontal: 18,
+    gap: tokens.space[2],
+    height: 40,
+    paddingHorizontal: 14,
     borderWidth: 1,
     borderRadius: tokens.radius.full,
   },
   input: {
     flex: 1,
     minWidth: 0,
-    height: tokens.owner.controls.height,
+    height: 40,
     fontFamily: fontFamily.regular,
     fontSize: 15,
   },

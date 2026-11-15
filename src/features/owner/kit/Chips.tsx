@@ -3,6 +3,7 @@ import { Check } from 'lucide-react-native';
 import { hapticSelection } from '@/lib/haptics';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
+import { useOwnerLayout } from '../chrome/layout';
 import { useTheme } from '@/ui/theme';
 
 /**
@@ -27,6 +28,8 @@ export function Chips<T extends string | number>({
   filled?: boolean;
 }) {
   const theme = useTheme();
+  // Phones: the same slim 34 px chip as the filter rows (FilterChips), with a 14 px label.
+  const { wide } = useOwnerLayout();
   return (
     <View
       accessibilityRole={single ? 'radiogroup' : undefined}
@@ -41,6 +44,7 @@ export function Chips<T extends string | number>({
             accessibilityRole={single ? 'radio' : 'checkbox'}
             accessibilityState={{ checked: on }}
             accessibilityLabel={option.label}
+            hitSlop={wide ? undefined : { top: 5, bottom: 5 }}
             onPress={() => {
               void hapticSelection();
               if (single) onChange([option.id]);
@@ -51,6 +55,7 @@ export function Chips<T extends string | number>({
               styles.chip,
               styles.size,
               filled && styles.big,
+              !wide && styles.slim,
               {
                 borderColor: on ? (filled ? theme.fill : theme.ink) : theme.line,
                 backgroundColor: on
@@ -66,10 +71,13 @@ export function Chips<T extends string | number>({
             {on && !filled ? <Check size={14} color={theme.badgeInk} strokeWidth={3} /> : null}
             <Text
               variant="body"
-              style={{
-                color: on ? (filled ? theme.onFill : theme.badgeInk) : theme.text,
-                fontFamily: on ? 'Inter_600' : 'Inter_400',
-              }}
+              style={[
+                {
+                  color: on ? (filled ? theme.onFill : theme.badgeInk) : theme.text,
+                  fontFamily: on ? 'Inter_600' : 'Inter_400',
+                },
+                !wide && styles.slimText,
+              ]}
             >
               {option.label}
             </Text>
@@ -92,4 +100,6 @@ const styles = StyleSheet.create({
   size: { minHeight: 40, paddingHorizontal: tokens.space[3] },
   // Canvas cuisine chips are a touch larger: 48 px tall, 20 px either side.
   big: { minHeight: 48, paddingHorizontal: 20 },
+  slim: { minHeight: 34, paddingHorizontal: tokens.space[3] },
+  slimText: { fontSize: 14, lineHeight: 18 },
 });
