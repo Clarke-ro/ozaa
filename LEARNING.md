@@ -4,6 +4,37 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-15 · Removing code the app no longer uses
+
+**What we built**
+
+The app now has fewer paths to the same behavior. The Loyalty route opens its real screen directly. Three owner components with no callers are gone, along with a Ghana-only money wrapper used only by its own test.
+
+**How it works**
+
+```text
+before: route → pass-through wrapper → LoyaltyScreen
+after:  route → LoyaltyScreen
+```
+
+Deleting an unused file is safer than keeping it "for later". A spare component can quietly drift from the live design and mislead the next person who finds it.
+
+**Files to look at**
+
+- `src/app/owner/loyalty.tsx`: imports the screen it renders.
+- `src/features/owner/index.ts`: no longer advertises obsolete screens.
+- `src/lib/money.ts`: keeps the currency-aware formatter used by the app.
+
+**New idea: dead code**
+
+Dead code has no runtime caller. It still costs time because searches, reviews, and future changes must decide whether it matters.
+
+**Try it yourself**
+
+Run `git grep OwnerLoyalty -- src` and `git grep formatCedis -- src`. Both commands should return no source reference.
+
+---
+
 ## 2026-11-15 · One place to refresh owner data
 
 **What we built**
@@ -1486,7 +1517,7 @@ In `floorStatus.ts`, make a resolved waiter call keep the table on "needs a wait
 
 **What we built**
 
-A venue-branded wallet card (`WalletCard.tsx`) with the Cravins scan-frame watermark, Bronze/Silver/Gold tiers, stamps or spend points, a rewards catalogue, and an owner Loyalty screen (`OwnerLoyalty.tsx`) to set up the programme and confirm guest claim codes.
+A venue-branded wallet card (`WalletCard.tsx`) with the Cravins scan-frame watermark, Bronze/Silver/Gold tiers, stamps or spend points, a rewards catalogue, and an owner Loyalty screen (`screens/loyalty/LoyaltyScreen.tsx`) to set up the programme and confirm guest claim codes.
 
 **How it works**
 
@@ -1502,7 +1533,7 @@ We never store a separate `stamps` counter that could drift out of sync with his
 - `src/features/loyalty/facts.ts`: the pure ledger commands (`apply`) and `foldCard`.
 - `src/features/loyalty/WalletCard.tsx`: the venue-coloured wallet card with front/back QR flip.
 - `src/features/loyalty/LoyaltyDetails.tsx`: rewards catalogue, claim banner, tier row, and activity history.
-- `src/features/owner/OwnerLoyalty.tsx`: staff code confirmation, programme setup, and members list.
+- `src/features/owner/screens/loyalty/LoyaltyScreen.tsx`: staff code confirmation, programme setup, and members list.
 
 **New idea: folding a ledger of facts**
 

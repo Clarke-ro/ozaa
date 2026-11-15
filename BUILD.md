@@ -579,7 +579,7 @@ Work top to bottom. Each box is one small PR that ends in a verifiable state (ps
 - [x] 3.2 Venue wallet card (`src/features/loyalty/WalletCard.tsx`): venue brand colour + initials badge, subtle Cravins scan-frame mono watermark in the background, guest name, tier pill, stamps grid or points bar, card number (`CRAVINS-XXXX-XXXX`), and flip to QR + claim code for staff. Render: `loyalty.png`.
 - [x] 3.3 Join flow (`src/features/loyalty/LoyaltyJoinCard.tsx`): phone, OTP (`guest_loyalty`), optional first name and birthday (`MM-DD`), and two consent boxes (loyalty is required; marketing is separate and unticked), sending `textVersion`.
 - [x] 3.4 Redeem flow (`src/features/loyalty/LoyaltyDetails.tsx`): rewards catalogue, short-lived 6-character claim code + QR (`POST /venues/{venueSlug}/loyalty/me/redeem`), staff confirmation (`POST /owner/venues/{venueId}/loyalty/confirm`) as the only debit, activity history, and leave loyalty (`DELETE /venues/{venueSlug}/loyalty/me`).
-- [x] 3.5 Wire the game stamp (`GameScreen.tsx`) and payment auto-earn (`PayScreen.tsx`). Owner loyalty screen (`src/features/owner/OwnerLoyalty.tsx`): confirm redemption code, programme setup (stamps vs points, locked after first earn; rewards; tiers; expiry; birthday treat), and members + redemptions list.
+- [x] 3.5 Wire the game stamp (`GameScreen.tsx`) and payment auto-earn (`PayScreen.tsx`). Owner loyalty screen (`src/features/owner/screens/loyalty/LoyaltyScreen.tsx`): confirm redemption code, programme setup (stamps vs points, locked after first earn; rewards; tiers; expiry; birthday treat), and members + redemptions list.
 
 ### Phase 4: Reviews (product 4)
 

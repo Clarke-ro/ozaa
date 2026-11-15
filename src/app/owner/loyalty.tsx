@@ -1,5 +1,5 @@
-import { OwnerLoyalty } from '@/features/owner';
+import { LoyaltyScreen } from '@/features/owner';
 
 export default function Route() {
-  return <OwnerLoyalty />;
+  return <LoyaltyScreen />;
 }

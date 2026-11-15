@@ -39,7 +39,7 @@ Misplaced or inconsistent:
 
 - **Two component kits.** `src/ui/` (guest and shared) and `src/features/owner/kit/` (owner). Some owner kit parts are generic (`ConfirmDialog`, `ModalSheet`, `Toast`, `Toggle`, `Segmented`, `Field`). See "Needs decision" D1.
 - **Owner screens are split between `screens/<name>/` folders and loose files** (`FloorScreen.tsx`, `MoreScreen.tsx`, `ScanStampScreen.tsx`, `SocialsScreen.tsx`, `LoyaltyCustomersScreen.tsx`, `AskCravinsAiScreen.tsx`, `ShellScreen.tsx`, `productShells.tsx`). Medium.
-- `owner/OwnerLogin.tsx` and `owner/OwnerLoyalty.tsx` sit at the feature root, not under `screens/`. Low.
+- `owner/OwnerLogin.tsx` sits at the feature root, not under `screens/`. `OwnerLoyalty.tsx` was later removed because it only forwarded to the real screen. Low.
 - **Barrel renames** hide the real name: `ServicesScreen as ServicesDeskScreen`, `ReviewsScreen as ReviewsDeskScreen`, `LinksScreen as CustomLinksScreen`, `FilterChips as ChipRow`. Searching for a screen's name misses its route. Low.
 - Route groups `(guest)/(owner)/(auth)` don't exist. URLs wouldn't change, but it touches every route. See D2.
 
