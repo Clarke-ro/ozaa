@@ -76,7 +76,7 @@ function PhoneBody({
   const shown = chip === 'all' ? sections : sections.filter((s) => s.id === chip);
   return (
     <PhoneFrame label={t('ownerMenu.live.phone')}>
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={[styles.cover, { backgroundColor: theme.wash }]}>
           {venue.banner?.url ? (
             <VenueImage url={venue.banner.url} alt={venue.name} style={StyleSheet.absoluteFill} />

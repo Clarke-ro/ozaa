@@ -30,7 +30,7 @@ export function InputRow({
   return (
     <View style={styles.pad}>
       <View style={[styles.line, stacked && styles.stacked]}>
-        {Icon && !stacked ? <Icon size={18} color={theme.text} /> : null}
+        {Icon && !stacked ? <Icon size={20} color={theme.text} /> : null}
         <Text variant="body" style={stacked ? undefined : styles.label}>
           {label}
         </Text>
@@ -75,9 +75,11 @@ export function SwitchRow({
   const theme = useTheme();
   return (
     <View style={[styles.pad, styles.row]}>
-      {Icon ? <Icon size={18} color={theme.text} /> : null}
+      {Icon ? <Icon size={20} color={theme.text} /> : null}
       <View style={styles.copy}>
-        <Text variant="body">{label}</Text>
+        <Text variant="body" style={styles.labelText}>
+          {label}
+        </Text>
         {hint ? (
           <Text variant="caption" style={{ color: theme.muted }}>
             {hint}
@@ -114,8 +116,12 @@ export function LinkRow({
       onPress={onPress}
       style={({ pressed }) => [styles.pad, styles.row, pressed && { backgroundColor: theme.wash }]}
     >
-      {Icon ? <Icon size={18} color={destructive ? theme.error : theme.muted} /> : null}
-      <Text variant="body" style={[styles.copy, { color: ink }]} numberOfLines={2}>
+      {Icon ? <Icon size={20} color={destructive ? theme.error : theme.muted} /> : null}
+      <Text
+        variant="body"
+        style={[styles.copy, styles.labelText, { color: ink }]}
+        numberOfLines={2}
+      >
         {label}
       </Text>
       {value ? (
@@ -148,9 +154,11 @@ export function InfoRow({
       accessibilityLabel={value ? `${label}, ${value}` : label}
       style={[styles.pad, styles.row]}
     >
-      {Icon ? <Icon size={18} color={theme.text} /> : null}
+      {Icon ? <Icon size={20} color={theme.text} /> : null}
       <View style={styles.copy}>
-        <Text variant="body">{label}</Text>
+        <Text variant="body" style={styles.labelText}>
+          {label}
+        </Text>
         {value ? (
           <Text variant="caption" style={{ color: theme.muted }}>
             {value}
@@ -168,15 +176,16 @@ export function SectionBody({ children }: { children: ReactNode }) {
 }
 
 const styles = StyleSheet.create({
+  // Canvas settings row: at least 60 px tall, 20 px in from the card edge, 16 px between parts.
   pad: {
-    paddingHorizontal: tokens.space[4],
-    paddingVertical: tokens.space[3],
-    minHeight: 52,
+    paddingHorizontal: tokens.owner.controls.cardPadding,
+    paddingVertical: tokens.space[2],
+    minHeight: 60,
     justifyContent: 'center',
     gap: tokens.space[1],
   },
-  row: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
-  line: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
+  row: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[4] },
+  line: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[4] },
   stacked: { flexDirection: 'column', alignItems: 'stretch', gap: tokens.space[1] },
   label: { flexShrink: 0, width: 110, maxWidth: '45%' },
   input: { flex: 1, minHeight: 28, fontFamily: 'Inter_400', fontSize: 15, padding: 0 },
@@ -193,6 +202,8 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   copy: { flex: 1, gap: 2 },
+  // Canvas: 16 px row labels, 15 px values on the right.
+  labelText: { fontSize: 16, lineHeight: 22 },
   value: { maxWidth: '45%' },
   body: { gap: tokens.space[3] },
 });

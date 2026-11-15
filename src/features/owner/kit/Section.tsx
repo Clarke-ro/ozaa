@@ -139,6 +139,7 @@ const styles = StyleSheet.create({
   words: { flex: 1, minWidth: 0, gap: 2 },
   titleRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: tokens.space[2] },
   title: { flexShrink: 1 },
-  rule: { height: 1 },
+  // Canvas: dividers stop 20 px short of the card edge, in line with the row text.
+  rule: { height: 1, marginHorizontal: tokens.owner.controls.cardPadding },
   note: { paddingHorizontal: tokens.space[1] },
 });

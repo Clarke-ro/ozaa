@@ -38,12 +38,7 @@ export function StatTile({
           {label}
         </Text>
         {Icon ? (
-          <View
-            style={[
-              styles.icon,
-              { backgroundColor: alert ? theme.errorTint : theme.wash },
-            ]}
-          >
+          <View style={[styles.icon, { backgroundColor: alert ? theme.errorTint : theme.wash }]}>
             <Icon size={16} color={alert ? theme.error : theme.ink} />
           </View>
         ) : null}

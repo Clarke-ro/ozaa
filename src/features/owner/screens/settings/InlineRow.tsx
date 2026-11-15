@@ -18,7 +18,7 @@ export function InlineRow({
   const theme = useTheme();
   return (
     <View style={styles.row}>
-      <Icon size={18} color={theme.muted} />
+      <Icon size={20} color={theme.muted} />
       <Text variant="body" style={styles.label} numberOfLines={1}>
         {label}
       </Text>
@@ -31,10 +31,11 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: tokens.space[3],
-    minHeight: 52,
-    paddingHorizontal: tokens.space[4],
+    // Same as the kit rows (canvas): 60 px tall, 20 px in, 16 px between parts, 16 px label.
+    gap: tokens.space[4],
+    minHeight: 60,
+    paddingHorizontal: tokens.owner.controls.cardPadding,
     paddingVertical: tokens.space[2],
   },
-  label: { flex: 1 },
+  label: { flex: 1, fontSize: 16, lineHeight: 22 },
 });
