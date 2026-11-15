@@ -1,5 +1,5 @@
 import { Redirect } from 'expo-router';
-import { PosShell } from '@/features/owner';
+import { PosShell } from '@/features/owner/screens/previews/PosShell';
 import { PREVIEWS_ENABLED } from '@/lib/features';
 
 export default function Route() {

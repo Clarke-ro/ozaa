@@ -36,6 +36,37 @@ In `sectionOrder.ts`, call `orderSections(['more'])` in a test. "More" comes fir
 
 ---
 
+## 2026-11-15 · Owner routes load only their screen
+
+**What we built**
+
+Each owner route now imports the exact screen it renders. The owner feature index keeps only the shared chrome and preferences used by the owner layout. A scoped lint rule lets owner routes enter their own feature, while deep imports into other features remain blocked.
+
+**How it works**
+
+```text
+before: Orders route → owner index → every owner screen
+after:  Orders route → OrdersScreen
+```
+
+The web build can now put each screen in its own route chunk. On the original comparison base, cold JavaScript fell by about 15–17% gzip for Today, Orders, and Scan and stamp. The rebased build keeps those screens in separate chunks.
+
+**Files to look at**
+
+- `src/app/owner/orders.tsx`: names the screen it renders.
+- `src/features/owner/index.ts`: exposes only owner-wide layout pieces.
+- `eslint.config.js`: keeps sibling feature boundaries in place.
+
+**New idea: a barrel file**
+
+A barrel file re-exports many modules through one `index.ts`. It shortens imports, but importing one screen can make a bundler treat every export as connected. Direct route imports let Metro split those screens.
+
+**Try it yourself**
+
+Compare `src/app/owner/orders.tsx` with `src/app/owner/_layout.tsx`. The route imports one screen directly. The layout uses the small owner entry point because its two imports are shared across every owner page.
+
+---
+
 ## 2026-11-15 · Removing code the app no longer uses
 
 **What we built**
