@@ -748,6 +748,13 @@ The agent must ask these, not guess. Until he answers, build behind a setting or
 8. Native speakers for French, Portuguese, Spanish, Arabic and Swahili. English stays the only selectable language until those files are filled by people, not by machine translation.
 9. The real first venue(s), to replace the AI-generated sample photos and videos.
 10. Should Setup (product 13) move before launch? A real venue needs onboarding, but it is last in the current order. *Default: the team sets up early venues by hand in the owner app.*
+11. Map tiles for Business → map pin. *Default: OpenStreetMap's own server, fine for testing with its credit shown; a busy launch needs a tile provider (set `EXPO_PUBLIC_MAP_TILES`).*
+12. The real WhatsApp support number for Help → "WhatsApp us". *Default: a demo number (233 20 000 0000) in `src/lib/env.ts` and `.env.example`; replace before launch.* Also confirm the promise "we reply within a working day".
+13. Google Business Profile: turn on the Google review link and the Integrations card? It needs a Google sign-in on the server. *Default: "Coming soon"; `googleReviewUrl` stays null.* Same for Tripadvisor and WhatsApp Business.
+14. How long a scanner pairing code lasts. The canvas says 10 minutes; the contract sets no expiry. *Default: the app says "It works once".*
+15. The average spend per guest shown under each price range (₵ to ₵₵₵₵). *Default: under GH₵ 50, 50 to 120, 120 to 250, over 250 (`ownerBusiness.spend` in `en.json`).*
+16. Which tips count as a waiter's "Tips today". *Default (contract): tips on succeeded payments for orders at their tables today.*
+17. Printing from the phone app (order tickets and table cards) needs `expo-print`. *Default: printing works in the web app only.*
 
 ## 18. Owner app
 
