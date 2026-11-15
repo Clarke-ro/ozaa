@@ -3,7 +3,7 @@ import type { ApiClient } from '@/lib/api/client';
 import { ApiError } from '@/lib/api/errors';
 import type { LoyaltyCard, LoyaltyProgram } from '@/lib/api/types';
 import { keepLoyalty, STAFF, venueById } from './world';
-import { accessOf } from './mockRules';
+import { accessOf, ownerOnly } from './mockRules';
 import { analyticsOf, customerDetail, customersOf, memberFrom } from './loyaltyDesk';
 import { rewardMember, stampMember } from './loyaltyStamps';
 import type { MockContext } from './mockContext';
@@ -92,6 +92,18 @@ export function mockOwnerLoyaltyCalls(ctx: MockContext) {
       await gate();
       accessOf(world, tokens);
       return customerDetail(world, venueId, customerId, now());
+    },
+    async ownerRemoveLoyaltyCustomer(venueId, customerId) {
+      await gate();
+      ownerOnly(world, tokens);
+      const member = memberFrom(world, venueId, customerId);
+      // The same erasure as a guest leaving: the card, stamps and consent go.
+      keepLoyalty(
+        world,
+        venueId,
+        { type: 'leave', phone: member.phone },
+        new Date(now()).toISOString(),
+      );
     },
     async ownerStampLoyaltyCustomer(venueId, customerId, call) {
       await gate();

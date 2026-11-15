@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { SearchX } from 'lucide-react-native';
 import { api } from '@/lib/api';
@@ -13,46 +13,34 @@ import { fontFamily, useTheme } from '@/ui/theme';
 import { useOwnerLayout } from '../../chrome/layout';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
-import {
-  cardStyle,
-  ConfirmDialog,
-  EmptyCard,
-  FigureRow,
-  TitledSection,
-  toast,
-  ToneTag,
-} from '../../kit';
+import { pesewas } from '@/lib/brand';
+import { formatMoney } from '@/lib/money';
+import { StaffAccess } from './StaffAccess';
+import { useStaffActions } from './useStaffActions';
+import { cardStyle, ConfirmDialog, EmptyCard, FigureRow, ToneTag } from '../../kit';
 
 /**
- * One person on the team (canvas): who they are and whether they are on shift, what they did
- * today, their role and what it can open, and Remove. The contract has no calls yet to change a
- * role, assign tables or reset a PIN, so those parts of the canvas are not shown.
+ * One person on the team (canvas): who they are and End shift, what they did today, their role,
+ * the tables they look after, their sign-in PIN, and Remove.
  */
 export function StaffDetailScreen({ memberId }: { memberId: string }) {
   const theme = useTheme();
   const { t, i18n } = useTranslation();
   const router = useRouter();
-  const client = useQueryClient();
   const { wide } = useOwnerLayout();
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
-  const key = ownerKeys.staff(venueId);
   const staff = useQuery({
-    queryKey: key,
+    queryKey: ownerKeys.staff(venueId),
     queryFn: () => api.ownerListStaff(venueId),
+    enabled: Boolean(venueId),
+  });
+  const venue = useQuery({
+    queryKey: ownerKeys.venue(venueId),
+    queryFn: () => api.ownerGetVenue(venueId),
     enabled: Boolean(venueId),
   });
   const [confirm, setConfirm] = useState(false);
   const back = () => (router.canGoBack() ? router.back() : router.replace('/owner/staff'));
-  const remove = useMutation({
-    mutationFn: (id: string) => api.ownerRevokeStaff(venueId, id),
-    onSuccess: () => {
-      toast.success(t('ownerStaff.removed'));
-      setConfirm(false);
-      void client.invalidateQueries({ queryKey: key });
-      router.replace('/owner/staff');
-    },
-    onError: () => toast.error(t('ownerKit.saveFailed')),
-  });
   const m = staff.data?.items.find((x) => x.id === memberId && x.status !== 'removed');
   const name = m ? [m.firstName, m.lastName].filter(Boolean).join(' ') : '';
   const initials = name
@@ -64,6 +52,9 @@ export function StaffDetailScreen({ memberId }: { memberId: string }) {
     ? new Date(m.joinedAt).toLocaleDateString(i18n.language, { month: 'long', year: 'numeric' })
     : null;
   const pickup = m?.today?.avgPickupMinutes;
+  const tips = m?.today?.tipsPesewas;
+  const actions = useStaffActions(venueId, memberId);
+  const money = (v: number) => formatMoney(pesewas(v), venue.data?.currency);
 
   return (
     <OwnerPage
@@ -100,6 +91,15 @@ export function StaffDetailScreen({ memberId }: { memberId: string }) {
                       .join(' · ')}
                   </Text>
                 </View>
+                {m.onShift && m.role !== 'owner' ? (
+                  <Button
+                    label={t('ownerStaff.endShift')}
+                    tone="secondary"
+                    loading={actions.endShift.isPending}
+                    onPress={() => actions.endShift.mutate()}
+                    style={styles.short}
+                  />
+                ) : null}
               </View>
               {m.today ? (
                 <FigureRow
@@ -120,16 +120,21 @@ export function StaffDetailScreen({ memberId }: { memberId: string }) {
                       short: t('ownerShort.reply'),
                       value: pickup == null ? '–' : t('ownerCalls.minutes', { count: pickup }),
                     },
+                    // Tips only show once the server reports them (succeeded payments only).
+                    ...(tips != null
+                      ? [
+                          {
+                            label: t('ownerStaff.tipsToday'),
+                            short: t('ownerStaff.tipsShort'),
+                            value: money(tips),
+                          },
+                        ]
+                      : []),
                   ]}
                 />
               ) : null}
             </View>
-            <TitledSection title={t('ownerStaff.role')} cardStyle={styles.pad}>
-              <Text variant="body-strong">{t(`ownerSettings.roles.${m.role}`)}</Text>
-              <Text variant="caption" style={{ color: theme.muted }}>
-                {t(`ownerStaff.can.${m.role}`)}
-              </Text>
-            </TitledSection>
+            <StaffAccess venueId={venueId} member={m} actions={actions} />
             {m.role === 'owner' ? null : (
               <Button
                 label={t('ownerStaff.removeFromStaff')}
@@ -156,9 +161,16 @@ export function StaffDetailScreen({ memberId }: { memberId: string }) {
         title={t('ownerStaff.removeTitle', { name: m?.firstName ?? '' })}
         message={t('ownerStaff.removeBody')}
         confirmLabel={t('ownerStaff.removeConfirm')}
-        loading={remove.isPending}
+        loading={actions.remove.isPending}
         onCancel={() => setConfirm(false)}
-        onConfirm={() => m && remove.mutate(m.id)}
+        onConfirm={() =>
+          actions.remove.mutate(undefined, {
+            onSuccess: () => {
+              setConfirm(false);
+              router.replace('/owner/staff');
+            },
+          })
+        }
       />
     </OwnerPage>
   );
@@ -184,6 +196,6 @@ const styles = StyleSheet.create({
   flex: { flex: 1, minWidth: 0, gap: 2 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
   name: { fontSize: 18, lineHeight: 24, fontFamily: fontFamily.strong, flexShrink: 1 },
-  pad: { padding: tokens.owner.controls.cardPadding, gap: 4 },
+  short: { minHeight: 40 },
   start: { alignSelf: 'flex-start', minHeight: 40 },
 });

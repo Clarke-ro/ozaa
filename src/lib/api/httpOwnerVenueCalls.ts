@@ -65,6 +65,28 @@ export function httpOwnerVenueCalls({ client, headers, ok }: HttpContext) {
           headers: headers('access'),
         }),
       ),
+    ownerUpdateStaff: (venueId, staffId, body) =>
+      ok(
+        client.PATCH('/owner/venues/{venueId}/staff/{staffId}', {
+          body,
+          params: { path: { venueId, staffId } },
+          headers: headers('access'),
+        }),
+      ),
+    async ownerSignOutStaff(venueId, staffId) {
+      const result = await client.POST('/owner/venues/{venueId}/staff/{staffId}/sign-out', {
+        params: { path: { venueId, staffId } },
+        headers: headers('access'),
+      });
+      if (!result.response.ok) throw problem(result.error, result.response.status);
+    },
+    async ownerResetStaffPin(venueId, staffId) {
+      const result = await client.POST('/owner/venues/{venueId}/staff/{staffId}/reset-pin', {
+        params: { path: { venueId, staffId } },
+        headers: headers('access'),
+      });
+      if (!result.response.ok) throw problem(result.error, result.response.status);
+    },
     async ownerRevokeStaff(venueId, staffId) {
       const result = await client.DELETE('/owner/venues/{venueId}/staff/{staffId}', {
         params: { path: { venueId, staffId } },

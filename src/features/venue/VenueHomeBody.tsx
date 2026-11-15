@@ -144,6 +144,7 @@ export function VenueHomeBody({
         slug={venue.slug}
         services={venue.services}
         payOnline={canPayOnline(venue)}
+        sectionOrder={venue.sectionOrder}
         onOpen={onOpen}
       />
       <View style={styles.powered}>

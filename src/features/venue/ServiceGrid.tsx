@@ -4,8 +4,8 @@ import type { VenuePublic } from '@/lib/api/types';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { ServiceList } from './ServiceList';
+import { orderSections } from './sectionOrder';
 
-const SECTIONS = ['table', 'rewards', 'fun', 'more'] as const;
 
 /** Services the API knows about but the guest app has no screen for yet. Never shown as a dead end. */
 export const NOT_BUILT: readonly string[] = ['reserve', 'events'];
@@ -17,18 +17,21 @@ export const NOT_BUILT: readonly string[] = ['reserve', 'events'];
 export function ServiceGrid({
   services,
   payOnline,
+  sectionOrder,
   onOpen,
 }: {
   slug: string;
   services: VenuePublic['services'];
   /** The venue's own Paystack is connected. Without it there is no in-app Pay, so no Pay card. */
   payOnline: boolean;
+  /** The owner's order for the sections (Branding); missing means the usual order. */
+  sectionOrder?: readonly string[] | null;
   onOpen: (id: string) => void;
 }) {
   const { t } = useTranslation();
   return (
     <View>
-      {SECTIONS.map((section) => {
+      {orderSections(sectionOrder).map((section) => {
         const items = services.filter(
           (service) =>
             service.enabled &&
