@@ -1,3 +1,4 @@
+import { splitLocationName } from './locationName';
 import { useRef, useState } from 'react';
 import {
   Modal,
@@ -84,7 +85,9 @@ export function LocationSwitcher({ variant }: { variant: 'chip' | 'block' | 'rai
   const name = active?.name ?? (business.isLoading ? '' : t('ownerKit.chooseLocation'));
   const block = variant === 'block';
   const rail = variant === 'rail';
-  const area = active?.city ?? active?.address1 ?? null;
+  const parts = splitLocationName(name);
+  // Canvas: the venue on the first line, the area (from the name, else the city) under it.
+  const area = parts.area ?? active?.city ?? active?.address1 ?? null;
   const count = t('ownerChrome.locationCount', { count: locations.length });
 
   return (
@@ -112,7 +115,7 @@ export function LocationSwitcher({ variant }: { variant: 'chip' | 'block' | 'rai
         {rail ? null : (
           <View style={block ? styles.blockCopy : styles.chipCopy}>
             <Text variant="body-strong" numberOfLines={1} style={styles.name}>
-              {name}
+              {block ? parts.title : name}
             </Text>
             {block && locations.length > 0 ? (
               <Text variant="caption" numberOfLines={1} style={{ color: theme.meta }}>

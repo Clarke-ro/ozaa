@@ -57,7 +57,7 @@ export function WalkInPreview({
   return (
     <ThemeProvider theme={guestTheme(venue)}>
       <PhoneFrame label={t('ownerMenu.live.walkInPhone')}>
-        <ScrollView contentContainerStyle={styles.scroll}>
+        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
           <VenueHomeBody
             venue={venue}
             tableCode={tableCode}

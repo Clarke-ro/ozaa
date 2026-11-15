@@ -75,7 +75,10 @@ export function Sidebar() {
           <View
             key={group}
             // Canvas: open, groups are split by their names alone; folded, by a thin line.
-            style={[styles.group, collapsed && index > 0 && [styles.ruled, { borderTopColor: theme.wash }]]}
+            style={[
+              styles.group,
+              collapsed && index > 0 && [styles.ruled, { borderTopColor: theme.wash }],
+            ]}
           >
             {/* The main group needs no label; the groups after it are named. Folded, the line between groups is enough. */}
             {collapsed || group === 'main' ? null : (

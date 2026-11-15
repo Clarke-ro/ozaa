@@ -85,5 +85,9 @@ const styles = StyleSheet.create({
   heading: { flexDirection: 'row', alignItems: 'baseline', gap: tokens.space[2], flexShrink: 1 },
   link: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   linkText: { fontFamily: 'Inter_600' },
-  body: { paddingHorizontal: tokens.space[4], paddingBottom: tokens.space[4], gap: tokens.space[3] },
+  body: {
+    paddingHorizontal: tokens.space[4],
+    paddingBottom: tokens.space[4],
+    gap: tokens.space[3],
+  },
 });
