@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
-import { MapPin, MessageCircle, Star } from 'lucide-react-native';
+import { GoogleLogo, TripadvisorLogo, WhatsAppLogo } from './BrandLogos';
 import { IntegrationCard } from './IntegrationCard';
 import { api } from '@/lib/api';
 import { useOwnerSession } from '@/features/session';
@@ -49,13 +49,13 @@ export function IntegrationsScreen() {
               {t('ownerPay.listingsTitle')}
             </Text>
             <IntegrationCard
-              icon={Star}
+              logo={<GoogleLogo />}
               title={t('ownerPay.google')}
               subtitle={t('ownerPay.googleSub')}
               badge={t('ownerPay.soon')}
             />
             <IntegrationCard
-              icon={MapPin}
+              logo={<TripadvisorLogo />}
               title={t('ownerPay.tripadvisor')}
               subtitle={t('ownerPay.tripadvisorSub')}
               badge={t('ownerPay.soon')}
@@ -64,7 +64,7 @@ export function IntegrationsScreen() {
               {t('ownerPay.messagesTitle')}
             </Text>
             <IntegrationCard
-              icon={MessageCircle}
+              logo={<WhatsAppLogo />}
               title={t('ownerPay.whatsapp')}
               subtitle={t('ownerPay.whatsappSub')}
               badge={t('ownerPay.soon')}

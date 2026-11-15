@@ -14,7 +14,9 @@ import { ticketAge } from '../../desk/ops';
 import { orderPlace, paidLabel, waitedLabel } from './orderPlace';
 
 // Enough dishes to cook from at a glance; the rest are one tap away on the order's page.
+// Phones show two, so each stage fits a couple of tickets on one screen.
 const PREVIEW_LINES = 4;
+const PREVIEW_LINES_PHONE = 2;
 
 /** The next step's button takes the colour of the stage it moves the ticket out of (canvas). */
 const NEXT_TINT: Record<Order['status'], StatusTone> = {
@@ -39,6 +41,7 @@ export function OrderCard({
   onNext,
   onOpen,
   onMarkPaid,
+  compact,
 }: {
   order: Order;
   currency: string;
@@ -50,6 +53,8 @@ export function OrderCard({
   onOpen: () => void;
   /** Set for staff who may mark orders paid; shown on unpaid tickets only. */
   onMarkPaid?: () => void;
+  /** Phones: 16 px padding, tighter gaps and fewer dish lines than the canvas card. */
+  compact?: boolean;
 }) {
   const theme = useTheme();
   const { t, i18n } = useTranslation();
@@ -61,7 +66,7 @@ export function OrderCard({
     hour: '2-digit',
     minute: '2-digit',
   });
-  const shown = order.lines.slice(0, PREVIEW_LINES);
+  const shown = order.lines.slice(0, compact ? PREVIEW_LINES_PHONE : PREVIEW_LINES);
   const hidden = order.lines.length - shown.length;
   // As on the canvas, "Mark paid" sits beside the first step only; later it lives on the order page.
   const canMarkPaid = onMarkPaid && order.paymentStatus !== 'paid' && order.status === 'received';
@@ -72,7 +77,7 @@ export function OrderCard({
   const paid = order.paymentStatus === 'paid';
 
   return (
-    <View style={[cardStyle(theme), styles.card]}>
+    <View style={[cardStyle(theme), styles.card, compact && styles.compact]}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`${where}, #${order.number}`}
@@ -80,14 +85,21 @@ export function OrderCard({
         onPress={onOpen}
         onHoverIn={() => setHovered(true)}
         onHoverOut={() => setHovered(false)}
-        style={({ pressed }) => [styles.top, (pressed || hovered) && { opacity: 0.7 }]}
+        style={({ pressed }) => [
+          styles.top,
+          compact && styles.compactTop,
+          (pressed || hovered) && { opacity: 0.7 },
+        ]}
       >
         <View style={styles.head}>
           <View style={styles.flex}>
-            <Text style={styles.where} numberOfLines={1}>
+            <Text style={[styles.where, compact && styles.whereSm]} numberOfLines={1}>
               {where}
             </Text>
-            <Text style={[styles.sub, { color: theme.meta }]} numberOfLines={1}>
+            <Text
+              style={[styles.sub, compact && styles.subSm, { color: theme.meta }]}
+              numberOfLines={1}
+            >
               #{order.number} · {time}
             </Text>
           </View>
@@ -102,7 +114,7 @@ export function OrderCard({
               {waitedLabel(age.minutes, t)}
             </Text>
           ) : (
-            <Text style={[styles.sub, { color: theme.meta }]}>
+            <Text style={[styles.sub, compact && styles.subSm, { color: theme.meta }]}>
               {t(`statusLabel.${order.status}`)}
             </Text>
           )}
@@ -116,21 +128,26 @@ export function OrderCard({
             return (
               <View key={line.id} style={styles.line}>
                 <View style={styles.flex}>
-                  <Text style={styles.dish} numberOfLines={1}>
+                  <Text style={[styles.dish, compact && styles.dishSm]} numberOfLines={1}>
                     {line.name}
                   </Text>
                   {extra ? (
-                    <Text style={[styles.sub, { color: theme.meta }]} numberOfLines={2}>
+                    <Text
+                      style={[styles.sub, compact && styles.subSm, { color: theme.meta }]}
+                      numberOfLines={2}
+                    >
                       {extra}
                     </Text>
                   ) : null}
                 </View>
-                <Text style={[styles.dish, styles.qty]}>{line.quantity}×</Text>
+                <Text style={[styles.dish, compact && styles.dishSm, styles.qty]}>
+                  {line.quantity}×
+                </Text>
               </View>
             );
           })}
           {hidden > 0 ? (
-            <Text style={[styles.sub, { color: theme.meta }]}>
+            <Text style={[styles.sub, compact && styles.subSm, { color: theme.meta }]}>
               {t('ownerOrders.moreDishes', { count: hidden })}
             </Text>
           ) : null}
@@ -138,7 +155,7 @@ export function OrderCard({
       </Pressable>
 
       <View style={[styles.sum, { borderTopColor: theme.wash }]}>
-        <Text style={[styles.where, styles.num]}>
+        <Text style={[styles.where, compact && styles.whereSm, styles.num]}>
           {formatMoney(pesewas(order.totalPesewas), currency)}
         </Text>
         <Text
@@ -181,6 +198,12 @@ const styles = StyleSheet.create({
   // Canvas ticket: 20 px padding, 16 px between parts.
   card: { padding: tokens.owner.controls.cardPadding, gap: tokens.space[4] },
   top: { gap: tokens.space[4] },
+  compact: { padding: tokens.space[4], gap: tokens.space[3] },
+  compactTop: { gap: tokens.space[3] },
+  // Phones: one size down, so a long dish name never makes the card grow.
+  whereSm: { fontSize: 15, lineHeight: 20 },
+  dishSm: { fontSize: 14, lineHeight: 20 },
+  subSm: { fontSize: 13, lineHeight: 18 },
   head: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.space[3] },
   flex: { flex: 1, minWidth: 0 },
   where: { fontSize: 17, lineHeight: 22, fontFamily: fontFamily.strong },

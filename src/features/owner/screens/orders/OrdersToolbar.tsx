@@ -2,7 +2,7 @@ import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { tokens } from '@/theme/tokens';
 import { ChipRow, Segmented } from '../../kit';
-import { ORDER_FILTERS, type OrderFilter } from '../../desk/orderBoard';
+import type { OrderFilter } from '../../desk/orderBoard';
 
 export type OrderLayout = 'board' | 'list';
 
@@ -12,16 +12,20 @@ export type OrderLayout = 'board' | 'list';
  */
 export function OrdersToolbar({
   filter,
+  filters,
   counts,
   onFilter,
   layout,
   onLayout,
 }: {
   filter: OrderFilter;
+  /** Which chips to show, in order: the board's on wide screens, the stages on phones. */
+  filters: readonly OrderFilter[];
   counts: Record<OrderFilter, number>;
   onFilter: (id: OrderFilter) => void;
   layout: OrderLayout;
-  onLayout: (id: OrderLayout) => void;
+  /** Missing on phones, which always show the board for open orders. */
+  onLayout?: (id: OrderLayout) => void;
 }) {
   const { t } = useTranslation();
   return (
@@ -31,14 +35,14 @@ export function OrdersToolbar({
           label={t('ownerOrders.range.label')}
           value={filter}
           onChange={onFilter}
-          items={ORDER_FILTERS.map((id) => ({
+          items={filters.map((id) => ({
             id,
             label: t(`ownerOrders.tabs.${id}`),
             count: counts[id],
           }))}
         />
       </View>
-      {filter === 'open' ? (
+      {filter === 'open' && onLayout ? (
         <View style={styles.end}>
           <Segmented<OrderLayout>
             label={t('ownerOrders.view.label')}

@@ -118,7 +118,12 @@ export function mockOwnerBusinessCalls(ctx: MockContext) {
           );
         loc.digitalAddress = body.digitalAddress;
       }
-      if (body.geo !== undefined) loc.geo = body.geo;
+      if (body.geo !== undefined) {
+        loc.geo = body.geo;
+        // Delivery fees measure from the venue's own pin, so it moves with the location's.
+        const venue = Object.values(world.venues).find((v) => v.id === (loc.venueId ?? loc.id));
+        if (venue) venue.location = { ...venue.location, lat: body.geo?.lat, lng: body.geo?.lng };
+      }
       return loc;
     },
     async ownerListScannerDevices(venueId) {

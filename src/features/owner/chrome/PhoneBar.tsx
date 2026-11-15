@@ -1,67 +1,29 @@
-import { Pressable, StyleSheet, View } from 'react-native';
-import { usePathname, useRouter } from 'expo-router';
-import { useTranslation } from 'react-i18next';
-import { ChevronLeft } from 'lucide-react-native';
+import type { ReactNode } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tokens } from '@/theme/tokens';
-import { Text } from '@/ui/Text';
-import { fontFamily, useTheme } from '@/ui/theme';
-import { useOwnerSession } from '@/features/session';
-import { CravinsMark } from '../kit/CravinsMark';
-import { isTabRoot } from './nav';
+import { useTheme } from '@/ui/theme';
 import { NotificationBell } from './NotificationBell';
-import { PlanBadge } from './PlanBadge';
-
-// The mark is in the "micro" logo tier (32 px or less, brand.md section 1).
-const MARK = tokens.space[6];
-const BACK = tokens.space[10];
 
 /**
- * Phones only: a slim bar above the page. Tab roots show the Cravins mark and plan; detail screens
- * show Back instead, so the way out is always in the same corner. The bell sits on the right.
+ * Phones only: the strip above a page's title.
+ *
+ * There is no Back arrow (Clarke, 2026-11-14): the page title is the header, and going back is
+ * the system's own swipe from the left edge on iPhone or the back gesture on Android. So the bar
+ * only shows when it holds something (Today's location switcher and bell); every other page gets
+ * just the status-bar spacer and its title starts right under it.
  */
-export function PhoneBar({ bell }: { bell: boolean }) {
+export function PhoneBar({ bell, start }: { bell: boolean; start?: ReactNode }) {
   const theme = useTheme();
-  const { t } = useTranslation();
-  const router = useRouter();
-  const path = usePathname();
   const insets = useSafeAreaInsets();
-  const role = useOwnerSession((state) => state.role) ?? 'waiter';
-  const root = isTabRoot(role, path);
+  const top = insets.top + tokens.space[2];
 
+  if (!start && !bell) {
+    return <View style={{ height: top + tokens.space[1], backgroundColor: theme.bg }} />;
+  }
   return (
-    <View
-      style={[
-        styles.bar,
-        {
-          paddingTop: insets.top + tokens.space[2],
-          backgroundColor: theme.surface,
-          borderBottomColor: theme.line,
-        },
-      ]}
-    >
-      {root ? (
-        <View style={styles.brand}>
-          <CravinsMark size={MARK} />
-          <Text variant="body-strong" style={styles.word}>
-            {t('ownerChrome.brand')}
-          </Text>
-          <PlanBadge />
-        </View>
-      ) : (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t('owner.back')}
-          onPress={() => (router.canGoBack() ? router.back() : router.replace('/owner/more'))}
-          hitSlop={4}
-          style={({ pressed }) => [
-            styles.back,
-            { backgroundColor: pressed ? theme.line : theme.wash },
-          ]}
-        >
-          <ChevronLeft size={22} color={theme.text} />
-        </Pressable>
-      )}
+    <View style={[styles.bar, { paddingTop: top, backgroundColor: theme.bg }]}>
+      {start ? <View style={styles.start}>{start}</View> : null}
       <View style={styles.spacer} />
       {bell ? <NotificationBell /> : null}
     </View>
@@ -75,16 +37,7 @@ const styles = StyleSheet.create({
     minHeight: tokens.touchTarget,
     paddingHorizontal: tokens.space[4],
     paddingBottom: tokens.space[2],
-    borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  brand: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
-  word: { fontFamily: fontFamily.strong },
-  back: {
-    width: BACK,
-    height: BACK,
-    borderRadius: tokens.radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  start: { flexShrink: 1, minWidth: 0, marginRight: tokens.space[3] },
   spacer: { flex: 1 },
 });

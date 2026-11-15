@@ -61,10 +61,12 @@ export function CustomersScreen() {
             { label: t('ownerMembers.figures.members'), value: n(total) },
             {
               label: t('ownerMembers.figures.new'),
+              short: t('ownerShort.newMembers'),
               value: report.data ? n(report.data.newEnrollments) : '–',
             },
             {
               label: t('ownerMembers.figures.cameBack'),
+              short: t('ownerShort.cameBack'),
               value: items.length ? `${Math.round((repeat / items.length) * 100)}%` : '–',
             },
           ]}

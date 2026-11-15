@@ -19,10 +19,12 @@ export function InlineRow({
   return (
     <View style={styles.row}>
       <Icon size={20} color={theme.muted} />
-      <Text variant="body" style={styles.label} numberOfLines={1}>
+      {/* Two lines rather than "Stamps on a full …" when the control beside it is wide. */}
+      <Text variant="body" style={styles.label} numberOfLines={2}>
         {label}
       </Text>
-      {children}
+      {/* The control may shrink, so a three-way switch never runs off a phone screen. */}
+      <View style={styles.control}>{children}</View>
     </View>
   );
 }
@@ -38,4 +40,5 @@ const styles = StyleSheet.create({
     paddingVertical: tokens.space[2],
   },
   label: { flex: 1, fontSize: 16, lineHeight: 22 },
+  control: { flexShrink: 1, maxWidth: '68%' },
 });

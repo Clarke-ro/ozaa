@@ -10,9 +10,18 @@ const schema = z.object({
   EXPO_PUBLIC_MOCK_FAST: z._default(z.enum(['0', '1']), '0'),
   /** Where guest links point when the app is not running on a web page (native share). */
   EXPO_PUBLIC_SITE_URL: z._default(z.string().check(z.url()), 'https://cravins.app'),
-  /** Help page "Email us" and "WhatsApp us". Empty hides the button. Set by Clarke, not in code. */
-  EXPO_PUBLIC_SUPPORT_EMAIL: z._default(z.string(), ''),
-  EXPO_PUBLIC_SUPPORT_WHATSAPP: z._default(z.string(), ''),
+  /**
+   * Map tiles for the Business page, with {z}/{x}/{y}. OpenStreetMap's own server is fine for
+   * light use with credit shown; a busy launch needs a tile provider (Clarke's choice).
+   */
+  EXPO_PUBLIC_MAP_TILES: z._default(z.string(), 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'),
+  /** Help page "Email us" (Clarke, 2026-11-14). Override in the build settings. */
+  EXPO_PUBLIC_SUPPORT_EMAIL: z._default(z.string(), 'support@cravins.app'),
+  /**
+   * Help page "WhatsApp us", digits with the country code. A DEMO number until Clarke has the
+   * real support line: replace it in the build settings before launch.
+   */
+  EXPO_PUBLIC_SUPPORT_WHATSAPP: z._default(z.string(), '233200000000'),
 });
 
 export type Env = z.infer<typeof schema> & { live: string[] };
@@ -32,6 +41,7 @@ const fromBuild: Source = {
   EXPO_PUBLIC_MOCK_FAIL_RATE: process.env.EXPO_PUBLIC_MOCK_FAIL_RATE,
   EXPO_PUBLIC_MOCK_FAST: process.env.EXPO_PUBLIC_MOCK_FAST,
   EXPO_PUBLIC_SITE_URL: process.env.EXPO_PUBLIC_SITE_URL,
+  EXPO_PUBLIC_MAP_TILES: process.env.EXPO_PUBLIC_MAP_TILES,
   EXPO_PUBLIC_SUPPORT_EMAIL: process.env.EXPO_PUBLIC_SUPPORT_EMAIL,
   EXPO_PUBLIC_SUPPORT_WHATSAPP: process.env.EXPO_PUBLIC_SUPPORT_WHATSAPP,
 };

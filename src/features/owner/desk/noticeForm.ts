@@ -104,3 +104,45 @@ export function checkNotice(draft: NoticeDraft, timeZone: string): NoticeCheck {
     },
   };
 }
+
+const two = (n: number) => String(n).padStart(2, '0');
+
+/** The next `count` days, starting today in the venue's zone, as "2026-11-14". */
+export function dayOptions(now: number, timeZone: string, count: number): string[] {
+  const today = partsIn(now, timeZone);
+  // Count calendar days from noon UTC, so no clock change can skip or repeat a day.
+  const start = Date.UTC(today.y, today.mo - 1, today.d, 12);
+  return Array.from({ length: count }, (_, i) =>
+    new Date(start + i * 86_400_000).toISOString().slice(0, 10),
+  );
+}
+
+/** Every half hour of a day, "00:00" to "23:30". */
+export function timeOptions(): string[] {
+  return Array.from({ length: 48 }, (_, i) => `${two(Math.floor(i / 2))}:${i % 2 ? '30' : '00'}`);
+}
+
+/** "Today, 18:00", "Tomorrow, 09:30" or "Fri 20 Nov, 12:00" for a picked time; "" when unset. */
+export function whenLabel(
+  text: string,
+  now: number,
+  timeZone: string,
+  words: { today: string; tomorrow: string },
+  locale: string,
+): string {
+  const match = WHEN.exec(text.trim());
+  if (!match) return '';
+  const date = text.trim().slice(0, 10);
+  const clock = text.trim().slice(11);
+  const [today, tomorrow] = dayOptions(now, timeZone, 2);
+  if (date === today) return `${words.today}, ${clock}`;
+  if (date === tomorrow) return `${words.tomorrow}, ${clock}`;
+  // Ghana writes dates the British way ("Fri 20 Nov"), so plain English uses en-GB.
+  const day = new Date(`${date}T12:00:00Z`).toLocaleDateString(locale === 'en' ? 'en-GB' : locale, {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    timeZone: 'UTC',
+  });
+  return `${day}, ${clock}`;
+}

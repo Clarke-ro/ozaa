@@ -1,5 +1,5 @@
 import type { Order } from '@/lib/api/types';
-import { boardColumns, filterCounts, inFilter } from './orderBoard';
+import { PHONE_FILTERS, boardColumns, filterCounts, inFilter, isBoardColumn } from './orderBoard';
 
 const order = (id: string, status: Order['status'], createdAt: string) =>
   ({ id, status, createdAt }) as Pick<Order, 'id' | 'status' | 'createdAt'>;
@@ -15,7 +15,15 @@ const orders = [
 
 describe('order board', () => {
   it('counts open as new, cooking and ready together', () => {
-    expect(filterCounts(orders)).toEqual({ open: 4, served: 1, rejected: 1, all: 6 });
+    expect(filterCounts(orders)).toEqual({
+      open: 4,
+      new: 2,
+      cooking: 1,
+      ready: 1,
+      served: 1,
+      rejected: 1,
+      all: 6,
+    });
   });
 
   it('keeps each filter to its own orders', () => {
@@ -26,6 +34,10 @@ describe('order board', () => {
       'd',
     ]);
     expect(orders.filter((o) => inFilter(o.status, 'rejected')).map((o) => o.id)).toEqual(['f']);
+    // Phones pick one kitchen stage at a time from the chips.
+    expect(orders.filter((o) => inFilter(o.status, 'new')).map((o) => o.id)).toEqual(['a', 'b']);
+    expect(orders.filter((o) => inFilter(o.status, 'cooking')).map((o) => o.id)).toEqual(['c']);
+    expect(orders.filter((o) => inFilter(o.status, 'ready')).map((o) => o.id)).toEqual(['d']);
     expect(orders.filter((o) => inFilter(o.status, 'all'))).toHaveLength(6);
   });
 
@@ -34,5 +46,24 @@ describe('order board', () => {
     expect(cols.new.map((o) => o.id)).toEqual(['b', 'a']);
     expect(cols.cooking.map((o) => o.id)).toEqual(['c']);
     expect(cols.ready.map((o) => o.id)).toEqual(['d']);
+  });
+});
+
+describe('isBoardColumn', () => {
+  it('accepts the three kitchen stages from a URL', () => {
+    expect(['new', 'cooking', 'ready'].every(isBoardColumn)).toBe(true);
+  });
+
+  it('turns away anything else', () => {
+    expect(isBoardColumn('served')).toBe(false);
+    expect(isBoardColumn('')).toBe(false);
+    expect(isBoardColumn(undefined)).toBe(false);
+    expect(isBoardColumn(['new'])).toBe(false);
+  });
+});
+
+describe('phone order chips', () => {
+  it('lists the three stages first, then the finished ones, with no Open chip', () => {
+    expect(PHONE_FILTERS).toEqual(['new', 'cooking', 'ready', 'served', 'rejected', 'all']);
   });
 });

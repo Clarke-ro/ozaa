@@ -1,6 +1,7 @@
 import { Children, Fragment, isValidElement, useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { ChevronDown, ChevronUp, type LucideIcon } from 'lucide-react-native';
+import { useOwnerLayout } from '../chrome/layout';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
@@ -37,6 +38,7 @@ export function Section({
   children: ReactNode;
 }) {
   const theme = useTheme();
+  const { wide } = useOwnerLayout();
   const [open, setOpen] = useState(defaultOpen);
   const shown = !collapsible || open;
   const rows = Children.toArray(children).filter(isValidElement);
@@ -44,7 +46,7 @@ export function Section({
 
   const head =
     title || action ? (
-      <View style={[styles.head, Icon && styles.headIcon]}>
+      <View style={[styles.head, Icon && styles.headIcon, Icon && !wide && styles.headIconPhone]}>
         {Icon ? (
           // Canvas: a plain 22 px icon in a 32 px slot, no tinted bubble.
           <View style={styles.chip}>
@@ -76,7 +78,7 @@ export function Section({
   const outside = !collapsible && !Icon && Boolean(head);
 
   return (
-    <View style={[styles.wrap, outside && styles.wrapOutside]}>
+    <View style={[styles.wrap, outside && (wide ? styles.wrapOutside : styles.wrapOutsidePhone)]}>
       {outside ? <View style={styles.outsideHead}>{head}</View> : null}
       <View style={[styles.card, cardStyle(theme)]}>
         {outside ? null : collapsible && head ? (
@@ -113,6 +115,8 @@ export function Section({
 const styles = StyleSheet.create({
   wrap: { gap: tokens.space[2] },
   wrapOutside: { gap: tokens.space[4] },
+  // Phones: the title sits closer to its card.
+  wrapOutsidePhone: { gap: 10 },
   outsideHead: {
     marginHorizontal: -tokens.space[4],
     marginTop: -tokens.space[4],
@@ -135,6 +139,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: tokens.owner.controls.cardPadding,
     gap: tokens.space[4],
   },
+  // Phones: a slimmer head, 16 px in, so the card is a little tighter than on the web.
+  headIconPhone: { minHeight: 60, paddingHorizontal: tokens.space[4], gap: tokens.space[3] },
   chip: { width: 32, alignItems: 'center', justifyContent: 'center' },
   words: { flex: 1, minWidth: 0, gap: 2 },
   titleRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: tokens.space[2] },

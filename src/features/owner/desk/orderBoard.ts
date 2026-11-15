@@ -1,13 +1,30 @@
 import type { Order } from '@/lib/api/types';
 import { orderTab } from './ops';
 
-/** The chips above Orders: everything still in the kitchen, done, turned away, or all. */
-export type OrderFilter = 'open' | 'served' | 'rejected' | 'all';
+/**
+ * The chips above Orders. Wide screens: everything still in the kitchen (the board), done, turned
+ * away, or all. Phones pick one kitchen stage at a time instead of a board (Clarke, 2026-11-14).
+ */
+export type OrderFilter = 'open' | 'new' | 'cooking' | 'ready' | 'served' | 'rejected' | 'all';
 export const ORDER_FILTERS: readonly OrderFilter[] = ['open', 'served', 'rejected', 'all'];
+export const PHONE_FILTERS: readonly OrderFilter[] = [
+  'new',
+  'cooking',
+  'ready',
+  'served',
+  'rejected',
+  'all',
+];
+const EVERY_FILTER: readonly OrderFilter[] = ['open', ...PHONE_FILTERS];
 
 /** The board's three columns, in the order a ticket moves through them. */
 export type BoardColumn = 'new' | 'cooking' | 'ready';
 export const BOARD_COLUMNS: readonly BoardColumn[] = ['new', 'cooking', 'ready'];
+
+/** A route param is a board column ("new", "cooking", "ready"), or not. */
+export function isBoardColumn(value: unknown): value is BoardColumn {
+  return typeof value === 'string' && (BOARD_COLUMNS as readonly string[]).includes(value);
+}
 
 export function inFilter(status: Order['status'], filter: OrderFilter): boolean {
   if (filter === 'all') return true;
@@ -19,9 +36,17 @@ export function inFilter(status: Order['status'], filter: OrderFilter): boolean 
 export function filterCounts(
   orders: readonly Pick<Order, 'status'>[],
 ): Record<OrderFilter, number> {
-  const counts: Record<OrderFilter, number> = { open: 0, served: 0, rejected: 0, all: 0 };
+  const counts: Record<OrderFilter, number> = {
+    open: 0,
+    new: 0,
+    cooking: 0,
+    ready: 0,
+    served: 0,
+    rejected: 0,
+    all: 0,
+  };
   for (const o of orders) {
-    for (const f of ORDER_FILTERS) if (inFilter(o.status, f)) counts[f] += 1;
+    for (const f of EVERY_FILTER) if (inFilter(o.status, f)) counts[f] += 1;
   }
   return counts;
 }

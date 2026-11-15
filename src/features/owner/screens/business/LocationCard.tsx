@@ -7,14 +7,14 @@ import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
 import { VenueImage } from '@/ui/VenueImage';
 import { fontFamily, useTheme } from '@/ui/theme';
-import { StatusPill } from '../../kit';
+import { cardStyle, StatusPill } from '../../kit';
+import { useOwnerLayout } from '../../chrome/layout';
 
 /** Canvas location row: logo, name, address, tables and staff, then In use or Switch, and Edit. */
 export function LocationCard({
   location,
   active,
   today,
-  first,
   onSwitch,
   onEdit,
 }: {
@@ -22,12 +22,14 @@ export function LocationCard({
   active: boolean;
   /** "Open today 11:00 to 22:00" for the location in use; other locations' hours aren't loaded. */
   today?: string;
-  first: boolean;
   onSwitch: () => void;
   onEdit: () => void;
 }) {
   const theme = useTheme();
   const { t } = useTranslation();
+  // Phones: a 70 px logo, the switch button and Edit leave no room for the name, so the logo
+  // shrinks and In use / Switch sits under the address instead.
+  const { wide } = useOwnerLayout();
   const address = [location.address1, location.city].filter(Boolean).join(', ');
   const initials = location.name
     .split(/\s+/)
@@ -44,11 +46,31 @@ export function LocationCard({
       : null,
     today,
   ].filter(Boolean);
+  const state = active ? (
+    <StatusPill label={t('ownerBusiness.active')} tone="success" boxed icon={false} />
+  ) : (
+    <Button
+      label={t('ownerBusiness.use')}
+      tone="secondary"
+      onPress={onSwitch}
+      style={styles.short}
+    />
+  );
   return (
-    <View style={[styles.row, !first && { borderTopWidth: 1, borderTopColor: theme.line }]}>
-      <View style={[styles.logo, { backgroundColor: theme.wash, borderColor: theme.line }]}>
+    <View style={[cardStyle(theme), styles.row, !wide && styles.rowPhone]}>
+      <View
+        style={[
+          styles.logo,
+          !wide && styles.logoPhone,
+          { backgroundColor: theme.wash, borderColor: theme.line },
+        ]}
+      >
         {location.logo ? (
-          <VenueImage url={location.logo.url} alt="" style={StyleSheet.absoluteFill} />
+          <VenueImage
+            url={location.logo.url}
+            alt=""
+            style={[StyleSheet.absoluteFill, { borderRadius: wide ? 35 : 24 }]}
+          />
         ) : (
           <Text style={[styles.initials, { color: theme.muted }]}>{initials}</Text>
         )}
@@ -70,17 +92,9 @@ export function LocationCard({
             {meta.join(' · ')}
           </Text>
         ) : null}
+        {wide ? null : <View style={styles.below}>{state}</View>}
       </View>
-      {active ? (
-        <StatusPill label={t('ownerBusiness.active')} tone="success" boxed icon={false} />
-      ) : (
-        <Button
-          label={t('ownerBusiness.use')}
-          tone="secondary"
-          onPress={onSwitch}
-          style={styles.short}
-        />
-      )}
+      {wide ? state : null}
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t('ownerBusiness.editA11y', { name: location.name })}
@@ -100,28 +114,31 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: tokens.space[3],
-    paddingHorizontal: tokens.space[4],
-    paddingVertical: tokens.space[3],
-    minHeight: 72,
+    paddingHorizontal: tokens.space[5],
+    paddingVertical: tokens.space[5],
+    gap: tokens.space[5],
   },
+  // Canvas: a 70 px round logo, or the initials on a soft square.
   logo: {
-    width: 44,
-    height: 44,
-    borderRadius: 10,
+    width: 70,
+    height: 70,
+    borderRadius: 20,
     borderWidth: 1,
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  initials: { fontSize: 14, fontFamily: fontFamily.strong },
+  initials: { fontSize: 18, fontFamily: fontFamily.strong },
+  rowPhone: { alignItems: 'flex-start', padding: tokens.space[4], gap: tokens.space[3] },
+  logoPhone: { width: 48, height: 48, borderRadius: 14 },
+  below: { flexDirection: 'row', marginTop: tokens.space[2] },
   flex: { flex: 1, minWidth: 0, gap: 2 },
   place: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[1] },
-  short: { minHeight: 36 },
+  short: { minHeight: 48 },
   edit: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',

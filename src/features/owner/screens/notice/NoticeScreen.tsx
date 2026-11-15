@@ -9,7 +9,7 @@ import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
 import { useDraft } from '../../data/useDraft';
 import { useSaveVenue } from '../../data/useSaveVenue';
-import { SaveBar } from '../../kit';
+import { Button } from '@/ui/Button';
 import { checkNotice, draftOf, type NoticeDraft } from '../../desk/noticeForm';
 import { useOwnerLayout } from '../../chrome/layout';
 import { NoticePreview } from './NoticePreview';
@@ -63,22 +63,7 @@ export function NoticeScreen() {
   };
 
   return (
-    <OwnerPage
-      width="mid"
-      title={t('owner.notice')}
-      subtitle={t('ownerNotice.lead')}
-      footer={
-        <SaveBar
-          visible={draft.dirty}
-          saving={save.isPending}
-          onDiscard={() => {
-            draft.reset();
-            setShowErrors(false);
-          }}
-          onSave={submit}
-        />
-      }
-    >
+    <OwnerPage width="mid" title={t('owner.notice')} subtitle={t('ownerNotice.lead')}>
       <DeskWait
         loading={venue.isLoading}
         error={venue.isError}
@@ -98,6 +83,25 @@ export function NoticeScreen() {
                 />
               </View>
             ))}
+            <View style={styles.actions}>
+              <Button
+                label={t('ownerNotice.save')}
+                loading={save.isPending}
+                onPress={submit}
+                style={styles.short}
+              />
+              {draft.dirty ? (
+                <Button
+                  label={t('ownerKit.discard')}
+                  tone="ghost"
+                  onPress={() => {
+                    draft.reset();
+                    setShowErrors(false);
+                  }}
+                  style={styles.short}
+                />
+              ) : null}
+            </View>
           </View>
           {desktop && venue.data ? (
             <View style={styles.aside}>
@@ -117,4 +121,6 @@ const styles = StyleSheet.create({
   form: { flex: 1, minWidth: 0 },
   aside: { width: 360 },
   stack: { gap: tokens.space[8] },
+  actions: { flexDirection: 'row', gap: 10 },
+  short: { minHeight: 40 },
 });

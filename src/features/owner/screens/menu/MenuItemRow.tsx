@@ -13,24 +13,28 @@ import { STATUS_TONES } from '@/theme/palette';
 import { cardStyle, StatusPill, Toggle } from '../../kit';
 
 const LOW_STOCK = 5;
-// Canvas dish card: a 60 px photo with 10 px corners.
-const THUMB = 60;
+const THUMB = 52;
+/** The drag list uses this default height to map a drag distance to a position. */
+export const DISH_ROW = 72;
 
 /**
- * One dish as its own card (design canvas): photo, name with a "Popular" tag, the price under
- * it, any state worth a glance (sold out, hidden, a few left), and the on-the-menu switch.
- * Tap the card to edit; delete lives in the editor.
+ * One dish: photo, name, then the price with any state worth a glance (Popular, sold out,
+ * hidden, a few left) under it, and the on-the-menu switch. The row grows when text wraps.
+ * Tap the card to edit; delete lives in the editor. `bare` drops the card look when the drag
+ * list draws the card around it.
  */
 export function MenuItemRow({
   item,
   currency,
   onToggle,
   onEdit,
+  bare,
 }: {
   item: MenuItem;
   currency: string;
   onToggle: () => void;
   onEdit: () => void;
+  bare?: boolean;
 }) {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -44,7 +48,7 @@ export function MenuItemRow({
   const popular = STATUS_TONES[theme.scheme].order;
 
   return (
-    <View style={[cardStyle(theme), styles.row]}>
+    <View style={[bare ? styles.bare : [cardStyle(theme), styles.row]]}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t('ownerMenu.editA11y', { name: item.name.en })}
@@ -55,39 +59,35 @@ export function MenuItemRow({
           {item.photo ? (
             <VenueImage url={item.photo.url} alt={item.name.en} style={StyleSheet.absoluteFill} />
           ) : (
-            <ImageOff size={18} color={theme.meta} />
+            <ImageOff size={16} color={theme.meta} />
           )}
         </View>
         <View style={styles.copy}>
-          <View style={styles.nameRow}>
-            <Text numberOfLines={1} style={[styles.name, off && { color: theme.muted }]}>
-              {item.name.en}
-            </Text>
-            {item.badges.includes('popular') ? (
-              <View style={[styles.tag, { backgroundColor: popular.bg }]}>
-                <Text style={[styles.tagText, { color: popular.ink }]}>
-                  {t('ownerMenu.filter.popular')}
-                </Text>
-              </View>
-            ) : null}
-          </View>
+          <Text numberOfLines={bare ? 1 : 2} style={[styles.name, off && { color: theme.muted }]}>
+            {item.name.en}
+          </Text>
           <View style={styles.priceRow}>
             <Text style={[styles.price, sale && { color: theme.ink }]}>
               {money(sale ? unitPrice(item) : item.pricePesewas)}
             </Text>
             {sale ? (
-              <Text variant="caption" style={[styles.num, styles.was, { color: theme.meta }]}>
+              <Text style={[styles.small, styles.was, { color: theme.meta }]}>
                 {money(item.pricePesewas)}
               </Text>
             ) : null}
-          </View>
-          <View style={styles.pills}>
             {/* Red only for sold out, which guests notice; hidden is the owner's choice. */}
             {!item.available ? <StatusPill label={t('owner.soldOut')} tone="error" boxed /> : null}
             {item.hidden ? (
               <StatusPill label={t('ownerMenu.statusHidden')} tone="neutral" boxed />
             ) : null}
             {few ? <StatusPill label={few} tone="waiting" boxed /> : null}
+            {item.badges.includes('popular') ? (
+              <View style={[styles.tag, { backgroundColor: popular.bg }]}>
+                <Text style={[styles.tagText, { color: popular.ink }]} numberOfLines={1}>
+                  {t('ownerMenu.filter.popular')}
+                </Text>
+              </View>
+            ) : null}
           </View>
         </View>
       </Pressable>
@@ -104,13 +104,20 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
-    minHeight: 80,
+    gap: tokens.space[3],
+    minHeight: DISH_ROW,
     paddingVertical: 10,
     paddingLeft: 10,
-    paddingRight: 18,
+    paddingRight: tokens.space[4],
   },
-  main: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 14 },
+  bare: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[3],
+    paddingRight: tokens.space[4],
+  },
+  main: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
   thumb: {
     width: THUMB,
     height: THUMB,
@@ -120,19 +127,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   dim: { opacity: 0.5 },
-  copy: { flex: 1, minWidth: 0, gap: 4 },
-  nameRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
-  name: { flexShrink: 1, fontSize: 16, lineHeight: 22, fontFamily: fontFamily.strong },
-  tag: { paddingHorizontal: tokens.space[2], paddingVertical: 2, borderRadius: tokens.radius.full },
-  tagText: { fontSize: 12, lineHeight: 16, fontFamily: fontFamily.strong },
-  priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: tokens.space[2] },
+  copy: { flex: 1, minWidth: 0, gap: 2 },
+  name: { fontSize: 15, lineHeight: 20, fontFamily: fontFamily.strong },
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
   price: {
-    fontSize: 15,
+    fontSize: 14,
     lineHeight: 20,
     fontFamily: fontFamily.strong,
     fontVariant: ['tabular-nums'],
   },
-  pills: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.space[1] },
-  num: { fontVariant: ['tabular-nums'] },
+  small: { fontSize: 13, lineHeight: 18, fontVariant: ['tabular-nums'] },
   was: { textDecorationLine: 'line-through' },
+  tag: { paddingHorizontal: 6, paddingVertical: 1, borderRadius: tokens.radius.full },
+  tagText: { fontSize: 11, lineHeight: 15, fontFamily: fontFamily.strong },
 });

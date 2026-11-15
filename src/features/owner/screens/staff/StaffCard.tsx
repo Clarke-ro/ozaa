@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { PressableScale } from '@/ui/PressableScale';
 import { useTranslation } from 'react-i18next';
 import { ChevronRight } from 'lucide-react-native';
 import type { StaffMember } from '@/lib/api/types';
@@ -39,21 +40,9 @@ export function StaffCard({
     ? t('ownerStaff.seen', { when: timeAgo(member.lastActiveAt, now, t) })
     : null;
   const today = member.today;
-
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={[name, t(`ownerSettings.roles.${member.role}`), seen]
-        .filter(Boolean)
-        .join(', ')}
-      onPress={onPress}
-      style={({ pressed }) => [
-        cardStyle(theme),
-        styles.row,
-        !wide && styles.wrap,
-        pressed && { backgroundColor: theme.wash },
-      ]}
-    >
+  const chevron = <ChevronRight size={20} color={theme.meta} />;
+  const head = (
+    <>
       <View style={[styles.avatar, { backgroundColor: theme.tint }]}>
         <Text style={[styles.initials, { color: theme.badgeInk }]}>{initials}</Text>
         {member.onShift ? (
@@ -73,29 +62,67 @@ export function StaffCard({
           {t(`ownerSettings.roles.${member.role}`)} · {member.phoneMasked}
         </Text>
       </View>
-      {invited ? (
-        <Text style={[styles.state, { color: tones.bill.line }]}>{t('ownerStaff.pending')}</Text>
-      ) : member.onShift ? (
-        <Text style={[styles.state, { color: tones.success.line }]}>{t('ownerStaff.onShift')}</Text>
-      ) : seen ? (
-        <Text style={[styles.sub, { color: theme.meta }]}>{seen}</Text>
-      ) : null}
-      {today && !invited ? (
-        <View style={styles.stats}>
-          <Stat label={t('ownerStaff.ordersShort')} value={String(today.ordersHandled)} />
-          <Stat label={t('ownerStaff.callsShort')} value={String(today.callsAnswered)} />
-          <Stat
-            label={t('ownerStaff.pickupShort')}
-            value={
-              today.avgPickupMinutes == null
-                ? '–'
-                : t('ownerCalls.minutes', { count: today.avgPickupMinutes })
-            }
-          />
-        </View>
-      ) : null}
-      <ChevronRight size={20} color={theme.meta} />
-    </Pressable>
+    </>
+  );
+  const shift = invited ? (
+    <Text style={[styles.state, { color: tones.bill.line }]}>{t('ownerStaff.pending')}</Text>
+  ) : member.onShift ? (
+    <Text style={[styles.state, { color: tones.success.line }]}>{t('ownerStaff.onShift')}</Text>
+  ) : seen ? (
+    <Text style={[styles.sub, { color: theme.meta }]}>{seen}</Text>
+  ) : null;
+  const figures =
+    today && !invited ? (
+      <View style={styles.stats}>
+        <Stat label={t('ownerStaff.ordersShort')} value={String(today.ordersHandled)} />
+        <Stat label={t('ownerStaff.callsShort')} value={String(today.callsAnswered)} />
+        <Stat
+          label={t('ownerStaff.pickupShort')}
+          value={
+            today.avgPickupMinutes == null
+              ? '–'
+              : t('ownerCalls.minutes', { count: today.avgPickupMinutes })
+          }
+        />
+      </View>
+    ) : null;
+
+  return (
+    <PressableScale
+      accessibilityRole="button"
+      accessibilityLabel={[name, t(`ownerSettings.roles.${member.role}`), seen]
+        .filter(Boolean)
+        .join(', ')}
+      onPress={onPress}
+      style={({ pressed }) => [
+        cardStyle(theme),
+        wide ? styles.row : styles.phone,
+        pressed && { backgroundColor: theme.wash },
+      ]}
+    >
+      {wide ? (
+        <>
+          {head}
+          {shift}
+          {figures}
+          {chevron}
+        </>
+      ) : (
+        // Phones: who they are on the first line with the chevron, shift and figures under it.
+        <>
+          <View style={styles.line}>
+            {head}
+            {chevron}
+          </View>
+          {shift || figures ? (
+            <View style={styles.line}>
+              <View style={styles.grow}>{shift}</View>
+              {figures}
+            </View>
+          ) : null}
+        </>
+      )}
+    </PressableScale>
   );
 }
 
@@ -121,7 +148,14 @@ const styles = StyleSheet.create({
     paddingLeft: 18,
     paddingRight: tokens.space[4],
   },
-  wrap: { flexWrap: 'wrap' },
+  phone: {
+    gap: tokens.space[3],
+    paddingVertical: 14,
+    paddingLeft: tokens.space[4],
+    paddingRight: tokens.space[4],
+  },
+  line: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
+  grow: { flex: 1, minWidth: 0 },
   avatar: {
     width: 44,
     height: 44,

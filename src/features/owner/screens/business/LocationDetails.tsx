@@ -2,17 +2,18 @@ import { StyleSheet, View } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
-import type { Location } from '@/lib/api/types';
+import type { GeoPoint, Location } from '@/lib/api/types';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
 import { useDraft } from '../../data/useDraft';
 import { ownerKeys } from '../../data/keys';
 import { Field, TitledSection, toast } from '../../kit';
+import { LocationMap } from './LocationMap';
 
 // GhanaPostGPS codes look like GA-123-4567; riders use them to find the venue.
 const DIGITAL = /^[A-Z]{2}-\d{3,4}-\d{4}$/;
 
-/** The location in use, edited in place (canvas): name, phone, street and digital address. */
+/** The location in use, edited in place (canvas): name, phone, addresses and the map pin. */
 export function LocationDetails({ location }: { location: Location }) {
   const { t } = useTranslation();
   const client = useQueryClient();
@@ -21,6 +22,7 @@ export function LocationDetails({ location }: { location: Location }) {
     phone: location.phone ?? '',
     address1: location.address1 ?? '',
     digital: location.digitalAddress ?? '',
+    geo: (location.geo ?? null) as GeoPoint | null,
   });
   const f = draft.value;
   const digital = f.digital.trim().toUpperCase();
@@ -32,6 +34,7 @@ export function LocationDetails({ location }: { location: Location }) {
         phone: f.phone.trim(),
         address1: f.address1.trim(),
         digitalAddress: digital || null,
+        ...(f.geo ? { geo: f.geo } : {}),
       }),
     onSuccess: () => {
       toast.success(t('ownerKit.saved'));
@@ -83,6 +86,7 @@ export function LocationDetails({ location }: { location: Location }) {
           />
         </View>
       </View>
+      <LocationMap geo={f.geo} onChange={(geo) => draft.set('geo', geo)} />
       {draft.dirty ? (
         <View style={styles.end}>
           <Button

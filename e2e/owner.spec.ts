@@ -63,6 +63,7 @@ async function signInAsOwner(page: Page, wide = false) {
 test('owner screens on phone (390x844): every tab and every More item opens, with a way back', async ({
   page,
 }) => {
+  test.setTimeout(120_000);
   await page.setViewportSize({ width: 390, height: 844 });
   await signInAsOwner(page);
   for (const [label, name] of tabs) {
@@ -78,17 +79,18 @@ test('owner screens on phone (390x844): every tab and every More item opens, wit
     await page.getByRole('button', { name: label, exact: true }).click();
     await waitLoaded(page);
     if (name === 'owner-tables') {
-      await page
-        .getByRole('radio', { name: /Table 1/ })
-        .first()
-        .click();
+      // The canvas shows every table's card under All tables, with its own Print and Download.
+      await expect(page.getByRole('heading', { name: 'All tables' })).toBeVisible();
     }
     await page.screenshot({ path: `test-results/${name}-phone.png`, fullPage: false });
-    // Detail screens get a back button that returns to More. Setup stands alone (no tab bar),
-    // so it has Close instead.
-    await page
-      .getByRole('button', { name: name === 'owner-setup' ? 'Close' : 'Back', exact: true })
-      .click();
+    // Phones have no Back arrow (Clarke, 2026-11-14): the way back is the system's back (swipe
+    // on iPhone, the back gesture on Android, the browser here). Setup stands alone with Close.
+    if (name === 'owner-setup') {
+      await page.getByRole('button', { name: 'Close', exact: true }).click();
+    } else {
+      await expect(page.getByRole('button', { name: 'Back', exact: true })).toHaveCount(0);
+      await page.goBack();
+    }
     await expect(
       page.getByRole('tab', { name: 'More', exact: true, selected: true }),
     ).toBeVisible();

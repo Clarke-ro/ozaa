@@ -15,14 +15,17 @@ import { AddDashed, EmptyCard, toast } from '../../kit';
 import { Button } from '@/ui/Button';
 import { LinkEditor } from './LinkEditor';
 import { LinkRow } from './LinkRow';
-import { moveLink } from './moveLink';
+import { reorderLinks } from './moveLink';
+import { DragList } from '../../kit/DragList';
+
+// Canvas link rows are 76 px tall; every row the same height lets a drag map to a position.
+const ROW = 76;
 
 const PLACEMENTS: CustomLink['placement'][] = ['button', 'banner', 'menu'];
 
 /**
- * Extra buttons on the guest page in one column, grouped by where they show: a white card per
- * link, then the count and a dashed "Add a link" box at the end. Switch one off to hide it
- * without deleting it.
+ * Extra buttons on the guest page (canvas), grouped by where they show: one row per link that
+ * you drag by its grip to reorder, then a dashed "Add a link". Switch one off to hide it.
  */
 export function LinksScreen() {
   const theme = useTheme();
@@ -100,24 +103,19 @@ export function LinksScreen() {
                   <Text variant="title" accessibilityRole="header">
                     {t(`ownerLinks.placementTitle.${placement}`)}
                   </Text>
-                  <View style={styles.list}>
-                    {group.map((link, index) => (
+                  <DragList
+                    items={group.map((link) => ({ key: link.id, label: link.title, link }))}
+                    rowHeight={ROW}
+                    gripSide="start"
+                    onOrder={(ids) => move.mutate(reorderLinks(group, ids))}
+                    renderRow={({ link }) => (
                       <LinkRow
-                        key={link.id}
                         link={link}
                         onEdit={() => setEditing(link)}
                         onToggle={() => toggle.mutate(link)}
-                        onMove={{
-                          up:
-                            index > 0 ? () => move.mutate(moveLink(group, link.id, -1)) : undefined,
-                          down:
-                            index < group.length - 1
-                              ? () => move.mutate(moveLink(group, link.id, 1))
-                              : undefined,
-                        }}
                       />
-                    ))}
-                  </View>
+                    )}
+                  />
                 </View>
               );
             })}
@@ -143,6 +141,5 @@ export function LinksScreen() {
 const styles = StyleSheet.create({
   stack: { gap: tokens.space[6] },
   group: { gap: tokens.space[4] },
-  list: { gap: tokens.owner.controls.listGap },
   note: { fontSize: 14, lineHeight: 20 },
 });

@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { PressableScale } from '@/ui/PressableScale';
 import { useTranslation } from 'react-i18next';
 import { STATUS_TONES } from '@/theme/palette';
 import { tokens } from '@/theme/tokens';
@@ -26,7 +27,7 @@ export function FreeTile({
   const name = label ?? t('ownerFloor.tableName', { name: code });
   const free = t('owner.free');
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityState={{ selected }}
       accessibilityLabel={`${name}, ${free}`}
@@ -42,7 +43,7 @@ export function FreeTile({
         {name}
       </Text>
       <Text style={[styles.free, { color: STATUS_TONES[theme.scheme].success.line }]}>{free}</Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 

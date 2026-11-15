@@ -131,8 +131,16 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   body: { flex: 1, gap: 14 },
-  top: { flexDirection: 'row', alignItems: 'baseline', gap: tokens.space[3] },
-  flex: { flex: 1, minWidth: 0 },
+  // Phones put two tables in a row, about 110 px each: the bill drops under the name instead of
+  // cutting it to "Tabl…". On wider cards both still fit on one line.
+  top: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'baseline',
+    columnGap: tokens.space[3],
+    rowGap: 2,
+  },
+  flex: { flexGrow: 1, flexShrink: 1, minWidth: 0 },
   name: { fontSize: 17, lineHeight: 22, fontFamily: fontFamily.strong },
   num: { fontVariant: ['tabular-nums'] },
   state: { marginTop: 'auto', gap: 2 },

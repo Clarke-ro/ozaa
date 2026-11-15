@@ -4,6 +4,226 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-15 · Removing code the app no longer uses
+
+**What we built**
+
+The app now has fewer paths to the same behavior. The Loyalty route opens its real screen directly. Three owner components with no callers are gone, along with a Ghana-only money wrapper used only by its own test.
+
+**How it works**
+
+```text
+before: route → pass-through wrapper → LoyaltyScreen
+after:  route → LoyaltyScreen
+```
+
+Deleting an unused file is safer than keeping it "for later". A spare component can quietly drift from the live design and mislead the next person who finds it.
+
+**Files to look at**
+
+- `src/app/owner/loyalty.tsx`: imports the screen it renders.
+- `src/features/owner/index.ts`: no longer advertises obsolete screens.
+- `src/lib/money.ts`: keeps the currency-aware formatter used by the app.
+
+**New idea: dead code**
+
+Dead code has no runtime caller. It still costs time because searches, reviews, and future changes must decide whether it matters.
+
+**Try it yourself**
+
+Run `git grep OwnerLoyalty -- src` and `git grep formatCedis -- src`. Both commands should return no source reference.
+
+---
+
+## 2026-11-15 · One place to refresh owner data
+
+**What we built**
+
+Owner actions no longer repeat the React Query invalidation call for every affected screen. One helper in `owner/data` performs that repeated operation. Each action still lists the exact data it refreshes, so its effect remains visible where you use it.
+
+**How it works**
+
+```text
+move an order
+  → invalidateOwnerQueries([Orders, Floor, Today])
+  → React Query marks those cached results stale
+  → mounted screens fetch current data
+```
+
+The helper does not wait for those refetches. The button can finish immediately while React Query updates the screens.
+
+**Files to look at**
+
+- `src/features/owner/data/invalidateOwnerQueries.ts`: the shared cache operation.
+- `src/features/owner/screens/orders/useOrderMove.ts`: the order-specific list.
+- `src/features/owner/screens/calls/useWaiterCalls.ts`: the call-specific list.
+
+**New idea: cache invalidation**
+
+A cache keeps an earlier server answer. After a change, invalidation marks related answers as old so React Query asks for fresh ones.
+
+**Try it yourself**
+
+Move an order to its next stage. Open Orders, Floor, and Today and check that all three agree.
+
+---
+
+## 2026-11-15 · Slimmer chips, cards and headers on a phone
+
+**What we built**
+
+- **No Back arrows:** a page's title is its header. Go back with the phone's own gesture (swipe from the left edge on iPhone, back on Android).
+- **Chips:** one slim chip across the app, 34 px tall with the count as a plain number ("New 2"). The visible chip stays slim, while its touch area remains 44 px tall.
+- **Orders:** the chips are New, Cooking, Ready, Served, Rejected and All, with that list underneath.
+- **Today and Loyalty:** three short tiles, number first and label under it, like your reference.
+- **Menu:** a slimmer search box. The pencil, eye and grip are gone from section headings (they live in ⋮ → Sections). Each dish has a grip on its left for dragging, and you tap a dish to edit it. Screen readers treat the grip, dish and availability switch as separate controls.
+- **Integrations:** each mark sits in a soft square tile, with the switch top right.
+
+**How it works**
+
+```
+FilterChips (ui)  → phone? slim 34 px chip inside a 44 px touch area
+Chips (kit)       → phone? the same slim size and touch area
+DragList (kit)    → holds each dish row; drag the grip to move it
+text size         → dish rows grow, and DragList uses the same height
+```
+
+**Files to look at**
+
+- `src/ui/FilterChips.tsx`: the chip row every page uses.
+- `src/features/owner/desk/orderBoard.ts`: `PHONE_FILTERS`, with tests.
+- `src/features/owner/screens/menu/SectionGroup.tsx`: dishes in a drag list.
+
+**New idea: a font that isn't loaded**
+
+Loyalty's Results tiles asked for `Inter_500`, but the app only loads Inter 400 and 600, so the browser showed a serif instead. If text suddenly looks like Times, check the weight against `src/theme/fonts.ts`.
+
+**Try it yourself**
+
+In `FilterChips.tsx`, change `slimText` from 14 px to 16 px and look at the Orders chips. The chip can grow while the touch area stays at least 44 px. Then put it back.
+
+---
+
+## 2026-11-14 · A cleaner phone layout and a kitchen board
+
+**What we built**
+
+- **Headers:** page titles start higher. Tabs with nothing to put in the top bar (Orders, Menu) have no bar. The grey line under each title is gone on phones. Header buttons are slimmer, and "add" buttons are a round orange +.
+- **Today:** the location switcher sits at the top beside the bell. The greeting is smaller, and the line under it is gone. The sales card is shorter. The three small cards are taller tiles.
+- **Orders:** one row of chips (Open, Served, Rejected, All). Open shows New, Cooking and Ready, each with its two oldest tickets. Tap a stage's heading to see every ticket in it on its own page.
+- **Cards:** 16 px inside on phones instead of 20. Figure rows (Loyalty, Staff, Customers) fit three small tiles in one row.
+- **Integrations:** the switch sits top right, and the status goes under the name.
+
+**How it works**
+
+```
+Orders (Open) → New ●2  >  → /owner/orders/stage/new → every new ticket
+                Cooking ●2 >
+                Ready ●1   >
+```
+
+`useOrderDesk` loads the orders and wires the buttons. Orders and the stage page both use it, so a ticket behaves the same on both.
+
+**Files to look at**
+
+- `src/features/owner/screens/orders/useOrderDesk.tsx`: the shared order logic.
+- `src/features/owner/screens/orders/OrderBoard.tsx`: the three stages.
+- `src/app/owner/orders/stage/[stage].tsx`: checks the stage in the URL.
+- `src/ui/Button.tsx`: `SlimButtons`, the slim header buttons.
+
+**New idea: React context**
+
+`SlimButtons` is a context: a value a parent sets once that every child can read. PageHeader sets it on phones, and every Button inside goes slim. No screen had to change.
+
+**Try it yourself**
+
+In `OrderBoard.tsx`, change `side ? 3 : 2` to `side ? 3 : 1`, then reload Orders on your phone to see one ticket per stage.
+
+---
+
+## 2026-11-14 · iPhone-style header and motion
+
+**What we built**
+
+The owner app on a phone now moves and responds more like an iPhone app.
+
+- **Header:** the Cravins name and FREE badge are gone from the top bar. The page's big title says where you are. Scroll down and the title moves up into the bar.
+- **Press:** buttons, cards and tabs shrink a little under your finger and spring back.
+- **Switches:** the knob slides and the colour fades. The white pill in Segmented slides to the option you pick.
+- **Sheets:** short forms (Invite someone) rise from the bottom edge, with rounded top corners.
+- **Orders:** a ticket that changes stage fades into its new column, and the other cards slide to make room.
+
+If Reduce Motion is on in the phone's settings, nothing slides or shrinks. Colours still change.
+
+**How it works**
+
+```
+finger down → PressableScale shrinks to 0.97 in 120 ms
+finger up   → it springs back to 1 from wherever it is
+page scroll → OwnerPage tracks scrollY → PhoneBar fades the small title in
+```
+
+All the timings live in `design/tokens.json` under `motion`.
+
+**Files to look at**
+
+- `src/ui/PressableScale.tsx`: the press feedback every button and card uses.
+- `src/features/owner/chrome/PhoneBar.tsx`: the header and its scroll title.
+- `src/features/owner/kit/Toggle.tsx` and `Segmented.tsx`: sliding controls.
+
+**New idea: a shared value**
+
+`useSharedValue` holds a number on the UI thread, which draws the screen. The animation reads it there, so it stays smooth even while JavaScript is busy loading orders.
+
+**Try it yourself**
+
+In `design/tokens.json`, change `pressScale` from 0.97 to 0.9, run `npm run gen:tokens`, and press a button. Then put it back.
+
+---
+
+## 2026-11-14 · The owner app on a phone
+
+**What we built**
+
+The canvas redesign was checked at 1440 px wide. This pass checks every owner page at 360 and 375 px, the width of most Android phones in Ghana, and fixes what broke there. Desktop and tablet look the same as before.
+
+- **Today:** the three small figure cards are shorter, with a smaller number.
+- **Figure cards (Staff, Customers, Loyalty, Billing):** an odd last card fills the row instead of leaving a gap.
+- **Sales:** order value gets its own row, so "GH₵39,280" is never cut off. Long amounts in the half-width cards step down in size.
+- **Switches (Branding and others):** a long option like "As you arrange" wraps onto two lines instead of becoming "As you …".
+- **Floor:** the bill drops under "Table 12" instead of cutting it to "Tabl…".
+- **Business, Scanner devices, Staff:** buttons and times move under the name, so the name shows.
+- **QR codes and links:** the three buttons wrap inside the card.
+- **Insights:** "Improve menu" sits under its sentence.
+
+**How it works**
+
+```
+useOwnerLayout()  →  wide?  (840 px and up: sidebar)
+        │
+        ├─ yes → the canvas layout, unchanged
+        └─ no  → the phone layout for that card
+```
+
+Each card asks the same hook, so every screen switches at the same width.
+
+**Files to look at**
+
+- `src/features/owner/chrome/layout.ts`: the one place the widths live.
+- `src/features/owner/kit/CardGrid.tsx`: `stretchLast` for the odd last card.
+- `src/features/owner/kit/Segmented.tsx`: two-line labels on phones.
+- `src/features/owner/screens/staff/StaffCard.tsx`: one card, two layouts.
+
+**New idea: flex-wrap**
+
+A row with `flexWrap: 'wrap'` puts items side by side while they fit, then starts a new line. On FloorCard, the name and the bill share a line on a tablet. On a phone they don't fit, so the bill moves down. You don't need an `if` for that.
+
+**Try it yourself**
+
+Open `/owner/floor` in the browser and drag the window narrower. Watch the bill jump under the table name once the card gets too thin.
+
+---
+
 ## 2026-11-14 · Every canvas board, full height
 
 **What we built**
@@ -189,6 +409,7 @@ Moving a link renumbers every link in its group 0, 1, 2… and saves only the on
 **Try it yourself**
 
 Give two links the same `sortOrder` in the mock, open Custom links and move one. Watch both get clean numbers.
+
 ## 2026-11-12 · Sales and Insights from real records (BUILD.md box 4c.5)
 
 **What we built**
@@ -211,11 +432,13 @@ A percentage is "part ÷ whole". With zero scans, that's a division by zero, whi
 **Try it yourself**
 
 Pick Custom dates on Insights and enter a range from last year. Every card should show its empty message.
+
 ## 2026-11-12 · Guests: customers, stamps and notes (BUILD.md box 4c.6)
 
 **What we built**
 
 Customers has tag filters (Reward ready, Regulars, New, Quiet lately) worked out from what guests did, search by name or last 4 digits, and an export with visits and tags. Each customer page lists their real visits and exactly what they agreed to, and "Add a stamp" works there. Scan and stamp shows a phone code on a computer, finds guests without their card, and lists today's stamps. Loyalty has switches for stamping paid orders and for 90-day stamps. "Ask about your feedback" now answers from the real notes.
+
 ## 2026-11-12 · Your profile and preferences (BUILD.md box 4c.8)
 
 **What we built**
@@ -246,6 +469,7 @@ A stamp can't be added twice within an hour for the same guest. That stops a dou
 **Try it yourself**
 
 Stamp a guest from their page, then press "Add a stamp" again straight away and read the message.
+
 ## 2026-11-12 · Business details, E-VAT and opening hours (BUILD.md box 4c.7)
 
 **What we built**
@@ -268,6 +492,7 @@ A TIN is a letter and ten digits. The code checks that with a "regular expressio
 **Try it yourself**
 
 Switch E-VAT on, place an order, then open Sales: the E-VAT card now shows totals.
+
 - `src/features/owner/screens/settings/ProfileSection.tsx`, `PhoneSheet.tsx`, `PrefsSection.tsx`.
 - `src/app/owner/_layout.tsx`: picks the light or dark theme.
 
@@ -623,6 +848,7 @@ In `quoteBill.test.ts`, add a test where two people pay equal shares of a GH₵1
 Your fixes from today. Finished setup steps drop off Today. Menu previews both the online menu and the table page walk-in guests see. Orders shows one card per order, with no calls on top, and each card opens a full page. Floor puts the tables that need you first. Calls is a board. Customers are small cards that open a full page. Pages are narrower and sit on a very light orange background.
 
 **How it works**
+
 ```
 Floor:  tables → groupTables() → Needs you | Eating | Free
 Calls:  calls  → callBoard()   → Waiting | On the way | Done
@@ -630,6 +856,7 @@ Orders: tap a card → /owner/orders/ord_123 → finds that order in the list yo
 ```
 
 **Files to look at**
+
 - `src/features/owner/screens/floor/floorGroups.ts`: sorts tables into the three bands.
 - `src/features/owner/screens/calls/callBoard.ts`: splits calls into columns and finds the most common request.
 - `src/features/owner/screens/orders/orderSteps.ts`: the order timeline (received, preparing, ready, served).
@@ -650,6 +877,7 @@ In `floorGroups.ts`, swap the order of `'attention'` and `'eating'` in `ORDER`, 
 A small server in `server/` that talks to Paystack with your test key. It can start a MoMo charge or a card checkout, check a payment, and accept Paystack's signed messages (webhooks). The app can send just its payment calls there (`EXPO_PUBLIC_API_LIVE=payments`) while everything else stays on the mock.
 
 **How it works**
+
 ```
 app (mock bill) ──POST /payments + the quote──▶ server ──▶ Paystack /charge or /transaction/initialize
 app ──GET /payments/{ref} every 3 s──▶ server ──(every 5 s)──▶ Paystack /transaction/verify
@@ -658,6 +886,7 @@ server says "succeeded" ──▶ app marks the mock order paid
 ```
 
 **Files to look at**
+
 - `server/src/status.ts` and its test: how Paystack's answer becomes ours. Only "success" for the right amount counts.
 - `server/src/signature.ts`: checking a webhook really came from Paystack.
 - `server/src/payments.ts`: starting, refreshing and finishing a payment.
@@ -677,15 +906,18 @@ Run `npm test` in `server/`. Then in `signature.test.ts`, change one letter of t
 After paying, a guest can tap See receipt. It shows the venue, order, table and time; every dish, the subtotal and the table total; then their share, the tip, what they paid, how, and the payment reference. Test payments say "Test payment. No money moved." at the top.
 
 **How it works**
+
 ```
 /{venue}/receipt?reference=pay_105
   GET /payments/pay_105  → amount, tip, method, test or not
   GET /orders/{orderId}  → dishes, subtotal, taxes, total, paid so far
   receiptFigures(order, payment) → the numbers on the page
 ```
+
 Tax lines come straight from the order. The list is empty today, and VAT, NHIL and GETFund will appear on their own once E-VAT is switched on, with no change to the screen.
 
 **Files to look at**
+
 - `src/features/pay/receiptFigures.ts` and its test: share, tip, still to pay.
 - `src/features/pay/ReceiptScreen.tsx`: the page.
 - `src/app/[venue]/receipt.tsx`: the route.
@@ -704,6 +936,7 @@ Pay a split bill (Split equally, 2 people) at `/bean-there/t/7`, then open the r
 A guest can pay by debit or credit card. Cravins opens Paystack's card page. On the web it opens in the same tab; in the app it opens in the in-app browser. When they come back, the app checks the payment and shows Paid. If they cancelled, it shows "Not paid. Nothing was taken." with Try again.
 
 **How it works**
+
 ```
 Pay by card → Paystack's card page
    web: Paystack sends the guest to /{venue}/pay?reference=…   (a fresh page)
@@ -712,9 +945,11 @@ Pay by card → Paystack's card page
      succeeded → Paid
      abandoned → Not paid, nothing taken
 ```
+
 The reference in the address is all the app needs. It asks the server, and only "succeeded" counts.
 
 **Files to look at**
+
 - `src/features/pay/openCheckout.ts`: where the card page opens on each platform.
 - `src/features/pay/useCardReturn.ts`: picks up the reference when the guest comes back.
 - `src/features/pay/paymentMachine.ts`: the new `resume_check` step.
@@ -734,6 +969,7 @@ On the test checkout page, tap Cancel, then Try again, then pay. You'll see the 
 After a guest taps Pay with MoMo, they see "Approve on your phone", what they're paying, and a 3:00 countdown. Then one of three endings: paid, didn't go through (with the network's reason), or time ran out. The last two say nothing was taken and offer Try again.
 
 **How it works**
+
 ```
 Pay → "Approve on your phone"  3:00 … 0:00   (asks the server every 3 s)
         succeeded → Paid
@@ -744,6 +980,7 @@ Pay → "Approve on your phone"  3:00 … 0:00   (asks the server every 3 s)
 ```
 
 **Files to look at**
+
 - `src/features/pay/paymentWatch.ts` and its test: the countdown and what each server status means.
 - `src/features/pay/usePaymentWatch.ts`: the timer and the checks.
 - `src/features/pay/PayProgress.tsx`: the four screens.
@@ -1280,7 +1517,7 @@ In `floorStatus.ts`, make a resolved waiter call keep the table on "needs a wait
 
 **What we built**
 
-A venue-branded wallet card (`WalletCard.tsx`) with the Cravins scan-frame watermark, Bronze/Silver/Gold tiers, stamps or spend points, a rewards catalogue, and an owner Loyalty screen (`OwnerLoyalty.tsx`) to set up the programme and confirm guest claim codes.
+A venue-branded wallet card (`WalletCard.tsx`) with the Cravins scan-frame watermark, Bronze/Silver/Gold tiers, stamps or spend points, a rewards catalogue, and an owner Loyalty screen (`screens/loyalty/LoyaltyScreen.tsx`) to set up the programme and confirm guest claim codes.
 
 **How it works**
 
@@ -1296,7 +1533,7 @@ We never store a separate `stamps` counter that could drift out of sync with his
 - `src/features/loyalty/facts.ts`: the pure ledger commands (`apply`) and `foldCard`.
 - `src/features/loyalty/WalletCard.tsx`: the venue-coloured wallet card with front/back QR flip.
 - `src/features/loyalty/LoyaltyDetails.tsx`: rewards catalogue, claim banner, tier row, and activity history.
-- `src/features/owner/OwnerLoyalty.tsx`: staff code confirmation, programme setup, and members list.
+- `src/features/owner/screens/loyalty/LoyaltyScreen.tsx`: staff code confirmation, programme setup, and members list.
 
 **New idea: folding a ledger of facts**
 

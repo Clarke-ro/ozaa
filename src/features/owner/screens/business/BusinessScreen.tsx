@@ -9,9 +9,8 @@ import { useOwnerSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
-import { AddDashed, cardStyle, toast } from '../../kit';
+import { AddDashed, toast } from '../../kit';
 import { SectionHead } from '../dashboard/SectionHead';
-import { useTheme } from '@/ui/theme';
 import { ClosedDays } from './ClosedDays';
 import { hoursOn } from './hoursForm';
 import { LocationCard } from './LocationCard';
@@ -22,7 +21,6 @@ import { HoursSection } from './HoursSection';
 import { TaxSection } from './TaxSection';
 
 export function BusinessScreen() {
-  const theme = useTheme();
   const { t } = useTranslation();
   const venueId = useOwnerSession((state) => state.venueId);
   const switchVenue = useOwnerSession((state) => state.switchVenue);
@@ -61,12 +59,11 @@ export function BusinessScreen() {
             badge={String(locations.length)}
             badgeTone="neutral"
           />
-          <View style={[cardStyle(theme), styles.card]}>
-            {locations.map((location, i) => (
+          <View style={styles.list}>
+            {locations.map((location) => (
               <LocationCard
                 key={location.id}
                 location={location}
-                first={i === 0}
                 active={location.id === venueId}
                 today={location.id === venueId && venue.data ? todayLabel : undefined}
                 onEdit={() => setEditing(location)}
@@ -100,5 +97,4 @@ export function BusinessScreen() {
 
 const styles = StyleSheet.create({
   list: { gap: tokens.owner.controls.listGap },
-  card: { overflow: 'hidden' },
 });

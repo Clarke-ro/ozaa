@@ -1,5 +1,7 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { PressableScale } from '@/ui/PressableScale';
 import { Minus, TrendingDown, TrendingUp } from 'lucide-react-native';
+import { useOwnerLayout } from '../chrome/layout';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
@@ -22,6 +24,7 @@ export function FigureCard({
   aside,
   tall,
   compact,
+  narrow,
   onPress,
 }: {
   label: string;
@@ -35,9 +38,16 @@ export function FigureCard({
   tall?: boolean;
   /** Sales' five-across card (canvas): 15 px label, 28 px number, the change or note at the bottom. */
   compact?: boolean;
+  /**
+   * A half-width phone card. Long amounts like "GH₵137.82" step down in size so they fit, since
+   * `adjustsFontSizeToFit` only works on iOS and Android, not in a phone's browser.
+   */
+  narrow?: boolean;
   onPress?: () => void;
 }) {
   const theme = useTheme();
+  // 16 px inside on phones, 20 on wide screens.
+  const { cardPad } = useOwnerLayout();
   const up = trend ? trend.percent > 0 : false;
   const down = trend ? trend.percent < 0 : false;
   const Arrow = up ? TrendingUp : down ? TrendingDown : Minus;
@@ -57,7 +67,12 @@ export function FigureCard({
   ) : null;
   const figure = (
     <Text
-      style={[styles.value, tall && styles.tallValue, compact && styles.compactValue]}
+      style={[
+        styles.value,
+        tall && styles.tallValue,
+        compact && styles.compactValue,
+        narrow && narrowSize(value),
+      ]}
       numberOfLines={1}
       adjustsFontSizeToFit
     >
@@ -109,7 +124,13 @@ export function FigureCard({
   if (!onPress) {
     return (
       <View
-        style={[styles.card, cardStyle(theme), tall && styles.tall, compact && styles.compact]}
+        style={[
+          styles.card,
+          { padding: cardPad },
+          cardStyle(theme),
+          tall && styles.tall,
+          compact && styles.compact,
+        ]}
         accessible
         accessibilityLabel={aside ? `${spoken}, ${aside}` : spoken}
       >
@@ -118,12 +139,13 @@ export function FigureCard({
     );
   }
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityLabel={spoken}
       onPress={onPress}
       style={({ pressed }) => [
         styles.card,
+        { padding: cardPad },
         cardStyle(theme),
         tall && styles.tall,
         compact && styles.compact,
@@ -131,8 +153,18 @@ export function FigureCard({
       ]}
     >
       {body}
-    </Pressable>
+    </PressableScale>
   );
+}
+
+/**
+ * Number size for a half-width phone card, about 120 px of room at 360 px wide. A figure
+ * character is roughly 0.6 of the font size, so up to 6 characters keep 28 px, up to 8
+ * ("GH₵1,378") drop to 22 px, and longer amounts ("GH₵137.82") to 17 px.
+ */
+function narrowSize(value: string) {
+  if (value.length <= 6) return null;
+  return value.length <= 8 ? styles.narrowMid : styles.narrowSmall;
 }
 
 const styles = StyleSheet.create({
@@ -158,6 +190,8 @@ const styles = StyleSheet.create({
   compact: { minHeight: 140 },
   compactLabel: { fontSize: 15, lineHeight: 20 },
   compactValue: { fontSize: 28, lineHeight: 34 },
+  narrowMid: { fontSize: 22, lineHeight: 34 },
+  narrowSmall: { fontSize: 17, lineHeight: 34 },
   notes: { gap: tokens.space[2] },
   bottom: { marginTop: 'auto', gap: tokens.space[1] },
   small: { fontSize: 13, lineHeight: 18 },

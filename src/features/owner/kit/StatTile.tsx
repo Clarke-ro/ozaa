@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react-native';
 import { TrendingDown, TrendingUp } from 'lucide-react-native';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { PressableScale } from '@/ui/PressableScale';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
@@ -67,17 +68,14 @@ export function StatTile({
   ];
   if (!onPress) return <View style={look}>{body}</View>;
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityLabel={`${label}: ${value}${note ? `, ${note}` : ''}`}
       onPress={onPress}
-      style={({ pressed }) => [
-        look,
-        pressed && { backgroundColor: theme.wash, transform: [{ scale: 0.99 }] },
-      ]}
+      style={({ pressed }) => [look, pressed && { backgroundColor: theme.wash }]}
     >
       {body}
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -91,7 +89,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   head: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
-  label: { flex: 1, fontFamily: 'Inter_500' },
+  // Only Inter 400 and 600 are loaded (theme/fonts.ts); 500 fell back to a serif.
+  label: { flex: 1, fontFamily: 'Inter_400' },
   icon: {
     width: 32,
     height: 32,

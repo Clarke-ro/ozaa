@@ -25,12 +25,11 @@ export function MenuListView({
   onAddDish,
   onEditDish,
   onToggleDish,
-  onEditSection,
-  onHideSection,
   onNewSection,
   onSections,
   onAllOff,
   onAllOn,
+  onReorder,
 }: {
   sections: MenuCategory[];
   dishes: MenuItem[];
@@ -39,13 +38,13 @@ export function MenuListView({
   onAddDish: (sectionId: string) => void;
   onEditDish: (item: MenuItem) => void;
   onToggleDish: (item: MenuItem) => void;
-  onEditSection: (section: MenuCategory) => void;
-  onHideSection: (section: MenuCategory) => void;
   onNewSection: () => void;
   onSections: () => void;
   /** With the dishes the list shows right now. */
   onAllOff: (shown: MenuItem[]) => void;
   onAllOn: (shown: MenuItem[]) => void;
+  /** A dish dragged to a new place in its section. */
+  onReorder: (dishes: MenuItem[], orderedIds: string[]) => void;
 }) {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -112,12 +111,11 @@ export function MenuListView({
               total={total(sectionId)}
               dishes={inSection}
               currency={currency}
+              draggable={query.trim() === ''}
               onAddDish={() => onAddDish(sectionId)}
-              onEditSection={() => sec && onEditSection(sec)}
-              onHideSection={() => sec && onHideSection(sec)}
-              onSections={onSections}
               onEditDish={onEditDish}
               onToggleDish={onToggleDish}
+              onReorder={onReorder}
             />
           );
         })
@@ -141,14 +139,14 @@ export function MenuListView({
 }
 
 const styles = StyleSheet.create({
-  // Canvas: 24 px between the toolbar, each section and the add button.
-  stack: { gap: tokens.space[6] },
+  // 20 px between the toolbar, each section and the add button.
+  stack: { gap: tokens.space[5] },
   addSection: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    minHeight: 56,
+    minHeight: 48,
     borderWidth: 1,
     borderStyle: 'dashed',
     borderRadius: tokens.owner.controls.cardRadius,

@@ -37,6 +37,8 @@ type Neutrals = {
   warning: string;
   warningTint: string;
   scrim: string;
+  /** The groove behind a segmented control (canvas: a warm grey from the page's own family). */
+  track: string;
 };
 
 const c = tokens.color;
@@ -66,6 +68,7 @@ export const NEUTRALS: Record<Scheme, Neutrals> = {
     warning: '#92400E',
     warningTint: '#FEF3C7',
     scrim: 'rgba(17,17,17,0.45)',
+    track: '#E7E7E2',
   },
   dark: {
     // Not pure black, so cards can sit one step above the page.
@@ -89,6 +92,7 @@ export const NEUTRALS: Record<Scheme, Neutrals> = {
     warning: '#FBBF24',
     warningTint: '#2E2410',
     scrim: 'rgba(0,0,0,0.6)',
+    track: '#26262A',
   },
 };
 

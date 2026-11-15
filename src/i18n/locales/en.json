@@ -788,7 +788,7 @@
     "tent": "Tent card",
     "stand": "Stand",
     "sticker": "Sticker",
-    "colour": "Card colour",
+    "colour": "Colour",
     "printOne": "Print {{name}}",
     "printAll_one": "Print 1 card",
     "printAll_other": "Print all {{count}} tables",
@@ -835,7 +835,39 @@
     "yourMenuLink": "Your menu link",
     "tableCodesTitle": "Table QR codes",
     "menuLinkUse": "For your bio, posters and WhatsApp",
-    "downloadQr": "Download QR"
+    "downloadQr": "Download QR",
+    "style": "Style",
+    "styles": {
+      "folded_tent": "Tent card",
+      "acrylic_stand": "Stand",
+      "sticker": "Sticker"
+    },
+    "notes": {
+      "folded_tent": "Folds in half and stands on the table. Prints on A5 card.",
+      "acrylic_stand": "Slides into an acrylic stand. Prints on A6 card.",
+      "sticker": "Round sticker for the table top. Prints 10 cm wide."
+    },
+    "styleNote": "{{note}} Every table gets its own number and QR code.",
+    "accents": {
+      "orange": "Orange",
+      "venue": "Venue colour",
+      "black": "Black",
+      "red": "Red",
+      "pink": "Pink",
+      "purple": "Purple",
+      "blue": "Blue",
+      "teal": "Teal",
+      "green": "Green",
+      "gold": "Gold",
+      "brown": "Brown",
+      "slate": "Slate"
+    },
+    "pdfAll": "Download all as PDF",
+    "pdfHint": "In the print window, choose Save as PDF.",
+    "scanToOrder": "Scan to order",
+    "allTables": "All tables",
+    "downloadOne": "Download {{name}}",
+    "previewLabel": "Preview of the card style, shown for the first table"
   },
   "ownerFeedback": {
     "lead": "Private notes guests leave from the table. Only you and your managers see them.",
@@ -1214,7 +1246,9 @@
     "email": "Email",
     "emailHint": "hello@…",
     "website": "Website",
-    "websiteHint": "mamas.kitchen"
+    "websiteHint": "mamas.kitchen",
+    "footnote": "Filled-in links show as icons under \"Follow us\" on your guest page. Empty ones stay hidden.",
+    "save": "Save links"
   },
   "ownerSettings": {
     "profile": "Your profile",
@@ -1264,7 +1298,7 @@
     "look": {
       "light": "Light",
       "dark": "Dark",
-      "system": "Follow my device"
+      "system": "System"
     },
     "notifyTitle": "Notifications",
     "notifyNote": "Choose what shows in Notifications and on the badges for you.",
@@ -1446,7 +1480,17 @@
       "90": "90 days",
       "365": "1 year",
       "never": "Never"
-    }
+    },
+    "previewCount": "{{count}} of {{total}}",
+    "previewNext_one": "1 more stamp for {{reward}}.",
+    "previewNext_other": "{{count}} more stamps for {{reward}}.",
+    "previewShow": "Show my card",
+    "previewShowSub": "Staff scan it to add a stamp",
+    "previewRewards": "Your rewards",
+    "toGo_one": "1 to go",
+    "toGo_other": "{{count}} to go",
+    "ready": "Ready",
+    "previewNote": "A sample member part-way round your card. Changes show as you make them."
   },
   "ownerBusiness": {
     "business": "Business",
@@ -1542,10 +1586,25 @@
     "closedDate": "Date",
     "dateError": "Use a date like 2026-12-25.",
     "removeClosed": "Remove {{date}}",
-    "locationPhone": "Phone"
+    "locationPhone": "Phone",
+    "map": {
+      "label": "Map of your location",
+      "move": "Move the pin",
+      "done": "Done",
+      "tapHere": "Tap where your door is"
+    },
+    "categoryHint": "Pick every type that fits. The first one shows on Google.",
+    "addCategory": "Add a category",
+    "removeCategory": "Remove {{name}}",
+    "spend": {
+      "1": "Average spend per guest: under GH₵ 50",
+      "2": "Average spend per guest: GH₵ 50 to 120",
+      "3": "Average spend per guest: GH₵ 120 to 250",
+      "4": "Average spend per guest: over GH₵ 250"
+    }
   },
   "ownerServices": {
-    "wifi": "Wi-Fi",
+    "wifi": "Wi-Fi for guests",
     "wifiNote": "Guests see a button to join with one tap.",
     "network": "Network name",
     "networkMissing": "Add the network name.",
@@ -1813,7 +1872,19 @@
       "list": "List"
     },
     "columnLabel": "{{stage}}, {{count}} orders",
-    "readyAgo": "ready {{time}}"
+    "seeStage": "Opens every ticket in this stage",
+    "stageTitle": {
+      "new": "New orders",
+      "cooking": "Cooking",
+      "ready": "Ready to serve"
+    },
+    "readyAgo": "ready {{time}}",
+    "print": {
+      "button": "Print",
+      "placed": "Ordered {{time}}",
+      "footer": "Printed from Cravins",
+      "blocked": "Your browser blocked the print window. Allow pop-ups for Cravins and try again."
+    }
   },
   "ownerCalls": {
     "status": {
@@ -1975,8 +2046,9 @@
     "pairTitle": "Pair a device",
     "step1": "Open the Cravins app on the scanner phone",
     "step2": "Tap Pair with a venue",
-    "step3": "Get a pairing code here and enter it. It works once.",
-    "footnote": "Scanner devices can only scan loyalty cards and add stamps. They can’t see sales or change settings."
+    "step3": "Scan this code, or type the numbers in. It works once.",
+    "footnote": "Scanner devices can only scan loyalty cards and add stamps. They can’t see sales or change settings.",
+    "defaultName": "Scanner device {{n}}"
   },
   "ownerSetup": {
     "progress": "Step {{step}} of {{total}}",
@@ -2074,7 +2146,7 @@
       "banner": "Banner",
       "menu": "On the menu"
     },
-    "footnote": "Switch one off to hide it without deleting it. Use the arrows to change the order."
+    "footnote": "Links show under \"More\" on your guest page. Switch one off to hide it without deleting it. Drag to change the order."
   },
   "about": {
     "hours": "Opening hours",
@@ -2406,7 +2478,15 @@
     "showKind": {
       "banner": "Show the banner",
       "popup": "Show the popup"
-    }
+    },
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "noTime": "No time set",
+    "done": "Done",
+    "day": "Day",
+    "time": "Time",
+    "save": "Save notice",
+    "clear": "Clear"
   },
   "notOpen": {
     "title": "Not open yet",
@@ -2428,7 +2508,7 @@
     "perKm": "Fee per km ({{currency}})",
     "maxKm": "Furthest (km)",
     "freeOver": "Free from ({{currency}})",
-    "freeOverHint": "Optional. Empty means never free.",
+    "freeOverHint": "Leave empty to always charge",
     "example": "Example: {{km}} km away with {{food}} of food, delivery is {{fee}}.",
     "free": "free",
     "noPin": "Delivery fees use the distance from your venue. Stand in your venue and tap the button to set its place on the map.",
@@ -2444,7 +2524,18 @@
     "setPin": "Use my current location",
     "movePin": "Update the venue location",
     "mainHint": "Guests order from your menu link for pickup or delivery",
-    "footnote": "Online orders arrive on Orders with a Pickup or Delivery tag. Guests leave a name and phone on the order only."
+    "footnote": "Online orders arrive on Orders with a Pickup or Delivery tag. Guests leave a name and phone on the order only.",
+    "readyIn": "Ready in",
+    "readyInHint": "How long guests wait before collecting",
+    "min": "min",
+    "km": "km",
+    "fee": "Delivery fee",
+    "feeHint": "The least a delivery costs",
+    "perKmShort": "Extra per km",
+    "perKmHint": "Leave at 0 for one flat fee",
+    "freeOverShort": "Free delivery over",
+    "upTo": "Deliver up to",
+    "from": "From {{place}}"
   },
   "linkOrder": {
     "title": "How do you want it?",
@@ -2667,7 +2758,9 @@
     "tripadvisorSub": "Guests can review you on Tripadvisor",
     "whatsapp": "WhatsApp Business",
     "whatsappSub": "Order alerts and replies to guests on WhatsApp",
-    "soon": "Coming soon"
+    "soon": "Coming soon",
+    "notConnected": "Not connected",
+    "connectedMode": "Connected · {{mode}}"
   },
   "ownerPromos": {
     "lead": "Discounts and codes. They come off the bill before the guest pays.",
@@ -2799,5 +2892,16 @@
     "phoneHint": "We text a code to confirm a new number",
     "moreLanguages": "More languages are coming.",
     "deleteBody": "Deletes your venues, menus and staff. Paid orders stay on record for tax for 6 years."
+  },
+  "ownerShort": {
+    "stampsGiven": "Stamps given",
+    "rewardsClaimed": "Rewards claimed",
+    "onShift": "On shift",
+    "invites": "Invites",
+    "newMembers": "New",
+    "cameBack": "Came back",
+    "calls": "Calls",
+    "reply": "Avg reply",
+    "orders": "Orders"
   }
 }

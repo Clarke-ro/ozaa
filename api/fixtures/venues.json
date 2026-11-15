@@ -59,11 +59,15 @@
       "exceptions": [
         {
           "date": "2026-12-25",
-          "closed": true
+          "closed": true,
+          "name": "Christmas Day"
         },
         {
           "date": "2027-01-01",
-          "closed": true
+          "closed": false,
+          "name": "New Year's Day",
+          "opens": "14:00",
+          "closes": "22:00"
         }
       ]
     },
