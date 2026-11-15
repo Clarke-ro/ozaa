@@ -4,6 +4,39 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-15 · One place to refresh owner data
+
+**What we built**
+
+Owner actions no longer repeat the React Query invalidation call for every affected screen. One helper in `owner/data` performs that repeated operation. Each action still lists the exact data it refreshes, so its effect remains visible where you use it.
+
+**How it works**
+
+```text
+move an order
+  → invalidateOwnerQueries([Orders, Floor, Today])
+  → React Query marks those cached results stale
+  → mounted screens fetch current data
+```
+
+The helper does not wait for those refetches. The button can finish immediately while React Query updates the screens.
+
+**Files to look at**
+
+- `src/features/owner/data/invalidateOwnerQueries.ts`: the shared cache operation.
+- `src/features/owner/screens/orders/useOrderMove.ts`: the order-specific list.
+- `src/features/owner/screens/calls/useWaiterCalls.ts`: the call-specific list.
+
+**New idea: cache invalidation**
+
+A cache keeps an earlier server answer. After a change, invalidation marks related answers as old so React Query asks for fresh ones.
+
+**Try it yourself**
+
+Move an order to its next stage. Open Orders, Floor, and Today and check that all three agree.
+
+---
+
 ## 2026-11-15 · Slimmer chips, cards and headers on a phone
 
 **What we built**

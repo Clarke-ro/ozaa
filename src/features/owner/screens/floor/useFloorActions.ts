@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import type { OrderStatus } from '@/features/orders';
 import { api } from '@/lib/api';
+import { invalidateOwnerQueries } from '../../data/invalidateOwnerQueries';
 import { ownerKeys } from '../../data/keys';
 import { toast } from '../../kit';
 
@@ -14,11 +15,12 @@ import { toast } from '../../kit';
 export function useFloorActions(venueId: string) {
   const { t } = useTranslation();
   const client = useQueryClient();
-  const refresh = () => {
-    void client.invalidateQueries({ queryKey: ownerKeys.floor(venueId) });
-    void client.invalidateQueries({ queryKey: ownerKeys.orders(venueId) });
-    void client.invalidateQueries({ queryKey: ownerKeys.dashboard(venueId) });
-  };
+  const refresh = () =>
+    invalidateOwnerQueries(client, [
+      ownerKeys.floor(venueId),
+      ownerKeys.orders(venueId),
+      ownerKeys.dashboard(venueId),
+    ]);
   const failed = () => toast.error(t('ownerKit.saveFailed'));
 
   const status = useMutation({

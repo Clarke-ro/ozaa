@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
 import type { WaiterCallUpdate } from '@/lib/api/client';
+import { invalidateOwnerQueries } from '../../data/invalidateOwnerQueries';
 import { ownerKeys } from '../../data/keys';
 import { toast } from '../../kit';
 import { POLL_MS } from '@/lib/polling';
@@ -28,9 +29,7 @@ export function useWaiterCalls(venueId: string) {
       api.ownerUpdateWaiterCall(id, body),
     onSuccess: (_saved, body) => {
       if (body.snoozeMinutes) toast.success(t('ownerCalls.snoozed'));
-      void client.invalidateQueries({ queryKey: key });
-      void client.invalidateQueries({ queryKey: ownerKeys.floor(venueId) });
-      void client.invalidateQueries({ queryKey: ownerKeys.dashboard(venueId) });
+      invalidateOwnerQueries(client, [key, ownerKeys.floor(venueId), ownerKeys.dashboard(venueId)]);
     },
     onError: () => toast.error(t('ownerKit.saveFailed')),
   });

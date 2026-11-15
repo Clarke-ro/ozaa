@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
 import { nextOrderMove, type OrderStatus, type StaffRole } from '@/features/orders';
 import type { Order } from '@/lib/api/types';
+import { invalidateOwnerQueries } from '../../data/invalidateOwnerQueries';
 import { ownerKeys } from '../../data/keys';
 import { toast } from '../../kit';
 
@@ -18,9 +19,11 @@ export function useOrderMove(venueId: string, role: StaffRole) {
       api.ownerSetOrderStatus(id, { status }),
     onSuccess: (_o, { status }) => {
       toast.success(t(`statusLabel.${status}`));
-      void client.invalidateQueries({ queryKey: ownerKeys.orders(venueId) });
-      void client.invalidateQueries({ queryKey: ownerKeys.floor(venueId) });
-      void client.invalidateQueries({ queryKey: ownerKeys.dashboard(venueId) });
+      invalidateOwnerQueries(client, [
+        ownerKeys.orders(venueId),
+        ownerKeys.floor(venueId),
+        ownerKeys.dashboard(venueId),
+      ]);
     },
     onError: () => toast.error(t('ownerKit.saveFailed')),
   });
