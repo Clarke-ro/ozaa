@@ -13,7 +13,8 @@ import { Button } from '@/ui/Button';
 import { useOwnerLayout } from '../../chrome/layout';
 import { BrandPhotos } from './BrandPhotos';
 import { ColourSection } from './ColourSection';
-import { BUTTON_KEYS, HomeOrderSection } from './HomeOrderSection';
+import { HomeOrderSection } from './HomeOrderSection';
+import { orderSections, type HomeSection } from '@/features/venue';
 import { TypeSection } from './TypeSection';
 import { WordsSection } from './WordsSection';
 import { GuestPreview } from './GuestPreview';
@@ -44,7 +45,7 @@ export function BrandingScreen() {
     tagline: v?.tagline ?? '',
     description: v?.description?.en ?? '',
     tint: (v?.buttonTint ?? 'auto') as Tint,
-    order: v?.buttonOrder?.length ? v.buttonOrder : [...BUTTON_KEYS],
+    order: orderSections(v?.sectionOrder) as string[],
     menuStyle: menuStyleOf(v?.menuStyle),
   });
   // Photos upload straight away; their ids are saved with the rest. undefined means unchanged.
@@ -82,7 +83,7 @@ export function BrandingScreen() {
         tagline: f.tagline.trim() || undefined,
         description: { ...v?.description, en: f.description.trim() },
         buttonTint: f.tint,
-        buttonOrder: f.order,
+        sectionOrder: f.order as HomeSection[],
         menuStyle: f.menuStyle,
         ...(banner ? { bannerMediaId: banner.id } : {}),
         ...(logo ? { logoMediaId: logo.id } : {}),

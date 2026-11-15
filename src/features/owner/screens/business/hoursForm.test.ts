@@ -31,6 +31,26 @@ describe('closed days', () => {
     expect(addClosedDay(one ?? [], '2026-12-25')).toHaveLength(2);
     expect(addClosedDay([], 'soon')).toBeNull();
   });
+  it('keeps a name and, for a day that opens, its own hours', () => {
+    const list = addClosedDay([], '2027-01-01', {
+      name: " New Year's Day ",
+      hours: { opens: '14:00', closes: '22:00' },
+    });
+    expect(list).toEqual([
+      {
+        date: '2027-01-01',
+        closed: false,
+        name: "New Year's Day",
+        opens: '14:00',
+        closes: '22:00',
+      },
+    ]);
+  });
+  it('refuses own hours that close before they open', () => {
+    expect(
+      addClosedDay([], '2027-01-01', { hours: { opens: '22:00', closes: '14:00' } }),
+    ).toBeNull();
+  });
 });
 
 describe('hoursOn', () => {

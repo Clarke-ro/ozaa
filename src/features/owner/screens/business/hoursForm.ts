@@ -41,11 +41,28 @@ export function isDate(text: string): boolean {
   return !Number.isNaN(day.getTime()) && day.toISOString().slice(0, 10) === text;
 }
 
-/** The closed days with one more, in date order, never twice. Returns null for a bad date. */
-export function addClosedDay(list: readonly Closure[], date: string): Closure[] | null {
+/**
+ * The special days with one more, in date order, never twice. A day is shut all day, or open with
+ * its own hours (contract: closed false plus opens and closes). Returns null for a bad date or
+ * hours that close before they open.
+ */
+export function addClosedDay(
+  list: readonly Closure[],
+  date: string,
+  extra: { name?: string; hours?: { opens: string; closes: string } } = {},
+): Closure[] | null {
   if (!isDate(date)) return null;
+  const { hours } = extra;
+  if (hours && hours.closes <= hours.opens) return null;
+  const name = extra.name?.trim();
+  const entry: Closure = {
+    date,
+    closed: !hours,
+    ...(name ? { name } : {}),
+    ...(hours ? { opens: hours.opens, closes: hours.closes } : {}),
+  };
   const rest = list.filter((c) => c.date !== date);
-  return [...rest, { date, closed: true }].sort((a, b) => a.date.localeCompare(b.date));
+  return [...rest, entry].sort((a, b) => a.date.localeCompare(b.date));
 }
 
 /** Today's hours as "11:00 to 22:00", or null when closed. Day 0 is Monday, like the contract. */

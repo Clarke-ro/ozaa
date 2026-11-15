@@ -7,3 +7,4 @@ export { mapsLink } from './mapsLink';
 export { NOT_BUILT } from './ServiceGrid';
 export { VenueHomeBody } from './VenueHomeBody';
 export { TableEntryScreen } from './TableEntryScreen';
+export { HOME_SECTIONS, orderSections, type HomeSection } from './sectionOrder';
