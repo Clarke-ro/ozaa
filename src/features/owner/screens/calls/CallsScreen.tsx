@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useOwnerSession } from '@/features/session';
@@ -15,6 +15,7 @@ import { CallFigures } from './CallFigures';
 import { QuickReplyStrip } from './QuickReplyStrip';
 import { ReasonCounts } from './ReasonCounts';
 import { useWaiterCalls } from './useWaiterCalls';
+import { useNow } from '@/lib/useNow';
 
 // Waits only need to move once every half minute.
 const TICK_MS = 30_000;
@@ -32,11 +33,7 @@ export function CallsScreen() {
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const { wide, desktop } = useOwnerLayout();
   const [tab, setTab] = useState<CallColumn>('open');
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), TICK_MS);
-    return () => clearInterval(id);
-  }, []);
+  const now = useNow(TICK_MS);
   const { calls, update } = useWaiterCalls(venueId);
   const all = calls.data?.items ?? [];
   const board = callBoard(all);

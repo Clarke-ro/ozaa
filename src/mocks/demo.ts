@@ -1,5 +1,4 @@
 import type { StaffRole } from '@/lib/api/types';
-import venuesFile from './fixtures/venues.json';
 
 /**
  * The sample people, places and scores for demo builds (EXPO_PUBLIC_API_MODE=mock), in one place so
@@ -35,12 +34,22 @@ export const DEMO_LOYALTY_PHONES: Record<string, string> = {
   'auntie-akos': '+233274000099',
 };
 
+/**
+ * The sample venues' names, for the sign-in shortcuts. Kept here rather than read from
+ * venues.json so a screen that shows the shortcuts doesn't pull the whole fixture into the
+ * bundle. demo.test.ts checks they match the fixture.
+ */
+export const DEMO_VENUE_NAMES: Record<string, string> = {
+  'mamas-kitchen': "Mama's Kitchen",
+  'bean-there': 'Bean There',
+  'auntie-akos': 'Auntie Akos Chop Bar',
+};
+
 /** Sign-in shortcuts on the owner login: an owner at two venues, and a waiter. */
 export const DEMO_LOGINS = ['+233240000001', '+233240000004', '+233240000002'].map((phone) => {
   const person = STAFF.find((staff) => staff.phone === phone);
   if (!person) throw new Error(`No sample staff with ${phone}`);
-  const venue = (venuesFile as Record<string, { name: string }>)[person.slug];
-  return { ...person, venueName: venue?.name ?? person.slug };
+  return { ...person, venueName: DEMO_VENUE_NAMES[person.slug] ?? person.slug };
 });
 
 /** Made-up scores so the game's board isn't empty on a first visit. Marked "sample" on screen. */

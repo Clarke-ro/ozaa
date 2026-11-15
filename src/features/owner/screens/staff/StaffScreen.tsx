@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
@@ -16,6 +16,7 @@ import { useOwnerLayout } from '../../chrome/layout';
 import { StaffCard } from './StaffCard';
 import { InviteSheet } from './InviteSheet';
 import { ownerKeys } from '../../data/keys';
+import { useNow } from '@/lib/useNow';
 
 type Show = 'all' | 'onShift' | 'invited';
 const ROLES = ['owner', 'manager', 'waiter', 'kitchen'] as const;
@@ -27,11 +28,7 @@ const ROLES = ['owner', 'manager', 'waiter', 'kitchen'] as const;
 export function StaffScreen() {
   const theme = useTheme();
   const { t } = useTranslation();
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 60_000);
-    return () => clearInterval(id);
-  }, []);
+  const now = useNow(60_000);
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const key = ownerKeys.staff(venueId);
   const staff = useQuery({

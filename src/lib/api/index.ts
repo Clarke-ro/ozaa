@@ -1,4 +1,3 @@
-import { createMockClient, sandboxBridge } from '@/mocks/mockClient';
 import type { ApiClient } from './client';
 import { env } from '../env';
 import { createHttpClient } from './http';
@@ -26,12 +25,14 @@ const tokens = {
   loyalty: () => loyaltyToken,
 };
 
-const mock = createMockClient({
-  latencyMs: env.EXPO_PUBLIC_MOCK_LATENCY_MS,
-  failRate: env.EXPO_PUBLIC_MOCK_FAIL_RATE,
-  fast: env.EXPO_PUBLIC_MOCK_FAST === '1',
-  tokens,
-});
+// The mock (demo venues, photos, fixtures) loads only in a mock build. Expo writes
+// EXPO_PUBLIC_API_MODE into the bundle, so for a real-server build ("http") this branch is dead
+// code and the whole mock is left out of what guests download. It must be spelled out in full here.
+const mocks =
+  process.env.EXPO_PUBLIC_API_MODE === 'http'
+    ? null
+    : // eslint-disable-next-line @typescript-eslint/no-require-imports -- see the note above
+      (require('@/mocks/mockClient') as typeof import('@/mocks/mockClient'));
 
 const http = createHttpClient(env.EXPO_PUBLIC_API_URL, tokens);
 
@@ -41,7 +42,8 @@ const http = createHttpClient(env.EXPO_PUBLIC_API_URL, tokens);
  * server what the quote says, and put a payment the server calls succeeded on the mock order.
  */
 function withLivePayments(base: ApiClient): ApiClient {
-  if (!env.live.includes('payments')) return base;
+  if (!env.live.includes('payments') || !mocks) return base;
+  const { sandboxBridge } = mocks;
   return {
     ...base,
     initializePayment: async (body, call) => {
@@ -61,10 +63,18 @@ export function setOnUnauthorized(handler: OnUnauthorized | null): void {
   onUnauthorized = handler;
 }
 
-export const api: ApiClient = withOwnerRetry(
-  env.EXPO_PUBLIC_API_MODE === 'http' ? http : withLivePayments(mock),
-  () => onUnauthorized,
-);
+const base: ApiClient = mocks
+  ? withLivePayments(
+      mocks.createMockClient({
+        latencyMs: env.EXPO_PUBLIC_MOCK_LATENCY_MS,
+        failRate: env.EXPO_PUBLIC_MOCK_FAIL_RATE,
+        fast: env.EXPO_PUBLIC_MOCK_FAST === '1',
+        tokens,
+      }),
+    )
+  : http;
+
+export const api: ApiClient = withOwnerRetry(base, () => onUnauthorized);
 
 export { ApiError, OfflineError, toMessageKey } from './errors';
 export type { ApiClient } from './client';

@@ -6,10 +6,10 @@ import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { useOwnerSession } from '@/features/session';
-import { OwnerPage } from '../chrome/OwnerPage';
-import { NAV_ICONS } from '../chrome/navIcons';
-import { moreGroups, type OwnerNavItem } from '../chrome/nav';
-import { IconTile, SectionLabel } from '../kit';
+import { OwnerPage } from '../../chrome/OwnerPage';
+import { NAV_ICONS } from '../../chrome/navIcons';
+import { moreGroups, type OwnerNavItem } from '../../chrome/nav';
+import { IconTile, SectionLabel } from '../../kit';
 
 export function MoreScreen() {
   const { t } = useTranslation();

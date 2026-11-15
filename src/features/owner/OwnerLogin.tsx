@@ -6,7 +6,6 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   TextInput,
   View,
 } from 'react-native';
@@ -23,10 +22,9 @@ import { Text } from '@/ui/Text';
 import { cravinsTheme, ThemeProvider, useTheme } from '@/ui/theme';
 import { DeskCard, CravinsMark } from './kit';
 import { SHADOW_INK } from '@/theme/palette';
-import { DEMO_LOGINS } from '@/mocks/demo';
+import { SampleLogins, SAMPLES } from './SampleLogins';
 
 // Demo builds only: sample staff from the mock, typed the way a Ghanaian number is (024…).
-const SAMPLES = DEMO_LOGINS.map((person) => ({ ...person, local: `0${person.phone.slice(4)}` }));
 
 export function OwnerLogin() {
   const theme = useTheme();
@@ -201,45 +199,13 @@ export function OwnerLogin() {
 
                 {/* Sample logins: demo builds only, the accounts exist only in the mock. */}
                 {!sent && DEMO ? (
-                  <View style={styles.sampleSection}>
-                    <Text variant="caption" style={{ color: theme.meta, textAlign: 'center' }}>
-                      {t('owner.sample')}
-                    </Text>
-                    <View style={styles.sampleChips}>
-                      {SAMPLES.map((s) => {
-                        const label = t('owner.sampleLogin', {
-                          venue: s.venueName,
-                          name: s.firstName,
-                          role: t(`owner.roles.${s.role}`),
-                        });
-                        return (
-                          <Pressable
-                            key={s.phone}
-                            accessibilityRole="button"
-                            accessibilityLabel={label}
-                            onPress={() => {
-                              dismissKeyboard();
-                              setPhone(s.local);
-                            }}
-                            style={[
-                              styles.sampleChip,
-                              {
-                                borderColor: phone === s.local ? theme.black : theme.line,
-                                backgroundColor: phone === s.local ? theme.wash : theme.surface,
-                              },
-                            ]}
-                          >
-                            <Text
-                              variant="caption"
-                              style={{ fontWeight: '600', color: theme.muted }}
-                            >
-                              {label}
-                            </Text>
-                          </Pressable>
-                        );
-                      })}
-                    </View>
-                  </View>
+                  <SampleLogins
+                    phone={phone}
+                    onPick={(local) => {
+                      dismissKeyboard();
+                      setPhone(local);
+                    }}
+                  />
                 ) : null}
               </DeskCard>
             </Pressable>
@@ -360,21 +326,5 @@ const useStyles = makeStyles((theme) => ({
     borderRadius: tokens.radius.sm,
     borderWidth: 1,
     borderColor: theme.errorTint,
-  },
-  sampleSection: {
-    gap: tokens.space[2],
-    paddingTop: tokens.space[2],
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: theme.line,
-  },
-  sampleChips: {
-    gap: 6,
-  },
-  sampleChip: {
-    paddingVertical: 8,
-    paddingHorizontal: tokens.space[3],
-    borderRadius: tokens.radius.md,
-    borderWidth: 1,
-    alignItems: 'center',
   },
 }));

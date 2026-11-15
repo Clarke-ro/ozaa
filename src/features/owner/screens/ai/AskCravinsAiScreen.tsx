@@ -9,7 +9,7 @@ import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
-import { DeskCard, IconTile } from '../kit';
+import { DeskCard, IconTile } from '../../kit';
 
 // Starter questions, by their en.json keys under ownerAi.
 const SUGGESTIONS = ['suggestLoved', 'suggestRepeat', 'suggestSpeed', 'suggestMood'] as const;

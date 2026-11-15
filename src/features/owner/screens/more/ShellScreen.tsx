@@ -5,8 +5,8 @@ import { useTranslation } from 'react-i18next';
 import { type LucideIcon } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
-import { OwnerPage } from '../chrome/OwnerPage';
-import { DeskCard, IconTile, SectionLabel } from '../kit';
+import { OwnerPage } from '../../chrome/OwnerPage';
+import { DeskCard, IconTile, SectionLabel } from '../../kit';
 
 export function ShellScreen({
   title,

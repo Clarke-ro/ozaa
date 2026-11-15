@@ -16,6 +16,41 @@ export const PHONE_FRAME = { body: '#0B0B0C', rim: '#9A9A9F' } as const;
 
 /** QR codes sit on white in both schemes: phone cameras read dark-on-light most reliably. */
 export const QR_PAPER = '#FFFFFF';
+/** The dark of a QR code and of printed table cards: near-black, never following dark mode. */
+export const QR_INK = '#111111';
+
+/** Venue colours offered in Branding (canvas). Names come from ownerBranding.swatch.<id>. */
+export const VENUE_SWATCHES = [
+  { id: 'clay', hex: '#B5432A' },
+  { id: 'orange', hex: '#D24000' },
+  { id: 'red', hex: '#B42318' },
+  { id: 'pink', hex: '#BE185D' },
+  { id: 'purple', hex: '#6D28D9' },
+  { id: 'blue', hex: '#1D4ED8' },
+  { id: 'teal', hex: '#0E7490' },
+  { id: 'green', hex: '#0F7A55' },
+  { id: 'gold', hex: '#E8B931' },
+  { id: 'black', hex: '#111111' },
+] as const;
+
+/**
+ * Table-card colours (canvas). "venue" has no hex here: the screen fills in the venue's own
+ * accent. Names come from ownerTables.accents.<id>.
+ */
+export const CARD_SWATCHES = [
+  { id: 'orange', hex: '#D24000' },
+  { id: 'venue', hex: '' },
+  { id: 'black', hex: '#111111' },
+  { id: 'red', hex: '#B42318' },
+  { id: 'pink', hex: '#BE185D' },
+  { id: 'purple', hex: '#6D28D9' },
+  { id: 'blue', hex: '#1D4ED8' },
+  { id: 'teal', hex: '#0E7490' },
+  { id: 'green', hex: '#0F7A55' },
+  { id: 'gold', hex: '#A16207' },
+  { id: 'brown', hex: '#6B3E26' },
+  { id: 'slate', hex: '#475569' },
+] as const;
 
 type Neutrals = {
   bg: string;

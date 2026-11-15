@@ -2,13 +2,13 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
 import { Button } from '@/ui/Button';
-import { useOwnerLayout } from '../chrome/layout';
-import { ownerKeys } from '../data/keys';
-import { downloadCsv, FigureRow } from '../kit';
-import { customersCsv } from './customers/customersCsv';
+import { useOwnerLayout } from '../../chrome/layout';
+import { ownerKeys } from '../../data/keys';
+import { downloadCsv, FigureRow } from '../../kit';
+import { customersCsv } from './customersCsv';
 import { useOwnerSession } from '@/features/session';
-import { OwnerPage } from '../chrome/OwnerPage';
-import { CustomerList } from './customers/CustomerList';
+import { OwnerPage } from '../../chrome/OwnerPage';
+import { CustomerList } from './CustomerList';
 
 /**
  * Customers who joined the loyalty card (design canvas): Export CSV in the header, three figures

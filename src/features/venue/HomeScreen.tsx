@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -29,6 +29,12 @@ export function HomeScreen({ slug }: { slug: string }) {
   const insets = useSafeAreaInsets();
   const [languageOpen, setLanguageOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  // "Link copied" shows for two seconds; the timer goes with the screen if the guest leaves.
+  useEffect(() => {
+    if (!copied) return;
+    const id = setTimeout(() => setCopied(false), 2000);
+    return () => clearTimeout(id);
+  }, [copied]);
   const language = languageByCode(i18n.language);
   const router = useRouter();
   const venue = useVenue(slug);
@@ -58,7 +64,6 @@ export function HomeScreen({ slug }: { slug: string }) {
             void shareVenueLink(pageLink, place.name).then((result) => {
               if (result !== 'copied') return;
               setCopied(true);
-              setTimeout(() => setCopied(false), 2000);
             });
           }}
           onLanguage={() => setLanguageOpen(true)}

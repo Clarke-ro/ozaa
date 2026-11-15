@@ -7,14 +7,14 @@ import { hapticSuccess, hapticWarning } from '@/lib/haptics';
 import type { LoyaltyScanResult } from '@/lib/api/types';
 import { tokens } from '@/theme/tokens';
 import { useOwnerSession } from '@/features/session';
-import { OwnerPage, useGutter } from '../chrome/OwnerPage';
-import { toast } from '../kit';
-import { GuestLookup } from './scan/GuestLookup';
-import { ScanLog } from './scan/ScanLog';
-import { ScanOnPhone } from './scan/ScanOnPhone';
-import { ScanProblem, ScanResult } from './scan/ScanResult';
-import { ScanViewfinder } from './scan/ScanViewfinder';
-import { ownerKeys } from '../data/keys';
+import { OwnerPage, useGutter } from '../../chrome/OwnerPage';
+import { toast } from '../../kit';
+import { GuestLookup } from './GuestLookup';
+import { ScanLog } from './ScanLog';
+import { ScanOnPhone } from './ScanOnPhone';
+import { ScanProblem, ScanResult } from './ScanResult';
+import { ScanViewfinder } from './ScanViewfinder';
+import { ownerKeys } from '../../data/keys';
 
 /**
  * Scan a guest's loyalty QR to add a stamp or give a reward. On a computer (no camera) the page

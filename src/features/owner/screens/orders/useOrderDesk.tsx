@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { api } from '@/lib/api';
@@ -12,6 +12,7 @@ import { MarkPaidSheet } from './MarkPaidSheet';
 import { OrderCard } from './OrderCard';
 import { useOrderMove } from './useOrderMove';
 import { useVenuePay } from './useVenuePay';
+import { useNow } from '@/lib/useNow';
 
 // Only a safety net while the venue loads; every venue has a zone in its opening hours.
 const FALLBACK_ZONE = 'Africa/Accra';
@@ -28,11 +29,7 @@ export function useOrderDesk(range: OrderRange, compact: boolean) {
   const venueId = useOwnerSession((state) => state.venueId) ?? '';
   const role = useOwnerSession((state) => state.role) ?? 'waiter';
   const [paying, setPaying] = useState<Order | null>(null);
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), TICK_MS);
-    return () => clearInterval(id);
-  }, []);
+  const now = useNow(TICK_MS);
   const { venue, methods } = useVenuePay(venueId);
   // The range's days start at midnight where the venue is, not where this phone is.
   const period = orderRange(range, now, venue.data?.hours.timezone ?? FALLBACK_ZONE);

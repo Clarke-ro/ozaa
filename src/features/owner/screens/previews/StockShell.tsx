@@ -6,7 +6,7 @@ import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { StatusPill } from '../../kit';
-import { ShellScreen } from '../ShellScreen';
+import { ShellScreen } from '../more/ShellScreen';
 
 export function StockShell() {
   const styles = useStyles();

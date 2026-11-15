@@ -4,6 +4,41 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-15 · A health check across the app
+
+**What we built**
+
+A clean-up pass across the guest, owner and waiter screens, to get ready for the real server. Nothing new appears on screen. The code is just safer and easier to read.
+
+**How it works**
+
+- **One clock.** Eight screens each ran their own ticking timer. They now share `useNow(ms)`, and it always stops its timer when the screen closes.
+- **The demo stays out of real builds.** The sample venues and photos load only when `EXPO_PUBLIC_API_MODE` is `mock`. A real-server build drops them, and its assets shrink from 7.7 MB to 304 KB.
+- **A safer server address.** A production build now refuses a local or plain `http://` API address.
+- **Named colours.** QR ink and the swatch lists now live in `src/theme/palette.ts`.
+- **Tidier folders and smaller files.** Loose owner screens moved into their own folders. `ItemScreen` and `OwnerLogin` were split into smaller files.
+
+```text
+mock build → mock client + demo photos
+http build → http client only (mock code removed)
+```
+
+**Files to look at**
+
+- `src/lib/useNow.ts`: the shared clock.
+- `src/lib/api/index.ts`: picks the mock or the real client.
+- `src/lib/env.ts`: checks the API address.
+
+**New idea: dead code removal**
+
+Expo writes `EXPO_PUBLIC_*` values into the bundle when it builds. So `MODE === 'http' ? null : require(mock)` becomes `null` in a real build. The bundler sees the `require` can never run and leaves the mock out.
+
+**Try it yourself**
+
+Run `EXPO_PUBLIC_API_MODE=http npx expo export -p web`, then search `dist/` for `ven_mamas`, the sample venue's id. It isn't there, because the fixtures were left out.
+
+---
+
 ## 2026-11-15 · Owner routes load only their screen
 
 **What we built**
