@@ -31,8 +31,16 @@ export function LoyaltyOverview({ venueId }: { venueId: string }) {
       wide={wide}
       items={[
         { label: t('ownerLoyaltyResults.members'), value: n(r.enrolledCount) },
-        { label: t('ownerLoyalty.stampsGiven'), value: n(r.stampsIssued) },
-        { label: t('ownerLoyalty.rewardsClaimed'), value: n(r.rewardsRedeemed) },
+        {
+          label: t('ownerLoyalty.stampsGiven'),
+          short: t('ownerShort.stampsGiven'),
+          value: n(r.stampsIssued),
+        },
+        {
+          label: t('ownerLoyalty.rewardsClaimed'),
+          short: t('ownerShort.rewardsClaimed'),
+          value: n(r.rewardsRedeemed),
+        },
       ]}
     />
   );

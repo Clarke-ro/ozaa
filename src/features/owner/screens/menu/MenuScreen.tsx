@@ -71,12 +71,11 @@ export function MenuScreen() {
       onAddDish={addDish}
       onEditDish={editDish}
       onToggleDish={(item) => desk.toggle.mutate(item)}
-      onEditSection={setEditingSection}
-      onHideSection={(section) => desk.hideSection.mutate(section)}
       onNewSection={() => setEditingSection(null)}
       onSections={() => setSectionsOpen(true)}
       onAllOff={(items) => setPending({ kind: 'soldOut', items })}
       onAllOn={(items) => desk.setAll.mutate({ items, available: true })}
+      onReorder={(dishes, orderedIds) => desk.reorderDishes.mutate({ dishes, orderedIds })}
     />
   );
   const preview = (who: Audience, stacked: boolean) =>

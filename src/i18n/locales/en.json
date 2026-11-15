@@ -1298,7 +1298,7 @@
     "look": {
       "light": "Light",
       "dark": "Dark",
-      "system": "Follow my device"
+      "system": "System"
     },
     "notifyTitle": "Notifications",
     "notifyNote": "Choose what shows in Notifications and on the badges for you.",
@@ -2892,5 +2892,16 @@
     "phoneHint": "We text a code to confirm a new number",
     "moreLanguages": "More languages are coming.",
     "deleteBody": "Deletes your venues, menus and staff. Paid orders stay on record for tax for 6 years."
+  },
+  "ownerShort": {
+    "stampsGiven": "Stamps given",
+    "rewardsClaimed": "Rewards claimed",
+    "onShift": "On shift",
+    "invites": "Invites",
+    "newMembers": "New",
+    "cameBack": "Came back",
+    "calls": "Calls",
+    "reply": "Avg reply",
+    "orders": "Orders"
   }
 }

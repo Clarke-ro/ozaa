@@ -1,17 +1,22 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
 import { CardGrid } from './CardGrid';
 import { cardStyle } from './cardStyle';
 
-export type Figure = { label: string; value: string };
+export type Figure = {
+  label: string;
+  value: string;
+  /** A one- or two-word label for a phone tile ("Stamps given"); falls back to `label`. */
+  short?: string;
+};
 
 /**
- * A row of white figure cards from the design canvas (Staff, Loyalty): the label in grey on top,
- * the number under it, at least 128 px tall. Phones keep up to three in one row as small tiles
- * (a 24 px number, 14 px padding), so the figures take one short band, not half the screen;
- * four go two by two.
+ * A row of white figure cards. Wide screens follow the design canvas (Staff, Loyalty): the label
+ * in grey on top, the number under it, at least 128 px tall. Phones show up to three small tiles
+ * in one row like Today's. Narrow phones and large text switch to two columns. Four always go two
+ * by two. Each phone tile puts the number first, then a short grey label (Clarke, 2026-11-14).
  */
 export function FigureRow({
   items,
@@ -25,33 +30,46 @@ export function FigureRow({
   size?: number;
 }) {
   const theme = useTheme();
-  const columns = wide || items.length <= 3 ? items.length : 2;
-  const number = wide ? size : 24;
+  const { fontScale, width } = useWindowDimensions();
+  const needsTwoColumns = width < 360 || fontScale > 1.3;
+  const phoneColumns = needsTwoColumns ? Math.min(items.length, 2) : items.length;
+  const columns = wide ? items.length : items.length <= 3 ? phoneColumns : 2;
   return (
     <CardGrid columns={columns} gap={wide ? tokens.owner.controls.listGap : 8} stretchLast>
-      {items.map((item) => (
-        <View
-          key={item.label}
-          accessible
-          accessibilityLabel={`${item.label}: ${item.value}`}
-          style={[cardStyle(theme), styles.card, !wide && styles.small]}
-        >
-          <Text
-            style={[styles.label, !wide && styles.smallLabel, { color: theme.muted }]}
-            // Three lines on a phone tile, so "Rewards claimed, 30 days" is never cut short.
-            numberOfLines={wide ? 2 : 3}
+      {items.map((item) =>
+        wide ? (
+          <View
+            key={item.label}
+            accessible
+            accessibilityLabel={`${item.label}: ${item.value}`}
+            style={[cardStyle(theme), styles.card]}
           >
-            {item.label}
-          </Text>
-          <Text
-            style={[styles.value, { fontSize: number, lineHeight: number + 6 }]}
-            numberOfLines={1}
-            adjustsFontSizeToFit
+            <Text style={[styles.label, { color: theme.muted }]} numberOfLines={2}>
+              {item.label}
+            </Text>
+            <Text
+              style={[styles.value, { fontSize: size, lineHeight: size + 6 }]}
+              numberOfLines={1}
+            >
+              {item.value}
+            </Text>
+          </View>
+        ) : (
+          <View
+            key={item.label}
+            accessible
+            accessibilityLabel={`${item.label}: ${item.value}`}
+            style={[cardStyle(theme), styles.tile]}
           >
-            {item.value}
-          </Text>
-        </View>
-      ))}
+            <Text style={[styles.value, styles.tileValue]} numberOfLines={1} adjustsFontSizeToFit>
+              {item.value}
+            </Text>
+            <Text style={[styles.tileLabel, { color: theme.muted }]} numberOfLines={2}>
+              {item.short ?? item.label}
+            </Text>
+          </View>
+        ),
+      )}
     </CardGrid>
   );
 }
@@ -64,13 +82,9 @@ const styles = StyleSheet.create({
     padding: tokens.owner.controls.cardPadding,
     gap: tokens.space[3],
   },
-  small: {
-    minHeight: 92,
-    padding: 14,
-    gap: tokens.space[2],
-    justifyContent: 'space-between',
-  },
+  tile: { flex: 1, minWidth: 0, paddingVertical: 14, paddingHorizontal: 14, gap: 2 },
   label: { fontSize: 16, lineHeight: 20, fontFamily: fontFamily.strong },
-  smallLabel: { fontSize: 13, lineHeight: 17 },
   value: { fontFamily: fontFamily.strong, fontVariant: ['tabular-nums'], letterSpacing: -0.3 },
+  tileValue: { fontSize: 26, lineHeight: 32, letterSpacing: -0.4 },
+  tileLabel: { fontSize: 12, lineHeight: 16 },
 });

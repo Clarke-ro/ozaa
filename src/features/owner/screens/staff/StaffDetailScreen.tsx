@@ -105,10 +105,19 @@ export function StaffDetailScreen({ memberId }: { memberId: string }) {
                 <FigureRow
                   wide={wide}
                   items={[
-                    { label: t('ownerStaff.ordersToday'), value: String(m.today.ordersHandled) },
-                    { label: t('ownerStaff.callsAnswered'), value: String(m.today.callsAnswered) },
+                    {
+                      label: t('ownerStaff.ordersToday'),
+                      short: t('ownerShort.orders'),
+                      value: String(m.today.ordersHandled),
+                    },
+                    {
+                      label: t('ownerStaff.callsAnswered'),
+                      short: t('ownerShort.calls'),
+                      value: String(m.today.callsAnswered),
+                    },
                     {
                       label: t('ownerStaff.avgReply'),
+                      short: t('ownerShort.reply'),
                       value: pickup == null ? '–' : t('ownerCalls.minutes', { count: pickup }),
                     },
                   ]}

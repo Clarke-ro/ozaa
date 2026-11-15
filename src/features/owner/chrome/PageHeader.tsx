@@ -13,7 +13,7 @@ import { NotificationBell } from './NotificationBell';
  * line under it on the left, and the screen's one action and the bell on the right. On phones
  * the grey line goes under the whole row, so it is never squeezed beside the action.
  * A page opened from another one (one order, one customer) gets a small Back link above the
- * title on wide screens; phones have Back in their top bar instead.
+ * title on wide screens. Phones use the system back gesture instead (Clarke, 2026-11-14).
  */
 export function PageHeader({
   title,

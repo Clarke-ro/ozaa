@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { STATUS_TONES, type StatusTone } from '@/theme/palette';
 import { tokens } from '@/theme/tokens';
 import { Text } from './Text';
@@ -17,6 +17,10 @@ export type FilterChip<T extends string> = {
  * The one filter-chip row for the whole app (guest menu, owner Orders, Menu, Payments, Floor).
  * Chips come from data, never typed in place. The picked chip is filled black so the choice
  * reads without colour; counts sit inside the chip.
+ *
+ * Owner app on a phone (Clarke, 2026-11-14): one slim chip everywhere, 34 px with a 14 px label
+ * and the count as plain figures after it ("New 2"), so a row of chips is one short line and
+ * more of them fit before it scrolls. Wide screens keep the canvas's 40 px chip.
  */
 export function FilterChips<T extends string>({
   items,
@@ -34,6 +38,9 @@ export function FilterChips<T extends string>({
   gutter?: number;
 }) {
   const theme = useTheme();
+  const { width } = useWindowDimensions();
+  // The owner app's phone chips; ui/ can't import the owner layout hook, so it reads the token.
+  const slim = Boolean(theme.pill) && width < tokens.owner.wideFrom;
   return (
     <ScrollView
       horizontal
@@ -44,7 +51,7 @@ export function FilterChips<T extends string>({
     >
       {items.map((item) => {
         const on = item.id === value;
-        const pill = Boolean(theme.pill);
+        const pill = Boolean(theme.pill) && !slim;
         const tone = item.tone ? STATUS_TONES[theme.scheme][item.tone] : null;
         // Owner canvas: the picked chip's count sits in a white circle; others in grey or the stage tint.
         const countBg = pill
@@ -69,11 +76,13 @@ export function FilterChips<T extends string>({
             aria-selected={on}
             accessibilityLabel={item.count == null ? item.label : `${item.label}, ${item.count}`}
             onPress={() => onChange(item.id)}
+            hitSlop={{ top: pill ? 2 : 5, bottom: pill ? 2 : 5 }}
             style={({ pressed }) => [
               styles.chip,
               // The owner app's chips are 40 px, as on its design canvas; guest pages keep 34.
               pill && styles.pillChip,
               pill && item.count != null && styles.pillChipCount,
+              slim && styles.slimChip,
               {
                 borderColor: on ? theme.black : theme.line,
                 backgroundColor: on ? theme.black : pressed ? theme.wash : theme.surface,
@@ -86,12 +95,23 @@ export function FilterChips<T extends string>({
               style={[
                 styles.text,
                 pill && styles.pillText,
-                { color: on ? theme.white : pill ? theme.muted : theme.text },
+                slim && styles.slimText,
+                { color: on ? theme.white : pill || slim ? theme.muted : theme.text },
+                slim && on && { fontFamily: fontFamily.strong },
               ]}
             >
               {item.label}
             </Text>
-            {item.count != null ? (
+            {item.count != null && slim ? (
+              <Text
+                style={[
+                  styles.slimCount,
+                  { color: on ? theme.white : (tone?.ink ?? theme.meta), opacity: on ? 0.75 : 1 },
+                ]}
+              >
+                {item.count}
+              </Text>
+            ) : item.count != null ? (
               <View style={[styles.count, pill && styles.pillCount, { backgroundColor: countBg }]}>
                 <Text
                   variant="caption"
@@ -111,24 +131,32 @@ export function FilterChips<T extends string>({
 const HEIGHT = 34;
 
 const styles = StyleSheet.create({
-  row: { gap: tokens.space[2], paddingVertical: 2, alignItems: 'center' },
+  row: { gap: tokens.space[2], paddingVertical: 5, alignItems: 'center' },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: tokens.space[1] + 2,
-    height: HEIGHT,
+    minHeight: HEIGHT,
     paddingHorizontal: tokens.space[3],
     borderRadius: tokens.radius.full,
     borderWidth: StyleSheet.hairlineWidth,
   },
   // Owner canvas chip: 40 px tall, 1 px edge, 15 px label, the count in a 28 px circle.
   pillChip: {
-    height: tokens.owner.controls.chipHeight,
+    minHeight: tokens.owner.controls.chipHeight,
     paddingHorizontal: tokens.space[4],
     borderWidth: 1,
     gap: tokens.space[2],
   },
   pillChipCount: { paddingRight: 6 },
+  slimChip: { minHeight: 34, paddingHorizontal: tokens.space[3], gap: 6, borderWidth: 1 },
+  slimText: { fontSize: 14, lineHeight: 18, fontFamily: fontFamily.regular },
+  slimCount: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontFamily: fontFamily.strong,
+    fontVariant: ['tabular-nums'],
+  },
   pillText: { fontSize: 15, lineHeight: 20, fontFamily: fontFamily.regular },
   pillCount: { minWidth: 28, height: 28, paddingHorizontal: tokens.space[2] },
   pillCountText: { fontSize: 13, lineHeight: 18 },

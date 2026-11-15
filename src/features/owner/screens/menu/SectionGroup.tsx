@@ -1,16 +1,20 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Eye, EyeOff, GripVertical, Pencil, Plus } from 'lucide-react-native';
+import { Plus } from 'lucide-react-native';
 import type { MenuCategory, MenuItem } from '@/lib/api/types';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
-import { MenuItemRow } from './MenuItemRow';
+import { DragList } from '../../kit/DragList';
+import { DISH_ROW, MenuItemRow } from './MenuItemRow';
+
+const NARROW_DISH_ROW = 104;
 
 /**
- * One menu section as on the design canvas: its name with a grey count, three small icons on
- * the right (rename, hide from guests, reorder sections), then each dish as its own card. An
- * empty section shows a dashed "Add the first dish".
+ * One menu section: its name with a grey count, then each dish as its own card. Hold the grip
+ * on a dish's left and drag to change its place; tap the dish to edit it; its switch takes it on
+ * or off the menu. Renaming, hiding and ordering sections lives in the ⋮ menu's Sections, so the
+ * heading stays clean (Clarke, 2026-11-14). An empty section shows a dashed "Add the first dish".
  */
 export function SectionGroup({
   section,
@@ -18,12 +22,11 @@ export function SectionGroup({
   total,
   dishes,
   currency,
+  draggable,
   onAddDish,
-  onEditSection,
-  onHideSection,
-  onSections,
   onEditDish,
   onToggleDish,
+  onReorder,
 }: {
   /** Missing for dishes whose section was deleted. */
   section: MenuCategory | undefined;
@@ -32,29 +35,31 @@ export function SectionGroup({
   total: number;
   dishes: MenuItem[];
   currency: string;
+  /** Off while a search is narrowing the list, when a dragged place would mean nothing. */
+  draggable: boolean;
   onAddDish: () => void;
-  onEditSection: () => void;
-  onHideSection: () => void;
-  onSections: () => void;
   onEditDish: (item: MenuItem) => void;
   onToggleDish: (item: MenuItem) => void;
+  onReorder: (dishes: MenuItem[], orderedIds: string[]) => void;
 }) {
   const theme = useTheme();
   const { t } = useTranslation();
+  const { fontScale, width } = useWindowDimensions();
+  // Narrow rows need another text line for price and status labels.
+  const baseDishRowHeight = width < 360 ? NARROW_DISH_ROW : DISH_ROW;
+  const dishRowHeight = Math.ceil(baseDishRowHeight * Math.max(1, fontScale));
   const hidden = section?.hidden === true;
-  const icon = (label: string, Icon: typeof Pencil, onPress: () => void) => (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      onPress={onPress}
-      style={({ pressed, hovered }) => [
-        styles.icon,
-        (pressed || hovered) && { backgroundColor: theme.wash },
-      ]}
-    >
-      <Icon size={18} color={theme.muted} />
-    </Pressable>
+  const row = (item: MenuItem, bare: boolean) => (
+    <MenuItemRow
+      key={item.id}
+      item={item}
+      currency={currency}
+      onToggle={() => onToggleDish(item)}
+      onEdit={() => onEditDish(item)}
+      bare={bare}
+    />
   );
+
   return (
     <View style={styles.group}>
       <View style={styles.head}>
@@ -74,19 +79,6 @@ export function SectionGroup({
         {hidden ? (
           <Text style={[styles.hidden, { color: theme.meta }]}>{t('ownerMenu.hidden')}</Text>
         ) : null}
-        {section ? (
-          <View style={styles.icons}>
-            {icon(t('ownerMenu.renameSection', { name }), Pencil, onEditSection)}
-            {icon(
-              hidden
-                ? t('ownerMenu.showSectionA11y', { name })
-                : t('ownerMenu.hideSectionA11y', { name }),
-              hidden ? EyeOff : Eye,
-              onHideSection,
-            )}
-            {icon(t('ownerMenu.reorderSections'), GripVertical, onSections)}
-          </View>
-        ) : null}
       </View>
       {dishes.length === 0 ? (
         <Pressable
@@ -95,62 +87,51 @@ export function SectionGroup({
           onPress={onAddDish}
           style={({ pressed }) => [
             styles.empty,
-            // Canvas: the first-dish button is white with a dashed edge; "Add a section" stays clear.
             { borderColor: theme.line, backgroundColor: pressed ? theme.wash : theme.surface },
           ]}
         >
-          <Plus size={18} color={theme.muted} />
+          <Plus size={16} color={theme.muted} />
           <Text style={[styles.emptyText, { color: theme.muted }]}>{t('ownerMenu.addFirst')}</Text>
         </Pressable>
+      ) : draggable && dishes.length > 1 ? (
+        <DragList
+          items={dishes.map((d) => ({ key: d.id, label: d.name.en, dish: d }))}
+          rowHeight={dishRowHeight}
+          gripSide="start"
+          onOrder={(ids) => onReorder(dishes, ids)}
+          renderRow={(entry) => row(entry.dish, true)}
+        />
       ) : (
-        <View style={styles.rows}>
-          {dishes.map((item) => (
-            <MenuItemRow
-              key={item.id}
-              item={item}
-              currency={currency}
-              onToggle={() => onToggleDish(item)}
-              onEdit={() => onEditDish(item)}
-            />
-          ))}
-        </View>
+        <View style={styles.rows}>{dishes.map((item) => row(item, false))}</View>
       )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  group: { gap: tokens.space[4] },
-  head: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  name: { flexShrink: 1, fontSize: 17, lineHeight: 24, fontFamily: fontFamily.strong },
+  group: { gap: tokens.space[3] },
+  head: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
+  name: { flexShrink: 1, fontSize: 16, lineHeight: 22, fontFamily: fontFamily.strong },
   count: {
-    minWidth: 28,
-    height: 24,
-    paddingHorizontal: 9,
+    minWidth: 24,
+    height: 22,
+    paddingHorizontal: 7,
     borderRadius: tokens.radius.full,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  countText: { fontSize: 13, lineHeight: 18, fontFamily: fontFamily.strong },
-  hidden: { fontSize: 14, lineHeight: 20 },
-  icons: { marginLeft: 'auto', flexDirection: 'row', gap: 2 },
-  icon: {
-    width: 36,
-    height: 36,
-    borderRadius: tokens.radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  rows: { gap: tokens.space[3] },
+  countText: { fontSize: 12, lineHeight: 16, fontFamily: fontFamily.strong },
+  hidden: { fontSize: 13, lineHeight: 18 },
+  rows: { gap: tokens.space[2] },
   empty: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
-    minHeight: 80,
+    gap: tokens.space[2],
+    minHeight: 56,
     borderWidth: 1,
     borderStyle: 'dashed',
     borderRadius: tokens.owner.controls.cardRadius,
   },
-  emptyText: { fontSize: 16, lineHeight: 22 },
+  emptyText: { fontSize: 14, lineHeight: 20 },
 });

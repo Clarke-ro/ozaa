@@ -89,7 +89,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   head: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] },
-  label: { flex: 1, fontFamily: 'Inter_500' },
+  // Only Inter 400 and 600 are loaded (theme/fonts.ts); 500 fell back to a serif.
+  label: { flex: 1, fontFamily: 'Inter_400' },
   icon: {
     width: 32,
     height: 32,

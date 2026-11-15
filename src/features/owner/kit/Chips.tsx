@@ -3,6 +3,7 @@ import { Check } from 'lucide-react-native';
 import { hapticSelection } from '@/lib/haptics';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
+import { useOwnerLayout } from '../chrome/layout';
 import { useTheme } from '@/ui/theme';
 
 /**
@@ -27,6 +28,8 @@ export function Chips<T extends string | number>({
   filled?: boolean;
 }) {
   const theme = useTheme();
+  // Phones: the same slim 34 px chip as the filter rows (FilterChips), with a 14 px label.
+  const { wide } = useOwnerLayout();
   return (
     <View
       accessibilityRole={single ? 'radiogroup' : undefined}
@@ -36,44 +39,52 @@ export function Chips<T extends string | number>({
       {options.map((option) => {
         const on = selected.includes(option.id);
         return (
-          <Pressable
-            key={String(option.id)}
-            accessibilityRole={single ? 'radio' : 'checkbox'}
-            accessibilityState={{ checked: on }}
-            accessibilityLabel={option.label}
-            onPress={() => {
-              void hapticSelection();
-              if (single) onChange([option.id]);
-              else
-                onChange(on ? selected.filter((id) => id !== option.id) : [...selected, option.id]);
-            }}
-            style={({ pressed }) => [
-              styles.chip,
-              styles.size,
-              filled && styles.big,
-              {
-                borderColor: on ? (filled ? theme.fill : theme.ink) : theme.line,
-                backgroundColor: on
-                  ? filled
-                    ? theme.fill
-                    : theme.tint
-                  : pressed
-                    ? theme.wash
-                    : theme.surface,
-              },
-            ]}
-          >
-            {on && !filled ? <Check size={14} color={theme.badgeInk} strokeWidth={3} /> : null}
-            <Text
-              variant="body"
-              style={{
-                color: on ? (filled ? theme.onFill : theme.badgeInk) : theme.text,
-                fontFamily: on ? 'Inter_600' : 'Inter_400',
+          <View key={String(option.id)} style={!wide && styles.slimTarget}>
+            <Pressable
+              accessibilityRole={single ? 'radio' : 'checkbox'}
+              accessibilityState={{ checked: on }}
+              accessibilityLabel={option.label}
+              hitSlop={wide ? undefined : { top: 5, bottom: 5 }}
+              onPress={() => {
+                void hapticSelection();
+                if (single) onChange([option.id]);
+                else
+                  onChange(
+                    on ? selected.filter((id) => id !== option.id) : [...selected, option.id],
+                  );
               }}
+              style={({ pressed }) => [
+                styles.chip,
+                styles.size,
+                filled && styles.big,
+                !wide && styles.slim,
+                {
+                  borderColor: on ? (filled ? theme.fill : theme.ink) : theme.line,
+                  backgroundColor: on
+                    ? filled
+                      ? theme.fill
+                      : theme.tint
+                    : pressed
+                      ? theme.wash
+                      : theme.surface,
+                },
+              ]}
             >
-              {option.label}
-            </Text>
-          </Pressable>
+              {on && !filled ? <Check size={14} color={theme.badgeInk} strokeWidth={3} /> : null}
+              <Text
+                variant="body"
+                style={[
+                  {
+                    color: on ? (filled ? theme.onFill : theme.badgeInk) : theme.text,
+                    fontFamily: on ? 'Inter_600' : 'Inter_400',
+                  },
+                  !wide && styles.slimText,
+                ]}
+              >
+                {option.label}
+              </Text>
+            </Pressable>
+          </View>
         );
       })}
     </View>
@@ -82,6 +93,7 @@ export function Chips<T extends string | number>({
 
 const styles = StyleSheet.create({
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.space[2] },
+  slimTarget: { minHeight: tokens.touchTarget, justifyContent: 'center' },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -92,4 +104,6 @@ const styles = StyleSheet.create({
   size: { minHeight: 40, paddingHorizontal: tokens.space[3] },
   // Canvas cuisine chips are a touch larger: 48 px tall, 20 px either side.
   big: { minHeight: 48, paddingHorizontal: 20 },
+  slim: { minHeight: 34, paddingHorizontal: tokens.space[3] },
+  slimText: { fontSize: 14, lineHeight: 18 },
 });

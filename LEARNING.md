@@ -4,6 +4,42 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-15 · Slimmer chips, cards and headers on a phone
+
+**What we built**
+
+- **No Back arrows:** a page's title is its header. Go back with the phone's own gesture (swipe from the left edge on iPhone, back on Android).
+- **Chips:** one slim chip across the app, 34 px tall with the count as a plain number ("New 2"). The visible chip stays slim, while its touch area remains 44 px tall.
+- **Orders:** the chips are New, Cooking, Ready, Served, Rejected and All, with that list underneath.
+- **Today and Loyalty:** three short tiles, number first and label under it, like your reference.
+- **Menu:** a slimmer search box. The pencil, eye and grip are gone from section headings (they live in ⋮ → Sections). Each dish has a grip on its left for dragging, and you tap a dish to edit it. Screen readers treat the grip, dish and availability switch as separate controls.
+- **Integrations:** each mark sits in a soft square tile, with the switch top right.
+
+**How it works**
+
+```
+FilterChips (ui)  → phone? slim 34 px chip inside a 44 px touch area
+Chips (kit)       → phone? the same slim size and touch area
+DragList (kit)    → holds each dish row; drag the grip to move it
+text size         → dish rows grow, and DragList uses the same height
+```
+
+**Files to look at**
+
+- `src/ui/FilterChips.tsx`: the chip row every page uses.
+- `src/features/owner/desk/orderBoard.ts`: `PHONE_FILTERS`, with tests.
+- `src/features/owner/screens/menu/SectionGroup.tsx`: dishes in a drag list.
+
+**New idea: a font that isn't loaded**
+
+Loyalty's Results tiles asked for `Inter_500`, but the app only loads Inter 400 and 600, so the browser showed a serif instead. If text suddenly looks like Times, check the weight against `src/theme/fonts.ts`.
+
+**Try it yourself**
+
+In `FilterChips.tsx`, change `slimText` from 14 px to 16 px and look at the Orders chips. The chip can grow while the touch area stays at least 44 px. Then put it back.
+
+---
+
 ## 2026-11-14 · A cleaner phone layout and a kitchen board
 
 **What we built**
@@ -309,6 +345,7 @@ Moving a link renumbers every link in its group 0, 1, 2… and saves only the on
 **Try it yourself**
 
 Give two links the same `sortOrder` in the mock, open Custom links and move one. Watch both get clean numbers.
+
 ## 2026-11-12 · Sales and Insights from real records (BUILD.md box 4c.5)
 
 **What we built**
@@ -331,11 +368,13 @@ A percentage is "part ÷ whole". With zero scans, that's a division by zero, whi
 **Try it yourself**
 
 Pick Custom dates on Insights and enter a range from last year. Every card should show its empty message.
+
 ## 2026-11-12 · Guests: customers, stamps and notes (BUILD.md box 4c.6)
 
 **What we built**
 
 Customers has tag filters (Reward ready, Regulars, New, Quiet lately) worked out from what guests did, search by name or last 4 digits, and an export with visits and tags. Each customer page lists their real visits and exactly what they agreed to, and "Add a stamp" works there. Scan and stamp shows a phone code on a computer, finds guests without their card, and lists today's stamps. Loyalty has switches for stamping paid orders and for 90-day stamps. "Ask about your feedback" now answers from the real notes.
+
 ## 2026-11-12 · Your profile and preferences (BUILD.md box 4c.8)
 
 **What we built**
@@ -366,6 +405,7 @@ A stamp can't be added twice within an hour for the same guest. That stops a dou
 **Try it yourself**
 
 Stamp a guest from their page, then press "Add a stamp" again straight away and read the message.
+
 ## 2026-11-12 · Business details, E-VAT and opening hours (BUILD.md box 4c.7)
 
 **What we built**
@@ -388,6 +428,7 @@ A TIN is a letter and ten digits. The code checks that with a "regular expressio
 **Try it yourself**
 
 Switch E-VAT on, place an order, then open Sales: the E-VAT card now shows totals.
+
 - `src/features/owner/screens/settings/ProfileSection.tsx`, `PhoneSheet.tsx`, `PrefsSection.tsx`.
 - `src/app/owner/_layout.tsx`: picks the light or dark theme.
 
@@ -743,6 +784,7 @@ In `quoteBill.test.ts`, add a test where two people pay equal shares of a GH₵1
 Your fixes from today. Finished setup steps drop off Today. Menu previews both the online menu and the table page walk-in guests see. Orders shows one card per order, with no calls on top, and each card opens a full page. Floor puts the tables that need you first. Calls is a board. Customers are small cards that open a full page. Pages are narrower and sit on a very light orange background.
 
 **How it works**
+
 ```
 Floor:  tables → groupTables() → Needs you | Eating | Free
 Calls:  calls  → callBoard()   → Waiting | On the way | Done
@@ -750,6 +792,7 @@ Orders: tap a card → /owner/orders/ord_123 → finds that order in the list yo
 ```
 
 **Files to look at**
+
 - `src/features/owner/screens/floor/floorGroups.ts`: sorts tables into the three bands.
 - `src/features/owner/screens/calls/callBoard.ts`: splits calls into columns and finds the most common request.
 - `src/features/owner/screens/orders/orderSteps.ts`: the order timeline (received, preparing, ready, served).
@@ -770,6 +813,7 @@ In `floorGroups.ts`, swap the order of `'attention'` and `'eating'` in `ORDER`, 
 A small server in `server/` that talks to Paystack with your test key. It can start a MoMo charge or a card checkout, check a payment, and accept Paystack's signed messages (webhooks). The app can send just its payment calls there (`EXPO_PUBLIC_API_LIVE=payments`) while everything else stays on the mock.
 
 **How it works**
+
 ```
 app (mock bill) ──POST /payments + the quote──▶ server ──▶ Paystack /charge or /transaction/initialize
 app ──GET /payments/{ref} every 3 s──▶ server ──(every 5 s)──▶ Paystack /transaction/verify
@@ -778,6 +822,7 @@ server says "succeeded" ──▶ app marks the mock order paid
 ```
 
 **Files to look at**
+
 - `server/src/status.ts` and its test: how Paystack's answer becomes ours. Only "success" for the right amount counts.
 - `server/src/signature.ts`: checking a webhook really came from Paystack.
 - `server/src/payments.ts`: starting, refreshing and finishing a payment.
@@ -797,15 +842,18 @@ Run `npm test` in `server/`. Then in `signature.test.ts`, change one letter of t
 After paying, a guest can tap See receipt. It shows the venue, order, table and time; every dish, the subtotal and the table total; then their share, the tip, what they paid, how, and the payment reference. Test payments say "Test payment. No money moved." at the top.
 
 **How it works**
+
 ```
 /{venue}/receipt?reference=pay_105
   GET /payments/pay_105  → amount, tip, method, test or not
   GET /orders/{orderId}  → dishes, subtotal, taxes, total, paid so far
   receiptFigures(order, payment) → the numbers on the page
 ```
+
 Tax lines come straight from the order. The list is empty today, and VAT, NHIL and GETFund will appear on their own once E-VAT is switched on, with no change to the screen.
 
 **Files to look at**
+
 - `src/features/pay/receiptFigures.ts` and its test: share, tip, still to pay.
 - `src/features/pay/ReceiptScreen.tsx`: the page.
 - `src/app/[venue]/receipt.tsx`: the route.
@@ -824,6 +872,7 @@ Pay a split bill (Split equally, 2 people) at `/bean-there/t/7`, then open the r
 A guest can pay by debit or credit card. Cravins opens Paystack's card page. On the web it opens in the same tab; in the app it opens in the in-app browser. When they come back, the app checks the payment and shows Paid. If they cancelled, it shows "Not paid. Nothing was taken." with Try again.
 
 **How it works**
+
 ```
 Pay by card → Paystack's card page
    web: Paystack sends the guest to /{venue}/pay?reference=…   (a fresh page)
@@ -832,9 +881,11 @@ Pay by card → Paystack's card page
      succeeded → Paid
      abandoned → Not paid, nothing taken
 ```
+
 The reference in the address is all the app needs. It asks the server, and only "succeeded" counts.
 
 **Files to look at**
+
 - `src/features/pay/openCheckout.ts`: where the card page opens on each platform.
 - `src/features/pay/useCardReturn.ts`: picks up the reference when the guest comes back.
 - `src/features/pay/paymentMachine.ts`: the new `resume_check` step.
@@ -854,6 +905,7 @@ On the test checkout page, tap Cancel, then Try again, then pay. You'll see the 
 After a guest taps Pay with MoMo, they see "Approve on your phone", what they're paying, and a 3:00 countdown. Then one of three endings: paid, didn't go through (with the network's reason), or time ran out. The last two say nothing was taken and offer Try again.
 
 **How it works**
+
 ```
 Pay → "Approve on your phone"  3:00 … 0:00   (asks the server every 3 s)
         succeeded → Paid
@@ -864,6 +916,7 @@ Pay → "Approve on your phone"  3:00 … 0:00   (asks the server every 3 s)
 ```
 
 **Files to look at**
+
 - `src/features/pay/paymentWatch.ts` and its test: the countdown and what each server status means.
 - `src/features/pay/usePaymentWatch.ts`: the timer and the checks.
 - `src/features/pay/PayProgress.tsx`: the four screens.
