@@ -1,10 +1,9 @@
-import { formatCedis, formatMoney, parseMoneyInput, percentOf, sumPesewas } from './money';
+import { formatMoney, parseMoneyInput, percentOf, sumPesewas } from './money';
 import { pesewas } from './brand';
 
 test('formats the Ghana sample without decimals when the pesewas are zero', () => {
   expect(formatMoney(pesewas(6500))).toBe('GH₵65');
   expect(formatMoney(pesewas(248000))).toBe('GH₵2,480');
-  expect(formatCedis(pesewas(6500))).toBe('GH₵65');
 });
 
 test('keeps pesewas when they are not zero', () => {

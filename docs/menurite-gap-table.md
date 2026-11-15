@@ -32,7 +32,7 @@ Key: **Full** = done, nothing to build. **Partial** = some of it exists, fill th
 | Waiter calls and bill requests | Full | `screens/calls/CallsScreen.tsx`, `screens/FloorScreen.tsx` | Brief wants them on Orders too: add a strip on Orders, keep the Calls screen. |
 | Sales page | Partial | `screens/insights/InsightsScreen.tsx` (sales, series, top items, peak hours; sales hidden with payments off) | Order counts by status, discounts given, breakdown by source. Needs `InsightsReport` fields. |
 | Customers | Partial | `screens/LoyaltyCustomersScreen.tsx` (loyalty members only) | Online orders will bring names and phones; see the privacy question. |
-| Loyalty | Full | `screens/loyalty/`, `OwnerLoyalty.tsx` | — |
+| Loyalty | Full | `screens/loyalty/LoyaltyScreen.tsx` and its sibling components | — |
 | Promos and coupons | None | Guest offers screen exists (`/[venue]/offers`), no owner editor, no coupon codes | New feature; discounts also touch money maths. Not in the brief's detail list, so I'd leave it as a sidebar entry that says "Coming soon" unless you want it now. |
 | Store notice (banner + popup, schedule, toggle) | None | `src/features/notices/` is the guest's own order alerts, not a venue notice | Contract + owner screen + guest banner and popup. |
 | Customization: logo, cover, brand colour | Full | `screens/branding/BrandingScreen.tsx`, `LookSection.tsx` | — |

@@ -28,7 +28,7 @@ All routes live in `src/app/owner/` and render one screen from `src/features/own
 | `/owner/calls` | CallsScreen | tab, dashboard bell | — |
 | `/owner/more` | MoreScreen | tab | every route below |
 | `/owner/menu` | MenuDeskScreen | More, dashboard | — |
-| `/owner/loyalty` | LoyaltyHubScreen (via OwnerLoyalty) | More | scan, devices |
+| `/owner/loyalty` | LoyaltyScreen | More | scan, devices |
 | `/owner/feedback` | FeedbackInboxScreen | More, dashboard | branding, socials |
 | `/owner/services` | ServicesDeskScreen | More | — |
 | `/owner/payments` | PaymentsScreen | More | — |

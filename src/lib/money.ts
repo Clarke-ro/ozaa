@@ -52,10 +52,6 @@ export function formatMoney(
   }
 }
 
-export function formatCedis(amount: Pesewas): string {
-  return formatMoney(amount, 'GHS');
-}
-
 export function sumPesewas(amounts: readonly Pesewas[]): Pesewas {
   return pesewas(amounts.reduce((total, amount) => total + amount, 0));
 }

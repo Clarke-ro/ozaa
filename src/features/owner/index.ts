@@ -1,5 +1,5 @@
 export { OwnerLogin } from './OwnerLogin';
-export { OwnerLoyalty } from './OwnerLoyalty';
+export { LoyaltyScreen } from './screens/loyalty/LoyaltyScreen';
 export { OwnerChrome } from './chrome/OwnerChrome';
 export { DashboardScreen } from './screens/dashboard/DashboardScreen';
 export { FloorScreen } from './screens/FloorScreen';
@@ -35,7 +35,6 @@ export { SettingsScreen } from './screens/settings/SettingsScreen';
 export { ProfileScreen } from './screens/profile/ProfileScreen';
 export { HelpScreen } from './screens/help/HelpScreen';
 export { SocialsScreen } from './screens/socials/SocialsScreen';
-export { ComingSoonScreen } from './screens/ComingSoonScreen';
 export { BillingScreen } from './screens/billing/BillingScreen';
 export { CustomersScreen } from './screens/CustomersScreen';
 export { CustomerDetailScreen } from './screens/customers/CustomerDetailScreen';
