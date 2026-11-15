@@ -1,5 +1,5 @@
 import { Redirect } from 'expo-router';
-import { AiShell } from '@/features/owner';
+import { AiShell } from '@/features/owner/screens/previews/AiShell';
 import { PREVIEWS_ENABLED } from '@/lib/features';
 
 export default function Route() {

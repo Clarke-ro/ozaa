@@ -1,5 +1,5 @@
 import { Redirect } from 'expo-router';
-import { MarketingShell } from '@/features/owner';
+import { MarketingShell } from '@/features/owner/screens/previews/MarketingShell';
 import { PREVIEWS_ENABLED } from '@/lib/features';
 
 export default function Route() {

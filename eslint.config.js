@@ -42,4 +42,20 @@ module.exports = defineConfig([
       ],
     },
   },
+  {
+    files: ['src/app/owner/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              regex: '^@/features/(?!owner(?:/|$))[^/]+/.+',
+              message: 'Import sibling features through their root index.',
+            },
+          ],
+        },
+      ],
+    },
+  },
 ]);

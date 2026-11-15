@@ -1,5 +1,5 @@
 import { Redirect } from 'expo-router';
-import { StockShell } from '@/features/owner';
+import { StockShell } from '@/features/owner/screens/previews/StockShell';
 import { PREVIEWS_ENABLED } from '@/lib/features';
 
 export default function Route() {

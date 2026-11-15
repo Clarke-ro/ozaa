@@ -1,4 +1,4 @@
-import { ReviewsDeskScreen } from '@/features/owner';
+import { ReviewsScreen } from '@/features/owner/screens/reviews/ReviewsScreen';
 export default function Route() {
-  return <ReviewsDeskScreen />;
+  return <ReviewsScreen />;
 }
