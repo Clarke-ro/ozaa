@@ -78,7 +78,7 @@ export function Section({
   const outside = !collapsible && !Icon && Boolean(head);
 
   return (
-    <View style={[styles.wrap, outside && styles.wrapOutside]}>
+    <View style={[styles.wrap, outside && (wide ? styles.wrapOutside : styles.wrapOutsidePhone)]}>
       {outside ? <View style={styles.outsideHead}>{head}</View> : null}
       <View style={[styles.card, cardStyle(theme)]}>
         {outside ? null : collapsible && head ? (
@@ -115,6 +115,8 @@ export function Section({
 const styles = StyleSheet.create({
   wrap: { gap: tokens.space[2] },
   wrapOutside: { gap: tokens.space[4] },
+  // Phones: the title sits closer to its card.
+  wrapOutsidePhone: { gap: 10 },
   outsideHead: {
     marginHorizontal: -tokens.space[4],
     marginTop: -tokens.space[4],

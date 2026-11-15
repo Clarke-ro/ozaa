@@ -23,7 +23,8 @@ export function InlineRow({
       <Text variant="body" style={styles.label} numberOfLines={2}>
         {label}
       </Text>
-      {children}
+      {/* The control may shrink, so a three-way switch never runs off a phone screen. */}
+      <View style={styles.control}>{children}</View>
     </View>
   );
 }
@@ -38,4 +39,5 @@ const styles = StyleSheet.create({
     paddingVertical: tokens.space[2],
   },
   label: { flex: 1 },
+  control: { flexShrink: 1, maxWidth: '68%' },
 });

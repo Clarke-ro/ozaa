@@ -5,7 +5,13 @@ import { ClipboardList } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
 import { useOwnerLayout } from '../../chrome/layout';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
-import { filterCounts, inFilter, type OrderFilter } from '../../desk/orderBoard';
+import {
+  ORDER_FILTERS,
+  PHONE_FILTERS,
+  filterCounts,
+  inFilter,
+  type OrderFilter,
+} from '../../desk/orderBoard';
 import { ORDER_RANGES, type OrderRange } from '../../desk/orderRange';
 import { CardGrid, EmptyCard, HeaderAdd, PeriodSelect } from '../../kit';
 import { CreateOrderSheet } from './CreateOrderSheet';
@@ -14,14 +20,18 @@ import { OrdersToolbar, type OrderLayout } from './OrdersToolbar';
 import { useOrderDesk } from './useOrderDesk';
 
 /**
- * Kitchen tickets. "Open" shows the board: New, Cooking and Ready, each with its oldest few
- * tickets and an arrow to see them all. Served, Rejected and All are plain lists, newest first.
+ * Kitchen tickets. Wide screens: "Open" shows the board (New, Cooking and Ready side by side, each
+ * with an arrow to see them all); Served, Rejected and All are lists. Phones have no board: one row
+ * of chips (New, Cooking, Ready, Served, Rejected, All) and the tickets of the picked one under it.
  * A card shows the dishes and only the next step this person may take; tapping it opens the order.
  */
 export function OrdersScreen() {
   const { t } = useTranslation();
   const { wide, desktop } = useOwnerLayout();
-  const [filter, setFilter] = useState<OrderFilter>('open');
+  const [picked, setPicked] = useState<OrderFilter | null>(null);
+  // Each layout starts on its own first chip and ignores one that only the other has.
+  const filters = wide ? ORDER_FILTERS : PHONE_FILTERS;
+  const filter = picked && filters.includes(picked) ? picked : (filters[0] ?? 'all');
   const [layout, setLayout] = useState<OrderLayout>('board');
   const [range, setRange] = useState<OrderRange>('today');
   const [creating, setCreating] = useState(false);
@@ -30,9 +40,8 @@ export function OrdersScreen() {
 
   const all = desk.orders.data?.items ?? [];
   const counts = filterCounts(all);
-  const live = filter === 'open';
-  // Phones always get the board for open orders; the list switch is for wide screens.
-  const board = live && (layout === 'board' || !wide);
+  const live = filter === 'open' || filter === 'new' || filter === 'cooking' || filter === 'ready';
+  const board = wide && filter === 'open' && layout === 'board';
   // Oldest first while still in the kitchen (who has waited longest), newest first once done.
   const shown = all
     .filter((o) => inFilter(o.status, filter))
@@ -62,8 +71,9 @@ export function OrdersScreen() {
     >
       <OrdersToolbar
         filter={filter}
+        filters={filters}
         counts={counts}
-        onFilter={setFilter}
+        onFilter={setPicked}
         layout={layout}
         onLayout={wide ? setLayout : undefined}
       />
