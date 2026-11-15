@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
@@ -15,8 +15,8 @@ export type Figure = {
 /**
  * A row of white figure cards. Wide screens follow the design canvas (Staff, Loyalty): the label
  * in grey on top, the number under it, at least 128 px tall. Phones show up to three small tiles
- * in one row like Today's: the number first, then a short grey label on one line (Clarke's
- * reference, 2026-11-14). Four go two by two.
+ * in one row like Today's. Narrow phones and large text switch to two columns. Four always go two
+ * by two. Each phone tile puts the number first, then a short grey label (Clarke, 2026-11-14).
  */
 export function FigureRow({
   items,
@@ -30,7 +30,10 @@ export function FigureRow({
   size?: number;
 }) {
   const theme = useTheme();
-  const columns = wide || items.length <= 3 ? items.length : 2;
+  const { fontScale, width } = useWindowDimensions();
+  const needsTwoColumns = width < 360 || fontScale > 1.3;
+  const phoneColumns = needsTwoColumns ? Math.min(items.length, 2) : items.length;
+  const columns = wide ? items.length : items.length <= 3 ? phoneColumns : 2;
   return (
     <CardGrid columns={columns} gap={wide ? tokens.owner.controls.listGap : 8} stretchLast>
       {items.map((item) =>

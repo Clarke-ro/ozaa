@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { PressableScale } from '@/ui/PressableScale';
 import { useRouter, type Href } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -28,8 +28,9 @@ const SHORTCUTS: readonly OwnerNavId[] = [
 const TILE = tokens.owner.controls.tileMinHeight;
 
 /**
- * A grid of square-ish tiles, an icon over a name: four across on wide screens, three smaller
- * ones on phones (Clarke's reference, 2026-11-14).
+ * A grid of square-ish tiles, with an icon over a name. Wide screens show four columns. Phones
+ * show three, then switch to two when the screen is narrow or text is large (Clarke's reference,
+ * 2026-11-14).
  * Only the pages this person may open (navFor also drops pages switched off in this build);
  * with none, the section is left out. The last row is padded so tiles keep one width.
  */
@@ -38,12 +39,14 @@ export function QuickActions() {
   const { t } = useTranslation();
   const router = useRouter();
   const { wide } = useOwnerLayout();
+  const { fontScale, width } = useWindowDimensions();
   const role = useOwnerSession((state) => state.role) ?? 'waiter';
   const allowed = navFor(role);
   const shown = SHORTCUTS.flatMap((id) => allowed.filter((item) => item.id === id));
   if (shown.length === 0) return null;
 
-  const across = wide ? 4 : 3;
+  const needsTwoColumns = width < 360 || fontScale > 1.3;
+  const across = wide ? 4 : needsTwoColumns ? 2 : 3;
   const rows: (typeof shown)[] = [];
   for (let i = 0; i < shown.length; i += across) rows.push(shown.slice(i, i + across));
 

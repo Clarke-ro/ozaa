@@ -76,8 +76,7 @@ export function FilterChips<T extends string>({
             aria-selected={on}
             accessibilityLabel={item.count == null ? item.label : `${item.label}, ${item.count}`}
             onPress={() => onChange(item.id)}
-            // 34 px to the eye, 44 px to the thumb.
-            hitSlop={slim ? { top: 5, bottom: 5 } : undefined}
+            hitSlop={{ top: pill ? 2 : 5, bottom: pill ? 2 : 5 }}
             style={({ pressed }) => [
               styles.chip,
               // The owner app's chips are 40 px, as on its design canvas; guest pages keep 34.
@@ -132,25 +131,25 @@ export function FilterChips<T extends string>({
 const HEIGHT = 34;
 
 const styles = StyleSheet.create({
-  row: { gap: tokens.space[2], paddingVertical: 2, alignItems: 'center' },
+  row: { gap: tokens.space[2], paddingVertical: 5, alignItems: 'center' },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: tokens.space[1] + 2,
-    height: HEIGHT,
+    minHeight: HEIGHT,
     paddingHorizontal: tokens.space[3],
     borderRadius: tokens.radius.full,
     borderWidth: StyleSheet.hairlineWidth,
   },
   // Owner canvas chip: 40 px tall, 1 px edge, 15 px label, the count in a 28 px circle.
   pillChip: {
-    height: tokens.owner.controls.chipHeight,
+    minHeight: tokens.owner.controls.chipHeight,
     paddingHorizontal: tokens.space[4],
     borderWidth: 1,
     gap: tokens.space[2],
   },
   pillChipCount: { paddingRight: 6 },
-  slimChip: { height: 34, paddingHorizontal: tokens.space[3], gap: 6, borderWidth: 1 },
+  slimChip: { minHeight: 34, paddingHorizontal: tokens.space[3], gap: 6, borderWidth: 1 },
   slimText: { fontSize: 14, lineHeight: 18, fontFamily: fontFamily.regular },
   slimCount: {
     fontSize: 13,

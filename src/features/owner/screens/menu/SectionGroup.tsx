@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Plus } from 'lucide-react-native';
 import type { MenuCategory, MenuItem } from '@/lib/api/types';
@@ -7,6 +7,8 @@ import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
 import { DragList } from '../../kit/DragList';
 import { DISH_ROW, MenuItemRow } from './MenuItemRow';
+
+const NARROW_DISH_ROW = 104;
 
 /**
  * One menu section: its name with a grey count, then each dish as its own card. Hold the grip
@@ -42,6 +44,10 @@ export function SectionGroup({
 }) {
   const theme = useTheme();
   const { t } = useTranslation();
+  const { fontScale, width } = useWindowDimensions();
+  // Narrow rows need another text line for price and status labels.
+  const baseDishRowHeight = width < 360 ? NARROW_DISH_ROW : DISH_ROW;
+  const dishRowHeight = Math.ceil(baseDishRowHeight * Math.max(1, fontScale));
   const hidden = section?.hidden === true;
   const row = (item: MenuItem, bare: boolean) => (
     <MenuItemRow
@@ -90,7 +96,7 @@ export function SectionGroup({
       ) : draggable && dishes.length > 1 ? (
         <DragList
           items={dishes.map((d) => ({ key: d.id, label: d.name.en, dish: d }))}
-          rowHeight={DISH_ROW}
+          rowHeight={dishRowHeight}
           gripSide="start"
           onOrder={(ids) => onReorder(dishes, ids)}
           renderRow={(entry) => row(entry.dish, true)}

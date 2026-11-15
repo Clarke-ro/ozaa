@@ -79,8 +79,21 @@ export function DragList<T extends { key: string; label: string }>({
     );
   }, [order, onOrder, dy, STEP]);
   const keys = order.split('|');
-  const grip = (index: number, lifted: boolean) => (
+  const moveWithAccessibility = (index: number, actionName: string) => {
+    const direction = actionName === 'up' ? -1 : actionName === 'down' ? 1 : 0;
+    const to = index + direction;
+    if (direction !== 0 && to >= 0 && to < items.length) onOrder(moveItem(keys, index, to));
+  };
+  const grip = (index: number, lifted: boolean, label: string) => (
     <View
+      accessible
+      accessibilityRole="button"
+      accessibilityLabel={`${index + 1}. ${label}`}
+      accessibilityActions={[
+        { name: 'up', label: t('ownerMenu.moveUp', { name: label }) },
+        { name: 'down', label: t('ownerMenu.moveDown', { name: label }) },
+      ]}
+      onAccessibilityAction={(event) => moveWithAccessibility(index, event.nativeEvent.actionName)}
       {...handlers[index]?.panHandlers}
       style={[styles.grip, gripSide === 'start' && styles.gripStart, { height: rowHeight }]}
     >
@@ -96,16 +109,6 @@ export function DragList<T extends { key: string; label: string }>({
         return (
           <Animated.View
             key={item.key}
-            accessible
-            accessibilityLabel={`${index + 1}. ${item.label}`}
-            accessibilityActions={[
-              { name: 'up', label: t('ownerMenu.moveUp', { name: item.label }) },
-              { name: 'down', label: t('ownerMenu.moveDown', { name: item.label }) },
-            ]}
-            onAccessibilityAction={(e) => {
-              const to = e.nativeEvent.actionName === 'up' ? index - 1 : index + 1;
-              if (to >= 0 && to < items.length) onOrder(moveItem(keys, index, to));
-            }}
             style={[
               styles.row,
               gripSide === 'start' && styles.rowStart,
@@ -121,7 +124,7 @@ export function DragList<T extends { key: string; label: string }>({
               },
             ]}
           >
-            {gripSide === 'start' ? grip(index, lifted) : null}
+            {gripSide === 'start' ? grip(index, lifted, item.label) : null}
             {renderRow ? (
               renderRow(item, index)
             ) : (
@@ -134,7 +137,7 @@ export function DragList<T extends { key: string; label: string }>({
                 </Text>
               </>
             )}
-            {gripSide === 'end' ? grip(index, lifted) : null}
+            {gripSide === 'end' ? grip(index, lifted, item.label) : null}
           </Animated.View>
         );
       })}

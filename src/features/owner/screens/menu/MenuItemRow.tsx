@@ -13,16 +13,15 @@ import { STATUS_TONES } from '@/theme/palette';
 import { cardStyle, StatusPill, Toggle } from '../../kit';
 
 const LOW_STOCK = 5;
-// A 52 px photo with 10 px corners.
 const THUMB = 52;
-/** Every dish row is this tall, so the drag list can map a drag distance to a position. */
+/** The drag list uses this default height to map a drag distance to a position. */
 export const DISH_ROW = 72;
 
 /**
  * One dish: photo, name, then the price with any state worth a glance (Popular, sold out,
- * hidden, a few left) on the same line, and the on-the-menu switch. Two lines at most, so every
- * card is the same height. Tap the card to edit; delete lives in the editor.
- * `bare` drops the card look when the drag list draws the card around it.
+ * hidden, a few left) under it, and the on-the-menu switch. The row grows when text wraps.
+ * Tap the card to edit; delete lives in the editor. `bare` drops the card look when the drag
+ * list draws the card around it.
  */
 export function MenuItemRow({
   item,
@@ -64,7 +63,7 @@ export function MenuItemRow({
           )}
         </View>
         <View style={styles.copy}>
-          <Text numberOfLines={1} style={[styles.name, off && { color: theme.muted }]}>
+          <Text numberOfLines={bare ? 1 : 2} style={[styles.name, off && { color: theme.muted }]}>
             {item.name.en}
           </Text>
           <View style={styles.priceRow}>
@@ -106,7 +105,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: tokens.space[3],
-    height: DISH_ROW,
+    minHeight: DISH_ROW,
+    paddingVertical: 10,
     paddingLeft: 10,
     paddingRight: tokens.space[4],
   },
@@ -132,8 +132,8 @@ const styles = StyleSheet.create({
   priceRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
     gap: 6,
-    overflow: 'hidden',
   },
   price: {
     fontSize: 14,

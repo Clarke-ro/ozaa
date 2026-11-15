@@ -19,8 +19,8 @@ export function useGutter() {
  * Every owner screen sits in this. The page starts with its own header (a bold title, a grey
  * line under it, the screen's one action on the right), then the content, in one centred column
  * on the page colour. Wide screens have no bar above it and no bell: the sidebar's Notifications
- * row and its count do that job. Phones get a slim bar with Back (or a page's own `barStart`) and
- * the bell, and no grey line under the title.
+ * row and its count do that job. Phones get a slim bar only when it holds a location switcher or
+ * bell. Other phone pages start below the status bar, with no grey line under the title.
  * `width="form"` keeps settings and Today at a readable width; `wide` is for long lists.
  */
 export function OwnerPage({

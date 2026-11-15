@@ -39,49 +39,52 @@ export function Chips<T extends string | number>({
       {options.map((option) => {
         const on = selected.includes(option.id);
         return (
-          <Pressable
-            key={String(option.id)}
-            accessibilityRole={single ? 'radio' : 'checkbox'}
-            accessibilityState={{ checked: on }}
-            accessibilityLabel={option.label}
-            hitSlop={wide ? undefined : { top: 5, bottom: 5 }}
-            onPress={() => {
-              void hapticSelection();
-              if (single) onChange([option.id]);
-              else
-                onChange(on ? selected.filter((id) => id !== option.id) : [...selected, option.id]);
-            }}
-            style={({ pressed }) => [
-              styles.chip,
-              styles.size,
-              filled && styles.big,
-              !wide && styles.slim,
-              {
-                borderColor: on ? (filled ? theme.fill : theme.ink) : theme.line,
-                backgroundColor: on
-                  ? filled
-                    ? theme.fill
-                    : theme.tint
-                  : pressed
-                    ? theme.wash
-                    : theme.surface,
-              },
-            ]}
-          >
-            {on && !filled ? <Check size={14} color={theme.badgeInk} strokeWidth={3} /> : null}
-            <Text
-              variant="body"
-              style={[
+          <View key={String(option.id)} style={!wide && styles.slimTarget}>
+            <Pressable
+              accessibilityRole={single ? 'radio' : 'checkbox'}
+              accessibilityState={{ checked: on }}
+              accessibilityLabel={option.label}
+              hitSlop={wide ? undefined : { top: 5, bottom: 5 }}
+              onPress={() => {
+                void hapticSelection();
+                if (single) onChange([option.id]);
+                else
+                  onChange(
+                    on ? selected.filter((id) => id !== option.id) : [...selected, option.id],
+                  );
+              }}
+              style={({ pressed }) => [
+                styles.chip,
+                styles.size,
+                filled && styles.big,
+                !wide && styles.slim,
                 {
-                  color: on ? (filled ? theme.onFill : theme.badgeInk) : theme.text,
-                  fontFamily: on ? 'Inter_600' : 'Inter_400',
+                  borderColor: on ? (filled ? theme.fill : theme.ink) : theme.line,
+                  backgroundColor: on
+                    ? filled
+                      ? theme.fill
+                      : theme.tint
+                    : pressed
+                      ? theme.wash
+                      : theme.surface,
                 },
-                !wide && styles.slimText,
               ]}
             >
-              {option.label}
-            </Text>
-          </Pressable>
+              {on && !filled ? <Check size={14} color={theme.badgeInk} strokeWidth={3} /> : null}
+              <Text
+                variant="body"
+                style={[
+                  {
+                    color: on ? (filled ? theme.onFill : theme.badgeInk) : theme.text,
+                    fontFamily: on ? 'Inter_600' : 'Inter_400',
+                  },
+                  !wide && styles.slimText,
+                ]}
+              >
+                {option.label}
+              </Text>
+            </Pressable>
+          </View>
         );
       })}
     </View>
@@ -90,6 +93,7 @@ export function Chips<T extends string | number>({
 
 const styles = StyleSheet.create({
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.space[2] },
+  slimTarget: { minHeight: tokens.touchTarget, justifyContent: 'center' },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',

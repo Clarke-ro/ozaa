@@ -1298,7 +1298,7 @@
     "look": {
       "light": "Light",
       "dark": "Dark",
-      "system": "Auto"
+      "system": "System"
     },
     "notifyTitle": "Notifications",
     "notifyNote": "Choose what shows in Notifications and on the badges for you.",
@@ -2897,7 +2897,6 @@
     "stampsGiven": "Stamps given",
     "rewardsClaimed": "Rewards claimed",
     "onShift": "On shift",
-    "team": "In the team",
     "invites": "Invites",
     "newMembers": "New",
     "cameBack": "Came back",

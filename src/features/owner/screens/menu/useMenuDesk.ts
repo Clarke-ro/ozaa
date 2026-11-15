@@ -76,7 +76,7 @@ export function useMenuDesk(venueId: string) {
     onSettled: refresh,
   });
 
-  // The eye on a section header: hide a whole section from guests, or show it again.
+  // Section settings can hide a whole section from guests or show it again.
   const hideSection = useMutation({
     mutationFn: (section: MenuCategory) =>
       api.ownerUpdateCategory(venueId, section.id, {
