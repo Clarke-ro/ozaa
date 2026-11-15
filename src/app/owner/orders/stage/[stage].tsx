@@ -1,5 +1,6 @@
 import { Redirect, useLocalSearchParams } from 'expo-router';
-import { OrderStageScreen, isBoardColumn } from '@/features/owner';
+import { OrderStageScreen } from '@/features/owner/screens/orders/OrderStageScreen';
+import { isBoardColumn } from '@/features/owner/desk/orderBoard';
 
 export default function Route() {
   const { stage } = useLocalSearchParams<{ stage: string }>();

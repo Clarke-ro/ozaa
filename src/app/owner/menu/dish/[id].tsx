@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from 'expo-router';
-import { DishEditScreen } from '@/features/owner';
+import { DishEditScreen } from '@/features/owner/screens/menu/DishEditScreen';
 
 export default function Route() {
   const { id, section } = useLocalSearchParams<{ id: string; section?: string }>();

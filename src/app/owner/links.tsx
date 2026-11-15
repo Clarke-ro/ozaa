@@ -1,5 +1,5 @@
-import { CustomLinksScreen } from '@/features/owner';
+import { LinksScreen } from '@/features/owner/screens/links/LinksScreen';
 
 export default function Route() {
-  return <CustomLinksScreen />;
+  return <LinksScreen />;
 }

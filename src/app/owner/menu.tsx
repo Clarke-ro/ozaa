@@ -1,4 +1,4 @@
-import { MenuDeskScreen } from '@/features/owner';
+import { MenuScreen } from '@/features/owner/screens/menu/MenuScreen';
 export default function Route() {
-  return <MenuDeskScreen />;
+  return <MenuScreen />;
 }

@@ -1,4 +1,4 @@
-import { ServicesDeskScreen } from '@/features/owner';
+import { ServicesScreen } from '@/features/owner/screens/services/ServicesScreen';
 export default function Route() {
-  return <ServicesDeskScreen />;
+  return <ServicesScreen />;
 }
