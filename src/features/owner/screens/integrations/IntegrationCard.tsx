@@ -1,6 +1,7 @@
-import type { ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
-import type { LucideIcon } from 'lucide-react-native';
+import { useState, type ReactNode } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { ChevronDown, ChevronUp, type LucideIcon } from 'lucide-react-native';
 import { STATUS_TONES } from '@/theme/palette';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
@@ -12,6 +13,9 @@ import { cardStyle, Toggle } from '../../kit';
  * One integration as a card (design canvas): a brand mark or plain icon, the name and what it
  * does, its status in words and a switch on the right; when switched on, its details sit under a
  * light line. A row with no switch can show a grey badge instead, e.g. "Coming soon".
+ *
+ * The details open when the switch goes on, close again once they're saved (the parent bumps
+ * `closeSignal`), and the header opens or closes them by hand. A finished card is just its row.
  *
  * Phones keep the switch on the first line, top right like an iOS settings row, set the mark in a
  * 44 px soft tile (Clarke's reference, 2026-11-14), and put the status or badge under the name,
@@ -27,6 +31,7 @@ export function IntegrationCard({
   onToggle,
   badge,
   children,
+  closeSignal = 0,
 }: {
   icon?: LucideIcon;
   /** A brand mark drawn instead of a plain icon (Paystack, Google…). */
@@ -39,8 +44,25 @@ export function IntegrationCard({
   onToggle?: (next: boolean) => void;
   badge?: string;
   children?: ReactNode;
+  /** Bump after a save succeeds to close the details back to the plain row. */
+  closeSignal?: number;
 }) {
   const theme = useTheme();
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  // Opening when the switch goes on, and closing on a new closeSignal, follow the props as they
+  // change (React's "adjust state while rendering" pattern, no effect needed).
+  const [seenOn, setSeenOn] = useState(on);
+  if (on !== seenOn) {
+    setSeenOn(on);
+    if (on) setOpen(true);
+  }
+  const [seenSignal, setSeenSignal] = useState(closeSignal);
+  if (closeSignal !== seenSignal) {
+    setSeenSignal(closeSignal);
+    setOpen(false);
+  }
+  const expandable = Boolean(on && children);
   const { wide, cardPad } = useOwnerLayout();
   const statusText = status ? (
     <Text
@@ -62,7 +84,21 @@ export function IntegrationCard({
         <View style={[styles.icon, !wide && [styles.iconPhone, { backgroundColor: theme.wash }]]}>
           {logo ?? (Icon ? <Icon size={22} color={theme.text} /> : null)}
         </View>
-        <View style={[styles.words, !wide && styles.wordsPhone]}>
+        <Pressable
+          disabled={!expandable}
+          accessibilityRole={expandable ? 'button' : undefined}
+          accessibilityLabel={
+            expandable
+              ? open
+                ? t('ownerPay.hideDetails', { name: title })
+                : t('ownerPay.showDetails', { name: title })
+              : undefined
+          }
+          accessibilityState={expandable ? { expanded: open } : undefined}
+          aria-expanded={expandable ? open : undefined}
+          onPress={() => setOpen((now) => !now)}
+          style={[styles.words, !wide && styles.wordsPhone]}
+        >
           <Text style={[styles.title, !wide && styles.titlePhone]} numberOfLines={2}>
             {title}
           </Text>
@@ -78,12 +114,19 @@ export function IntegrationCard({
               {badgeTag}
             </View>
           ) : null}
-        </View>
+        </Pressable>
+        {expandable ? (
+          open ? (
+            <ChevronUp size={18} color={theme.meta} />
+          ) : (
+            <ChevronDown size={18} color={theme.meta} />
+          )
+        ) : null}
         {wide ? statusText : null}
         {wide ? badgeTag : null}
         {toggle}
       </View>
-      {on && children ? (
+      {expandable && open ? (
         <View style={[styles.body, { borderTopColor: theme.wash }]}>{children}</View>
       ) : null}
     </View>

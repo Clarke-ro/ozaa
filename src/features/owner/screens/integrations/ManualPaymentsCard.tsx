@@ -39,6 +39,8 @@ export function ManualPaymentsCard({
   // The MoMo number is typed as the owner says it ("024 …") and turned into +233 on save.
   const [momoText, setMomoText] = useState(saved.momo.number ? formatPhone(saved.momo.number) : '');
   const [tried, setTried] = useState(false);
+  // Bumped after a save, so the bank and MoMo cards close back to their rows.
+  const [closeSignal, setCloseSignal] = useState(0);
   const momoNumber = asGhanaPhone(parseGhanaPhone(momoText)) ?? undefined;
   const next: ManualPayments = { ...draft, momo: { ...draft.momo, number: momoNumber } };
   const check = checkManualPayments(next);
@@ -51,6 +53,7 @@ export function ManualPaymentsCard({
       void client.invalidateQueries({ queryKey: ownerKeys.venue(venueId) });
       void client.invalidateQueries({ queryKey: guestKeys.venueAll() });
       setTried(false);
+      setCloseSignal((n) => n + 1);
       toast.success(t('ownerKit.saved'));
     },
     onError: (error) => toast.error(t(toMessageKey(error))),
@@ -103,6 +106,7 @@ export function ManualPaymentsCard({
         subtitle={t('ownerPay.bankSub')}
         status={draft.bankTransfer.enabled ? t('ownerPay.on') : t('ownerPay.notConnected')}
         on={draft.bankTransfer.enabled}
+        closeSignal={closeSignal}
         onToggle={(enabled) =>
           enabled
             ? set({ bankTransfer: { ...draft.bankTransfer, enabled } })
@@ -150,6 +154,7 @@ export function ManualPaymentsCard({
         subtitle={t('ownerPay.momoHint')}
         status={draft.momo.enabled ? t('ownerPay.on') : t('ownerPay.notConnected')}
         on={draft.momo.enabled}
+        closeSignal={closeSignal}
         onToggle={(enabled) =>
           enabled
             ? set({ momo: { ...draft.momo, enabled } })
