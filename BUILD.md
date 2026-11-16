@@ -598,7 +598,7 @@ Work top to bottom. Each box is one small PR that ends in a verifiable state (ps
   - motion (`ui-skills-fixing-motion-performance`)
   - copy (`pstack-unslop`)
   - Lighthouse
-- [ ] **UI APPROVAL GATE:** Clarke gets screenshots of every screen side by side with the renders, for all 3 venues, plus a short screen recording of the guest flow (scan → order → pay → stamp → review) and the owner flow. **Wait for his written yes.**
+- [x] **UI APPROVAL GATE:** Clarke gets screenshots of every screen side by side with the renders, for all 3 venues, plus a short screen recording of the guest flow (scan → order → pay → stamp → review) and the owner flow. **Wait for his written yes.** *Approved by Clarke in writing on 2026-11-16 ("approved"), after the UI approval pack: every guest screen beside its render for all 3 venues, all 31 owner pages in desktop light, desktop dark and phone, and recordings of both flows. 2.10 (fee screens) was still to build, and 1.15 (JS budget) waits on his call.*
 
 ### Phase 4b: Owner dashboard and online ordering (gap table, on mocks)
 
@@ -622,7 +622,7 @@ Approved by Clarke on 2026-11-03. Details and file locations are in `docs/menuri
 - [x] 4b.16 *contract* + UI: Sales page (totals, counts by status, discounts, top items, revenue over time, by source).
 - [x] 4b.17 *contract* + UI: Settings > Integrations > Payments (own Paystack keys, where to find them, test/live, test connection), manual methods, mark paid by method, payment status on orders and sales. Split bill hidden.
 - [x] 4b.18 WhatsApp order-alerts number field, behind a flag that stays off. Done 2026-11-16: `VenueSettings.whatsappAlerts` (owner only, contract PR first), and the WhatsApp card on Integrations takes and saves the number when `WHATSAPP_ALERTS_ENABLED` (in `src/lib/features.ts`, `false`) is on. Sending alerts waits for Phase 5 and a WhatsApp provider (section 17, item 5).
-- [ ] **Review:** Clarke sees every new screen in light and dark, phone and tablet, then says go for the backend (per-venue encrypted Paystack keys, webhook per venue, push alerts).
+- [x] **Review:** Clarke sees every new screen in light and dark, phone and tablet, then says go for the backend (per-venue encrypted Paystack keys, webhook per venue, push alerts). *Covered by the same approval on 2026-11-16 (desktop light and dark, and phone; tablet was not in the pack).*
 
 ### Phase 4c: Owner redesign from the design canvas (on mocks)
 
