@@ -38,6 +38,7 @@ import { MenuControls, type MenuView } from './MenuControls';
 import { menuRows, type MenuRow } from './menuRows';
 import { guestKeys } from '@/lib/queryKeys';
 import { StoreNoticeBanner, useLiveNotices } from '@/features/notices';
+import { canOrderHere, useAtTable } from '@/features/session';
 
 /**
  * The guest menu: a bar to search and pick a section, then the dishes as a list (the default)
@@ -62,6 +63,8 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
   // Once a minute is enough to drop an offer that has just ended.
   const now = useNow(60_000);
   const add = useCart((state) => state.add);
+  // Browse only from the venue link when the venue takes no online orders.
+  const canOrder = canOrderHere(useAtTable(slug), venue.data);
   const [section, setSection] = useState('all');
   const [query, setQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -147,7 +150,7 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
         offers={deals}
         currency={currency}
         onOpen={open}
-        onAdd={(deal) => (canQuickAdd(deal.item) ? () => quickAdd(deal.item) : null)}
+        onAdd={(deal) => (canOrder && canQuickAdd(deal.item) ? () => quickAdd(deal.item) : null)}
       />
       {searching ? (
         <Text variant="title" style={styles.heading}>
@@ -172,7 +175,7 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
             item={row.item}
             currency={currency}
             onOpen={() => open(row.item.id)}
-            onAdd={canQuickAdd(row.item) ? () => quickAdd(row.item) : null}
+            onAdd={canOrder && canQuickAdd(row.item) ? () => quickAdd(row.item) : null}
           />
         </View>
       );
@@ -185,7 +188,7 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
             item={item}
             currency={currency}
             onOpen={() => open(item.id)}
-            onAdd={canQuickAdd(item) ? () => quickAdd(item) : null}
+            onAdd={canOrder && canQuickAdd(item) ? () => quickAdd(item) : null}
           />
         ))}
         {/* Keep the last row's cards the same width as the rows above. */}
@@ -260,7 +263,7 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
         ) : null}
         {dishes}
       </ScrollView>
-      <MenuCartBar slug={slug} currency={currency} />
+      {canOrder ? <MenuCartBar slug={slug} currency={currency} /> : null}
     </SafeScreen>
   );
 }

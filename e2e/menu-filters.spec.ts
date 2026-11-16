@@ -9,7 +9,9 @@ test('the menu bar has section tabs and search only', async ({ page }) => {
 });
 
 test('special offers show while an offer runs, and their dish can be added', async ({ page }) => {
-  await page.goto('/mamas-kitchen/menu', { waitUntil: 'domcontentloaded' });
+  // Ordering needs a table: start from its QR, as a guest does.
+  await page.goto('/mamas-kitchen/t/12', { waitUntil: 'domcontentloaded' });
+  await page.getByRole('button', { name: /^Menu/ }).first().click({ timeout: 15_000 });
   await expect(page.getByRole('heading', { name: 'Special offers' })).toBeVisible();
   await expect(page.getByText('Jollof Tuesday')).toBeVisible();
   await expect(page.getByText('Happy hour drinks')).toBeVisible();
@@ -27,7 +29,9 @@ test('no offers, no section', async ({ page }) => {
 });
 
 test('search finds a dish, the card adds it, and the dish page adds more', async ({ page }) => {
-  await page.goto('/mamas-kitchen/menu', { waitUntil: 'domcontentloaded' });
+  // Ordering needs a table: start from its QR, as a guest does.
+  await page.goto('/mamas-kitchen/t/12', { waitUntil: 'domcontentloaded' });
+  await page.getByRole('button', { name: /^Menu/ }).first().click({ timeout: 15_000 });
   // Search is an icon in the menu bar; it opens the search field.
   await page.getByRole('button', { name: 'Search the menu', exact: true }).click();
   await page.getByRole('textbox', { name: 'Search the menu', exact: true }).fill('waakye');

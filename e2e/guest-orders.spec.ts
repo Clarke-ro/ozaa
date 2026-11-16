@@ -23,8 +23,9 @@ test('table guest: the page reloads while browsing, and the order still reaches 
   const errors = watchErrors(page);
   await page.goto('/bean-there/t/7', { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: /^Menu/ }).first().click({ timeout: 15_000 });
-  // Reload only once the menu is open, or the reload can land back on the table home.
+  // Reload only once the menu is open. Reloading on the table home has no dish to add.
   await expect(page).toHaveURL(/\/bean-there\/menu$/, { timeout: 15_000 });
+  await expect(page.getByRole('button', { name: /^Add .+ to your order$/ }).first()).toBeVisible();
   await page.reload({ waitUntil: 'domcontentloaded' });
   await addFirstDishAndOpenOrder(page);
   await page.getByRole('button', { name: 'Send to kitchen' }).click();
