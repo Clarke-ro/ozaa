@@ -39,6 +39,7 @@ export function SpecialOffers({
       </View>
       <ScrollView
         horizontal
+        nestedScrollEnabled
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.row}
       >

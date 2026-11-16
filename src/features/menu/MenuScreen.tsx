@@ -1,15 +1,8 @@
-import { useState, type ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import {
-  Animated,
-  StyleSheet,
-  View,
-  useWindowDimensions,
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
-} from 'react-native';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
-import { FlashList } from '@shopify/flash-list';
+import { FlashList, type RenderTarget } from '@shopify/flash-list';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
@@ -41,7 +34,13 @@ import { guestKeys } from '@/lib/queryKeys';
 import { StoreNoticeBanner, useLiveNotices } from '@/features/notices';
 
 type ListRow<T extends { id: string; categoryId: string }> =
-  MenuRow<T> | { type: 'hero'; key: string } | { type: 'controls'; key: string };
+  | MenuRow<T>
+  | { type: 'hero'; key: string }
+  | { type: 'controls'; key: string }
+  | { type: 'empty'; key: string };
+
+// Hero is always index 0 and the tab bar index 1, so the list knows which row to pin.
+const CONTROLS_INDEX = 1;
 
 /**
  * The guest menu: a fixed bar to search, filter and pick a section, then the dishes as a list
@@ -50,6 +49,10 @@ type ListRow<T extends { id: string; categoryId: string }> =
  * With a `hero` (the online-ordering page), the menu is the page: the hero scrolls away above it,
  * the search and section bar sticks to the top, and the venue's name shows in that bar once the
  * hero is gone. Without one (a table guest's Menu page), there's a header with a back button.
+ *
+ * The bar is a row in the list that the list itself pins. A bar drawn on top of the list shows
+ * on the web and disappears on a phone: the native list paints over it, and Android can drop a
+ * wrapper that exists only to be measured, so the bar stays invisible.
  */
 export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
   const { t } = useTranslation();
@@ -65,12 +68,12 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
   const add = useCart((state) => state.add);
   const [section, setSection] = useState('all');
   const [query, setQuery] = useState('');
-  // Online page only: one search-and-sections bar that slides up with the page and stops under
-  // a slim strip with the venue's name. One bar, not a copy, so screen readers meet it once.
-  const [scrollY] = useState(() => new Animated.Value(0));
-  const [heroHeight, setHeroHeight] = useState(0);
-  const [barHeight, setBarHeight] = useState(0);
+  const [searchOpen, setSearchOpen] = useState(false);
+  // True once the tab row has reached the top and the list is holding it there.
   const [pastHero, setPastHero] = useState(false);
+  const listRef = useRef<{
+    scrollToOffset: (args: { offset: number; animated?: boolean }) => void;
+  } | null>(null);
   const insets = useSafeAreaInsets();
   const pinnedAt = insets.top + NAME_STRIP;
 
@@ -118,13 +121,24 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
   };
   const open = (id: string) => router.push(`/${slug}/menu/${id}`);
 
-  const controls = (
+  // A shorter section would otherwise leave you scrolled into blank space.
+  const jumpTop = () => listRef.current?.scrollToOffset({ offset: 0, animated: false });
+  const controls = (target: RenderTarget | 'standalone') => (
     <MenuControls
       query={query}
-      onQuery={setQuery}
+      onQuery={(text) => {
+        setQuery(text);
+        jumpTop();
+      }}
+      searchOpen={searchOpen}
+      onSearchOpen={setSearchOpen}
+      autoFocus={target === 'StickyHeader' || !pastHero}
       sections={sections}
       active={active}
-      onSection={setSection}
+      onSection={(id) => {
+        setSection(id);
+        jumpTop();
+      }}
     />
   );
   const listHeader = (
@@ -143,22 +157,48 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
       ) : null}
     </View>
   );
+  const dishRows: ListRow<(typeof shown)[number]>[] =
+    rows.length > 0 ? rows : [{ type: 'empty', key: 'empty' }];
   const data: ListRow<(typeof shown)[number]>[] = hero
-    ? [{ type: 'hero', key: 'hero' }, { type: 'controls', key: 'controls' }, ...rows]
+    ? [{ type: 'hero', key: 'hero' }, { type: 'controls', key: 'controls' }, ...dishRows]
     : rows;
 
-  const renderRow = (row: ListRow<(typeof shown)[number]>) => {
+  const renderRow = (row: ListRow<(typeof shown)[number]>, target: RenderTarget) => {
     if (row.type === 'hero') {
+      // collapsable={false}: Android otherwise drops a wrapper that only groups children, and the
+      // list then thinks the banner has no height, so the tabs pin over it.
       return (
-        <View onLayout={(event) => setHeroHeight(event.nativeEvent.layout.height)}>
+        <View collapsable={false}>
           {hero}
           {listHeader}
         </View>
       );
     }
     if (row.type === 'controls') {
-      // Room for the sliding bar, which floats over the list (see below).
-      return <View style={{ height: barHeight }} />;
+      const hidden = target === 'Cell' && pastHero;
+      return (
+        <View
+          collapsable={false}
+          pointerEvents={hidden ? 'none' : 'auto'}
+          accessibilityElementsHidden={hidden}
+          importantForAccessibility={hidden ? 'no-hide-descendants' : 'auto'}
+          aria-hidden={hidden}
+          style={[
+            { backgroundColor: theme.bg },
+            // The pinned copy is taken out of the row, so give it the screen width explicitly.
+            target === 'StickyHeader' ? { width } : null,
+          ]}
+        >
+          {controls(target)}
+        </View>
+      );
+    }
+    if (row.type === 'empty') {
+      return (
+        <Text variant="body" style={[styles.empty, { color: theme.muted }]}>
+          {searching ? t('menu.noMatch') : t('menu.empty')}
+        </Text>
+      );
     }
     if (row.type === 'heading') {
       return (
@@ -202,72 +242,46 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
     <SafeScreen includeTop={!hero}>
       {hero ? null : <PageHeader title={t('menu.title')} subtitle={venue.data?.name ?? ''} />}
       {storeNotice.banner ? <StoreNoticeBanner notice={storeNotice.banner} /> : null}
-      {hero ? null : controls}
+      {hero ? null : controls('standalone')}
       {/* FlashList keeps long menus cheap on 2–3 GB phones. */}
       <FlashList
+        ref={(node) => {
+          listRef.current = node;
+        }}
         data={data}
+        extraData={{ active, query, searchOpen, pastHero }}
         keyExtractor={(row) => row.key}
         getItemType={(row) => row.type}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={hero ? styles.scrollHero : styles.scroll}
         ItemSeparatorComponent={RowGap}
-        onScroll={
-          hero
-            ? Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
-                useNativeDriver: false,
-                listener: (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-                  const past = event.nativeEvent.contentOffset.y >= heroHeight - pinnedAt;
-                  if (past !== pastHero) setPastHero(past);
-                },
-              })
-            : undefined
+        stickyHeaderIndices={hero ? [CONTROLS_INDEX] : undefined}
+        stickyHeaderConfig={
+          hero ? { offset: pinnedAt, hideRelatedCell: true, useNativeDriver: true } : undefined
         }
-        scrollEventThrottle={hero ? 16 : undefined}
+        onChangeStickyIndex={
+          hero ? (current) => setPastHero(current === CONTROLS_INDEX) : undefined
+        }
         ListHeaderComponent={hero ? null : listHeader}
         ListEmptyComponent={
           <Text variant="body" style={[styles.empty, { color: theme.muted }]}>
             {searching ? t('menu.noMatch') : t('menu.empty')}
           </Text>
         }
-        renderItem={({ item: row }) => renderRow(row)}
+        renderItem={({ item: row, target }) => renderRow(row, target)}
       />
-      {hero ? (
-        <>
-          {/* Hidden until the hero is measured, so it never flashes at the top first. */}
-          <Animated.View
-            onLayout={(event) => setBarHeight(event.nativeEvent.layout.height)}
-            style={[
-              styles.floating,
-              {
-                backgroundColor: theme.bg,
-                opacity: heroHeight > 0 ? 1 : 0,
-                transform: [
-                  {
-                    translateY: scrollY.interpolate({
-                      inputRange: [0, Math.max(1, heroHeight - pinnedAt)],
-                      outputRange: [heroHeight, pinnedAt],
-                      extrapolate: 'clamp',
-                    }),
-                  },
-                ],
-              },
-            ]}
-          >
-            {controls}
-          </Animated.View>
-          {pastHero ? (
-            <View
-              style={[
-                styles.nameStrip,
-                { height: pinnedAt, paddingTop: insets.top, backgroundColor: theme.bg },
-              ]}
-            >
-              <Text variant="title" numberOfLines={1} accessibilityRole="header">
-                {venue.data?.name ?? ''}
-              </Text>
-            </View>
-          ) : null}
-        </>
+      {hero && pastHero ? (
+        <View
+          pointerEvents="none"
+          style={[
+            styles.nameStrip,
+            { height: pinnedAt, paddingTop: insets.top, backgroundColor: theme.bg },
+          ]}
+        >
+          <Text variant="title" numberOfLines={1} accessibilityRole="header">
+            {venue.data?.name ?? ''}
+          </Text>
+        </View>
       ) : null}
       <MenuCartBar slug={slug} currency={currency} />
     </SafeScreen>
@@ -277,12 +291,13 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
 const styles = StyleSheet.create({
   scroll: { paddingBottom: 120, paddingTop: tokens.space[3] },
   scrollHero: { paddingBottom: 120 },
-  floating: { position: 'absolute', top: 0, start: 0, end: 0 },
   nameStrip: {
     position: 'absolute',
     top: 0,
     start: 0,
     end: 0,
+    zIndex: 4,
+    elevation: 12,
     justifyContent: 'center',
     paddingHorizontal: tokens.grid.mobile.margin,
   },
@@ -302,6 +317,8 @@ const styles = StyleSheet.create({
 // The slim strip with the venue's name that the bar stops under once the hero has gone.
 const NAME_STRIP = 44;
 
-function RowGap() {
+function RowGap({ leadingItem }: { leadingItem?: { type?: string } }) {
+  // The banner and the tab bar meet. A gap here would pin the bar too early.
+  if (leadingItem?.type === 'hero') return null;
   return <View style={styles.rowGap} />;
 }

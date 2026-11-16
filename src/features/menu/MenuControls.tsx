@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Search, X } from 'lucide-react-native';
@@ -16,12 +15,19 @@ export type MenuView = 'list' | 'grid';
 export function MenuControls({
   query,
   onQuery,
+  searchOpen,
+  onSearchOpen,
+  autoFocus = true,
   sections,
   active,
   onSection,
 }: {
   query: string;
   onQuery: (text: string) => void;
+  searchOpen: boolean;
+  onSearchOpen: (open: boolean) => void;
+  /** The pinned copy and the row in the list both mount. Only the one being used should take focus. */
+  autoFocus?: boolean;
   sections: MenuCategory[];
   /** A section id, or 'all'. */
   active: string;
@@ -29,7 +35,6 @@ export function MenuControls({
 }) {
   const { t } = useTranslation();
   const theme = useTheme();
-  const [searchOpen, setSearchOpen] = useState(query.length > 0);
   const searching = query.trim().length > 0;
   const tabs = [
     { id: 'all', label: t('menu.allSections') },
@@ -52,7 +57,7 @@ export function MenuControls({
             placeholderTextColor={theme.meta}
             accessibilityLabel={t('menu.search')}
             returnKeyType="search"
-            autoFocus
+            autoFocus={autoFocus}
             style={[styles.input, { color: theme.text }]}
           />
           <Pressable
@@ -60,7 +65,7 @@ export function MenuControls({
             accessibilityLabel={t('menu.closeSearch')}
             onPress={() => {
               onQuery('');
-              setSearchOpen(false);
+              onSearchOpen(false);
             }}
             hitSlop={tokens.space[2]}
           >
@@ -77,6 +82,7 @@ export function MenuControls({
         ) : (
           <ScrollView
             horizontal
+            nestedScrollEnabled
             showsHorizontalScrollIndicator={false}
             accessibilityRole="tablist"
             accessibilityLabel={t('menu.sectionsLabel')}
@@ -115,7 +121,7 @@ export function MenuControls({
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={t('menu.search')}
-              onPress={() => setSearchOpen(true)}
+              onPress={() => onSearchOpen(true)}
               style={({ pressed }) => icon(pressed)}
             >
               <Search size={20} color={theme.text} />
