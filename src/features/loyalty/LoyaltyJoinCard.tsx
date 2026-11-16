@@ -53,7 +53,7 @@ export function LoyaltyJoinCard({
   const theme = useTheme();
 
   return (
-    <View style={[styles.box, { borderColor: theme.line }]}>
+    <View style={[styles.box, { borderColor: theme.line, backgroundColor: theme.surface }]}>
       <Text variant="display-m">{t('loyalty.join')}</Text>
       <Text variant="body" style={{ color: theme.muted }}>
         {t('loyalty.joinLead', { name: venueName })}
@@ -63,7 +63,7 @@ export function LoyaltyJoinCard({
         value={firstName}
         onChangeText={onFirstName}
         placeholder={t('loyalty.firstName')}
-        style={[styles.input, { borderColor: theme.line }]}
+        style={[styles.input, { borderColor: theme.line, backgroundColor: theme.surface }]}
       />
       <TextInput
         accessibilityLabel={t('loyalty.phone')}
@@ -71,14 +71,14 @@ export function LoyaltyJoinCard({
         onChangeText={onPhone}
         keyboardType="phone-pad"
         placeholder={t('loyalty.phone')}
-        style={[styles.input, { borderColor: theme.line }]}
+        style={[styles.input, { borderColor: theme.line, backgroundColor: theme.surface }]}
       />
       <TextInput
         accessibilityLabel={t('loyalty.birthday')}
         value={birthday}
         onChangeText={onBirthday}
         placeholder={t('loyalty.birthday')}
-        style={[styles.input, { borderColor: theme.line }]}
+        style={[styles.input, { borderColor: theme.line, backgroundColor: theme.surface }]}
       />
       {sent ? (
         <TextInput
@@ -87,7 +87,7 @@ export function LoyaltyJoinCard({
           onChangeText={onCode}
           keyboardType="number-pad"
           placeholder={t('loyalty.code')}
-          style={[styles.input, { borderColor: theme.line }]}
+          style={[styles.input, { borderColor: theme.line, backgroundColor: theme.surface }]}
         />
       ) : null}
 

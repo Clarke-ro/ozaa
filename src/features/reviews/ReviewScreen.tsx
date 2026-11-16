@@ -128,7 +128,10 @@ export function ReviewScreen({ slug }: { slug: string }) {
           maxLength={500}
           placeholder={t('review.more')}
           placeholderTextColor={theme.meta}
-          style={[styles.input, { borderColor: theme.line, color: theme.text }]}
+          style={[
+            styles.input,
+            { borderColor: theme.line, color: theme.text, backgroundColor: theme.surface },
+          ]}
         />
         {post.isError ? (
           <Text variant="body" accessibilityLiveRegion="polite" style={{ color: theme.error }}>

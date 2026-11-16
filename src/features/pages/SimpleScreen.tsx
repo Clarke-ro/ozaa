@@ -32,7 +32,10 @@ export function SimpleScreen({
       <View style={{ padding: 20, gap: 12 }}>
         {kind === 'offers'
           ? (offers.data?.items ?? []).map((offer) => (
-              <View key={offer.id} style={[styles.card, { borderColor: theme.line }]}>
+              <View
+                key={offer.id}
+                style={[styles.card, { borderColor: theme.line, backgroundColor: theme.surface }]}
+              >
                 <Text variant="body-strong">{offer.title.en}</Text>
                 <Text variant="caption" style={{ color: theme.muted }}>
                   {offer.detail?.en}
@@ -64,7 +67,7 @@ export function SimpleScreen({
               value={message}
               onChangeText={setMessage}
               multiline
-              style={[styles.input, { borderColor: theme.line }]}
+              style={[styles.input, { borderColor: theme.line, backgroundColor: theme.surface }]}
             />
             {sent ? (
               <Text>{t('simple.sent')}</Text>

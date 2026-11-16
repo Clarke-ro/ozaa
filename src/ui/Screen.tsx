@@ -21,7 +21,8 @@ export function SafeScreen({
       style={[
         styles.screen,
         {
-          backgroundColor: theme.white,
+          // The page is the soft canvas; cards on it are white (theme.surface).
+          backgroundColor: theme.bg,
           paddingTop: includeTop ? insets.top : 0,
           paddingBottom: includeBottom ? insets.bottom : 0,
         },
@@ -49,7 +50,7 @@ export function Screen({
     <View style={{ flex: 1 }}>{children}</View>
   );
   return (
-    <View style={[styles.screen, { backgroundColor: theme.white, paddingTop: insets.top }]}>
+    <View style={[styles.screen, { backgroundColor: theme.bg, paddingTop: insets.top }]}>
       {body}
       {footer ? (
         <View

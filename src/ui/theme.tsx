@@ -79,7 +79,9 @@ export function themeFromAccent(
     tint: dark ? n.tint : derived.tint,
     badgeInk: dark ? n.badgeInk : derived.badgeInk,
     displayFont: DISPLAY[fontPair],
-    bg: n.bg,
+    // Pages sit on the soft canvas so white cards stand out, in the guest app as in the owner app
+    // (Clarke, 2026-11-16). `white` below stays pure white for buttons on photos.
+    bg: n.canvas,
     surface: n.surface,
     text: n.text,
     muted: n.muted,
@@ -106,8 +108,8 @@ export const cravinsDarkTheme = themeFromAccent(null, 'cravins', 'dark');
 /**
  * The owner app: same Cravins colours, but pages sit on a very light orange canvas so white cards stand out.
  * Its type follows the reference dashboard (Clarke, 2026-11-07): Inter everywhere, numbers
- * included, on a smaller scale (tokens.owner.type). Guest pages keep a white background and
- * the brand scale (brand.md sections 2 and 3).
+ * included, on a smaller scale (tokens.owner.type). Guest pages share the canvas (2026-11-16)
+ * but keep the brand type scale (brand.md section 3).
  */
 const o = tokens.owner.type;
 const OWNER_TYPE: TypeScale = {
