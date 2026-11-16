@@ -4,6 +4,42 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-16 · Two doors: the table and the menu link
+
+**What we built**
+
+A venue now has two clear front doors:
+- **Table QR** (`/mamas-kitchen/t/12`): the table home with the services list first (Menu, Call waiter, Order status…). It stays on that address.
+- **Menu link** (`/bean-there`): online ordering, menu first. The banner keeps share and language; then the name with a small **Info ›**, slim pills for open hours and pickup time, and the menu. Scroll down and the banner slides away; the name and the category tabs stay at the top.
+
+The menu itself now uses cards with the photo on the right and a round **+** on its corner, for both doors.
+
+**How it works**
+
+```
+/slug/t/12 → start a table session → table home (services list)
+/slug      → end any table visit here → menu with the banner on top → pickup or delivery
+```
+
+Opening the menu link after scanning a table ends that table visit in the browser, so an online order never goes to a table you left.
+
+**Files to look at**
+
+- `src/features/online/`: the menu-link page and its banner.
+- `src/features/menu/DishRow.tsx`, `MenuControls.tsx`: the new cards and tabs.
+- `src/features/session/guestHome.ts`: where "home" is for each kind of guest.
+- `e2e/online-ordering.spec.ts`: the three rules, tested.
+
+**New idea: one thing that moves, not two copies**
+
+The sticky tab bar could have been made by drawing a second copy that appears at the top. But a screen reader would then meet two search buttons. Instead there's one bar, moved with an animation that follows the scroll (`Animated.event` and `interpolate`): it rides under the banner, then stops at the top.
+
+**Try it yourself**
+
+In `OnlineHero.tsx`, change `const BANNER = 220;` to `300`. Rebuild and open `/bean-there`: a taller banner, and the bar still stops in the right place, because it measures the header instead of guessing.
+
+---
+
 ## 2026-11-16 · Guests can pay the card fee (BUILD.md 2.10)
 
 **What we built**

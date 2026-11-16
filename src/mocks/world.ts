@@ -24,7 +24,7 @@ import { seedPromos } from './seedPromos';
 import { kitchenQueue } from './kitchenQueue';
 import type { LiveOrder, World } from './worldTypes';
 import { seedOwnerDesk } from './seedOwnerDesk';
-import { samplePaymentSettings, staffDetail, tablesFor } from './worldSamples';
+import { samplePaymentSettings, staffDetail, tablesFor, withSampleOnlineOrdering } from './worldSamples';
 
 export { STAFF, type StaffSeed } from './demo';
 export type { LiveOrder, World } from './worldTypes';
@@ -56,6 +56,7 @@ function load<T>(file: unknown, name: string): Record<string, T> {
 
 export function createWorld(now: number): World {
   const venues = load<VenuePublic>(venuesFile, 'venues');
+  withSampleOnlineOrdering(venues);
   const menus = load<Menu>(menusFile, 'menus');
   const wifi = load<Wifi>(wifiFile, 'wifi');
   const offerLists = load<{ items: Offer[] }>(offersFile, 'offers');

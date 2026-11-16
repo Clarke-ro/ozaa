@@ -13,6 +13,7 @@ import { PageHeader } from '@/ui/PageHeader';
 import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
+import { guestHomeHref, useGuestSession } from '@/features/session';
 
 /**
  * A private note to the manager. A phone number is only sent if the guest switches it on
@@ -22,6 +23,8 @@ export function FeedbackScreen({ slug }: { slug: string }) {
   const theme = useTheme();
   const { t } = useTranslation();
   const router = useRouter();
+  // Back to this guest's own home: their table, or the online menu.
+  const tableCode = useGuestSession((state) => (state.slug === slug ? state.tableCode : null));
   const venue = useVenue(slug);
   const [message, setMessage] = useState('');
   const [share, setShare] = useState(false);
@@ -52,7 +55,7 @@ export function FeedbackScreen({ slug }: { slug: string }) {
           <Button
             label={t('review.backHome')}
             tone="secondary"
-            onPress={() => router.replace(`/${slug}`)}
+            onPress={() => router.replace(guestHomeHref(slug, tableCode))}
           />
         </View>
       </SafeScreen>

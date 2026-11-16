@@ -29,6 +29,11 @@ type GuestSessionState = {
   }) => void;
   setOrderId: (orderId: string) => void;
   setLoyaltyToken: (token: string | null) => void;
+  /**
+   * The online-ordering link (/slug) was opened. A table visit at this venue ends here, so the
+   * customer orders online and never to a table they left. Their own online order is kept.
+   */
+  startOnlineVisit: (slug: string) => void;
 };
 
 type OwnerSessionState = {
@@ -77,6 +82,13 @@ export const useGuestSession = create<GuestSessionState>()(
       setLoyaltyToken: (loyaltyToken) => {
         setApiLoyaltyToken(loyaltyToken);
         set({ loyaltyToken });
+      },
+      startOnlineVisit: (slug) => {
+        const state = get();
+        if (state.slug !== slug || state.tableCode === null) return;
+        useMyCalls.getState().clear();
+        setGuestToken(null);
+        set({ token: null, tableCode: null, orderId: null });
       },
     }),
     {

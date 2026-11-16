@@ -30,6 +30,14 @@ Connected today: Supabase "Cravins" (migrations 0000–0001), Clerk "Cravins" (d
 16. [ ] **Sentry on the server**, with personal data scrubbed the same way as `src/log.ts`.
 17. [x] **CI job for `server/`**: typecheck and tests on every PR.
 
+## D2. Guest UI upgrade (Clarke, 2026-11-16, from his reference screenshots)
+
+- [x] Routing: table QR home at `/slug/t/12` (services list first); `/slug` is online ordering only, and ends a table visit in that browser.
+- [x] Online page: banner with share and language, name + "Info ›", slim pills, menu first, banner scrolls away under a pinned name and tabs.
+- [x] Menu (both doors): text tabs with an underline, image-right cards with a round "+", sale price struck through.
+- [ ] Info page (map, call, about, opening hours) from the third reference image.
+- [ ] Guest "unauthorized" on Send fixed (#149).
+
 ## D. Still open from earlier phases
 
 18. [ ] **2.10 fee screens**: the owner switch and share on Integrations > Payments, and the fee line on Pay and on the receipt.
