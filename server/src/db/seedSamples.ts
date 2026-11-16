@@ -142,16 +142,22 @@ export function itemRow(venueId: string, item: MenuItem): typeof menuItems.$infe
 
 /**
  * The owner of the sample venues, from the server's settings (SAMPLE_OWNER_PHONE), never from git:
- * a phone number is personal data. They become owner at each sample venue; the invite turns active
+ * phone numbers and emails are personal data. SAMPLE_OWNER_EMAIL is the address they sign in with. They become owner at each sample venue; the invite turns active
  * the first time they sign in with Clerk using that number. Safe to run again.
  */
-export async function seedOwner(db: Db, input: { phone: string; firstName: string; venueIds: string[] }): Promise<void> {
+export async function seedOwner(
+  db: Db,
+  input: { phone: string; email?: string; firstName: string; venueIds: string[] },
+): Promise<void> {
   const local = input.phone.replace(/\s+/g, '');
   const phone = /^0\d{9}$/.test(local) ? `+233${local.slice(1)}` : local;
   if (!/^\+233\d{9}$/.test(phone)) throw new Error('SAMPLE_OWNER_PHONE must be a Ghana number, like 024 123 4567.');
-  await db.insert(staffUsers).values({ id: 'usr_sample_owner', phone, firstName: input.firstName }).onConflictDoNothing();
+  const email = input.email?.trim().toLowerCase() || null;
+  await db.insert(staffUsers).values({ id: 'usr_sample_owner', phone, email, firstName: input.firstName }).onConflictDoNothing();
   const [user] = await db.select().from(staffUsers).where(eq(staffUsers.phone, phone));
   if (!user) return;
+  // They sign in by email code: add or change the email on a run after the first.
+  if (email && user.email !== email) await db.update(staffUsers).set({ email }).where(eq(staffUsers.id, user.id));
   for (const venueId of input.venueIds) {
     await db
       .insert(staffMemberships)

@@ -24,7 +24,7 @@ if (process.env.SEED_SAMPLES !== 'true') {
     const { venueIds, items } = await seedSamples(db);
     log({ event: 'seeded', venues: venueIds.length, items });
     if (process.env.SAMPLE_OWNER_PHONE) {
-      await seedOwner(db, { phone: process.env.SAMPLE_OWNER_PHONE, firstName: process.env.SAMPLE_OWNER_NAME || 'Owner', venueIds });
+      await seedOwner(db, { phone: process.env.SAMPLE_OWNER_PHONE, email: process.env.SAMPLE_OWNER_EMAIL, firstName: process.env.SAMPLE_OWNER_NAME || 'Owner', venueIds });
       log({ event: 'sample_owner_ready' });
     }
     if (config.PAYSTACK_SECRET_KEY && config.PAYSTACK_PUBLIC_KEY) {
