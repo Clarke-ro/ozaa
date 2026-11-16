@@ -7,7 +7,6 @@ import { accessOf } from './mockRules';
 import type { MockContext } from './mockContext';
 import type { World } from './worldTypes';
 import type { StaffPrefs, StaffUser } from '@/lib/api/types';
-import { isGhanaPhone } from '@/lib/brand';
 import { mockUploadedImage } from './mediaRegistry';
 
 const DEFAULT_PREFS: StaffPrefs = {
@@ -32,9 +31,9 @@ export function profileOf(world: World, phone: string) {
   );
 }
 
-/** Mock calls: sign-in, tokens, the signed-in profile and the guest session. */
+/** Mock calls: the loyalty code, the signed-in profile and the guest session. */
 export function mockAuthCalls(ctx: MockContext) {
-  const { world, tokens, now, gate, remember } = ctx;
+  const { world, tokens, now, gate } = ctx;
   const meOf = (phone: string): StaffUser => {
     const profile = profileOf(world, phone);
     return {
@@ -51,6 +50,7 @@ export function mockAuthCalls(ctx: MockContext) {
       }),
     };
   };
+  // Loyalty only: owners and staff sign in through mockOwnerAuth, the stand-in for Clerk.
   const verifyOtp: ApiClient['verifyOtp'] = async (body) => {
     await gate();
     const fails = world.otpFails.get(body.phone) ?? 0;
@@ -61,51 +61,24 @@ export function mockAuthCalls(ctx: MockContext) {
     }
     world.otpFails.set(body.phone, 0);
     const accessToken = `acc_${body.purpose}_${body.phone}`;
-    const refreshToken = `rfr_${body.phone}_${world.seq}`;
     world.access.set(accessToken, { phone: body.phone, purpose: body.purpose });
-    world.refresh.set(refreshToken, accessToken);
-    const staff = STAFF.find((person) => person.phone === body.phone);
-    const venue = staff ? world.venues[staff.slug] : undefined;
-    return {
-      accessToken,
-      refreshToken,
-      expiresAt: new Date(now() + 3600_000).toISOString(),
-      user:
-        body.purpose === 'owner_login' && staff && venue
-          ? {
-              id: `usr_${body.phone.slice(-4)}`,
-              firstName: staff.firstName,
-              phone: body.phone,
-              venues: [{ venueId: venue.id, name: venue.name, role: staff.role }],
-            }
-          : undefined,
-    };
+    return { accessToken, expiresAt: new Date(now() + 3600_000).toISOString() };
   };
 
   return {
     verifyOtp,
-    async requestOtp(body) {
+    async requestOtp() {
       await gate();
       return { expiresInSeconds: 300, resendInSeconds: 30 };
-    },
-    async refreshTokens(body) {
-      await gate();
-      const previous = world.refresh.get(body.refreshToken);
-      if (!previous) throw new ApiError(401, 'unauthorized', 'Sign in again');
-      const row = world.access.get(previous);
-      if (!row) throw new ApiError(401, 'unauthorized', 'Sign in again');
-      world.refresh.delete(body.refreshToken);
-      return verifyOtp({ phone: row.phone, code: DEMO_CODE, purpose: row.purpose });
-    },
-    async logout() {
-      await gate();
-      const token = tokens.access();
-      if (token) world.access.delete(token);
     },
     async getMe() {
       await gate();
       const row = accessOf(world, tokens);
-      return meOf(row.phone);
+      const me = meOf(row.phone);
+      // Signed in, but on no team: the server answers the same way (api/openapi.yaml, getMe).
+      if (me.venues.length === 0)
+        throw new ApiError(403, 'not_staff', 'This number is not on a Cravins team');
+      return me;
     },
     async updateMyProfile(body) {
       await gate();
@@ -126,27 +99,6 @@ export function mockAuthCalls(ctx: MockContext) {
               : (mockUploadedImage(body.photoMediaId) ?? current.photo),
         prefs: body.prefs ?? current.prefs,
       });
-      return meOf(phone);
-    },
-    async requestPhoneChange(phone, call) {
-      await gate();
-      const row = accessOf(world, tokens);
-      return remember(call.idempotencyKey, () => {
-        if (!isGhanaPhone(phone)) throw new ApiError(400, 'phone_not_valid', 'Check the number');
-        if (STAFF.some((person) => person.phone === phone) && phone !== row.phone)
-          throw new ApiError(409, 'phone_taken', 'Someone already signs in with that number');
-        world.phoneChanges.set(row.phone, phone);
-        return { expiresInSeconds: 300, resendInSeconds: 30 };
-      });
-    },
-    async confirmPhoneChange(body) {
-      await gate();
-      const { phone } = accessOf(world, tokens);
-      // The demo code stands in for the SMS code the real server sends to the new number.
-      if (world.phoneChanges.get(phone) !== body.phone || body.code !== DEMO_CODE)
-        throw new ApiError(401, 'code_wrong', 'That code is not right');
-      world.phoneChanges.delete(phone);
-      world.profiles.set(phone, { ...profileOf(world, phone), phone: body.phone });
       return meOf(phone);
     },
     async createGuestSession(body) {

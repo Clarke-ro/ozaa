@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { api } from '@/lib/api';
+import { api, ownerAuth } from '@/lib/api';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
@@ -10,7 +10,7 @@ import { useTheme } from '@/ui/theme';
 import { ownerKeys } from '../../data/keys';
 import { Field, ModalSheet, toast } from '../../kit';
 
-/** Change the sign-in phone: a code goes to the new number, and only the right code changes it. */
+/** Change the sign-in phone in Clerk: a code goes to the new number, and only the right code changes it. */
 export function PhoneSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -24,12 +24,16 @@ export function PhoneSheet({ visible, onClose }: { visible: boolean; onClose: ()
     return digits.startsWith('233') ? `+${digits}` : `+233${digits.replace(/^0/, '')}`;
   };
   const request = useMutation({
-    mutationFn: () => api.requestPhoneChange(e164(phone), { idempotencyKey: crypto.randomUUID() }),
+    mutationFn: () => ownerAuth.sendPhoneChangeCode(e164(phone)),
     onSuccess: () => setSent(true),
     onError: () => toast.error(t('ownerSettings.phoneSendFailed')),
   });
   const confirm = useMutation({
-    mutationFn: () => api.confirmPhoneChange({ phone: e164(phone), code: code.trim() }),
+    // Clerk checks the code and changes the number; /me then reads the new one from Clerk.
+    mutationFn: async () => {
+      await ownerAuth.confirmPhoneChange(code.trim());
+      return api.getMe();
+    },
     onSuccess: (user) => {
       client.setQueryData(ownerKeys.me(), user);
       toast.success(t('ownerSettings.phoneChanged'));

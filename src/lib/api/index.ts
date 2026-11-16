@@ -3,6 +3,7 @@ import { onlineManager } from '@tanstack/react-query';
 import { env } from '../env';
 import { createHttpClient } from './http';
 import { withOwnerRetry, type OnUnauthorized } from './ownerRetry';
+import { notReadyAuth, type OwnerAuth } from '../auth/ownerAuth';
 
 let guestToken: string | null = null;
 let accessToken: string | null = null;
@@ -64,20 +65,24 @@ export function setOnUnauthorized(handler: OnUnauthorized | null): void {
   onUnauthorized = handler;
 }
 
-const base: ApiClient = mocks
-  ? withLivePayments(
-      mocks.createMockClient({
-        latencyMs: env.EXPO_PUBLIC_MOCK_LATENCY_MS,
-        failRate: env.EXPO_PUBLIC_MOCK_FAIL_RATE,
-        fast: env.EXPO_PUBLIC_MOCK_FAST === '1',
-        tokens,
-        // Lets the demo go offline like a real phone, so the offline screens can be tried and tested.
-        isOnline: () => onlineManager.isOnline(),
-      }),
-    )
-  : http;
+const mock = mocks?.createMockApi({
+  latencyMs: env.EXPO_PUBLIC_MOCK_LATENCY_MS,
+  failRate: env.EXPO_PUBLIC_MOCK_FAIL_RATE,
+  fast: env.EXPO_PUBLIC_MOCK_FAST === '1',
+  tokens,
+  // Lets the demo go offline like a real phone, so the offline screens can be tried and tested.
+  isOnline: () => onlineManager.isOnline(),
+});
+
+const base: ApiClient = mock ? withLivePayments(mock.api) : http;
 
 export const api: ApiClient = withOwnerRetry(base, () => onUnauthorized);
+
+/**
+ * Owner and staff sign-in (src/lib/auth/ownerAuth.ts). The mock's stand-in shares the mock's world;
+ * real-server builds get Clerk in the next PR and say "not set up" until then.
+ */
+export const ownerAuth: OwnerAuth = mock?.auth ?? notReadyAuth;
 
 export { ApiError, OfflineError, toMessageKey } from './errors';
 export type { ApiClient } from './client';

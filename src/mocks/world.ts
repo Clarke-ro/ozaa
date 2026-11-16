@@ -223,14 +223,12 @@ export function createWorld(now: number): World {
     notificationReads: new Map(),
     scanLog: [],
     profiles: new Map(),
-    phoneChanges: new Map(),
     quotes: new Map(),
     payments: new Map(),
     idempotency: new Map(),
     otpFails: new Map(),
     sessions: new Map(),
     access,
-    refresh: new Map(),
     seq: 100,
   };
   seedOwnerDesk(world, now);

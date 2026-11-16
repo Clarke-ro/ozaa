@@ -4,6 +4,38 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-16 · Sign-in moves to Clerk (BUILD.md 5.2, contract first)
+
+**What we built**
+
+Owners and staff will sign in with Clerk, a sign-in service. It texts the 6-digit code and remembers who is signed in. The screens stay ours. This PR changes the contract and the mock; the real Clerk screens come next.
+
+**How it works**
+
+```
+phone → Clerk texts a code → code right → Clerk gives a token (lasts about a minute)
+app → Cravins server with that token → server checks Clerk's signature → finds the staff record
+```
+
+The token only says _who_ you are. _What you may do_ (owner, waiter, kitchen…) still comes from our database.
+
+**Files to look at**
+
+- `src/lib/auth/ownerAuth.ts`: the six things sign-in does, in one type.
+- `src/mocks/mockOwnerAuth.ts`: the mock's stand-in for Clerk (code `123456`).
+- `src/features/session/ownerRefresh.ts`: gets a fresh token when the server says the old one expired.
+- `api/openapi.yaml`: search for `ownerAuth`.
+
+**New idea: a seam**
+
+A seam is a place where you can swap one part for another without touching the rest. The screens call `ownerAuth.sendCode()` and never know whether the mock or Clerk answers. Next PR, Clerk goes in behind the same seam and no screen changes.
+
+**Try it yourself**
+
+In `src/mocks/mockOwnerAuth.ts`, change `fails >= 3` to `fails >= 1`. Run the app, type a wrong code once, then again, and see "too many tries" sooner.
+
+---
+
 ## 2026-11-16 · The server gets a memory
 
 **What we built**
@@ -155,6 +187,7 @@ for each piece of text:
 ```
 
 It found:
+
 - grey hint text on the warm owner background at 4.35:1. One token, `grey500`, went one step darker and fixed it everywhere.
 - a dark-mode bug on owner sign-in
 - small tap targets: the photo dots, a switch, the X buttons and two search fields
@@ -167,7 +200,7 @@ It found:
 
 **New idea: React context reads from above**
 
-`useTheme()` looks *up* the tree for the nearest `ThemeProvider`. The sign-in page called `useTheme()` and then rendered its own provider *below* that call, so it read the outer, dark theme. Moving the form into its own component puts the call inside the provider.
+`useTheme()` looks _up_ the tree for the nearest `ThemeProvider`. The sign-in page called `useTheme()` and then rendered its own provider _below_ that call, so it read the outer, dark theme. Moving the form into its own component puts the call inside the provider.
 
 **Try it yourself**
 
