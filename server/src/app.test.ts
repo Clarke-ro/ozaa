@@ -2,8 +2,10 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHmac } from 'node:crypto';
 import { createApp, SANDBOX_QUOTE } from './app.ts';
-import { readConfig } from './config.ts';
+import { readConfig, readDatabaseUrl } from './config.ts';
 import type { Paystack } from './paystack.ts';
+import { paymentStore } from './db/paymentStore.ts';
+import { testDb } from './db/testDb.ts';
 import { paymentService } from './payments.ts';
 
 const secret = 'sk_test_example';
@@ -13,9 +15,9 @@ const paystack: Paystack = {
   verify: async () => ({ status: 'ongoing', amount: 3_800, currency: 'GHS' }),
 };
 
-function setup() {
+async function setup() {
   const logs: Record<string, unknown>[] = [];
-  const payments = paymentService({ paystack, siteUrl: 'http://localhost:8081', testMode: true, newReference: () => 'pay_1' });
+  const payments = paymentService({ paystack, store: paymentStore(await testDb()), siteUrl: 'http://localhost:8081', testMode: true, newReference: () => 'pay_1' });
   const app = createApp({ payments, secret, allowedOrigins: ['http://localhost:8081'], log: (e) => logs.push(e) });
   return { app, logs };
 }
@@ -24,11 +26,11 @@ const quote = Buffer.from(
   JSON.stringify({ orderId: 'ord_1', venueSlug: 'bean-there', amountPesewas: 3_800, tipPesewas: 0 }),
 ).toString('base64');
 const momoBody = JSON.stringify({ quoteId: 'quo_1', method: 'momo', momo: { phone: '+233241234567', provider: 'mtn' } });
-const start = (headers: Record<string, string>, body = momoBody) =>
-  setup().app.request('/v1/payments', { method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body });
+const start = async (headers: Record<string, string>, body = momoBody) =>
+  (await setup()).app.request('/v1/payments', { method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body });
 
 test('POST /payments starts MoMo and logs no phone number', async () => {
-  const { app, logs } = setup();
+  const { app, logs } = await setup();
   const res = await app.request('/v1/payments', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Idempotency-Key': 'k1', [SANDBOX_QUOTE]: quote },
@@ -50,13 +52,13 @@ test('POST /payments needs an Idempotency-Key, the sandbox quote and valid detai
 });
 
 test('an unknown payment is a 404 in the Problem shape', async () => {
-  const res = await setup().app.request('/v1/payments/nope');
+  const res = await (await setup()).app.request('/v1/payments/nope');
   assert.equal(res.status, 404);
   assert.equal(((await res.json()) as { code: string }).code, 'payment_not_found');
 });
 
 test('webhooks: unsigned is refused, signed is accepted', async () => {
-  const { app } = setup();
+  const { app } = await setup();
   const body = JSON.stringify({
     event: 'charge.success',
     data: { reference: 'pay_1', status: 'success', amount: 3_800, currency: 'GHS' },
@@ -78,5 +80,25 @@ test('the server refuses to start with a live key, and never prints the key', ()
     assert.ok(!error.message.includes('secret123'));
     return true;
   });
-  assert.equal(readConfig({ PAYSTACK_SECRET_KEY: 'sk_test_x' }).PORT, 4000);
+  assert.equal(
+    readConfig({ PAYSTACK_SECRET_KEY: 'sk_test_x', DATABASE_URL: 'postgresql://u:p@localhost:5432/cravins' }).PORT,
+    4000,
+  );
+});
+
+test('the server needs a Postgres address, and never prints its password', () => {
+  assert.throws(() => readConfig({ PAYSTACK_SECRET_KEY: 'sk_test_x' }), /DATABASE_URL is missing/);
+  assert.throws(
+    () => readConfig({ PAYSTACK_SECRET_KEY: 'sk_test_x', DATABASE_URL: 'mysql://u:hunter2@db/cravins' }),
+    (error: Error) => {
+      assert.match(error.message, /must start with postgres/);
+      assert.ok(!error.message.includes('hunter2'));
+      return true;
+    },
+  );
+});
+
+test('migrations need only the database address', () => {
+  assert.equal(readDatabaseUrl({ DATABASE_URL: 'postgresql://u:p@localhost/c' }), 'postgresql://u:p@localhost/c');
+  assert.throws(() => readDatabaseUrl({}), /DATABASE_URL is missing/);
 });

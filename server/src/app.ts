@@ -3,6 +3,7 @@ import { cors } from 'hono/cors';
 import { z } from 'zod';
 import type { PaymentService } from './payments.ts';
 import { isFromPaystack } from './signature.ts';
+import type { Log } from './log.ts';
 
 /**
  * Phase 2b only. The bill and its quote still live in the app's mock, so this server has never
@@ -40,7 +41,6 @@ const webhookBody = z.object({
   }),
 });
 
-type Log = (entry: Record<string, string | number | undefined>) => void;
 
 /** Errors in the contract's Problem shape, with plain words in `detail`. */
 function problem(c: Context, status: 400 | 401 | 404 | 422, code: string, detail: string) {
@@ -119,7 +119,7 @@ export function createApp(deps: {
     }
     const parsed = webhookBody.safeParse(json);
     if (parsed.success) {
-      const payment = deps.payments.fromWebhook(parsed.data.data.reference, parsed.data.data);
+      const payment = await deps.payments.fromWebhook(parsed.data.data.reference, parsed.data.data);
       deps.log({
         event: 'webhook',
         type: parsed.data.event,

@@ -1,0 +1,23 @@
+CREATE TABLE "payments" (
+	"reference" text PRIMARY KEY NOT NULL,
+	"idempotency_key" text NOT NULL,
+	"order_id" text NOT NULL,
+	"venue_slug" text NOT NULL,
+	"method" text NOT NULL,
+	"provider" text,
+	"amount_pesewas" integer NOT NULL,
+	"tip_pesewas" integer DEFAULT 0 NOT NULL,
+	"currency" text DEFAULT 'GHS' NOT NULL,
+	"status" text NOT NULL,
+	"display_text" text,
+	"authorization_url" text,
+	"approve_by" timestamp with time zone,
+	"failure_reason" text,
+	"test_mode" boolean NOT NULL,
+	"created_at" timestamp with time zone NOT NULL,
+	"paid_at" timestamp with time zone,
+	"last_asked_at" timestamp with time zone,
+	CONSTRAINT "payments_idempotency_key_unique" UNIQUE("idempotency_key"),
+	CONSTRAINT "payments_amount_positive" CHECK ("payments"."amount_pesewas" > 0),
+	CONSTRAINT "payments_tip_not_negative" CHECK ("payments"."tip_pesewas" >= 0)
+);

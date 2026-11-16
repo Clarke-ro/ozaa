@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1794814012455,
+      "tag": "0000_payments",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794817724944,
+      "tag": "0001_payments_rls",
+      "breakpoints": true
+    }
+  ]
+}

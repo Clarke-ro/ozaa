@@ -4,6 +4,40 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-16 · The server gets a memory
+
+**What we built**
+
+The start of the real backend. The server now keeps payments in a Postgres database instead of in memory. A restart no longer forgets them, and two copies of the server, which Vercel will run, see the same payments.
+
+**How it works**
+
+```text
+app ──► POST /v1/payments (Idempotency-Key: abc)
+        server ──► INSERT payment … ON CONFLICT (idempotency_key) DO NOTHING
+                   new row?  yes ─► ask Paystack to charge, save the answer
+                             no  ─► give back the payment already saved for "abc"
+```
+
+The database decides which tap was first, so a guest who taps Pay twice is charged once.
+
+**Files to look at**
+
+- `server/src/db/schema.ts`: the payments table.
+- `server/drizzle/0000_payments.sql`: the SQL it turns into.
+- `server/src/db/paymentStore.ts`: reading and saving payments.
+- `server/src/log.ts`: logs that never hold a phone number.
+
+**New idea: a migration**
+
+A migration is a numbered SQL file that changes the database one step, like `0000_payments.sql` creating the payments table. The database remembers which ones it has run. So `npm run db:migrate` brings any copy (your laptop, Supabase) to the same shape, and running it again does nothing.
+
+**Try it yourself**
+
+Run `cd server && npm test`. The payment tests run on PGlite, a real Postgres inside Node. Then open `server/src/db/paymentStore.test.ts` and read "two taps at the same moment still make one payment".
+
+---
+
 ## 2026-11-16 · A feature that waits behind a switch
 
 **What we built**

@@ -87,10 +87,11 @@ These are settled. Do not reopen them.
 - **Payments:** Paystack, test mode first. MoMo on MTN, Telecel and AT, plus card. *Changed 2026-11-03:* each restaurant pastes its own Paystack public and secret keys (Settings > Integrations). The secret key is stored encrypted on the server only and never reaches the app, the browser or a log. No split payments, no pooled accounts, no payouts. Never hold funds. Manual methods (cash, card machine, bank transfer, MoMo to the merchant number) are marked paid by staff.
 - **Two ways to order** *(2026-11-03)*: walk-in guests scan a **table QR** (no contact details, call waiter, ask for the bill). Online customers use the venue's **menu link** (`/<venue-slug>`) to order for pickup or delivery, and give a name and phone (plus an address for delivery). That contact data lives on the order only, never in the guest session, and is never logged.
 - **Paystack fee** *(2026-11-16)*: the venue pays it unless the owner switches on "Pass fees to customers" (Integrations > Payments) and picks a share, 1–100%. 100% adds Paystack's whole fee (1.95% in Ghana, `src/lib/paystackFee.ts`) so the venue still receives the full bill. The guest sees it as its own line before paying and on the receipt. It applies only to payments in the app, never to cash, card machine, bank transfer or MoMo to the venue's number, and it never counts as paying for food. The server works it out.
-- **SMS for sign-in codes** *(2026-11-16)*: Arkesel (Ghana; OTP API at about GH₵0.035 per code, free sign-up with test credits, free sender ID). Clarke signs up when Phase 5 needs it.
+- **Sign-in** *(2026-11-16)*: **Clerk**, paid from Clarke's Clerk credit, with our own screens built on Clerk's custom-flow APIs (no Clerk-drawn screens). Clerk sends the phone codes; Arkesel (about GH₵0.035 a code) is the fallback if Clerk's SMS to Ghana proves slow or costly. If Google sign-in is added, Sign in with Apple must be added too (App Store guideline 4.8). Moving sign-in to Clerk changes the contract's auth calls, so that goes in its own contract PR first.
 - **Legal checks** *(2026-11-16)*: the PSP-licence question and DPC registration are done after the backend is built, before real phone numbers or real money.
 - **Plans:** the owner plan badge and Billing page use the placeholder plans from `landing/src/content/pricing.ts` until real prices are set.
 - **Build order:** frontend first against a fixed API contract and a mock. The backend comes only after Clarke approves the UI. *2026-11-03:* Clarke approved the MenuRite-gap work (`docs/menurite-gap-table.md`): build all of its UI on the mock first, then hook in the backend.
+- **Hosting** *(2026-11-16)*: the server (`server/`, Hono on Node) runs on **Heroku**, paid from Clarke's Heroku credit: Eco ($5/month, sleeps when idle) while building, Basic ($7/month, always on) before the first real venue. Migrations run in Heroku's release phase, once per deploy. Heroku Scheduler runs the payment check. The database is **Supabase** Postgres (project "Cravins", eu-west-1), reached through its pooled connection, with Row Level Security on every table so Supabase's public web API can't read them. Photos go in Supabase Storage. The web app stays on Vercel, but Vercel's free Hobby plan is for non-commercial use, so it moves to Vercel Pro or a free host that allows business use before launch.
 - **Code style:** Clarke is learning, so code must be simple, readable, and commented where it is not obvious. Every feature gets a LEARNING.md entry.
 
 ## 5. Stack and why
@@ -645,7 +646,7 @@ Approved by Clarke on 2026-11-12: build the canvas redesign on the mock first, b
 
 ### Phase 5: Backend for products 1–4
 
-- [ ] 5.1 `server/`: Hono + TypeScript, Postgres with Drizzle migrations, config parsed with zod, structured logs without personal data.
+- [x] 5.1 `server/`: Hono + TypeScript, Postgres with Drizzle migrations, config parsed with zod, structured logs without personal data. Done 2026-11-16: payments moved from memory to Postgres with a unique Idempotency-Key, `src/log.ts` scrubs personal data, and tests run on PGlite. Supabase project "Cravins" has migrations 0000 and 0001 applied (payments, with Row Level Security on).
 - [ ] 5.2 Implement the contract exactly. Run contract tests that call every operation and validate responses against `openapi.yaml`, and reuse the fixtures as seed data.
   - Tenant checks (audit N6, 2026-11-11): for **every** `/owner/...` operation, a staff member of venue A gets 403 for venue B's venue, order, table, call, menu item and loyalty data. The mock doesn't enforce this (most mock owner calls skip it), so these tests are the first real line.
   - Role checks: each owner call is tested with every `StaffRole` in the contract (owner, manager, waiter, kitchen, viewer, staff_scanner) against what that role may do.
@@ -753,8 +754,8 @@ The agent must ask these, not guess. Until he answers, build behind a setting or
 2. Cravins's own fee per transaction or per month? _Default: none in the UI yet._
 3. Lawyer sign-off that subaccount split settlement keeps Cravins outside PSP licensing under Act 987. *After the backend (Clarke, 2026-11-16).*
 4. DPC registration done before real phone numbers are stored? *After the backend, before real numbers (Clarke, 2026-11-16).*
-5. ~~The SMS/OTP provider~~ **Answered 2026-11-16:** Arkesel (section 4). WhatsApp for marketing is still open.
-6. Server hosting and database provider for Phase 5.
+5. ~~The SMS/OTP provider~~ **Answered 2026-11-16:** sign-in goes through Clerk (section 4). WhatsApp for marketing is still open.
+6. ~~Server hosting and database provider~~ **Answered 2026-11-16:** Heroku for the server, Supabase for the database (section 4).
 7. Trademark search for "cravins" (Ghana RGD, OAPI, WIPO) and the native-speaker meaning check, and which domains to buy (`cravins.app` is the assumed one).
 8. Native speakers for French, Portuguese, Spanish, Arabic and Swahili. English stays the only selectable language until those files are filled by people, not by machine translation.
 9. The real first venue(s), to replace the AI-generated sample photos and videos.
