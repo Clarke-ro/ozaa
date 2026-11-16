@@ -29,8 +29,9 @@ jest.mock('@/lib/api', () => ({
     ownerListOrders: jest.fn(() => Promise.resolve({ items: [{ id: 'o1' }] })),
     ownerListWaiterCalls: jest.fn(() => Promise.resolve({ items: [] })),
   },
-  // The owner session registers its token refresh when it loads.
+  // The sessions register their token refresh and guest-session renewal when they load.
   setOnUnauthorized: jest.fn(),
+  setOnGuestUnauthorized: jest.fn(),
 }));
 
 async function setup(role: 'owner' | 'kitchen') {

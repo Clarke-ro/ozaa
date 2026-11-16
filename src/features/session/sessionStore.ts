@@ -4,8 +4,10 @@ import { useMyCalls } from './myCalls';
 import { ownerSessionStorage } from './ownerStorage';
 import { ownerRefresher } from './ownerRefresh';
 import {
+  api,
   ownerAuth,
   setAccessToken,
+  setOnGuestUnauthorized,
   setGuestToken,
   setLoyaltyToken as setApiLoyaltyToken,
   setOnUnauthorized,
@@ -150,3 +152,17 @@ setOnUnauthorized(
     signOut: () => useOwnerSession.getState().clearOwner(),
   }),
 );
+
+// A guest's session runs out (or, in the demo, a page reload forgets it). When sending an order or
+// calling the waiter comes back 401, start a new session for the same venue and table and try
+// once more, so a guest never sees "unauthorized" (src/lib/api/guestRetry.ts).
+setOnGuestUnauthorized(async () => {
+  const { slug, tableCode } = useGuestSession.getState();
+  if (!slug) return false;
+  const session = await api.createGuestSession({
+    venueSlug: slug,
+    tableCode: tableCode ?? undefined,
+  });
+  useGuestSession.getState().saveGuest({ token: session.guestToken, slug, tableCode });
+  return true;
+});

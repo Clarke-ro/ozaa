@@ -3,6 +3,7 @@ import { onlineManager } from '@tanstack/react-query';
 import { env } from '../env';
 import { createHttpClient } from './http';
 import { withOwnerRetry, type OnUnauthorized } from './ownerRetry';
+import { withGuestRetry, type OnGuestUnauthorized } from './guestRetry';
 import { notReadyAuth, type OwnerAuth } from '../auth/ownerAuth';
 
 let guestToken: string | null = null;
@@ -76,7 +77,17 @@ const mock = mocks?.createMockApi({
 
 const base: ApiClient = mock ? withLivePayments(mock.api) : http;
 
-export const api: ApiClient = withOwnerRetry(base, () => onUnauthorized);
+let onGuestUnauthorized: OnGuestUnauthorized | null = null;
+
+/** The guest session plugs in here: how to start a new one when the old one has run out. */
+export function setOnGuestUnauthorized(handler: OnGuestUnauthorized | null): void {
+  onGuestUnauthorized = handler;
+}
+
+export const api: ApiClient = withOwnerRetry(
+  withGuestRetry(base, () => onGuestUnauthorized),
+  () => onUnauthorized,
+);
 
 /**
  * Owner and staff sign-in (src/lib/auth/ownerAuth.ts). The mock's stand-in shares the mock's world;
