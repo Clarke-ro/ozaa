@@ -27,6 +27,11 @@ const schema = z.object({
    * server only. Empty in mock builds, which sign in with the demo code instead.
    */
   EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: z._default(z.string(), ''),
+  /**
+   * Real-server builds: the demo build's address (e.g. https://cravins-demo.vercel.app), so the
+   * start page can offer the sample restaurants without ordering at a real venue. Empty: no link.
+   */
+  EXPO_PUBLIC_DEMO_URL: z._default(z.string(), ''),
 });
 
 export type Env = z.infer<typeof schema>;
@@ -48,6 +53,7 @@ const fromBuild: Source = {
   EXPO_PUBLIC_MAP_TILES: process.env.EXPO_PUBLIC_MAP_TILES,
   EXPO_PUBLIC_SUPPORT_EMAIL: process.env.EXPO_PUBLIC_SUPPORT_EMAIL,
   EXPO_PUBLIC_SUPPORT_WHATSAPP: process.env.EXPO_PUBLIC_SUPPORT_WHATSAPP,
+  EXPO_PUBLIC_DEMO_URL: process.env.EXPO_PUBLIC_DEMO_URL,
   EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY,
 };
 

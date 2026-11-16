@@ -42,6 +42,7 @@ App settings are read once, checked with zod, in `src/lib/env.ts`. Anything star
 |---|---|---|
 | `EXPO_PUBLIC_API_MODE` | `mock` | `mock` or `http` |
 | `EXPO_PUBLIC_API_URL` | `http://localhost:4000/v1` | Server address in `http` mode |
+| `EXPO_PUBLIC_DEMO_URL` | empty | Real builds: the demo build's address, for "Open Mama's Kitchen" on the start page |
 | `EXPO_PUBLIC_MOCK_LATENCY_MS`, `_FAIL_RATE`, `_FAST` | 400, 0, 0 | How slow and flaky the mock is, and whether orders move on by themselves quickly |
 | `EXPO_PUBLIC_SITE_URL` | `https://cravins.app` | Guest links when the app isn't on a web page |
 | `PREVIEWS_ENABLED` | `false` | Shows roadmap previews on sample data (build time, `app.config.ts`) |
