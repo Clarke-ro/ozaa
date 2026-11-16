@@ -6,8 +6,9 @@ import { registerMockUpload } from '@/mocks/mediaRegistry';
 export type MediaKind = 'banner' | 'logo' | 'dish_photo';
 
 const TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-// Phone photos are 2–6 MB; 8 MB covers them while keeping guest pages quick to load.
-const MAX_BYTES = 8 * 1024 * 1024;
+// The contract's limit (api/openapi.yaml, ownerCreateMediaUpload): 5 MB keeps guest pages quick.
+// Most phone photos fit; a bigger one is refused here before anything is sent.
+const MAX_BYTES = 5 * 1024 * 1024;
 
 export type UploadResult =
   | { ok: true; mediaId: string; previewUrl: string }

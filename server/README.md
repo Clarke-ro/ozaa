@@ -49,6 +49,12 @@ Phase 5 has started (BUILD.md section 13). The server runs on Postgres: Supabase
 - **Clerk proves who someone is; Cravins decides what they may do.** The token is checked with `CLERK_SECRET_KEY`, and it must have been made for one of `ALLOWED_ORIGINS`. Roles come from `staff_memberships`, never from Clerk.
 - **The first owner** comes from `SAMPLE_OWNER_PHONE` and `SAMPLE_OWNER_NAME` (Heroku settings, not git) while `SEED_SAMPLES=true`. They become owner of the sample venues.
 
+## Photos (Supabase Storage)
+
+- `POST /v1/owner/venues/{id}/media` gives the owner app a one-file upload URL. The app PUTs the photo straight to Supabase, so photos never pass through this server.
+- When a dish (or later the venue) is saved with that `mediaId`, the server checks the file arrived, reads its width and height, and saves the public URL. A `mediaId` from another venue is refused.
+- Bucket `media`: public to read, 5 MB at most, JPEG, PNG or WebP. Only this server, with `SUPABASE_SECRET_KEY`, can sign uploads.
+
 ## Run it
 
 1. `cp .env.example .env`. Then fill it in:

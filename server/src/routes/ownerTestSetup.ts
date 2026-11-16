@@ -6,6 +6,7 @@ import type { VerifyOwner } from '../owner/clerk.ts';
 import type { PaymentService } from '../payments.ts';
 import { PaystackError, type Paystack } from '../paystack.ts';
 import { venuePaystack } from '../venues/venuePaystack.ts';
+import type { MediaStorage } from '../media/storage.ts';
 import { TEST_KEY } from './testHelpers.ts';
 
 /**
@@ -49,6 +50,14 @@ export async function ownerSetup(options: { verify?: VerifyOwner | null } = {}) 
       if (secret !== 'sk_test_goodkey12345') throw new PaystackError('Invalid key', 401);
     },
   });
+  // Storage: a file "arrives" once the test calls `upload(uploadUrl)`; it then measures 800×600.
+  const arrived = new Set<string>();
+  const storage: MediaStorage = {
+    signUpload: async (path) => `https://storage.test/upload/${path}?token=t`,
+    publicUrl: (path) => `https://storage.test/public/${path}`,
+    measure: async (path) => (arrived.has(path) ? { width: 800, height: 600 } : null),
+  };
+  const upload = (uploadUrl: string) => arrived.add(new URL(uploadUrl).pathname.replace('/upload/', ''));
   const logs: Record<string, unknown>[] = [];
   const app = createApp({
     guest: { db, guestSecret: 'test-guest-secret-that-is-long-enough', now: () => clock },
@@ -58,6 +67,7 @@ export async function ownerSetup(options: { verify?: VerifyOwner | null } = {}) 
       now: () => clock,
       venueKeys: venuePaystack({ db, key: TEST_KEY, client }),
       paystackClient: client,
+      storage,
     },
     payments: {} as PaymentService,
     allowedOrigins: [],
@@ -73,5 +83,5 @@ export async function ownerSetup(options: { verify?: VerifyOwner | null } = {}) 
     const text = await res.text();
     return { status: res.status, json: text ? JSON.parse(text) : null };
   };
-  return { db, call, logs, mamas, tick: (ms: number) => (clock += ms) };
+  return { db, call, logs, mamas, upload, tick: (ms: number) => (clock += ms) };
 }
