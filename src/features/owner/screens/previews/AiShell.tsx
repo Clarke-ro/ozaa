@@ -6,7 +6,7 @@ import { Bot } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
-import { ShellScreen } from '../ShellScreen';
+import { ShellScreen } from '../more/ShellScreen';
 
 export function AiShell() {
   const styles = useStyles();

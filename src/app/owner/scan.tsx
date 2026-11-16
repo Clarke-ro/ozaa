@@ -1,4 +1,4 @@
-import { ScanStampScreen } from '@/features/owner/screens/ScanStampScreen';
+import { ScanStampScreen } from '@/features/owner/screens/scan/ScanStampScreen';
 
 export default function Route() {
   return <ScanStampScreen />;

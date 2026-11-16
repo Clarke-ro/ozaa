@@ -4,23 +4,24 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Check, Clock, Flame, Minus, Plus } from 'lucide-react-native';
+import { ArrowLeft, Clock, Flame, Minus, Plus } from 'lucide-react-native';
 import { api } from '@/lib/api';
 import { pesewas } from '@/lib/brand';
 import { isOnGuestMenu, quantityLimits, unitPrice } from '@/lib/dishRules';
-import { hapticImpactLight, hapticSelection } from '@/lib/haptics';
+import { hapticImpactLight } from '@/lib/haptics';
 import { DEFAULT_CURRENCY, formatMoney } from '@/lib/money';
 import { useCart } from '@/features/cart';
 import { useVenue } from '@/features/venue';
 import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
-import { VenueImage } from '@/ui/VenueImage';
 import { ErrorState, LoadingState } from '@/ui/states';
 import { tokens } from '@/theme/tokens';
 import { useTheme } from '@/ui/theme';
-import { addOnTotal, missingChoice, pickOption } from '@/lib/dishLogic';
+import { addOnTotal, missingChoice } from '@/lib/dishLogic';
 import { DishPrice } from './DishPrice';
+import { DishChoices } from './DishChoices';
 import { DishGallery } from './DishGallery';
+import { RelatedDishes } from './RelatedDishes';
 import { guestKeys } from '@/lib/queryKeys';
 import { SHADOW_INK } from '@/theme/palette';
 
@@ -135,73 +136,13 @@ export function ItemScreen({ slug, itemId }: { slug: string; itemId: string }) {
             </Text>
           ) : null}
 
-          {item.modifierGroups.map((group) => {
-            const picked = picks[group.id] ?? [];
-            const needed = showMissing && missing?.id === group.id;
-            return (
-              <View key={group.id} style={styles.group}>
-                <View style={styles.groupHead}>
-                  <Text variant="title" style={styles.flex}>
-                    {group.name.en}
-                  </Text>
-                  <Text
-                    variant="caption"
-                    style={{ color: needed ? theme.error : theme.muted, fontFamily: 'Inter_600' }}
-                  >
-                    {group.min > 0
-                      ? t('menu.required')
-                      : group.max > 1
-                        ? t('menu.upTo', { count: group.max })
-                        : t('menu.optional')}
-                  </Text>
-                </View>
-                {group.options.map((option) => {
-                  const on = picked.includes(option.id);
-                  return (
-                    <Pressable
-                      key={option.id}
-                      accessibilityRole={group.max === 1 ? 'radio' : 'checkbox'}
-                      accessibilityState={{ checked: on }}
-                      onPress={() => {
-                        void hapticSelection();
-                        setPicks((p) => ({
-                          ...p,
-                          [group.id]: pickOption(group, picked, option.id),
-                        }));
-                      }}
-                      style={[
-                        styles.option,
-                        {
-                          borderColor: on ? theme.fill : theme.line,
-                          backgroundColor: on ? theme.tint : theme.white,
-                        },
-                      ]}
-                    >
-                      <View
-                        style={[
-                          group.max === 1 ? styles.radio : styles.box,
-                          {
-                            borderColor: on ? theme.fill : theme.line,
-                            backgroundColor: on ? theme.fill : 'transparent',
-                          },
-                        ]}
-                      >
-                        {on ? <Check size={14} color={theme.onFill} strokeWidth={3} /> : null}
-                      </View>
-                      <Text variant="body" style={styles.flex}>
-                        {option.name.en}
-                      </Text>
-                      {option.pricePesewas ? (
-                        <Text variant="caption" style={{ color: theme.muted }}>
-                          +{money(option.pricePesewas)}
-                        </Text>
-                      ) : null}
-                    </Pressable>
-                  );
-                })}
-              </View>
-            );
-          })}
+          <DishChoices
+            groups={item.modifierGroups}
+            picks={picks}
+            onPick={(groupId, ids) => setPicks((p) => ({ ...p, [groupId]: ids }))}
+            missingId={showMissing ? (missing?.id ?? null) : null}
+            money={money}
+          />
 
           <View style={styles.qtyRow}>
             <Text variant="title" style={styles.flex}>
@@ -249,38 +190,11 @@ export function ItemScreen({ slug, itemId }: { slug: string; itemId: string }) {
             style={[styles.note, { borderColor: theme.line, color: theme.text }]}
           />
 
-          {related.length ? (
-            <View style={styles.group}>
-              <Text variant="title">{t('menu.alsoLike')}</Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.related}
-              >
-                {related.map((r) => (
-                  <Pressable
-                    key={r.id}
-                    accessibilityRole="button"
-                    accessibilityLabel={r.name.en}
-                    onPress={() => router.replace(`/${slug}/menu/${r.id}`)}
-                    style={[styles.mini, { borderColor: theme.line }]}
-                  >
-                    <View style={[styles.miniPhoto, { backgroundColor: theme.wash }]}>
-                      {r.photo ? (
-                        <VenueImage url={r.photo.url} alt="" style={StyleSheet.absoluteFill} />
-                      ) : null}
-                    </View>
-                    <Text variant="caption" numberOfLines={1} style={styles.miniText}>
-                      {r.name.en}
-                    </Text>
-                    <Text variant="caption" style={[styles.miniText, { color: theme.muted }]}>
-                      {money(r.pricePesewas)}
-                    </Text>
-                  </Pressable>
-                ))}
-              </ScrollView>
-            </View>
-          ) : null}
+          <RelatedDishes
+            dishes={related}
+            money={money}
+            onOpen={(id) => router.replace(`/${slug}/menu/${id}`)}
+          />
         </View>
       </ScrollView>
 
@@ -320,7 +234,6 @@ export function ItemScreen({ slug, itemId }: { slug: string; itemId: string }) {
 
 // Space for the back button above the photo.
 const HERO_TOP = 56;
-const MINI = 132;
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
@@ -348,32 +261,6 @@ const styles = StyleSheet.create({
     minHeight: 32,
   },
   group: { gap: 8 },
-  groupHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  option: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    minHeight: 52,
-    paddingHorizontal: 14,
-    borderWidth: 1,
-    borderRadius: 14,
-  },
-  radio: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 1.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  box: {
-    width: 22,
-    height: 22,
-    borderRadius: 6,
-    borderWidth: 1.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   qtyRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   step: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   qty: { minWidth: 28, textAlign: 'center', fontVariant: ['tabular-nums'] },
@@ -385,17 +272,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Inter_400',
   },
-  related: { gap: 12 },
-  mini: {
-    width: MINI,
-    borderWidth: 1,
-    borderRadius: tokens.radius.md + 2,
-    overflow: 'hidden',
-    paddingBottom: tokens.space[2],
-  },
-  // Square, like the dish photos themselves, so nothing is cut off.
-  miniPhoto: { width: MINI, aspectRatio: 1 },
-  miniText: { paddingHorizontal: 8, paddingTop: 4 },
   back: {
     position: 'absolute',
     left: 16,

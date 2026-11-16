@@ -1,11 +1,10 @@
 import Svg, { Path, Rect } from 'react-native-svg';
 import { env } from '@/lib/env';
 import { qrModules } from '@/lib/qrSvg';
-import { QR_PAPER } from '@/theme/palette';
+import { QR_INK, QR_PAPER } from '@/theme/palette';
 
 // A QR code must be dark on light or many phone cameras will not read it, so it never follows
 // dark mode.
-const QR_INK = '#111111';
 
 /** A QR code for `url`, drawn as one SVG path, `size` points square. */
 export function QrImage({ url, size }: { url: string; size: number }) {

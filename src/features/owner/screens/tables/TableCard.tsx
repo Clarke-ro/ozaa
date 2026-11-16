@@ -1,12 +1,11 @@
 import { Image, StyleSheet, View } from 'react-native';
 import type { TableCardTemplate } from '@/features/tables';
-import { QR_PAPER } from '@/theme/palette';
+import { QR_INK as INK, QR_PAPER } from '@/theme/palette';
 import { Text } from '@/ui/Text';
 import { fontFamily } from '@/ui/theme';
 import { QrImage } from './QrImage';
 
 // The printed card is paper: it never follows dark mode, and the QR stays black on white.
-const INK = '#111111';
 const GREY = '#52525B';
 const STAND_BASE = '#2B2B2E';
 const FOLD = '#D9D9D3';

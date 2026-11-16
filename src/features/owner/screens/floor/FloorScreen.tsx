@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams } from 'expo-router';
@@ -10,15 +10,15 @@ import { api } from '@/lib/api';
 import type { FloorTable, Order } from '@/lib/api/types';
 import { DEFAULT_CURRENCY } from '@/lib/money';
 import { tokens } from '@/theme/tokens';
-import { useOwnerLayout } from '../chrome/layout';
-import { DeskWait, OwnerPage } from '../chrome/OwnerPage';
-import { ownerKeys } from '../data/keys';
-import { ticketAge } from '../desk/ops';
-import { ChipRow, EmptyCard } from '../kit';
+import { useOwnerLayout } from '../../chrome/layout';
+import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
+import { ownerKeys } from '../../data/keys';
+import { ticketAge } from '../../desk/ops';
+import { ChipRow, EmptyCard } from '../../kit';
 import type { StatusTone } from '@/theme/palette';
-import { useWaiterCalls } from './calls/useWaiterCalls';
-import { FloorBand } from './floor/FloorBand';
-import { FloorCard } from './floor/FloorCard';
+import { useWaiterCalls } from '../calls/useWaiterCalls';
+import { FloorBand } from './FloorBand';
+import { FloorCard } from './FloorCard';
 import {
   FLOOR_FILTERS,
   floorFilterCounts,
@@ -26,13 +26,14 @@ import {
   inFloorFilter,
   tablesInUse,
   type FloorFilter,
-} from './floor/floorGroups';
-import { FreeTile } from './floor/FreeTile';
-import { TableDetail } from './floor/TableDetail';
-import { useFloorActions } from './floor/useFloorActions';
-import { MarkPaidSheet } from './orders/MarkPaidSheet';
-import { useVenuePay } from './orders/useVenuePay';
+} from './floorGroups';
+import { FreeTile } from './FreeTile';
+import { TableDetail } from './TableDetail';
+import { useFloorActions } from './useFloorActions';
+import { MarkPaidSheet } from '../orders/MarkPaidSheet';
+import { useVenuePay } from '../orders/useVenuePay';
 import { POLL_MS } from '@/lib/polling';
+import { useNow } from '@/lib/useNow';
 
 // Minutes since ordering only need to move once every half minute.
 const TICK_MS = 30_000;
@@ -60,11 +61,7 @@ export function FloorScreen() {
   const [picked, setPicked] = useState<string | null>(params.table ?? null);
   const [filter, setFilter] = useState<FloorFilter>('all');
   const [paying, setPaying] = useState<Order | null>(null);
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), TICK_MS);
-    return () => clearInterval(id);
-  }, []);
+  const now = useNow(TICK_MS);
   const client = useQueryClient();
   const actions = useFloorActions(venueId);
   const { venue, methods } = useVenuePay(venueId);

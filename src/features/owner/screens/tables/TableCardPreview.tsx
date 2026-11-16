@@ -2,26 +2,13 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { TableCardTemplate } from '@/features/tables';
 import { hapticSelection } from '@/lib/haptics';
+import { CARD_SWATCHES } from '@/theme/palette';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
 import { Segmented } from '../../kit';
 
-// The canvas palette for printed cards. "Venue colour" is filled in from the venue's own accent.
-export const CARD_ACCENTS = [
-  { id: 'orange', hex: '#D24000' },
-  { id: 'venue', hex: '' },
-  { id: 'black', hex: '#111111' },
-  { id: 'red', hex: '#B42318' },
-  { id: 'pink', hex: '#BE185D' },
-  { id: 'purple', hex: '#6D28D9' },
-  { id: 'blue', hex: '#1D4ED8' },
-  { id: 'teal', hex: '#0E7490' },
-  { id: 'green', hex: '#0F7A55' },
-  { id: 'gold', hex: '#A16207' },
-  { id: 'brown', hex: '#6B3E26' },
-  { id: 'slate', hex: '#475569' },
-] as const;
+export const CARD_ACCENTS = CARD_SWATCHES;
 
 const STYLES: TableCardTemplate[] = ['folded_tent', 'acrylic_stand', 'sticker'];
 

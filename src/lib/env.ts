@@ -46,12 +46,38 @@ const fromBuild: Source = {
   EXPO_PUBLIC_SUPPORT_WHATSAPP: process.env.EXPO_PUBLIC_SUPPORT_WHATSAPP,
 };
 
-export function readEnv(source: Source = fromBuild): Env {
+const LOCAL = /^(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+)$/;
+
+/**
+ * A real-server build must point somewhere real. While developing, a local server is fine; a
+ * production build must use https and not localhost, or every phone would call itself and fail.
+ */
+function checkApiUrl(url: string, production: boolean): void {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new Error(`EXPO_PUBLIC_API_URL is not a URL: "${url}"`);
+  }
+  if (!production) return;
+  if (LOCAL.test(parsed.hostname))
+    throw new Error(
+      'EXPO_PUBLIC_API_URL points at this machine; set the real server for a release',
+    );
+  if (parsed.protocol !== 'https:')
+    throw new Error('EXPO_PUBLIC_API_URL must use https in a release build');
+}
+
+export function readEnv(
+  source: Source = fromBuild,
+  production = process.env.NODE_ENV === 'production',
+): Env {
   // An empty value in .env means "not set", so the default applies.
   const blankToUnset = Object.fromEntries(
     Object.entries(source).map(([name, value]) => [name, value || undefined]),
   );
   const parsed = schema.parse(blankToUnset);
+  if (parsed.EXPO_PUBLIC_API_MODE === 'http') checkApiUrl(parsed.EXPO_PUBLIC_API_URL, production);
   return {
     ...parsed,
     live: parsed.EXPO_PUBLIC_API_LIVE.split(',')

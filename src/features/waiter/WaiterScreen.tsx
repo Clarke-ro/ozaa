@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import * as Crypto from 'expo-crypto';
 import { useMutation } from '@tanstack/react-query';
@@ -17,6 +17,7 @@ import { useGuestSession, useMyCalls } from '@/features/session';
 import { useVenue } from '@/features/venue';
 import { CallStatusCard } from './CallStatusCard';
 import { REASON_ICON, REASONS } from './reasonIcon';
+import { useNow } from '@/lib/useNow';
 
 // The note travels with the call to the waiter's phone; keep it to a line or two.
 const NOTE_MAX = 140;
@@ -36,11 +37,7 @@ export function WaiterScreen({ slug }: { slug: string }) {
   const remember = useMyCalls((s) => s.add);
   const [picked, setPicked] = useState<WaiterReason[]>([]);
   const [note, setNote] = useState('');
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), TICK_MS);
-    return () => clearInterval(id);
-  }, []);
+  const now = useNow(TICK_MS);
 
   // One open call per table (BUILD.md 1.10): the first reason is the call, the others ride in
   // its note so the waiter sees everything the table asked for in one place.

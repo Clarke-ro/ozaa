@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -12,8 +12,9 @@ import { useTheme } from '@/ui/theme';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
 import { ChipRow, EmptyCard, toast } from '../../kit';
-import { AskCravinsAiScreen } from '../AskCravinsAiScreen';
+import { AskCravinsAiScreen } from '../ai/AskCravinsAiScreen';
 import { FeedbackCard } from './FeedbackCard';
+import { useNow } from '@/lib/useNow';
 
 type Tab = 'new' | 'archived' | 'ai';
 
@@ -24,11 +25,7 @@ export function FeedbackScreen() {
   const client = useQueryClient();
   const [tab, setTab] = useState<Tab>('new');
   const [search, setSearch] = useState('');
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 60_000);
-    return () => clearInterval(id);
-  }, []);
+  const now = useNow(60_000);
   const query = useDebouncedValue(search.trim());
 
   const list = useQuery({

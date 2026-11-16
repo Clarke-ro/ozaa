@@ -2,26 +2,13 @@ import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Check } from 'lucide-react-native';
 import { hapticSelection } from '@/lib/haptics';
+import { VENUE_SWATCHES } from '@/theme/palette';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
 import { Segmented, TitledSection } from '../../kit';
 import { FieldLabel } from './FieldLabel';
 import { buttonLook, isHex, normaliseHex, type Tint } from './look';
-
-// The canvas palette. Any hex still works in the code field; these save typing.
-const SWATCHES = [
-  { hex: '#B5432A', name: 'Clay' },
-  { hex: '#D24000', name: 'Orange' },
-  { hex: '#B42318', name: 'Red' },
-  { hex: '#BE185D', name: 'Pink' },
-  { hex: '#6D28D9', name: 'Purple' },
-  { hex: '#1D4ED8', name: 'Blue' },
-  { hex: '#0E7490', name: 'Teal' },
-  { hex: '#0F7A55', name: 'Green' },
-  { hex: '#E8B931', name: 'Gold' },
-  { hex: '#111111', name: 'Black' },
-] as const;
 
 /** Venue colour, its code with the contrast check, and the button text colour. */
 export function ColourSection({
@@ -50,13 +37,13 @@ export function ColourSection({
           accessibilityLabel={t('ownerBranding.colour')}
           style={styles.swatches}
         >
-          {SWATCHES.map((s) => {
+          {VENUE_SWATCHES.map((s) => {
             const on = s.hex.toUpperCase() === accent.toUpperCase();
             return (
               <Pressable
                 key={s.hex}
                 accessibilityRole="radio"
-                accessibilityLabel={s.name}
+                accessibilityLabel={t(`ownerBranding.swatch.${s.id}`)}
                 accessibilityState={{ checked: on }}
                 onPress={() => {
                   void hapticSelection();

@@ -49,7 +49,10 @@ const config: ExpoConfig = {
     [
       'expo-camera',
       {
-        cameraPermission: 'Cravins uses the camera to record your video review.',
+        // The camera scans loyalty cards (owner app) and records video reviews (guests); the store
+        // review checks this text matches every use.
+        cameraPermission:
+          'Cravins uses the camera to scan loyalty cards and to record your video review.',
         microphonePermission: 'Cravins records sound with your video review.',
       },
     ],

@@ -1213,7 +1213,19 @@
     "homeOrder": "Guest home order",
     "saveBranding": "Save branding",
     "guestsSee": "What guests see",
-    "previewNote": "Changes show here as you make them."
+    "previewNote": "Changes show here as you make them.",
+    "swatch": {
+      "clay": "Clay",
+      "orange": "Orange",
+      "red": "Red",
+      "pink": "Pink",
+      "purple": "Purple",
+      "blue": "Blue",
+      "teal": "Teal",
+      "green": "Green",
+      "gold": "Gold",
+      "black": "Black"
+    }
   },
   "ownerPages": {
     "businessLead": "Your business name and every location you run on Cravins.",

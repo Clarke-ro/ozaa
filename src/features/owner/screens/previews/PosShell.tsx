@@ -8,7 +8,7 @@ import { DEFAULT_CURRENCY, formatMoney, sumPesewas } from '@/lib/money';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
-import { ShellScreen } from '../ShellScreen';
+import { ShellScreen } from '../more/ShellScreen';
 
 export function PosShell() {
   const styles = useStyles();

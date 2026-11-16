@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -16,6 +16,7 @@ import { DeviceCard } from './DeviceCard';
 import { PairCode } from './PairCode';
 import { PairSheet } from './PairSheet';
 import { ownerKeys } from '../../data/keys';
+import { useNow } from '@/lib/useNow';
 
 /**
  * Scanner devices (design canvas): the paired phones and tablets with a Remove each, then the
@@ -33,11 +34,7 @@ export function DevicesScreen() {
     enabled: Boolean(venueId),
   });
   const [pairing, setPairing] = useState(false);
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 60_000);
-    return () => clearInterval(id);
-  }, []);
+  const now = useNow(60_000);
   const [removing, setRemoving] = useState<ScannerDevice | null>(null);
 
   const revoke = useMutation({
