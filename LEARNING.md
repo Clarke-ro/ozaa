@@ -39,6 +39,38 @@ Run `EXPO_PUBLIC_API_MODE=http npx expo export -p web`, then search `dist/` for 
 
 ---
 
+## 2026-11-15 · Staff, guests and special days on the new API calls
+
+**What we built**
+
+The Staff page now changes a role, picks the tables a waiter looks after, ends a shift, resets a PIN and shows tips today. A customer page can remove a guest who asks to be forgotten. Closed days have names and can open with their own hours. Branding orders the sections on the guest home.
+
+**How it works**
+
+```
+contract PR (#110) merged first → new calls in api/openapi.yaml
+→ client.ts says what the app may call
+→ http*.ts calls the real server · mock*.ts plays the server in the demo
+→ screens call api.ownerUpdateStaff(...) and never know which one answered
+```
+
+**Files to look at**
+
+- `src/features/owner/screens/staff/useStaffActions.ts`: every staff action in one hook.
+- `src/mocks/mockClient.staffGuests.test.ts`: the mock refuses to change the owner's role.
+- `src/features/owner/screens/business/hoursForm.ts`: `addClosedDay` with a name and hours.
+- `src/features/venue/sectionOrder.ts`: the guest home section order.
+
+**New idea: contract first**
+
+The app and the server agree on a contract (`api/openapi.yaml`) before either is written. That's why the contract went in its own PR first: once it merged, the app, the mock and later the real server could each be built against the same promise.
+
+**Try it yourself**
+
+In `sectionOrder.ts`, call `orderSections(['more'])` in a test. "More" comes first and the other sections keep their usual order.
+
+---
+
 ## 2026-11-15 · Owner routes load only their screen
 
 **What we built**

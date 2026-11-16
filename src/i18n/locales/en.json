@@ -1595,8 +1595,6 @@
     "closedDays": "Closed days",
     "noClosedDays": "No closed days yet. Add public holidays here.",
     "addClosed": "Add a closed day",
-    "closedDate": "Date",
-    "dateError": "Use a date like 2026-12-25.",
     "removeClosed": "Remove {{date}}",
     "locationPhone": "Phone",
     "map": {
@@ -1613,7 +1611,16 @@
       "2": "Average spend per guest: GH₵ 50 to 120",
       "3": "Average spend per guest: GH₵ 120 to 250",
       "4": "Average spend per guest: over GH₵ 250"
-    }
+    },
+    "closedName": "Name",
+    "closedNameHint": "For example Christmas Day",
+    "month": "Month",
+    "dayOfMonth": "Day",
+    "closedKind": "Closed or open",
+    "closedAllDay": "Closed all day",
+    "ownHours": "Open with its own hours",
+    "hoursRange": "{{opens}} to {{closes}}",
+    "hoursError": "Pick a closing time after the opening time."
   },
   "ownerServices": {
     "wifi": "Wi-Fi for guests",
@@ -2027,7 +2034,20 @@
     "removeFromStaff": "Remove from staff",
     "missing": "This person isn't on the team",
     "missingBody": "They may have been removed. Go back to see who works here.",
-    "invitedTag": "Invited"
+    "invitedTag": "Invited",
+    "endShift": "End shift",
+    "shiftEnded": "Signed out on every device",
+    "pinReset": "PIN cleared. They'll set a new one next time they sign in.",
+    "tipsToday": "Tips today",
+    "tipsShort": "Tips",
+    "tables": "Tables",
+    "tablesHint": "They see calls and orders from these tables first.",
+    "tablesAll": "No tables picked: they look after every table.",
+    "signIn": "Sign-in",
+    "pin": "Sign-in PIN",
+    "pinSet": "{{name}} signs in on the staff app with a 4-digit PIN",
+    "pinNone": "{{name}} hasn't set a PIN yet. They sign in with a texted code.",
+    "resetPin": "Reset PIN"
   },
   "ownerDevices": {
     "pair": "Pair a phone",
@@ -2387,7 +2407,11 @@
     "marketingCan": "You can send offers to this guest",
     "marketingCant": "You can't send offers to this guest",
     "consentShort": "Consent",
-    "stampAdded": "Stamp added"
+    "stampAdded": "Stamp added",
+    "remove": "Remove this guest",
+    "removeTitle": "Remove {{name}}?",
+    "removeBody": "Their card, stamps, rewards and what they agreed to are deleted. Paid orders stay for tax, without their name or phone. This can't be undone.",
+    "removed": "Guest removed"
   },
   "ownerAi": {
     "title": "Cravins feedback assistant",

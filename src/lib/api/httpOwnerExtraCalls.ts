@@ -1,5 +1,5 @@
 import type { ApiClient } from './client';
-import type { HttpContext } from './httpContext';
+import { problem, type HttpContext } from './httpContext';
 
 /** Real-server calls: promos, notifications, one loyalty customer, the scan log and the profile. */
 export function httpOwnerExtraCalls({ client, headers, ok }: HttpContext) {
@@ -58,6 +58,13 @@ export function httpOwnerExtraCalls({ client, headers, ok }: HttpContext) {
           headers: access(),
         }),
       ),
+    async ownerRemoveLoyaltyCustomer(venueId, customerId) {
+      const result = await client.DELETE('/owner/venues/{venueId}/loyalty/customers/{customerId}', {
+        params: { path: { venueId, customerId } },
+        headers: access(),
+      });
+      if (!result.response.ok) throw problem(result.error, result.response.status);
+    },
     ownerStampLoyaltyCustomer: (venueId, customerId, call) =>
       ok(
         client.POST('/owner/venues/{venueId}/loyalty/customers/{customerId}/stamp', {

@@ -98,6 +98,30 @@ export function mockOwnerVenueCalls(ctx: MockContext) {
       world.staff.push(member);
       return member;
     },
+    async ownerUpdateStaff(venueId, staffId, body) {
+      await gate();
+      const member = world.staff.find((s) => s.id === staffId && s.venueId === venueId);
+      if (!member) throw new ApiError(404, 'not_found', 'Staff member not found');
+      if (member.role === 'owner')
+        throw new ApiError(409, 'owner_role', "The owner's role can't be changed");
+      if (body.role !== undefined) member.role = body.role;
+      if (body.tableCodes !== undefined) member.tableCodes = body.tableCodes;
+      return member;
+    },
+    async ownerSignOutStaff(venueId, staffId) {
+      await gate();
+      const member = world.staff.find((s) => s.id === staffId && s.venueId === venueId);
+      if (!member) throw new ApiError(404, 'not_found', 'Staff member not found');
+      if (member.role === 'owner')
+        throw new ApiError(409, 'owner_sign_out', 'The owner signs out in Settings');
+      member.onShift = false;
+    },
+    async ownerResetStaffPin(venueId, staffId) {
+      await gate();
+      const member = world.staff.find((s) => s.id === staffId && s.venueId === venueId);
+      if (!member) throw new ApiError(404, 'not_found', 'Staff member not found');
+      member.hasPin = false;
+    },
     async ownerRevokeStaff(venueId, staffId) {
       await gate();
       world.staff = world.staff.filter((s) => s.id !== staffId);

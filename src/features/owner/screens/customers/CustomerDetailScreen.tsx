@@ -14,7 +14,8 @@ import { useTheme } from '@/ui/theme';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
 import { useOwnerLayout } from '../../chrome/layout';
-import { EmptyCard, FigureRow, TitledSection, toast } from '../../kit';
+import { ConfirmDialog, EmptyCard, FigureRow, TitledSection, toast } from '../../kit';
+import { Button } from '@/ui/Button';
 import { timeAgo } from '@/lib/time';
 import { ConsentCard } from './ConsentCard';
 import { CustomerHead } from './CustomerHead';
@@ -44,6 +45,18 @@ export function CustomerDetailScreen({ customerId }: { customerId: string }) {
     queryKey: ownerKeys.venue(venueId),
     queryFn: () => api.ownerGetVenue(venueId),
     enabled: Boolean(venueId),
+  });
+  const [removing, setRemoving] = useState(false);
+  const remove = useMutation({
+    mutationFn: () => api.ownerRemoveLoyaltyCustomer(venueId, customerId),
+    onSuccess: () => {
+      setRemoving(false);
+      toast.success(t('ownerMembers.removed'));
+      void client.invalidateQueries({ queryKey: ownerKeys.loyaltyCustomers(venueId) });
+      void client.invalidateQueries({ queryKey: ownerKeys.loyalty(venueId) });
+      router.replace('/owner/customers');
+    },
+    onError: () => toast.error(t('ownerKit.saveFailed')),
   });
   const stamp = useMutation({
     mutationFn: () =>
@@ -76,9 +89,7 @@ export function CustomerDetailScreen({ customerId }: { customerId: string }) {
   return (
     <OwnerPage
       title={c ? c.name || c.phoneMasked : t('owner.customers')}
-      subtitle={
-        last ? t('ownerMembers.lastVisitAgo', { ago: timeAgo(last, now, t) }) : undefined
-      }
+      subtitle={last ? t('ownerMembers.lastVisitAgo', { ago: timeAgo(last, now, t) }) : undefined}
       back={{ label: t('owner.customers'), onPress: back }}
     >
       <DeskWait
@@ -146,6 +157,14 @@ export function CustomerDetailScreen({ customerId }: { customerId: string }) {
               ))}
             </TitledSection>
             <ConsentCard consent={c.consent} date={date} />
+            {/* Act 843: a guest can ask to be forgotten. Paid orders stay for tax, without them. */}
+            <Button
+              label={t('ownerMembers.remove')}
+              tone="secondary"
+              labelColor={theme.error}
+              onPress={() => setRemoving(true)}
+              style={styles.remove}
+            />
           </View>
         ) : (
           <EmptyCard
@@ -157,6 +176,16 @@ export function CustomerDetailScreen({ customerId }: { customerId: string }) {
           />
         )}
       </DeskWait>
+      <ConfirmDialog
+        visible={removing}
+        destructive
+        title={t('ownerMembers.removeTitle', { name: c?.name || c?.phoneMasked || '' })}
+        message={t('ownerMembers.removeBody')}
+        confirmLabel={t('ownerMembers.remove')}
+        loading={remove.isPending}
+        onCancel={() => setRemoving(false)}
+        onConfirm={() => remove.mutate()}
+      />
     </OwnerPage>
   );
 }
@@ -173,4 +202,5 @@ const styles = StyleSheet.create({
     paddingVertical: tokens.space[2],
   },
   flex: { flex: 1, minWidth: 0, gap: 2 },
+  remove: { alignSelf: 'flex-start', minHeight: 40 },
 });

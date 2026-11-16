@@ -159,6 +159,16 @@ export type ApiClient = {
     body: { phone: string; role: StaffRole; firstName: string },
   ): Promise<StaffMember>;
   ownerRevokeStaff(venueId: string, staffId: string): Promise<void>;
+  /** Owner only. The owner's own role can't change, and nobody can be made owner (409). */
+  ownerUpdateStaff(
+    venueId: string,
+    staffId: string,
+    body: { role?: Exclude<StaffRole, 'owner'>; tableCodes?: string[] },
+  ): Promise<StaffMember>;
+  /** "End shift": signs them out on every device. */
+  ownerSignOutStaff(venueId: string, staffId: string): Promise<void>;
+  /** Clears their PIN; they sign in with an SMS code next time and set a new one. */
+  ownerResetStaffPin(venueId: string, staffId: string): Promise<void>;
   ownerListCategories(venueId: string): Promise<{ items: MenuCategory[] }>;
   ownerCreateCategory(venueId: string, body: MenuCategoryInput): Promise<MenuCategory>;
   ownerUpdateCategory(
@@ -216,6 +226,8 @@ export type ApiClient = {
     countsByTag?: Record<string, number>;
   }>;
   ownerGetLoyaltyCustomer(venueId: string, customerId: string): Promise<LoyaltyCustomerDetail>;
+  /** Act 843 erasure: their card, stamps and consent go; paid orders stay without name or phone. */
+  ownerRemoveLoyaltyCustomer(venueId: string, customerId: string): Promise<void>;
   ownerStampLoyaltyCustomer(
     venueId: string,
     customerId: string,

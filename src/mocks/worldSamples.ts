@@ -12,7 +12,14 @@ const STAFF_DETAIL: Record<
     joinedDaysAgo: number;
     lastSeenMinutesAgo: number | null;
     onShift: boolean;
-    today: { ordersHandled: number; callsAnswered: number; avgPickupMinutes: number | null };
+    today: {
+      ordersHandled: number;
+      callsAnswered: number;
+      avgPickupMinutes: number | null;
+      tipsPesewas?: number;
+    };
+    tableCodes?: string[];
+    hasPin?: boolean;
   }
 > = {
   '0001': {
@@ -21,13 +28,16 @@ const STAFF_DETAIL: Record<
     lastSeenMinutesAgo: 2,
     onShift: true,
     today: { ordersHandled: 6, callsAnswered: 2, avgPickupMinutes: 3 },
+    hasPin: true,
   },
   '0002': {
     lastName: 'Asante',
     joinedDaysAgo: 210,
     lastSeenMinutesAgo: 1,
     onShift: true,
-    today: { ordersHandled: 18, callsAnswered: 11, avgPickupMinutes: 2 },
+    today: { ordersHandled: 18, callsAnswered: 11, avgPickupMinutes: 2, tipsPesewas: 4500 },
+    tableCodes: ['3', '4', '5', '12'],
+    hasPin: true,
   },
   '0003': {
     lastName: 'Boateng',
@@ -35,6 +45,7 @@ const STAFF_DETAIL: Record<
     lastSeenMinutesAgo: 140,
     onShift: false,
     today: { ordersHandled: 23, callsAnswered: 0, avgPickupMinutes: null },
+    hasPin: false,
   },
 };
 
@@ -50,6 +61,8 @@ export function staffDetail(key: string, now: number) {
         : new Date(now - d.lastSeenMinutesAgo * 60_000).toISOString(),
     onShift: d.onShift,
     today: d.today,
+    tableCodes: d.tableCodes ?? [],
+    hasPin: d.hasPin ?? false,
   };
 }
 
