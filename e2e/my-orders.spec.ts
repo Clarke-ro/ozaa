@@ -19,10 +19,7 @@ test('after an online order: track strip, My orders, notifications, and it is st
   await page.getByRole('button', { name: /View order/ }).click();
   await page.getByRole('textbox', { name: 'Your name' }).fill('Ama');
   await page.getByRole('textbox', { name: 'Phone number' }).fill('024 123 4567');
-  // Pay later, where the venue offers the choice (pay-when.spec.ts covers paying now).
-  const later = page.getByRole('radio', { name: /Pay when you collect/ });
-  if (await later.count()) await later.click();
-  await page.getByRole('button', { name: /^(Place order|Send and pay)/ }).click();
+  await page.getByRole('button', { name: /^Continue to payment/ }).click();
   await expect(page).toHaveURL(/\/bean-there\/(status|pay)$/, { timeout: 15_000 });
 
   // Back on the venue page: the order is followed live.

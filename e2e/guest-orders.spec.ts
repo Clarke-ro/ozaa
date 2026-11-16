@@ -28,8 +28,9 @@ test('table guest: the page reloads while browsing, and the order still reaches 
   await expect(page.getByRole('button', { name: /^Add .+ to your order$/ }).first()).toBeVisible();
   await page.reload({ waitUntil: 'domcontentloaded' });
   await addFirstDishAndOpenOrder(page);
-  await page.getByRole('button', { name: 'Send to kitchen' }).click();
-  await expect(page).toHaveURL(/\/bean-there\/status$/, { timeout: 15_000 });
+  // Bean There takes payments in the app, so the order goes and the Payment step opens.
+  await page.getByRole('button', { name: /^Continue to payment/ }).click();
+  await expect(page).toHaveURL(/\/bean-there\/pay$/, { timeout: 15_000 });
   await expect(page.getByText(/unauthori[sz]ed|errors\./i)).toHaveCount(0);
   expect(errors).toEqual([]);
 });

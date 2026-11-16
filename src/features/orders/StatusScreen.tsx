@@ -152,8 +152,12 @@ export function StatusScreen({ slug }: { slug: string }) {
 
         <View style={styles.actions}>
           {/* In-app Pay is for a table's bill; pickup and delivery pay on collection. */}
-          {payOnline && unpaid && !fromLink ? (
-            <Button label={t('status.pay')} onPress={() => router.push(`/${slug}/pay`)} />
+          {/* A table pays its bill here; a pickup order must be paid in the app before collection. */}
+          {payOnline && unpaid && (!fromLink || o.source === 'pickup') ? (
+            <Button
+              label={fromLink ? t('payment.payNow') : t('status.pay')}
+              onPress={() => router.push(`/${slug}/pay`)}
+            />
           ) : null}
           <View style={styles.pair}>
             {/* Only a guest at a table can call a waiter. */}

@@ -14,7 +14,7 @@ import { DEFAULT_CURRENCY, formatMoney } from '@/lib/money';
 import { canPayOnline } from '@/lib/payments';
 import { useVenue } from '@/features/venue';
 import { pesewas } from '@/lib/brand';
-import { useGuestSession } from '@/features/session';
+import { useGuestSession, useMyCalls } from '@/features/session';
 import { Button } from '@/ui/Button';
 import { PageHeader } from '@/ui/PageHeader';
 import { SafeScreen } from '@/ui/Screen';
@@ -28,7 +28,8 @@ import { secondsLeft } from './paymentWatch';
 import { BillLines } from './BillLines';
 import { openCheckout } from './openCheckout';
 import { useCardReturn } from './useCardReturn';
-import { PAY_METHODS, PayMethods, type PayMethod } from './PayMethods';
+import { PAY_METHODS, PayMethods, type PayChoice, type PayMethod } from './PayMethods';
+import { laterOption } from './laterOption';
 import { PayProgress } from './PayProgress';
 import { PaySummary } from './PaySummary';
 import { payStyles } from './payStyles';
@@ -71,7 +72,9 @@ export function PayScreen({ slug }: { slug: string }) {
   // No tip and an empty number to start: the guest chooses, nothing is decided for them.
   const [tip, setTip] = useState<(typeof TIPS)[number]>(0);
   const [phone, setPhone] = useState('');
-  const [method, setMethod] = useState<PayMethod>('mtn');
+  const [method, setMethod] = useState<PayChoice>('mtn');
+  const [deferring, setDeferring] = useState(false);
+  const rememberCalls = useMyCalls((s) => s.add);
   const [mine, setMine] = useState<string[]>([]);
   const [payState, send] = useReducer(payTransition, payInitial);
   const [started, setStarted] = useState<Payment | null>(null);
@@ -156,7 +159,10 @@ export function PayScreen({ slug }: { slug: string }) {
       {
         quoteId: quote.quoteId,
         method: method === 'card' ? 'card' : 'momo',
-        momo: method === 'card' || !parsed ? undefined : { phone: parsed, provider: method },
+        momo:
+          method === 'card' || method === 'later' || !parsed
+            ? undefined
+            : { phone: parsed, provider: method },
       },
       { idempotencyKey },
     );
@@ -178,11 +184,29 @@ export function PayScreen({ slug }: { slug: string }) {
 
   // What is being paid, for the steps after Pay: the server's amount once it has one.
   const typed = asGhanaPhone(parsePhone(phone, country));
+  const chosen: PayMethod = method === 'later' ? 'mtn' : method;
   const paidWith: PayMethod = shown
     ? shown.method === 'card'
       ? 'card'
-      : (shown.provider ?? method)
-    : method;
+      : (shown.provider ?? chosen)
+    : chosen;
+  // The page's one "not now" option: the bill after the meal at a table, or pay on delivery.
+  const laterKey = laterOption(order.data);
+  const later = method === 'later' && laterKey !== null;
+  const defer = async () => {
+    setDeferring(true);
+    try {
+      if (order.data.tableCode) {
+        // Asking for the bill is a waiter call, so staff see it with the table's other calls.
+        const body = { reason: 'bill' as const };
+        const call = await api.callWaiter(body, { idempotencyKey: Crypto.randomUUID() });
+        rememberCalls([call.id]);
+      }
+      router.replace(`/${slug}/status`);
+    } finally {
+      setDeferring(false);
+    }
+  };
   const card = paidWith === 'card';
   const charge = {
     amountPesewas: shown?.amountPesewas ?? due,
@@ -234,21 +258,25 @@ export function PayScreen({ slug }: { slug: string }) {
               <SplitChoice mode={mode} onMode={setMode} parts={parts} onParts={setParts} />
             ) : null}
 
-            <View style={payStyles.block}>
-              <Text variant="title">{t('pay.tip')}</Text>
-              <FilterChips
-                label={t('pay.tip')}
-                value={String(tip)}
-                onChange={(id) => setTip(Number(id) as (typeof TIPS)[number])}
-                items={TIPS.map((v) => ({
-                  id: String(v),
-                  label: v === 0 ? t('pay.noTip') : `${v}%`,
-                }))}
-              />
-            </View>
+            {later ? null : (
+              <View style={payStyles.block}>
+                <Text variant="title">{t('pay.tip')}</Text>
+                <FilterChips
+                  label={t('pay.tip')}
+                  value={String(tip)}
+                  onChange={(id) => setTip(Number(id) as (typeof TIPS)[number])}
+                  items={TIPS.map((v) => ({
+                    id: String(v),
+                    label: v === 0 ? t('pay.noTip') : `${v}%`,
+                  }))}
+                />
+              </View>
+            )}
 
             <View style={payStyles.block}>
-              <Text variant="title">{t('pay.with')}</Text>
+              <Text variant="title" accessibilityRole="header">
+                {t('payment.title')}
+              </Text>
               <PayMethods
                 value={method}
                 onChange={setMethod}
@@ -256,26 +284,37 @@ export function PayScreen({ slug }: { slug: string }) {
                 onPhone={setPhone}
                 // Demo builds only: the mock accepts any valid number and charges nothing.
                 hint={DEMO ? t('pay.testNumber') : undefined}
+                later={laterKey ? t(laterKey) : null}
               />
             </View>
 
-            <PaySummary
-              share={preview?.sharePesewas ?? 0}
-              tip={preview?.tipPesewas ?? 0}
-              fee={fee}
-              due={due}
-              currency={currency}
-            />
-            <Button
-              label={t('pay.payNow', { amount: formatMoney(pesewas(due), currency) })}
-              disabled={!preview || due <= 0}
-              loading={payState.kind !== 'choosing'}
-              onPress={() =>
-                void start().catch(() =>
-                  send({ type: 'start_rejected', message: t('pay.nothingTaken') }),
-                )
-              }
-            />
+            {later ? (
+              <Button
+                label={t(order.data.tableCode ? 'payment.requestBill' : 'payment.confirmDelivery')}
+                loading={deferring}
+                onPress={() => void defer()}
+              />
+            ) : (
+              <>
+                <PaySummary
+                  share={preview?.sharePesewas ?? 0}
+                  tip={preview?.tipPesewas ?? 0}
+                  fee={fee}
+                  due={due}
+                  currency={currency}
+                />
+                <Button
+                  label={t('pay.payNow', { amount: formatMoney(pesewas(due), currency) })}
+                  disabled={!preview || due <= 0}
+                  loading={payState.kind !== 'choosing'}
+                  onPress={() =>
+                    void start().catch(() =>
+                      send({ type: 'start_rejected', message: t('pay.nothingTaken') }),
+                    )
+                  }
+                />
+              </>
+            )}
             {venue.data?.payMethods?.testMode ? (
               <Text variant="caption" style={[styles.center, { color: theme.meta }]}>
                 {t('pay.test')}
