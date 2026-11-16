@@ -47,8 +47,8 @@ import { StoreNoticeBanner, useLiveNotices } from '@/features/notices';
  * Without one (a table guest's Menu page), there's a header with a back button.
  *
  * This is a normal scroll view, not FlashList. FlashList v2 asks the phone for the list's
- * size and then draws. On Android that answer comes back as 0, so the menu never appears.
- * The browser answers straight away, which is why the same screen showed on the web only.
+ * size and then draws. On iPhone and Android that answer comes back as 0, so the menu never
+ * appears. The browser answers straight away, which is why the same screen showed on the web only.
  */
 export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
   const { t } = useTranslation();

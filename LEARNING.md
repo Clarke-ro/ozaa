@@ -4,27 +4,30 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
-## 2026-11-16 · The menu was blank on Android
+## 2026-11-16 · The menu was blank on iPhone and Android
 
 **What we built**
 
-The new menu (banner, tabs, offer row, photo cards) now draws on Android and iPhone, the same way it already drew in the browser.
+The new menu (banner, tabs, offer row, photo cards) now draws on iPhone and Android, the same way it already drew in the browser.
 
 **How it works**
 
-The dish list was a FlashList. It asks the phone "how tall am I?" and only then draws the rows. On Android that answer comes back too late, as a height of 0, so it draws nothing. The browser answers immediately, which is why the web looked finished and the phone looked unchanged.
+The dish list was a FlashList. It asks the phone "how tall am I?" and only then draws the rows. On iPhone and Android that answer comes back too late, as a height of 0, so it draws nothing. The browser answers immediately, which is why the web looked finished and both phones looked unchanged.
 
-The menu is now an ordinary scroll view. Android can measure that. The tab bar is the second child, and the scroll view pins it under the venue's name once the banner has gone.
+The menu is now an ordinary scroll view. Both phones can measure that. The tab bar is the second child, and the scroll view pins it under the venue's name once the banner has gone.
+
+The phones also load TrueType copies of the same fonts. iPhone and Android cannot read the WOFF2 files the browser uses, so the type never arrived there.
 
 ```
-web:     FlashList measures the page and draws the dishes
-Android: the same question came back as 0, so no dishes
-now:     a normal scroll view, which Android can measure
+web:    FlashList measures the page and draws the dishes
+phones: the same question came back as 0, so no dishes
+now:    a normal scroll view, which iPhone and Android can measure
 ```
 
 **Files to look at**
 
 - `src/features/menu/MenuScreen.tsx`: the scroll view and the pinned tab bar.
+- `src/theme/fonts.ts`: the TrueType files the phones load. The browser uses `fonts.web.ts`.
 
 **New idea: a measurement that arrives too late**
 
