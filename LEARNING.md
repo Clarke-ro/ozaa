@@ -3136,3 +3136,35 @@ Instead of removing a row, we mark it deleted and leave it out of every list. Th
 In `ownerMenu.test.ts`, give a dish a sale price equal to its price. The server refuses with 422. Then read `checkItem` to see why.
 
 **Not yet:** dish photos. Uploads need a storage service (BUILD.md section 17). Until then, an edit keeps the dish's current photo.
+
+## 2026-11-16 · Dish photos go to Supabase Storage
+
+**What we built**
+
+Owners can put a photo on a dish. The photo goes straight from the owner's browser to Supabase Storage. The server only hands out a one-time upload address and checks the result.
+
+**How it works**
+
+```
+app → POST /owner/venues/{id}/media {dish_photo, image/jpeg, size}
+server → asks Supabase for a signed upload URL (2 hours, one file) → app
+app → PUT photo to that URL                       (straight to Supabase)
+app → PATCH dish {photoMediaId}
+server → file arrived? read width × height → save the public URL on the dish
+```
+
+The secret key that signs uploads stays on the server. The app only ever gets a link that works for one file, for a short time.
+
+**Files to look at**
+
+- `server/src/media/storage.ts`: talks to Supabase.
+- `server/src/media/images.ts`: turns a media id into a photo with its size.
+- `server/src/routes/media.ts`: the upload route.
+
+**New idea: signed upload URLs**
+
+Instead of passing photos through our server, the server signs a permission slip for one file. Big files skip our server, and the storage key never reaches a phone.
+
+**Try it yourself**
+
+In `media.test.ts`, save a dish with a `photoMediaId` before calling `upload(...)`. The server says `media_not_found`: it never shows a photo that didn't arrive.

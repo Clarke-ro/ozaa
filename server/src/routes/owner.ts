@@ -6,6 +6,7 @@ import { body, Problem } from '../http/problem.ts';
 import type { Log } from '../log.ts';
 import { orderById, orderFromRows } from '../orders/orderStore.ts';
 import { meOf, roleAt, ROLES, signedIn, type OwnerDeps } from '../owner/staff.ts';
+import type { MediaStorage } from '../media/storage.ts';
 import type { Paystack } from '../paystack.ts';
 import { orderTransition, type OrderMove } from '../shared/orderMachine.ts';
 import { checkManualPayments, checkPaystackKeys } from '../shared/payments.ts';
@@ -14,6 +15,8 @@ import { paymentSettingsOf, venueRowById } from '../venues/venueData.ts';
 import type { VenuePaystackStore } from '../venues/venuePaystack.ts';
 
 export type OwnerRouteDeps = OwnerDeps & {
+  /** Photo uploads (Supabase Storage). Null until the server has the storage key. */
+  storage: MediaStorage | null;
   venueKeys: VenuePaystackStore;
   /** A Paystack client for a key being connected, before it is saved. */
   paystackClient: (secret: string) => Paystack;

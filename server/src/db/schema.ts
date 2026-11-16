@@ -8,6 +8,7 @@ export * from './tables/menu.ts';
 export * from './tables/orders.ts';
 export * from './tables/guests.ts';
 export * from './tables/owner.ts';
+export * from './tables/media.ts';
 
 /**
  * Payments started in the app (api/openapi.yaml Payment). One row per Paystack charge.

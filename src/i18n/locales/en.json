@@ -720,7 +720,7 @@
       "uploading": "Uploading…",
       "unsupported": "Adding photos from a phone comes in a later update. Use Cravins on a computer for now.",
       "type": "Use a JPG, PNG or WebP photo.",
-      "size": "That photo is over 8 MB. Choose a smaller one.",
+      "size": "That photo is over 5 MB. Choose a smaller one.",
       "failed": "The photo did not upload. Check the connection and try again."
     },
     "unsaved": "Unsaved changes",

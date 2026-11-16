@@ -4,6 +4,8 @@ import { z } from 'zod';
 import type { Db } from '../db/client.ts';
 import { menuCategories, menuItems } from '../db/schema.ts';
 import { itemRow } from '../db/seedSamples.ts';
+import { imageFor } from '../media/images.ts';
+import type { MediaStorage } from '../media/storage.ts';
 import { body, Problem } from '../http/problem.ts';
 import { roleAt, ROLES, signedIn, type OwnerDeps } from '../owner/staff.ts';
 import type { MenuCategory, MenuItem } from '../shared/types.ts';
@@ -62,11 +64,9 @@ function checkItem(item: MenuItem): void {
   }
 }
 
-/** A dish with the edit applied. `photoMediaId`: missing keeps the photo, null removes it. */
-function applyItem(current: MenuItem, input: ItemInput): MenuItem {
-  const { photoMediaId, ...fields } = input;
-  // Photo uploads come with the media service; until then a new photo id leaves the photo as it is.
-  const photo = photoMediaId === null ? null : current.photo;
+/** A dish with the edit applied. `photo` is already resolved from photoMediaId by the caller. */
+function applyItem(current: MenuItem, input: ItemInput, photo: MenuItem['photo']): MenuItem {
+  const { photoMediaId: _id, ...fields } = input;
   const next = { ...current, ...fields, photo } as MenuItem;
   // Setting the stock to 0 sells the dish out; giving stock back puts it on sale again.
   if (input.stockCount === 0) next.available = false;
@@ -74,9 +74,17 @@ function applyItem(current: MenuItem, input: ItemInput): MenuItem {
 }
 
 /** The menu editor (api/openapi.yaml owner-menu). Owners and managers. */
-export function ownerMenuRoutes(deps: OwnerDeps) {
+export function ownerMenuRoutes(deps: OwnerDeps & { storage: MediaStorage | null }) {
   const app = new Hono();
   const { db } = deps;
+
+  /** photoMediaId: missing keeps the photo, null removes it, an id puts in the uploaded photo. */
+  const photoFor = async (venueId: string, input: ItemInput, current: MenuItem['photo']) =>
+    input.photoMediaId === undefined
+      ? current
+      : input.photoMediaId === null
+        ? null
+        : await imageFor(db, deps.storage, venueId, input.photoMediaId);
 
   const editorAt = async (c: Context) => {
     const venueId = c.req.param('venueId') ?? '';
@@ -170,7 +178,7 @@ export function ownerMenuRoutes(deps: OwnerDeps) {
       // A new dish goes to the end of its section.
       position: n,
     } as unknown as MenuItem;
-    const item = applyItem(blank, input);
+    const item = applyItem(blank, input, await photoFor(venueId, input, null));
     checkItem(item);
     const [row] = await db.insert(menuItems).values(itemRow(venueId, item)).returning();
     return c.json(itemFromRow(row!), 201);
@@ -185,7 +193,8 @@ export function ownerMenuRoutes(deps: OwnerDeps) {
       .where(and(eq(menuItems.id, c.req.param('menuItemId')), eq(menuItems.venueId, venueId), isNull(menuItems.deletedAt)));
     if (!current) throw new Problem(404, 'not_found', 'That dish is gone.');
     if (input.categoryId) await categoryAt(db, venueId, input.categoryId);
-    const item = applyItem(itemFromRow(current), input);
+    const existing = itemFromRow(current);
+    const item = applyItem(existing, input, await photoFor(venueId, input, existing.photo ?? null));
     checkItem(item);
     const { id: _id, venueId: _venue, ...values } = itemRow(venueId, item);
     const [row] = await db.update(menuItems).set(values).where(eq(menuItems.id, current.id)).returning();
