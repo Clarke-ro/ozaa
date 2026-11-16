@@ -128,6 +128,23 @@ describe('guestPayMethods', () => {
     expect(methods.testMode).toBe(true);
     expect(JSON.stringify(methods)).not.toContain('sk_');
   });
+  test('a fee passed to guests shows as its share, only while Paystack is connected', () => {
+    const paystack = {
+      mode: 'test' as const,
+      publicKey: pk,
+      secretKeyHint: '••••7890',
+      connectedAt: '2026-11-04T10:00:00Z',
+    };
+    const on = { enabled: true, percent: 50 };
+    expect(guestPayMethods({ paystack, manual, feePassing: on }).feePercent).toBe(50);
+    expect(
+      guestPayMethods({ paystack, manual, feePassing: { ...on, enabled: false } }),
+    ).not.toHaveProperty('feePercent');
+    expect(guestPayMethods({ paystack, manual })).not.toHaveProperty('feePercent');
+    expect(guestPayMethods({ paystack: null, manual, feePassing: on })).not.toHaveProperty(
+      'feePercent',
+    );
+  });
 });
 
 describe('canPayOnline', () => {

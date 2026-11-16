@@ -50,9 +50,12 @@ export function checkManualPayments(manual: ManualPayments): ManualCheck {
 /** What guests are told about paying. Never includes a key, only whether online pay works. */
 export function guestPayMethods(settings: PaymentSettings): GuestPayMethods {
   const { bankTransfer, momo } = settings.manual;
+  // The fee share only matters for payments in the app, so it's left out when there are none.
+  const passing = settings.paystack && settings.feePassing?.enabled ? settings.feePassing : null;
   return {
     online: settings.paystack !== null,
     testMode: settings.paystack?.mode === 'test',
+    ...(passing ? { feePercent: passing.percent } : {}),
     cash: settings.manual.cash,
     cardMachine: settings.manual.cardMachine,
     bankTransfer:

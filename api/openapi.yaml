@@ -3320,6 +3320,14 @@ components:
       properties:
         online: { type: boolean, description: "True when the venue's Paystack is connected: card and MoMo prompt in the app." }
         testMode: { type: boolean, description: True while the venue uses Paystack test keys. Show a "Test payment" label. }
+        feePercent:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: >-
+            The share of Paystack's fee this venue passes to guests on in-app payments (FeePassing.percent),
+            so the Pay screen can show the fee line before the guest pays. Missing when the venue keeps the
+            whole fee or can't take payments in the app. The quote's feePesewas is still the figure charged.
         cash: { type: boolean }
         cardMachine: { type: boolean }
         bankTransfer:

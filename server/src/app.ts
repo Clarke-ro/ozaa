@@ -65,6 +65,8 @@ export function createApp(deps: {
   secret: string;
   allowedOrigins: string[];
   log: Log;
+  /** Throws when the database doesn't answer. Used by the health check. */
+  ping: () => Promise<void>;
 }) {
   const app = new Hono().basePath('/v1');
   app.use(
@@ -75,6 +77,18 @@ export function createApp(deps: {
       allowHeaders: ['Authorization', 'Content-Type', 'Idempotency-Key', SANDBOX_QUOTE],
     }),
   );
+
+  // Heroku and uptime checks call this. It says only whether the database answers: never the
+  // error itself, which can hold the database address.
+  app.get('/health', async (c) => {
+    try {
+      await deps.ping();
+      return c.json({ status: 'ok' });
+    } catch {
+      deps.log({ event: 'health_database_unreachable' });
+      return c.json({ status: 'database_unreachable' }, 503);
+    }
+  });
 
   app.post('/payments', async (c) => {
     const key = c.req.header('Idempotency-Key');

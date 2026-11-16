@@ -15,12 +15,29 @@ const paystack: Paystack = {
   verify: async () => ({ status: 'ongoing', amount: 3_800, currency: 'GHS' }),
 };
 
-async function setup() {
+async function setup(ping: () => Promise<void> = async () => {}) {
   const logs: Record<string, unknown>[] = [];
   const payments = paymentService({ paystack, store: paymentStore(await testDb()), siteUrl: 'http://localhost:8081', testMode: true, newReference: () => 'pay_1' });
-  const app = createApp({ payments, secret, allowedOrigins: ['http://localhost:8081'], log: (e) => logs.push(e) });
+  const app = createApp({ payments, secret, allowedOrigins: ['http://localhost:8081'], log: (e) => logs.push(e), ping });
   return { app, logs };
 }
+
+test('GET /health says ok while the database answers', async () => {
+  const { app } = await setup();
+  const res = await app.request('/v1/health');
+  assert.equal(res.status, 200);
+  assert.deepEqual(await res.json(), { status: 'ok' });
+});
+
+test('GET /health says 503 when the database is down, without the error text', async () => {
+  const { app, logs } = await setup(async () => {
+    throw new Error('connect ECONNREFUSED postgres://user:secret@host');
+  });
+  const res = await app.request('/v1/health');
+  assert.equal(res.status, 503);
+  assert.deepEqual(await res.json(), { status: 'database_unreachable' });
+  assert.equal(JSON.stringify(logs).includes('secret'), false);
+});
 
 const quote = Buffer.from(
   JSON.stringify({ orderId: 'ord_1', venueSlug: 'bean-there', amountPesewas: 3_800, tipPesewas: 0 }),

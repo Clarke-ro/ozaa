@@ -2467,6 +2467,8 @@ export interface components {
             online: boolean;
             /** @description True while the venue uses Paystack test keys. Show a "Test payment" label. */
             testMode?: boolean;
+            /** @description The share of Paystack's fee this venue passes to guests on in-app payments (FeePassing.percent), so the Pay screen can show the fee line before the guest pays. Missing when the venue keeps the whole fee or can't take payments in the app. The quote's feePesewas is still the figure charged. */
+            feePercent?: number;
             cash: boolean;
             cardMachine: boolean;
             bankTransfer?: {
