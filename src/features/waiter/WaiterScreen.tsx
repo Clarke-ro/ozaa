@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
-import * as Crypto from 'expo-crypto';
+import { useRetryKey } from '@/lib/retryKey';
 import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { OfflineNote } from '@/ui/OfflineNote';
 import { Check } from 'lucide-react-native';
 import { api } from '@/lib/api';
 import type { WaiterReason } from '@/lib/api/types';
@@ -41,6 +42,7 @@ export function WaiterScreen({ slug }: { slug: string }) {
 
   // One open call per table (BUILD.md 1.10): the first reason is the call, the others ride in
   // its note so the waiter sees everything the table asked for in one place.
+  const keyFor = useRetryKey();
   const send = useMutation({
     mutationFn: (reasons: WaiterReason[]) => {
       const [first, ...more] = reasons;
@@ -50,10 +52,9 @@ export function WaiterScreen({ slug }: { slug: string }) {
           : null,
         note.trim() || null,
       ].filter(Boolean);
-      return api.callWaiter(
-        { reason: first ?? 'other', note: parts.length ? parts.join(' · ') : undefined },
-        { idempotencyKey: Crypto.randomUUID() },
-      );
+      const body = { reason: first ?? 'other', note: parts.length ? parts.join(' · ') : undefined };
+      // Retrying the same call reuses its key, so a lost reply never rings the waiter twice.
+      return api.callWaiter(body, { idempotencyKey: keyFor(body) });
     },
     onSuccess: (row) => {
       void hapticSuccess();
@@ -74,6 +75,7 @@ export function WaiterScreen({ slug }: { slug: string }) {
         title={t('waiter.title')}
         subtitle={table ? t('home.table', { code: table }) : (venue.data?.name ?? '')}
       />
+      <OfflineNote sending />
       <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
         {myCalls.length > 0 ? (
           <View style={styles.block}>

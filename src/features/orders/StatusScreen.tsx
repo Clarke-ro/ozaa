@@ -2,6 +2,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { OfflineNote } from '@/ui/OfflineNote';
 import { ClipboardList } from 'lucide-react-native';
 import { api } from '@/lib/api';
 import { useGuestSession } from '@/features/session';
@@ -77,6 +78,7 @@ export function StatusScreen({ slug }: { slug: string }) {
                 : undefined
         }
       />
+      <OfflineNote savedAt={order.dataUpdatedAt} />
       <ScrollView contentContainerStyle={styles.page}>
         <View style={card}>
           <Text variant="caption" style={{ color: theme.meta }}>

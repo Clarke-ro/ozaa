@@ -1,4 +1,4 @@
-import { CHECKS, clock, eventFor, secondsLeft } from './paymentWatch';
+import { CHECKS, clock, eventFor, secondsLeft, pollDelay } from './paymentWatch';
 
 const NOW = Date.parse('2026-11-09T12:00:00Z');
 
@@ -67,5 +67,20 @@ describe('eventFor', () => {
     expect(eventFor({ ...base, status: 'pay_offline' }, 'checking', CHECKS, fallback)).toEqual({
       type: 'verify_still_open',
     });
+  });
+});
+
+describe('pollDelay', () => {
+  it('asks every 3 s at first, while the guest is likely approving', () => {
+    expect(pollDelay(0)).toBe(3_000);
+    expect(pollDelay(1)).toBe(3_000);
+  });
+
+  it('backs off a little each time after that', () => {
+    expect(pollDelay(5)).toBeGreaterThan(pollDelay(4));
+  });
+
+  it('never waits more than 10 s', () => {
+    expect(pollDelay(50)).toBe(10_000);
   });
 });

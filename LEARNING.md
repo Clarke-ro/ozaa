@@ -4,6 +4,39 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-16 · When the signal drops
+
+**What we built**
+
+The guest app now copes with a phone that loses its connection, which happens a lot on mobile data.
+
+**How it works**
+
+```text
+guest taps Send ─► request ──X reply lost
+guest taps again ─► same key ─► server: "I know this one" ─► the first order
+```
+
+- **The same key on a retry.** A new helper, `useRetryKey`, keeps one key for as long as the basket stays the same. If the reply is lost and the guest taps again, the server sees the same key and doesn't make a second order. Waiter calls work the same way.
+- **Saying so.** The basket and the waiter screen say "You're offline. Connect to send." A send that fails says "Connect and try again" and keeps the basket. The status page says how old the saved status is.
+- **Gentler payment checks.** The app checks a MoMo payment every 3 s at first, then slows towards 10 s. It skips checks while the guest is in their MoMo prompt, and checks again the moment they come back.
+
+**Files to look at**
+
+- `src/lib/retryKey.ts`: the key that survives a retry.
+- `src/features/pay/paymentWatch.ts`: `pollDelay`.
+- `e2e/offline.spec.ts`: a browser test that switches the network off and on.
+
+**New idea: idempotency**
+
+An action is idempotent when doing it twice has the same effect as doing it once. Sending a key with each order lets the server spot the second try and return the first result.
+
+**Try it yourself**
+
+Run `npx playwright test e2e/offline.spec.ts --headed` and watch the basket survive going offline.
+
+---
+
 ## 2026-11-16 · A robot that checks every page for accessibility
 
 **What we built**

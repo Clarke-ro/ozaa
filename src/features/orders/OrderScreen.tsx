@@ -2,8 +2,9 @@ import { Fragment, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import * as Crypto from 'expo-crypto';
+import { useRetryKey } from '@/lib/retryKey';
 import { useTranslation } from 'react-i18next';
+import { OfflineNote } from '@/ui/OfflineNote';
 import { Plus, ShoppingBag } from 'lucide-react-native';
 import { api } from '@/lib/api';
 import { cartCount, cartEstimate, linesFor, useCart } from '@/features/cart';
@@ -60,6 +61,7 @@ export function OrderScreen({ slug }: { slug: string }) {
   const [errorKey, setErrorKey] = useState('errors.generic');
   const currency = venue.data?.currency ?? DEFAULT_CURRENCY;
   const [sending, setSending] = useState(false);
+  const keyFor = useRetryKey();
   const [error, setError] = useState(false);
   const count = cartCount(lines);
   const food = cartEstimate(lines);
@@ -83,7 +85,17 @@ export function OrderScreen({ slug }: { slug: string }) {
     }
     setSending(true);
     setError(false);
-    const clientOrderId = Crypto.randomUUID();
+    const body = {
+      lines: lines.map((line) => ({
+        menuItemId: line.menuItemId,
+        quantity: line.quantity,
+        modifierOptionIds: line.modifierOptionIds,
+        note: line.note,
+      })),
+      ...(online && check.ok ? { fulfilment: check.fulfilment } : {}),
+    };
+    // A retry of the same basket reuses the id, so a lost reply never makes a second order.
+    const clientOrderId = keyFor(body);
     // A menu-link visit has no table scan to start a session, so start one now (no personal data).
     if (online && !hasSession) {
       try {
@@ -97,19 +109,7 @@ export function OrderScreen({ slug }: { slug: string }) {
       }
     }
     api
-      .createOrder(
-        {
-          clientOrderId,
-          lines: lines.map((line) => ({
-            menuItemId: line.menuItemId,
-            quantity: line.quantity,
-            modifierOptionIds: line.modifierOptionIds,
-            note: line.note,
-          })),
-          ...(online && check.ok ? { fulfilment: check.fulfilment } : {}),
-        },
-        { idempotencyKey: clientOrderId },
-      )
+      .createOrder({ clientOrderId, ...body }, { idempotencyKey: clientOrderId })
       .then((order) => {
         setOrderId(order.id);
         clear();
@@ -128,6 +128,7 @@ export function OrderScreen({ slug }: { slug: string }) {
         title={t('basket.title')}
         subtitle={table ? `${t('home.table', { code: table })} · ${place}` : place}
       />
+      <OfflineNote sending />
       {lines.length === 0 ? (
         <View style={styles.empty}>
           <View style={[styles.emptyIcon, { backgroundColor: theme.tint }]}>

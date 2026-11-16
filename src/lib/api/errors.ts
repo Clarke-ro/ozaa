@@ -43,7 +43,8 @@ const MESSAGES: Record<string, string> = {
 };
 
 export function toMessageKey(error: unknown): string {
-  if (error instanceof OfflineError) return 'errors.offline';
+  // Not errors.offline: that line is for showing saved data, and a failed send shows none.
+  if (error instanceof OfflineError) return 'errors.offlineRetry';
   if (error instanceof ApiError) return MESSAGES[error.code] ?? 'errors.generic';
   return 'errors.generic';
 }

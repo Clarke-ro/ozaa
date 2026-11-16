@@ -543,7 +543,13 @@ Work top to bottom. Each box is one small PR that ends in a verifiable state (ps
 - [x] 1.11 Wi-Fi: network name, copy password, join QR (guestAuth). Render: `wifi.png`.
 - [x] 1.12 Offers, About & contact, Feedback, Reserve and Events: simple list screens. Reserve and Events can show "Coming soon" if the venue hasn't set them up.
 - [x] 1.13 Play while you wait (Plate Stack): engine tdd, then the canvas and the local leaderboard. Renders: `game-start.png`, `game.png`, `game-over.png`, plus the test in `game-test.txt`. The stamp hook is only wired in Phase 3.
-- [ ] 1.14 Offline and slow-network pass (section 11) over Phase 1 screens.
+- [x] 1.14 Offline and slow-network pass (section 11) over Phase 1 screens. Done 2026-11-16:
+  - a retried order or waiter call reuses its key, so a lost reply never sends it twice;
+  - offline notes on the basket, waiter call and order status;
+  - the payment check backs off from 3 s to 10 s and pauses while the app is hidden;
+  - the mock fails while offline, like a real network;
+  - `e2e/offline.spec.ts` covers it.
+- [ ] 1.15 JS budget (section 11). The real-server build loads about 635 KB gzipped on the guest home against the 350 KB budget. The framework alone (Expo Router, React Native Web, React DOM) is about 286 KB. Next: load zod, Reanimated, FlashList and the full icon set only on the screens that use them, and ask Clarke whether to raise the budget or try static rendering. Expo's tree shaking (`EXPO_UNSTABLE_TREE_SHAKING`) was tried and saved nothing.
 - [ ] **Review:** screenshots of every Phase 1 screen, side by side with the render, for all 3 venues.
 
 ### Phase 1b: Table (product 1), owner side, on mocks
