@@ -86,6 +86,8 @@ const styles = StyleSheet.create({
   amount: {
     flex: 1,
     minWidth: 0,
+    // Fill the pill's height, so a tap anywhere on it lands in the box (a 20 px box was too small).
+    alignSelf: 'stretch',
     textAlign: 'right',
     fontFamily: fontFamily.strong,
     fontSize: 17,

@@ -50,10 +50,28 @@ test('at a table: the bill after the meal is the usual; pay now opens Pay with s
 test('a venue without payments in the app asks nothing: the order goes, paid in person', async ({
   page,
 }) => {
-  await page.goto('/mamas-kitchen/t/12', { waitUntil: 'domcontentloaded' });
+  // Auntie Akos is the sample that takes payment in person.
+  await page.goto('/auntie-akos/t/7', { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: /^Menu/ }).first().click({ timeout: 15_000 });
   await basket(page);
   await expect(page.getByRole('radio', { name: /^Pay now/ })).toHaveCount(0);
   await page.getByRole('button', { name: 'Send to kitchen' }).click();
-  await expect(page).toHaveURL(/\/mamas-kitchen\/status$/, { timeout: 15_000 });
+  await expect(page).toHaveURL(/\/auntie-akos\/status$/, { timeout: 15_000 });
+});
+
+test("Mama's Kitchen, the venue the demo opens, has the whole payment flow at the table", async ({
+  page,
+}) => {
+  await page.goto('/mamas-kitchen/t/12', { waitUntil: 'domcontentloaded' });
+  await page.getByRole('button', { name: /^Menu/ }).first().click({ timeout: 15_000 });
+  await basket(page);
+  await page.getByRole('radio', { name: /^Pay now/ }).click();
+  await page.getByRole('button', { name: /^Send and pay/ }).click();
+  await expect(page).toHaveURL(/\/mamas-kitchen\/pay$/, { timeout: 15_000 });
+  await expect(page.getByText('Test payment')).toBeVisible();
+  await page.getByRole('textbox', { name: 'MoMo number' }).fill('0551234987');
+  await page.getByRole('button', { name: /^Pay GH/ }).click();
+  await expect(page.getByText('Paid. Your order is with the kitchen.')).toBeVisible({
+    timeout: 20_000,
+  });
 });

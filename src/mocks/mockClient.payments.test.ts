@@ -2,6 +2,10 @@ import { ApiError } from '@/lib/api/errors';
 import { decideMockCard } from './cardBox';
 import { signedInMock } from './testOwner';
 
+// Auntie Akos is the sample that takes payment in person, with no online ordering, until its
+// owner (Akosua) sets them up. Mama's Kitchen and Bean There start with both on.
+const AKOSUA = '+233240000005';
+
 const keys = {
   mode: 'test' as const,
   publicKey: 'pk_test_abcdef1234567890',
@@ -18,8 +22,8 @@ async function codeOf(promise: Promise<unknown>) {
 }
 
 test('connecting Paystack never sends the secret key back, anywhere', async () => {
-  const { api } = await signedInMock();
-  const { id } = await api.getVenue('mamas-kitchen');
+  const { api } = await signedInMock(Date.now(), AKOSUA);
+  const { id } = await api.getVenue('auntie-akos');
   const before = await api.ownerGetPaymentSettings(id);
   expect(before.paystack).toBeNull();
   const saved = await api.ownerConnectPaystack(id, keys);
@@ -27,7 +31,7 @@ test('connecting Paystack never sends the secret key back, anywhere', async () =
   const everything = JSON.stringify([
     saved,
     await api.ownerGetPaymentSettings(id),
-    await api.getVenue('mamas-kitchen'),
+    await api.getVenue('auntie-akos'),
     await api.ownerGetVenue(id),
     await api.ownerTestPaystack(id),
   ]);
@@ -36,20 +40,20 @@ test('connecting Paystack never sends the secret key back, anywhere', async () =
 });
 
 test('guests learn they can pay online once Paystack is connected, and that it is a test', async () => {
-  const { api } = await signedInMock();
-  const { id } = await api.getVenue('mamas-kitchen');
-  expect((await api.getVenue('mamas-kitchen')).payMethods?.online).toBe(false);
+  const { api } = await signedInMock(Date.now(), AKOSUA);
+  const { id } = await api.getVenue('auntie-akos');
+  expect((await api.getVenue('auntie-akos')).payMethods?.online).toBe(false);
   await api.ownerConnectPaystack(id, keys);
-  const methods = (await api.getVenue('mamas-kitchen')).payMethods;
+  const methods = (await api.getVenue('auntie-akos')).payMethods;
   expect(methods?.online).toBe(true);
   expect(methods?.testMode).toBe(true);
   await api.ownerDisconnectPaystack(id);
-  expect((await api.getVenue('mamas-kitchen')).payMethods?.online).toBe(false);
+  expect((await api.getVenue('auntie-akos')).payMethods?.online).toBe(false);
 });
 
 test('live keys, swapped keys and staff other than the owner are refused', async () => {
-  const { api } = await signedInMock();
-  const { id } = await api.getVenue('mamas-kitchen');
+  const { api } = await signedInMock(Date.now(), AKOSUA);
+  const { id } = await api.getVenue('auntie-akos');
   const live = {
     mode: 'live' as const,
     publicKey: 'pk_live_abcdef1234567890',
@@ -71,8 +75,8 @@ test('live keys, swapped keys and staff other than the owner are refused', async
 });
 
 test('manual methods need their details, then guests see them', async () => {
-  const { api } = await signedInMock();
-  const { id } = await api.getVenue('mamas-kitchen');
+  const { api } = await signedInMock(Date.now(), AKOSUA);
+  const { id } = await api.getVenue('auntie-akos');
   const manual = {
     cash: true,
     cardMachine: true,
@@ -84,19 +88,17 @@ test('manual methods need their details, then guests see them', async () => {
     ...manual,
     momo: { ...manual.momo, number: '+233241234567', name: 'Mama K' },
   });
-  const methods = (await api.getVenue('mamas-kitchen')).payMethods;
+  const methods = (await api.getVenue('auntie-akos')).payMethods;
   expect(methods?.cardMachine).toBe(true);
   expect(methods?.momo).toEqual({ network: 'mtn', number: '+233241234567', name: 'Mama K' });
 });
 
 test('after part of the bill is paid, paying the whole bill asks only for what is left', async () => {
-  const { api, setGuest } = await signedInMock();
-  const { id } = await api.getVenue('mamas-kitchen');
+  const { api, setGuest } = await signedInMock(Date.now(), AKOSUA);
+  const { id } = await api.getVenue('auntie-akos');
   await api.ownerConnectPaystack(id, keys);
-  const dish = (await api.getMenu('mamas-kitchen')).items[0]!;
-  setGuest(
-    (await api.createGuestSession({ venueSlug: 'mamas-kitchen', tableCode: '4' })).guestToken,
-  );
+  const dish = (await api.getMenu('auntie-akos')).items[0]!;
+  setGuest((await api.createGuestSession({ venueSlug: 'auntie-akos', tableCode: '4' })).guestToken);
   const order = await api.createOrder(
     { clientOrderId: crypto.randomUUID(), lines: [{ menuItemId: dish.id, quantity: 2 }] },
     { idempotencyKey: crypto.randomUUID() },
@@ -115,9 +117,9 @@ test('after part of the bill is paid, paying the whole bill asks only for what i
 });
 
 test('staff mark an order paid by method; doing it twice changes nothing; the kitchen cannot', async () => {
-  const { api } = await signedInMock();
-  const { id } = await api.getVenue('mamas-kitchen');
-  const dish = (await api.getMenu('mamas-kitchen')).items[0]!;
+  const { api } = await signedInMock(Date.now(), AKOSUA);
+  const { id } = await api.getVenue('auntie-akos');
+  const dish = (await api.getMenu('auntie-akos')).items[0]!;
   const order = await api.ownerCreateOrder(
     id,
     { clientOrderId: crypto.randomUUID(), lines: [{ menuItemId: dish.id, quantity: 1 }] },

@@ -4,6 +4,38 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-16 · The demo remembers what the owner switched on
+
+**What we built**
+
+- **Mama's Kitchen now has everything on**: Paystack test keys and online ordering (pickup and delivery). It's the venue the app's start page opens, so the whole payment flow shows there. Auntie Akos is now the "pays in person" sample.
+- **The demo keeps an owner's settings on the device.** Before, connecting Paystack or turning on online ordering vanished on the next reload, because the demo keeps everything in memory. Now the owner's settings are saved on the phone or in the browser and come back after a reload.
+
+**How it works**
+
+```
+owner change (any owner… call) → save settings a moment later (AsyncStorage)
+app starts → first call waits → saved settings put back on top of the samples
+```
+
+Only settings are kept (venues, menus, payments, offers, tables…), never orders or sign-ins. A version number on the saved copy means new sample data isn't hidden by an old copy.
+
+**Files to look at**
+
+- `src/mocks/demoMemory.ts` and its test.
+- `src/mocks/worldSamples.ts`: the three sample venues.
+- `README.md`, "Testing payments" and "Expo Go on your phone".
+
+**New idea: per-device storage**
+
+What a phone saves for itself (AsyncStorage, or localStorage in a browser) stays on that phone. That's why an owner's change in one browser doesn't show on another phone: they don't share anything. The real server will be the one shared place, and it replaces this.
+
+**Try it yourself**
+
+In the owner app as Akosua (`0240000005`), connect Paystack with `pk_test_…` and `sk_test_…` keys, reload, then open `/auntie-akos/t/7` and order: **Pay now** is there.
+
+---
+
 ## 2026-11-16 · Pay now or pay later
 
 **What we built**

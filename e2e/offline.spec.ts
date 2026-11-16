@@ -3,8 +3,7 @@ import { expect, test, type Page } from '@playwright/test';
 // BUILD.md section 11 on a phone that drops its connection: the menu says it's showing saved
 // data, the basket says it can't send, a failed send keeps the basket, and reconnecting sends it.
 // Screens behind the current one stay mounted, so only text the guest can see counts.
-const seen = (page: Page, text: string | RegExp) =>
-  page.getByText(text).filter({ visible: true });
+const seen = (page: Page, text: string | RegExp) => page.getByText(text).filter({ visible: true });
 
 test('a guest who loses signal keeps their basket and sends it once back online', async ({
   page,
