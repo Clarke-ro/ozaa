@@ -26,9 +26,9 @@ Connected today: Supabase "Cravins" (migrations 0000–0001), Clerk "Cravins" (d
 
 ## C. Hosting
 
-15. [ ] **Heroku app for the server**: _app `cravins-api` created 2026-11-16 (EU region, Node buildpack, `NODE_ENV`, `SITE_URL`, `ALLOWED_ORIGINS` and `CLERK_PUBLISHABLE_KEY` set). Clarke pastes `DATABASE_URL`, `PAYSTACK_SECRET_KEY` and `CLERK_SECRET_KEY` in Heroku's Settings > Config Vars._ Still to do in a PR: `Procfile` with `release: npm run db:migrate`, `GET /v1/health`, deploying `server/` from the monorepo. Eco while building.
+15. [x] **Heroku app for the server**: `cravins-api` (EU, Basic dyno), `Procfile` with `release: npm run db:migrate`, `GET /v1/health`, clean shutdown. First deploy 2026-11-16 (release v9, migrations 0000–0002 on Supabase). Deploys come from Heroku's GitHub connection (`main`, after CI), building `server/` only.
 16. [ ] **Sentry on the server**, with personal data scrubbed the same way as `src/log.ts`.
-17. [ ] **CI job for `server/`**: typecheck and tests on every PR.
+17. [x] **CI job for `server/`**: typecheck and tests on every PR.
 
 ## D. Still open from earlier phases
 
@@ -48,7 +48,7 @@ Connected today: Supabase "Cravins" (migrations 0000–0001), Clerk "Cravins" (d
 - Request id on every response and log line, so a guest's "it failed" can be found.
 - Body size limit and secure headers on the server.
 - Graceful shutdown on Heroku's SIGTERM, so a deploy doesn't cut a payment in half.
-- Postgres pool sized for Heroku Eco and Supabase's pooler.
+- Postgres pool sized for one Basic dyno and Supabase's pooler.
 - Run Supabase's security advisors after every migration.
 - One `problem()` helper for every error, matching `Problem` in the contract.
 - Proactive Clerk token refresh every 50 s, so the first call after a minute doesn't need a retry.

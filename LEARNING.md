@@ -74,7 +74,7 @@ The server now has a place to live: the Heroku app `cravins-api`. Merging a serv
 **How it works**
 
 ```
-merge to main → GitHub packs server/ → Heroku builds it
+merge to main → CI passes → Heroku takes the repo, keeps only server/, builds it
 → release phase: npm run db:migrate → new version goes live → /v1/health says ok
 ```
 
@@ -83,7 +83,7 @@ If a migration fails, Heroku keeps the old version running. Nobody sees a half-c
 **Files to look at**
 
 - `server/Procfile`: two lines. `release` runs once per deploy, `web` is the server.
-- `.github/workflows/deploy-server.yml`: the deploy steps.
+- `server/README.md`, "Deploying to Heroku": how Heroku is connected to GitHub.
 - `server/src/index.ts`: what happens when Heroku asks the server to stop.
 
 **New idea: a graceful shutdown**
