@@ -63,6 +63,7 @@ export type OrderContact = Schemas['OrderContact'];
 export type SalesReport = Schemas['SalesReport'];
 export type PaymentSettings = Schemas['PaymentSettings'];
 export type ManualPayments = Schemas['ManualPayments'];
+export type FeePassing = Schemas['FeePassing'];
 export type PaystackKeysInput = Schemas['PaystackKeysInput'];
 export type GuestPayMethods = Schemas['GuestPayMethods'];
 export type ManualPaymentMethod = Schemas['ManualPaymentMethod'];

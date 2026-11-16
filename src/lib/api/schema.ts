@@ -775,6 +775,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/owner/venues/{venueId}/payment-settings/fees": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Choose whether guests pay some or all of the Paystack fee on payments in the app. */
+        put: operations["ownerSetFeePassing"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/owner/venues/{venueId}/payment-settings/paystack": {
         parameters: {
             query?: never;
@@ -2197,7 +2214,9 @@ export interface components {
             orderId: components["schemas"]["OrderId"];
             sharePesewas: components["schemas"]["Pesewas"];
             tipPesewas: components["schemas"]["Pesewas"];
-            /** @description What the guest pays now (share + tip). */
+            /** @description The part of Paystack's fee the venue passes to the guest (FeePassing). Missing or 0 when it keeps the fee. Not part of the bill, so it never pays off food. */
+            feePesewas?: components["schemas"]["Pesewas"];
+            /** @description What the guest pays now (share + tip + fee). */
             totalPesewas: components["schemas"]["Pesewas"];
             remainingAfterPesewas: components["schemas"]["Pesewas"];
             /** Format: date-time */
@@ -2236,6 +2255,8 @@ export interface components {
             provider?: components["schemas"]["MomoProvider"];
             amountPesewas: components["schemas"]["Pesewas"];
             tipPesewas?: components["schemas"]["Pesewas"];
+            /** @description The Paystack fee the guest paid, inside amountPesewas. Shown on the receipt as its own line. */
+            feePesewas?: components["schemas"]["Pesewas"];
             /** @constant */
             currency: "GHS";
             status: components["schemas"]["PaymentStatus"];
@@ -2489,6 +2510,14 @@ export interface components {
             /** @description Null until the owner connects their own Paystack account. */
             paystack: components["schemas"]["PaystackConnection"] | null;
             manual: components["schemas"]["ManualPayments"];
+            /** @description Missing means the venue keeps paying the whole fee. */
+            feePassing?: components["schemas"]["FeePassing"];
+        };
+        /** @description How much of Paystack's fee (1.95% in Ghana) the guest pays on a payment in the app. 100 adds the whole fee, worked out so the venue still receives the full bill. Never applies to cash, card machine, bank transfer or MoMo to the venue's own number. The server works it out. */
+        FeePassing: {
+            enabled: boolean;
+            /** @description Share of the fee the guest pays. 100 means all of it. */
+            percent: number;
         };
         /** @description What a guest can use to pay at this venue. Built from the venue's payment settings; never includes a key. */
         GuestPayMethods: {
@@ -4670,6 +4699,34 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ManualPayments"];
+            };
+        };
+        responses: {
+            /** @description Saved. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentSettings"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    ownerSetFeePassing: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FeePassing"];
             };
         };
         responses: {

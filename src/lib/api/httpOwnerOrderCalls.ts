@@ -56,6 +56,14 @@ export function httpOwnerOrderCalls({ client, headers, ok }: HttpContext) {
           headers: headers('access'),
         }),
       ),
+    ownerSetFeePassing: (venueId, body) =>
+      ok(
+        client.PUT('/owner/venues/{venueId}/payment-settings/fees', {
+          body,
+          params: { path: { venueId } },
+          headers: headers('access'),
+        }),
+      ),
     ownerConnectPaystack: (venueId, body) =>
       ok(
         client.PUT('/owner/venues/{venueId}/payment-settings/paystack', {

@@ -1,4 +1,5 @@
 import { quoteBill } from '../features/pay/quoteBill';
+import { passedFee } from '@/lib/paystackFee';
 import { pesewas } from '@/lib/brand';
 import type { ApiClient } from '@/lib/api/client';
 import { ApiError } from '@/lib/api/errors';
@@ -103,15 +104,28 @@ export function mockGuestCalls(ctx: MockContext) {
             : undefined,
         },
       );
+      // The owner may pass some or all of Paystack's fee to the guest. It sits on top of the bill.
+      const passing = world.paymentSettings[live.order.venueId]?.feePassing;
+      const fee = passing?.enabled
+        ? passedFee(quote.sharePesewas + quote.tipPesewas, passing.percent)
+        : 0;
       const quoteId = nextId(world, 'quo');
       world.quotes.set(quoteId, {
         orderId,
         share: quote.sharePesewas,
         tip: quote.tipPesewas,
+        fee,
         lineIds: body.lineIds ?? [],
         expiresAt: now() + 10 * 60_000,
       });
-      return { quoteId, orderId, ...quote, expiresAt: new Date(now() + 10 * 60_000).toISOString() };
+      return {
+        quoteId,
+        orderId,
+        ...quote,
+        feePesewas: pesewas(fee),
+        totalPesewas: pesewas(quote.totalPesewas + fee),
+        expiresAt: new Date(now() + 10 * 60_000).toISOString(),
+      };
     },
     async initializePayment(body, call) {
       await gate();
@@ -132,8 +146,9 @@ export function mockGuestCalls(ctx: MockContext) {
           orderId: quote.orderId,
           method: body.method,
           provider: body.momo?.provider,
-          amountPesewas: quote.share + quote.tip,
+          amountPesewas: quote.share + quote.tip + quote.fee,
           tipPesewas: quote.tip,
+          feePesewas: quote.fee,
           currency: 'GHS',
           status: body.method === 'momo' ? 'pay_offline' : 'open_url',
           displayText:

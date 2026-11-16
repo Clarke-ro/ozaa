@@ -86,6 +86,9 @@ These are settled. Do not reopen them.
 - **Owner side:** review moderation, service toggles, the Customise page, and an orders dashboard.
 - **Payments:** Paystack, test mode first. MoMo on MTN, Telecel and AT, plus card. *Changed 2026-11-03:* each restaurant pastes its own Paystack public and secret keys (Settings > Integrations). The secret key is stored encrypted on the server only and never reaches the app, the browser or a log. No split payments, no pooled accounts, no payouts. Never hold funds. Manual methods (cash, card machine, bank transfer, MoMo to the merchant number) are marked paid by staff.
 - **Two ways to order** *(2026-11-03)*: walk-in guests scan a **table QR** (no contact details, call waiter, ask for the bill). Online customers use the venue's **menu link** (`/<venue-slug>`) to order for pickup or delivery, and give a name and phone (plus an address for delivery). That contact data lives on the order only, never in the guest session, and is never logged.
+- **Paystack fee** *(2026-11-16)*: the venue pays it unless the owner switches on "Pass fees to customers" (Integrations > Payments) and picks a share, 1–100%. 100% adds Paystack's whole fee (1.95% in Ghana, `src/lib/paystackFee.ts`) so the venue still receives the full bill. The guest sees it as its own line before paying and on the receipt. It applies only to payments in the app, never to cash, card machine, bank transfer or MoMo to the venue's number, and it never counts as paying for food. The server works it out.
+- **SMS for sign-in codes** *(2026-11-16)*: Arkesel (Ghana; OTP API at about GH₵0.035 per code, free sign-up with test credits, free sender ID). Clarke signs up when Phase 5 needs it.
+- **Legal checks** *(2026-11-16)*: the PSP-licence question and DPC registration are done after the backend is built, before real phone numbers or real money.
 - **Plans:** the owner plan badge and Billing page use the placeholder plans from `landing/src/content/pricing.ts` until real prices are set.
 - **Build order:** frontend first against a fixed API contract and a mock. The backend comes only after Clarke approves the UI. *2026-11-03:* Clarke approved the MenuRite-gap work (`docs/menurite-gap-table.md`): build all of its UI on the mock first, then hook in the backend.
 - **Code style:** Clarke is learning, so code must be simple, readable, and commented where it is not obvious. Every feature gets a LEARNING.md entry.
@@ -572,6 +575,8 @@ Work top to bottom. Each box is one small PR that ends in a verifiable state (ps
 - [x] 2.6 Receipt view: lines, tip, empty-ready tax lines, and "Test payment" label in sandbox.
 - [x] 2.7 Owner payout account screen: bank or MoMo, shows the masked account and status. *(Replaced by Payments settings; endpoint removed 2026-11-11.)*
 - [x] 2.8 Owner "Mark paid in cash" (`/owner/orders/{id}/cash-payment`). *(Replaced by Mark paid with a method, `manual-payment`; endpoint removed 2026-11-11.)*
+- [x] 2.9 *contract* + mock: fee passing (`FeePassing`, `ownerSetFeePassing`, `BillQuote.feePesewas`, `Payment.feePesewas`), with the maths tdd in `src/lib/paystackFee.ts`.
+- [ ] 2.10 Fee passing screens: the owner switch and share on Integrations > Payments, the fee line on Pay and on the receipt.
 - [ ] **2b Paystack sandbox slice** (the only early server code, in `server/`):
   - Implement only `POST /payments`, `GET /payments/{ref}`, `POST /payments/{ref}/verify` and `POST /webhooks/paystack`, with **test** keys from the server env.
   - The app uses `EXPO_PUBLIC_API_LIVE=payments` to send just these calls to the server and keep everything else on mocks.
@@ -744,11 +749,11 @@ Phase 6 is kept for launch hardening: E-VAT receipts, error monitoring, app stor
 
 The agent must ask these, not guess. Until he answers, build behind a setting or use the stated default.
 
-1. Who pays the Paystack fee (about 1.95%): the venue, the guest, or shared? _Default: the venue._
+1. ~~Who pays the Paystack fee?~~ **Answered 2026-11-16** (section 4): the owner's choice, per venue. Still to confirm with Paystack: whether Ghana has a fee cap, which would change the sum for large bills.
 2. Cravins's own fee per transaction or per month? _Default: none in the UI yet._
-3. Lawyer sign-off that subaccount split settlement keeps Cravins outside PSP licensing under Act 987.
-4. DPC registration done before real phone numbers are stored?
-5. The SMS/OTP provider for Phase 5 (and WhatsApp for marketing later).
+3. Lawyer sign-off that subaccount split settlement keeps Cravins outside PSP licensing under Act 987. *After the backend (Clarke, 2026-11-16).*
+4. DPC registration done before real phone numbers are stored? *After the backend, before real numbers (Clarke, 2026-11-16).*
+5. ~~The SMS/OTP provider~~ **Answered 2026-11-16:** Arkesel (section 4). WhatsApp for marketing is still open.
 6. Server hosting and database provider for Phase 5.
 7. Trademark search for "cravins" (Ghana RGD, OAPI, WIPO) and the native-speaker meaning check, and which domains to buy (`cravins.app` is the assumed one).
 8. Native speakers for French, Portuguese, Spanish, Arabic and Swahili. English stays the only selectable language until those files are filled by people, not by machine translation.

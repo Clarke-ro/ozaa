@@ -128,6 +128,16 @@ export function mockOwnerOrderCalls(ctx: MockContext) {
       world.paymentSettings[venueId] = { ...current, manual: body };
       return world.paymentSettings[venueId];
     },
+    async ownerSetFeePassing(venueId, body) {
+      await gate();
+      ownerOnly(world, tokens);
+      venueById(world, venueId);
+      if (!Number.isInteger(body.percent) || body.percent < 1 || body.percent > 100)
+        throw new ApiError(400, 'fee_percent_invalid', 'Pick a share from 1% to 100%');
+      const current = world.paymentSettings[venueId] ?? defaultPaymentSettings();
+      world.paymentSettings[venueId] = { ...current, feePassing: body };
+      return world.paymentSettings[venueId];
+    },
     async ownerConnectPaystack(venueId, body) {
       await gate();
       ownerOnly(world, tokens);

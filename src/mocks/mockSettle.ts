@@ -52,7 +52,10 @@ export function settlePayment(
     row.applied = true;
     const quote = row.quoteId ? world.quotes.get(row.quoteId) : undefined;
     const live = findOrder(world, row.payment.orderId);
-    const share = row.payment.amountPesewas - (row.payment.tipPesewas ?? 0);
+    // Only the food share pays off the bill: never the tip, never a Paystack fee passed to the guest.
+    const share = quote
+      ? quote.share
+      : row.payment.amountPesewas - (row.payment.tipPesewas ?? 0) - (row.payment.feePesewas ?? 0);
     const paid = live.order.paidPesewas + share;
     const lineIds = quote && quote.orderId === live.order.id ? quote.lineIds : [];
     const lines = live.order.lines.map((line) =>
