@@ -43,8 +43,14 @@ test('bank transfer opens when switched on, closes after saving, and the header 
 
 test('passing fees closes once a share is picked', async ({ page }) => {
   await signInAsKojo(page);
-  await page.getByRole('switch', { name: 'Pass fees to customers' }).click();
-  await expect(page.getByRole('radio', { name: '50%' })).toBeVisible({ timeout: 15_000 });
+  // Click again until the switch reacts: a click before the settings load does nothing.
+  const half = page.getByRole('radio', { name: '50%' });
+  await expect(async () => {
+    if (!(await half.isVisible())) {
+      await page.getByRole('switch', { name: 'Pass fees to customers' }).click();
+    }
+    await expect(half).toBeVisible({ timeout: 2_000 });
+  }).toPass({ timeout: 15_000 });
   await page.getByRole('radio', { name: '50%' }).click();
   await expect(page.getByRole('radio', { name: '50%' })).toHaveCount(0, { timeout: 15_000 });
   await expect(page.getByRole('switch', { name: 'Pass fees to customers' })).toBeChecked();
