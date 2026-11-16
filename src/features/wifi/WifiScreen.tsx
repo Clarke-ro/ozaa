@@ -31,7 +31,7 @@ export function WifiScreen({ slug }: { slug: string }) {
         <Text variant="body" style={{ color: theme.muted }}>
           {t('wifi.lead')}
         </Text>
-        <View style={[styles.box, { borderColor: theme.line }]}>
+        <View style={[styles.box, { borderColor: theme.line, backgroundColor: theme.surface }]}>
           <Text variant="caption" style={{ color: theme.meta }}>
             {t('wifi.network')}
           </Text>
@@ -41,7 +41,12 @@ export function WifiScreen({ slug }: { slug: string }) {
           </Text>
           <Text variant="body-strong">{password}</Text>
         </View>
-        <View style={[styles.box, { borderColor: theme.line, alignItems: 'center' }]}>
+        <View
+          style={[
+            styles.box,
+            { borderColor: theme.line, backgroundColor: theme.surface, alignItems: 'center' },
+          ]}
+        >
           <Text variant="body-strong">{t('wifi.qr')}</Text>
           <Text variant="caption" style={{ color: theme.muted, textAlign: 'center' }}>
             {t('wifi.qrLead')}

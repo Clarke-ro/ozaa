@@ -78,7 +78,7 @@ Products 11 and 12 are not in Clarke's list; do not invent them. **Video menu** 
 These are settled. Do not reopen them.
 
 - **Logo:** the SCAN FRAME mark. It is an orange #FC5205 circle with a white rounded square, QR corner marks, and a fork and knife cut out. The files are in `design/logo/` and the rules are in `design/brand.md` section 1.
-- **Colours:** black and white base. #FC5205 is for the logo only. Buttons are #D24000, hover #BA3800, pressed #A33000, tint #FFF1EA.
+- **Colours:** black and white base. #FC5205 is for the logo only. Buttons are #D24000, hover #BA3800, pressed #A33000, tint #FFF1EA. *2026-11-16:* guest pages use the owner app's soft canvas behind white cards.
 - **Fonts:** Inter for text and Unbounded for display.
 - **Venue theming:** each venue sets one colour and a heading font. Contrast fallbacks follow `deriveTheme` (`design/prototype/theme.js`). Cravins-owned screens (the owner app, Customise, and "Powered by Cravins") always use Cravins orange.
 - **Guest home:** an edge-to-edge banner with a round logo at bottom-left, then name, description, location and hours. Below that come the video-review story circles, then services in four sections (At your table, Rewards, Fun while you wait, More). Each service opens its own screen.

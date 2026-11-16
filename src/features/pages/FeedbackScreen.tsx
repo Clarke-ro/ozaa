@@ -80,7 +80,11 @@ export function FeedbackScreen({ slug }: { slug: string }) {
           placeholderTextColor={theme.meta}
           style={[
             styles.input,
-            { borderColor: messageError ? theme.error : theme.line, color: theme.text },
+            {
+              borderColor: messageError ? theme.error : theme.line,
+              color: theme.text,
+              backgroundColor: theme.surface,
+            },
           ]}
         />
         {messageError ? (
@@ -109,7 +113,11 @@ export function FeedbackScreen({ slug }: { slug: string }) {
               textContentType="telephoneNumber"
               style={[
                 styles.field,
-                { borderColor: phoneError ? theme.error : theme.line, color: theme.text },
+                {
+                  borderColor: phoneError ? theme.error : theme.line,
+                  color: theme.text,
+                  backgroundColor: theme.surface,
+                },
               ]}
             />
             {phoneError ? (

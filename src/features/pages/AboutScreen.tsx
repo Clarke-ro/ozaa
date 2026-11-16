@@ -118,7 +118,9 @@ function Group({ title, children }: { title: string; children: ReactNode }) {
       >
         {title.toUpperCase()}
       </Text>
-      <View style={[styles.card, { borderColor: theme.line }]}>{children}</View>
+      <View style={[styles.card, { borderColor: theme.line, backgroundColor: theme.surface }]}>
+        {children}
+      </View>
     </View>
   );
 }

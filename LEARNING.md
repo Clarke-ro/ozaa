@@ -4,6 +4,37 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-16 · White cards on a soft page
+
+**What we built**
+
+Guest pages now sit on the same soft canvas as the owner app, and every card on them is white, so the cards stand out like in Clarke's reference screenshots.
+
+**How it works**
+
+```
+theme.bg      → the page (soft canvas)
+theme.surface → cards, text boxes, the Wi-Fi box… (white)
+theme.white   → buttons on photos (always pure white)
+```
+
+`SafeScreen` paints the page with `theme.bg`, so one change moved every guest page. A few boxes had no colour of their own and showed the page through them; they now say `theme.surface`.
+
+**Files to look at**
+
+- `src/ui/theme.tsx`: `bg` is the canvas for guests too.
+- `src/ui/Screen.tsx`: the page background.
+
+**New idea: name colours by job, not by look**
+
+`surface` means "a card", `bg` means "the page". Because the code says what each colour is *for*, changing the page from white to canvas was one line, and the cards stayed white without touching them.
+
+**Try it yourself**
+
+In `src/theme/palette.ts`, look at `canvas` in the light colours. Change it slightly, rebuild, and every guest and owner page changes together.
+
+---
+
 ## 2026-11-16 · The demo remembers what the owner switched on
 
 **What we built**
