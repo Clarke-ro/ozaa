@@ -41,9 +41,14 @@ export function FeePassingCard({
     settings.feePassing ?? { enabled: false, percent: 100 },
   );
 
+  // Bumped after a share is picked, so the card closes back to its row.
+  const [closeSignal, setCloseSignal] = useState(0);
   const save = useMutation({
     mutationFn: (body: FeePassing) => api.ownerSetFeePassing(venueId, body),
-    onSuccess: (result) => {
+    onSuccess: (result, body) => {
+      if (body.enabled && body.percent !== (settings.feePassing?.percent ?? null)) {
+        setCloseSignal((n) => n + 1);
+      }
       client.setQueryData(ownerKeys.paymentSettings(venueId), result);
       // Guests read the share from the venue, so their Pay screen shows the new fee line.
       void client.invalidateQueries({ queryKey: guestKeys.venueAll() });
@@ -68,6 +73,7 @@ export function FeePassingCard({
       status={draft.enabled ? t('ownerPay.on') : t('ownerPay.off')}
       on={draft.enabled}
       onToggle={(enabled) => change({ ...draft, enabled })}
+      closeSignal={closeSignal}
     >
       {draft.enabled ? (
         <View style={styles.stack}>

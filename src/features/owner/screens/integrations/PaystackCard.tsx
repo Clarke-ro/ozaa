@@ -40,6 +40,8 @@ export function PaystackCard({
   const [tried, setTried] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [opening, setOpening] = useState(false);
+  // Bumped after connecting, so the card closes back to its row.
+  const [closeSignal, setCloseSignal] = useState(0);
   const [testResult, setTestResult] = useState<{ ok: boolean; message?: string } | null>(null);
   // payMethods on the venue (Pay switch, QR card line, Mark paid methods) follow these settings.
   const refresh = (next: PaymentSettings) => {
@@ -63,6 +65,7 @@ export function PaystackCard({
       setTried(false);
       setOpening(false);
       refresh(next);
+      setCloseSignal((n) => n + 1);
       toast.success(t('ownerPay.connected'));
     },
     onError: (error) => toast.error(t(toMessageKey(error))),
@@ -107,6 +110,7 @@ export function PaystackCard({
       status={status}
       on={on}
       onToggle={onToggle}
+      closeSignal={closeSignal}
     >
       {paystack ? (
         <View style={styles.stack}>

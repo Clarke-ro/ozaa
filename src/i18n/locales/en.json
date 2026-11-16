@@ -2760,6 +2760,8 @@
     "taxOffBody": "Sales before tax, VAT and levies for each period, ready for your monthly return."
   },
   "ownerPay": {
+    "showDetails": "Show {{name}} details",
+    "hideDetails": "Hide {{name}} details",
     "feesTitle": "Pass fees to customers",
     "feesSub": "Guests pay some or all of Paystack's 1.95% fee",
     "feesShare": "Share guests pay",
