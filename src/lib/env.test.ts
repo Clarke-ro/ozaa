@@ -13,6 +13,7 @@ describe('readEnv', () => {
       EXPO_PUBLIC_MAP_TILES: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
       EXPO_PUBLIC_SUPPORT_EMAIL: 'support@cravins.app',
       EXPO_PUBLIC_SUPPORT_WHATSAPP: '233200000000',
+      EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: '',
       live: [],
     });
   });

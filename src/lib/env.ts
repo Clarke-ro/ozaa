@@ -22,6 +22,12 @@ const schema = z.object({
    * real support line: replace it in the build settings before launch.
    */
   EXPO_PUBLIC_SUPPORT_WHATSAPP: z._default(z.string(), '233200000000'),
+  /**
+   * Clerk's publishable key (pk_test_… or pk_live_…) for owner and staff sign-in in real-server
+   * builds. It's meant to be public: it only names our Clerk app. The secret key lives on the
+   * server only. Empty in mock builds, which sign in with the demo code instead.
+   */
+  EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: z._default(z.string(), ''),
 });
 
 export type Env = z.infer<typeof schema> & { live: string[] };
@@ -44,6 +50,7 @@ const fromBuild: Source = {
   EXPO_PUBLIC_MAP_TILES: process.env.EXPO_PUBLIC_MAP_TILES,
   EXPO_PUBLIC_SUPPORT_EMAIL: process.env.EXPO_PUBLIC_SUPPORT_EMAIL,
   EXPO_PUBLIC_SUPPORT_WHATSAPP: process.env.EXPO_PUBLIC_SUPPORT_WHATSAPP,
+  EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY,
 };
 
 const LOCAL = /^(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+)$/;
