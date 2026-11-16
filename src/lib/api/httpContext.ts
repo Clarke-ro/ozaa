@@ -34,7 +34,6 @@ export function createHttpContext(baseUrl: string, tokens: TokenSource) {
     if (call?.idempotencyKey) value['Idempotency-Key'] = call.idempotencyKey;
     if (call?.ifNoneMatch) value['If-None-Match'] = call.ifNoneMatch;
     if (call?.deleteToken) value['X-Delete-Token'] = call.deleteToken;
-    if (call?.sandboxQuote) value['X-Cravins-Sandbox-Quote'] = call.sandboxQuote;
     return value;
   };
 

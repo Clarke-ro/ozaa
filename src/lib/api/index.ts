@@ -40,26 +40,6 @@ const mocks =
 
 const http = createHttpClient(env.EXPO_PUBLIC_API_URL, tokens);
 
-/**
- * Phase 2b (EXPO_PUBLIC_API_LIVE=payments): the three payment calls go to the Paystack sandbox
- * server in server/, everything else stays on the mock. The bill lives in the mock, so we send the
- * server what the quote says, and put a payment the server calls succeeded on the mock order.
- */
-function withLivePayments(base: ApiClient): ApiClient {
-  if (!env.live.includes('payments') || !mocks) return base;
-  const { sandboxBridge } = mocks;
-  return {
-    ...base,
-    initializePayment: async (body, call) => {
-      const quote = JSON.stringify(sandboxBridge.quote(body.quoteId));
-      const payment = await http.initializePayment(body, { ...call, sandboxQuote: btoa(quote) });
-      return sandboxBridge.track(payment, body.quoteId);
-    },
-    getPayment: async (reference) => sandboxBridge.track(await http.getPayment(reference)),
-    verifyPayment: async (reference) => sandboxBridge.track(await http.verifyPayment(reference)),
-  };
-}
-
 let onUnauthorized: OnUnauthorized | null = null;
 
 /** The owner session plugs in here: how to get a new access token when one expires. */
@@ -78,7 +58,7 @@ const mock = mocks?.createMockApi({
   remember: true,
 });
 
-const base: ApiClient = mock ? withLivePayments(mock.api) : http;
+const base: ApiClient = mock ? mock.api : http;
 
 let onGuestUnauthorized: OnGuestUnauthorized | null = null;
 

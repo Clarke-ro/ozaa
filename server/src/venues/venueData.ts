@@ -41,7 +41,7 @@ export async function paymentSettingsOf(db: Db, venueId: string): Promise<Paymen
   if (!row) return { paystack: null, manual: NO_MANUAL };
   return {
     paystack:
-      row.paystackMode && row.paystackPublicKey && row.paystackSecretHint && row.paystackConnectedAt
+      row.paystackMode && row.paystackPublicKey && row.paystackSecretEncrypted && row.paystackSecretHint && row.paystackConnectedAt
         ? {
             mode: row.paystackMode,
             publicKey: row.paystackPublicKey,

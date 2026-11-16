@@ -68,6 +68,16 @@ export function guestOf(c: Context, deps: GuestDeps): GuestClaims {
   return claims;
 }
 
+/** Orders a guest may see: their own, or their table's while it is still open. */
+export function canSeeOrder(
+  guest: GuestClaims,
+  row: { venueId: string; guestSessionId: string | null; tableCode: string | null; status: string },
+): boolean {
+  if (row.venueId !== guest.venueId) return false;
+  if (row.guestSessionId === guest.sid) return true;
+  return guest.tableCode !== null && row.tableCode === guest.tableCode && row.status !== 'served' && row.status !== 'cancelled';
+}
+
 /** Guest calls (api/openapi.yaml: guest-session, venues, menu, orders). No personal data in logs. */
 export function guestRoutes(deps: GuestDeps) {
   const app = new Hono();
@@ -152,13 +162,7 @@ export function guestRoutes(deps: GuestDeps) {
   async function visibleOrder(c: Context) {
     const guest = guestOf(c, deps);
     const found = await orderById(db, c.req.param('orderId') ?? '');
-    const row = found?.row;
-    const mine =
-      row &&
-      row.venueId === guest.venueId &&
-      (row.guestSessionId === guest.sid ||
-        (guest.tableCode !== null && row.tableCode === guest.tableCode && row.status !== 'served' && row.status !== 'cancelled'));
-    if (!found || !mine) throw new Problem(404, 'order_not_found', 'We could not find that order.');
+    if (!found || !canSeeOrder(guest, found.row)) throw new Problem(404, 'order_not_found', 'We could not find that order.');
     return found;
   }
 

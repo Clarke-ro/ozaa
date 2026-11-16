@@ -29,10 +29,15 @@ test('owner passes the whole fee; the guest sees a Payment fee line before payin
 
   await goInApp(page, '/owner/integrations');
   await expect(page.getByText('Pass fees to customers')).toBeVisible({ timeout: 15_000 });
-  await page.getByRole('switch', { name: 'Pass fees to customers' }).click();
-  await expect(page.getByText(/^On a GH₵100 bill, guests pay GH₵1\.99 more\./)).toBeVisible({
-    timeout: 15_000,
-  });
+  // A click that lands before the settings have loaded does nothing (seen on slow CI runners), so
+  // click again until the switch reacts. It only clicks while the fee note isn't showing.
+  const feeNote = page.getByText(/^On a GH₵100 bill, guests pay GH₵1\.99 more\./);
+  await expect(async () => {
+    if (!(await feeNote.isVisible())) {
+      await page.getByRole('switch', { name: 'Pass fees to customers' }).click();
+    }
+    await expect(feeNote).toBeVisible({ timeout: 2_000 });
+  }).toPass({ timeout: 15_000 });
   await expect(page.getByRole('switch', { name: 'Pass fees to customers' })).toBeChecked();
   await page.waitForTimeout(400); // let the switch finish sliding before the screenshot
   await page.screenshot({ path: 'test-results/fee-passing-owner.png' });

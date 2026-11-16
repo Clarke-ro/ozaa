@@ -1,5 +1,4 @@
 import { decideMockCard } from './cardBox';
-import { sandboxBridge } from './mockClient';
 import { signedInMock } from './testOwner';
 
 const keys = {
@@ -44,30 +43,6 @@ test('a card payment marks paid the dishes in its own quote, not an older one', 
   );
   decideMockCard(payment.reference, 'succeeded');
   expect((await api.verifyPayment(payment.reference)).status).toBe('succeeded');
-  const lines = (await api.getOrder(order.id)).lines;
-  expect(lines.find((l) => l.id === lineB.id)?.paid).toBe(true);
-  expect(lines.find((l) => l.id === lineA.id)?.paid).toBe(false);
-});
-
-test('a sandbox server payment marks paid the dishes in its own quote', async () => {
-  const { api, order, lineA, lineB, quoteB } = await twoDishesTwoQuotes();
-  sandboxBridge.track(
-    {
-      id: 'pay_srv_items',
-      reference: 'pay_srv_items',
-      orderId: order.id,
-      method: 'momo',
-      amountPesewas: quoteB.totalPesewas,
-      tipPesewas: quoteB.tipPesewas,
-      currency: 'GHS',
-      status: 'succeeded',
-      approveBy: null,
-      createdAt: new Date().toISOString(),
-      paidAt: new Date().toISOString(),
-      testMode: true,
-    },
-    quoteB.quoteId,
-  );
   const lines = (await api.getOrder(order.id)).lines;
   expect(lines.find((l) => l.id === lineB.id)?.paid).toBe(true);
   expect(lines.find((l) => l.id === lineA.id)?.paid).toBe(false);

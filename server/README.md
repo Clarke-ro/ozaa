@@ -2,18 +2,20 @@
 
 Phase 5 has started (BUILD.md section 13). The server runs on Postgres: Supabase in production, a local Postgres or PGlite while building. It runs on Heroku as the app `cravins-api` (BUILD.md section 4). So far it has the Paystack sandbox slice from 2b, now storing payments in Postgres, and the guest side of the contract: table and menu-link sessions, venue, menu, Wi-Fi, offers, orders and bill quotes.
 
-## Payments (from the 2b sandbox slice)
-
-The only server code before the UI approval gate. It does four things, exactly as `api/openapi.yaml` describes them:
+## Payments: each restaurant's own Paystack
 
 | Route | What it does |
 |---|---|
-| `POST /v1/payments` | Starts a MoMo charge or a card checkout with Paystack |
+| `POST /v1/payments` | Starts a MoMo charge or a card checkout for a bill quote |
 | `GET /v1/payments/{reference}` | The payment as we know it, refreshed from Paystack every 5 s while open |
 | `POST /v1/payments/{reference}/verify` | Asks Paystack now |
-| `POST /v1/webhooks/paystack` | Paystack's messages, believed only when signed with the secret key |
+| `POST /v1/webhooks/paystack` | Paystack's messages, believed only when signed with that venue's key |
 
-Only Paystack's "success" for the same amount and currency (GHS) makes a payment `succeeded`.
+- **The amount comes from the server's quote** (`POST /v1/orders/{id}/bill`), never from the app.
+- **Each payment uses the venue's own Paystack secret key**, so the money lands in that restaurant's account. Cravins holds no funds and has no key of its own.
+- **The secret key is sealed** with AES-256-GCM using `ENCRYPTION_KEY` (`src/secrets/sealed.ts`). The database alone reveals no keys. Only the last 4 characters are ever shown.
+- **Only Paystack's "success" for the same amount** makes a payment `succeeded`. The first success adds the quote's food share to the order and marks its lines paid, once, in one transaction. Tips and the passed-on fee never pay for food.
+- **Test keys only.** A venue in live mode can't take payments until Clarke switches live on.
 
 ## Guests (Phase 5.2)
 
@@ -34,12 +36,13 @@ Only Paystack's "success" for the same amount and currency (GHS) makes a payment
 ## Run it
 
 1. `cp .env.example .env`. Then fill it in:
-   - your Paystack **test** secret key. A live key (`sk_live_`) is refused.
    - `DATABASE_URL`: your Supabase pooled connection string, or a local Postgres.
-2. `npm install`, then `npm run db:migrate` to create the tables. Run it again after every schema change; it's safe to repeat.
+   - `ENCRYPTION_KEY` and `GUEST_TOKEN_SECRET`: run `openssl rand -hex 32` for each.
+   - To try payments before an owner connects Paystack: your **test** keys in `PAYSTACK_SECRET_KEY` and `PAYSTACK_PUBLIC_KEY`, with `SEED_SAMPLES=true`.
+2. `npm install`, then `npm run db:migrate` to create the tables and `npm run db:seed` for the sample venues. Both are safe to repeat.
 3. `npm run dev`. It listens on http://localhost:4000/v1.
-4. In the app's root `.env`, set `EXPO_PUBLIC_API_LIVE=payments` and start the app (`npx expo start --web`). Payment calls go to this server; everything else stays on the mock.
-5. Pay at Bean There (`/bean-there/t/7`) with Paystack's test MoMo numbers or test cards from the Paystack docs.
+4. In the app's root `.env`, set `EXPO_PUBLIC_API_MODE=http` and start the app (`npx expo start --web`). Every call goes to this server.
+5. Scan Mama's Kitchen table 12 (`/mamas-kitchen/t/12`), order, and pay with Paystack's test MoMo number (MTN 0551234987) or test card (4084 0840 8408 4081, CVV 408, any future date).
 
 `npm test` runs the tests. They use PGlite, a real Postgres inside Node, so no database or Paystack is needed. `npm run typecheck` checks the types.
 
@@ -60,14 +63,12 @@ Every merge to `main` that changes `server/` deploys it (`.github/workflows/depl
 One-time set-up, done by Clarke:
 
 - **GitHub:** repo Settings > Secrets and variables > Actions > New secret `HEROKU_API_KEY` (from Heroku's Account settings > API key). Until it's set, the deploy fails and says why. The app runs on one **Basic** dyno ($7/month, always on).
-- **Heroku:** `cravins-api` > Settings > Config Vars: `DATABASE_URL` (Supabase **Session pooler** address, not `db.….supabase.co`, which is IPv6 only), `PAYSTACK_SECRET_KEY` (`sk_test_…`) `CLERK_SECRET_KEY` (`sk_test_…`), `GUEST_TOKEN_SECRET` (any random 32+ characters) and `SEED_SAMPLES=true` while testing. `NODE_ENV`, `SITE_URL`, `ALLOWED_ORIGINS` and `CLERK_PUBLISHABLE_KEY` are already set.
+- **Heroku:** `cravins-api` > Settings > Config Vars: `DATABASE_URL` (Supabase **Session pooler** address, not `db.….supabase.co`, which is IPv6 only), `PAYSTACK_SECRET_KEY` (`sk_test_…`), `CLERK_SECRET_KEY` (`sk_test_…`), `GUEST_TOKEN_SECRET` and `ENCRYPTION_KEY` (each from `openssl rand -hex 32`), and while testing `SEED_SAMPLES=true` with `PAYSTACK_PUBLIC_KEY` (`pk_test_…`) beside the secret key. `NODE_ENV`, `SITE_URL`, `ALLOWED_ORIGINS` and `CLERK_PUBLISHABLE_KEY` are already set.
 
 On a deploy or Heroku's daily restart, the server gets SIGTERM. It stops taking new requests, lets the ones in flight finish, then closes the database.
 
 ## Know before you test
 
-- **The amount comes from the app.** The bill still lives in the app's mock, so the app sends the quote in an `X-Cravins-Sandbox-Quote` header. That's only acceptable because the server refuses live keys. Phase 5 removes it: the server works out the bill itself.
-- **Card on the web reloads the page.** Coming back from Paystack's card page loads the app fresh, and the in-browser mock forgets the order. The server still has the payment (see the log). MoMo has no page load, so it works end to end.
-- **Webhooks need a public address.** Paystack can't reach your laptop. The app checks with verify instead, so this isn't needed to test. To try webhooks, point Paystack's test webhook URL at a tunnel to `/v1/webhooks/paystack`.
-- **Telecel may ask for a code** (`send_otp`). This slice doesn't support entering it yet, so test with MTN first.
+- **Webhooks:** each venue sets its Paystack webhook URL to `https://cravins-api-c62d81d926d2.herokuapp.com/v1/webhooks/paystack` (Paystack dashboard > Settings > API Keys & Webhooks). Without it, payments still finish: the app asks with verify.
+- **Telecel may ask for a code** (`send_otp`). Entering it isn't supported yet, so test with MTN first.
 - **Logs** are one JSON line per event, written through `src/log.ts`. It drops any field named like personal data or a secret, and blanks phone numbers, emails, keys and tokens anywhere else.

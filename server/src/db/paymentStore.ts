@@ -1,7 +1,7 @@
-import { eq } from 'drizzle-orm';
+import { and, eq, inArray, ne, sql } from 'drizzle-orm';
 import type { Payment } from '../payments.ts';
 import type { Db } from './client.ts';
-import { payments } from './schema.ts';
+import { billQuotes, orderLines, orders, payments } from './schema.ts';
 
 type Row = typeof payments.$inferSelect;
 
@@ -18,6 +18,7 @@ function toPayment(row: Row): Payment {
     ...(row.provider ? { provider: row.provider } : {}),
     amountPesewas: row.amountPesewas,
     tipPesewas: row.tipPesewas,
+    feePesewas: row.feePesewas,
     currency: row.currency,
     status: row.status,
     ...(row.displayText ? { displayText: row.displayText } : {}),
@@ -52,6 +53,7 @@ export function paymentStore(db: Db) {
       key: string,
       payment: Payment,
       venueSlug: string,
+      quoteId: string | null = null,
     ): Promise<{ created: boolean; payment: Payment }> {
       const inserted = await db
         .insert(payments)
@@ -64,6 +66,8 @@ export function paymentStore(db: Db) {
           provider: payment.provider ?? null,
           amountPesewas: payment.amountPesewas,
           tipPesewas: payment.tipPesewas,
+          feePesewas: payment.feePesewas,
+          quoteId,
           currency: payment.currency,
           approveBy: at(payment.approveBy),
           testMode: payment.testMode,
@@ -79,13 +83,56 @@ export function paymentStore(db: Db) {
       return { created: false, payment: toPayment(existing) };
     },
 
-    async get(reference: string): Promise<{ payment: Payment; lastAskedAt: number | null } | null> {
+    async get(
+      reference: string,
+    ): Promise<{ payment: Payment; lastAskedAt: number | null; venueSlug: string } | null> {
       const [row] = await db.select().from(payments).where(eq(payments.reference, reference));
-      return row ? { payment: toPayment(row), lastAskedAt: row.lastAskedAt?.getTime() ?? null } : null;
+      return row
+        ? { payment: toPayment(row), lastAskedAt: row.lastAskedAt?.getTime() ?? null, venueSlug: row.venueSlug }
+        : null;
     },
 
+    /**
+     * Saves a change. The first time a payment becomes succeeded, its bill share is added to the
+     * order in the same transaction, and the lines it paid for are marked paid. The update only
+     * matches while the row isn't succeeded yet, so a webhook and a verify arriving together
+     * can't count the money twice.
+     */
     async save(payment: Payment): Promise<void> {
-      await db.update(payments).set(changes(payment)).where(eq(payments.reference, payment.reference));
+      if (payment.status !== 'succeeded') {
+        await db.update(payments).set(changes(payment)).where(eq(payments.reference, payment.reference));
+        return;
+      }
+      await db.transaction(async (tx) => {
+        const [row] = await tx
+          .update(payments)
+          .set(changes(payment))
+          .where(and(eq(payments.reference, payment.reference), ne(payments.status, 'succeeded')))
+          .returning();
+        if (!row?.quoteId) return;
+        const [quote] = await tx.select().from(billQuotes).where(eq(billQuotes.id, row.quoteId));
+        if (!quote) return;
+        // Only the food share pays the order: the tip and the passed-on fee never count (BUILD.md).
+        const [order] = await tx
+          .update(orders)
+          .set({
+            paidPesewas: sql`least(${orders.totalPesewas}, ${orders.paidPesewas} + ${quote.sharePesewas})`,
+            paymentMethod: row.method === 'momo' ? 'online_momo' : 'online_card',
+            updatedAt: new Date(),
+          })
+          .where(eq(orders.id, row.orderId))
+          .returning();
+        if (!order) return;
+        if (quote.mode === 'items' && quote.lineIds.length > 0) {
+          await tx
+            .update(orderLines)
+            .set({ paid: true })
+            .where(and(eq(orderLines.orderId, order.id), inArray(orderLines.id, quote.lineIds)));
+        }
+        if (order.paidPesewas >= order.totalPesewas) {
+          await tx.update(orderLines).set({ paid: true }).where(eq(orderLines.orderId, order.id));
+        }
+      });
     },
 
     async asked(reference: string, when: number): Promise<void> {

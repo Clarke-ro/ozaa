@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { PaymentStore } from './db/paymentStore.ts';
+import { Problem } from './http/problem.ts';
 import type { Paystack, PaystackError } from './paystack.ts';
 import { fromPaystack, type PaymentStatus, type PaystackTransaction } from './status.ts';
 
@@ -12,6 +13,7 @@ export type Payment = {
   provider?: 'mtn' | 'vod' | 'atl';
   amountPesewas: number;
   tipPesewas: number;
+  feePesewas: number;
   currency: 'GHS';
   status: PaymentStatus;
   displayText?: string;
@@ -23,13 +25,18 @@ export type Payment = {
   testMode: boolean;
 };
 
-/** What the bill quote says this payment is for (see app.ts on where this comes from in 2b). */
+/** What a bill quote (made by the server, see orders/billQuote.ts) says this payment is for. */
 export type Charge = {
   orderId: string;
   venueSlug: string;
+  quoteId: string | null;
   amountPesewas: number;
   tipPesewas: number;
+  feePesewas: number;
 };
+
+/** The Paystack account of the venue whose bill it is, or null when the venue hasn't connected one. */
+export type PaystackFor = (venueSlug: string) => Promise<{ paystack: Paystack; secret: string; testMode: boolean } | null>;
 
 export type StartInput = {
   charge: Charge;
@@ -51,10 +58,9 @@ const MISMATCH = 'The amount did not match, so nothing was counted.';
  * Only Paystack's word moves a payment to succeeded.
  */
 export function paymentService(deps: {
-  paystack: Paystack;
+  paystackFor: PaystackFor;
   store: PaymentStore;
   siteUrl: string;
-  testMode: boolean;
   now?: () => number;
   newReference?: () => string;
 }) {
@@ -79,18 +85,21 @@ export function paymentService(deps: {
     return updated;
   };
 
-  const ask = async (payment: Payment): Promise<Payment> => {
+  const ask = async (payment: Payment, venueSlug: string): Promise<Payment> => {
+    const venue = await deps.paystackFor(venueSlug);
+    // The venue disconnected Paystack since: we can't ask, so we keep what we know.
+    if (!venue) return payment;
     await store.asked(payment.reference, now());
-    return apply(payment, await deps.paystack.verify(payment.reference));
+    return apply(payment, await venue.paystack.verify(payment.reference));
   };
 
   /** Asks Paystack to start the charge for a claimed payment. Never throws: a refusal is saved as failed. */
-  const charge = async (base: Payment, input: StartInput): Promise<Payment> => {
+  const charge = async (base: Payment, input: StartInput, paystack: Paystack): Promise<Payment> => {
     const email = input.email ?? PLACEHOLDER_EMAIL;
     let payment: Payment;
     try {
       if (input.method === 'momo' && input.momo) {
-        const res = await deps.paystack.chargeMomo({
+        const res = await paystack.chargeMomo({
           email,
           amountPesewas: base.amountPesewas,
           reference: base.reference,
@@ -98,7 +107,7 @@ export function paymentService(deps: {
         });
         payment = { ...base, status: 'pay_offline', displayText: res.display_text };
       } else {
-        const res = await deps.paystack.initializeCard({
+        const res = await paystack.initializeCard({
           email,
           amountPesewas: base.amountPesewas,
           reference: base.reference,
@@ -120,6 +129,8 @@ export function paymentService(deps: {
      * claimed in Postgres before Paystack is called, so a second tap never starts a second charge.
      */
     async start(input: StartInput, idempotencyKey: string): Promise<Payment> {
+      const venue = await deps.paystackFor(input.charge.venueSlug);
+      if (!venue) throw new Problem(409, 'online_pay_off', 'Pay at the counter, or ask your waiter for the bill.');
       const reference = newReference();
       const created = now();
       const base: Payment = {
@@ -130,33 +141,40 @@ export function paymentService(deps: {
         provider: input.momo?.provider,
         amountPesewas: input.charge.amountPesewas,
         tipPesewas: input.charge.tipPesewas,
+        feePesewas: input.charge.feePesewas,
         currency: 'GHS',
         status: 'pending',
         approveBy: input.method === 'momo' ? new Date(created + APPROVE_MS).toISOString() : null,
         createdAt: new Date(created).toISOString(),
         paidAt: null,
-        testMode: deps.testMode,
+        testMode: venue.testMode,
       };
-      const claim = await store.claim(idempotencyKey, base, input.charge.venueSlug);
+      const claim = await store.claim(idempotencyKey, base, input.charge.venueSlug, input.charge.quoteId);
       // A repeat: the latest word on the first payment, in case it has moved on since it started.
       if (!claim.created) return (await store.get(claim.payment.reference))?.payment ?? claim.payment;
-      return charge(claim.payment, input);
+      return charge(claim.payment, input, venue.paystack);
     },
 
     /** GET /payments/{ref}: what we know, refreshed from Paystack every few seconds while open. */
     async get(reference: string): Promise<Payment | null> {
       const found = await store.get(reference);
       if (!found) return null;
-      const { payment, lastAskedAt } = found;
+      const { payment, lastAskedAt, venueSlug } = found;
       const open = payment.status === 'pay_offline' || payment.status === 'open_url';
-      if (open && now() - (lastAskedAt ?? 0) >= REFRESH_MS) return ask(payment);
+      if (open && now() - (lastAskedAt ?? 0) >= REFRESH_MS) return ask(payment, venueSlug);
       return payment;
     },
 
     /** POST /payments/{ref}/verify: ask Paystack now. */
     async verify(reference: string): Promise<Payment | null> {
       const found = await store.get(reference);
-      return found ? ask(found.payment) : null;
+      return found ? ask(found.payment, found.venueSlug) : null;
+    },
+
+    /** The secret of the venue a payment belongs to: Paystack signs that venue's webhooks with it. */
+    async webhookSecret(reference: string): Promise<string | null> {
+      const found = await store.get(reference);
+      return found ? ((await deps.paystackFor(found.venueSlug))?.secret ?? null) : null;
     },
 
     /** A signed webhook told us about a transaction. Unknown references are ignored. */
