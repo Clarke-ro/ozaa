@@ -2,12 +2,12 @@
 import Icon from "../components/Icon.astro";
 import IPhone from "../components/IPhone.astro";
 import PageHero from "../components/PageHero.astro";
-import { appLinks } from "../content/links";
+import { links } from "../content/links";
 import { demoPage, routes, screens } from "../content/page";
 import Site from "../layouts/Site.astro";
 
-const app = appLinks(import.meta.env.PUBLIC_APP_URL);
-const root = app.app.replace(/\/$/, "");
+// The sample menus open the demo build, never the real app (src/content/links.ts).
+const root = links.demo.replace(/\/$/, "");
 ---
 
 <Site title={demoPage.title} description={demoPage.description}>

@@ -3042,3 +3042,36 @@ Authentication is proving who you are (Clerk's SMS code). Authorisation is decid
 **Try it yourself**
 
 In `owner.test.ts`, let the waiter move an order to `preparing`. The test fails with `illegal_move`, because waiters only serve. Find the rule in `src/features/orders/orderMachine.ts`.
+
+## 2026-11-16 · Two apps: the real one and the demo
+
+**What we built**
+
+Cravins now runs as two web builds of the same code:
+
+- **The real app** (`cravins-app.vercel.app`) talks to the server on Heroku. Real orders, real Paystack test payments, real owner sign-in.
+- **The demo** (`cravins-demo.vercel.app`) runs on the built-in mock with sample restaurants. Nothing in it reaches the server.
+
+The landing site's **Log in** and **Get started** open the real app. **Try it**, the sample menus and the QR card open the demo. The real app's start page sends "Open Mama's Kitchen" to the demo too.
+
+**How it works**
+
+```
+same code ──build with EXPO_PUBLIC_API_MODE=http──▶ cravins-app  (real server)
+          └─build with EXPO_PUBLIC_API_MODE=mock──▶ cravins-demo (sample data)
+landing: PUBLIC_APP_URL → Log in    PUBLIC_DEMO_URL → Try it
+```
+
+**Files to look at**
+
+- `landing/src/content/links.ts`: which button goes where.
+- `src/app/index.tsx`: the app's start page.
+- `src/lib/env.ts`: `EXPO_PUBLIC_DEMO_URL`.
+
+**New idea: build-time settings**
+
+One codebase, two behaviours, chosen when the site is built, not when it runs. Vercel bakes each project's settings into its own copy, so the demo build doesn't even contain the code that talks to the server.
+
+**Try it yourself**
+
+In `landing/`, run `PUBLIC_DEMO_URL=https://example.com npm run build` and open `dist/demo/index.html`. The sample menus now point at example.com, while Log in still points at the app.

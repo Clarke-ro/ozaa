@@ -13,6 +13,7 @@ describe('readEnv', () => {
       EXPO_PUBLIC_SUPPORT_EMAIL: 'support@cravins.app',
       EXPO_PUBLIC_SUPPORT_WHATSAPP: '233200000000',
       EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: '',
+      EXPO_PUBLIC_DEMO_URL: '',
     });
   });
 

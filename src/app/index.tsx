@@ -1,14 +1,19 @@
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { View } from 'react-native';
+import { Linking, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { DEMO } from '@/lib/demo';
+import { env } from '@/lib/env';
 import { DEMO_TABLE_PATH } from '@/mocks/demo';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
 import { makeStyles } from '@/ui/makeStyles';
 import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
+
+const demoSample = env.EXPO_PUBLIC_DEMO_URL
+  ? `${env.EXPO_PUBLIC_DEMO_URL.replace(/\/+$/, '')}${DEMO_TABLE_PATH}`
+  : null;
 
 export default function LandingScreen() {
   const { t } = useTranslation();
@@ -29,11 +34,18 @@ export default function LandingScreen() {
         <Text variant="body" style={styles.body}>
           {t('landing.body')}
         </Text>
-        {/* Demo builds only: the sample venue exists only in the mock. */}
+        {/* The sample venue lives in the demo build. A real build sends people there instead,
+            so nobody orders at a real restaurant by accident. */}
         {DEMO ? (
           <Button
             label={t('landing.sample')}
             onPress={() => router.push(DEMO_TABLE_PATH)}
+            style={styles.button}
+          />
+        ) : demoSample ? (
+          <Button
+            label={t('landing.sample')}
+            onPress={() => void Linking.openURL(demoSample)}
             style={styles.button}
           />
         ) : null}

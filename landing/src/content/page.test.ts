@@ -79,10 +79,20 @@ test("the grids and lists have the counts the layout is built for", () => {
 test("Get started points at the web app, local until it is hosted", () => {
   assert.deepEqual(appLinks(undefined), {
     app: `${LOCAL_APP_URL}/`,
-    sample: `${LOCAL_APP_URL}/mamas-kitchen/t/12`,
     owner: `${LOCAL_APP_URL}/owner/login`,
+    demo: `${LOCAL_APP_URL}/`,
+    sample: `${LOCAL_APP_URL}/mamas-kitchen/t/12`,
   });
   assert.equal(appLinks("https://app.example.com/").app, "https://app.example.com/");
+});
+
+test("sign-in goes to the real app, and the samples to the demo once it has its own address", () => {
+  const split = appLinks("https://app.example.com", "https://demo.example.com/");
+  assert.equal(split.owner, "https://app.example.com/owner/login");
+  assert.equal(split.sample, "https://demo.example.com/mamas-kitchen/t/12");
+  assert.equal(split.demo, "https://demo.example.com/");
+  // Before the demo has its own address, the samples stay on the app, as they always were.
+  assert.equal(appLinks("https://app.example.com").sample, "https://app.example.com/mamas-kitchen/t/12");
 });
 
 test("prices, policies and socials stay marked as placeholders until they are real", async () => {

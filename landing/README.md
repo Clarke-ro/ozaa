@@ -38,7 +38,8 @@ Pages swap through Astro's client router with link prefetching, and no transitio
 
 | Variable | What it does | Until it's set |
 | --- | --- | --- |
-| `PUBLIC_APP_URL` | Where Log in, Get started and the demo menus go (the Expo web app) | http://localhost:8081, so run `npm run web` in the app folder |
+| `PUBLIC_APP_URL` | Where Log in and Get started go: the real Cravins app | http://localhost:8081, so run `npm run web` in the app folder |
+| `PUBLIC_DEMO_URL` | Where Try it, the sample menus and the QR card go: the demo build with sample restaurants | `PUBLIC_APP_URL` |
 | `PUBLIC_CONTACT_ENDPOINT` | The form service URL the contact form posts to (for example a Formspree or Web3Forms form). These URLs are public, so no secret key is involved | The form says sending isn't set up yet and sends nothing |
 | `SITE_URL` | The public domain, for canonical links, share images, the sitemap and RSS | http://localhost:4321 |
 
@@ -66,6 +67,6 @@ The banner stores the visitor's choice in `localStorage` under `cravins-cookies`
 
 The hero's `home.webp` and the three `demo-*.webp` venue pages on the Try it page are different: each is the whole screen (393×852 pt at 2×), taken with the phone's safe areas, so the banner photo runs up behind the status bar. They're marked `full: true` in `page.ts`.
 
-The QR code under the statement is drawn at build time and opens the sample table at `PUBLIC_APP_URL`. Until that's set it points at localhost, so a phone can't open it yet.
+The QR code under the statement is drawn at build time and opens the sample table at `PUBLIC_DEMO_URL` (or `PUBLIC_APP_URL` without it). Until that's set it points at localhost, so a phone can't open it yet.
 
 Do not add customer names, quotes, counts or logos. The phone pictures are sample screens.
