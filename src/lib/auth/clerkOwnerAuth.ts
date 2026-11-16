@@ -1,15 +1,17 @@
 import { ApiError } from '@/lib/api/errors';
 import type { OwnerAuth } from './ownerAuth';
 
-type Factor = { strategy: string; phoneNumberId?: string };
+type Factor = { strategy: string; phoneNumberId?: string; emailAddressId?: string };
+type Strategy = 'phone_code' | 'email_code';
 type SignInAttempt = {
   supportedFirstFactors: Factor[] | null;
-  prepareFirstFactor: (params: {
-    strategy: 'phone_code';
-    phoneNumberId: string;
-  }) => Promise<unknown>;
+  prepareFirstFactor: (
+    params:
+      | { strategy: 'phone_code'; phoneNumberId: string }
+      | { strategy: 'email_code'; emailAddressId: string },
+  ) => Promise<unknown>;
   attemptFirstFactor: (params: {
-    strategy: 'phone_code';
+    strategy: Strategy;
     code: string;
   }) => Promise<{ status: string | null; createdSessionId: string | null }>;
 };
@@ -64,8 +66,16 @@ const badCode = () => new ApiError(401, 'bad_code', 'That code is wrong');
 /**
  * Owner and staff sign-in through Clerk (BUILD.md section 4), behind the same OwnerAuth the mock
  * fills in, so the screens don't change. `getClerk` waits until Clerk has loaded.
+ *
+ * Sign-in is by email code for now: Clerk keeps SMS to Ghana locked (its "Tier D") until its
+ * support switches it on, and Clarke chose email over waiting (2026-11-16). `identifier` switches
+ * back to phone in one place when SMS is available.
  */
-export function clerkOwnerAuth(getClerk: () => Promise<ClerkLike>): OwnerAuth {
+export function clerkOwnerAuth(
+  getClerk: () => Promise<ClerkLike>,
+  identifier: 'phone' | 'email' = 'email',
+): OwnerAuth {
+  const strategy: Strategy = identifier === 'email' ? 'email_code' : 'phone_code';
   let attempt: SignInAttempt | null = null;
   let newPhone: NewPhone | null = null;
 
@@ -78,25 +88,24 @@ export function clerkOwnerAuth(getClerk: () => Promise<ClerkLike>): OwnerAuth {
   };
 
   return {
-    sendCode: (phone) =>
+    identifier,
+    sendCode: (address) =>
       run(async (clerk) => {
         if (!clerk.client) throw new ApiError(503, 'auth_unavailable', 'Sign-in is not ready');
-        attempt = await clerk.client.signIn.create({ identifier: phone });
-        const factor = attempt.supportedFirstFactors?.find((f) => f.strategy === 'phone_code');
-        // With strict enumeration protection an unknown number gets no phone factor and no SMS.
+        attempt = await clerk.client.signIn.create({ identifier: address.trim() });
+        const factor = attempt.supportedFirstFactors?.find((f) => f.strategy === strategy);
+        // With strict enumeration protection an unknown address gets no factor and no code.
         // We still move on to the code step, so the screen looks the same either way.
-        if (factor?.phoneNumberId) {
-          await attempt.prepareFirstFactor({
-            strategy: 'phone_code',
-            phoneNumberId: factor.phoneNumberId,
-          });
+        if (factor?.emailAddressId) {
+          await attempt.prepareFirstFactor({ strategy: 'email_code', emailAddressId: factor.emailAddressId });
+        } else if (factor?.phoneNumberId) {
+          await attempt.prepareFirstFactor({ strategy: 'phone_code', phoneNumberId: factor.phoneNumberId });
         }
       }),
     verifyCode: (code) =>
       run(async (clerk) => {
-        if (!attempt?.supportedFirstFactors?.some((f) => f.strategy === 'phone_code'))
-          throw badCode();
-        const result = await attempt.attemptFirstFactor({ strategy: 'phone_code', code });
+        if (!attempt?.supportedFirstFactors?.some((f) => f.strategy === strategy)) throw badCode();
+        const result = await attempt.attemptFirstFactor({ strategy, code });
         if (result.status !== 'complete' || !result.createdSessionId) throw badCode();
         await clerk.setActive({ session: result.createdSessionId });
         attempt = null;

@@ -414,6 +414,7 @@
   "owner": {
     "login": "Owner sign in",
     "phone": "Phone number",
+    "email": "Email",
     "code": "Code",
     "send": "Send code",
     "enter": "Enter",
@@ -656,7 +657,9 @@
     "loginBrand": "Cravins restaurant management",
     "loginLead": "Sign in to see your orders, kitchen tickets and floor.",
     "codeLead": "Enter the 6-digit code we sent to your phone.",
+    "codeLeadEmail": "Enter the 6-digit code we sent to your email.",
     "changeNumber": "Change number",
+    "changeEmail": "Change email",
     "categories": "Categories",
     "notice": "Store notice",
     "customers": "Customers",
@@ -2610,7 +2613,6 @@
     "confirmDelivery": "Confirm, pay on delivery",
     "payNow": "Pay now"
   },
-
   "linkOrder": {
     "title": "How do you want it?",
     "how": "Pickup or delivery",

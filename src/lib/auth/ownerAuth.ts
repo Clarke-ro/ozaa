@@ -9,8 +9,13 @@ import { ApiError } from '@/lib/api/errors';
  * Errors are ApiErrors with the codes the screens already know: 401 `bad_code`, 429 `rate_limited`.
  */
 export type OwnerAuth = {
-  /** Texts a 6-digit code to the phone (+233…). */
-  sendCode(phone: string): Promise<void>;
+  /**
+   * What people sign in with. Real builds use an email code for now, because Clerk won't text
+   * Ghana numbers yet (2026-11-16); the demo keeps its sample phone numbers.
+   */
+  identifier: 'phone' | 'email';
+  /** Sends a 6-digit code to the phone (+233…) or email, whichever `identifier` says. */
+  sendCode(identifier: string): Promise<void>;
   /** Checks the code sent by sendCode. Afterwards getToken() gives a token for owner calls. */
   verifyCode(code: string): Promise<void>;
   /**
@@ -30,6 +35,7 @@ export type OwnerAuth = {
  * isn't ready instead of failing in a confusing way.
  */
 export const notReadyAuth: OwnerAuth = {
+  identifier: 'email',
   sendCode: notReady,
   verifyCode: notReady,
   getToken: async () => null,

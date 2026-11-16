@@ -17,17 +17,19 @@ const OWNER = '+233200000001';
 const WAITER = '+233200000002';
 const KITCHEN = '+233200000003';
 
-// Stands in for Clerk: the token "clerk:<user id>:<verified phone>" signs that person in.
+// Stands in for Clerk: "clerk:<user id>:<verified phone or email>" signs that person in.
 const fakeClerk: VerifyOwner = async (token) => {
-  const [kind, clerkUserId, phone] = token.split(':');
-  return kind === 'clerk' && clerkUserId ? { clerkUserId, phone: phone || null, firstName: null } : null;
+  const [kind, clerkUserId, address = ''] = token.split(':');
+  if (kind !== 'clerk' || !clerkUserId) return null;
+  const email = address.includes('@') ? address : null;
+  return { clerkUserId, email, phone: email ? null : address || null, firstName: null };
 };
 const as = (clerkUserId: string, phone = '') => ({ Authorization: `Bearer clerk:${clerkUserId}:${phone}` });
 
 async function setup(options: { verify?: VerifyOwner | null } = {}) {
   const db = await testDb();
   const { venueIds } = await seedSamples(db);
-  await seedOwner(db, { phone: '020 000 0001', firstName: 'Ama', venueIds });
+  await seedOwner(db, { phone: '020 000 0001', email: 'Ama@Example.com', firstName: 'Ama', venueIds });
   const mamas = venueIds.find((id) => id.includes('mama')) ?? venueIds[0]!;
   // A waiter and a cook at Mama's Kitchen only.
   for (const [id, phone, role] of [
@@ -91,6 +93,17 @@ test('GET /me links the Clerk user by verified phone, then knows them by Clerk i
   // A number changed in Clerk shows up on the next call.
   const moved = await call('GET', '/me', undefined, as('user_owner', '+233200000009'));
   assert.equal(moved.json.phone, '+233200000009');
+});
+
+test('staff sign in by email code: the verified email finds the owner, and only once', async () => {
+  const { call } = await setup();
+  const me = await call('GET', '/me', undefined, as('user_email_owner', 'ama@example.com'));
+  expectContract('getMe', 200, me.json);
+  assert.equal(me.json.email, 'ama@example.com');
+  assert.equal(me.json.venues.length, 3);
+  // Another Clerk account with the same email can't take over a row that is already linked.
+  const copy = await call('GET', '/me', undefined, as('user_someone_else', 'ama@example.com'));
+  assert.equal(copy.json.code, 'not_staff');
 });
 
 test('owner calls say "not set up" while the server has no Clerk key', async () => {

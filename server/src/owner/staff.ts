@@ -1,4 +1,4 @@
-import { and, eq, inArray, ne } from 'drizzle-orm';
+import { and, eq, inArray, isNull, ne } from 'drizzle-orm';
 import type { Context } from 'hono';
 import type { Db } from '../db/client.ts';
 import { staffMemberships, staffUsers, venues } from '../db/schema.ts';
@@ -14,8 +14,9 @@ export type SignedIn = { user: UserRow; memberships: MembershipRow[] };
 
 /**
  * The signed-in staff member, or a Problem. Clerk proves who they are; Cravins decides what they
- * may do. The first sign-in links the Clerk user to the staff record with the same verified phone
- * and turns their invites into active memberships. After that the Clerk user id finds them.
+ * may do. The first sign-in links the Clerk user to the staff record with the same verified email
+ * (staff sign in by email code for now, because Clerk won't text Ghana numbers yet) or phone, and
+ * turns their invites into active memberships. After that the Clerk user id finds them.
  */
 export async function signedIn(c: Context, deps: OwnerDeps): Promise<SignedIn> {
   if (!deps.verify) throw new Problem(503, 'sign_in_not_ready', 'Sign-in is not set up on this server yet.');
@@ -25,14 +26,22 @@ export async function signedIn(c: Context, deps: OwnerDeps): Promise<SignedIn> {
   const { db } = deps;
 
   let [user] = await db.select().from(staffUsers).where(eq(staffUsers.clerkUserId, identity.clerkUserId));
+  // Only a row no other Clerk user has claimed can be linked.
+  if (!user && identity.email) {
+    [user] = await db
+      .update(staffUsers)
+      .set({ clerkUserId: identity.clerkUserId })
+      .where(and(eq(staffUsers.email, identity.email), isNull(staffUsers.clerkUserId)))
+      .returning();
+  }
   if (!user && identity.phone) {
     [user] = await db
       .update(staffUsers)
       .set({ clerkUserId: identity.clerkUserId })
-      .where(and(eq(staffUsers.phone, identity.phone)))
+      .where(and(eq(staffUsers.phone, identity.phone), isNull(staffUsers.clerkUserId)))
       .returning();
   }
-  if (!user) throw new Problem(403, 'not_staff', 'This number is not on a Cravins team. Ask your venue owner for an invite.');
+  if (!user) throw new Problem(403, 'not_staff', 'You are not on a Cravins team. Ask your venue owner for an invite.');
   // Keep the phone in step with Clerk: a number changed in Clerk shows up here on the next call.
   if (identity.phone && identity.phone !== user.phone) {
     [user] = await db.update(staffUsers).set({ phone: identity.phone }).where(eq(staffUsers.id, user.id)).returning();

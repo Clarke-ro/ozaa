@@ -24,6 +24,7 @@ export function mockOwnerAuth(ctx: MockContext): OwnerAuth {
   };
 
   return {
+    identifier: 'phone',
     async sendCode(phone) {
       await gate();
       if (!isGhanaPhone(phone)) throw new ApiError(400, 'phone_not_valid', 'Check the number');
