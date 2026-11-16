@@ -577,7 +577,7 @@ Work top to bottom. Each box is one small PR that ends in a verifiable state (ps
 - [x] 2.7 Owner payout account screen: bank or MoMo, shows the masked account and status. *(Replaced by Payments settings; endpoint removed 2026-11-11.)*
 - [x] 2.8 Owner "Mark paid in cash" (`/owner/orders/{id}/cash-payment`). *(Replaced by Mark paid with a method, `manual-payment`; endpoint removed 2026-11-11.)*
 - [x] 2.9 *contract* + mock: fee passing (`FeePassing`, `ownerSetFeePassing`, `BillQuote.feePesewas`, `Payment.feePesewas`), with the maths tdd in `src/lib/paystackFee.ts`.
-- [ ] 2.10 Fee passing screens: the owner switch and share on Integrations > Payments, the fee line on Pay and on the receipt.
+- [x] 2.10 Fee passing screens: the owner switch and share on Integrations > Payments, the fee line on Pay and on the receipt. *Done 2026-11-16: `FeePassingCard` (shown once Paystack is connected; 25/50/75/100%), a "Payment fee" line on Pay (from `VenuePublic.payMethods.feePercent`, contract PR first) and on the receipt, and `e2e/fee-passing.spec.ts` for the whole path.*
 - [ ] **2b Paystack sandbox slice** (the only early server code, in `server/`):
   - Implement only `POST /payments`, `GET /payments/{ref}`, `POST /payments/{ref}/verify` and `POST /webhooks/paystack`, with **test** keys from the server env.
   - The app uses `EXPO_PUBLIC_API_LIVE=payments` to send just these calls to the server and keep everything else on mocks.

@@ -1,4 +1,4 @@
-import { PAYSTACK_GH_FEE_BPS, passedFee } from './paystackFee';
+import { PAYSTACK_GH_FEE_BPS, passedFee, previewFee } from './paystackFee';
 
 // What Paystack keeps from a payment of `gross` pesewas in Ghana (1.95%).
 const paystackTakes = (gross: number) => Math.round((gross * PAYSTACK_GH_FEE_BPS) / 10_000);
@@ -34,5 +34,19 @@ describe('passedFee', () => {
     expect(() => passedFee(10_000, 101)).toThrow(RangeError);
     expect(() => passedFee(10_000, -1)).toThrow(RangeError);
     expect(() => passedFee(100.5, 100)).toThrow(RangeError);
+  });
+});
+
+describe('previewFee', () => {
+  const online = { online: true, cash: true, cardMachine: false };
+  test('the same figure the server charges, when the venue passes a share', () => {
+    expect(previewFee(10_000, { ...online, feePercent: 100 })).toBe(passedFee(10_000, 100));
+    expect(previewFee(10_000, { ...online, feePercent: 50 })).toBe(passedFee(10_000, 50));
+  });
+  test('nothing when the venue keeps the fee, has no online payments, or nothing is due', () => {
+    expect(previewFee(10_000, online)).toBe(0);
+    expect(previewFee(10_000, { ...online, online: false, feePercent: 100 })).toBe(0);
+    expect(previewFee(10_000, undefined)).toBe(0);
+    expect(previewFee(0, { ...online, feePercent: 100 })).toBe(0);
   });
 });

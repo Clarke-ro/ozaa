@@ -4,6 +4,7 @@ import { Receipt } from 'lucide-react-native';
 import * as Crypto from 'expo-crypto';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { previewFee } from '@/lib/paystackFee';
 import { Redirect, useRouter, type Href } from 'expo-router';
 import { api } from '@/lib/api';
 import type { Payment } from '@/lib/api/types';
@@ -132,7 +133,12 @@ export function PayScreen({ slug }: { slug: string }) {
       return null;
     }
   })();
-  const due = preview?.totalPesewas ?? 0;
+  // The fee the venue passes on, worked out the server's way so the guest sees it before paying.
+  // The quote then charges the server's own figure.
+  const fee = preview
+    ? previewFee(preview.sharePesewas + preview.tipPesewas, venue.data?.payMethods)
+    : 0;
+  const due = (preview?.totalPesewas ?? 0) + fee;
 
   const start = async () => {
     send({ type: 'request_quote' });
@@ -249,6 +255,7 @@ export function PayScreen({ slug }: { slug: string }) {
             <PaySummary
               share={preview?.sharePesewas ?? 0}
               tip={preview?.tipPesewas ?? 0}
+              fee={fee}
               due={due}
               currency={currency}
             />

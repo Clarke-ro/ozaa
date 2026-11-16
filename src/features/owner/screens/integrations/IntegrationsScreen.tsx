@@ -11,6 +11,7 @@ import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
 import { ManualPaymentsCard } from './ManualPaymentsCard';
 import { PaystackCard } from './PaystackCard';
+import { FeePassingCard } from './FeePassingCard';
 import { WhatsAppIntegration } from './WhatsAppIntegration';
 
 /**
@@ -39,6 +40,10 @@ export function IntegrationsScreen() {
               {t('ownerPay.paymentsTitle')}
             </Text>
             <PaystackCard venueId={venueId} settings={settings.data} />
+            {/* The fee only exists on payments in the app, so it shows once Paystack is connected. */}
+            {settings.data.paystack ? (
+              <FeePassingCard venueId={venueId} settings={settings.data} />
+            ) : null}
             {/* Keyed on the saved settings, so the form starts from them after each save. */}
             <ManualPaymentsCard
               key={JSON.stringify(settings.data.manual)}

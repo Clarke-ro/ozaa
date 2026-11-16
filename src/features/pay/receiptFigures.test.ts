@@ -15,9 +15,21 @@ test('a whole bill with a tip: share is what was paid less the tip, nothing left
     tableTotal: 13_000,
     share: 13_000,
     tip: 1_300,
+    fee: 0,
     paid: 14_300,
     stillToPay: 0,
   });
+});
+
+test('a fee the guest paid is its own line, and never counts as their share of the bill', () => {
+  const figures = receiptFigures(order, {
+    amountPesewas: 14_580,
+    tipPesewas: 1_300,
+    feePesewas: 280,
+  });
+  expect(figures.fee).toBe(280);
+  expect(figures.share).toBe(13_000);
+  expect(figures.paid).toBe(14_580);
 });
 
 test('a split bill: what is still to pay at the table comes from the order', () => {
