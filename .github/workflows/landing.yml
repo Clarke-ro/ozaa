@@ -1,7 +1,11 @@
 name: landing
 
+# Only when the landing site changes: every other PR used to build it too, costing Actions minutes.
 on:
   pull_request:
+    paths:
+      - "landing/**"
+      - ".github/workflows/landing.yml"
   push:
     paths:
       - "landing/**"
