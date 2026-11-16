@@ -1,8 +1,14 @@
 import { useRef, useState, type ReactNode } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import {
+  ScrollView,
+  StyleSheet,
+  View,
+  useWindowDimensions,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+} from 'react-native';
 import { useRouter } from 'expo-router';
-import { FlashList, type RenderTarget } from '@shopify/flash-list';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
@@ -33,26 +39,16 @@ import { menuRows, type MenuRow } from './menuRows';
 import { guestKeys } from '@/lib/queryKeys';
 import { StoreNoticeBanner, useLiveNotices } from '@/features/notices';
 
-type ListRow<T extends { id: string; categoryId: string }> =
-  | MenuRow<T>
-  | { type: 'hero'; key: string }
-  | { type: 'controls'; key: string }
-  | { type: 'empty'; key: string };
-
-// Hero is always index 0 and the tab bar index 1, so the list knows which row to pin.
-const CONTROLS_INDEX = 1;
-
 /**
- * The guest menu: a fixed bar to search, filter and pick a section, then the dishes as a list
- * (the default) or a grid of photo cards. With every section shown, each gets a heading.
+ * The guest menu: a bar to search and pick a section, then the dishes as a list (the default)
+ * or a grid of photo cards. With every section shown, each gets a heading.
  *
- * With a `hero` (the online-ordering page), the menu is the page: the hero scrolls away above it,
- * the search and section bar sticks to the top, and the venue's name shows in that bar once the
- * hero is gone. Without one (a table guest's Menu page), there's a header with a back button.
+ * With a `hero` (the online-ordering page), the banner scrolls away and the tab bar stays.
+ * Without one (a table guest's Menu page), there's a header with a back button.
  *
- * The bar is a row in the list that the list itself pins. A bar drawn on top of the list shows
- * on the web and disappears on a phone: the native list paints over it, and Android can drop a
- * wrapper that exists only to be measured, so the bar stays invisible.
+ * This is a normal scroll view, not FlashList. FlashList v2 asks the phone for the list's
+ * size and then draws. On iPhone and Android that answer comes back as 0, so the menu never
+ * appears. The browser answers straight away, which is why the same screen showed on the web only.
  */
 export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
   const { t } = useTranslation();
@@ -69,10 +65,11 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
   const [section, setSection] = useState('all');
   const [query, setQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
-  // True once the tab row has reached the top and the list is holding it there.
+  // True once the banner block has scrolled off and the tab bar is held at the top.
   const [pastHero, setPastHero] = useState(false);
-  const listRef = useRef<{
-    scrollToOffset: (args: { offset: number; animated?: boolean }) => void;
+  const [heroHeight, setHeroHeight] = useState(0);
+  const scrollRef = useRef<{
+    scrollTo: (options: { y: number; animated?: boolean }) => void;
   } | null>(null);
   const insets = useSafeAreaInsets();
   const pinnedAt = insets.top + NAME_STRIP;
@@ -122,8 +119,11 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
   const open = (id: string) => router.push(`/${slug}/menu/${id}`);
 
   // A shorter section would otherwise leave you scrolled into blank space.
-  const jumpTop = () => listRef.current?.scrollToOffset({ offset: 0, animated: false });
-  const controls = (target: RenderTarget | 'standalone') => (
+  const jumpTop = () => {
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
+    setPastHero(false);
+  };
+  const controls = (
     <MenuControls
       query={query}
       onQuery={(text) => {
@@ -132,7 +132,6 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
       }}
       searchOpen={searchOpen}
       onSearchOpen={setSearchOpen}
-      autoFocus={target === 'StickyHeader' || !pastHero}
       sections={sections}
       active={active}
       onSection={(id) => {
@@ -157,59 +156,18 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
       ) : null}
     </View>
   );
-  const dishRows: ListRow<(typeof shown)[number]>[] =
-    rows.length > 0 ? rows : [{ type: 'empty', key: 'empty' }];
-  const data: ListRow<(typeof shown)[number]>[] = hero
-    ? [{ type: 'hero', key: 'hero' }, { type: 'controls', key: 'controls' }, ...dishRows]
-    : rows;
 
-  const renderRow = (row: ListRow<(typeof shown)[number]>, target: RenderTarget) => {
-    if (row.type === 'hero') {
-      // collapsable={false}: Android otherwise drops a wrapper that only groups children, and the
-      // list then thinks the banner has no height, so the tabs pin over it.
-      return (
-        <View collapsable={false}>
-          {hero}
-          {listHeader}
-        </View>
-      );
-    }
-    if (row.type === 'controls') {
-      const hidden = target === 'Cell' && pastHero;
-      return (
-        <View
-          collapsable={false}
-          pointerEvents={hidden ? 'none' : 'auto'}
-          accessibilityElementsHidden={hidden}
-          importantForAccessibility={hidden ? 'no-hide-descendants' : 'auto'}
-          aria-hidden={hidden}
-          style={[
-            { backgroundColor: theme.bg },
-            // The pinned copy is taken out of the row, so give it the screen width explicitly.
-            target === 'StickyHeader' ? { width } : null,
-          ]}
-        >
-          {controls(target)}
-        </View>
-      );
-    }
-    if (row.type === 'empty') {
-      return (
-        <Text variant="body" style={[styles.empty, { color: theme.muted }]}>
-          {searching ? t('menu.noMatch') : t('menu.empty')}
-        </Text>
-      );
-    }
+  const rowView = (row: MenuRow<(typeof shown)[number]>) => {
     if (row.type === 'heading') {
       return (
-        <Text variant="title" accessibilityRole="header" style={styles.heading}>
+        <Text key={row.key} variant="title" accessibilityRole="header" style={styles.heading}>
           {row.title}
         </Text>
       );
     }
     if (row.type === 'dish') {
       return (
-        <View style={styles.pad}>
+        <View key={row.key} style={styles.pad}>
           <DishRow
             item={row.item}
             currency={currency}
@@ -220,7 +178,7 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
       );
     }
     return (
-      <View style={[styles.pad, styles.gridRow]}>
+      <View key={row.key} style={[styles.pad, styles.gridRow]}>
         {row.items.map((item) => (
           <DishCard
             key={item.id}
@@ -238,73 +196,93 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
     );
   };
 
+  const dishes =
+    rows.length > 0
+      ? rows.map(rowView)
+      : [
+          <Text key="empty" variant="body" style={[styles.empty, { color: theme.muted }]}>
+            {searching ? t('menu.noMatch') : t('menu.empty')}
+          </Text>,
+        ];
+
+  const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    if (!hero) return;
+    const y = event.nativeEvent.contentOffset.y;
+    const stuck = heroHeight > 0 && y >= heroHeight;
+    setPastHero((on) => (on === stuck ? on : stuck));
+  };
+
   return (
     <SafeScreen includeTop={!hero}>
       {hero ? null : <PageHeader title={t('menu.title')} subtitle={venue.data?.name ?? ''} />}
       {storeNotice.banner ? <StoreNoticeBanner notice={storeNotice.banner} /> : null}
-      {hero ? null : controls('standalone')}
-      {/* FlashList keeps long menus cheap on 2–3 GB phones. */}
-      <FlashList
+      {hero ? null : controls}
+      <ScrollView
         ref={(node) => {
-          listRef.current = node;
+          // The scroll view's own type is the native instance. Keep only the call we use.
+          scrollRef.current = node ? { scrollTo: (options) => node.scrollTo(options) } : null;
         }}
-        data={data}
-        extraData={{ active, query, searchOpen, pastHero }}
-        keyExtractor={(row) => row.key}
-        getItemType={(row) => row.type}
-        keyboardShouldPersistTaps="handled"
+        style={styles.fill}
         contentContainerStyle={hero ? styles.scrollHero : styles.scroll}
-        ItemSeparatorComponent={RowGap}
-        stickyHeaderIndices={hero ? [CONTROLS_INDEX] : undefined}
-        stickyHeaderConfig={
-          hero ? { offset: pinnedAt, hideRelatedCell: true, useNativeDriver: true } : undefined
-        }
-        onChangeStickyIndex={
-          hero ? (current) => setPastHero(current === CONTROLS_INDEX) : undefined
-        }
-        ListHeaderComponent={hero ? null : listHeader}
-        ListEmptyComponent={
-          <Text variant="body" style={[styles.empty, { color: theme.muted }]}>
-            {searching ? t('menu.noMatch') : t('menu.empty')}
-          </Text>
-        }
-        renderItem={({ item: row, target }) => renderRow(row, target)}
-      />
-      {hero && pastHero ? (
-        <View
-          pointerEvents="none"
-          style={[
-            styles.nameStrip,
-            { height: pinnedAt, paddingTop: insets.top, backgroundColor: theme.bg },
-          ]}
-        >
-          <Text variant="title" numberOfLines={1} accessibilityRole="header">
-            {venue.data?.name ?? ''}
-          </Text>
-        </View>
-      ) : null}
+        keyboardShouldPersistTaps="handled"
+        nestedScrollEnabled
+        scrollEventThrottle={16}
+        onScroll={hero ? onScroll : undefined}
+        // Child 0 is the banner block. Child 1 is the tab bar, so it stays under the venue name.
+        stickyHeaderIndices={hero ? [1] : undefined}
+      >
+        {hero ? (
+          <View
+            key="hero"
+            collapsable={false}
+            onLayout={(event) => {
+              const next = event.nativeEvent.layout.height;
+              setHeroHeight((height) => (height === next ? height : next));
+            }}
+          >
+            {hero}
+            {listHeader}
+          </View>
+        ) : (
+          <View key="header">{listHeader}</View>
+        )}
+        {hero ? (
+          <View key="controls" collapsable={false} style={{ backgroundColor: theme.bg }}>
+            {pastHero ? (
+              <View style={[styles.nameInBar, { height: pinnedAt, paddingTop: insets.top }]}>
+                <Text variant="title" numberOfLines={1} accessibilityRole="header">
+                  {venue.data?.name ?? ''}
+                </Text>
+              </View>
+            ) : null}
+            {controls}
+          </View>
+        ) : null}
+        {dishes}
+      </ScrollView>
       <MenuCartBar slug={slug} currency={currency} />
     </SafeScreen>
   );
 }
 
+// The slim strip with the venue's name that the tab bar stops under once the banner has gone.
+const NAME_STRIP = 44;
+
 const styles = StyleSheet.create({
+  fill: { flex: 1 },
   scroll: { paddingBottom: 120, paddingTop: tokens.space[3] },
   scrollHero: { paddingBottom: 120 },
-  nameStrip: {
-    position: 'absolute',
-    top: 0,
-    start: 0,
-    end: 0,
-    zIndex: 4,
-    elevation: 12,
+  nameInBar: {
     justifyContent: 'center',
     paddingHorizontal: tokens.grid.mobile.margin,
   },
   header: { gap: tokens.space[3] },
-  rowGap: { height: tokens.space[3] },
-  pad: { paddingHorizontal: tokens.space[4] },
-  heading: { paddingHorizontal: tokens.grid.mobile.margin, paddingTop: tokens.space[2] },
+  pad: { paddingHorizontal: tokens.space[4], marginBottom: tokens.space[3] },
+  heading: {
+    paddingHorizontal: tokens.grid.mobile.margin,
+    paddingTop: tokens.space[2],
+    marginBottom: tokens.space[3],
+  },
   empty: {
     paddingHorizontal: tokens.grid.mobile.margin,
     paddingTop: tokens.space[3],
@@ -313,12 +291,3 @@ const styles = StyleSheet.create({
   gridRow: { flexDirection: 'row', gap: tokens.space[3] },
   filler: { flex: 1 },
 });
-
-// The slim strip with the venue's name that the bar stops under once the hero has gone.
-const NAME_STRIP = 44;
-
-function RowGap({ leadingItem }: { leadingItem?: { type?: string } }) {
-  // The banner and the tab bar meet. A gap here would pin the bar too early.
-  if (leadingItem?.type === 'hero') return null;
-  return <View style={styles.rowGap} />;
-}

@@ -4,31 +4,34 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
-## 2026-11-16 · The same menu on a phone
+## 2026-11-16 · The menu was blank on iPhone and Android
 
 **What we built**
 
-The new menu (banner, tabs, offer row, photo cards) now shows in the iOS and Android app the same way it shows in the browser, and in the owner's phone preview.
+The new menu (banner, tabs, offer row, photo cards) now draws on iPhone and Android, the same way it already drew in the browser.
 
 **How it works**
 
-The tab bar is a row in the dish list. The list pins that row under the venue's name once the banner has scrolled off. A bar drawn on top of the list sits in front in the browser. On a phone the list is a native view and paints over that bar, so the tabs never appeared. Android can also throw away a view that only wraps other views, which left the list thinking the banner had no height.
+The dish list was a FlashList. It asks the phone "how tall am I?" and only then draws the rows. On iPhone and Android that answer comes back too late, as a height of 0, so it draws nothing. The browser answers immediately, which is why the web looked finished and both phones looked unchanged.
+
+The menu is now an ordinary scroll view. Both phones can measure that. The tab bar is the second child, and the scroll view pins it under the venue's name once the banner has gone.
+
+The phones also load TrueType copies of the same fonts. iPhone and Android cannot read the WOFF2 files the browser uses, so the type never arrived there.
 
 ```
-browser: banner scrolls, a bar drawn on top stays visible
-phone:   the list itself pins the tab row
+web:    FlashList measures the page and draws the dishes
+phones: the same question came back as 0, so no dishes
+now:    a normal scroll view, which iPhone and Android can measure
 ```
-
-The owner's Menu preview used to be a cover photo and chips. It now uses the same banner and tabs as the guest page. Tapping a dish still opens the editor. Share and Info in that preview are only a picture, so a tap stays on the menu builder.
 
 **Files to look at**
 
-- `src/features/menu/MenuScreen.tsx`: the pinned tab row.
-- `src/features/owner/screens/menu/live/PhonePreview.tsx`: the preview inside the owner's app.
+- `src/features/menu/MenuScreen.tsx`: the scroll view and the pinned tab bar.
+- `src/theme/fonts.ts`: the TrueType files the phones load. The browser uses `fonts.web.ts`.
 
-**New idea: a native view paints in its own layer**
+**New idea: a measurement that arrives too late**
 
-On the web, later boxes paint on top of earlier ones. On a phone, a scrolling list is drawn by the system in its own layer, and it can cover a box that React placed on top of it. If something must stay visible while the list scrolls, ask the list to pin it.
+Some phone APIs call you back later, after your function has already returned. If you read the result on the next line, you still have the empty starting value. FlashList did that with the list's height, so it kept the 0 and never drew.
 
 **Try it yourself**
 
@@ -67,7 +70,7 @@ Opening the menu link after scanning a table ends that table visit in the browse
 
 **New idea: one search button**
 
-The tab bar is a row in the list. Once the banner scrolls away, the list pins that row and hides the original from a screen reader, so there's still one search button to find.
+The tab bar is one row in the scroll view. The scroll view pins that same row when the banner leaves, so a screen reader still finds one search button.
 
 **Try it yourself**
 
