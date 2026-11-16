@@ -60,7 +60,7 @@ Clarke's order. Each product is a group of features. We build them in this order
 | #   | Product     | What it is                                                                                                                                                                                                                  | Phase |
 | --- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
 | 1   | **Table**   | Guest page from the QR code, with the home screen, stories, menu, order, order status, call waiter, Wi-Fi, offers, about, the game, and the food-ready banner. Owner side: services, customise, orders dashboard and staff. | 1     |
-| 2   | **Pay**     | Whole bill, equal split or "my items", with tips. MoMo (MTN, Telecel, AT) and card through Paystack, Paystack sandbox first. Split payments to the venue's subaccount; Cravins never holds funds.                           | 2     |
+| 2   | **Pay**     | Whole bill, equal split or "my items", with tips. MoMo (MTN, Telecel, AT) and card through Paystack, Paystack sandbox first. Split payments to the venue's subaccount; Cravins never holds funds.                              | 2     |
 | 3   | **Loyalty** | Stamp card per venue, joined with a phone code and recorded consent. Stamps for paid orders and, optionally, a game high score.                                                                                             | 3     |
 | 4   | **Reviews** | Written reviews (4–5 stars point to Google, 1–3 to private feedback). 15–30 s video reviews become story circles once the owner features them. Owner moderation.                                                            | 4     |
 | 5   | POS         | Staff take orders and cash at the counter, print or share receipts.                                                                                                                                                         | 7     |
@@ -84,14 +84,14 @@ These are settled. Do not reopen them.
 - **Guest home:** an edge-to-edge banner with a round logo at bottom-left, then name, description, location and hours. Below that come the video-review story circles, then services in four sections (At your table, Rewards, Fun while you wait, More). Each service opens its own screen.
 - **Game:** "Play while you wait" is for every guest. It has a weekly leaderboard, an optional loyalty stamp at the owner's target score, and the food-ready banner can appear over it.
 - **Owner side:** review moderation, service toggles, the Customise page, and an orders dashboard.
-- **Payments:** Paystack, test mode first. MoMo on MTN, Telecel and AT, plus card. _Changed 2026-11-03:_ each restaurant pastes its own Paystack public and secret keys (Settings > Integrations). The secret key is stored encrypted on the server only and never reaches the app, the browser or a log. No split payments, no pooled accounts, no payouts. Never hold funds. Manual methods (cash, card machine, bank transfer, MoMo to the merchant number) are marked paid by staff.
-- **Two ways to order** _(2026-11-03)_: walk-in guests scan a **table QR** (no contact details, call waiter, ask for the bill). Online customers use the venue's **menu link** (`/<venue-slug>`) to order for pickup or delivery, and give a name and phone (plus an address for delivery). That contact data lives on the order only, never in the guest session, and is never logged.
-- **Paystack fee** _(2026-11-16)_: the venue pays it unless the owner switches on "Pass fees to customers" (Integrations > Payments) and picks a share, 1–100%. 100% adds Paystack's whole fee (1.95% in Ghana, `src/lib/paystackFee.ts`) so the venue still receives the full bill. The guest sees it as its own line before paying and on the receipt. It applies only to payments in the app, never to cash, card machine, bank transfer or MoMo to the venue's number, and it never counts as paying for food. The server works it out.
-- **Sign-in** _(2026-11-16)_: **Clerk**, paid from Clarke's Clerk credit, with our own screens built on Clerk's custom-flow APIs (no Clerk-drawn screens). Clerk sends the phone codes; Arkesel (about GH₵0.035 a code) is the fallback if Clerk's SMS to Ghana proves slow or costly. If Google sign-in is added, Sign in with Apple must be added too (App Store guideline 4.8). Moving sign-in to Clerk changes the contract's auth calls, so that goes in its own contract PR first. _Clarke, 2026-11-16:_ Clerk is for owners and staff only, never guests. Guests joining loyalty get their code by plain SMS sent by our server (`POST /auth/otp/*`); Arkesel is the default sender until Clarke names another. Clerk's strict enumeration protection is on, and sign-ups are invite-only, so an unknown number sees the same "enter your code" step and no SMS is sent.
-- **Legal checks** _(2026-11-16)_: the PSP-licence question and DPC registration are done after the backend is built, before real phone numbers or real money.
+- **Payments:** Paystack, test mode first. MoMo on MTN, Telecel and AT, plus card. *Changed 2026-11-03:* each restaurant pastes its own Paystack public and secret keys (Settings > Integrations). The secret key is stored encrypted on the server only and never reaches the app, the browser or a log. No split payments, no pooled accounts, no payouts. Never hold funds. Manual methods (cash, card machine, bank transfer, MoMo to the merchant number) are marked paid by staff.
+- **Two ways to order** *(2026-11-03)*: walk-in guests scan a **table QR** (no contact details, call waiter, ask for the bill). Online customers use the venue's **menu link** (`/<venue-slug>`) to order for pickup or delivery, and give a name and phone (plus an address for delivery). That contact data lives on the order only, never in the guest session, and is never logged.
+- **Paystack fee** *(2026-11-16)*: the venue pays it unless the owner switches on "Pass fees to customers" (Integrations > Payments) and picks a share, 1–100%. 100% adds Paystack's whole fee (1.95% in Ghana, `src/lib/paystackFee.ts`) so the venue still receives the full bill. The guest sees it as its own line before paying and on the receipt. It applies only to payments in the app, never to cash, card machine, bank transfer or MoMo to the venue's number, and it never counts as paying for food. The server works it out.
+- **Sign-in** *(2026-11-16)*: **Clerk**, paid from Clarke's Clerk credit, with our own screens built on Clerk's custom-flow APIs (no Clerk-drawn screens). Clerk sends the phone codes; Arkesel (about GH₵0.035 a code) is the fallback if Clerk's SMS to Ghana proves slow or costly. If Google sign-in is added, Sign in with Apple must be added too (App Store guideline 4.8). Moving sign-in to Clerk changes the contract's auth calls, so that goes in its own contract PR first. *Clarke, 2026-11-16:* Clerk is for owners and staff only, never guests. Guests joining loyalty get their code by plain SMS sent by our server (`POST /auth/otp/*`); Arkesel is the default sender until Clarke names another. Clerk's strict enumeration protection is on, and sign-ups are invite-only, so an unknown number sees the same "enter your code" step and no SMS is sent.
+- **Legal checks** *(2026-11-16)*: the PSP-licence question and DPC registration are done after the backend is built, before real phone numbers or real money.
 - **Plans:** the owner plan badge and Billing page use the placeholder plans from `landing/src/content/pricing.ts` until real prices are set.
-- **Build order:** frontend first against a fixed API contract and a mock. The backend comes only after Clarke approves the UI. _2026-11-03:_ Clarke approved the MenuRite-gap work (`docs/menurite-gap-table.md`): build all of its UI on the mock first, then hook in the backend.
-- **Hosting** _(2026-11-16)_: the server (`server/`, Hono on Node) runs on **Heroku**, paid from Clarke's Heroku credit: Eco ($5/month, sleeps when idle) while building, Basic ($7/month, always on) before the first real venue. Migrations run in Heroku's release phase, once per deploy. Heroku Scheduler runs the payment check. The database is **Supabase** Postgres (project "Cravins", eu-west-1), reached through its pooled connection, with Row Level Security on every table so Supabase's public web API can't read them. Photos go in Supabase Storage. The web app stays on Vercel, but Vercel's free Hobby plan is for non-commercial use, so it moves to Vercel Pro or a free host that allows business use before launch.
+- **Build order:** frontend first against a fixed API contract and a mock. The backend comes only after Clarke approves the UI. *2026-11-03:* Clarke approved the MenuRite-gap work (`docs/menurite-gap-table.md`): build all of its UI on the mock first, then hook in the backend.
+- **Hosting** *(2026-11-16)*: the server (`server/`, Hono on Node) runs on **Heroku**, paid from Clarke's Heroku credit: Eco ($5/month, sleeps when idle) while building, Basic ($7/month, always on) before the first real venue. Migrations run in Heroku's release phase, once per deploy. Heroku Scheduler runs the payment check. The database is **Supabase** Postgres (project "Cravins", eu-west-1), reached through its pooled connection, with Row Level Security on every table so Supabase's public web API can't read them. Photos go in Supabase Storage. The web app stays on Vercel, but Vercel's free Hobby plan is for non-commercial use, so it moves to Vercel Pro or a free host that allows business use before launch.
 - **Code style:** Clarke is learning, so code must be simple, readable, and commented where it is not obvious. Every feature gets a LEARNING.md entry.
 
 ## 5. Stack and why
@@ -197,7 +197,7 @@ Expo Router groups in brackets do not appear in URLs. The QR code opens `https:/
 | Route file                                                                     | URL                   | Screen                                                                                         | Render to match                                                                                                   |
 | ------------------------------------------------------------------------------ | --------------------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | `_layout.tsx`                                                                  | —                     | Providers: fonts, QueryClient (+persister), i18n, safe area, error boundary                    | —                                                                                                                 |
-| `index.tsx`                                                                    | `/`                   | Simple Cravins landing for now ("Scan the code on your table")                                 | —                                                                                                                 |
+| `index.tsx`                                                                    | `/`                   | Simple Cravins landing for now ("Scan the code on your table")                                    | —                                                                                                                 |
 | `+not-found.tsx`                                                               | any                   | Friendly not-found with a "Scan again" hint                                                    | —                                                                                                                 |
 | `[venue]/_layout.tsx`                                                          | —                     | Loads the venue, applies `VenueThemeProvider`, mounts the food-ready banner and the bottom bar | —                                                                                                                 |
 | `[venue]/t/[table].tsx`                                                        | `/mamas-kitchen/t/12` | Creates a guest session (`POST /guest-sessions`), stores it, redirects to the venue home       | —                                                                                                                 |
@@ -215,7 +215,7 @@ Expo Router groups in brackets do not appear in URLs. The QR code opens `https:/
 | `[venue]/review/record.tsx`                                                    |                       | Record a video review                                                                          | `review-record.png`                                                                                               |
 | `[venue]/play.tsx`                                                             |                       | Plate Stack game                                                                               | `game-start.png`, `game.png`, `game-over.png`                                                                     |
 | `[venue]/offers.tsx`, `about.tsx`, `feedback.tsx`, `reserve.tsx`, `events.tsx` |                       | List screens                                                                                   | none: reuse `ListRow`/`Card` patterns from the renders                                                            |
-| `owner/_layout.tsx`                                                            | `/owner`              | Auth guard and Cravins chrome (never venue colours)                                            | —                                                                                                                 |
+| `owner/_layout.tsx`                                                            | `/owner`              | Auth guard and Cravins chrome (never venue colours)                                               | —                                                                                                                 |
 | `owner/login.tsx`                                                              | `/owner/login`        | Phone + OTP                                                                                    | —                                                                                                                 |
 | `owner/(tabs)/_layout.tsx`                                                     |                       | Tabs: Orders, Reviews, Services, Customise                                                     | —                                                                                                                 |
 | `owner/(tabs)/index.tsx`                                                       | `/owner`              | Orders dashboard                                                                               | `v4-reference/04-owner-dashboard.png` (content; v5 chrome)                                                        |
@@ -273,8 +273,8 @@ Port `design/prototype/theme.js` to `src/features/theming/deriveTheme.ts` using 
 | #B5432A (Mama's Kitchen)           | white       | 5.52           | passes as is                                                                        |
 | #1F5C3F (Bean There)               | white       | 7.89           | passes as is                                                                        |
 | #FFC21A (Auntie Akos)              | #111111     | 11.67          | white would be 1.62; ink on white becomes #94710F (4.54); badge text #8E6C0E (4.53) |
-| #D24000 (Cravins)                  | white       | ≥ 4.5          | default                                                                             |
-| any colour within ΔE 20 of #D24000 | —           | —              | `tooCloseToCravins: true`, so Customise warns                                       |
+| #D24000 (Cravins)                     | white       | ≥ 4.5          | default                                                                             |
+| any colour within ΔE 20 of #D24000 | —           | —              | `tooCloseToCravins: true`, so Customise warns                                          |
 
 Also test that every returned pair reaches 4.5:1. Use a property-style loop over 500 random colours.
 
@@ -437,7 +437,7 @@ Ghana is the first launch market and the default sample: cedis, `+233`, and `Afr
   - The server learns the result from the `charge.success` webhook. The signature is HMAC-SHA512 of the raw body with the secret key, in `x-paystack-signature`.
   - The server falls back to Verify Transaction if the webhook is late.
 - **Split payments:**
-  - Each venue gets a Paystack **subaccount** (bank or MoMo payout). _Replaced 2026-11-08: each venue connects its own Paystack keys (`payment-settings`). The old `payout-account` calls left the contract on 2026-11-11._
+  - Each venue gets a Paystack **subaccount** (bank or MoMo payout). *Replaced 2026-11-08: each venue connects its own Paystack keys (`payment-settings`). The old `payout-account` calls left the contract on 2026-11-11.*
   - Every transaction names the subaccount, so Paystack settles the venue directly.
   - Cravins's cut is the split share.
   - **Cravins never holds funds.** This keeps Cravins out of the Bank of Ghana PSP licence rules under Act 987, but Clarke must confirm this with a lawyer before launch.
@@ -574,9 +574,9 @@ Work top to bottom. Each box is one small PR that ends in a verifiable state (ps
 - [x] 2.4 MoMo wait screen: countdown from `approveBy`, "Check your phone and enter your PIN to approve.", then paid, failed or timed-out states. Render: `v4-reference/03-momo-checkout.png`, restyled to v5.
 - [x] 2.5 Card: open `authorizationUrl` (expo-web-browser on native, same tab on web with a return URL), then verify on return.
 - [x] 2.6 Receipt view: lines, tip, empty-ready tax lines, and "Test payment" label in sandbox.
-- [x] 2.7 Owner payout account screen: bank or MoMo, shows the masked account and status. _(Replaced by Payments settings; endpoint removed 2026-11-11.)_
-- [x] 2.8 Owner "Mark paid in cash" (`/owner/orders/{id}/cash-payment`). _(Replaced by Mark paid with a method, `manual-payment`; endpoint removed 2026-11-11.)_
-- [x] 2.9 _contract_ + mock: fee passing (`FeePassing`, `ownerSetFeePassing`, `BillQuote.feePesewas`, `Payment.feePesewas`), with the maths tdd in `src/lib/paystackFee.ts`.
+- [x] 2.7 Owner payout account screen: bank or MoMo, shows the masked account and status. *(Replaced by Payments settings; endpoint removed 2026-11-11.)*
+- [x] 2.8 Owner "Mark paid in cash" (`/owner/orders/{id}/cash-payment`). *(Replaced by Mark paid with a method, `manual-payment`; endpoint removed 2026-11-11.)*
+- [x] 2.9 *contract* + mock: fee passing (`FeePassing`, `ownerSetFeePassing`, `BillQuote.feePesewas`, `Payment.feePesewas`), with the maths tdd in `src/lib/paystackFee.ts`.
 - [ ] 2.10 Fee passing screens: the owner switch and share on Integrations > Payments, the fee line on Pay and on the receipt.
 - [ ] **2b Paystack sandbox slice** (the only early server code, in `server/`):
   - Implement only `POST /payments`, `GET /payments/{ref}`, `POST /payments/{ref}/verify` and `POST /webhooks/paystack`, with **test** keys from the server env.
@@ -604,11 +604,11 @@ Work top to bottom. Each box is one small PR that ends in a verifiable state (ps
   - motion (`ui-skills-fixing-motion-performance`)
   - copy (`pstack-unslop`)
   - Lighthouse
-- [x] **UI APPROVAL GATE:** Clarke gets screenshots of every screen side by side with the renders, for all 3 venues, plus a short screen recording of the guest flow (scan → order → pay → stamp → review) and the owner flow. **Wait for his written yes.** _Approved by Clarke in writing on 2026-11-16 ("approved"), after the UI approval pack: every guest screen beside its render for all 3 venues, all 31 owner pages in desktop light, desktop dark and phone, and recordings of both flows. 2.10 (fee screens) was still to build, and 1.15 (JS budget) waits on his call._
+- [x] **UI APPROVAL GATE:** Clarke gets screenshots of every screen side by side with the renders, for all 3 venues, plus a short screen recording of the guest flow (scan → order → pay → stamp → review) and the owner flow. **Wait for his written yes.** *Approved by Clarke in writing on 2026-11-16 ("approved"), after the UI approval pack: every guest screen beside its render for all 3 venues, all 31 owner pages in desktop light, desktop dark and phone, and recordings of both flows. 2.10 (fee screens) was still to build, and 1.15 (JS budget) waits on his call.*
 
 ### Phase 4b: Owner dashboard and online ordering (gap table, on mocks)
 
-Approved by Clarke on 2026-11-03. Details and file locations are in `docs/menurite-gap-table.md`. One PR per box. Contract boxes (marked _contract_) go first in their own PR.
+Approved by Clarke on 2026-11-03. Details and file locations are in `docs/menurite-gap-table.md`. One PR per box. Contract boxes (marked *contract*) go first in their own PR.
 
 - [x] 4b.1 Sidebar in Main / Sales / Settings, collapsible, plan badge at the top (landing placeholder plans), help, profile and log out at the bottom. Pages with no screen yet open a "Coming soon" page.
 - [x] 4b.2 Home: "Complete your setup" checklist with a % bar, worked out from data the app already loads.
@@ -617,24 +617,24 @@ Approved by Clarke on 2026-11-03. Details and file locations are in `docs/menuri
 - [x] 4b.5 Categories as its own page.
 - [x] 4b.6 QR codes and links page: menu link (copy, share, download QR), embed snippet, table QR codes.
 - [x] 4b.7 "Size" preset in the add-ons editor (one required choice, each size with its own price).
-- [x] 4b.8 _contract_ + UI: item status (available, out of stock, hidden), sale price, stock count, min and max quantity.
-- [x] 4b.9 _contract_ + UI: store notice (scrolling banner and popup, each with a schedule and a show/hide toggle).
-- [x] 4b.10 _contract_ + UI: customization of item sort order, list or grid layout, and guest light/dark mode.
-- [x] 4b.11 _contract_ + UI: menu editor on a live phone preview, publish toggle, menu link and quick style on the right.
-- [x] 4b.12 _contract_ + UI: orders date filter and manual "create order".
-- [x] 4b.13 _contract_ + UI: Home stats for orders today, pending orders and visitors today.
-- [x] 4b.14 _contract_ + UI: online ordering settings (on/off, pickup prep time, delivery fees, distance, free threshold).
-- [x] 4b.15 _contract_ + UI: menu-link guest flow (pickup or delivery, contact form, confirmation and status page) and the source on every order.
-- [x] 4b.16 _contract_ + UI: Sales page (totals, counts by status, discounts, top items, revenue over time, by source).
-- [x] 4b.17 _contract_ + UI: Settings > Integrations > Payments (own Paystack keys, where to find them, test/live, test connection), manual methods, mark paid by method, payment status on orders and sales. Split bill hidden.
+- [x] 4b.8 *contract* + UI: item status (available, out of stock, hidden), sale price, stock count, min and max quantity.
+- [x] 4b.9 *contract* + UI: store notice (scrolling banner and popup, each with a schedule and a show/hide toggle).
+- [x] 4b.10 *contract* + UI: customization of item sort order, list or grid layout, and guest light/dark mode.
+- [x] 4b.11 *contract* + UI: menu editor on a live phone preview, publish toggle, menu link and quick style on the right.
+- [x] 4b.12 *contract* + UI: orders date filter and manual "create order".
+- [x] 4b.13 *contract* + UI: Home stats for orders today, pending orders and visitors today.
+- [x] 4b.14 *contract* + UI: online ordering settings (on/off, pickup prep time, delivery fees, distance, free threshold).
+- [x] 4b.15 *contract* + UI: menu-link guest flow (pickup or delivery, contact form, confirmation and status page) and the source on every order.
+- [x] 4b.16 *contract* + UI: Sales page (totals, counts by status, discounts, top items, revenue over time, by source).
+- [x] 4b.17 *contract* + UI: Settings > Integrations > Payments (own Paystack keys, where to find them, test/live, test connection), manual methods, mark paid by method, payment status on orders and sales. Split bill hidden.
 - [x] 4b.18 WhatsApp order-alerts number field, behind a flag that stays off. Done 2026-11-16: `VenueSettings.whatsappAlerts` (owner only, contract PR first), and the WhatsApp card on Integrations takes and saves the number when `WHATSAPP_ALERTS_ENABLED` (in `src/lib/features.ts`, `false`) is on. Sending alerts waits for Phase 5 and a WhatsApp provider (section 17, item 5).
-- [x] **Review:** Clarke sees every new screen in light and dark, phone and tablet, then says go for the backend (per-venue encrypted Paystack keys, webhook per venue, push alerts). _Covered by the same approval on 2026-11-16 (desktop light and dark, and phone; tablet was not in the pack)._
+- [x] **Review:** Clarke sees every new screen in light and dark, phone and tablet, then says go for the backend (per-venue encrypted Paystack keys, webhook per venue, push alerts). *Covered by the same approval on 2026-11-16 (desktop light and dark, and phone; tablet was not in the pack).*
 
 ### Phase 4c: Owner redesign from the design canvas (on mocks)
 
 Approved by Clarke on 2026-11-12: build the canvas redesign on the mock first, backend after the UI is approved. Contract box first, then one PR per screen group, each from `main`.
 
-- [x] 4c.1 _contract_ + mock: waiter-call reply, snooze and "on my way"; order served time and reject reason; promos (rules, schedule, code, channel, usage) applied by the server; notifications with per-person read state; customer tags, visits and detail; manual stamp and scan log; Sales vs the period before, by hour, by staff, by method and E-VAT; Insights funnel and custom dates from real visits; business details and location digital address; profile, preferences and phone change with a code; tax setup; paid-order stamp switch. The mock's history, members and visits are one set of records, so every screen agrees.
+- [x] 4c.1 *contract* + mock: waiter-call reply, snooze and "on my way"; order served time and reject reason; promos (rules, schedule, code, channel, usage) applied by the server; notifications with per-person read state; customer tags, visits and detail; manual stamp and scan log; Sales vs the period before, by hour, by staff, by method and E-VAT; Insights funnel and custom dates from real visits; business details and location digital address; profile, preferences and phone change with a code; tax setup; paid-order stamp switch. The mock's history, members and visits are one set of records, so every screen agrees.
 - [x] 4c.2 Shell: sidebar groups, collapse that remembers, location switcher with the location's logo, owner menu, real plan tag.
 - [x] 4c.3 Run the room: Today, Notifications, Orders, Floor, Calls and the detail pages, on one live source.
 - [x] 4c.4 Menu and money: Menu, Edit dish, QR codes and links, Custom links, Store notice, Promos.
@@ -647,7 +647,7 @@ Approved by Clarke on 2026-11-12: build the canvas redesign on the mock first, b
 ### Phase 5: Backend for products 1–4
 
 - [x] 5.1 `server/`: Hono + TypeScript, Postgres with Drizzle migrations, config parsed with zod, structured logs without personal data. Done 2026-11-16: payments moved from memory to Postgres with a unique Idempotency-Key, `src/log.ts` scrubs personal data, and tests run on PGlite. Supabase project "Cravins" has migrations 0000 and 0001 applied (payments, with Row Level Security on).
-- [ ] 5.2 Implement the contract exactly. _First, its own contract PR (2026-11-16): owner and staff sign-in moved to Clerk. `ownerAuth` is now Clerk's session token; the owner code, refresh, log-out and phone-change calls left the contract; PIN sign-in returns a one-time Clerk token. The plan for the rest of Phase 5 is in `docs/phase5-plan.md`._ Run contract tests that call every operation and validate responses against `openapi.yaml`, and reuse the fixtures as seed data.
+- [ ] 5.2 Implement the contract exactly. *First, its own contract PR (2026-11-16): owner and staff sign-in moved to Clerk. `ownerAuth` is now Clerk's session token; the owner code, refresh, log-out and phone-change calls left the contract; PIN sign-in returns a one-time Clerk token. The plan for the rest of Phase 5 is in `docs/phase5-plan.md`.* Run contract tests that call every operation and validate responses against `openapi.yaml`, and reuse the fixtures as seed data.
   - Tenant checks (audit N6, 2026-11-11): for **every** `/owner/...` operation, a staff member of venue A gets 403 for venue B's venue, order, table, call, menu item and loyalty data. The mock doesn't enforce this (most mock owner calls skip it), so these tests are the first real line.
   - Role checks: each owner call is tested with every `StaffRole` in the contract (owner, manager, waiter, kitchen, viewer, staff_scanner) against what that role may do.
 - [ ] 5.3 Auth (Clerk on our own screens, section 4), roles, rate limits, idempotency store.
@@ -752,21 +752,21 @@ The agent must ask these, not guess. Until he answers, build behind a setting or
 
 1. ~~Who pays the Paystack fee?~~ **Answered 2026-11-16** (section 4): the owner's choice, per venue. Still to confirm with Paystack: whether Ghana has a fee cap, which would change the sum for large bills.
 2. Cravins's own fee per transaction or per month? _Default: none in the UI yet._
-3. Lawyer sign-off that subaccount split settlement keeps Cravins outside PSP licensing under Act 987. _After the backend (Clarke, 2026-11-16)._
-4. DPC registration done before real phone numbers are stored? _After the backend, before real numbers (Clarke, 2026-11-16)._
+3. Lawyer sign-off that subaccount split settlement keeps Cravins outside PSP licensing under Act 987. *After the backend (Clarke, 2026-11-16).*
+4. DPC registration done before real phone numbers are stored? *After the backend, before real numbers (Clarke, 2026-11-16).*
 5. ~~The SMS/OTP provider~~ **Answered 2026-11-16:** sign-in goes through Clerk (section 4). WhatsApp for marketing is still open.
 6. ~~Server hosting and database provider~~ **Answered 2026-11-16:** Heroku for the server, Supabase for the database (section 4).
 7. Trademark search for "cravins" (Ghana RGD, OAPI, WIPO) and the native-speaker meaning check, and which domains to buy (`cravins.app` is the assumed one).
 8. Native speakers for French, Portuguese, Spanish, Arabic and Swahili. English stays the only selectable language until those files are filled by people, not by machine translation.
 9. The real first venue(s), to replace the AI-generated sample photos and videos.
-10. Should Setup (product 13) move before launch? A real venue needs onboarding, but it is last in the current order. _Default: the team sets up early venues by hand in the owner app._
-11. Map tiles for Business → map pin. _Default: OpenStreetMap's own server, fine for testing with its credit shown; a busy launch needs a tile provider (set `EXPO_PUBLIC_MAP_TILES`)._
-12. The real WhatsApp support number for Help → "WhatsApp us". _Default: a demo number (233 20 000 0000) in `src/lib/env.ts` and `.env.example`; replace before launch._ Also confirm the promise "we reply within a working day".
-13. Google Business Profile: turn on the Google review link and the Integrations card? It needs a Google sign-in on the server. _Default: "Coming soon"; `googleReviewUrl` stays null._ Same for Tripadvisor and WhatsApp Business.
-14. How long a scanner pairing code lasts. The canvas says 10 minutes; the contract sets no expiry. _Default: the app says "It works once"._
-15. The average spend per guest shown under each price range (₵ to ₵₵₵₵). _Default: under GH₵ 50, 50 to 120, 120 to 250, over 250 (`ownerBusiness.spend` in `en.json`)._
-16. Which tips count as a waiter's "Tips today". _Default (contract): tips on succeeded payments for orders at their tables today._
-17. Printing from the phone app (order tickets and table cards) needs `expo-print`. _Default: printing works in the web app only._
+10. Should Setup (product 13) move before launch? A real venue needs onboarding, but it is last in the current order. *Default: the team sets up early venues by hand in the owner app.*
+11. Map tiles for Business → map pin. *Default: OpenStreetMap's own server, fine for testing with its credit shown; a busy launch needs a tile provider (set `EXPO_PUBLIC_MAP_TILES`).*
+12. The real WhatsApp support number for Help → "WhatsApp us". *Default: a demo number (233 20 000 0000) in `src/lib/env.ts` and `.env.example`; replace before launch.* Also confirm the promise "we reply within a working day".
+13. Google Business Profile: turn on the Google review link and the Integrations card? It needs a Google sign-in on the server. *Default: "Coming soon"; `googleReviewUrl` stays null.* Same for Tripadvisor and WhatsApp Business.
+14. How long a scanner pairing code lasts. The canvas says 10 minutes; the contract sets no expiry. *Default: the app says "It works once".*
+15. The average spend per guest shown under each price range (₵ to ₵₵₵₵). *Default: under GH₵ 50, 50 to 120, 120 to 250, over 250 (`ownerBusiness.spend` in `en.json`).*
+16. Which tips count as a waiter's "Tips today". *Default (contract): tips on succeeded payments for orders at their tables today.*
+17. Printing from the phone app (order tickets and table cards) needs `expo-print`. *Default: printing works in the web app only.*
 
 ## 18. Owner app
 
@@ -776,19 +776,19 @@ Money on these screens goes through `formatMoney`. Sample venues stay GHS, so th
 
 Floor status is not saved on the table. `deriveFloor` reads orders and waiter calls. A call beats every other status. A served unpaid bill is waiting to pay. A ticket still in the kitchen is ordered. A guest with no order is seated. Anything else is free. Kitchen moves still use `orderTransition`. Only `ready` shows the guest food-ready banner, including over the game.
 
-| #   | Product   | Owner screen                                                                                                           | State                                                                       |
-| --- | --------- | ---------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| 1   | Table     | Today, floor, orders, calls, menu, services, tables and QR, branding, staff                                            | Built on the mock                                                           |
-| 2   | Pay       | Payments list, MoMo or card or cash, full refund, settlement, payout line. Cash mark on the floor                      | Built on the mock. Paystack sandbox, `testMode`                             |
-| 3   | Loyalty   | Staff code confirmation, programme setup (stamps or points, rewards, tiers, expiry, birthday), members and redemptions | Built on the mock                                                           |
-| 4   | Reviews   | To check, Featured, Hidden, and written ratings with a private reply                                                   | Built on the mock                                                           |
-| 5   | POS       | Register shell                                                                                                         | Not built. Next is a counter order, cash, and a receipt                     |
-| 6   | Stock     | Stock shell                                                                                                            | Not built. Next is recipes and sold out when a recipe hits zero             |
-| 7   | Orders    | Kitchen tickets and the food-ready banner                                                                              | Built on the mock. Live push is still later                                 |
-| 8   | AI Waiter | AI waiter shell                                                                                                        | Not built. English first, then Twi, Ga and Ewe after a native-speaker check |
-| 9   | Marketing | Marketing shell                                                                                                        | Not built. Only members who ticked marketing, and that box stays separate   |
-| 10  | Insights  | Sales, top dishes, busy hours, repeat guests                                                                           | Built on the mock. Figures are marked Sample                                |
-| 13  | Setup     | Four steps. Name, tables, Wi-Fi, MoMo payout                                                                           | Built on the mock for the venue you are already signed into                 |
+| # | Product | Owner screen | State |
+|---|---|---|---|
+| 1 | Table | Today, floor, orders, calls, menu, services, tables and QR, branding, staff | Built on the mock |
+| 2 | Pay | Payments list, MoMo or card or cash, full refund, settlement, payout line. Cash mark on the floor | Built on the mock. Paystack sandbox, `testMode` |
+| 3 | Loyalty | Staff code confirmation, programme setup (stamps or points, rewards, tiers, expiry, birthday), members and redemptions | Built on the mock |
+| 4 | Reviews | To check, Featured, Hidden, and written ratings with a private reply | Built on the mock |
+| 5 | POS | Register shell | Not built. Next is a counter order, cash, and a receipt |
+| 6 | Stock | Stock shell | Not built. Next is recipes and sold out when a recipe hits zero |
+| 7 | Orders | Kitchen tickets and the food-ready banner | Built on the mock. Live push is still later |
+| 8 | AI Waiter | AI waiter shell | Not built. English first, then Twi, Ga and Ewe after a native-speaker check |
+| 9 | Marketing | Marketing shell | Not built. Only members who ticked marketing, and that box stays separate |
+| 10 | Insights | Sales, top dishes, busy hours, repeat guests | Built on the mock. Figures are marked Sample |
+| 13 | Setup | Four steps. Name, tables, Wi-Fi, MoMo payout | Built on the mock for the venue you are already signed into |
 
 New contract paths, all owner auth: `GET /owner/venues/{id}/dashboard`, `GET .../floor`, `GET .../transactions`, `POST /owner/transactions/{id}/refund`, `GET .../written-reviews`, `POST /owner/written-reviews/{id}/reply`, `GET .../insights`.
 
