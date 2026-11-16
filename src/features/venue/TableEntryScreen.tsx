@@ -22,6 +22,9 @@ export function TableEntryScreen({ slug, table }: { slug: string; table: string 
   const parsed = tableSchema.safeParse(table);
   const tableCode = parsed.success ? parsed.data : null;
   const saveGuest = useGuestSession((state) => state.saveGuest);
+  // On phones the saved visit is read back a moment after start. Saving the table before that
+  // finished let the old visit (no table) overwrite it, and orders then said "table only".
+  const hydrated = useGuestSession((state) => state.hydrated);
   // Already at this table (back from the menu, or a reload): no new session needed.
   const here = useGuestSession(
     (state) => state.slug === slug && state.tableCode === tableCode && Boolean(state.token),
@@ -31,7 +34,7 @@ export function TableEntryScreen({ slug, table }: { slug: string; table: string 
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
-    if (!tableCode || here) return;
+    if (!tableCode || here || !hydrated) return;
     let live = true;
     api
       .createGuestSession({ venueSlug: slug, tableCode })
@@ -50,7 +53,7 @@ export function TableEntryScreen({ slug, table }: { slug: string; table: string 
     return () => {
       live = false;
     };
-  }, [slug, saveGuest, tableCode, here, attempt]);
+  }, [slug, saveGuest, tableCode, here, hydrated, attempt]);
 
   if (!tableCode) return <ErrorState onRetry={() => router.replace('/')} />;
   if (failed) {

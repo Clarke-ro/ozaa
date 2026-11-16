@@ -24,7 +24,12 @@ import { seedPromos } from './seedPromos';
 import { kitchenQueue } from './kitchenQueue';
 import type { LiveOrder, World } from './worldTypes';
 import { seedOwnerDesk } from './seedOwnerDesk';
-import { samplePaymentSettings, staffDetail, tablesFor, withSampleOnlineOrdering } from './worldSamples';
+import {
+  samplePaymentSettings,
+  staffDetail,
+  tablesFor,
+  withSampleOnlineOrdering,
+} from './worldSamples';
 
 export { STAFF, type StaffSeed } from './demo';
 export type { LiveOrder, World } from './worldTypes';
