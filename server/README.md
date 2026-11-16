@@ -1,6 +1,6 @@
 # Cravins server
 
-Phase 5 has started (BUILD.md section 13). The server runs on Postgres: Supabase in production, a local Postgres or PGlite while building. It runs on Heroku as the app `cravins-api` (BUILD.md section 4). So far it has the Paystack sandbox slice from 2b, now storing payments in Postgres.
+Phase 5 has started (BUILD.md section 13). The server runs on Postgres: Supabase in production, a local Postgres or PGlite while building. It runs on Heroku as the app `cravins-api` (BUILD.md section 4). So far it has the Paystack sandbox slice from 2b, now storing payments in Postgres, and the guest side of the contract: table and menu-link sessions, venue, menu, Wi-Fi, offers, orders and bill quotes.
 
 ## Payments (from the 2b sandbox slice)
 
@@ -14,6 +14,22 @@ The only server code before the UI approval gate. It does four things, exactly a
 | `POST /v1/webhooks/paystack` | Paystack's messages, believed only when signed with the secret key |
 
 Only Paystack's "success" for the same amount and currency (GHS) makes a payment `succeeded`.
+
+## Guests (Phase 5.2)
+
+| Route | What it does |
+|---|---|
+| `POST /v1/guest-sessions` | A QR scan (with a table code) or a menu link (without). Returns a signed guest token for 4 hours |
+| `GET /v1/venues/{slug}`, `/menu`, `/offers` | Public venue details, menu and offers |
+| `GET /v1/venues/{slug}/wifi` | Only for a guest in a session at that venue |
+| `POST /v1/orders` | Prices the order on the server (sale prices, add-ons, the best promo, tax, delivery fee), takes stock and saves it. Sending the same `clientOrderId` again returns the first order |
+| `GET /v1/orders/{id}` | Your own order, or your table's while it's still open |
+| `POST /v1/orders/{id}/bill` | A 10-minute quote for paying: whole, equal split or your items, plus tip and any passed-on Paystack fee |
+
+- **No personal data in a guest session.** The guest token holds a random session id, the venue and the table, signed with `GUEST_TOKEN_SECRET`. The server keeps no session row.
+- **Shared rules.** Prices, promos, tax, delivery and bill splitting use the same code as the app. `npm run sync:server-shared` (repo root) copies those files into `src/shared/` and the sample fixtures into `seed/`. Don't edit the copies; CI fails if they drift.
+- **Contract tests.** `src/routes/guest.test.ts` checks every reply against `api/openapi.yaml` with `expectContract`.
+- **Sample venues.** `npm run db:seed` adds Mama's Kitchen, Bean There and Auntie Akos with tables 1 to 12, but only while `SEED_SAMPLES=true`. It never changes rows that exist.
 
 ## Run it
 
@@ -38,13 +54,13 @@ Only Paystack's "success" for the same amount and currency (GHS) makes a payment
 Every merge to `main` that changes `server/` deploys it (`.github/workflows/deploy-server.yml`):
 
 1. GitHub packs `server/` alone and sends it to Heroku, which installs and builds it.
-2. Heroku's **release phase** runs `npm run db:migrate` (`Procfile`). If a migration fails, the new version doesn't go live and the old one keeps running.
+2. Heroku's **release phase** runs `npm run db:migrate`, then `npm run db:seed` (`Procfile`). If a migration fails, the new version doesn't go live and the old one keeps running.
 3. The workflow waits for `GET /v1/health` to say `ok`. That checks the server is up and the database answers.
 
 One-time set-up, done by Clarke:
 
 - **GitHub:** repo Settings > Secrets and variables > Actions > New secret `HEROKU_API_KEY` (from Heroku's Account settings > API key). Until it's set, the deploy fails and says why. The app runs on one **Basic** dyno ($7/month, always on).
-- **Heroku:** `cravins-api` > Settings > Config Vars: `DATABASE_URL` (Supabase **Session pooler** address, not `db.….supabase.co`, which is IPv6 only), `PAYSTACK_SECRET_KEY` (`sk_test_…`) and `CLERK_SECRET_KEY` (`sk_test_…`). `NODE_ENV`, `SITE_URL`, `ALLOWED_ORIGINS` and `CLERK_PUBLISHABLE_KEY` are already set.
+- **Heroku:** `cravins-api` > Settings > Config Vars: `DATABASE_URL` (Supabase **Session pooler** address, not `db.….supabase.co`, which is IPv6 only), `PAYSTACK_SECRET_KEY` (`sk_test_…`) `CLERK_SECRET_KEY` (`sk_test_…`), `GUEST_TOKEN_SECRET` (any random 32+ characters) and `SEED_SAMPLES=true` while testing. `NODE_ENV`, `SITE_URL`, `ALLOWED_ORIGINS` and `CLERK_PUBLISHABLE_KEY` are already set.
 
 On a deploy or Heroku's daily restart, the server gets SIGTERM. It stops taking new requests, lets the ones in flight finish, then closes the database.
 

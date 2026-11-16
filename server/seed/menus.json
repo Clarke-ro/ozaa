@@ -1,0 +1,621 @@
+{
+  "mamas-kitchen": {
+    "venueId": "ven_mamas",
+    "updatedAt": "2026-10-31T12:41:00.000Z",
+    "categories": [
+      {
+        "id": "cat_mamas0",
+        "name": {
+          "en": "Mains"
+        },
+        "kind": "food",
+        "position": 0
+      },
+      {
+        "id": "cat_mamas1",
+        "name": {
+          "en": "Sides"
+        },
+        "kind": "food",
+        "position": 1
+      },
+      {
+        "id": "cat_mamas2",
+        "name": {
+          "en": "Soups"
+        },
+        "kind": "food",
+        "position": 2
+      },
+      {
+        "id": "cat_mamas3",
+        "name": {
+          "en": "Drinks"
+        },
+        "kind": "drinks",
+        "position": 3
+      }
+    ],
+    "items": [
+      {
+        "id": "itm_mamas0",
+        "categoryId": "cat_mamas0",
+        "name": {
+          "en": "Jollof & chicken"
+        },
+        "description": {
+          "en": "Smoky party jollof, grilled chicken, fried plantain and shito."
+        },
+        "pricePesewas": 6500,
+        "photo": {
+          "url": "https://mock.cravins.app/media/img/jollof.jpg",
+          "width": 800,
+          "height": 800,
+          "alt": "Jollof & chicken"
+        },
+        "gallery": [
+          {
+            "url": "https://mock.cravins.app/media/img/jollof-2.jpg",
+            "width": 800,
+            "height": 800,
+            "alt": "Jollof & chicken, close up"
+          },
+          {
+            "url": "https://mock.cravins.app/media/img/jollof-3.jpg",
+            "width": 800,
+            "height": 800,
+            "alt": "Jollof & chicken, close up"
+          }
+        ],
+        "available": true,
+        "dietary": [
+          "halal"
+        ],
+        "badges": [
+          "popular"
+        ],
+        "modifierGroups": [],
+        "prepMinutes": 12
+      },
+      {
+        "id": "itm_mamas1",
+        "categoryId": "cat_mamas0",
+        "name": {
+          "en": "Waakye special"
+        },
+        "description": {
+          "en": "Rice and beans with gari, spaghetti, egg, wele and stew."
+        },
+        "pricePesewas": 4500,
+        "photo": {
+          "url": "https://mock.cravins.app/media/img/waakye.jpg",
+          "width": 800,
+          "height": 800,
+          "alt": "Waakye special"
+        },
+        "gallery": [
+          {
+            "url": "https://mock.cravins.app/media/img/waakye-2.jpg",
+            "width": 800,
+            "height": 800,
+            "alt": "Waakye special, close up"
+          },
+          {
+            "url": "https://mock.cravins.app/media/img/waakye-3.jpg",
+            "width": 800,
+            "height": 800,
+            "alt": "Waakye special, close up"
+          }
+        ],
+        "available": true,
+        "dietary": [
+          "halal"
+        ],
+        "badges": [],
+        "modifierGroups": [],
+        "prepMinutes": 12
+      },
+      {
+        "id": "itm_mamas2",
+        "categoryId": "cat_mamas0",
+        "name": {
+          "en": "Banku & tilapia"
+        },
+        "description": {
+          "en": "Whole grilled tilapia, hot pepper and onions."
+        },
+        "pricePesewas": 9000,
+        "photo": {
+          "url": "https://mock.cravins.app/media/img/banku-tilapia.jpg",
+          "width": 800,
+          "height": 800,
+          "alt": "Banku & tilapia"
+        },
+        "gallery": [
+          {
+            "url": "https://mock.cravins.app/media/img/banku-tilapia-2.jpg",
+            "width": 800,
+            "height": 800,
+            "alt": "Banku & tilapia, close up"
+          },
+          {
+            "url": "https://mock.cravins.app/media/img/banku-tilapia-3.jpg",
+            "width": 800,
+            "height": 800,
+            "alt": "Banku & tilapia, close up"
+          }
+        ],
+        "available": true,
+        "dietary": [
+          "gluten_free",
+          "spicy"
+        ],
+        "badges": [
+          "popular"
+        ],
+        "modifierGroups": [],
+        "prepMinutes": 12
+      },
+      {
+        "id": "itm_mamas3",
+        "categoryId": "cat_mamas0",
+        "name": {
+          "en": "Kɛlɛwɛlɛ"
+        },
+        "description": {
+          "en": "Spicy fried ripe plantain with roasted groundnuts."
+        },
+        "pricePesewas": 2000,
+        "photo": {
+          "url": "https://mock.cravins.app/media/img/kelewele.jpg",
+          "width": 800,
+          "height": 800,
+          "alt": "Kɛlɛwɛlɛ"
+        },
+        "gallery": [
+          {
+            "url": "https://mock.cravins.app/media/img/kelewele-2.jpg",
+            "width": 800,
+            "height": 800,
+            "alt": "Kɛlɛwɛlɛ, close up"
+          },
+          {
+            "url": "https://mock.cravins.app/media/img/kelewele-3.jpg",
+            "width": 800,
+            "height": 800,
+            "alt": "Kɛlɛwɛlɛ, close up"
+          }
+        ],
+        "available": true,
+        "dietary": [
+          "vegetarian",
+          "vegan",
+          "gluten_free",
+          "spicy"
+        ],
+        "badges": [],
+        "modifierGroups": [],
+        "prepMinutes": 12
+      },
+      {
+        "id": "itm_mamas4",
+        "categoryId": "cat_mamas0",
+        "name": {
+          "en": "Sobolo"
+        },
+        "description": {
+          "en": "Chilled hibiscus with ginger and pineapple."
+        },
+        "pricePesewas": 1500,
+        "photo": {
+          "url": "https://mock.cravins.app/media/img/sobolo.jpg",
+          "width": 800,
+          "height": 800,
+          "alt": "Sobolo"
+        },
+        "gallery": [
+          {
+            "url": "https://mock.cravins.app/media/img/sobolo-2.jpg",
+            "width": 800,
+            "height": 800,
+            "alt": "Sobolo, close up"
+          },
+          {
+            "url": "https://mock.cravins.app/media/img/sobolo-3.jpg",
+            "width": 800,
+            "height": 800,
+            "alt": "Sobolo, close up"
+          }
+        ],
+        "available": true,
+        "dietary": [
+          "vegetarian",
+          "vegan",
+          "gluten_free"
+        ],
+        "badges": [],
+        "modifierGroups": [],
+        "prepMinutes": 12
+      }
+    ]
+  },
+  "bean-there": {
+    "venueId": "ven_bean",
+    "updatedAt": "2026-10-31T12:41:00.000Z",
+    "categories": [
+      {
+        "id": "cat_bean0",
+        "name": {
+          "en": "Coffee"
+        },
+        "kind": "drinks",
+        "position": 0
+      },
+      {
+        "id": "cat_bean1",
+        "name": {
+          "en": "Pastries"
+        },
+        "kind": "food",
+        "position": 1
+      },
+      {
+        "id": "cat_bean2",
+        "name": {
+          "en": "Cold drinks"
+        },
+        "kind": "drinks",
+        "position": 2
+      },
+      {
+        "id": "cat_bean3",
+        "name": {
+          "en": "Breakfast"
+        },
+        "kind": "food",
+        "position": 3
+      }
+    ],
+    "items": [
+      {
+        "id": "itm_bean0",
+        "categoryId": "cat_bean0",
+        "name": {
+          "en": "Flat white"
+        },
+        "description": {
+          "en": "Double shot of Volta-grown espresso with silky milk."
+        },
+        "pricePesewas": 3800,
+        "photo": {
+          "url": "https://mock.cravins.app/media/img/latte.jpg",
+          "width": 800,
+          "height": 800,
+          "alt": "Flat white"
+        },
+        "gallery": [
+          {
+            "url": "https://mock.cravins.app/media/img/latte-2.jpg",
+            "width": 800,
+            "height": 800,
+            "alt": "Flat white, close up"
+          },
+          {
+            "url": "https://mock.cravins.app/media/img/latte-3.jpg",
+            "width": 800,
+            "height": 800,
+            "alt": "Flat white, close up"
+          }
+        ],
+        "available": true,
+        "dietary": [],
+        "badges": [
+          "popular"
+        ],
+        "modifierGroups": [],
+        "prepMinutes": 12
+      },
+      {
+        "id": "itm_bean1",
+        "categoryId": "cat_bean0",
+        "name": {
+          "en": "Croissant & meat pie"
+        },
+        "description": {
+          "en": "Butter croissant and a Ghana-style beef pie, warmed."
+        },
+        "pricePesewas": 4500,
+        "photo": {
+          "url": "https://mock.cravins.app/media/img/pastry.jpg",
+          "width": 800,
+          "height": 800,
+          "alt": "Croissant & meat pie"
+        },
+        "gallery": [
+          {
+            "url": "https://mock.cravins.app/media/img/pastry-2.jpg",
+            "width": 800,
+            "height": 800,
+            "alt": "Croissant & meat pie, close up"
+          },
+          {
+            "url": "https://mock.cravins.app/media/img/pastry-3.jpg",
+            "width": 800,
+            "height": 800,
+            "alt": "Croissant & meat pie, close up"
+          }
+        ],
+        "available": true,
+        "dietary": [],
+        "badges": [],
+        "modifierGroups": [],
+        "prepMinutes": 12
+      },
+      {
+        "id": "itm_bean2",
+        "categoryId": "cat_bean0",
+        "name": {
+          "en": "Sobolo cold brew"
+        },
+        "description": {
+          "en": "Hibiscus, ginger and a shot of cold brew over ice."
+        },
+        "pricePesewas": 3200,
+        "photo": {
+          "url": "https://mock.cravins.app/media/img/sobolo.jpg",
+          "width": 800,
+          "height": 800,
+          "alt": "Sobolo cold brew"
+        },
+        "gallery": [
+          {
+            "url": "https://mock.cravins.app/media/img/sobolo-2.jpg",
+            "width": 800,
+            "height": 800,
+            "alt": "Sobolo cold brew, close up"
+          },
+          {
+            "url": "https://mock.cravins.app/media/img/sobolo-3.jpg",
+            "width": 800,
+            "height": 800,
+            "alt": "Sobolo cold brew, close up"
+          }
+        ],
+        "available": true,
+        "dietary": [],
+        "badges": [
+          "popular"
+        ],
+        "modifierGroups": [],
+        "prepMinutes": 12
+      },
+      {
+        "id": "itm_bean3",
+        "categoryId": "cat_bean0",
+        "name": {
+          "en": "Kelewele bites"
+        },
+        "description": {
+          "en": "A small bowl of spicy plantain to go with your coffee."
+        },
+        "pricePesewas": 1800,
+        "photo": {
+          "url": "https://mock.cravins.app/media/img/kelewele.jpg",
+          "width": 800,
+          "height": 800,
+          "alt": "Kelewele bites"
+        },
+        "gallery": [
+          {
+            "url": "https://mock.cravins.app/media/img/kelewele-2.jpg",
+            "width": 800,
+            "height": 800,
+            "alt": "Kelewele bites, close up"
+          },
+          {
+            "url": "https://mock.cravins.app/media/img/kelewele-3.jpg",
+            "width": 800,
+            "height": 800,
+            "alt": "Kelewele bites, close up"
+          }
+        ],
+        "available": true,
+        "dietary": [],
+        "badges": [],
+        "modifierGroups": [],
+        "prepMinutes": 12
+      }
+    ]
+  },
+  "auntie-akos": {
+    "venueId": "ven_akos",
+    "updatedAt": "2026-10-31T12:41:00.000Z",
+    "categories": [
+      {
+        "id": "cat_akos0",
+        "name": {
+          "en": "Fufu"
+        },
+        "kind": "food",
+        "position": 0
+      },
+      {
+        "id": "cat_akos1",
+        "name": {
+          "en": "Banku"
+        },
+        "kind": "food",
+        "position": 1
+      },
+      {
+        "id": "cat_akos2",
+        "name": {
+          "en": "Rice"
+        },
+        "kind": "food",
+        "position": 2
+      },
+      {
+        "id": "cat_akos3",
+        "name": {
+          "en": "Drinks"
+        },
+        "kind": "drinks",
+        "position": 3
+      }
+    ],
+    "items": [
+      {
+        "id": "itm_akos0",
+        "categoryId": "cat_akos0",
+        "name": {
+          "en": "Fufu & light soup"
+        },
+        "description": {
+          "en": "Pounded to order, goat meat light soup."
+        },
+        "pricePesewas": 5500,
+        "photo": {
+          "url": "https://mock.cravins.app/media/img/fufu.jpg",
+          "width": 800,
+          "height": 800,
+          "alt": "Fufu & light soup"
+        },
+        "gallery": [
+          {
+            "url": "https://mock.cravins.app/media/img/fufu-2.jpg",
+            "width": 800,
+            "height": 800,
+            "alt": "Fufu & light soup, close up"
+          },
+          {
+            "url": "https://mock.cravins.app/media/img/fufu-3.jpg",
+            "width": 800,
+            "height": 800,
+            "alt": "Fufu & light soup, close up"
+          }
+        ],
+        "available": true,
+        "dietary": [],
+        "badges": [
+          "popular"
+        ],
+        "modifierGroups": [],
+        "prepMinutes": 12
+      },
+      {
+        "id": "itm_akos1",
+        "categoryId": "cat_akos0",
+        "name": {
+          "en": "Banku & tilapia"
+        },
+        "description": {
+          "en": "Grilled tilapia, pepper and onions."
+        },
+        "pricePesewas": 8500,
+        "photo": {
+          "url": "https://mock.cravins.app/media/img/banku-tilapia.jpg",
+          "width": 800,
+          "height": 800,
+          "alt": "Banku & tilapia"
+        },
+        "gallery": [
+          {
+            "url": "https://mock.cravins.app/media/img/banku-tilapia-2.jpg",
+            "width": 800,
+            "height": 800,
+            "alt": "Banku & tilapia, close up"
+          },
+          {
+            "url": "https://mock.cravins.app/media/img/banku-tilapia-3.jpg",
+            "width": 800,
+            "height": 800,
+            "alt": "Banku & tilapia, close up"
+          }
+        ],
+        "available": true,
+        "dietary": [
+          "gluten_free",
+          "spicy"
+        ],
+        "badges": [
+          "popular"
+        ],
+        "modifierGroups": [],
+        "prepMinutes": 12
+      },
+      {
+        "id": "itm_akos2",
+        "categoryId": "cat_akos0",
+        "name": {
+          "en": "Kenkey & fish"
+        },
+        "description": {
+          "en": "Ga kenkey, fried fish, shito and fresh pepper."
+        },
+        "pricePesewas": 3500,
+        "photo": {
+          "url": "https://mock.cravins.app/media/img/kenkey.jpg",
+          "width": 800,
+          "height": 800,
+          "alt": "Kenkey & fish"
+        },
+        "gallery": [
+          {
+            "url": "https://mock.cravins.app/media/img/kenkey-2.jpg",
+            "width": 800,
+            "height": 800,
+            "alt": "Kenkey & fish, close up"
+          },
+          {
+            "url": "https://mock.cravins.app/media/img/kenkey-3.jpg",
+            "width": 800,
+            "height": 800,
+            "alt": "Kenkey & fish, close up"
+          }
+        ],
+        "available": true,
+        "dietary": [],
+        "badges": [],
+        "modifierGroups": [],
+        "prepMinutes": 12
+      },
+      {
+        "id": "itm_akos3",
+        "categoryId": "cat_akos0",
+        "name": {
+          "en": "Red red"
+        },
+        "description": {
+          "en": "Bean stew in palm oil, fried plantain and gari."
+        },
+        "pricePesewas": 3000,
+        "photo": {
+          "url": "https://mock.cravins.app/media/img/redred.jpg",
+          "width": 800,
+          "height": 800,
+          "alt": "Red red"
+        },
+        "gallery": [
+          {
+            "url": "https://mock.cravins.app/media/img/redred-2.jpg",
+            "width": 800,
+            "height": 800,
+            "alt": "Red red, close up"
+          },
+          {
+            "url": "https://mock.cravins.app/media/img/redred-3.jpg",
+            "width": 800,
+            "height": 800,
+            "alt": "Red red, close up"
+          }
+        ],
+        "available": true,
+        "dietary": [],
+        "badges": [],
+        "modifierGroups": [],
+        "prepMinutes": 12
+      }
+    ]
+  }
+}

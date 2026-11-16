@@ -10,6 +10,10 @@ const schema = z.object({
   DATABASE_URL: z
     .string({ error: 'DATABASE_URL is missing. Put your Postgres connection string in server/.env.' })
     .regex(/^postgres(ql)?:\/\//, { error: 'DATABASE_URL must start with postgres:// or postgresql://.' }),
+  // Signs guest tokens (src/guest/token.ts). A long random string; changing it ends every visit.
+  GUEST_TOKEN_SECRET: z
+    .string({ error: 'GUEST_TOKEN_SECRET is missing. Put a long random string in server/.env.' })
+    .min(32, { error: 'GUEST_TOKEN_SECRET must be at least 32 characters.' }),
   PORT: z.coerce.number().int().positive().default(4000),
   // Where Paystack sends a card payer back: {SITE_URL}/{venueSlug}/pay (api/openapi.yaml).
   SITE_URL: z.url().default('http://localhost:8081'),

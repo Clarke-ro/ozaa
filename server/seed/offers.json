@@ -1,0 +1,33 @@
+{
+  "mamas-kitchen": {
+    "items": [
+      {
+        "id": "ofr_mamas1",
+        "title": {
+          "en": "Jollof Tuesday"
+        },
+        "detail": {
+          "en": "Second plate half price"
+        },
+        "menuItemId": "itm_mamas0",
+        "endsAt": null
+      },
+      {
+        "id": "ofr_mamas2",
+        "title": {
+          "en": "Happy hour drinks"
+        },
+        "detail": {
+          "en": "Sobolo GH₵10 from 4 to 6 PM"
+        },
+        "endsAt": null
+      }
+    ]
+  },
+  "bean-there": {
+    "items": []
+  },
+  "auntie-akos": {
+    "items": []
+  }
+}

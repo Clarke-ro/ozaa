@@ -18,6 +18,7 @@ const payments = paymentService({
   testMode: true,
 });
 const app = createApp({
+  guest: { db, guestSecret: config.GUEST_TOKEN_SECRET, now: Date.now },
   payments,
   secret: config.PAYSTACK_SECRET_KEY,
   allowedOrigins: config.ALLOWED_ORIGINS,
