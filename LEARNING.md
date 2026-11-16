@@ -36,24 +36,15 @@ In `src/mocks/mockOwnerAuth.ts`, change `fails >= 3` to `fails >= 1`. Run the ap
 
 ---
 
-<<<<<<< HEAD
 ## 2026-11-16 · A table for everything (BUILD.md 5.2, step 4)
 
 **What we built**
 
 The database now has a place for everything the app shows: venues, menus, orders, waiter calls, staff, loyalty, reviews, promos and more. 26 new tables, made by one migration.
-=======
-## 2026-11-16 · The server's home on Heroku
-
-**What we built**
-
-The server now has a place to live: the Heroku app `cravins-api`. Merging a server change to `main` puts it live by itself.
->>>>>>> origin/main
 
 **How it works**
 
 ```
-<<<<<<< HEAD
 src/db/tables/*.ts  →  npm run db:generate  →  drizzle/0002_everything.sql  →  Heroku runs it on deploy
 ```
 
@@ -71,7 +62,18 @@ Code has bugs. So the most important rules also live in the database as *checks*
 **Try it yourself**
 
 In `tables.test.ts`, change `paidPesewas: 5001` to `5000` and run `npm test` in `server/`. That test now fails: paying exactly the total is allowed, so the database no longer says no.
-=======
+
+---
+
+## 2026-11-16 · The server's home on Heroku
+
+**What we built**
+
+The server now has a place to live: the Heroku app `cravins-api`. Merging a server change to `main` puts it live by itself.
+
+**How it works**
+
+```
 merge to main → GitHub packs server/ → Heroku builds it
 → release phase: npm run db:migrate → new version goes live → /v1/health says ok
 ```
@@ -91,7 +93,6 @@ Heroku restarts every server once a day and on every deploy. It first sends a po
 **Try it yourself**
 
 Run `npm run dev` in `server/`, open http://localhost:4000/v1/health, then stop the database and refresh. It says `database_unreachable`, and never shows the error text, which could contain the database password.
->>>>>>> origin/main
 
 ---
 
