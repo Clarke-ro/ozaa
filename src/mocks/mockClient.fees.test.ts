@@ -113,3 +113,15 @@ test('only the owner can change who pays the fee', async () => {
     waiter.ownerSetFeePassing(venue.id, { enabled: true, percent: 100 }),
   ).rejects.toMatchObject({ status: 403 });
 });
+
+test('guests see the fee share before paying, and the quote charges the same fee', async () => {
+  const { api, venue, order } = await guestOrder();
+  await api.ownerSetFeePassing(venue.id, { enabled: true, percent: 50 });
+  const percent = (await api.getVenue(venue.slug)).payMethods?.feePercent;
+  expect(percent).toBe(50);
+  const quote = await api.quoteBill(order.id, { mode: 'whole' });
+  expect(quote.feePesewas).toBe(passedFee(quote.sharePesewas + quote.tipPesewas, percent ?? 0));
+
+  await api.ownerSetFeePassing(venue.id, { enabled: false, percent: 50 });
+  expect((await api.getVenue(venue.slug)).payMethods).not.toHaveProperty('feePercent');
+});
