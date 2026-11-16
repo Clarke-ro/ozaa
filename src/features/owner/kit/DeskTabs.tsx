@@ -29,7 +29,7 @@ export function DeskTabs<T extends string>({
             <Pressable
               key={tab.id}
               accessibilityRole="tab"
-              accessibilityState={{ selected: on }}
+              aria-selected={on}
               accessibilityLabel={tab.count === undefined ? tab.label : `${tab.label} ${tab.count}`}
               onPress={() => onChange(tab.id)}
               style={[styles.tab, on && { borderBottomColor: theme.black }]}

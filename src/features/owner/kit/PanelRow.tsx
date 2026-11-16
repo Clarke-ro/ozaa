@@ -62,7 +62,7 @@ export function PanelRow({
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label ?? title}
-      accessibilityState={checked === undefined ? undefined : { checked }}
+      aria-checked={checked}
       onPress={onPress}
       onHoverIn={() => setHovered(true)}
       onHoverOut={() => setHovered(false)}

@@ -35,7 +35,7 @@ export function EmbedCard({ slug, venueName }: { slug: string; venueName: string
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t('ownerTables.embedTitle')}
-        accessibilityState={{ expanded: open }}
+        aria-expanded={open}
         onPress={() => setOpen((v) => !v)}
         style={({ pressed }) => [styles.head, pressed && { opacity: 0.7 }]}
       >

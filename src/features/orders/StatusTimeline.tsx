@@ -52,7 +52,7 @@ export function StatusTimeline({
         const Icon = ICON[step];
         const last = index === STEPS.length - 1;
         return (
-          <View key={step} style={styles.step} accessible accessibilityState={{ selected: on }}>
+          <View key={step} style={styles.step} accessible aria-selected={on}>
             <View style={styles.rail}>
               <View
                 style={[

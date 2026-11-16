@@ -151,7 +151,7 @@ export function ItemScreen({ slug, itemId }: { slug: string; itemId: string }) {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={t('menu.less')}
-              accessibilityState={{ disabled: count <= limits.min }}
+              aria-disabled={count <= limits.min}
               disabled={count <= limits.min}
               onPress={() => setQuantity(Math.max(limits.min, count - 1))}
               style={[
@@ -168,7 +168,7 @@ export function ItemScreen({ slug, itemId }: { slug: string; itemId: string }) {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={t('menu.more')}
-              accessibilityState={{ disabled: count >= limits.max }}
+              aria-disabled={count >= limits.max}
               disabled={count >= limits.max}
               onPress={() => setQuantity(Math.min(limits.max, count + 1))}
               style={[

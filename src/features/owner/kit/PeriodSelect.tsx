@@ -37,7 +37,7 @@ export function PeriodSelect<T extends string>({
         ref={anchor}
         accessibilityRole="button"
         accessibilityLabel={`${label}: ${current}`}
-        accessibilityState={{ expanded: at !== null }}
+        aria-expanded={at !== null}
         onPress={open}
         style={({ pressed }) => [
           styles.button,
@@ -58,7 +58,7 @@ export function PeriodSelect<T extends string>({
               key={option.id}
               accessibilityRole="menuitem"
               accessibilityLabel={option.label}
-              accessibilityState={{ selected: on }}
+              aria-selected={on}
               onPress={() => {
                 close();
                 if (!on) onChange(option.id);

@@ -71,7 +71,7 @@ export function PickDishRow({
                     <Pressable
                       key={option.id}
                       accessibilityRole={group.max === 1 ? 'radio' : 'checkbox'}
-                      accessibilityState={{ checked: on }}
+                      aria-checked={on}
                       accessibilityLabel={option.name.en}
                       onPress={() =>
                         set({

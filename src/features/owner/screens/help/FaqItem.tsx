@@ -31,7 +31,7 @@ export function FaqItem({
     <View style={[!first && styles.rule, { borderTopColor: theme.line }]}>
       <Pressable
         accessibilityRole="button"
-        accessibilityState={{ expanded: open }}
+        aria-expanded={open}
         onPress={onToggle}
         style={({ pressed }) => [styles.head, pressed && { backgroundColor: theme.wash }]}
       >

@@ -37,7 +37,7 @@ export function BillLines({
             key={line.id}
             disabled={!pickable}
             accessibilityRole={pickable ? 'checkbox' : undefined}
-            accessibilityState={pickable ? { checked: picked } : undefined}
+            aria-checked={pickable ? picked : undefined}
             onPress={() => onToggle(line.id)}
             style={payStyles.line}
           >

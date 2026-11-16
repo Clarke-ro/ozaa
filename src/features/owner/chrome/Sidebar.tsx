@@ -61,7 +61,7 @@ export function Sidebar() {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={collapsed ? t('ownerChrome.expand') : t('ownerChrome.collapse')}
-          accessibilityState={{ expanded: !collapsed }}
+          aria-expanded={!collapsed}
           onPress={() => setCollapsed(!collapsed)}
           style={({ pressed }) => [styles.toggle, pressed && { backgroundColor: theme.wash }]}
         >

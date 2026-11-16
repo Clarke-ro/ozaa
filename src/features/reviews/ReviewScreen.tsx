@@ -76,7 +76,7 @@ export function ReviewScreen({ slug }: { slug: string }) {
               key={value}
               accessibilityRole="radio"
               accessibilityLabel={t('review.starsA11y', { count: value })}
-              accessibilityState={{ checked: value === stars }}
+              aria-checked={value === stars}
               onPress={() => setStars(value)}
               style={styles.star}
             >
@@ -96,7 +96,7 @@ export function ReviewScreen({ slug }: { slug: string }) {
               <Pressable
                 key={item}
                 accessibilityRole="checkbox"
-                accessibilityState={{ checked: on }}
+                aria-checked={on}
                 onPress={() =>
                   setPicked((current) =>
                     on ? current.filter((v) => v !== item) : [...current, item],

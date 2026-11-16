@@ -52,7 +52,7 @@ export function DishChoices({
                 <Pressable
                   key={option.id}
                   accessibilityRole={group.max === 1 ? 'radio' : 'checkbox'}
-                  accessibilityState={{ checked: on }}
+                  aria-checked={on}
                   onPress={() => {
                     void hapticSelection();
                     onPick(group.id, pickOption(group, picked, option.id));

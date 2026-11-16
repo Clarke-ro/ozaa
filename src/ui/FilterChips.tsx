@@ -72,7 +72,6 @@ export function FilterChips<T extends string>({
           <Pressable
             key={item.id}
             accessibilityRole="tab"
-            accessibilityState={{ selected: on }}
             aria-selected={on}
             accessibilityLabel={item.count == null ? item.label : `${item.label}, ${item.count}`}
             onPress={() => onChange(item.id)}

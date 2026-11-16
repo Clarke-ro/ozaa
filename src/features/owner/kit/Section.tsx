@@ -85,7 +85,7 @@ export function Section({
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={title}
-            accessibilityState={{ expanded: open }}
+            aria-expanded={open}
             onPress={() => setOpen((v) => !v)}
             style={({ pressed }) => [pressed && { backgroundColor: theme.wash }]}
           >

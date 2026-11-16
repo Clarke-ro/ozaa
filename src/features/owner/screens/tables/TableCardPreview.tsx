@@ -66,7 +66,7 @@ export function TableCardControls({
                 key={c.id}
                 accessibilityRole="radio"
                 accessibilityLabel={t(`ownerTables.accents.${c.id}`)}
-                accessibilityState={{ checked: on }}
+                aria-checked={on}
                 onPress={() => {
                   void hapticSelection();
                   onAccent(c.hex);
