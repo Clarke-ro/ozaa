@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
-import { GoogleLogo, TripadvisorLogo, WhatsAppLogo } from './BrandLogos';
+import { GoogleLogo, TripadvisorLogo } from './BrandLogos';
 import { IntegrationCard } from './IntegrationCard';
 import { api } from '@/lib/api';
 import { useOwnerSession } from '@/features/session';
@@ -11,11 +11,12 @@ import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ownerKeys } from '../../data/keys';
 import { ManualPaymentsCard } from './ManualPaymentsCard';
 import { PaystackCard } from './PaystackCard';
+import { WhatsAppIntegration } from './WhatsAppIntegration';
 
 /**
  * Integrations > Payments (design canvas): the venue's own Paystack account and the ways guests
- * pay in person, as cards with switches; then Google, Tripadvisor and WhatsApp, which are not in
- * the API contract yet and so say "Coming soon".
+ * pay in person, as cards with switches; then Google and Tripadvisor, which say "Coming soon",
+ * and WhatsApp order alerts, behind WHATSAPP_ALERTS_ENABLED (off).
  */
 export function IntegrationsScreen() {
   const { t } = useTranslation();
@@ -63,12 +64,7 @@ export function IntegrationsScreen() {
             <Text variant="title" accessibilityRole="header" style={styles.next}>
               {t('ownerPay.messagesTitle')}
             </Text>
-            <IntegrationCard
-              logo={<WhatsAppLogo />}
-              title={t('ownerPay.whatsapp')}
-              subtitle={t('ownerPay.whatsappSub')}
-              badge={t('ownerPay.soon')}
-            />
+            <WhatsAppIntegration venueId={venueId} />
           </View>
         ) : null}
       </DeskWait>

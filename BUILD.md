@@ -621,7 +621,7 @@ Approved by Clarke on 2026-11-03. Details and file locations are in `docs/menuri
 - [x] 4b.15 *contract* + UI: menu-link guest flow (pickup or delivery, contact form, confirmation and status page) and the source on every order.
 - [x] 4b.16 *contract* + UI: Sales page (totals, counts by status, discounts, top items, revenue over time, by source).
 - [x] 4b.17 *contract* + UI: Settings > Integrations > Payments (own Paystack keys, where to find them, test/live, test connection), manual methods, mark paid by method, payment status on orders and sales. Split bill hidden.
-- [ ] 4b.18 WhatsApp order-alerts number field, behind a flag that stays off.
+- [x] 4b.18 WhatsApp order-alerts number field, behind a flag that stays off. Done 2026-11-16: `VenueSettings.whatsappAlerts` (owner only, contract PR first), and the WhatsApp card on Integrations takes and saves the number when `WHATSAPP_ALERTS_ENABLED` (in `src/lib/features.ts`, `false`) is on. Sending alerts waits for Phase 5 and a WhatsApp provider (section 17, item 5).
 - [ ] **Review:** Clarke sees every new screen in light and dark, phone and tablet, then says go for the backend (per-venue encrypted Paystack keys, webhook per venue, push alerts).
 
 ### Phase 4c: Owner redesign from the design canvas (on mocks)

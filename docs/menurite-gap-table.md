@@ -93,7 +93,7 @@ The owner app and the web dashboard are **the same code** (`src/app/owner/*`, on
 
 | Feature | Status | Notes |
 |---|---|---|
-| WhatsApp ordering | — | Stays off. `whatsapp` already exists on the venue (`VenuePublic.whatsapp`). An "order alerts to WhatsApp" toggle can sit behind a new `WHATSAPP_ALERTS_ENABLED` flag in `src/lib/features.ts`. |
+| WhatsApp ordering | — | Stays off. Order alerts have their own owner-only number, `VenueSettings.whatsappAlerts`, apart from the guest-facing `VenuePublic.whatsapp`. The Integrations card for it sits behind `WHATSAPP_ALERTS_ENABLED` in `src/lib/features.ts` (off). |
 | POS integration | — | Not built. `/owner/pos` stays a preview. |
 
 ## What clashes with the house rules
