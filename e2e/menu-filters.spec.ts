@@ -1,40 +1,35 @@
 import { expect, test } from '@playwright/test';
 
-test('dietary filters open in a sheet and can clear back to the menu', async ({ page }) => {
+// The venue picks list or grid, and there's no diet filter on the guest menu (Clarke, 2026-11-16).
+test('the menu bar has section tabs and search only', async ({ page }) => {
   await page.goto('/mamas-kitchen/menu', { waitUntil: 'domcontentloaded' });
-  await expect(page.getByRole('tab', { name: 'All', exact: true })).toBeVisible();
-  await expect(page.getByRole('tab', { name: 'Mains' })).toBeVisible();
-  await expect(page.getByText('Show only')).toHaveCount(0);
-  await expect(page.getByText('Jollof & chicken')).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'All categories', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Search the menu', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Dietary filters|Show as/ })).toHaveCount(0);
+});
 
-  await page.getByRole('button', { name: 'Dietary filters' }).click();
-  await expect(page.getByRole('checkbox', { name: 'Vegetarian' })).toBeVisible();
-  await expect(page.getByRole('checkbox', { name: 'Gluten free' })).toBeVisible();
-  await page.getByRole('checkbox', { name: 'Halal' }).click();
-  await page.getByRole('button', { name: 'Close' }).click({ position: { x: 20, y: 20 } });
-  await expect(page.getByText('Jollof & chicken')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Dietary filters' })).toBeVisible();
+test('special offers show while an offer runs, and their dish can be added', async ({ page }) => {
+  await page.goto('/mamas-kitchen/menu', { waitUntil: 'domcontentloaded' });
+  await expect(page.getByRole('heading', { name: 'Special offers' })).toBeVisible();
+  await expect(page.getByText('Jollof Tuesday')).toBeVisible();
+  await expect(page.getByText('Happy hour drinks')).toBeVisible();
+  await page.getByRole('button', { name: 'Add Jollof & chicken to your order' }).first().click();
+  await expect(page.getByText('1 View order')).toBeVisible();
+  // A section on its own is about finding one thing: no offers row there.
+  await page.getByRole('tab', { name: 'Drinks' }).click();
+  await expect(page.getByRole('heading', { name: 'Special offers' })).toHaveCount(0);
+});
 
-  await page.getByRole('button', { name: 'Dietary filters' }).click();
-  // No sample dish is both halal and vegan.
-  await page.getByRole('checkbox', { name: 'Halal' }).click();
-  await page.getByRole('checkbox', { name: 'Vegan' }).click();
-  await page.getByRole('button', { name: 'Apply' }).click();
-
-  await expect(page.getByRole('button', { name: 'Dietary filters, 2 on' })).toBeVisible();
-  await expect(page.getByText('Nothing matches those filters.')).toBeVisible();
-  await expect(page.getByText('Jollof & chicken')).toBeHidden();
-  await expect(page.getByRole('tab', { name: 'All', exact: true })).toBeVisible();
-
-  await page.getByRole('button', { name: 'Dietary filters, 2 on' }).click();
-  await page.getByRole('button', { name: 'Clear' }).click();
-  await expect(page.getByText('Jollof & chicken')).toBeVisible();
-  await expect(page.getByText('Nothing matches those filters.')).toHaveCount(0);
+test('no offers, no section', async ({ page }) => {
+  await page.goto('/auntie-akos/menu', { waitUntil: 'domcontentloaded' });
+  await expect(page.getByRole('tab', { name: 'All categories', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Special offers' })).toHaveCount(0);
 });
 
 test('search finds a dish, the card adds it, and the dish page adds more', async ({ page }) => {
   await page.goto('/mamas-kitchen/menu', { waitUntil: 'domcontentloaded' });
-  // The search box is always on screen in the menu's control bar.
+  // Search is an icon in the menu bar; it opens the search field.
+  await page.getByRole('button', { name: 'Search the menu', exact: true }).click();
   await page.getByRole('textbox', { name: 'Search the menu', exact: true }).fill('waakye');
   await expect(page.getByText('1 result')).toBeVisible();
   await page.getByRole('button', { name: 'Add Waakye special to your order' }).click();

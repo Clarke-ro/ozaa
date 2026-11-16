@@ -98,6 +98,8 @@
     "cancelled": "Cancelled"
   },
   "menu": {
+    "offersTitle": "Special offers",
+    "searchAll": "Results from the whole menu",
     "title": "Menu",
     "food": "Food",
     "drinks": "Drinks",
@@ -141,7 +143,7 @@
     "showGrid": "Show as photo cards",
     "showList": "Show as a list",
     "sectionsLabel": "Menu sections",
-    "allSections": "All",
+    "allSections": "All categories",
     "salePrice": "Now {{now}}, was {{was}}",
     "limits": "Order {{min}} to {{max}}"
   },
@@ -2582,6 +2584,12 @@
     "freeOverShort": "Free delivery over",
     "upTo": "Deliver up to",
     "from": "From {{place}}"
+  },
+  "online": {
+    "info": "Info",
+    "infoLabel": "About {{name}}: address, hours and phone",
+    "pickupIn": "Pickup in {{minutes}} min",
+    "delivery": "Delivery"
   },
   "linkOrder": {
     "title": "How do you want it?",

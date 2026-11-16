@@ -7,24 +7,31 @@ import { useGuestSession } from '@/features/session';
 // it on the side. In http mode this always answers null.
 import { peekOpenOrder } from '@/mocks/openOrder';
 import { ErrorState, LoadingState } from '@/ui/states';
+import { HomeScreen } from './HomeScreen';
 
 const tableSchema = z.string().check(z.regex(/^[A-Za-z0-9-]{1,12}$/));
 
 /**
- * Where a table's QR code lands (/slug/t/12): open a guest session for that table, then go
- * to the venue's home. A bad code goes back to the start; a failed request can be retried.
+ * Where a table's QR code lands (/slug/t/12), and the table guest's home from then on: open a
+ * guest session for that table, then show the venue's home with its services right here. The
+ * address stays /slug/t/12, so it never mixes with the online-ordering link (/slug).
+ * A bad code goes back to the start; a failed request can be retried.
  */
 export function TableEntryScreen({ slug, table }: { slug: string; table: string | undefined }) {
   const router = useRouter();
-  const saveGuest = useGuestSession((state) => state.saveGuest);
   const parsed = tableSchema.safeParse(table);
   const tableCode = parsed.success ? parsed.data : null;
+  const saveGuest = useGuestSession((state) => state.saveGuest);
+  // Already at this table (back from the menu, or a reload): no new session needed.
+  const here = useGuestSession(
+    (state) => state.slug === slug && state.tableCode === tableCode && Boolean(state.token),
+  );
   const [failed, setFailed] = useState(false);
   // Bumped by Try again to run the request once more.
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
-    if (!tableCode) return;
+    if (!tableCode || here) return;
     let live = true;
     api
       .createGuestSession({ venueSlug: slug, tableCode })
@@ -36,7 +43,6 @@ export function TableEntryScreen({ slug, table }: { slug: string; table: string 
           tableCode: session.table?.code ?? tableCode,
           orderId: peekOpenOrder(session.guestToken),
         });
-        router.replace(`/${slug}`);
       })
       .catch(() => {
         if (live) setFailed(true);
@@ -44,7 +50,7 @@ export function TableEntryScreen({ slug, table }: { slug: string; table: string 
     return () => {
       live = false;
     };
-  }, [slug, router, saveGuest, tableCode, attempt]);
+  }, [slug, saveGuest, tableCode, here, attempt]);
 
   if (!tableCode) return <ErrorState onRetry={() => router.replace('/')} />;
   if (failed) {
@@ -57,5 +63,5 @@ export function TableEntryScreen({ slug, table }: { slug: string; table: string 
       />
     );
   }
-  return <LoadingState />;
+  return here ? <HomeScreen slug={slug} /> : <LoadingState />;
 }

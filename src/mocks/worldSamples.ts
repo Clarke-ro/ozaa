@@ -101,3 +101,18 @@ export function samplePaymentSettings(
     },
   };
 }
+
+/**
+ * Bean There takes menu-link orders for pickup, so the demo shows online ordering (BUILD.md 4b.15).
+ * Delivery stays off: the sample venue has no map pin, and delivery needs one to work out distance.
+ * Mama's Kitchen and Auntie Akos take orders at the table only.
+ */
+export function withSampleOnlineOrdering(venues: Record<string, VenuePublic>): void {
+  const bean = venues['bean-there'];
+  if (!bean) return;
+  bean.onlineOrdering = {
+    enabled: true,
+    pickup: { enabled: true, prepMinutes: 15 },
+    delivery: { enabled: false, minimumFeePesewas: 1500, feePerKmPesewas: 300, maxDistanceKm: 8, freeOverPesewas: null },
+  };
+}

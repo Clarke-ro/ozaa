@@ -1,7 +1,8 @@
 import { useLocalSearchParams } from 'expo-router';
-import { HomeScreen } from '@/features/venue';
+import { OnlineMenuScreen } from '@/features/online';
 
-export default function VenueHomeRoute() {
+// The venue's own link: online ordering, menu first. Table guests use /[venue]/t/[table].
+export default function VenueLinkRoute() {
   const { venue } = useLocalSearchParams<{ venue: string }>();
-  return <HomeScreen slug={venue ?? ''} />;
+  return <OnlineMenuScreen slug={venue ?? ''} />;
 }

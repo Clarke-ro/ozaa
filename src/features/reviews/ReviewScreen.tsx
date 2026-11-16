@@ -12,6 +12,7 @@ import { PageHeader } from '@/ui/PageHeader';
 import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
+import { guestHomeHref, useGuestSession } from '@/features/session';
 
 const HIGHLIGHTS = ['food', 'service', 'speed', 'value', 'vibe'] as const;
 type Highlight = (typeof HIGHLIGHTS)[number];
@@ -21,6 +22,8 @@ export function ReviewScreen({ slug }: { slug: string }) {
   const { t } = useTranslation();
   const theme = useTheme();
   const router = useRouter();
+  // Back to this guest's own home: their table, or the online menu.
+  const tableCode = useGuestSession((state) => (state.slug === slug ? state.tableCode : null));
   const venue = useVenue(slug);
   // Nothing is chosen for the guest: a pre-filled rating would nudge the score.
   const [stars, setStars] = useState(0);
@@ -52,7 +55,7 @@ export function ReviewScreen({ slug }: { slug: string }) {
           <Button
             label={t('review.backHome')}
             tone="secondary"
-            onPress={() => router.replace(`/${slug}`)}
+            onPress={() => router.replace(guestHomeHref(slug, tableCode))}
           />
         </View>
       </SafeScreen>

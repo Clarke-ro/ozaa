@@ -9,8 +9,10 @@ import { fontFamily, useTheme } from '@/ui/theme';
 import { DishPrice } from './DishPrice';
 
 /**
- * One dish in the list view (the default): a square photo, name, one line of description,
- * price, and the add button. Sold out dims the row and says so in words.
+ * One dish in the list view (the default), as a card: name and price on the left; the photo
+ * fills the right side, with the round add button on its corner. The description is on the
+ * dish's own page.
+ * Sold out dims the photo and says so in words.
  */
 export function DishRow({
   item,
@@ -28,47 +30,40 @@ export function DishRow({
   const off = !item.available;
   const popular = item.badges.includes('popular') && !off;
   return (
-    <View style={[styles.row, { backgroundColor: theme.surface }]}>
+    <View style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.line }]}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={off ? `${item.name.en}, ${t('menu.soldOut')}` : item.name.en}
         onPress={onOpen}
         style={({ pressed }) => [styles.open, pressed && styles.pressed]}
       >
-        <View style={[styles.photo, { backgroundColor: theme.wash }, off && styles.dim]}>
+        <View style={styles.copy}>
+          <Text variant="body" numberOfLines={2} style={styles.name}>
+            {item.name.en}
+          </Text>
+          <View style={styles.meta}>
+            <DishPrice item={item} currency={currency} />
+          </View>
+          {popular || off ? (
+            <Text
+              variant="caption"
+              style={[styles.tag, { color: off ? theme.error : theme.badgeInk }]}
+            >
+              {off ? t('menu.soldOut') : t('menu.popular')}
+            </Text>
+          ) : null}
+        </View>
+        <View style={[styles.photo, { backgroundColor: theme.wash }]}>
           {item.photo ? (
             <VenueImage
               url={item.photo.url}
               alt={item.photo.alt ?? item.name.en}
               blurhash={item.photo.blurhash}
-              style={StyleSheet.absoluteFill}
+              style={[StyleSheet.absoluteFill, off && styles.dim]}
             />
           ) : (
-            <UtensilsCrossed size={22} color={theme.meta} />
+            <UtensilsCrossed size={24} color={theme.meta} />
           )}
-        </View>
-        <View style={styles.copy}>
-          <Text variant="body-strong" numberOfLines={1}>
-            {item.name.en}
-          </Text>
-          {item.description.en ? (
-            <Text variant="caption" numberOfLines={1} style={{ color: theme.muted }}>
-              {item.description.en}
-            </Text>
-          ) : null}
-          <View style={styles.meta}>
-            <DishPrice item={item} currency={currency} />
-            {popular ? (
-              <Text variant="caption" style={[styles.tag, { color: theme.badgeInk }]}>
-                {t('menu.popular')}
-              </Text>
-            ) : null}
-            {off ? (
-              <Text variant="caption" style={[styles.tag, { color: theme.error }]}>
-                {t('menu.soldOut')}
-              </Text>
-            ) : null}
-          </View>
         </View>
       </Pressable>
       {onAdd ? (
@@ -82,42 +77,48 @@ export function DishRow({
             { backgroundColor: pressed ? theme.pressed : theme.fill },
           ]}
         >
-          <Plus size={16} color={theme.onFill} strokeWidth={2.5} />
+          <Plus size={20} color={theme.onFill} strokeWidth={2.5} />
         </Pressable>
       ) : null}
     </View>
   );
 }
 
-const PHOTO = 72;
-const ADD = 32;
+// The photo is a square as tall as the card; the add button sits on its lower corner.
+const PHOTO = 104;
+const ADD = 40;
 
 const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[2],
-    padding: tokens.space[2],
-    paddingEnd: tokens.space[3],
+  card: {
+    minHeight: PHOTO,
     borderRadius: tokens.radius.lg,
     borderCurve: 'continuous',
-    boxShadow: tokens.shadow.card,
+    borderWidth: StyleSheet.hairlineWidth,
+    overflow: 'hidden',
   },
-  open: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
+  open: { flex: 1, flexDirection: 'row', alignItems: 'stretch' },
   pressed: { opacity: 0.85 },
+  copy: {
+    flex: 1,
+    gap: tokens.space[1],
+    paddingVertical: tokens.space[3],
+    paddingHorizontal: tokens.space[4],
+    justifyContent: 'center',
+  },
+  name: { fontFamily: fontFamily.strong },
   photo: {
     width: PHOTO,
-    height: PHOTO,
-    borderRadius: tokens.radius.md,
-    overflow: 'hidden',
+    minHeight: PHOTO,
     alignItems: 'center',
     justifyContent: 'center',
   },
   dim: { opacity: 0.45 },
-  copy: { flex: 1, gap: 2 },
-  meta: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[2], marginTop: 2 },
+  meta: { marginTop: tokens.space[1] },
   tag: { fontFamily: fontFamily.strong },
   add: {
+    position: 'absolute',
+    end: tokens.space[2],
+    bottom: tokens.space[2],
     width: ADD,
     height: ADD,
     borderRadius: ADD / 2,
