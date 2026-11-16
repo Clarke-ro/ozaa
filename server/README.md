@@ -1,6 +1,6 @@
 # Cravins server
 
-Phase 5 has started (BUILD.md section 13). The server runs on Postgres: Supabase in production, a local Postgres or PGlite while building. It will run on Vercel Functions (BUILD.md section 4). So far it has the Paystack sandbox slice from 2b, now storing payments in Postgres.
+Phase 5 has started (BUILD.md section 13). The server runs on Postgres: Supabase in production, a local Postgres or PGlite while building. It runs on Heroku as the app `cravins-api` (BUILD.md section 4). So far it has the Paystack sandbox slice from 2b, now storing payments in Postgres.
 
 ## Payments (from the 2b sandbox slice)
 
@@ -32,6 +32,21 @@ Only Paystack's "success" for the same amount and currency (GHS) makes a payment
 - **Tables** are defined in `src/db/schema.ts`. After changing it, run `npm run db:generate`. That writes a new SQL file in `drizzle/`; commit it with the change. `npm run db:migrate` applies it.
 - **Migrations run as their own step**, never when the server starts. Two copies of the server starting together could otherwise both try to change the tables.
 - **No double charges.** A payment's `Idempotency-Key` is unique in the table. A second tap, even one that reaches another copy of the server, gets the first payment back.
+
+## Deploying to Heroku
+
+Every merge to `main` that changes `server/` deploys it (`.github/workflows/deploy-server.yml`):
+
+1. GitHub packs `server/` alone and sends it to Heroku, which installs and builds it.
+2. Heroku's **release phase** runs `npm run db:migrate` (`Procfile`). If a migration fails, the new version doesn't go live and the old one keeps running.
+3. The workflow waits for `GET /v1/health` to say `ok`. That checks the server is up and the database answers.
+
+One-time set-up, done by Clarke:
+
+- **GitHub:** repo Settings > Secrets and variables > Actions > New secret `HEROKU_API_KEY` (from Heroku's Account settings > API key). Until it's set, the workflow skips the deploy and says why.
+- **Heroku:** `cravins-api` > Settings > Config Vars: `DATABASE_URL` (Supabase **Session pooler** address, not `db.….supabase.co`, which is IPv6 only), `PAYSTACK_SECRET_KEY` (`sk_test_…`) and `CLERK_SECRET_KEY` (`sk_test_…`). `NODE_ENV`, `SITE_URL`, `ALLOWED_ORIGINS` and `CLERK_PUBLISHABLE_KEY` are already set.
+
+On a deploy or Heroku's daily restart, the server gets SIGTERM. It stops taking new requests, lets the ones in flight finish, then closes the database.
 
 ## Know before you test
 

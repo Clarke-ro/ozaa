@@ -2,7 +2,7 @@
   "name": "cravins-server",
   "private": true,
   "type": "module",
-  "description": "Cravins server (Phase 5): Hono on Postgres. Payments are the first part moved over.",
+  "description": "Cravins server (Phase 5): Hono on Postgres, hosted on Heroku.",
   "scripts": {
     "dev": "tsx watch --env-file-if-exists=.env src/index.ts",
     "start": "tsx --env-file-if-exists=.env src/index.ts",
@@ -16,13 +16,16 @@
     "drizzle-orm": "^0.44.7",
     "hono": "^4.13.17",
     "postgres": "^3.4.7",
+    "tsx": "^4.23.15",
     "zod": "^4.6.7"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.3.11",
     "@types/node": "^26.6.6",
     "drizzle-kit": "^0.31.6",
-    "tsx": "^4.23.15",
     "typescript": "^7.0.2"
+  },
+  "engines": {
+    "node": "22.x"
   }
 }
