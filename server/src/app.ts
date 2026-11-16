@@ -6,6 +6,7 @@ import { Problem, problemResponse } from './http/problem.ts';
 import { guestRoutes, type GuestDeps } from './routes/guest.ts';
 import { ownerRoutes, type OwnerRouteDeps } from './routes/owner.ts';
 import { paymentRoutes } from './routes/payments.ts';
+import { waiterRoutes } from './routes/waiter.ts';
 
 export function createApp(deps: {
   /** Guest calls (sessions, venues, menu, orders, bill, payments). Missing in the health-only tests. */
@@ -56,6 +57,7 @@ export function createApp(deps: {
     app.route('/', paymentRoutes({ ...deps.guest, payments: deps.payments, log: deps.log }));
   }
   if (deps.owner) app.route('/', ownerRoutes({ ...deps.owner, log: deps.log }));
+  if (deps.guest && deps.owner) app.route('/', waiterRoutes({ ...deps.guest, ...deps.owner }));
 
   return app;
 }

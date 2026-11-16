@@ -3075,3 +3075,33 @@ One codebase, two behaviours, chosen when the site is built, not when it runs. V
 **Try it yourself**
 
 In `landing/`, run `PUBLIC_DEMO_URL=https://example.com npm run build` and open `dist/demo/index.html`. The sample menus now point at example.com, while Log in still points at the app.
+
+## 2026-11-16 · Waiter calls on the real server
+
+**What we built**
+
+A guest at a table taps "Call the waiter". The call shows up in the restaurant app's queue. A waiter taps "On my way", and the guest's phone shows the waiter's first name. A reply such as "Coming in 2 min" finishes the call. A snooze hides it from the queue for a few minutes.
+
+**How it works**
+
+```
+guest  → POST /waiter-calls {reason}           → one open call per table
+staff  → GET  /owner/venues/…/waiter-calls     → the queue (snoozed ones hidden)
+staff  → PATCH /owner/waiter-calls/… "On my way" → guest sees "Kwesi is on the way"
+```
+
+Calling twice from the same table changes the reason of the open call, so an impatient guest can't fill the queue.
+
+**Files to look at**
+
+- `server/src/routes/waiter.ts`: the four routes.
+- `src/features/waiter/callUpdate.ts`: the rules, shared by the app and the server.
+- `server/src/routes/waiter.test.ts`: a table, a waiter, a cook and a snooze.
+
+**New idea: a guarded update**
+
+When two waiters tap "On my way" at the same moment, only one should win. The update says "change it only if it's still open". The second tap finds it already acknowledged and gets a polite 409.
+
+**Try it yourself**
+
+In `waiter.test.ts`, snooze a call for 2 minutes, then move the clock only 1 minute with `tick(60_000)`. The queue stays empty.
