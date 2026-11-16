@@ -9,8 +9,9 @@ import { fontFamily, useTheme } from '@/ui/theme';
 import { DishPrice } from './DishPrice';
 
 /**
- * One dish in the list view (the default), as a card: name, two lines of description and the
- * price on the left; the photo fills the right side, with the round add button on its corner.
+ * One dish in the list view (the default), as a card: name and price on the left; the photo
+ * fills the right side, with the round add button on its corner. The description is on the
+ * dish's own page.
  * Sold out dims the photo and says so in words.
  */
 export function DishRow({
@@ -40,11 +41,6 @@ export function DishRow({
           <Text variant="body" numberOfLines={2} style={styles.name}>
             {item.name.en}
           </Text>
-          {item.description.en ? (
-            <Text variant="caption" numberOfLines={2} style={{ color: theme.muted }}>
-              {item.description.en}
-            </Text>
-          ) : null}
           <View style={styles.meta}>
             <DishPrice item={item} currency={currency} />
           </View>
@@ -89,7 +85,7 @@ export function DishRow({
 }
 
 // The photo is a square as tall as the card; the add button sits on its lower corner.
-const PHOTO = 120;
+const PHOTO = 104;
 const ADD = 40;
 
 const styles = StyleSheet.create({

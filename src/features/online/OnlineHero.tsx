@@ -137,11 +137,6 @@ export function OnlineHero({ venue, topInset }: { venue: VenuePublic; topInset: 
             </View>
           ) : null}
         </View>
-        {!ordering.enabled ? (
-          <Text variant="caption" style={{ color: theme.muted }}>
-            {t('linkOrder.tableOnly')}
-          </Text>
-        ) : null}
       </View>
       <LanguagePicker
         open={languageOpen}

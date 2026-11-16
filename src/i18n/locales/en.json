@@ -32,7 +32,6 @@
   },
   "services": {
     "menu": {
-    "searchAll": "Results from the whole menu",
       "title": "Menu",
       "body": "Food and drinks, order from your table"
     },
@@ -99,6 +98,8 @@
     "cancelled": "Cancelled"
   },
   "menu": {
+    "offersTitle": "Special offers",
+    "searchAll": "Results from the whole menu",
     "title": "Menu",
     "food": "Food",
     "drinks": "Drinks",

@@ -33,6 +33,7 @@ test('the banner photo shows and share and language respond', async ({ page }) =
   await expect(page.getByText('Français')).toBeHidden();
 
   await page.goto('/mamas-kitchen/menu');
-  await expect(page.getByText('Jollof & chicken')).toBeVisible();
+  // It's on the menu and, as today's offer, in Special offers too.
+  await expect(page.getByText('Jollof & chicken').first()).toBeVisible();
   await expect(page.getByText('GH₵65').first()).toBeVisible();
 });

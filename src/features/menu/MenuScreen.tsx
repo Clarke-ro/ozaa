@@ -19,7 +19,8 @@ import { menuStyleOf, sortDishes } from '@/lib/menuStyle';
 import { hapticImpactLight } from '@/lib/haptics';
 import { DEFAULT_CURRENCY } from '@/lib/money';
 import { useCart } from '@/features/cart';
-import { useVenue } from '@/features/venue';
+import { useOffers, useVenue } from '@/features/venue';
+import { useNow } from '@/lib/useNow';
 import { PageHeader } from '@/ui/PageHeader';
 import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
@@ -27,10 +28,10 @@ import { ErrorState, LoadingState } from '@/ui/states';
 import { OfflineNote } from '@/ui/OfflineNote';
 import { tokens } from '@/theme/tokens';
 import { useTheme } from '@/ui/theme';
-import { DietFilterSheet } from './DietFilterSheet';
+import { SpecialOffers } from './SpecialOffers';
+import { specialOffers } from './specialOffers';
 import { DishCard } from './DishCard';
 import { canQuickAdd, searchItems } from '@/lib/dishLogic';
-import { dietOptions } from '@/lib/dietary';
 import { filterMenuItems } from './filterMenu';
 import { MenuCartBar } from './MenuCartBar';
 import { DishRow } from './DishRow';
@@ -58,13 +59,12 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
   const menu = useQuery({ queryKey: guestKeys.menu(slug), queryFn: () => api.getMenu(slug) });
   const venue = useVenue(slug);
   const storeNotice = useLiveNotices(venue.data?.notices);
+  const offers = useOffers(slug);
+  // Once a minute is enough to drop an offer that has just ended.
+  const now = useNow(60_000);
   const add = useCart((state) => state.add);
   const [section, setSection] = useState('all');
-  const [diets, setDiets] = useState<string[]>([]);
-  const [filtersOpen, setFiltersOpen] = useState(false);
   const [query, setQuery] = useState('');
-  // Null until the guest switches; until then the venue's chosen layout is used.
-  const [picked, setPicked] = useState<MenuView | null>(null);
   // Online page only: one search-and-sections bar that slides up with the page and stops under
   // a slim strip with the venue's name. One bar, not a copy, so screen readers meet it once.
   const [scrollY] = useState(() => new Animated.Value(0));
@@ -79,7 +79,8 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
 
   const currency = venue.data?.currency ?? DEFAULT_CURRENCY;
   const style = menuStyleOf(venue.data?.menuStyle);
-  const view: MenuView = picked ?? style.layout;
+  // List or photo grid is the venue's choice (Customise > menu style), not the guest's.
+  const view: MenuView = style.layout;
   // Food sections first, then drinks, each in the venue's order.
   const sections = menu.data.categories
     .filter((c) => !c.hidden)
@@ -91,9 +92,11 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
   const searching = query.trim().length > 0;
   // Searching looks across every section; otherwise show the picked one (or all of them).
   const shown = searching
-    ? searchItems(filterMenuItems(visible, 'all', diets), query)
-    : filterMenuItems(visible, active, diets);
-  const options = dietOptions(visible);
+    ? searchItems(filterMenuItems(visible, 'all', []), query)
+    : filterMenuItems(visible, active, []);
+  // Only on the full menu: searching or a single section is about finding one thing.
+  const deals =
+    searching || active !== 'all' ? [] : specialOffers(visible, offers.data?.items ?? [], now);
   const columns = width >= 700 ? 3 : 2;
   const rows = menuRows(shown, sections, {
     grouped: active === 'all' && !searching,
@@ -119,10 +122,6 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
     <MenuControls
       query={query}
       onQuery={setQuery}
-      diets={diets.length}
-      onFilters={options.length > 0 ? () => setFiltersOpen(true) : null}
-      view={view}
-      onView={setPicked}
       sections={sections}
       active={active}
       onSection={setSection}
@@ -131,6 +130,12 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
   const listHeader = (
     <View style={styles.header}>
       <OfflineNote savedAt={menu.dataUpdatedAt} />
+      <SpecialOffers
+        offers={deals}
+        currency={currency}
+        onOpen={open}
+        onAdd={(deal) => (canQuickAdd(deal.item) ? () => quickAdd(deal.item) : null)}
+      />
       {searching ? (
         <Text variant="title" style={styles.heading}>
           {t('menu.results', { count: shown.length })}
@@ -221,7 +226,7 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
         ListHeaderComponent={hero ? null : listHeader}
         ListEmptyComponent={
           <Text variant="body" style={[styles.empty, { color: theme.muted }]}>
-            {searching || diets.length > 0 ? t('menu.noMatch') : t('menu.empty')}
+            {searching ? t('menu.noMatch') : t('menu.empty')}
           </Text>
         }
         renderItem={({ item: row }) => renderRow(row)}
@@ -265,21 +270,6 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
         </>
       ) : null}
       <MenuCartBar slug={slug} currency={currency} />
-      {filtersOpen ? (
-        <DietFilterSheet
-          options={options}
-          selected={diets}
-          onApply={(tags) => {
-            setDiets(tags);
-            setFiltersOpen(false);
-          }}
-          onClear={() => {
-            setDiets([]);
-            setFiltersOpen(false);
-          }}
-          onClose={() => setFiltersOpen(false)}
-        />
-      ) : null}
     </SafeScreen>
   );
 }

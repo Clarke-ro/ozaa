@@ -12,7 +12,9 @@ A venue now has two clear front doors:
 - **Table QR** (`/mamas-kitchen/t/12`): the table home with the services list first (Menu, Call waiter, Order status…). It stays on that address.
 - **Menu link** (`/bean-there`): online ordering, menu first. The banner keeps share and language; then the name with a small **Info ›**, slim pills for open hours and pickup time, and the menu. Scroll down and the banner slides away; the name and the category tabs stay at the top.
 
-The menu itself now uses cards with the photo on the right and a round **+** on its corner, for both doors.
+The menu itself now uses cards with the photo on the right and a round **+** on its corner, for both doors. Cards show the name and price; the description is on each dish's own page. The venue picks list or grid in Customise; guests don't switch it.
+
+**Special offers** appear above the menu only while something is on offer: dishes the owner put on sale, and the venue's offers (`GET …/offers`). An offer for a dish shows that dish with the offer's name and a **+**; other offers are short notes.
 
 **How it works**
 

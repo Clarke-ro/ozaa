@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { LayoutGrid, List, Search, SlidersHorizontal, X } from 'lucide-react-native';
+import { Search, X } from 'lucide-react-native';
 import type { MenuCategory } from '@/lib/api/types';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
@@ -10,28 +10,18 @@ import { fontFamily, useTheme } from '@/ui/theme';
 export type MenuView = 'list' | 'grid';
 
 /**
- * The menu's bar: the sections as text tabs with an underline under the one you're on, and small
- * search, diet filter and list/grid buttons at the end. Search opens a field above the tabs.
+ * The menu's bar: the sections as text tabs with an underline under the one you're on, and a
+ * search button at the end that opens a field above the tabs. List or grid is the venue's choice.
  */
 export function MenuControls({
   query,
   onQuery,
-  diets,
-  onFilters,
-  view,
-  onView,
   sections,
   active,
   onSection,
 }: {
   query: string;
   onQuery: (text: string) => void;
-  /** How many diet filters are on; shown on the filter button. */
-  diets: number;
-  /** Null when no dish on this menu has a diet tag, so there is nothing to filter by. */
-  onFilters: (() => void) | null;
-  view: MenuView;
-  onView: (view: MenuView) => void;
   sections: MenuCategory[];
   /** A section id, or 'all'. */
   active: string;
@@ -45,9 +35,9 @@ export function MenuControls({
     { id: 'all', label: t('menu.allSections') },
     ...sections.map((s) => ({ id: s.id, label: s.name.en })),
   ];
-  const icon = (pressed: boolean, on = false) => [
+  const icon = (pressed: boolean) => [
     styles.icon,
-    { backgroundColor: on || pressed ? theme.tint : 'transparent' },
+    { backgroundColor: pressed ? theme.tint : 'transparent' },
   ];
 
   return (
@@ -131,37 +121,6 @@ export function MenuControls({
               <Search size={20} color={theme.text} />
             </Pressable>
           )}
-          {onFilters ? (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={
-                diets > 0 ? t('menu.filtersOn', { count: diets }) : t('menu.filters')
-              }
-              onPress={onFilters}
-              style={({ pressed }) => icon(pressed, diets > 0)}
-            >
-              <SlidersHorizontal size={20} color={diets > 0 ? theme.ink : theme.text} />
-              {diets > 0 ? (
-                <View pointerEvents="none" style={[styles.count, { backgroundColor: theme.fill }]}>
-                  <Text variant="caption" style={[styles.countText, { color: theme.onFill }]}>
-                    {diets}
-                  </Text>
-                </View>
-              ) : null}
-            </Pressable>
-          ) : null}
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={view === 'list' ? t('menu.showGrid') : t('menu.showList')}
-            onPress={() => onView(view === 'list' ? 'grid' : 'list')}
-            style={({ pressed }) => icon(pressed)}
-          >
-            {view === 'list' ? (
-              <LayoutGrid size={20} color={theme.text} />
-            ) : (
-              <List size={20} color={theme.text} />
-            )}
-          </Pressable>
         </View>
       </View>
     </View>
@@ -216,16 +175,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  count: {
-    position: 'absolute',
-    top: tokens.space[1],
-    right: tokens.space[1],
-    minWidth: 16,
-    height: 16,
-    borderRadius: 8,
-    paddingHorizontal: tokens.space[1],
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  countText: { fontSize: tokens.type.caption.size - 2, lineHeight: 13 },
 });
