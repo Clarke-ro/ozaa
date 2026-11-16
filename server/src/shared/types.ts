@@ -107,7 +107,5 @@ export type Call = {
   idempotencyKey?: string;
   ifNoneMatch?: string;
   deleteToken?: string;
-  /** Phase 2b only: the bill quote for the payments sandbox server (src/lib/api/index.ts). */
-  sandboxQuote?: string;
 };
 export type OrderStatus = Schemas['OrderStatus'];
