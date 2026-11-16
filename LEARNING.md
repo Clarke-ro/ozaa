@@ -3105,3 +3105,34 @@ When two waiters tap "On my way" at the same moment, only one should win. The up
 **Try it yourself**
 
 In `waiter.test.ts`, snooze a call for 2 minutes, then move the clock only 1 minute with `tick(60_000)`. The queue stays empty.
+
+## 2026-11-16 · The menu editor saves to the real server
+
+**What we built**
+
+Owners and managers can add, rename, hide and delete menu sections. They can add dishes and change prices, sale prices, stock and labels. Guests see each change on their next menu load.
+
+**How it works**
+
+```
+owner app → POST/PATCH/DELETE /owner/venues/{id}/menu/…   (owner or manager only)
+server checks: sale price below price, min ≤ max, section is on this menu
+guest app → GET /venues/{slug}/menu → the same rows
+```
+
+A deleted dish isn't wiped. It gets a "deleted at" time, because past orders and the Sales page still name it. A section can only be deleted once it has no dishes left, so nothing vanishes from the menu by surprise.
+
+**Files to look at**
+
+- `server/src/routes/ownerMenu.ts`: the routes and the checks.
+- `server/src/routes/ownerMenu.test.ts`: a dish goes from new, to on sale, to sold out, to deleted.
+
+**New idea: soft delete**
+
+Instead of removing a row, we mark it deleted and leave it out of every list. The history stays correct, and "undo" stays possible later.
+
+**Try it yourself**
+
+In `ownerMenu.test.ts`, give a dish a sale price equal to its price. The server refuses with 422. Then read `checkItem` to see why.
+
+**Not yet:** dish photos. Uploads need a storage service (BUILD.md section 17). Until then, an edit keeps the dish's current photo.

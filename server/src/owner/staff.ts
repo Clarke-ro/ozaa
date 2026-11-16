@@ -91,6 +91,7 @@ export const ROLES = {
   orders: ['owner', 'manager', 'waiter', 'kitchen', 'viewer'],
   markPaid: ['owner', 'manager', 'waiter'],
   moveOrder: ['owner', 'manager', 'waiter', 'kitchen'],
+  menu: ['owner', 'manager'],
 } satisfies Record<string, StaffRole[]>;
 
 /** The caller's role at this venue, if it is one of `allowed`; otherwise 403. */
