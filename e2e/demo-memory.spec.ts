@@ -34,5 +34,7 @@ test('an owner connects Paystack, and after a reload guests can pay in the app',
     .first()
     .click({ timeout: 15_000 });
   await page.getByRole('button', { name: /View order/ }).click();
-  await expect(page.getByRole('radio', { name: /^Pay now/ })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('button', { name: /^Continue to payment/ })).toBeVisible({
+    timeout: 15_000,
+  });
 });

@@ -2601,16 +2601,16 @@
     "track": "Order #{{number}} · {{status}}",
     "trackAction": "Track"
   },
-  "payWhen": {
-    "title": "When do you want to pay?",
-    "now": "Pay now",
-    "nowHint": "MoMo or card, right after you send",
-    "later": "Pay later",
-    "laterTable": "Ask for the bill after your meal",
-    "laterPickup": "Pay when you collect",
-    "laterDelivery": "Pay when it arrives",
-    "sendAndPay": "Send and pay {{amount}}"
+  "payment": {
+    "title": "Payment",
+    "continue": "Continue to payment · {{amount}}",
+    "billLater": "Request the bill after your meal",
+    "onDelivery": "Pay on delivery",
+    "requestBill": "Request the bill",
+    "confirmDelivery": "Confirm, pay on delivery",
+    "payNow": "Pay now"
   },
+
   "linkOrder": {
     "title": "How do you want it?",
     "how": "Pickup or delivery",

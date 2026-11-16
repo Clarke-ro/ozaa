@@ -1,11 +1,13 @@
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { CreditCard, Smartphone } from 'lucide-react-native';
+import { Clock, CreditCard, Smartphone } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
 
 export type PayMethod = 'mtn' | 'vod' | 'atl' | 'card';
+/** A payment method, or the page's one "not now" option (laterOption.ts). */
+export type PayChoice = PayMethod | 'later';
 
 // Order and labels for the methods; MoMo networks first, as most guests pay that way.
 export const PAY_METHODS: readonly { id: PayMethod; label: string }[] = [
@@ -25,13 +27,16 @@ export function PayMethods({
   phone,
   onPhone,
   hint,
+  later,
 }: {
-  value: PayMethod;
-  onChange: (method: PayMethod) => void;
+  value: PayChoice;
+  onChange: (method: PayChoice) => void;
   phone: string;
   onPhone: (text: string) => void;
   /** A small line under the phone box (test-mode note in demo builds). */
   hint?: string;
+  /** The "not now" option's label (request the bill, or pay on delivery). None: pay now only. */
+  later?: string | null;
 }) {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -89,6 +94,37 @@ export function PayMethods({
           </View>
         );
       })}
+      {later ? (
+        <View
+          style={[
+            styles.card,
+            {
+              backgroundColor: theme.surface,
+              borderColor: value === 'later' ? theme.ink : theme.surface,
+            },
+          ]}
+        >
+          <Pressable
+            accessibilityRole="radio"
+            aria-checked={value === 'later'}
+            accessibilityLabel={later}
+            onPress={() => onChange('later')}
+            style={styles.row}
+          >
+            <Clock size={22} color={theme.ink} />
+            <Text variant="body-strong" style={styles.flex}>
+              {later}
+            </Text>
+            <View
+              style={[styles.ring, { borderColor: value === 'later' ? theme.ink : theme.line }]}
+            >
+              {value === 'later' ? (
+                <View style={[styles.dot, { backgroundColor: theme.ink }]} />
+              ) : null}
+            </View>
+          </Pressable>
+        </View>
+      ) : null}
     </View>
   );
 }

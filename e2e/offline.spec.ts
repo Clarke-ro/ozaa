@@ -9,7 +9,8 @@ test('a guest who loses signal keeps their basket and sends it once back online'
   page,
   context,
 }) => {
-  await page.goto('/mamas-kitchen/t/12', { waitUntil: 'domcontentloaded' });
+  // Auntie Akos takes payment in person, so the order goes straight to the kitchen.
+  await page.goto('/auntie-akos/t/7', { waitUntil: 'domcontentloaded' });
   await expect(page.getByText('Call waiter').first()).toBeVisible({ timeout: 15_000 });
 
   // Move inside the app: a full page load restarts the in-browser mock and forgets the table.

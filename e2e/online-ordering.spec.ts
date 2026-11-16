@@ -34,10 +34,9 @@ test('the menu link opens the menu first, and a pickup order reaches its status 
   await page.getByRole('button', { name: /View order/ }).click();
   await page.getByRole('textbox', { name: 'Your name' }).fill('Ama');
   await page.getByRole('textbox', { name: 'Phone number' }).fill('024 123 4567');
-  // Pay at the counter this time; paying now is covered in pay-when.spec.ts.
-  await page.getByRole('radio', { name: /Pay when you collect/ }).click();
-  await page.getByRole('button', { name: /^Place order/ }).click();
-  await expect(page).toHaveURL(/\/bean-there\/status$/, { timeout: 15_000 });
+  // Pickup is paid in the app: the order goes, then the Payment step (payment-step.spec.ts).
+  await page.getByRole('button', { name: /^Continue to payment/ }).click();
+  await expect(page).toHaveURL(/\/bean-there\/pay$/, { timeout: 15_000 });
   await expect(page.getByText(/unauthori[sz]ed|errors\./i)).toHaveCount(0);
   expect(errors).toEqual([]);
 });
