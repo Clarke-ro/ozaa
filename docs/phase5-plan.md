@@ -26,7 +26,7 @@ Connected today: Supabase "Cravins" (migrations 0000–0001), Clerk "Cravins" (d
 
 ## C. Hosting
 
-15. [x] **Heroku app for the server**: `cravins-api` (EU, Basic dyno), `Procfile` with `release: npm run db:migrate`, `GET /v1/health`, clean shutdown. First deploy 2026-11-16 (release v9, migrations 0000–0002 on Supabase). Deploys come from Heroku's GitHub connection (`main`, after CI), building `server/` only.
+15. [x] **Heroku app for the server**: `cravins-api` (EU, Basic dyno), `Procfile` with `release: npm run db:migrate`, `GET /v1/health`, clean shutdown. First deploy 2026-11-16 (release v9, migrations 0000–0002 on Supabase). `.github/workflows/deploy-server.yml` deploys `server/` on each merge to `main` with the `HEROKU_API_KEY` secret.
 16. [ ] **Sentry on the server**, with personal data scrubbed the same way as `src/log.ts`.
 17. [x] **CI job for `server/`**: typecheck and tests on every PR.
 

@@ -35,21 +35,16 @@ Only Paystack's "success" for the same amount and currency (GHS) makes a payment
 
 ## Deploying to Heroku
 
-Heroku is connected to this GitHub repo and deploys `main` by itself, after CI passes:
+Every merge to `main` that changes `server/` deploys it (`.github/workflows/deploy-server.yml`):
 
-1. Heroku takes the repo. A small buildpack (`heroku-buildpack-monorepo`, with `APP_BASE=server`) keeps only `server/`, so the app at the repo root isn't built.
-2. The Node buildpack installs and builds the server.
-3. Heroku's **release phase** runs `npm run db:migrate` (`Procfile`). If a migration fails, the new version doesn't go live and the old one keeps running.
-
-Check a deploy at https://cravins-api-c62d81d926d2.herokuapp.com/v1/health. It says `ok` when the server is up and the database answers.
-
-The app runs on one **Basic** dyno ($7/month, always on).
+1. GitHub packs `server/` alone and sends it to Heroku, which installs and builds it.
+2. Heroku's **release phase** runs `npm run db:migrate` (`Procfile`). If a migration fails, the new version doesn't go live and the old one keeps running.
+3. The workflow waits for `GET /v1/health` to say `ok`. That checks the server is up and the database answers.
 
 One-time set-up, done by Clarke:
 
-- **Buildpacks** (`cravins-api` > Settings > Buildpacks), in this order: `https://github.com/lstoll/heroku-buildpack-monorepo`, then `heroku/nodejs`.
-- **Config Vars** (Settings > Config Vars): `APP_BASE` = `server`. Also `DATABASE_URL` (Supabase **Session pooler** address, not `db.….supabase.co`, which is IPv6 only), `PAYSTACK_SECRET_KEY` (`sk_test_…`) and `CLERK_SECRET_KEY` (`sk_test_…`). `NODE_ENV`, `SITE_URL`, `ALLOWED_ORIGINS` and `CLERK_PUBLISHABLE_KEY` are already set.
-- **GitHub** (Deploy tab): Deployment method GitHub, connect `Clarke-ro/ozaa`, then under Automatic deploys pick `main`, tick **Wait for CI to pass before deploy**, and click Enable Automatic Deploys.
+- **GitHub:** repo Settings > Secrets and variables > Actions > New secret `HEROKU_API_KEY` (from Heroku's Account settings > API key). Until it's set, the deploy fails and says why. The app runs on one **Basic** dyno ($7/month, always on).
+- **Heroku:** `cravins-api` > Settings > Config Vars: `DATABASE_URL` (Supabase **Session pooler** address, not `db.….supabase.co`, which is IPv6 only), `PAYSTACK_SECRET_KEY` (`sk_test_…`) and `CLERK_SECRET_KEY` (`sk_test_…`). `NODE_ENV`, `SITE_URL`, `ALLOWED_ORIGINS` and `CLERK_PUBLISHABLE_KEY` are already set.
 
 On a deploy or Heroku's daily restart, the server gets SIGTERM. It stops taking new requests, lets the ones in flight finish, then closes the database.
 
