@@ -26,6 +26,7 @@ import type {
   SalesReport,
   ManualPaymentMethod,
   ManualPayments,
+  FeePassing,
   PaymentSettings,
   PaystackKeysInput,
   MenuCategory,
@@ -258,6 +259,8 @@ export type ApiClient = {
   /** Owner only. The Paystack secret key is never returned, only `secretKeyHint`. */
   ownerGetPaymentSettings(venueId: string): Promise<PaymentSettings>;
   ownerSetManualPayments(venueId: string, body: ManualPayments): Promise<PaymentSettings>;
+  /** Owner only. How much of Paystack's fee guests pay on in-app payments. */
+  ownerSetFeePassing(venueId: string, body: FeePassing): Promise<PaymentSettings>;
   ownerConnectPaystack(venueId: string, body: PaystackKeysInput): Promise<PaymentSettings>;
   ownerDisconnectPaystack(venueId: string): Promise<PaymentSettings>;
   ownerTestPaystack(venueId: string): Promise<{ ok: boolean; checkedAt: string; message?: string }>;

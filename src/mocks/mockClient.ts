@@ -53,7 +53,7 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
     return {
       orderId: quote.orderId,
       venueSlug: venueById(world, live.order.venueId).slug,
-      amountPesewas: quote.share + quote.tip,
+      amountPesewas: quote.share + quote.tip + quote.fee,
       tipPesewas: quote.tip,
     };
   };
