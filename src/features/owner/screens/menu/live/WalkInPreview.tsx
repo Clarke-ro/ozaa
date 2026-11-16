@@ -49,7 +49,13 @@ export function WalkInPreview({
             onPress={() => setScreen('home')}
           />
         </View>
-        <PhonePreview venue={venue} sections={sections} dishes={dishes} actions={actions} />
+        <PhonePreview
+          variant="table"
+          venue={venue}
+          sections={sections}
+          dishes={dishes}
+          actions={actions}
+        />
       </View>
     );
   }

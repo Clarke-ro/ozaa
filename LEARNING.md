@@ -4,11 +4,44 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-16 · The same menu on a phone
+
+**What we built**
+
+The new menu (banner, tabs, offer row, photo cards) now shows in the iOS and Android app the same way it shows in the browser, and in the owner's phone preview.
+
+**How it works**
+
+The tab bar is a row in the dish list. The list pins that row under the venue's name once the banner has scrolled off. A bar drawn on top of the list sits in front in the browser. On a phone the list is a native view and paints over that bar, so the tabs never appeared. Android can also throw away a view that only wraps other views, which left the list thinking the banner had no height.
+
+```
+browser: banner scrolls, a bar drawn on top stays visible
+phone:   the list itself pins the tab row
+```
+
+The owner's Menu preview used to be a cover photo and chips. It now uses the same banner and tabs as the guest page. Tapping a dish still opens the editor. Share and Info in that preview are only a picture, so a tap stays on the menu builder.
+
+**Files to look at**
+
+- `src/features/menu/MenuScreen.tsx`: the pinned tab row.
+- `src/features/owner/screens/menu/live/PhonePreview.tsx`: the preview inside the owner's app.
+
+**New idea: a native view paints in its own layer**
+
+On the web, later boxes paint on top of earlier ones. On a phone, a scrolling list is drawn by the system in its own layer, and it can cover a box that React placed on top of it. If something must stay visible while the list scrolls, ask the list to pin it.
+
+**Try it yourself**
+
+In `MenuScreen.tsx`, change `const NAME_STRIP = 44` to `64`. Open a venue's own link on your phone: after you scroll, the name has more room and the tabs still sit just under it.
+
+---
+
 ## 2026-11-16 · Two doors: the table and the menu link
 
 **What we built**
 
 A venue now has two clear front doors:
+
 - **Table QR** (`/mamas-kitchen/t/12`): the table home with the services list first (Menu, Call waiter, Order status…). It stays on that address.
 - **Menu link** (`/bean-there`): online ordering, menu first. The banner keeps share and language; then the name with a small **Info ›**, slim pills for open hours and pickup time, and the menu. Scroll down and the banner slides away; the name and the category tabs stay at the top.
 
@@ -32,9 +65,9 @@ Opening the menu link after scanning a table ends that table visit in the browse
 - `src/features/session/guestHome.ts`: where "home" is for each kind of guest.
 - `e2e/online-ordering.spec.ts`: the three rules, tested.
 
-**New idea: one thing that moves, not two copies**
+**New idea: one search button**
 
-The sticky tab bar could have been made by drawing a second copy that appears at the top. But a screen reader would then meet two search buttons. Instead there's one bar, moved with an animation that follows the scroll (`Animated.event` and `interpolate`): it rides under the banner, then stops at the top.
+The tab bar is a row in the list. Once the banner scrolls away, the list pins that row and hides the original from a screen reader, so there's still one search button to find.
 
 **Try it yourself**
 
@@ -67,7 +100,7 @@ Guests never download Clerk. Its code is fetched only when someone opens the own
 
 **New idea: loading code only when it's needed**
 
-`import('../auth/loadClerk')` with brackets is a *dynamic import*. The web build puts that file in its own download and fetches it only when the line runs. The first try used a plain `require`, and every guest page downloaded Clerk's 70 KB without using it. We measured the pages to catch that.
+`import('../auth/loadClerk')` with brackets is a _dynamic import_. The web build puts that file in its own download and fetches it only when the line runs. The first try used a plain `require`, and every guest page downloaded Clerk's 70 KB without using it. We measured the pages to catch that.
 
 **Try it yourself**
 
@@ -162,7 +195,7 @@ Each table has **columns** for what the server searches or checks (venue, status
 
 **New idea: let the database say no**
 
-Code has bugs. So the most important rules also live in the database as *checks*: an order can never be paid more than its total, a sale price must be below the normal price, stock can't go below zero. Even if the server code gets it wrong one day, Postgres refuses the write.
+Code has bugs. So the most important rules also live in the database as _checks_: an order can never be paid more than its total, a sale price must be below the normal price, stock can't go below zero. Even if the server code gets it wrong one day, Postgres refuses the write.
 
 **Try it yourself**
 
