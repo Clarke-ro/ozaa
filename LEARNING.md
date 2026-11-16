@@ -71,6 +71,42 @@ In the owner app, open **QR codes and links**, download a table's QR and scan it
 
 ---
 
+## 2026-11-16 · My orders and notifications for online customers
+
+**What we built**
+
+Customers ordering from a venue's link now have:
+- **Track strip.** While an order is on its way, the venue page shows "Order #673 · Received — Track ›". Tap it to open the live status page.
+- **My orders** (the receipt button on the banner). The order on its way, followed live, and earlier orders from this phone, with their dishes, total, date and last status.
+- **Notifications** (the bell on the banner, with a count of new ones). The same page table guests have: order updates as they happen.
+
+No account is needed. The history stays on the phone.
+
+**How it works**
+
+```
+order sent (online) → remember(order #, dishes, total, status)   ← kept on this phone
+status page / My orders poll the order → setStatus(latest)
+```
+
+Only what the customer saw on the order is kept: never their name, phone or address.
+
+**Files to look at**
+
+- `src/features/history/orderHistory.ts` and its test: what's kept, newest first, at most 30.
+- `src/features/history/MyOrdersScreen.tsx`, `ActiveOrderStrip.tsx`.
+- `src/features/online/OnlineBanner.tsx`: the banner buttons.
+
+**New idea: data minimisation**
+
+Keep only what you need. My orders needs the order number, dishes and total. It doesn't need the customer's name or phone, so we don't save them, and a test checks that.
+
+**Try it yourself**
+
+Place two pickup orders at Bean There in the demo, then open **Your orders**. Reload the page: they're still listed, because they're kept on the device.
+
+---
+
 ## 2026-11-16 · The menu was blank on iPhone and Android
 
 **What we built**

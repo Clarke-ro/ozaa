@@ -23,6 +23,7 @@ import { onlineOrderingOf } from '@/lib/onlineOrdering';
 import { LinkCheckoutCard } from './LinkCheckoutCard';
 import { checkCheckout, type CheckoutDraft } from './linkCheckout';
 import { OrderLine } from './OrderLine';
+import { pastOrderFrom, useOrderHistory } from '@/features/history';
 import { canPayOnline } from '@/lib/payments';
 import { payWhenOptions, type PayWhen } from './payWhen';
 import { PayWhenChoice } from './PayWhenChoice';
@@ -45,6 +46,7 @@ export function OrderScreen({ slug }: { slug: string }) {
   const table = useGuestSession((state) => (state.slug === slug ? state.tableCode : null));
   const setOrderId = useGuestSession((state) => state.setOrderId);
   const saveGuest = useGuestSession((state) => state.saveGuest);
+  const remember = useOrderHistory((state) => state.remember);
   const hasSession = useGuestSession((state) => state.slug === slug && Boolean(state.token));
   // No table means the guest came from the menu link: pickup or delivery, with contact details.
   const online = table === null;
@@ -121,6 +123,8 @@ export function OrderScreen({ slug }: { slug: string }) {
     api
       .createOrder({ clientOrderId, ...body }, { idempotencyKey: clientOrderId })
       .then((order) => {
+        // Online customers find it again under My orders (no account, no personal data kept).
+        if (online) remember(pastOrderFrom(order, slug, place, currency));
         setOrderId(order.id);
         clear();
         router.replace(when === 'now' ? `/${slug}/pay` : `/${slug}/status`);

@@ -2591,6 +2591,16 @@
     "pickupIn": "Pickup in {{minutes}} min",
     "delivery": "Delivery"
   },
+  "myOrders": {
+    "title": "Your orders",
+    "open": "Your orders",
+    "now": "On its way",
+    "earlier": "Earlier",
+    "none": "No orders yet",
+    "noneBody": "Orders you place from this phone show here, so you can follow them and see them again later.",
+    "track": "Order #{{number}} · {{status}}",
+    "trackAction": "Track"
+  },
   "payWhen": {
     "title": "When do you want to pay?",
     "now": "Pay now",
