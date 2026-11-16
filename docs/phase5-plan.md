@@ -8,7 +8,7 @@ Connected today: Supabase "Cravins" (migrations 0000–0001), Clerk "Cravins" (d
 
 1. [x] **Contract PR**: `ownerAuth` is Clerk's session token. Owner codes, refresh, log-out and phone change leave the contract. `GET /me` gives 403 `not_staff`. PIN sign-in returns a one-time Clerk token. App: `src/lib/auth/ownerAuth.ts` seam with a mock stand-in.
 2. [x] **Clerk set-up** (development instance, done 2026-11-16): phone code sign-in only, no password or email, sign-ups restricted so only numbers the server invites can sign in, Google and Apple off. _Still to do with the Clerk screens: the allowed app origins and Ghana-only phone numbers._
-3. [ ] **Clerk screens in the app**: `@clerk/clerk-expo` behind the seam on our own screens (custom flows). Clerk loads only on owner routes, so the guest web bundle stays the same size (check with `expo export`). Phone change through Clerk. Publishable key in `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY`.
+3. [x] **Clerk screens in the app**: `@clerk/clerk-expo` behind the seam on our own screens (custom flows). Clerk loads only on owner routes, so the guest web bundle stays the same size (check with `expo export`). Phone change through Clerk. Publishable key in `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY`.
 
 ## B. Server: the contract, exactly (BUILD.md 5.2)
 
@@ -36,7 +36,7 @@ Connected today: Supabase "Cravins" (migrations 0000–0001), Clerk "Cravins" (d
 - [x] Online page: banner with share and language, name + "Info ›", slim pills, menu first, banner scrolls away under a pinned name and tabs.
 - [x] Menu (both doors): text tabs with an underline, image-right cards with a round "+", sale price struck through.
 - [ ] Info page (map, call, about, opening hours) from the third reference image.
-- [ ] Guest "unauthorized" on Send fixed (#149).
+- [x] Guest "unauthorized" on Send fixed (#149).
 
 ## D. Still open from earlier phases
 

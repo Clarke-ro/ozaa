@@ -15,7 +15,7 @@ export class OfflineError extends Error {
   }
 }
 
-const MESSAGES: Record<string, string> = {
+export const MESSAGES: Record<string, string> = {
   venue_not_found: 'errors.venueNotFound',
   order_not_found: 'errors.orderNotFound',
   payment_declined: 'errors.paymentDeclined',

@@ -1,13 +1,31 @@
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { Redirect, Stack, usePathname } from 'expo-router';
 import { useColorScheme } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
-import { useOwnerSession } from '@/features/session';
+import { useFreshOwnerToken, useOwnerSession } from '@/features/session';
 import { OwnerChrome, useOwnerPrefs } from '@/features/owner';
 import { isOwnerQuery } from '@/lib/queryPersist';
 import { cravinsOwnerDarkTheme, cravinsOwnerTheme, ThemeProvider } from '@/ui/theme';
 
+// Clerk starts around the owner pages in real-server builds only (src/lib/auth). Mock builds sign
+// in with the demo code and never load Clerk.
+const ClerkGate: (props: { children: ReactNode }) => ReactNode =
+  process.env.EXPO_PUBLIC_API_MODE === 'http'
+    ? // eslint-disable-next-line @typescript-eslint/no-require-imports -- keeps Clerk out of mock builds
+      (require('@/lib/auth/OwnerClerkProvider') as typeof import('@/lib/auth/OwnerClerkProvider'))
+        .OwnerClerkProvider
+    : ({ children }) => children;
+
 export default function OwnerLayout() {
+  return (
+    <ClerkGate>
+      <OwnerArea />
+    </ClerkGate>
+  );
+}
+
+function OwnerArea() {
+  useFreshOwnerToken();
   const token = useOwnerSession((state) => state.accessToken);
   const hydrated = useOwnerSession((state) => state.hydrated);
   const role = useOwnerSession((state) => state.role);

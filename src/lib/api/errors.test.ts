@@ -1,4 +1,4 @@
-import { OfflineError, toMessageKey } from './errors';
+import { MESSAGES, OfflineError, toMessageKey } from './errors';
 
 describe('toMessageKey', () => {
   it('asks the guest to reconnect when a send fails offline', () => {
@@ -15,5 +15,15 @@ describe('guest menu text exists in English', () => {
   const en = require('@/i18n/locales/en.json') as { menu: Record<string, unknown> };
   it.each(['offersTitle', 'searchAll', 'allSections'])('menu.%s', (key) => {
     expect(typeof en.menu[key]).toBe('string');
+  });
+});
+
+describe('every error message exists in English', () => {
+  // A missing one shows the raw key on screen ("errors.unauthorized"), which a guest saw once.
+  const en = require('@/i18n/locales/en.json') as Record<string, unknown>;
+  const lookup = (key: string) =>
+    key.split('.').reduce<unknown>((node, part) => (node as Record<string, unknown>)?.[part], en);
+  it.each(Object.entries(MESSAGES))('%s → %s', (_code, key) => {
+    expect(typeof lookup(key)).toBe('string');
   });
 });

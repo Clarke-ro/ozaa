@@ -3,7 +3,9 @@ import { onlineManager } from '@tanstack/react-query';
 import { env } from '../env';
 import { createHttpClient } from './http';
 import { withOwnerRetry, type OnUnauthorized } from './ownerRetry';
+import { withGuestRetry, type OnGuestUnauthorized } from './guestRetry';
 import { notReadyAuth, type OwnerAuth } from '../auth/ownerAuth';
+import { clerkOwnerAuth } from '../auth/clerkOwnerAuth';
 
 let guestToken: string | null = null;
 let accessToken: string | null = null;
@@ -76,13 +78,33 @@ const mock = mocks?.createMockApi({
 
 const base: ApiClient = mock ? withLivePayments(mock.api) : http;
 
-export const api: ApiClient = withOwnerRetry(base, () => onUnauthorized);
+let onGuestUnauthorized: OnGuestUnauthorized | null = null;
+
+/** The guest session plugs in here: how to start a new one when the old one has run out. */
+export function setOnGuestUnauthorized(handler: OnGuestUnauthorized | null): void {
+  onGuestUnauthorized = handler;
+}
+
+export const api: ApiClient = withOwnerRetry(
+  withGuestRetry(base, () => onGuestUnauthorized),
+  () => onUnauthorized,
+);
+
+// Clerk's code is fetched the first time someone uses owner sign-in (a dynamic import, which the
+// web build splits into its own file), so guest pages never download it. In a mock build the
+// branch below is dead code and Clerk is left out entirely.
+const loadClerk = (key: string) =>
+  import('../auth/loadClerk').then((module) => module.loadClerk(key));
 
 /**
- * Owner and staff sign-in (src/lib/auth/ownerAuth.ts). The mock's stand-in shares the mock's world;
- * real-server builds get Clerk in the next PR and say "not set up" until then.
+ * Owner and staff sign-in (src/lib/auth/ownerAuth.ts): the mock's stand-in in mock builds, Clerk
+ * in real-server builds. Without a Clerk key, sign-in says it isn't set up.
  */
-export const ownerAuth: OwnerAuth = mock?.auth ?? notReadyAuth;
+export const ownerAuth: OwnerAuth =
+  mock?.auth ??
+  (process.env.EXPO_PUBLIC_API_MODE === 'http' && env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY
+    ? clerkOwnerAuth(() => loadClerk(env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY))
+    : notReadyAuth);
 
 export { ApiError, OfflineError, toMessageKey } from './errors';
 export type { ApiClient } from './client';

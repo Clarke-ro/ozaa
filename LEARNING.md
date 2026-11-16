@@ -42,6 +42,39 @@ In `OnlineHero.tsx`, change `const BANNER = 220;` to `300`. Rebuild and open `/b
 
 ---
 
+## 2026-11-16 · Real sign-in with Clerk, behind the same door
+
+**What we built**
+
+In a build that talks to the real server, owners and staff now sign in with Clerk: Clerk texts the code and keeps them signed in. The screens look exactly the same. The demo build still uses the code 123456.
+
+**How it works**
+
+```
+OwnerLogin → ownerAuth.sendCode / verifyCode   (same calls as before)
+   mock build  → mockOwnerAuth (demo code)
+   real build  → clerkOwnerAuth → Clerk
+every 50 s → a fresh Clerk token, so owner screens never use an expired one
+```
+
+Guests never download Clerk. Its code is fetched only when someone opens the owner sign-in page.
+
+**Files to look at**
+
+- `src/lib/auth/clerkOwnerAuth.ts` and its test: Clerk's calls, and its errors turned into ours.
+- `src/lib/auth/OwnerClerkProvider.tsx`: starts Clerk around the owner pages only.
+- `src/features/session/useFreshOwnerToken.ts`: the 50-second refresh.
+
+**New idea: loading code only when it's needed**
+
+`import('../auth/loadClerk')` with brackets is a *dynamic import*. The web build puts that file in its own download and fetches it only when the line runs. The first try used a plain `require`, and every guest page downloaded Clerk's 70 KB without using it. We measured the pages to catch that.
+
+**Try it yourself**
+
+Run `npx expo export -p web` and look in `dist/_expo/static/js/web/`. With `EXPO_PUBLIC_API_MODE=http`, one of the files contains Clerk; open a guest page and it's never requested.
+
+---
+
 ## 2026-11-16 · Guests can pay the card fee (BUILD.md 2.10)
 
 **What we built**
