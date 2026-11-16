@@ -98,7 +98,7 @@ test('the server refuses to start with a live key, and never prints the key', ()
     return true;
   });
   assert.equal(
-    readConfig({ PAYSTACK_SECRET_KEY: 'sk_test_x', DATABASE_URL: 'postgresql://u:p@localhost:5432/cravins' }).PORT,
+    readConfig({ PAYSTACK_SECRET_KEY: 'sk_test_x', DATABASE_URL: 'postgresql://u:p@localhost:5432/cravins', GUEST_TOKEN_SECRET: 'x'.repeat(32) }).PORT,
     4000,
   );
 });

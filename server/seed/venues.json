@@ -1,0 +1,469 @@
+{
+  "mamas-kitchen": {
+    "id": "ven_mamas",
+    "slug": "mamas-kitchen",
+    "name": "Mama's Kitchen",
+    "initials": "MK",
+    "description": {
+      "en": "Home-style Ghanaian plates, cooked fresh every day since 2009."
+    },
+    "location": {
+      "label": "Oxford Street, Osu, Accra"
+    },
+    "hours": {
+      "timezone": "Africa/Accra",
+      "weekly": [
+        [
+          {
+            "opens": "09:00",
+            "closes": "22:00"
+          }
+        ],
+        [
+          {
+            "opens": "09:00",
+            "closes": "22:00"
+          }
+        ],
+        [
+          {
+            "opens": "09:00",
+            "closes": "22:00"
+          }
+        ],
+        [
+          {
+            "opens": "09:00",
+            "closes": "22:00"
+          }
+        ],
+        [
+          {
+            "opens": "09:00",
+            "closes": "22:00"
+          }
+        ],
+        [
+          {
+            "opens": "09:00",
+            "closes": "22:00"
+          }
+        ],
+        [
+          {
+            "opens": "09:00",
+            "closes": "22:00"
+          }
+        ]
+      ],
+      "exceptions": [
+        {
+          "date": "2026-12-25",
+          "closed": true,
+          "name": "Christmas Day"
+        },
+        {
+          "date": "2027-01-01",
+          "closed": false,
+          "name": "New Year's Day",
+          "opens": "14:00",
+          "closes": "22:00"
+        }
+      ]
+    },
+    "theme": {
+      "accent": "#B5432A",
+      "fontPair": "serif",
+      "derived": {
+        "fill": "#B5432A",
+        "onAccent": "#FFFFFF",
+        "pressed": "#9C3A24",
+        "ink": "#B5432A",
+        "tint": "#F5E5E1",
+        "badgeInk": "#B5432A",
+        "notes": [],
+        "cravinsDistance": 24.2,
+        "ratios": {
+          "buttonText": 5.52,
+          "inkOnWhite": 5.52,
+          "badge": 4.52
+        }
+      }
+    },
+    "banner": {
+      "url": "https://mock.cravins.app/media/img/banner-mamas.jpg",
+      "width": 1170,
+      "height": 720,
+      "alt": "Mama's Kitchen"
+    },
+    "logo": null,
+    "services": [
+      {
+        "id": "menu",
+        "section": "table",
+        "enabled": true
+      },
+      {
+        "id": "waiter",
+        "section": "table",
+        "enabled": true
+      },
+      {
+        "id": "status",
+        "section": "table",
+        "enabled": true
+      },
+      {
+        "id": "pay",
+        "section": "table",
+        "enabled": true
+      },
+      {
+        "id": "wifi",
+        "section": "table",
+        "enabled": true
+      },
+      {
+        "id": "loyalty",
+        "section": "rewards",
+        "enabled": true
+      },
+      {
+        "id": "offers",
+        "section": "rewards",
+        "enabled": true,
+        "subtitle": "2 deals today"
+      },
+      {
+        "id": "review",
+        "section": "rewards",
+        "enabled": true
+      },
+      {
+        "id": "play",
+        "section": "fun",
+        "enabled": true
+      },
+      {
+        "id": "reserve",
+        "section": "more",
+        "enabled": true
+      },
+      {
+        "id": "events",
+        "section": "more",
+        "enabled": true
+      },
+      {
+        "id": "feedback",
+        "section": "more",
+        "enabled": true
+      },
+      {
+        "id": "about",
+        "section": "more",
+        "enabled": true
+      }
+    ],
+    "game": {
+      "enabled": true,
+      "minScore": 15
+    },
+    "loyaltySummary": {
+      "stampsNeeded": 8,
+      "rewardTitle": "Free jollof & chicken"
+    },
+    "currency": "GHS",
+    "languages": [
+      "en"
+    ],
+    "googleReviewUrl": "https://g.page/r/sample-mamas/review",
+    "payEnabled": true
+  },
+  "bean-there": {
+    "id": "ven_bean",
+    "slug": "bean-there",
+    "name": "Bean There",
+    "initials": "BT",
+    "description": {
+      "en": "Ghana-grown coffee, fresh pastries and quiet tables to work from."
+    },
+    "location": {
+      "label": "Lagos Avenue, East Legon, Accra"
+    },
+    "hours": {
+      "timezone": "Africa/Accra",
+      "weekly": [
+        [
+          {
+            "opens": "09:00",
+            "closes": "20:00"
+          }
+        ],
+        [
+          {
+            "opens": "09:00",
+            "closes": "20:00"
+          }
+        ],
+        [
+          {
+            "opens": "09:00",
+            "closes": "20:00"
+          }
+        ],
+        [
+          {
+            "opens": "09:00",
+            "closes": "20:00"
+          }
+        ],
+        [
+          {
+            "opens": "09:00",
+            "closes": "20:00"
+          }
+        ],
+        [
+          {
+            "opens": "09:00",
+            "closes": "20:00"
+          }
+        ],
+        [
+          {
+            "opens": "09:00",
+            "closes": "20:00"
+          }
+        ]
+      ]
+    },
+    "theme": {
+      "accent": "#1F5C3F",
+      "fontPair": "bold",
+      "derived": {
+        "fill": "#1F5C3F",
+        "onAccent": "#FFFFFF",
+        "pressed": "#1B4F36",
+        "ink": "#1F5C3F",
+        "tint": "#E0E8E4",
+        "badgeInk": "#1F5C3F",
+        "notes": [],
+        "cravinsDistance": 97.1,
+        "ratios": {
+          "buttonText": 7.89,
+          "inkOnWhite": 7.89,
+          "badge": 6.33
+        }
+      }
+    },
+    "banner": {
+      "url": "https://mock.cravins.app/media/img/banner-bean.jpg",
+      "width": 1170,
+      "height": 720,
+      "alt": "Bean There"
+    },
+    "logo": null,
+    "services": [
+      {
+        "id": "menu",
+        "section": "table",
+        "enabled": true
+      },
+      {
+        "id": "waiter",
+        "section": "table",
+        "enabled": true
+      },
+      {
+        "id": "status",
+        "section": "table",
+        "enabled": true
+      },
+      {
+        "id": "pay",
+        "section": "table",
+        "enabled": true
+      },
+      {
+        "id": "wifi",
+        "section": "table",
+        "enabled": true
+      },
+      {
+        "id": "loyalty",
+        "section": "rewards",
+        "enabled": true
+      },
+      {
+        "id": "review",
+        "section": "rewards",
+        "enabled": true
+      },
+      {
+        "id": "play",
+        "section": "fun",
+        "enabled": true
+      },
+      {
+        "id": "about",
+        "section": "more",
+        "enabled": true
+      }
+    ],
+    "game": {
+      "enabled": false,
+      "minScore": 15
+    },
+    "loyaltySummary": {
+      "stampsNeeded": 10,
+      "rewardTitle": "Free flat white"
+    },
+    "currency": "GHS",
+    "languages": [
+      "en"
+    ],
+    "googleReviewUrl": "https://g.page/r/sample-bean/review",
+    "payEnabled": true
+  },
+  "auntie-akos": {
+    "id": "ven_akos",
+    "slug": "auntie-akos",
+    "name": "Auntie Akos Chop Bar",
+    "initials": "AA",
+    "description": {
+      "en": "Fufu pounded to order and soups from the big pots. Come hungry."
+    },
+    "location": {
+      "label": "Kaneshie Market Road, Accra"
+    },
+    "hours": {
+      "timezone": "Africa/Accra",
+      "weekly": [
+        [
+          {
+            "opens": "09:00",
+            "closes": "21:00"
+          }
+        ],
+        [
+          {
+            "opens": "09:00",
+            "closes": "21:00"
+          }
+        ],
+        [
+          {
+            "opens": "09:00",
+            "closes": "21:00"
+          }
+        ],
+        [
+          {
+            "opens": "09:00",
+            "closes": "21:00"
+          }
+        ],
+        [
+          {
+            "opens": "09:00",
+            "closes": "21:00"
+          }
+        ],
+        [
+          {
+            "opens": "09:00",
+            "closes": "21:00"
+          }
+        ],
+        [
+          {
+            "opens": "09:00",
+            "closes": "21:00"
+          }
+        ]
+      ]
+    },
+    "theme": {
+      "accent": "#FFC21A",
+      "fontPair": "cravins",
+      "derived": {
+        "fill": "#FFC21A",
+        "onAccent": "#111111",
+        "pressed": "#EBB218",
+        "ink": "#94710F",
+        "tint": "#FFF6DF",
+        "badgeInk": "#8E6C0E",
+        "notes": [
+          "White text on #FFC21A is 1.62:1, so buttons use dark text (11.67:1).",
+          "#FFC21A on white is 1.62:1, so icons and links use #94710F (4.54:1)."
+        ],
+        "cravinsDistance": 59.2,
+        "ratios": {
+          "buttonText": 11.67,
+          "inkOnWhite": 4.54,
+          "badge": 4.53
+        }
+      }
+    },
+    "banner": {
+      "url": "https://mock.cravins.app/media/img/banner-akos.jpg",
+      "width": 1170,
+      "height": 720,
+      "alt": "Auntie Akos Chop Bar"
+    },
+    "logo": null,
+    "services": [
+      {
+        "id": "menu",
+        "section": "table",
+        "enabled": true
+      },
+      {
+        "id": "waiter",
+        "section": "table",
+        "enabled": true
+      },
+      {
+        "id": "status",
+        "section": "table",
+        "enabled": true
+      },
+      {
+        "id": "pay",
+        "section": "table",
+        "enabled": true
+      },
+      {
+        "id": "review",
+        "section": "rewards",
+        "enabled": true
+      },
+      {
+        "id": "play",
+        "section": "fun",
+        "enabled": true
+      },
+      {
+        "id": "about",
+        "section": "more",
+        "enabled": true
+      }
+    ],
+    "game": {
+      "enabled": true,
+      "minScore": 20
+    },
+    "loyaltySummary": {
+      "stampsNeeded": 6,
+      "rewardTitle": "Free fufu & light soup"
+    },
+    "currency": "GHS",
+    "languages": [
+      "en",
+      "tw"
+    ],
+    "googleReviewUrl": "https://g.page/r/sample-akos/review",
+    "payEnabled": true
+  }
+}

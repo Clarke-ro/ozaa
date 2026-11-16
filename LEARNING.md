@@ -2917,3 +2917,34 @@ In the contract, the secret key is marked `writeOnly`. Apps can send it, but no 
 **Try it yourself**
 
 Connect with `pk_test_` and `sk_test_` keys from your own Paystack test account, then try a `pk_live_` key and see why it's refused.
+
+## 2026-11-16 · The server takes guest orders
+
+**What we built**
+
+The server now does the guest side of the app for real: scanning a table, the menu, Wi-Fi, offers, placing an order and getting a bill to pay. Until now, the app's built-in demo did all of this inside your browser.
+
+**How it works**
+
+```
+scan table 12 → POST /guest-sessions → signed token "gst.…" (4 hours)
+add dishes   → POST /orders + token  → server prices it, takes stock, saves it → order #7
+pay          → POST /orders/…/bill   → a quote the payment will use
+```
+
+The server never trusts the app's total. It looks up each dish, applies sale prices, add-ons, the best promo, tax and the delivery fee itself. It uses the same rules as the app: a script copies them into `server/src/shared/`.
+
+**Files to look at**
+
+- `server/src/routes/guest.ts`: the routes.
+- `server/src/orders/priceOrder.ts` and `orderStore.ts`: pricing, then saving in one go.
+- `server/src/guest/token.ts`: the signed token.
+- `server/src/routes/guest.test.ts`: the tests that check replies against the contract.
+
+**New idea: a signed token instead of a login**
+
+Guests don't sign in. The token says "session X, venue Y, table 12, until 4 pm", followed by a signature made with a secret only the server knows. If anyone changes a letter, the signature no longer matches and the server says 401. So the server needs no session table and stores nothing personal.
+
+**Try it yourself**
+
+In `guest.test.ts`, set a dish's `stockCount` to 1, then order 2 of it. Watch the server say `item_sold_out`. Then order 1, and see the menu mark it unavailable.

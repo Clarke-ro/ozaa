@@ -89,7 +89,8 @@
     "typecheck": "tsc --noEmit",
     "test": "jest",
     "e2e": "expo export -p web && playwright test",
-    "prepare": "husky"
+    "prepare": "husky",
+    "sync:server-shared": "node scripts/sync-server-shared.mjs"
   },
   "private": true,
   "lint-staged": {
