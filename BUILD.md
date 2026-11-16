@@ -86,9 +86,12 @@ These are settled. Do not reopen them.
 - **Owner side:** review moderation, service toggles, the Customise page, and an orders dashboard.
 - **Payments:** Paystack, test mode first. MoMo on MTN, Telecel and AT, plus card. *Changed 2026-11-03:* each restaurant pastes its own Paystack public and secret keys (Settings > Integrations). The secret key is stored encrypted on the server only and never reaches the app, the browser or a log. No split payments, no pooled accounts, no payouts. Never hold funds. Manual methods (cash, card machine, bank transfer, MoMo to the merchant number) are marked paid by staff.
 - **Two ways to order** *(2026-11-03)*: walk-in guests scan a **table QR** (no contact details, call waiter, ask for the bill). Online customers use the venue's **menu link** (`/<venue-slug>`) to order for pickup or delivery, and give a name and phone (plus an address for delivery). That contact data lives on the order only, never in the guest session, and is never logged.
+- **Paystack fee** *(2026-11-16)*: the venue pays it unless the owner switches on "Pass fees to customers" (Integrations > Payments) and picks a share, 1–100%. 100% adds Paystack's whole fee (1.95% in Ghana, `src/lib/paystackFee.ts`) so the venue still receives the full bill. The guest sees it as its own line before paying and on the receipt. It applies only to payments in the app, never to cash, card machine, bank transfer or MoMo to the venue's number, and it never counts as paying for food. The server works it out.
+- **Sign-in** *(2026-11-16)*: **Clerk**, paid from Clarke's Clerk credit, with our own screens built on Clerk's custom-flow APIs (no Clerk-drawn screens). Clerk sends the phone codes; Arkesel (about GH₵0.035 a code) is the fallback if Clerk's SMS to Ghana proves slow or costly. If Google sign-in is added, Sign in with Apple must be added too (App Store guideline 4.8). Moving sign-in to Clerk changes the contract's auth calls, so that goes in its own contract PR first.
+- **Legal checks** *(2026-11-16)*: the PSP-licence question and DPC registration are done after the backend is built, before real phone numbers or real money.
 - **Plans:** the owner plan badge and Billing page use the placeholder plans from `landing/src/content/pricing.ts` until real prices are set.
 - **Build order:** frontend first against a fixed API contract and a mock. The backend comes only after Clarke approves the UI. *2026-11-03:* Clarke approved the MenuRite-gap work (`docs/menurite-gap-table.md`): build all of its UI on the mock first, then hook in the backend.
-- **Hosting** *(2026-11-16)*: the server (`server/`, Hono) runs on Vercel Functions as its own Vercel project, with Vercel Cron for the payment check. The database is Supabase Postgres, reached through Supabase's pooled connection, and photos go in Supabase Storage. Supabase Auth and Clerk are not used: sign-in stays the contract's phone-and-code flow with Arkesel. Free plans while building; Vercel Pro and a paid Supabase plan before real money. Heroku is the fallback if the server ever needs to run all the time.
+- **Hosting** *(2026-11-16)*: the server (`server/`, Hono on Node) runs on **Heroku**, paid from Clarke's Heroku credit: Eco ($5/month, sleeps when idle) while building, Basic ($7/month, always on) before the first real venue. Migrations run in Heroku's release phase, once per deploy. Heroku Scheduler runs the payment check. The database is **Supabase** Postgres (project "Cravins", eu-west-1), reached through its pooled connection, with Row Level Security on every table so Supabase's public web API can't read them. Photos go in Supabase Storage. The web app stays on Vercel, but Vercel's free Hobby plan is for non-commercial use, so it moves to Vercel Pro or a free host that allows business use before launch.
 - **Code style:** Clarke is learning, so code must be simple, readable, and commented where it is not obvious. Every feature gets a LEARNING.md entry.
 
 ## 5. Stack and why
@@ -573,6 +576,8 @@ Work top to bottom. Each box is one small PR that ends in a verifiable state (ps
 - [x] 2.6 Receipt view: lines, tip, empty-ready tax lines, and "Test payment" label in sandbox.
 - [x] 2.7 Owner payout account screen: bank or MoMo, shows the masked account and status. *(Replaced by Payments settings; endpoint removed 2026-11-11.)*
 - [x] 2.8 Owner "Mark paid in cash" (`/owner/orders/{id}/cash-payment`). *(Replaced by Mark paid with a method, `manual-payment`; endpoint removed 2026-11-11.)*
+- [x] 2.9 *contract* + mock: fee passing (`FeePassing`, `ownerSetFeePassing`, `BillQuote.feePesewas`, `Payment.feePesewas`), with the maths tdd in `src/lib/paystackFee.ts`.
+- [ ] 2.10 Fee passing screens: the owner switch and share on Integrations > Payments, the fee line on Pay and on the receipt.
 - [ ] **2b Paystack sandbox slice** (the only early server code, in `server/`):
   - Implement only `POST /payments`, `GET /payments/{ref}`, `POST /payments/{ref}/verify` and `POST /webhooks/paystack`, with **test** keys from the server env.
   - The app uses `EXPO_PUBLIC_API_LIVE=payments` to send just these calls to the server and keep everything else on mocks.
@@ -599,7 +604,7 @@ Work top to bottom. Each box is one small PR that ends in a verifiable state (ps
   - motion (`ui-skills-fixing-motion-performance`)
   - copy (`pstack-unslop`)
   - Lighthouse
-- [ ] **UI APPROVAL GATE:** Clarke gets screenshots of every screen side by side with the renders, for all 3 venues, plus a short screen recording of the guest flow (scan → order → pay → stamp → review) and the owner flow. **Wait for his written yes.**
+- [x] **UI APPROVAL GATE:** Clarke gets screenshots of every screen side by side with the renders, for all 3 venues, plus a short screen recording of the guest flow (scan → order → pay → stamp → review) and the owner flow. **Wait for his written yes.** *Approved by Clarke in writing on 2026-11-16 ("approved"), after the UI approval pack: every guest screen beside its render for all 3 venues, all 31 owner pages in desktop light, desktop dark and phone, and recordings of both flows. 2.10 (fee screens) was still to build, and 1.15 (JS budget) waits on his call.*
 
 ### Phase 4b: Owner dashboard and online ordering (gap table, on mocks)
 
@@ -623,7 +628,7 @@ Approved by Clarke on 2026-11-03. Details and file locations are in `docs/menuri
 - [x] 4b.16 *contract* + UI: Sales page (totals, counts by status, discounts, top items, revenue over time, by source).
 - [x] 4b.17 *contract* + UI: Settings > Integrations > Payments (own Paystack keys, where to find them, test/live, test connection), manual methods, mark paid by method, payment status on orders and sales. Split bill hidden.
 - [x] 4b.18 WhatsApp order-alerts number field, behind a flag that stays off. Done 2026-11-16: `VenueSettings.whatsappAlerts` (owner only, contract PR first), and the WhatsApp card on Integrations takes and saves the number when `WHATSAPP_ALERTS_ENABLED` (in `src/lib/features.ts`, `false`) is on. Sending alerts waits for Phase 5 and a WhatsApp provider (section 17, item 5).
-- [ ] **Review:** Clarke sees every new screen in light and dark, phone and tablet, then says go for the backend (per-venue encrypted Paystack keys, webhook per venue, push alerts).
+- [x] **Review:** Clarke sees every new screen in light and dark, phone and tablet, then says go for the backend (per-venue encrypted Paystack keys, webhook per venue, push alerts). *Covered by the same approval on 2026-11-16 (desktop light and dark, and phone; tablet was not in the pack).*
 
 ### Phase 4c: Owner redesign from the design canvas (on mocks)
 
@@ -745,12 +750,12 @@ Phase 6 is kept for launch hardening: E-VAT receipts, error monitoring, app stor
 
 The agent must ask these, not guess. Until he answers, build behind a setting or use the stated default.
 
-1. Who pays the Paystack fee (about 1.95%): the venue, the guest, or shared? _Default: the venue._
+1. ~~Who pays the Paystack fee?~~ **Answered 2026-11-16** (section 4): the owner's choice, per venue. Still to confirm with Paystack: whether Ghana has a fee cap, which would change the sum for large bills.
 2. Cravins's own fee per transaction or per month? _Default: none in the UI yet._
-3. Lawyer sign-off that subaccount split settlement keeps Cravins outside PSP licensing under Act 987.
-4. DPC registration done before real phone numbers are stored?
-5. The SMS/OTP provider for Phase 5 (and WhatsApp for marketing later).
-6. ~~Server hosting and database provider~~ **Answered 2026-11-16:** Vercel + Supabase (section 4).
+3. Lawyer sign-off that subaccount split settlement keeps Cravins outside PSP licensing under Act 987. *After the backend (Clarke, 2026-11-16).*
+4. DPC registration done before real phone numbers are stored? *After the backend, before real numbers (Clarke, 2026-11-16).*
+5. ~~The SMS/OTP provider~~ **Answered 2026-11-16:** sign-in goes through Clerk (section 4). WhatsApp for marketing is still open.
+6. ~~Server hosting and database provider~~ **Answered 2026-11-16:** Heroku for the server, Supabase for the database (section 4).
 7. Trademark search for "cravins" (Ghana RGD, OAPI, WIPO) and the native-speaker meaning check, and which domains to buy (`cravins.app` is the assumed one).
 8. Native speakers for French, Portuguese, Spanish, Arabic and Swahili. English stays the only selectable language until those files are filled by people, not by machine translation.
 9. The real first venue(s), to replace the AI-generated sample photos and videos.

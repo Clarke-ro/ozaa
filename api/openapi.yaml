@@ -1092,6 +1092,26 @@ paths:
               schema: { $ref: '#/components/schemas/PaymentSettings' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '403': { $ref: '#/components/responses/Forbidden' }
+  /owner/venues/{venueId}/payment-settings/fees:
+    put:
+      tags: [owner-payments]
+      operationId: ownerSetFeePassing
+      security: [{ ownerAuth: [] }]
+      summary: Choose whether guests pay some or all of the Paystack fee on payments in the app.
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FeePassing' }
+      responses:
+        '200':
+          description: Saved.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaymentSettings' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '403': { $ref: '#/components/responses/Forbidden' }
   /owner/venues/{venueId}/payment-settings/paystack:
     put:
       tags: [owner-payments]
@@ -3038,8 +3058,11 @@ components:
         orderId: { $ref: '#/components/schemas/OrderId' }
         sharePesewas: { $ref: '#/components/schemas/Pesewas' }
         tipPesewas: { $ref: '#/components/schemas/Pesewas' }
+        feePesewas:
+          description: The part of Paystack's fee the venue passes to the guest (FeePassing). Missing or 0 when it keeps the fee. Not part of the bill, so it never pays off food.
+          allOf: [{ $ref: '#/components/schemas/Pesewas' }]
         totalPesewas:
-          description: What the guest pays now (share + tip).
+          description: What the guest pays now (share + tip + fee).
           allOf: [{ $ref: '#/components/schemas/Pesewas' }]
         remainingAfterPesewas: { $ref: '#/components/schemas/Pesewas' }
         expiresAt: { type: string, format: date-time }
@@ -3075,6 +3098,9 @@ components:
         provider: { $ref: '#/components/schemas/MomoProvider' }
         amountPesewas: { $ref: '#/components/schemas/Pesewas' }
         tipPesewas: { $ref: '#/components/schemas/Pesewas' }
+        feePesewas:
+          description: The Paystack fee the guest paid, inside amountPesewas. Shown on the receipt as its own line.
+          allOf: [{ $ref: '#/components/schemas/Pesewas' }]
         currency: { type: string, const: GHS }
         status: { $ref: '#/components/schemas/PaymentStatus' }
         displayText: { type: string, description: 'Text from Paystack for pay_offline, e.g. approve on your phone.' }
@@ -3331,6 +3357,19 @@ components:
           oneOf: [{ $ref: '#/components/schemas/PaystackConnection' }, { type: 'null' }]
           description: Null until the owner connects their own Paystack account.
         manual: { $ref: '#/components/schemas/ManualPayments' }
+        feePassing:
+          allOf: [{ $ref: '#/components/schemas/FeePassing' }]
+          description: Missing means the venue keeps paying the whole fee.
+    FeePassing:
+      type: object
+      required: [enabled, percent]
+      description: >-
+        How much of Paystack's fee (1.95% in Ghana) the guest pays on a payment in the app. 100 adds
+        the whole fee, worked out so the venue still receives the full bill. Never applies to cash,
+        card machine, bank transfer or MoMo to the venue's own number. The server works it out.
+      properties:
+        enabled: { type: boolean }
+        percent: { type: integer, minimum: 1, maximum: 100, description: "Share of the fee the guest pays. 100 means all of it." }
     GuestPayMethods:
       type: object
       required: [online, cash, cardMachine]

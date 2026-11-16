@@ -83,7 +83,15 @@ export type World = {
   phoneChanges: Map<string, string>;
   quotes: Map<
     string,
-    { orderId: string; share: number; tip: number; lineIds: string[]; expiresAt: number }
+    {
+      orderId: string;
+      share: number;
+      tip: number;
+      /** The Paystack fee passed to the guest; not part of the bill. */
+      fee: number;
+      lineIds: string[];
+      expiresAt: number;
+    }
   >;
   payments: Map<
     string,
