@@ -4,6 +4,40 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-16 · Pay now or pay later
+
+**What we built**
+
+Before sending an order, a guest at a venue that takes payments in the app picks **Pay now** or **Pay later**:
+- **At a table:** pay later ("Ask for the bill after your meal") is ticked first, because that's how most people eat out.
+- **Pickup or delivery:** pay now is ticked first. Later means "Pay when you collect" or "Pay when it arrives".
+- **Pay now** sends the order, then opens the Pay page (MoMo or card, Paystack test).
+
+Online orders pay the whole bill; splitting is only offered at a table. A venue without payments in the app asks nothing.
+
+**How it works**
+
+```
+payWhenOptions({ payOnline, fulfilment }) → choices, which one starts ticked, what "later" means
+Send → order made → now ? /slug/pay : /slug/status
+```
+
+**Files to look at**
+
+- `src/features/orders/payWhen.ts` and its test: the rules.
+- `src/features/orders/PayWhenChoice.tsx`: the two cards.
+- `e2e/pay-when.spec.ts`: both doors, start to finish.
+
+**New idea: a flaky test**
+
+A test that sometimes passes and sometimes fails is *flaky*. `guest-orders` reloaded the page right after tapping Menu. If the reload was faster than the tap, it reloaded the home page and failed. Waiting for the address to change first made it pass every time.
+
+**Try it yourself**
+
+In `payWhen.ts`, change `input.fulfilment === 'table' ? 'later' : 'now'` to always `'now'`. Run `npx jest payWhen`: the table test fails, because it says the bill should come after the meal.
+
+---
+
 ## 2026-11-16 · The menu was blank on iPhone and Android
 
 **What we built**
