@@ -201,7 +201,11 @@ export function PayScreen({ slug }: { slug: string }) {
     <SafeScreen>
       <PageHeader
         title={t('pay.title')}
-        subtitle={t('home.table', { code: order.data.tableCode ?? '' })}
+        subtitle={
+          order.data.tableCode
+            ? t('home.table', { code: order.data.tableCode })
+            : (venue.data?.name ?? '')
+        }
       />
       <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
         {IN_PROGRESS.includes(payState.kind) ? (
@@ -225,7 +229,10 @@ export function PayScreen({ slug }: { slug: string }) {
               }
               currency={currency}
             />
-            <SplitChoice mode={mode} onMode={setMode} parts={parts} onParts={setParts} />
+            {/* Splitting is for a table sharing a bill; a pickup or delivery order is paid whole. */}
+            {order.data.tableCode ? (
+              <SplitChoice mode={mode} onMode={setMode} parts={parts} onParts={setParts} />
+            ) : null}
 
             <View style={payStyles.block}>
               <Text variant="title">{t('pay.tip')}</Text>
