@@ -4,7 +4,7 @@ import { useMyCalls } from './myCalls';
 import { ownerSessionStorage } from './ownerStorage';
 import { ownerRefresher } from './ownerRefresh';
 import {
-  api,
+  ownerAuth,
   setAccessToken,
   setGuestToken,
   setLoyaltyToken as setApiLoyaltyToken,
@@ -32,8 +32,8 @@ type GuestSessionState = {
 };
 
 type OwnerSessionState = {
+  /** Clerk's short-lived token, kept so the first calls after a restart don't wait on Clerk. */
   accessToken: string | null;
-  refreshToken: string | null;
   venueId: string | null;
   role: StaffRole | null;
   firstName: string | null;
@@ -42,13 +42,12 @@ type OwnerSessionState = {
   markHydrated: () => void;
   saveOwner: (input: {
     accessToken: string;
-    refreshToken: string;
     venueId: string;
     role: StaffRole;
     firstName: string;
   }) => void;
-  /** New tokens from a refresh; who is signed in stays the same. */
-  saveTokens: (input: { accessToken: string; refreshToken: string }) => void;
+  /** A new token from Clerk; who is signed in stays the same. */
+  saveToken: (accessToken: string) => void;
   switchVenue: (venueId: string) => void;
   clearOwner: () => void;
 };
@@ -104,32 +103,30 @@ export const useOwnerSession = create<OwnerSessionState>()(
   persist(
     (set) => ({
       accessToken: null,
-      refreshToken: null,
       venueId: null,
       role: null,
       firstName: null,
       hydrated: false,
       markHydrated: () => set({ hydrated: true }),
-      saveOwner: ({ accessToken, refreshToken, venueId, role, firstName }) => {
+      saveOwner: ({ accessToken, venueId, role, firstName }) => {
         setAccessToken(accessToken);
-        set({ accessToken, refreshToken, venueId, role, firstName });
+        set({ accessToken, venueId, role, firstName });
       },
-      saveTokens: ({ accessToken, refreshToken }) => {
+      saveToken: (accessToken) => {
         setAccessToken(accessToken);
-        set({ accessToken, refreshToken });
+        set({ accessToken });
       },
       switchVenue: (venueId) => set({ venueId }),
       clearOwner: () => {
         setAccessToken(null);
-        set({ accessToken: null, refreshToken: null, venueId: null, role: null, firstName: null });
+        set({ accessToken: null, venueId: null, role: null, firstName: null });
       },
     }),
     {
       name: 'cravins-owner-session',
       storage: createJSONStorage(() => ownerSessionStorage),
-      partialize: ({ accessToken, refreshToken, venueId, role, firstName }) => ({
+      partialize: ({ accessToken, venueId, role, firstName }) => ({
         accessToken,
-        refreshToken,
         venueId,
         role,
         firstName,
@@ -144,13 +141,12 @@ export const useOwnerSession = create<OwnerSessionState>()(
   ),
 );
 
-// An expired owner token is swapped for a new one behind the scenes (src/lib/api/ownerRetry.ts).
-// If the refresh token is refused too, the owner is signed out and the layout shows sign-in.
+// An expired owner token is swapped for a new one from Clerk behind the scenes
+// (src/lib/api/ownerRetry.ts). If the Clerk sign-in has ended, the layout shows sign-in.
 setOnUnauthorized(
   ownerRefresher({
-    refreshToken: () => useOwnerSession.getState().refreshToken,
-    refresh: (refreshToken) => api.refreshTokens({ refreshToken }),
-    save: (tokens) => useOwnerSession.getState().saveTokens(tokens),
+    freshToken: () => ownerAuth.getToken({ fresh: true }),
+    save: (token) => useOwnerSession.getState().saveToken(token),
     signOut: () => useOwnerSession.getState().clearOwner(),
   }),
 );

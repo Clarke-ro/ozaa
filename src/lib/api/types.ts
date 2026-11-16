@@ -31,7 +31,8 @@ export type Table = Schemas['Table'];
 export type StaffUser = Schemas['StaffUser'];
 export type StaffMember = Schemas['StaffMember'];
 export type StaffRole = Schemas['StaffRole'];
-export type AuthTokens = Schemas['AuthTokens'];
+export type LoyaltyToken = Schemas['LoyaltyToken'];
+export type PinSignIn = Schemas['PinSignIn'];
 export type ServiceSettings = Schemas['ServiceSettings'];
 export type ThemeInput = Schemas['ThemeInput'];
 export type VenueTheme = Schemas['VenueTheme'];
@@ -91,7 +92,8 @@ export type StaffProfilePatch = Schemas['StaffProfilePatch'];
 export type Image = Schemas['Image'];
 export type OpeningHours = Schemas['OpeningHours'];
 export type TaxLine = Schemas['TaxLine'];
-export type OtpPurpose = 'owner_login' | 'guest_loyalty';
+/** Owners and staff sign in with Clerk, so the server's own codes are for loyalty only. */
+export type OtpPurpose = 'guest_loyalty';
 
 export type GuestSession = {
   guestToken: string;

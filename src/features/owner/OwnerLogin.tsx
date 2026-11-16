@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { api } from '@/lib/api';
+import { api, ownerAuth, setAccessToken } from '@/lib/api';
 import { DEMO } from '@/lib/demo';
 import { parseGhanaPhone } from '@/lib/phone';
 import { useOwnerSession } from '@/features/session';
@@ -64,8 +64,8 @@ function LoginForm() {
     setLoading(true);
 
     if (!sent) {
-      void api
-        .requestOtp({ phone: parsed.phone, purpose: 'owner_login' })
+      void ownerAuth
+        .sendCode(parsed.phone)
         .then(() => {
           setSent(true);
           setLoading(false);
@@ -77,25 +77,22 @@ function LoginForm() {
       return;
     }
 
-    void api
-      .verifyOtp({ phone: parsed.phone, code, purpose: 'owner_login' })
-      .then((tokensRes) => {
-        const venue = tokensRes.user?.venues[0];
-        if (!venue || !tokensRes.user) throw new Error('no venue');
-        saveOwner({
-          accessToken: tokensRes.accessToken,
-          refreshToken: tokensRes.refreshToken,
-          venueId: venue.venueId,
-          role: venue.role,
-          firstName: tokensRes.user.firstName,
-        });
-        setLoading(false);
-        router.replace(venue.role === 'kitchen' ? '/owner/orders' : '/owner');
-      })
-      .catch(() => {
-        setError(true);
-        setLoading(false);
-      });
+    // Clerk checks the code; then the server says which venues this person works at.
+    void (async () => {
+      await ownerAuth.verifyCode(code);
+      const accessToken = await ownerAuth.getToken();
+      if (!accessToken) throw new Error('no token');
+      setAccessToken(accessToken);
+      const me = await api.getMe();
+      const venue = me.venues[0];
+      if (!venue) throw new Error('no venue');
+      saveOwner({ accessToken, venueId: venue.venueId, role: venue.role, firstName: me.firstName });
+      setLoading(false);
+      router.replace(venue.role === 'kitchen' ? '/owner/orders' : '/owner');
+    })().catch(() => {
+      setError(true);
+      setLoading(false);
+    });
   };
 
   return (

@@ -1,5 +1,4 @@
 import type {
-  AuthTokens,
   BillQuote,
   BillQuoteRequest,
   Business,
@@ -36,6 +35,7 @@ import type {
   Offer,
   Order,
   OtpPurpose,
+  LoyaltyToken,
   OwnerDashboard,
   Payment,
   ScannerDevice,
@@ -92,9 +92,7 @@ export type ApiClient = {
     body: { phone: string; purpose: OtpPurpose },
     call?: Call,
   ): Promise<{ expiresInSeconds: number; resendInSeconds: number }>;
-  verifyOtp(body: { phone: string; code: string; purpose: OtpPurpose }): Promise<AuthTokens>;
-  refreshTokens(body: { refreshToken: string }): Promise<AuthTokens>;
-  logout(): Promise<void>;
+  verifyOtp(body: { phone: string; code: string; purpose: OtpPurpose }): Promise<LoyaltyToken>;
   getMe(): Promise<StaffUser>;
   createGuestSession(body: {
     venueSlug: string;
@@ -309,12 +307,6 @@ export type ApiClient = {
   /** Leave ids out to mark everything read. */
   ownerMarkNotificationsRead(venueId: string, ids?: string[]): Promise<{ unreadCount: number }>;
   updateMyProfile(body: StaffProfilePatch): Promise<StaffUser>;
-  /** Sends a code to the new number; the number changes only after confirmPhoneChange. */
-  requestPhoneChange(
-    phone: string,
-    call: Call,
-  ): Promise<{ expiresInSeconds: number; resendInSeconds: number }>;
-  confirmPhoneChange(body: { phone: string; code: string }): Promise<StaffUser>;
 };
 
 export type { Currency };

@@ -1,34 +1,28 @@
-import { ApiError } from '@/lib/api/errors';
-import type { AuthTokens } from '@/lib/api/types';
-
 type Deps = {
-  refreshToken: () => string | null;
-  refresh: (refreshToken: string) => Promise<AuthTokens>;
-  save: (tokens: AuthTokens) => void;
+  /** A new token from the sign-in provider (Clerk), or null when the sign-in has ended. */
+  freshToken: () => Promise<string | null>;
+  save: (token: string) => void;
   signOut: () => void;
 };
 
 /**
- * Swaps the refresh token for a new access token. Several owner screens poll at once, so when the
- * token expires many calls fail together: they all wait on the same refresh instead of each
- * starting one (a refresh token works only once).
- * A refused refresh token signs the owner out. Being offline doesn't: they can try again later.
+ * Gets a new owner token after the server said the old one expired (Clerk's last about a minute).
+ * Several owner screens poll at once, so when the token expires many calls fail together: they all
+ * wait on the same request instead of each starting one.
+ * An ended sign-in signs the owner out here too. Being offline doesn't: they can try again later.
  */
 export function ownerRefresher(deps: Deps): () => Promise<boolean> {
   let running: Promise<boolean> | null = null;
   const attempt = async (): Promise<boolean> => {
-    const refreshToken = deps.refreshToken();
-    if (!refreshToken) {
-      deps.signOut();
-      return false;
-    }
     try {
-      deps.save(await deps.refresh(refreshToken));
-      return true;
-    } catch (error) {
-      if (error instanceof ApiError && (error.status === 401 || error.status === 400)) {
+      const token = await deps.freshToken();
+      if (!token) {
         deps.signOut();
+        return false;
       }
+      deps.save(token);
+      return true;
+    } catch {
       return false;
     }
   };

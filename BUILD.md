@@ -647,10 +647,10 @@ Approved by Clarke on 2026-11-12: build the canvas redesign on the mock first, b
 ### Phase 5: Backend for products 1–4
 
 - [x] 5.1 `server/`: Hono + TypeScript, Postgres with Drizzle migrations, config parsed with zod, structured logs without personal data. Done 2026-11-16: payments moved from memory to Postgres with a unique Idempotency-Key, `src/log.ts` scrubs personal data, and tests run on PGlite. Supabase project "Cravins" has migrations 0000 and 0001 applied (payments, with Row Level Security on).
-- [ ] 5.2 Implement the contract exactly. Run contract tests that call every operation and validate responses against `openapi.yaml`, and reuse the fixtures as seed data.
+- [ ] 5.2 Implement the contract exactly. *First, its own contract PR (2026-11-16): owner and staff sign-in moved to Clerk. `ownerAuth` is now Clerk's session token; the owner code, refresh, log-out and phone-change calls left the contract; PIN sign-in returns a one-time Clerk token. The plan for the rest of Phase 5 is in `docs/phase5-plan.md`.* Run contract tests that call every operation and validate responses against `openapi.yaml`, and reuse the fixtures as seed data.
   - Tenant checks (audit N6, 2026-11-11): for **every** `/owner/...` operation, a staff member of venue A gets 403 for venue B's venue, order, table, call, menu item and loyalty data. The mock doesn't enforce this (most mock owner calls skip it), so these tests are the first real line.
   - Role checks: each owner call is tested with every `StaffRole` in the contract (owner, manager, waiter, kitchen, viewer, staff_scanner) against what that role may do.
-- [ ] 5.3 Auth (OTP via an SMS provider Clarke chooses), roles, rate limits, idempotency store.
+- [ ] 5.3 Auth (Clerk on our own screens, section 4), roles, rate limits, idempotency store.
 - [ ] 5.4 Money: Paystack live-ready (still test keys), each venue's own keys stored encrypted, a webhook URL per venue checked with that venue's secret, reconciliation job (verify pending payments older than 5 min).
 - [ ] 5.5 Media: object storage with pre-signed uploads, image resizing, video transcoding to 480p and a poster.
 - [ ] 5.6 Switch the app to `EXPO_PUBLIC_API_MODE=http` in staging. The Playwright suite must pass against staging.
@@ -736,7 +736,7 @@ Phase 6 is kept for launch hardening: E-VAT receipts, error monitoring, app stor
   - `EXPO_PUBLIC_API_LIVE` (comma list of features sent to the server while the rest are mocked; Phase 2b only)
   - `EXPO_PUBLIC_MOCK_LATENCY_MS`
   - `EXPO_PUBLIC_MOCK_FAIL_RATE`
-  - Server-only, never with the EXPO_PUBLIC prefix: `PAYSTACK_SECRET_KEY`, `DATABASE_URL`, `OTP_PROVIDER_KEY`.
+  - Server-only, never with the EXPO_PUBLIC prefix: `PAYSTACK_SECRET_KEY`, `DATABASE_URL`, `CLERK_SECRET_KEY`. The app gets only Clerk's publishable key (`EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY`), which is safe to ship.
 - **Guest web hosting:**
   - `npx expo export -p web`, deployed to EAS Hosting (`agent-skills/expo-eas-hosting`) or any static host with SPA fallback to `index.html`.
   - The domain is `cravins.app` if Clarke buys it. Nothing has been bought.

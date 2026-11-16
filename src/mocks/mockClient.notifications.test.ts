@@ -34,7 +34,7 @@ test('mark all as read is per person; a kitchen account never sees guest notes',
 });
 
 test('profile changes come back on getMe; a new phone needs the code first', async () => {
-  const { api } = await signedInMock();
+  const { api, auth } = await signedInMock();
   await api.updateMyProfile({
     lastName: 'Owusu',
     prefs: {
@@ -49,11 +49,8 @@ test('profile changes come back on getMe; a new phone needs the code first', asy
     lastName: 'Owusu',
     prefs: { appearance: 'dark', soundForNewOrders: false },
   });
-  await api.requestPhoneChange('+233249998877', { idempotencyKey: 'ph-1' });
-  await expect(
-    api.confirmPhoneChange({ phone: '+233249998877', code: '000000' }),
-  ).rejects.toMatchObject({ status: 401 });
-  expect((await api.confirmPhoneChange({ phone: '+233249998877', code: '123456' })).phone).toBe(
-    '+233249998877',
-  );
+  await auth.sendPhoneChangeCode('+233249998877');
+  await expect(auth.confirmPhoneChange('000000')).rejects.toMatchObject({ status: 401 });
+  await auth.confirmPhoneChange('123456');
+  expect((await api.getMe()).phone).toBe('+233249998877');
 });

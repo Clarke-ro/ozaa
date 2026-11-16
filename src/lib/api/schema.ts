@@ -13,7 +13,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Send a 6-digit login code by SMS to an owner, staff member, or a guest joining loyalty. */
+        /** Send a 6-digit code by SMS to a guest joining loyalty. Owners and staff sign in with Clerk instead. */
         post: operations["requestOtp"];
         delete?: never;
         options?: never;
@@ -30,7 +30,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Exchange the SMS code for tokens. */
+        /** Exchange the SMS code for a loyalty token that proves the guest's phone number. */
         post: operations["verifyOtp"];
         delete?: never;
         options?: never;
@@ -48,7 +48,7 @@ export interface paths {
         get?: never;
         /**
          * Set or change the signed-in staff member's 4-digit PIN for quick sign-in on this device.
-         * @description Needs a session from the SMS code first. The server keeps only a slow hash of the PIN and never sends it back.
+         * @description Needs a Clerk session from the SMS code first. The server keeps only a slow hash of the PIN and never sends it back.
          */
         put: operations["setStaffPin"];
         post?: never;
@@ -70,42 +70,10 @@ export interface paths {
         /**
          * Sign in with a 4-digit PIN on a device where this person already signed in by SMS.
          * @description Five wrong PINs in a row clear the PIN; the person then signs in with the SMS code and sets a new one.
+         *     A right PIN returns a one-time Clerk sign-in token. The app hands it to Clerk (the `ticket` sign-in
+         *     strategy), which starts the session; it works once and only for a few minutes.
          */
         post: operations["loginWithPin"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/refresh": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Refresh tokens. */
-        post: operations["refreshTokens"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/logout": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Log out. */
-        post: operations["logout"];
         delete?: never;
         options?: never;
         head?: never;
@@ -119,7 +87,12 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** The logged-in staff member. */
+        /**
+         * The signed-in staff member.
+         * @description The app calls this straight after Clerk signs someone in. The server matches the Clerk user to a
+         *     staff record by its verified phone number the first time, then by Clerk user id. The phone here is
+         *     always the one Clerk has verified, so a number changed in Clerk shows up on the next call.
+         */
         get: operations["getMe"];
         put?: never;
         post?: never;
@@ -1332,7 +1305,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Revoke staff access. */
+        /** Revoke staff access. The server also ends their Clerk sessions. */
         delete: operations["ownerRevokeStaff"];
         options?: never;
         head?: never;
@@ -1373,7 +1346,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * End someone's shift by signing them out on every device. They sign in again with an SMS code.
+         * End someone's shift by signing them out on every device (the server revokes their Clerk sessions). They sign in again with an SMS code.
          * @description Owner only. Signing out the owner is refused (409); they use Sign out in Settings.
          */
         post: operations["ownerSignOutStaff"];
@@ -1395,7 +1368,7 @@ export interface paths {
         post?: never;
         /**
          * Delete account and personal data.
-         * @description Removes the owner's login, profile and venues from the app. Paid orders, payments and tax lines are kept for 6 years with the personal data removed, because Ghana tax law requires the records.
+         * @description Removes the owner's Clerk sign-in, profile and venues from the app. Paid orders, payments and tax lines are kept for 6 years with the personal data removed, because Ghana tax law requires the records.
          */
         delete: operations["deleteAccount"];
         options?: never;
@@ -1544,42 +1517,8 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Change the signed-in staff member's own name, email, photo and app preferences. The phone changes through /me/phone. */
+        /** Change the signed-in staff member's own name, email, photo and app preferences. The phone changes in Clerk (the app verifies the new number with Clerk's code), and /me then shows it. */
         patch: operations["updateMyProfile"];
-        trace?: never;
-    };
-    "/me/phone": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Send a 6-digit code to the new number. The number only changes once the code is confirmed. */
-        post: operations["requestPhoneChange"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/me/phone/verify": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Confirm the new number with the code sent to it. */
-        post: operations["confirmPhoneChange"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
         trace?: never;
     };
 }
@@ -1641,12 +1580,15 @@ export interface components {
         };
         OrderId: string;
         MenuItemId: string;
-        AuthTokens: {
+        /** @description Proves a guest's phone for loyalty calls. When it expires the guest asks for a new code. */
+        LoyaltyToken: {
             accessToken: string;
-            refreshToken: string;
             /** Format: date-time */
             expiresAt: string;
-            user?: components["schemas"]["StaffUser"];
+        };
+        PinSignIn: {
+            /** @description One-time Clerk sign-in token (ticket strategy). Works once, for a few minutes. Never logged. */
+            signInToken: string;
         };
         /**
          * @description owner does everything incl. payment settings; manager everything except payment settings and staff; waiter orders and waiter calls; kitchen order status only.
@@ -3243,7 +3185,7 @@ export interface operations {
                 "application/json": {
                     phone: components["schemas"]["GhanaPhone"];
                     /** @enum {string} */
-                    purpose: "owner_login" | "guest_loyalty";
+                    purpose: "guest_loyalty";
                 };
             };
         };
@@ -3279,18 +3221,18 @@ export interface operations {
                     phone: components["schemas"]["GhanaPhone"];
                     code: string;
                     /** @enum {string} */
-                    purpose: "owner_login" | "guest_loyalty";
+                    purpose: "guest_loyalty";
                 };
             };
         };
         responses: {
-            /** @description Logged in. */
+            /** @description Phone proved. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AuthTokens"];
+                    "application/json": components["schemas"]["LoyaltyToken"];
                 };
             };
             400: components["responses"]["BadRequest"];
@@ -3343,63 +3285,18 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Signed in. */
+            /** @description PIN right. Finish signing in with Clerk using the token. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AuthTokens"];
+                    "application/json": components["schemas"]["PinSignIn"];
                 };
             };
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
             429: components["responses"]["TooManyRequests"];
-        };
-    };
-    refreshTokens: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    refreshToken: string;
-                };
-            };
-        };
-        responses: {
-            /** @description New tokens. The old refresh token stops working. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AuthTokens"];
-                };
-            };
-            401: components["responses"]["Unauthorized"];
-        };
-    };
-    logout: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Logged out. */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
         };
     };
     getMe: {
@@ -3411,7 +3308,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description The logged-in owner or staff member and the venues they can manage. */
+            /** @description The signed-in owner or staff member and the venues they can manage. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -3421,6 +3318,15 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            /** @description Signed in with Clerk, but this number is on no Cravins team (code `not_staff`). The app asks them to get an invite from their venue owner. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
         };
     };
     createGuestSession: {
@@ -4308,7 +4214,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Invited. They log in with an SMS code. */
+            /** @description Invited. The server also creates their Clerk sign-in for this number, so they can sign in with an SMS code. */
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -6099,71 +6005,6 @@ export interface operations {
                 };
             };
             422: components["responses"]["Unprocessable"];
-        };
-    };
-    requestPhoneChange: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description A new UUID per user action. Reuse it when retrying the same action. */
-                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    phone: components["schemas"]["GhanaPhone"];
-                };
-            };
-        };
-        responses: {
-            /** @description Code sent. */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example 300 */
-                        expiresInSeconds: number;
-                        /** @example 30 */
-                        resendInSeconds: number;
-                    };
-                };
-            };
-            409: components["responses"]["Conflict"];
-            429: components["responses"]["TooManyRequests"];
-        };
-    };
-    confirmPhoneChange: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    phone: components["schemas"]["GhanaPhone"];
-                    code: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Number changed. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StaffUser"];
-                };
-            };
-            401: components["responses"]["Unauthorized"];
-            429: components["responses"]["TooManyRequests"];
         };
     };
 }

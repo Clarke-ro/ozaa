@@ -17,6 +17,10 @@ info:
     - Every POST that creates something accepts an `Idempotency-Key` header. Retrying with the same key returns the first result.
     - Payment secrets (Paystack secret key) live only on the server. The app never sees them.
     - Guests never hold an account. A guest session is created from the QR code (venue slug + table code).
+    - Owners and staff sign in with Clerk (clerk.com) on our own screens: Clerk texts the 6-digit code and
+      keeps the session. The app sends Clerk's short-lived session token as the `ownerAuth` bearer token, and
+      the server checks it against Clerk's public keys. There are no owner sign-in, refresh or log-out calls
+      in this file; those happen between the app and Clerk.
 servers:
   - url: https://api.cravins.app/v1
     description: Production (not live yet)
@@ -52,12 +56,12 @@ tags:
   - name: webhooks
 security: []
 paths:
-  # ---------------------------------------------------------------- auth (owner + staff, and guests joining loyalty)
+  # ---------------------------------------------------------------- auth (guests joining loyalty; owners and staff use Clerk)
   /auth/otp/request:
     post:
       tags: [auth]
       operationId: requestOtp
-      summary: Send a 6-digit login code by SMS to an owner, staff member, or a guest joining loyalty.
+      summary: Send a 6-digit code by SMS to a guest joining loyalty. Owners and staff sign in with Clerk instead.
       parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
       requestBody:
         required: true
@@ -68,7 +72,7 @@ paths:
               required: [phone, purpose]
               properties:
                 phone: { $ref: '#/components/schemas/GhanaPhone' }
-                purpose: { type: string, enum: [owner_login, guest_loyalty] }
+                purpose: { type: string, enum: [guest_loyalty] }
       responses:
         '202':
           description: Code sent. Same response whether or not the number is known, so numbers cannot be probed.
@@ -86,7 +90,7 @@ paths:
     post:
       tags: [auth]
       operationId: verifyOtp
-      summary: Exchange the SMS code for tokens.
+      summary: Exchange the SMS code for a loyalty token that proves the guest's phone number.
       requestBody:
         required: true
         content:
@@ -97,13 +101,13 @@ paths:
               properties:
                 phone: { $ref: '#/components/schemas/GhanaPhone' }
                 code: { type: string, pattern: '^[0-9]{6}$' }
-                purpose: { type: string, enum: [owner_login, guest_loyalty] }
+                purpose: { type: string, enum: [guest_loyalty] }
       responses:
         '200':
-          description: Logged in.
+          description: Phone proved.
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/AuthTokens' }
+              schema: { $ref: '#/components/schemas/LoyaltyToken' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '429': { $ref: '#/components/responses/TooManyRequests' }
@@ -112,7 +116,7 @@ paths:
       tags: [auth]
       operationId: setStaffPin
       summary: Set or change the signed-in staff member's 4-digit PIN for quick sign-in on this device.
-      description: "Needs a session from the SMS code first. The server keeps only a slow hash of the PIN and never sends it back."
+      description: "Needs a Clerk session from the SMS code first. The server keeps only a slow hash of the PIN and never sends it back."
       security: [{ ownerAuth: [] }]
       requestBody:
         required: true
@@ -134,7 +138,10 @@ paths:
       tags: [auth]
       operationId: loginWithPin
       summary: Sign in with a 4-digit PIN on a device where this person already signed in by SMS.
-      description: "Five wrong PINs in a row clear the PIN; the person then signs in with the SMS code and sets a new one."
+      description: |
+        Five wrong PINs in a row clear the PIN; the person then signs in with the SMS code and sets a new one.
+        A right PIN returns a one-time Clerk sign-in token. The app hands it to Clerk (the `ticket` sign-in
+        strategy), which starts the session; it works once and only for a few minutes.
       requestBody:
         required: true
         content:
@@ -148,55 +155,35 @@ paths:
                 deviceId: { type: string }
       responses:
         '200':
-          description: Signed in.
+          description: PIN right. Finish signing in with Clerk using the token.
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/AuthTokens' }
+              schema: { $ref: '#/components/schemas/PinSignIn' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '429': { $ref: '#/components/responses/TooManyRequests' }
-  /auth/refresh:
-    post:
-      tags: [auth]
-      operationId: refreshTokens
-      summary: Refresh tokens.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [refreshToken]
-              properties:
-                refreshToken: { type: string }
-      responses:
-        '200':
-          description: New tokens. The old refresh token stops working.
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/AuthTokens' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-  /auth/logout:
-    post:
-      tags: [auth]
-      operationId: logout
-      summary: Log out.
-      security: [{ ownerAuth: [] }]
-      responses:
-        '204': { description: Logged out. }
   /me:
     get:
       tags: [auth]
       operationId: getMe
-      summary: The logged-in staff member.
+      summary: The signed-in staff member.
+      description: |
+        The app calls this straight after Clerk signs someone in. The server matches the Clerk user to a
+        staff record by its verified phone number the first time, then by Clerk user id. The phone here is
+        always the one Clerk has verified, so a number changed in Clerk shows up on the next call.
       security: [{ ownerAuth: [] }]
       responses:
         '200':
-          description: The logged-in owner or staff member and the venues they can manage.
+          description: The signed-in owner or staff member and the venues they can manage.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/StaffUser' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Signed in with Clerk, but this number is on no Cravins team (code `not_staff`). The app asks them to get an invite from their venue owner.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
 
   # ---------------------------------------------------------------- guest session (from the QR code)
   /guest-sessions:
@@ -822,7 +809,7 @@ paths:
                 role: { $ref: '#/components/schemas/StaffRole' }
       responses:
         '201':
-          description: Invited. They log in with an SMS code.
+          description: Invited. The server also creates their Clerk sign-in for this number, so they can sign in with an SMS code.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/StaffMember' }
@@ -1894,7 +1881,7 @@ paths:
     delete:
       tags: [owner-venue]
       operationId: ownerRevokeStaff
-      summary: Revoke staff access.
+      summary: Revoke staff access. The server also ends their Clerk sessions.
       security: [{ ownerAuth: [] }]
       parameters:
         - { $ref: '#/components/parameters/VenueId' }
@@ -1923,7 +1910,7 @@ paths:
     post:
       tags: [owner-venue]
       operationId: ownerSignOutStaff
-      summary: End someone's shift by signing them out on every device. They sign in again with an SMS code.
+      summary: End someone's shift by signing them out on every device (the server revokes their Clerk sessions). They sign in again with an SMS code.
       description: Owner only. Signing out the owner is refused (409); they use Sign out in Settings.
       security: [{ ownerAuth: [] }]
       parameters:
@@ -1940,7 +1927,7 @@ paths:
       tags: [auth]
       operationId: deleteAccount
       summary: Delete account and personal data.
-      description: "Removes the owner's login, profile and venues from the app. Paid orders, payments and tax lines are kept for 6 years with the personal data removed, because Ghana tax law requires the records."
+      description: "Removes the owner's Clerk sign-in, profile and venues from the app. Paid orders, payments and tax lines are kept for 6 years with the personal data removed, because Ghana tax law requires the records."
       security: [{ ownerAuth: [] }]
       requestBody:
         required: true
@@ -2153,7 +2140,7 @@ paths:
     patch:
       tags: [owner-profile]
       operationId: updateMyProfile
-      summary: Change the signed-in staff member's own name, email, photo and app preferences. The phone changes through /me/phone.
+      summary: Change the signed-in staff member's own name, email, photo and app preferences. The phone changes in Clerk (the app verifies the new number with Clerk's code), and /me then shows it.
       security: [{ ownerAuth: [] }]
       requestBody:
         required: true
@@ -2167,59 +2154,6 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/StaffUser' }
         '422': { $ref: '#/components/responses/Unprocessable' }
-  /me/phone:
-    post:
-      tags: [owner-profile]
-      operationId: requestPhoneChange
-      summary: Send a 6-digit code to the new number. The number only changes once the code is confirmed.
-      security: [{ ownerAuth: [] }]
-      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [phone]
-              properties:
-                phone: { $ref: '#/components/schemas/GhanaPhone' }
-      responses:
-        '202':
-          description: Code sent.
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [expiresInSeconds, resendInSeconds]
-                properties:
-                  expiresInSeconds: { type: integer, example: 300 }
-                  resendInSeconds: { type: integer, example: 30 }
-        '409': { $ref: '#/components/responses/Conflict' }
-        '429': { $ref: '#/components/responses/TooManyRequests' }
-  /me/phone/verify:
-    post:
-      tags: [owner-profile]
-      operationId: confirmPhoneChange
-      summary: Confirm the new number with the code sent to it.
-      security: [{ ownerAuth: [] }]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [phone, code]
-              properties:
-                phone: { $ref: '#/components/schemas/GhanaPhone' }
-                code: { type: string, pattern: '^[0-9]{6}$' }
-      responses:
-        '200':
-          description: Number changed.
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/StaffUser' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '429': { $ref: '#/components/responses/TooManyRequests' }
 
 components:
   securitySchemes:
@@ -2234,7 +2168,12 @@ components:
     ownerAuth:
       type: http
       scheme: bearer
-      description: Owner or staff access token from POST /auth/otp/verify with purpose owner_login. Kept in expo-secure-store on native.
+      bearerFormat: JWT
+      description: |
+        Clerk session token for an owner or staff member, from Clerk's `getToken()` on our own sign-in
+        screens. It lasts about a minute; Clerk renews it while the session lives. The server checks the
+        signature with Clerk's public key, the expiry, and that `azp` is one of our app's origins. A staff
+        member's venues and role come from the Cravins database, never from the token.
 
   headers:
     ETag:
@@ -2398,14 +2337,18 @@ components:
     MenuItemId:
       type: string
       pattern: '^itm_[A-Za-z0-9]+$'
-    AuthTokens:
+    LoyaltyToken:
       type: object
-      required: [accessToken, refreshToken, expiresAt]
+      required: [accessToken, expiresAt]
+      description: Proves a guest's phone for loyalty calls. When it expires the guest asks for a new code.
       properties:
         accessToken: { type: string }
-        refreshToken: { type: string }
         expiresAt: { type: string, format: date-time }
-        user: { $ref: '#/components/schemas/StaffUser' }
+    PinSignIn:
+      type: object
+      required: [signInToken]
+      properties:
+        signInToken: { type: string, description: 'One-time Clerk sign-in token (ticket strategy). Works once, for a few minutes. Never logged.' }
     StaffRole:
       type: string
       enum: [owner, manager, waiter, kitchen, viewer, staff_scanner]

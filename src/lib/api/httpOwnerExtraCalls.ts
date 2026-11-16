@@ -83,14 +83,5 @@ export function httpOwnerExtraCalls({ client, headers, ok }: HttpContext) {
         }),
       ),
     updateMyProfile: (body) => ok(client.PATCH('/me/profile', { body, headers: access() })),
-    requestPhoneChange: (phone, call) =>
-      ok(
-        client.POST('/me/phone', {
-          body: { phone },
-          params: { header: { 'Idempotency-Key': call.idempotencyKey } },
-          headers: headers('access', call),
-        }),
-      ),
-    confirmPhoneChange: (body) => ok(client.POST('/me/phone/verify', { body, headers: access() })),
   } satisfies Partial<ApiClient>;
 }

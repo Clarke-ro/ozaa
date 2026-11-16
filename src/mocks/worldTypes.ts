@@ -80,7 +80,6 @@ export type World = {
     }
   >;
   /** Pending phone changes: new number by current phone. */
-  phoneChanges: Map<string, string>;
   quotes: Map<
     string,
     {
@@ -119,6 +118,5 @@ export type World = {
     }
   >;
   access: Map<string, { phone: string; purpose: 'owner_login' | 'guest_loyalty' }>;
-  refresh: Map<string, string>;
   seq: number;
 };

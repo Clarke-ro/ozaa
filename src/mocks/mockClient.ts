@@ -5,6 +5,8 @@ import { decideMockCard } from './cardBox';
 import { findOrder, venueById } from './world';
 import { createMockContext, type MockOptions } from './mockContext';
 import { mockAuthCalls } from './mockAuthCalls';
+import { mockOwnerAuth } from './mockOwnerAuth';
+import type { OwnerAuth } from '@/lib/auth/ownerAuth';
 import { mockGuestCalls } from './mockGuestCalls';
 import { mockGuestExtraCalls } from './mockGuestExtraCalls';
 import { mockOwnerVenueCalls } from './mockOwnerVenueCalls';
@@ -39,8 +41,16 @@ export const sandboxBridge: {
   track: (payment) => payment,
 };
 
-/** The whole mock API: one in-memory world shared by every call. Each area lives in its own file. */
+/** The mock API on its own, for tests and screens that don't sign anyone in. */
 export function createMockClient(options: MockOptions = {}): ApiClient {
+  return createMockApi(options).api;
+}
+
+/**
+ * The whole mock: one in-memory world shared by every call, plus the stand-in for Clerk sign-in
+ * on the same world, so a mock sign-in works for the mock owner calls. Each area has its own file.
+ */
+export function createMockApi(options: MockOptions = {}): { api: ApiClient; auth: OwnerAuth } {
   const ctx = createMockContext(options);
   const { world, now, settle } = ctx;
 
@@ -66,7 +76,7 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
     return payment.status === 'succeeded' ? settle(payment.reference) : payment;
   };
 
-  return {
+  const api: ApiClient = {
     ...mockAuthCalls(ctx),
     ...mockGuestCalls(ctx),
     ...mockGuestExtraCalls(ctx),
@@ -78,6 +88,7 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
     ...mockOwnerPromoCalls(ctx),
     ...mockOwnerNotificationCalls(ctx),
   };
+  return { api, auth: mockOwnerAuth(ctx) };
 }
 
 export { decideMockCard };
