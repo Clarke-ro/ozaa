@@ -5,7 +5,7 @@ import { encryptionKey } from '../secrets/sealed.ts';
 import { venuePaystack } from '../venues/venuePaystack.ts';
 import { connect } from './client.ts';
 import { paymentSettings } from './schema.ts';
-import { seedSamples } from './seedSamples.ts';
+import { seedOwner, seedSamples } from './seedSamples.ts';
 
 // `npm run db:seed`: puts the sample venues into the database. Heroku runs it after each migrate,
 // but it only does something while SEED_SAMPLES=true (the sandbox stage). Rows that already exist
@@ -23,6 +23,10 @@ if (process.env.SEED_SAMPLES !== 'true') {
   try {
     const { venueIds, items } = await seedSamples(db);
     log({ event: 'seeded', venues: venueIds.length, items });
+    if (process.env.SAMPLE_OWNER_PHONE) {
+      await seedOwner(db, { phone: process.env.SAMPLE_OWNER_PHONE, firstName: process.env.SAMPLE_OWNER_NAME || 'Owner', venueIds });
+      log({ event: 'sample_owner_ready' });
+    }
     if (config.PAYSTACK_SECRET_KEY && config.PAYSTACK_PUBLIC_KEY) {
       const keys = venuePaystack({ db, key: encryptionKey(config.ENCRYPTION_KEY), client: () => { throw new Error('not used'); } });
       const rows = await db.select().from(paymentSettings).where(inArray(paymentSettings.venueId, venueIds));

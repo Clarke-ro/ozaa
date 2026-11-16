@@ -88,6 +88,14 @@ export function paystackClient(secret: string, fetchFn: typeof fetch = fetch, ba
       return initData.parse(data);
     },
 
+    /**
+     * Checks a secret key without moving money: listing one transaction only works with a real
+     * key. Throws PaystackError (401) when Paystack refuses it.
+     */
+    async checkKey(): Promise<void> {
+      await call('/transaction?perPage=1', { method: 'GET' });
+    },
+
     async verify(reference: string): Promise<PaystackTransaction> {
       const data = await call(`/transaction/verify/${encodeURIComponent(reference)}`, { method: 'GET' });
       return txData.parse(data);

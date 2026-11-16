@@ -3010,3 +3010,35 @@ AES-GCM doesn't only scramble the key. It adds a tag, like a wax seal. If anyone
 **Try it yourself**
 
 In `payments.test.ts`, sign a webhook with `sk_test_someoneelse` instead of the venue's key, and watch the server refuse it with 401.
+
+## 2026-11-16 · Owners sign in to the real server
+
+**What we built**
+
+The server now knows who is using the restaurant app and what they're allowed to do. An owner can connect Paystack, set cash, bank or MoMo details, and run the orders desk. Kitchen and waiters only get the buttons their job needs.
+
+**How it works**
+
+```
+app signs in with Clerk (SMS code) → Clerk gives a short token
+app → GET /me with the token → server asks Clerk "whose token, which phone?"
+server finds the staff row with that phone → "Clarke, owner at 3 venues"
+every /owner call → "is this person owner/kitchen/waiter at THIS venue?"
+```
+
+Clerk only answers "who is this". Cravins keeps the answer to "what may they do" in its own database, so an owner can add or remove staff without touching Clerk.
+
+**Files to look at**
+
+- `server/src/owner/clerk.ts`: checks the token with Clerk.
+- `server/src/owner/staff.ts`: finds the person, and `ROLES`, the who-may-do-what list.
+- `server/src/routes/owner.ts`: the routes.
+- `server/src/routes/owner.test.ts`: a fake Clerk signs in an owner, a waiter and a cook.
+
+**New idea: authentication vs authorisation**
+
+Authentication is proving who you are (Clerk's SMS code). Authorisation is deciding what you may do (our roles). Keeping them apart means a kitchen phone signed in as "Kofi" still can't change where the money goes.
+
+**Try it yourself**
+
+In `owner.test.ts`, let the waiter move an order to `preparing`. The test fails with `illegal_move`, because waiters only serve. Find the rule in `src/features/orders/orderMachine.ts`.

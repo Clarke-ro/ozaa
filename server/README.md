@@ -33,6 +33,22 @@ Phase 5 has started (BUILD.md section 13). The server runs on Postgres: Supabase
 - **Contract tests.** `src/routes/guest.test.ts` checks every reply against `api/openapi.yaml` with `expectContract`.
 - **Sample venues.** `npm run db:seed` adds Mama's Kitchen, Bean There and Auntie Akos with tables 1 to 12, but only while `SEED_SAMPLES=true`. It never changes rows that exist.
 
+## Owners and staff (Phase 5.2)
+
+| Route | Who | What it does |
+|---|---|---|
+| `GET /v1/me` | anyone signed in | Links the Clerk user to their staff record by verified phone on first sign-in, then lists their venues and roles |
+| `GET /v1/owner/venues/{id}/payment-settings` | owner | Paystack (last 4 of the key only), manual methods, fee passing |
+| `PUT …/payment-settings/paystack` | owner | Checks the keys with Paystack, then stores the secret sealed |
+| `POST …/paystack/test`, `DELETE …/paystack` | owner | Checks the saved key still works; disconnects |
+| `PUT …/payment-settings/manual`, `…/fees` | owner | Cash, card machine, bank, MoMo; the guest's share of the fee |
+| `GET /v1/owner/venues/{id}/orders` | all staff | The venue's orders, newest first |
+| `PUT /v1/owner/orders/{id}/status` | by role | Only legal moves (kitchen starts and readies, waiters serve) |
+| `POST /v1/owner/orders/{id}/manual-payment` | owner, manager, waiter | Marks the order paid by cash and the like. A repeat changes nothing |
+
+- **Clerk proves who someone is; Cravins decides what they may do.** The token is checked with `CLERK_SECRET_KEY`, and it must have been made for one of `ALLOWED_ORIGINS`. Roles come from `staff_memberships`, never from Clerk.
+- **The first owner** comes from `SAMPLE_OWNER_PHONE` and `SAMPLE_OWNER_NAME` (Heroku settings, not git) while `SEED_SAMPLES=true`. They become owner of the sample venues.
+
 ## Run it
 
 1. `cp .env.example .env`. Then fill it in:

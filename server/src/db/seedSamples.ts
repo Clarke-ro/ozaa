@@ -1,7 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import type { Db } from './client.ts';
-import { businesses, diningTables, menuCategories, menuItems, paymentSettings, venues } from './schema.ts';
+import { eq } from 'drizzle-orm';
+import { businesses, diningTables, menuCategories, menuItems, paymentSettings, staffMemberships, staffUsers, venues } from './schema.ts';
 import type { Menu, MenuItem, Offer, OnlineOrdering, VenuePublic, Wifi } from '../shared/types.ts';
 import { NO_MANUAL, type VenueProfile } from '../venues/venueData.ts';
 
@@ -137,4 +138,24 @@ export function itemRow(venueId: string, item: MenuItem): typeof menuItems.$infe
     position: position ?? null,
     details,
   };
+}
+
+/**
+ * The owner of the sample venues, from the server's settings (SAMPLE_OWNER_PHONE), never from git:
+ * a phone number is personal data. They become owner at each sample venue; the invite turns active
+ * the first time they sign in with Clerk using that number. Safe to run again.
+ */
+export async function seedOwner(db: Db, input: { phone: string; firstName: string; venueIds: string[] }): Promise<void> {
+  const local = input.phone.replace(/\s+/g, '');
+  const phone = /^0\d{9}$/.test(local) ? `+233${local.slice(1)}` : local;
+  if (!/^\+233\d{9}$/.test(phone)) throw new Error('SAMPLE_OWNER_PHONE must be a Ghana number, like 024 123 4567.');
+  await db.insert(staffUsers).values({ id: 'usr_sample_owner', phone, firstName: input.firstName }).onConflictDoNothing();
+  const [user] = await db.select().from(staffUsers).where(eq(staffUsers.phone, phone));
+  if (!user) return;
+  for (const venueId of input.venueIds) {
+    await db
+      .insert(staffMemberships)
+      .values({ id: `mem_${venueId}_${user.id}`, venueId, userId: user.id, role: 'owner', status: 'invited' })
+      .onConflictDoNothing();
+  }
 }

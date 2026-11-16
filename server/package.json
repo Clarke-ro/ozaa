@@ -13,6 +13,7 @@
     "db:seed": "tsx --env-file-if-exists=.env src/db/seed.ts"
   },
   "dependencies": {
+    "@clerk/backend": "^2.33.9",
     "@hono/node-server": "^2.1.6",
     "drizzle-orm": "^0.44.7",
     "hono": "^4.13.17",
