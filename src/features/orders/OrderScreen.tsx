@@ -25,8 +25,6 @@ import { checkCheckout, type CheckoutDraft } from './linkCheckout';
 import { OrderLine } from './OrderLine';
 import { pastOrderFrom, useOrderHistory } from '@/features/history';
 import { canPayOnline } from '@/lib/payments';
-import { payWhenOptions, type PayWhen } from './payWhen';
-import { PayWhenChoice } from './PayWhenChoice';
 
 const EMPTY_ICON = 64;
 
@@ -78,13 +76,8 @@ export function OrderScreen({ slug }: { slug: string }) {
         ? 'delivery'
         : 'pickup';
   const check = checkCheckout({ ...draft, type }, ordering, venuePin, food);
-  // Pay now (the Pay page opens after sending) or later (the bill, at pickup or on delivery).
-  const payWhen = payWhenOptions({
-    payOnline: canPayOnline(venue.data),
-    fulfilment: online ? type : 'table',
-  });
-  const [picked, setPicked] = useState<PayWhen | null>(null);
-  const when: PayWhen = picked && payWhen.choices.includes(picked) ? picked : payWhen.initial;
+  // Venues with payments in the app take the guest to the Payment page after sending.
+  const payNext = canPayOnline(venue.data);
   const fee = online && check.ok ? check.deliveryFeePesewas : 0;
   const total = formatMoney(pesewas(food + fee), currency);
   const canOrderHere = !online || ordering.enabled;
@@ -127,7 +120,7 @@ export function OrderScreen({ slug }: { slug: string }) {
         if (online) remember(pastOrderFrom(order, slug, place, currency));
         setOrderId(order.id);
         clear();
-        router.replace(when === 'now' ? `/${slug}/pay` : `/${slug}/status`);
+        router.replace(payNext ? `/${slug}/pay` : `/${slug}/status`);
       })
       .catch((failure) => {
         setErrorKey(toMessageKey(failure));
@@ -203,10 +196,6 @@ export function OrderScreen({ slug }: { slug: string }) {
               />
             ) : null}
 
-            {canOrderHere && payWhen.choices.length > 1 ? (
-              <PayWhenChoice value={when} onChange={setPicked} laterKey={payWhen.laterKey} />
-            ) : null}
-
             <View style={[styles.card, styles.summary, { backgroundColor: theme.surface }]}>
               <View style={styles.summaryRow}>
                 <Text variant="body" style={{ color: theme.muted }}>
@@ -257,8 +246,8 @@ export function OrderScreen({ slug }: { slug: string }) {
             {canOrderHere ? (
               <Button
                 label={
-                  when === 'now'
-                    ? t('payWhen.sendAndPay', { amount: total })
+                  payNext
+                    ? t('payment.continue', { amount: total })
                     : online
                       ? t('linkOrder.place')
                       : t('menu.send')

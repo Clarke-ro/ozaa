@@ -3,3 +3,4 @@ export { useMyCalls } from './myCalls';
 export { guestHomeHref } from './guestHome';
 export { useFreshOwnerToken } from './useFreshOwnerToken';
 export { canOrderHere, useAtTable } from './useCanOrder';
+export { TableOnly } from './TableOnly';

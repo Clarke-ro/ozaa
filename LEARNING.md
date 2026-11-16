@@ -4,6 +4,37 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-16 · One Payment step, and doors that stay shut
+
+**What we built**
+
+- **One Payment step.** After the order, venues that take payments in the app show **Payment**: MTN MoMo, Telecel, AT, card, and one "not now" option where it makes sense: **Request the bill after your meal** at a table (it calls the waiter for the bill), or **Pay on delivery**. Pickup has no "not now": it's paid in the app.
+- **Table pages are for table guests.** Call waiter, the game, reviews, Wi-Fi, loyalty and offers send anyone who came from the venue's link back to its online menu, even if they type the address.
+
+**How it works**
+
+```
+order → Continue to payment → Payment: [MoMo | Telecel | AT | Card | not now?]
+laterOption(order): table → "Request the bill…", delivery → "Pay on delivery", pickup → none
+<TableOnly slug> → no scanned table here? → /slug
+```
+
+**Files to look at**
+
+- `src/features/pay/laterOption.ts` and its test.
+- `src/features/session/TableOnly.tsx`.
+- `e2e/payment-step.spec.ts`.
+
+**New idea: guard the route, not just the button**
+
+Hiding a button isn't enough: anyone can type `/mamas-kitchen/waiter`. Wrapping the page itself (`TableOnly`) closes the door however someone arrives.
+
+**Try it yourself**
+
+Open `/mamas-kitchen/play` in a fresh browser tab: you land on the online menu. Scan a table first (`/mamas-kitchen/t/12`) and the game opens.
+
+---
+
 ## 2026-11-16 · White cards on a soft page
 
 **What we built**

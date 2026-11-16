@@ -3,6 +3,9 @@ import { expect, test } from '@playwright/test';
 test('guest loyalty wallet card, earn history, claim code QR, and owner confirmation', async ({
   page,
 }) => {
+  // Loyalty is a table page: scan the table first (the visit is kept across page loads).
+  await page.goto('/mamas-kitchen/t/12', { waitUntil: 'domcontentloaded' });
+  await expect(page.getByText('At your table')).toBeVisible({ timeout: 15_000 });
   await page.goto('/mamas-kitchen/loyalty', { waitUntil: 'domcontentloaded' });
   await expect(page.getByText('Loyalty card').first()).toBeVisible();
   await page.waitForTimeout(800);
@@ -36,6 +39,8 @@ test('guest loyalty wallet card, earn history, claim code QR, and owner confirma
   await page.waitForTimeout(600);
   await page.screenshot({ path: 'test-results/loyalty-redeem-claim-qr.png', fullPage: false });
 
+  await page.goto('/bean-there/t/4', { waitUntil: 'domcontentloaded' });
+  await expect(page.getByText('At your table')).toBeVisible({ timeout: 15_000 });
   await page.goto('/bean-there/loyalty', { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: 'Join the card' }).click();
   await page.getByRole('button', { name: 'Open sample card (Ama)' }).click();
@@ -45,6 +50,8 @@ test('guest loyalty wallet card, earn history, claim code QR, and owner confirma
   await page.waitForTimeout(600);
   await page.screenshot({ path: 'test-results/loyalty-wallet-points-bean.png', fullPage: false });
 
+  await page.goto('/auntie-akos/t/7', { waitUntil: 'domcontentloaded' });
+  await expect(page.getByText('At your table')).toBeVisible({ timeout: 15_000 });
   await page.goto('/auntie-akos/loyalty', { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: 'Join the card' }).click();
   await page.getByRole('button', { name: 'Open sample card (Ama)' }).click();

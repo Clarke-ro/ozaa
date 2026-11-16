@@ -22,11 +22,8 @@ test('guest at a venue with Paystack: order, pay by MoMo in test mode, and see i
     .first()
     .click();
   await page.getByRole('button', { name: /View order/ }).click();
-  await page.getByRole('button', { name: 'Send to kitchen' }).click();
-
-  await expect(page.getByText('Not paid yet')).toBeVisible({ timeout: 15_000 });
-  await page.screenshot({ path: 'test-results/pay-online-status.png' });
-  await page.getByRole('button', { name: 'Pay & split bill' }).click();
+  // Venues that take payments in the app go straight to the Payment step.
+  await page.getByRole('button', { name: /^Continue to payment/ }).click();
 
   await expect(page.getByText('Test payment')).toBeVisible({ timeout: 15_000 });
   // The mock approves any MoMo number that doesn't end in 0 or 9, five seconds after it starts.
@@ -65,8 +62,7 @@ test('guest MoMo payment that fails: says why, nothing taken, and Try again goes
     .first()
     .click();
   await page.getByRole('button', { name: /View order/ }).click();
-  await page.getByRole('button', { name: 'Send to kitchen' }).click();
-  await page.getByRole('button', { name: 'Pay & split bill' }).click();
+  await page.getByRole('button', { name: /^Continue to payment/ }).click();
 
   // The mock fails any MoMo number ending in 0 ("Not enough money in the wallet.").
   await page.getByRole('textbox', { name: 'MoMo number' }).fill('0241234560');
@@ -91,8 +87,7 @@ test('guest MoMo payment nobody approves: after 0:00 the app checks, then Time r
     .first()
     .click();
   await page.getByRole('button', { name: /View order/ }).click();
-  await page.getByRole('button', { name: 'Send to kitchen' }).click();
-  await page.getByRole('button', { name: 'Pay & split bill' }).click();
+  await page.getByRole('button', { name: /^Continue to payment/ }).click();
 
   // The mock never approves a MoMo number ending in 9; it expires at 3:00.
   await page.getByRole('textbox', { name: 'MoMo number' }).fill('0241234569');
@@ -120,8 +115,7 @@ async function payByCard(page: import('@playwright/test').Page) {
     .first()
     .click();
   await page.getByRole('button', { name: /View order/ }).click();
-  await page.getByRole('button', { name: 'Send to kitchen' }).click();
-  await page.getByRole('button', { name: 'Pay & split bill' }).click();
+  await page.getByRole('button', { name: /^Continue to payment/ }).click();
   await page.getByRole('radio', { name: 'Debit or credit card' }).click();
   await page.getByRole('button', { name: /^Pay GH/ }).click();
 }
