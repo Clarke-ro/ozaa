@@ -268,6 +268,7 @@
     "linePaid": "Paid",
     "yourShare": "Your share",
     "tipLine": "Tip",
+    "feeLine": "Payment fee",
     "due": "To pay",
     "payNow": "Pay {{amount}}",
     "seeReceipt": "See receipt"
@@ -2724,6 +2725,10 @@
     "taxOffBody": "Sales before tax, VAT and levies for each period, ready for your monthly return."
   },
   "ownerPay": {
+    "feesTitle": "Pass fees to customers",
+    "feesSub": "Guests pay some or all of Paystack's 1.95% fee",
+    "feesShare": "Share guests pay",
+    "feesExample": "On a {{bill}} bill, guests pay {{fee}} more. They see it as its own line before paying and on the receipt. It applies to card and MoMo in the app only, never to cash, card machine or transfers.",
     "lead": "Connect Cravins to the services you already use",
     "paystack": "Paystack",
     "ownAccount": "Card and MoMo, paid straight into your own account",

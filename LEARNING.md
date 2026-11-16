@@ -4,6 +4,40 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-16 · Guests can pay the card fee (BUILD.md 2.10)
+
+**What we built**
+
+An owner can switch on **Pass fees to customers** (Settings > Integrations) and pick how much of Paystack's 1.95% fee guests pay: 25, 50, 75 or 100%. Guests then see a **Payment fee** line before they pay and on their receipt.
+
+**How it works**
+
+```
+owner picks 100% → venue tells guests "feePercent: 100"
+Pay screen: share GH₵38 + fee GH₵0.76 = Pay GH₵38.76   (worked out with passedFee)
+server quote: the same sum, and that's what Paystack charges
+```
+
+The Pay screen works the fee out itself, so the line shows straight away. The server still decides what's charged, so a change in between can never overcharge anyone.
+
+**Files to look at**
+
+- `src/lib/paystackFee.ts`: `passedFee` and `previewFee`, with tests.
+- `src/features/owner/screens/integrations/FeePassingCard.tsx`: the owner card.
+- `src/features/pay/receiptFigures.ts`: the receipt's sums.
+
+**New idea: one function, two places**
+
+The Pay screen and the server both call `passedFee`. If they each had their own copy of the maths, they could disagree by a pesewa and the guest would pay something different from what they saw. One shared function means they can't disagree.
+
+We also fixed a bug here: the receipt used to count the fee as part of "Your share". A test now proves it doesn't.
+
+**Try it yourself**
+
+In `FeePassingCard.tsx`, add `10` to `SHARES`. Switch it on in the demo and pick 10%: the example under the choices changes to the new fee.
+
+---
+
 ## 2026-11-16 · Sign-in moves to Clerk (BUILD.md 5.2, contract first)
 
 **What we built**

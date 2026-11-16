@@ -6,8 +6,8 @@ export const PAYSTACK_GH_FEE_BPS = 195;
 
 /**
  * The Paystack fee the guest pays on top of `basePesewas`, when the venue passes `percent` of it
- * on (0 = the venue keeps it all, 100 = the guest pays it all). Server and mock use this; the app
- * only shows the server's figure.
+ * on (0 = the venue keeps it all, 100 = the guest pays it all). Server and mock use this to
+ * charge; the Pay screen uses it (through previewFee) only to show the fee line before paying.
  *
  * Passing it all uses Paystack's own gross-up: the guest pays base ÷ (1 − 1.95%), rounded up to
  * the pesewa, so after Paystack takes its cut the venue still receives the whole bill. A part is
@@ -29,4 +29,17 @@ export function passedFee(
   const gross = Math.ceil((basePesewas * 10_000) / (10_000 - feeBps));
   const full = gross - basePesewas;
   return Math.round((full * percent) / 100);
+}
+
+/**
+ * The fee line the Pay screen shows before the guest pays, from the share the venue passes on
+ * (VenuePublic.payMethods.feePercent). It is the same sum the server charges, but the server's
+ * quote is still the figure that is paid, so a change in between can never overcharge anyone.
+ */
+export function previewFee(
+  basePesewas: number,
+  payMethods: { online: boolean; feePercent?: number } | undefined,
+): number {
+  if (!payMethods?.online || !payMethods.feePercent) return 0;
+  return passedFee(basePesewas, payMethods.feePercent);
 }

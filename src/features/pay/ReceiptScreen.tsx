@@ -134,6 +134,9 @@ export function ReceiptScreen({ slug, reference }: { slug: string; reference: st
         <View style={card}>
           <Row label={t('pay.yourShare')} amount={money.share} currency={currency} muted />
           <Row label={t('pay.tipLine')} amount={money.tip} currency={currency} muted />
+          {money.fee > 0 ? (
+            <Row label={t('pay.feeLine')} amount={money.fee} currency={currency} muted />
+          ) : null}
           <Row label={t('receipt.paid')} amount={money.paid} currency={currency} strong />
           <Text variant="caption" style={{ color: theme.muted }}>
             {t('receipt.paidWith', { method })}
