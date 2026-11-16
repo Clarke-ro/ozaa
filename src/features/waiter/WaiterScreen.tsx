@@ -100,7 +100,7 @@ export function WaiterScreen({ slug }: { slug: string }) {
               <Pressable
                 key={reason}
                 accessibilityRole="checkbox"
-                accessibilityState={{ checked: on }}
+                aria-checked={on}
                 accessibilityLabel={t(`waiter.reasons.${reason}`)}
                 onPress={() => toggle(reason)}
                 style={({ pressed }) => [

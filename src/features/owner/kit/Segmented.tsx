@@ -77,7 +77,7 @@ export function Segmented<T extends string>({
             onLayout={measure(option.id)}
             accessibilityRole="radio"
             accessibilityLabel={option.label}
-            accessibilityState={{ checked: on }}
+            aria-checked={on}
             onPress={() => {
               if (on) return;
               void hapticSelection();

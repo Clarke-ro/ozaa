@@ -55,7 +55,7 @@ export function ChartCard({
         {rows && hasData ? (
           <Pressable
             accessibilityRole="switch"
-            accessibilityState={{ checked: table }}
+            aria-checked={table}
             accessibilityLabel={t('ownerCharts.showNumbers')}
             onPress={() => setTable((on) => !on)}
             hitSlop={8}

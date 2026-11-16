@@ -41,7 +41,7 @@ export function SidebarFooter({ collapsed }: { collapsed: boolean }) {
           name: name || t('ownerChrome.profile'),
           role: roleLabel,
         })}
-        accessibilityState={{ selected: here }}
+        aria-selected={here}
         onPress={() => goTo('/owner/settings')}
         style={({ pressed }) => [
           styles.row,

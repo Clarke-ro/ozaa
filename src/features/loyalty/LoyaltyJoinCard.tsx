@@ -93,7 +93,7 @@ export function LoyaltyJoinCard({
 
       <Pressable
         accessibilityRole="checkbox"
-        accessibilityState={{ checked: loyaltyBox }}
+        aria-checked={loyaltyBox}
         onPress={onToggleLoyalty}
         style={styles.checkRow}
       >
@@ -115,7 +115,7 @@ export function LoyaltyJoinCard({
 
       <Pressable
         accessibilityRole="checkbox"
-        accessibilityState={{ checked: marketing }}
+        aria-checked={marketing}
         onPress={onToggleMarketing}
         style={styles.checkRow}
       >

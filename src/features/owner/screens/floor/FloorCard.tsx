@@ -83,7 +83,7 @@ export function FloorCard({
     <View style={[cardStyle(theme), styles.card, selected && { borderColor: theme.text }]}>
       <Pressable
         accessibilityRole="button"
-        accessibilityState={{ selected }}
+        aria-selected={selected}
         accessibilityLabel={[name, word, bill].filter(Boolean).join(', ')}
         onPress={onPress}
         style={({ pressed, hovered }) => [styles.body, (pressed || hovered) && { opacity: 0.7 }]}

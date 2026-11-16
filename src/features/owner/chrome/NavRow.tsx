@@ -71,8 +71,6 @@ export function NavRow({
       accessibilityRole={compact ? 'tab' : 'button'}
       accessibilityLabel={label}
       accessibilityValue={value}
-      accessibilityState={{ selected: current }}
-      // aria-selected is what React Native Web passes to the browser; accessibilityState alone is not.
       aria-selected={current}
       onHoverIn={() => setHovered(true)}
       onHoverOut={() => setHovered(false)}
