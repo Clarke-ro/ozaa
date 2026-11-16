@@ -32,6 +32,7 @@ function fakePaystack() {
       amounts.set(input.reference, input.amountPesewas);
       return { authorization_url: 'https://checkout.paystack.com/abc', reference: input.reference };
     },
+    checkKey: async () => undefined,
     verify: async (reference) => {
       used.push(secret);
       return answer(amounts.get(reference) ?? 0);

@@ -26,6 +26,9 @@ const schema = z.object({
   GUEST_TOKEN_SECRET: z
     .string({ error: 'GUEST_TOKEN_SECRET is missing. Put a long random string in server/.env.' })
     .min(32, { error: 'GUEST_TOKEN_SECRET must be at least 32 characters.' }),
+  // Clerk's secret key (sk_test_… for the development instance). Checks owner and staff sign-ins.
+  // Without it the server still serves guests, and owner calls answer "sign-in not set up".
+  CLERK_SECRET_KEY: z.string().startsWith('sk_', { error: 'CLERK_SECRET_KEY must start with sk_.' }).optional(),
   PORT: z.coerce.number().int().positive().default(4000),
   // Where Paystack sends a card payer back: {SITE_URL}/{venueSlug}/pay (api/openapi.yaml).
   SITE_URL: z.url().default('http://localhost:8081'),

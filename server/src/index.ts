@@ -9,6 +9,7 @@ import { paymentService } from './payments.ts';
 import { paystackClient } from './paystack.ts';
 import { encryptionKey } from './secrets/sealed.ts';
 import { venuePaystack } from './venues/venuePaystack.ts';
+import { clerkVerifier } from './owner/clerk.ts';
 
 const config = readConfig();
 const log = createLog();
@@ -23,6 +24,16 @@ const payments = paymentService({
 const app = createApp({
   guest: { db, guestSecret: config.GUEST_TOKEN_SECRET, now: Date.now },
   payments,
+  owner: {
+    db,
+    // Clerk's tokens name the site that asked for them (azp); only our own sites count.
+    verify: config.CLERK_SECRET_KEY
+      ? clerkVerifier({ secretKey: config.CLERK_SECRET_KEY, authorizedParties: config.ALLOWED_ORIGINS })
+      : null,
+    now: Date.now,
+    venueKeys,
+    paystackClient: (secret) => paystackClient(secret),
+  },
   allowedOrigins: config.ALLOWED_ORIGINS,
   log,
   ping: async () => {

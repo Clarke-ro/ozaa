@@ -4,12 +4,15 @@ import type { PaymentService } from './payments.ts';
 import type { Log } from './log.ts';
 import { Problem, problemResponse } from './http/problem.ts';
 import { guestRoutes, type GuestDeps } from './routes/guest.ts';
+import { ownerRoutes, type OwnerRouteDeps } from './routes/owner.ts';
 import { paymentRoutes } from './routes/payments.ts';
 
 export function createApp(deps: {
   /** Guest calls (sessions, venues, menu, orders, bill, payments). Missing in the health-only tests. */
   guest?: GuestDeps;
   payments: PaymentService;
+  /** Owner and staff calls. Missing in the tests that don't sign anyone in. */
+  owner?: Omit<OwnerRouteDeps, 'log'>;
   allowedOrigins: string[];
   log: Log;
   /** Throws when the database doesn't answer. Used by the health check. */
@@ -52,6 +55,7 @@ export function createApp(deps: {
     app.route('/', guestRoutes(deps.guest));
     app.route('/', paymentRoutes({ ...deps.guest, payments: deps.payments, log: deps.log }));
   }
+  if (deps.owner) app.route('/', ownerRoutes({ ...deps.owner, log: deps.log }));
 
   return app;
 }

@@ -19,6 +19,7 @@ function fakePaystack(verify: () => PaystackTransaction) {
       calls.push(`card ${input.callbackUrl}`);
       return { authorization_url: 'https://checkout.paystack.com/abc', reference: input.reference };
     },
+    checkKey: async () => undefined,
     verify: async () => {
       calls.push('verify');
       return verify();
