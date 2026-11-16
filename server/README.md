@@ -43,7 +43,7 @@ Every merge to `main` that changes `server/` deploys it (`.github/workflows/depl
 
 One-time set-up, done by Clarke:
 
-- **GitHub:** repo Settings > Secrets and variables > Actions > New secret `HEROKU_API_KEY` (from Heroku's Account settings > API key). Until it's set, the workflow skips the deploy and says why.
+- **GitHub:** repo Settings > Secrets and variables > Actions > New secret `HEROKU_API_KEY` (from Heroku's Account settings > API key). Until it's set, the deploy fails and says why. The app runs on one **Basic** dyno ($7/month, always on).
 - **Heroku:** `cravins-api` > Settings > Config Vars: `DATABASE_URL` (Supabase **Session pooler** address, not `db.….supabase.co`, which is IPv6 only), `PAYSTACK_SECRET_KEY` (`sk_test_…`) and `CLERK_SECRET_KEY` (`sk_test_…`). `NODE_ENV`, `SITE_URL`, `ALLOWED_ORIGINS` and `CLERK_PUBLISHABLE_KEY` are already set.
 
 On a deploy or Heroku's daily restart, the server gets SIGTERM. It stops taking new requests, lets the ones in flight finish, then closes the database.
