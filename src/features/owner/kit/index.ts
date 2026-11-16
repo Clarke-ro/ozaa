@@ -14,7 +14,7 @@ export { PanelRow } from './PanelRow';
 export { SectionLabel } from './SectionLabel';
 export { StatTile } from './StatTile';
 export { StatusPill, type PillTone } from './StatusPill';
-export { Toggle } from './Toggle';
+export { Toggle } from '@/ui/Toggle';
 export { ToastHost, toast } from './Toast';
 export * from './charts';
 export { Segmented } from './Segmented';

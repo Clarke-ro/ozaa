@@ -586,7 +586,7 @@ Work top to bottom. Each box is one small PR that ends in a verifiable state (ps
 - [x] 4.1 Written review: stars, "what stood out" chips and text. 4–5 stars offer "Share on Google" (the venue's Google review link). 1–3 stars go privately to the owner. Render: `review.png`.
 - [x] 4.2 ~~Video review~~ **Dropped.** Video reviews were removed from the contract (`c02efe4`), so there is nothing to build.
 - [x] 4.3 Owner moderation: To check, Featured and Hidden tabs, with Hide and Feature buttons and the private-reply hint for low ratings. Featured videos become guest stories. Render: `owner-reviews.png`.
-- [ ] 4.4 Full polish pass:
+- [x] 4.4 Full polish pass (2026-11-16; `e2e/a11y.spec.ts` now checks names, target size and contrast on every page, light and dark; Lighthouse accessibility 100, best practices 100, SEO 100, and performance about 55 on the mock build, which is set by the mock bundle and demo photos and is re-measured on staging in 5.6):
   - `cursor-team-kit-deslop`, `impeccable`, `ui-skills-improve-ui`
   - accessibility (`ui-skills-fixing-accessibility`)
   - motion (`ui-skills-fixing-motion-performance`)

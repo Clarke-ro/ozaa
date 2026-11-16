@@ -46,7 +46,6 @@ export function PageHeader({
           accessibilityRole="link"
           accessibilityLabel={back.label}
           onPress={back.onPress}
-          hitSlop={tokens.space[2]}
           style={({ pressed }) => [styles.back, pressed && { opacity: 0.6 }]}
         >
           <ChevronLeft size={16} color={theme.muted} />
@@ -87,7 +86,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: 'flex-start',
     gap: tokens.space[1],
-    marginBottom: tokens.space[1],
+    // 32 px tall to tap (web ignores hitSlop); the negative margin keeps the title where it was.
+    minHeight: 32,
+    marginVertical: -6,
+    marginBottom: tokens.space[1] - 6,
   },
   head: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
   words: { flex: 1, gap: tokens.space[1] },

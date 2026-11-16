@@ -140,6 +140,6 @@ const styles = StyleSheet.create({
     borderRadius: 22,
   },
   dot: { width: 18, height: 18, borderRadius: 9 },
-  hexInput: { width: 84, fontFamily: fontFamily.strong, fontSize: 15, padding: 0 },
+  hexInput: { width: 84, alignSelf: 'stretch', fontFamily: fontFamily.strong, fontSize: 15, padding: 0 },
   note: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 },
 });

@@ -83,7 +83,7 @@ export function ClosedDays({ venue }: { venue: VenueSettings }) {
                 date: c.name || label(c.date),
               })}
               onPress={() => save.mutate(list.filter((x) => x.date !== c.date))}
-              hitSlop={8}
+              style={styles.xHit}
             >
               <X size={16} color={theme.meta} />
             </Pressable>
@@ -105,6 +105,9 @@ export function ClosedDays({ venue }: { venue: VenueSettings }) {
 }
 
 const styles = StyleSheet.create({
+  // A 16 px icon in a 32 px tap area; the negative margin keeps the row's layout unchanged. Web
+  // ignores hitSlop, so the box itself has to be big enough.
+  xHit: { width: 32, height: 32, margin: -8, alignItems: 'center', justifyContent: 'center' },
   stack: { gap: tokens.owner.controls.listGap },
   card: { paddingVertical: 2, paddingHorizontal: tokens.owner.controls.cardPadding },
   row: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3], minHeight: 60 },

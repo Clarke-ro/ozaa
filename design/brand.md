@@ -24,7 +24,7 @@ A summary of the brand Page for the coding agent. The numbers are in `tokens.jso
 | pressed                   | #A33000                               | Pressed                                                                   |
 | tint                      | #FFF1EA                               | Icon-button fill, selected rows                                           |
 | text                      | #111111                               | All body text                                                             |
-| grey600 / 500 / 200 / 100 | #52525B / #71717A / #E4E4E7 / #F4F4F5 | Secondary text, captions, borders, disabled fills                         |
+| grey600 / 500 / 200 / 100 | #52525B / #6B6B73 / #E4E4E7 / #F4F4F5 | Secondary text, captions, borders, disabled fills                         |
 | success / error           | #15803D / #B91C1C                     | Status only                                                               |
 | white                     | #FFFFFF                               | Every background                                                          |
 
@@ -49,7 +49,7 @@ A summary of the brand Page for the coding agent. The numbers are in `tokens.jso
 - **Primary:** fill #D24000 (or the venue fill), white text, 52 px tall, radius 12. **One filled button per screen**, pinned at the bottom.
 - **Secondary:** white with a 1.5 px #111 border. **Ghost:** text only.
 - **Icon button:** a 40 px circle with tint fill and a primary-colour icon.
-- **Disabled:** #F4F4F5 fill and #71717A text.
+- **Disabled:** #F4F4F5 fill and #6B6B73 text.
 - Icons are Lucide (`lucide-react-native`) at 20 or 24 px with a 2 px stroke. No emoji as icons.
 
 ## 6. Guest home (renders: home-mamas, home-mamas-scrolled, home-default, home-default-scrolled)

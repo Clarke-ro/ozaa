@@ -10,7 +10,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { Easing, SlideInDown } from 'react-native-reanimated';
+import Animated, { Easing, SlideInDown, useReducedMotion } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
@@ -47,6 +47,8 @@ export function ModalSheet({
   footer,
 }: ModalSheetProps) {
   const theme = useTheme();
+  // The system Modal's slide ignores Reduce Motion, so it is swapped for a fade by hand.
+  const reduce = useReducedMotion();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
@@ -121,7 +123,7 @@ export function ModalSheet({
     return (
       <Modal
         visible={visible}
-        animationType="slide"
+        animationType={reduce ? 'fade' : 'slide'}
         presentationStyle="fullScreen"
         onRequestClose={onClose}
       >

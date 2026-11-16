@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
+import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Toggle } from '@/ui/Toggle';
 import { useRouter } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -91,12 +92,7 @@ export function FeedbackScreen({ slug }: { slug: string }) {
               {t('simple.shareNumberHint')}
             </Text>
           </View>
-          <Switch
-            value={share}
-            onValueChange={setShare}
-            accessibilityLabel={t('simple.shareNumber')}
-            trackColor={{ true: theme.fill, false: theme.line }}
-          />
+          <Toggle value={share} onChange={setShare} label={t('simple.shareNumber')} />
         </View>
         {share ? (
           <>

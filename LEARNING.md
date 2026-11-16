@@ -4,6 +4,43 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-16 · A robot that checks every page for accessibility
+
+**What we built**
+
+A test that opens every guest and owner page, in light and dark, and checks three things a screen reader user or a thumb would notice. Then we fixed what it found.
+
+**How it works**
+
+```text
+open page → wait for loading → for each button, link and field:
+  has a name?            (a screen reader can say it)
+  at least 24 px?        (a thumb can hit it)
+for each piece of text:
+  contrast ≥ 4.5 : 1?    (3 : 1 for big text)
+```
+
+It found:
+- grey hint text on the warm owner background at 4.35:1. One token, `grey500`, went one step darker and fixed it everywhere.
+- a dark-mode bug on owner sign-in
+- small tap targets: the photo dots, a switch, the X buttons and two search fields
+
+**Files to look at**
+
+- `e2e/a11yAudit.ts`: the checks, run inside the browser.
+- `e2e/a11y.spec.ts`: the list of pages.
+- `src/features/owner/OwnerLogin.tsx`: the dark-mode fix.
+
+**New idea: React context reads from above**
+
+`useTheme()` looks *up* the tree for the nearest `ThemeProvider`. The sign-in page called `useTheme()` and then rendered its own provider *below* that call, so it read the outer, dark theme. Moving the form into its own component puts the call inside the provider.
+
+**Try it yourself**
+
+Set `grey500` back to `#71717A` in `design/tokens.json`, run `npm run gen:tokens`, rebuild, and run `npx playwright test e2e/a11y.spec.ts`. The test names each hint that fails.
+
+---
+
 ## 2026-11-15 · A health check across the app
 
 **What we built**

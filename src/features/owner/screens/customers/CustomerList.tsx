@@ -100,7 +100,7 @@ export function CustomerList({
                 accessibilityRole="button"
                 accessibilityLabel={t('ownerMembers.clearSearch')}
                 onPress={() => setSearch('')}
-                hitSlop={tokens.space[3]}
+                style={styles.xHit}
               >
                 <X size={16} color={theme.meta} />
               </Pressable>
@@ -166,6 +166,9 @@ export function CustomerList({
 const CONTROL_HEIGHT = tokens.owner.controls.height;
 
 const styles = StyleSheet.create({
+  // A 16 px icon in a 32 px tap area; the negative margin keeps the row's layout unchanged. Web
+  // ignores hitSlop, so the box itself has to be big enough.
+  xHit: { width: 32, height: 32, margin: -8, alignItems: 'center', justifyContent: 'center' },
   stack: { gap: tokens.space[4] },
   rows: { gap: tokens.owner.controls.listGap },
   note: { fontSize: 14, lineHeight: 20 },
@@ -182,5 +185,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: tokens.radius.full,
   },
-  input: { flex: 1, fontFamily: fontFamily.regular, fontSize: tokens.owner.type.body.size },
+  // Fills the pill's height, so a tap anywhere on the pill lands in the field.
+  input: { flex: 1, alignSelf: 'stretch', fontFamily: fontFamily.regular, fontSize: tokens.owner.type.body.size },
 });
