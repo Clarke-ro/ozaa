@@ -20,6 +20,8 @@ const FILES = {
   'src/lib/notices.ts': 'notices.ts',
   'src/features/pay/quoteBill.ts': 'quoteBill.ts',
   'src/features/orders/orderMachine.ts': 'orderMachine.ts',
+  'src/features/waiter/waiterCallMachine.ts': 'waiterCallMachine.ts',
+  'src/features/waiter/callUpdate.ts': 'callUpdate.ts',
   'src/lib/api/types.ts': 'types.ts',
   'src/lib/api/schema.ts': 'schema.ts',
 };
