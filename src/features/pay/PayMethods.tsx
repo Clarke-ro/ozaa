@@ -49,7 +49,7 @@ export function PayMethods({
           >
             <Pressable
               accessibilityRole="radio"
-              accessibilityState={{ checked: on }}
+              aria-checked={on}
               accessibilityLabel={t(m.label)}
               onPress={() => onChange(m.id)}
               style={styles.row}

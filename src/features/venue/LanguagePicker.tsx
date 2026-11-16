@@ -35,7 +35,8 @@ export function LanguagePicker({
               key={language.code}
               accessibilityRole="button"
               accessibilityLabel={language.label}
-              accessibilityState={{ disabled: !language.ready, selected: on }}
+              aria-disabled={!language.ready}
+              aria-selected={on}
               onPress={() => {
                 if (!language.ready) return;
                 onChoose(language.code);

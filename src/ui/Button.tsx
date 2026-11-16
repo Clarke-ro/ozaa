@@ -66,7 +66,8 @@ export function Button({
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityHint={accessibilityHint}
-      accessibilityState={{ disabled: off, busy: loading }}
+      aria-disabled={off}
+      aria-busy={loading}
       disabled={off}
       onPress={() => {
         // A light tap only on the filled action; secondary taps stay quiet.

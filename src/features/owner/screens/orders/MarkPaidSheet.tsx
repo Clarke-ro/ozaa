@@ -77,7 +77,7 @@ export function MarkPaidSheet({
             <Pressable
               key={method}
               accessibilityRole="button"
-              accessibilityState={{ busy: mark.isPending }}
+              aria-busy={mark.isPending}
               disabled={mark.isPending}
               onPress={() => mark.mutate(method)}
               style={({ pressed }) => [

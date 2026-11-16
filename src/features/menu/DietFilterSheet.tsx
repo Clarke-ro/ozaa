@@ -41,7 +41,7 @@ export function DietFilterSheet({
               key={tag}
               accessibilityRole="checkbox"
               accessibilityLabel={t(`dietary.${tag}`, { defaultValue: tag })}
-              accessibilityState={{ checked: on }}
+              aria-checked={on}
               onPress={() =>
                 setDraft((current) =>
                   on ? current.filter((item) => item !== tag) : [...current, tag],

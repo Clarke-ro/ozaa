@@ -97,7 +97,7 @@ export function LocationSwitcher({ variant }: { variant: 'chip' | 'block' | 'rai
         accessibilityRole="button"
         accessibilityLabel={t('ownerKit.locationA11y', { name })}
         accessibilityHint={t('ownerKit.switchLocation')}
-        accessibilityState={{ expanded: open }}
+        aria-expanded={open}
         onPress={openMenu}
         style={({ pressed }) => [
           rail ? styles.rail : block ? styles.block : styles.chip,
@@ -160,7 +160,7 @@ export function LocationSwitcher({ variant }: { variant: 'chip' | 'block' | 'rai
               <Pressable
                 key={location.id}
                 accessibilityRole="radio"
-                accessibilityState={{ checked: selected }}
+                aria-checked={selected}
                 onPress={() => {
                   void hapticSelection();
                   switchVenue(location.id);

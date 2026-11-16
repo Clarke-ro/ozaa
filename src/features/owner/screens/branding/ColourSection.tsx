@@ -44,7 +44,7 @@ export function ColourSection({
                 key={s.hex}
                 accessibilityRole="radio"
                 accessibilityLabel={t(`ownerBranding.swatch.${s.id}`)}
-                accessibilityState={{ checked: on }}
+                aria-checked={on}
                 onPress={() => {
                   void hapticSelection();
                   onAccent(s.hex);
@@ -140,6 +140,12 @@ const styles = StyleSheet.create({
     borderRadius: 22,
   },
   dot: { width: 18, height: 18, borderRadius: 9 },
-  hexInput: { width: 84, alignSelf: 'stretch', fontFamily: fontFamily.strong, fontSize: 15, padding: 0 },
+  hexInput: {
+    width: 84,
+    alignSelf: 'stretch',
+    fontFamily: fontFamily.strong,
+    fontSize: 15,
+    padding: 0,
+  },
   note: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 },
 });

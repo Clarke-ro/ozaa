@@ -29,7 +29,7 @@ export function FreeTile({
   return (
     <PressableScale
       accessibilityRole="button"
-      accessibilityState={{ selected }}
+      aria-selected={selected}
       accessibilityLabel={`${name}, ${free}`}
       onPress={onPress}
       style={({ pressed, hovered }) => [

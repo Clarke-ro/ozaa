@@ -42,7 +42,7 @@ export function Chips<T extends string | number>({
           <View key={String(option.id)} style={!wide && styles.slimTarget}>
             <Pressable
               accessibilityRole={single ? 'radio' : 'checkbox'}
-              accessibilityState={{ checked: on }}
+              aria-checked={on}
               accessibilityLabel={option.label}
               hitSlop={wide ? undefined : { top: 5, bottom: 5 }}
               onPress={() => {

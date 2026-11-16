@@ -43,7 +43,7 @@ export function CategoryPicker({
         ))}
         <Pressable
           accessibilityRole="button"
-          accessibilityState={{ expanded: open }}
+          aria-expanded={open}
           accessibilityLabel={t('ownerBusiness.addCategory')}
           disabled={rest.length === 0}
           onPress={() => setOpen((o) => !o)}

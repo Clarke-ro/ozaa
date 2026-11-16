@@ -22,7 +22,8 @@ export function LanguageSheet({ visible, onClose }: { visible: boolean; onClose:
             <Pressable
               key={language.code}
               accessibilityRole="radio"
-              accessibilityState={{ checked: on, disabled: !language.ready }}
+              aria-checked={on}
+              aria-disabled={!language.ready}
               accessibilityLabel={
                 language.ready ? language.label : `${language.label}, ${t('ownerSettings.soon')}`
               }

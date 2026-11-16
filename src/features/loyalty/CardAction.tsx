@@ -24,7 +24,8 @@ export function CardAction({
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={label}
-        accessibilityState={{ busy, disabled: busy }}
+        aria-busy={busy}
+        aria-disabled={busy}
         disabled={busy}
         onPress={onPress}
         style={({ pressed }) => ({ backgroundColor: pressed ? theme.wash : undefined })}

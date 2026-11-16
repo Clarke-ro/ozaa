@@ -1,17 +1,26 @@
 import type { Page } from '@playwright/test';
 
-export type Finding = { rule: 'name' | 'target' | 'contrast'; what: string; detail: string };
+export type Finding = {
+  rule: 'name' | 'target' | 'contrast' | 'state';
+  what: string;
+  detail: string;
+};
 
 /**
  * A small accessibility check that runs inside the page, with no extra package. It covers the
- * three rules from BUILD.md that break most often:
+ * rules from BUILD.md that break most often:
  * - every control has a name a screen reader can say
  * - every control is at least 24 px (the WCAG 2.2 minimum; 44 px is our own target)
  * - text has 4.5:1 contrast with what is behind it (3:1 for large text)
+ * - a switch, checkbox, radio or tab says whether it is on or chosen
  */
 export function audit(page: Page, minTarget: number): Promise<Finding[]> {
   return page.evaluate((min) => {
-    const found: { rule: 'name' | 'target' | 'contrast'; what: string; detail: string }[] = [];
+    const found: {
+      rule: 'name' | 'target' | 'contrast' | 'state';
+      what: string;
+      detail: string;
+    }[] = [];
     const visible = (el: Element) => {
       const r = el.getBoundingClientRect();
       const s = getComputedStyle(el);
@@ -39,6 +48,19 @@ export function audit(page: Page, minTarget: number): Promise<Finding[]> {
         (el as HTMLInputElement).labels?.[0]?.textContent ||
         el.textContent;
       if (!name?.trim()) found.push({ rule: 'name', what: describe(el), detail: 'no name' });
+
+      // A switch, checkbox or radio must say whether it's on, and a tab whether it's chosen.
+      // React Native Web ignores accessibilityState, so a missing aria-* prop shows up here.
+      const role = el.getAttribute('role');
+      const needs =
+        role === 'switch' || role === 'checkbox' || role === 'radio'
+          ? 'aria-checked'
+          : role === 'tab'
+            ? 'aria-selected'
+            : null;
+      if (needs && !el.hasAttribute(needs)) {
+        found.push({ rule: 'state', what: describe(el), detail: `no ${needs}` });
+      }
 
       // A link inside running text is exempt from the size rule.
       const r = el.getBoundingClientRect();

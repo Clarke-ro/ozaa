@@ -37,6 +37,40 @@ Set the flag to `true`, run `npx expo start --web`, sign in, and open Integratio
 
 ---
 
+## 2026-11-16 · Telling a screen reader "on" or "off"
+
+**What we built**
+
+On the web, every switch, checkbox, tab and fold-out row now tells a screen reader its state ("on", "selected", "expanded"). Before, it only said the name.
+
+**How it works**
+
+React Native has two ways to say a control's state:
+
+```text
+accessibilityState={{ checked: on }}   phones: yes   web: ignored
+aria-checked={on}                      phones: yes   web: yes
+```
+
+React Native Web only reads the `aria-*` form, so the 47 places that used `accessibilityState` were silent in the browser. They now use `aria-checked`, `aria-selected`, `aria-expanded`, `aria-disabled` and `aria-busy`.
+
+The accessibility test (`e2e/a11yAudit.ts`) now fails any switch, checkbox, radio or tab that doesn't say its state. Run against the old build, it named every colour swatch and card style on Tables and Branding.
+
+**Files to look at**
+
+- `src/ui/Toggle.tsx`: the switch, with `aria-checked`.
+- `e2e/a11yAudit.ts`: the new "state" rule.
+
+**New idea: ARIA**
+
+ARIA attributes are how a web page tells assistive tech what an element is (`role="switch"`) and what state it's in (`aria-checked="true"`). A blind owner needs both to know whether "Call waiter" is on.
+
+**Try it yourself**
+
+In Chrome, open the owner Services page, right-click a switch, choose Inspect, and find `aria-checked`. Flip the switch and watch it change.
+
+---
+
 ## 2026-11-16 · When the signal drops
 
 **What we built**

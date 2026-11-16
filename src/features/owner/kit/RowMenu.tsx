@@ -26,7 +26,7 @@ export function RowMenu({ label, actions }: { label: string; actions: RowAction[
         ref={anchor}
         accessibilityRole="button"
         accessibilityLabel={label}
-        accessibilityState={{ expanded: at !== null }}
+        aria-expanded={at !== null}
         onPress={open}
         style={({ pressed }) => [
           styles.button,
@@ -43,7 +43,7 @@ export function RowMenu({ label, actions }: { label: string; actions: RowAction[
               key={name}
               accessibilityRole="menuitem"
               accessibilityLabel={name}
-              accessibilityState={{ disabled }}
+              aria-disabled={disabled}
               disabled={disabled}
               onPress={() => {
                 close();
