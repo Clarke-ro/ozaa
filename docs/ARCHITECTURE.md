@@ -9,7 +9,7 @@ Last checked: 9 Nov 2026, `main` at `aa9bebb`. This is a map. For the plan and t
 | App | One Expo app (SDK 58, React Native 0.88, Expo Router) for guests and owners. Web for guests, web and Android for owners. | `src/` | `npx expo start --web`; Vercel builds it with `npx expo export -p web` into `dist/` |
 | Contract | The fixed API: 75 paths, 91 operations | `api/openapi.yaml` | Types are generated into `src/lib/api/schema.ts` (`npm run gen:api`) |
 | Mock API | The whole API in memory, in the app, with sample venues | `src/mocks/` | Default. `EXPO_PUBLIC_API_MODE=mock` |
-| Payments sandbox | Hono server for the 3 payment calls and the Paystack webhook, test keys only | `server/` | `cd server && npm run dev`, then `EXPO_PUBLIC_API_LIVE=payments` |
+| Server | Hono on Postgres: guest sessions, menu, orders, bill quotes, payments with each venue's own Paystack keys (test keys only) | `server/` | `cd server && npm run dev`, then `EXPO_PUBLIC_API_MODE=http` |
 | Landing site | Astro marketing site | `landing/` | Its own Vercel project and CI (`.github/workflows/landing.yml`) |
 | Design | Renders to match, brand rules, tokens, logos | `design/` | Not shipped. `design/tokens.json` generates `src/theme/tokens.ts` |
 
@@ -41,13 +41,12 @@ App settings are read once, checked with zod, in `src/lib/env.ts`. Anything star
 | Variable | Default | What it does |
 |---|---|---|
 | `EXPO_PUBLIC_API_MODE` | `mock` | `mock` or `http` |
-| `EXPO_PUBLIC_API_URL` | `http://localhost:4000/v1` | Server address in `http` mode, or for live payments |
-| `EXPO_PUBLIC_API_LIVE` | empty | `payments` sends the payment calls to `server/` |
+| `EXPO_PUBLIC_API_URL` | `http://localhost:4000/v1` | Server address in `http` mode |
 | `EXPO_PUBLIC_MOCK_LATENCY_MS`, `_FAIL_RATE`, `_FAST` | 400, 0, 0 | How slow and flaky the mock is, and whether orders move on by themselves quickly |
 | `EXPO_PUBLIC_SITE_URL` | `https://cravins.app` | Guest links when the app isn't on a web page |
 | `PREVIEWS_ENABLED` | `false` | Shows roadmap previews on sample data (build time, `app.config.ts`) |
 
-Server settings live in `server/.env` (`server/.env.example`): `PAYSTACK_SECRET_KEY` (must be `sk_test_`), `PORT`, `SITE_URL`, `ALLOWED_ORIGINS`.
+Server settings live in `server/.env` (`server/.env.example`): `DATABASE_URL`, `GUEST_TOKEN_SECRET`, `ENCRYPTION_KEY`, `PORT`, `SITE_URL`, `ALLOWED_ORIGINS`.
 
 ## How an order flows
 

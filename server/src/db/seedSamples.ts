@@ -39,7 +39,7 @@ const TABLE_CODES = Array.from({ length: 12 }, (_, i) => String(i + 1));
  * their menus, tables, Wi-Fi and offers. Safe to run again: rows that exist are left alone.
  * No staff and no Paystack keys: owners sign in with Clerk and connect their own keys.
  */
-export async function seedSamples(db: Db): Promise<{ venues: number; items: number }> {
+export async function seedSamples(db: Db): Promise<{ venueIds: string[]; items: number }> {
   const venueFile = read<VenuePublic>('venues');
   const menuFile = read<Menu>('menus');
   const offerFile = read<{ items: Offer[] }>('offers');
@@ -101,7 +101,7 @@ export async function seedSamples(db: Db): Promise<{ venues: number; items: numb
       itemCount += 1;
     }
   }
-  return { venues: Object.keys(venueFile).length, items: itemCount };
+  return { venueIds: Object.values(venueFile).map((venue) => venue.id), items: itemCount };
 }
 
 /** A contract MenuItem as a row: checked fields in columns, the rest as details. */

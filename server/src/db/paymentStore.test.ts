@@ -11,6 +11,7 @@ const base: Payment = {
   method: 'momo',
   provider: 'mtn',
   amountPesewas: 14300,
+  feePesewas: 0,
   tipPesewas: 1300,
   currency: 'GHS',
   status: 'pending',

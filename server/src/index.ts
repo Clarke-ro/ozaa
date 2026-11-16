@@ -7,20 +7,22 @@ import { paymentStore } from './db/paymentStore.ts';
 import { createLog } from './log.ts';
 import { paymentService } from './payments.ts';
 import { paystackClient } from './paystack.ts';
+import { encryptionKey } from './secrets/sealed.ts';
+import { venuePaystack } from './venues/venuePaystack.ts';
 
 const config = readConfig();
 const log = createLog();
 const { db, close } = connect(config.DATABASE_URL);
+// Each payment is charged with the Paystack key of the venue whose bill it is.
+const venueKeys = venuePaystack({ db, key: encryptionKey(config.ENCRYPTION_KEY), client: (secret) => paystackClient(secret) });
 const payments = paymentService({
-  paystack: paystackClient(config.PAYSTACK_SECRET_KEY),
+  paystackFor: (slug) => venueKeys.forVenueSlug(slug),
   store: paymentStore(db),
   siteUrl: config.SITE_URL,
-  testMode: true,
 });
 const app = createApp({
   guest: { db, guestSecret: config.GUEST_TOKEN_SECRET, now: Date.now },
   payments,
-  secret: config.PAYSTACK_SECRET_KEY,
   allowedOrigins: config.ALLOWED_ORIGINS,
   log,
   ping: async () => {

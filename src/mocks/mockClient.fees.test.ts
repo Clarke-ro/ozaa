@@ -1,7 +1,6 @@
 import { ApiError } from '@/lib/api/errors';
 import { passedFee } from '@/lib/paystackFee';
 import { decideMockCard } from './cardBox';
-import { sandboxBridge } from './mockClient';
 import { signedInMock } from './testOwner';
 
 // The owner can pass some or all of Paystack's fee to guests paying in the app. The mock is the
@@ -69,31 +68,6 @@ test('a paid fee never counts as paying for food', async () => {
   const after = await api.getOrder(order.id);
   expect(after.paidPesewas).toBe(order.paidPesewas + quote.sharePesewas);
   expect(after.paidPesewas).toBeLessThanOrEqual(after.totalPesewas);
-});
-
-test('a sandbox server payment with a fee also pays only the food share', async () => {
-  const { api, venue, order } = await guestOrder();
-  await api.ownerSetFeePassing(venue.id, { enabled: true, percent: 50 });
-  const quote = await api.quoteBill(order.id, { mode: 'whole' });
-  expect(sandboxBridge.quote(quote.quoteId).amountPesewas).toBe(quote.totalPesewas);
-  sandboxBridge.track(
-    {
-      id: 'pay_srv_fee',
-      reference: 'pay_srv_fee',
-      orderId: order.id,
-      method: 'momo',
-      amountPesewas: quote.totalPesewas,
-      tipPesewas: quote.tipPesewas,
-      currency: 'GHS',
-      status: 'succeeded',
-      approveBy: null,
-      createdAt: new Date().toISOString(),
-      paidAt: new Date().toISOString(),
-      testMode: true,
-    },
-    quote.quoteId,
-  );
-  expect((await api.getOrder(order.id)).paidPesewas).toBe(order.paidPesewas + quote.sharePesewas);
 });
 
 test('a share outside 1–100% is refused', async () => {

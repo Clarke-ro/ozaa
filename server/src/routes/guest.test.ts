@@ -8,6 +8,7 @@ import { menuItems, paymentSettings } from '../db/schema.ts';
 import { seedSamples } from '../db/seedSamples.ts';
 import { testDb } from '../db/testDb.ts';
 import type { PaymentService } from '../payments.ts';
+import { connectTestPaystack } from './testHelpers.ts';
 
 const NOW = Date.parse('2026-11-16T12:00:00Z');
 
@@ -17,7 +18,6 @@ async function setup() {
   const app = createApp({
     guest: { db, guestSecret: 'test-guest-secret-that-is-long-enough', now: () => NOW },
     payments: {} as PaymentService,
-    secret: 'sk_test_x',
     allowedOrigins: [],
     log: () => undefined,
     ping: async () => undefined,
@@ -138,16 +138,8 @@ test('the bill quote: refused without Paystack; with it, the share, tip and pass
   assert.equal(off.json.code, 'online_pay_off');
 
   const venueId = (await call('GET', '/venues/mamas-kitchen')).json.id;
-  await db
-    .update(paymentSettings)
-    .set({
-      paystackMode: 'test',
-      paystackPublicKey: 'pk_test_abcdefghij',
-      paystackSecretHint: '••••1234',
-      paystackConnectedAt: new Date(NOW),
-      feePassing: { enabled: true, percent: 100 },
-    })
-    .where(eq(paymentSettings.venueId, venueId));
+  await connectTestPaystack(db, venueId);
+  await db.update(paymentSettings).set({ feePassing: { enabled: true, percent: 100 } }).where(eq(paymentSettings.venueId, venueId));
   const quote = await call('POST', `/orders/${order.id}/bill`, { mode: 'whole', tip: { percent: 10 } }, token);
   expectContract('quoteBill', 200, quote.json);
   assert.equal(quote.json.sharePesewas, order.totalPesewas);

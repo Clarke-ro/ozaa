@@ -6,7 +6,7 @@ import { testDb } from './db/testDb.ts';
 import { paymentService } from './payments.ts';
 import type { PaystackTransaction } from './status.ts';
 
-const charge = { orderId: 'ord_1', venueSlug: 'bean-there', amountPesewas: 14_300, tipPesewas: 1_300 };
+const charge = { orderId: 'ord_1', venueSlug: 'bean-there', quoteId: null, amountPesewas: 14_300, tipPesewas: 1_300, feePesewas: 0 };
 
 function fakePaystack(verify: () => PaystackTransaction) {
   const calls: string[] = [];
@@ -31,10 +31,9 @@ async function service(verify: () => PaystackTransaction, start = 0) {
   let clock = start;
   const fake = fakePaystack(verify);
   const svc = paymentService({
-    paystack: fake.paystack,
+    paystackFor: async () => ({ paystack: fake.paystack, secret: 'sk_test_venue', testMode: true }),
     store: paymentStore(await testDb()),
     siteUrl: 'https://cravins-app.vercel.app/',
-    testMode: true,
     now: () => clock,
     newReference: () => 'pay_1',
   });

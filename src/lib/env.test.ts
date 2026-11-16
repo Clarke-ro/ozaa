@@ -5,7 +5,6 @@ describe('readEnv', () => {
     expect(readEnv({})).toEqual({
       EXPO_PUBLIC_API_MODE: 'mock',
       EXPO_PUBLIC_API_URL: 'http://localhost:4000/v1',
-      EXPO_PUBLIC_API_LIVE: '',
       EXPO_PUBLIC_MOCK_LATENCY_MS: 400,
       EXPO_PUBLIC_MOCK_FAIL_RATE: 0,
       EXPO_PUBLIC_MOCK_FAST: '0',
@@ -14,19 +13,16 @@ describe('readEnv', () => {
       EXPO_PUBLIC_SUPPORT_EMAIL: 'support@cravins.app',
       EXPO_PUBLIC_SUPPORT_WHATSAPP: '233200000000',
       EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: '',
-      live: [],
     });
   });
 
-  it('turns numbers from strings into numbers and splits the live list', () => {
+  it('turns numbers from strings into numbers', () => {
     const env = readEnv({
       EXPO_PUBLIC_MOCK_LATENCY_MS: '50',
       EXPO_PUBLIC_MOCK_FAIL_RATE: '0.2',
-      EXPO_PUBLIC_API_LIVE: 'payments, menu',
     });
     expect(env.EXPO_PUBLIC_MOCK_LATENCY_MS).toBe(50);
     expect(env.EXPO_PUBLIC_MOCK_FAIL_RATE).toBe(0.2);
-    expect(env.live).toEqual(['payments', 'menu']);
   });
 
   it('refuses a fail rate outside 0 to 1 and an unknown mode', () => {

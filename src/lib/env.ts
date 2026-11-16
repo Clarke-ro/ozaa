@@ -4,7 +4,6 @@ import { z } from 'zod/mini';
 const schema = z.object({
   EXPO_PUBLIC_API_MODE: z._default(z.enum(['mock', 'http']), 'mock'),
   EXPO_PUBLIC_API_URL: z._default(z.string(), 'http://localhost:4000/v1'),
-  EXPO_PUBLIC_API_LIVE: z._default(z.string(), ''),
   EXPO_PUBLIC_MOCK_LATENCY_MS: z._default(z.coerce.number(), 400),
   EXPO_PUBLIC_MOCK_FAIL_RATE: z._default(z.coerce.number().check(z.gte(0), z.lte(1)), 0),
   EXPO_PUBLIC_MOCK_FAST: z._default(z.enum(['0', '1']), '0'),
@@ -30,7 +29,7 @@ const schema = z.object({
   EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: z._default(z.string(), ''),
 });
 
-export type Env = z.infer<typeof schema> & { live: string[] };
+export type Env = z.infer<typeof schema>;
 
 type Source = Partial<Record<keyof z.infer<typeof schema>, string | undefined>>;
 
@@ -42,7 +41,6 @@ type Source = Partial<Record<keyof z.infer<typeof schema>, string | undefined>>;
 const fromBuild: Source = {
   EXPO_PUBLIC_API_MODE: process.env.EXPO_PUBLIC_API_MODE,
   EXPO_PUBLIC_API_URL: process.env.EXPO_PUBLIC_API_URL,
-  EXPO_PUBLIC_API_LIVE: process.env.EXPO_PUBLIC_API_LIVE,
   EXPO_PUBLIC_MOCK_LATENCY_MS: process.env.EXPO_PUBLIC_MOCK_LATENCY_MS,
   EXPO_PUBLIC_MOCK_FAIL_RATE: process.env.EXPO_PUBLIC_MOCK_FAIL_RATE,
   EXPO_PUBLIC_MOCK_FAST: process.env.EXPO_PUBLIC_MOCK_FAST,
@@ -85,12 +83,7 @@ export function readEnv(
   );
   const parsed = schema.parse(blankToUnset);
   if (parsed.EXPO_PUBLIC_API_MODE === 'http') checkApiUrl(parsed.EXPO_PUBLIC_API_URL, production);
-  return {
-    ...parsed,
-    live: parsed.EXPO_PUBLIC_API_LIVE.split(',')
-      .map((item) => item.trim())
-      .filter(Boolean),
-  };
+  return parsed;
 }
 
 export const env = readEnv();

@@ -1,10 +1,22 @@
 import { z } from 'zod';
 
 const schema = z.object({
-  // Sandbox only (BUILD.md 2b): a live key (sk_live_…) is refused, so real money can't move.
+  // Optional, sandbox only. Payments use each venue's own keys (Settings > Integrations); these
+  // two only connect the sample venues while SEED_SAMPLES=true, so a test payment can be tried
+  // before any owner signs in. A live key (sk_live_…) is refused, so real money can't move.
   PAYSTACK_SECRET_KEY: z
-    .string({ error: 'PAYSTACK_SECRET_KEY is missing. Put your Paystack test secret key in server/.env.' })
-    .startsWith('sk_test_', { error: 'PAYSTACK_SECRET_KEY must be a test key (sk_test_…).' }),
+    .string()
+    .startsWith('sk_test_', { error: 'PAYSTACK_SECRET_KEY must be a test key (sk_test_…).' })
+    .optional(),
+  PAYSTACK_PUBLIC_KEY: z
+    .string()
+    .startsWith('pk_test_', { error: 'PAYSTACK_PUBLIC_KEY must be a test key (pk_test_…).' })
+    .optional(),
+  // Seals each venue's Paystack secret key in the database (src/secrets/sealed.ts). 64 hex
+  // characters. Losing or changing it means every venue has to connect Paystack again.
+  ENCRYPTION_KEY: z
+    .string({ error: 'ENCRYPTION_KEY is missing. Put 64 random hex characters in server/.env (openssl rand -hex 32).' })
+    .regex(/^[0-9a-fA-F]{64}$/, { error: 'ENCRYPTION_KEY must be 64 hex characters (openssl rand -hex 32).' }),
   // Postgres, e.g. Supabase's pooled connection string (Project Settings > Database). Holds a
   // password, so it lives in server/.env and Vercel's settings, never in git or a log.
   DATABASE_URL: z

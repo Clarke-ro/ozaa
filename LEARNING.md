@@ -2979,3 +2979,34 @@ Guests don't sign in. The token says "session X, venue Y, table 12, until 4 pm",
 **Try it yourself**
 
 In `guest.test.ts`, set a dish's `stockCount` to 1, then order 2 of it. Watch the server say `item_sold_out`. Then order 1, and see the menu mark it unavailable.
+
+## 2026-11-16 · Payments land in each restaurant's own Paystack
+
+**What we built**
+
+A guest's payment now goes to the Paystack account of the restaurant they're eating at. The server finds that restaurant's key and charges the bill the server itself worked out. When Paystack says "success", the order shows as paid.
+
+**How it works**
+
+```
+guest → POST /orders/…/bill → quote (share + tip + fee), made by the server
+guest → POST /payments {quoteId} → server opens Mama's sealed key → Paystack charges
+Paystack "success" → payment succeeded → order paid, lines ticked (once only)
+```
+
+Each restaurant's secret key is stored **sealed**. The server locks it with `ENCRYPTION_KEY`, which lives only in Heroku's settings. Someone with a copy of the database sees `v1.Xk3…` and nothing useful.
+
+**Files to look at**
+
+- `server/src/secrets/sealed.ts`: sealing and opening a key.
+- `server/src/venues/venuePaystack.ts`: finds the right restaurant's key.
+- `server/src/routes/payments.ts`: the payment routes and the webhook.
+- `server/src/db/paymentStore.ts`: `save`, which pays the order exactly once.
+
+**New idea: authenticated encryption**
+
+AES-GCM doesn't only scramble the key. It adds a tag, like a wax seal. If anyone changes even one letter of the stored value, opening it fails loudly instead of giving back a wrong key. The test `a changed letter or the wrong key is refused` shows it.
+
+**Try it yourself**
+
+In `payments.test.ts`, sign a webhook with `sk_test_someoneelse` instead of the venue's key, and watch the server refuse it with 401.
