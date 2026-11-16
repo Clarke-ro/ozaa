@@ -3168,3 +3168,32 @@ Instead of passing photos through our server, the server signs a permission slip
 **Try it yourself**
 
 In `media.test.ts`, save a dish with a `photoMediaId` before calling `upload(...)`. The server says `media_not_found`: it never shows a photo that didn't arrive.
+
+## 2026-11-16 · Tables and QR codes on the real server
+
+**What we built**
+
+Owners see their tables, add new ones (like "13" or "Patio-1"), and download each table's QR code. Each code opens that table's page on the real app, so a guest who scans it starts a table visit.
+
+**How it works**
+
+```
+owner → POST /owner/venues/{id}/tables {codes: ["13","Patio-1"]}
+server → saves the new ones, keeps any that exist (safe to repeat)
+owner → GET …/tables/{tableId}/qr → SVG of https://cravins-app.vercel.app/mamas-kitchen/t/13
+```
+
+The server draws the QR with the same code as the app (`src/lib/qrSvg.ts`, shared by the sync script), so the sticker and the screen always match.
+
+**Files to look at**
+
+- `server/src/routes/ownerTables.ts`
+- `src/lib/tableLink.ts`: the address a QR holds.
+
+**New idea: natural sort**
+
+Plain text sorting puts "10" before "2". `localeCompare(…, { numeric: true })` compares the numbers inside the text, so tables list as 1, 2 … 10.
+
+**Try it yourself**
+
+In a Node prompt, sort `['10', '2', '1']` with and without `{ numeric: true }`, and compare the results.

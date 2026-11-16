@@ -68,6 +68,7 @@ export async function ownerSetup(options: { verify?: VerifyOwner | null } = {}) 
       venueKeys: venuePaystack({ db, key: TEST_KEY, client }),
       paystackClient: client,
       storage,
+      siteUrl: 'https://cravins-app.vercel.app',
     },
     payments: {} as PaymentService,
     allowedOrigins: [],
@@ -81,7 +82,14 @@ export async function ownerSetup(options: { verify?: VerifyOwner | null } = {}) 
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     });
     const text = await res.text();
-    return { status: res.status, json: text ? JSON.parse(text) : null };
+    // Most replies are JSON; a QR code is SVG text, kept in `text`.
+    let json = null;
+    try {
+      json = text ? JSON.parse(text) : null;
+    } catch {
+      json = null;
+    }
+    return { status: res.status, json, text, type: res.headers.get('Content-Type') ?? '' };
   };
   return { db, call, logs, mamas, upload, tick: (ms: number) => (clock += ms) };
 }
