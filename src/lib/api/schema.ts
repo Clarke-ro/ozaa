@@ -1885,6 +1885,8 @@ export interface components {
             /** @description Every notice as the owner set it, including ones switched off or outside their times. */
             noticeSettings?: components["schemas"]["StoreNotices"];
             tax?: components["schemas"]["TaxSetup"];
+            /** @description The number that gets new-order alerts on WhatsApp (Settings > Integrations). Owner only, never shown to guests. Null or missing means no alerts. Sending them waits for Phase 5. */
+            whatsappAlerts?: components["schemas"]["GhanaPhone"] | null;
         };
         VenueSettingsPatch: {
             name?: string;
@@ -1917,6 +1919,8 @@ export interface components {
             published?: boolean;
             onlineOrdering?: components["schemas"]["OnlineOrdering"];
             tax?: components["schemas"]["TaxSetup"];
+            /** @description See VenueSettings.whatsappAlerts. Null turns the alerts off. */
+            whatsappAlerts?: components["schemas"]["GhanaPhone"] | null;
         };
         Wifi: {
             ssid: string;
