@@ -5,6 +5,7 @@ import type { Log } from './log.ts';
 import { Problem, problemResponse } from './http/problem.ts';
 import { guestRoutes, type GuestDeps } from './routes/guest.ts';
 import { ownerRoutes, type OwnerRouteDeps } from './routes/owner.ts';
+import { ownerMenuRoutes } from './routes/ownerMenu.ts';
 import { paymentRoutes } from './routes/payments.ts';
 
 export function createApp(deps: {
@@ -56,6 +57,7 @@ export function createApp(deps: {
     app.route('/', paymentRoutes({ ...deps.guest, payments: deps.payments, log: deps.log }));
   }
   if (deps.owner) app.route('/', ownerRoutes({ ...deps.owner, log: deps.log }));
+  if (deps.owner) app.route('/', ownerMenuRoutes(deps.owner));
 
   return app;
 }
