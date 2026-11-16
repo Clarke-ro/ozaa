@@ -88,6 +88,7 @@ These are settled. Do not reopen them.
 - **Two ways to order** *(2026-11-03)*: walk-in guests scan a **table QR** (no contact details, call waiter, ask for the bill). Online customers use the venue's **menu link** (`/<venue-slug>`) to order for pickup or delivery, and give a name and phone (plus an address for delivery). That contact data lives on the order only, never in the guest session, and is never logged.
 - **Plans:** the owner plan badge and Billing page use the placeholder plans from `landing/src/content/pricing.ts` until real prices are set.
 - **Build order:** frontend first against a fixed API contract and a mock. The backend comes only after Clarke approves the UI. *2026-11-03:* Clarke approved the MenuRite-gap work (`docs/menurite-gap-table.md`): build all of its UI on the mock first, then hook in the backend.
+- **Hosting** *(2026-11-16)*: the server (`server/`, Hono) runs on Vercel Functions as its own Vercel project, with Vercel Cron for the payment check. The database is Supabase Postgres, reached through Supabase's pooled connection, and photos go in Supabase Storage. Supabase Auth and Clerk are not used: sign-in stays the contract's phone-and-code flow with Arkesel. Free plans while building; Vercel Pro and a paid Supabase plan before real money. Heroku is the fallback if the server ever needs to run all the time.
 - **Code style:** Clarke is learning, so code must be simple, readable, and commented where it is not obvious. Every feature gets a LEARNING.md entry.
 
 ## 5. Stack and why
@@ -640,7 +641,7 @@ Approved by Clarke on 2026-11-12: build the canvas redesign on the mock first, b
 
 ### Phase 5: Backend for products 1–4
 
-- [ ] 5.1 `server/`: Hono + TypeScript, Postgres with Drizzle migrations, config parsed with zod, structured logs without personal data.
+- [x] 5.1 `server/`: Hono + TypeScript, Postgres with Drizzle migrations, config parsed with zod, structured logs without personal data. Done 2026-11-16: payments moved from memory to Postgres with a unique Idempotency-Key, `src/log.ts` scrubs personal data, and tests run on PGlite.
 - [ ] 5.2 Implement the contract exactly. Run contract tests that call every operation and validate responses against `openapi.yaml`, and reuse the fixtures as seed data.
   - Tenant checks (audit N6, 2026-11-11): for **every** `/owner/...` operation, a staff member of venue A gets 403 for venue B's venue, order, table, call, menu item and loyalty data. The mock doesn't enforce this (most mock owner calls skip it), so these tests are the first real line.
   - Role checks: each owner call is tested with every `StaffRole` in the contract (owner, manager, waiter, kitchen, viewer, staff_scanner) against what that role may do.
@@ -749,7 +750,7 @@ The agent must ask these, not guess. Until he answers, build behind a setting or
 3. Lawyer sign-off that subaccount split settlement keeps Cravins outside PSP licensing under Act 987.
 4. DPC registration done before real phone numbers are stored?
 5. The SMS/OTP provider for Phase 5 (and WhatsApp for marketing later).
-6. Server hosting and database provider for Phase 5.
+6. ~~Server hosting and database provider~~ **Answered 2026-11-16:** Vercel + Supabase (section 4).
 7. Trademark search for "cravins" (Ghana RGD, OAPI, WIPO) and the native-speaker meaning check, and which domains to buy (`cravins.app` is the assumed one).
 8. Native speakers for French, Portuguese, Spanish, Arabic and Swahili. English stays the only selectable language until those files are filled by people, not by machine translation.
 9. The real first venue(s), to replace the AI-generated sample photos and videos.

@@ -1,4 +1,8 @@
-# Cravins server: Paystack sandbox slice (BUILD.md 2b)
+# Cravins server
+
+Phase 5 has started (BUILD.md section 13). The server runs on Postgres: Supabase in production, a local Postgres or PGlite while building. It will run on Vercel Functions (BUILD.md section 4). So far it has the Paystack sandbox slice from 2b, now storing payments in Postgres.
+
+## Payments (from the 2b sandbox slice)
 
 The only server code before the UI approval gate. It does four things, exactly as `api/openapi.yaml` describes them:
 
@@ -13,18 +17,26 @@ Only Paystack's "success" for the same amount and currency (GHS) makes a payment
 
 ## Run it
 
-1. `cp .env.example .env`, then put your Paystack **test** secret key in `.env`. A live key (`sk_live_`) is refused.
-2. `npm install`, then `npm run dev`. It listens on http://localhost:4000/v1.
-3. In the app's root `.env`, set `EXPO_PUBLIC_API_LIVE=payments` and start the app (`npx expo start --web`). Payment calls go to this server; everything else stays on the mock.
-4. Pay at Bean There (`/bean-there/t/7`) with Paystack's test MoMo numbers or test cards from the Paystack docs.
+1. `cp .env.example .env`. Then fill it in:
+   - your Paystack **test** secret key. A live key (`sk_live_`) is refused.
+   - `DATABASE_URL`: your Supabase pooled connection string, or a local Postgres.
+2. `npm install`, then `npm run db:migrate` to create the tables. Run it again after every schema change; it's safe to repeat.
+3. `npm run dev`. It listens on http://localhost:4000/v1.
+4. In the app's root `.env`, set `EXPO_PUBLIC_API_LIVE=payments` and start the app (`npx expo start --web`). Payment calls go to this server; everything else stays on the mock.
+5. Pay at Bean There (`/bean-there/t/7`) with Paystack's test MoMo numbers or test cards from the Paystack docs.
 
-`npm test` runs the tests (no Paystack needed). `npm run typecheck` checks the types.
+`npm test` runs the tests. They use PGlite, a real Postgres inside Node, so no database or Paystack is needed. `npm run typecheck` checks the types.
+
+## The database
+
+- **Tables** are defined in `src/db/schema.ts`. After changing it, run `npm run db:generate`. That writes a new SQL file in `drizzle/`; commit it with the change. `npm run db:migrate` applies it.
+- **Migrations run as their own step**, never when the server starts. Two copies of the server starting together could otherwise both try to change the tables.
+- **No double charges.** A payment's `Idempotency-Key` is unique in the table. A second tap, even one that reaches another copy of the server, gets the first payment back.
 
 ## Know before you test
 
 - **The amount comes from the app.** The bill still lives in the app's mock, so the app sends the quote in an `X-Cravins-Sandbox-Quote` header. That's only acceptable because the server refuses live keys. Phase 5 removes it: the server works out the bill itself.
-- **Payments are kept in memory.** A restart forgets them. Phase 5 moves them to Postgres.
 - **Card on the web reloads the page.** Coming back from Paystack's card page loads the app fresh, and the in-browser mock forgets the order. The server still has the payment (see the log). MoMo has no page load, so it works end to end.
 - **Webhooks need a public address.** Paystack can't reach your laptop. The app checks with verify instead, so this isn't needed to test. To try webhooks, point Paystack's test webhook URL at a tunnel to `/v1/webhooks/paystack`.
 - **Telecel may ask for a code** (`send_otp`). This slice doesn't support entering it yet, so test with MTN first.
-- **Logs** are one JSON line per event, with no phone numbers, emails or keys.
+- **Logs** are one JSON line per event, written through `src/log.ts`. It drops any field named like personal data or a secret, and blanks phone numbers, emails, keys and tokens anywhere else.

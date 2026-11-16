@@ -5,6 +5,11 @@ const schema = z.object({
   PAYSTACK_SECRET_KEY: z
     .string({ error: 'PAYSTACK_SECRET_KEY is missing. Put your Paystack test secret key in server/.env.' })
     .startsWith('sk_test_', { error: 'PAYSTACK_SECRET_KEY must be a test key (sk_test_…).' }),
+  // Postgres, e.g. Supabase's pooled connection string (Project Settings > Database). Holds a
+  // password, so it lives in server/.env and Vercel's settings, never in git or a log.
+  DATABASE_URL: z
+    .string({ error: 'DATABASE_URL is missing. Put your Postgres connection string in server/.env.' })
+    .regex(/^postgres(ql)?:\/\//, { error: 'DATABASE_URL must start with postgres:// or postgresql://.' }),
   PORT: z.coerce.number().int().positive().default(4000),
   // Where Paystack sends a card payer back: {SITE_URL}/{venueSlug}/pay (api/openapi.yaml).
   SITE_URL: z.url().default('http://localhost:8081'),

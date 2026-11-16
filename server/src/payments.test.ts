@@ -1,6 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import type { Paystack } from './paystack.ts';
+import { paymentStore } from './db/paymentStore.ts';
+import { testDb } from './db/testDb.ts';
 import { paymentService } from './payments.ts';
 import type { PaystackTransaction } from './status.ts';
 
@@ -25,11 +27,12 @@ function fakePaystack(verify: () => PaystackTransaction) {
   return { paystack, calls };
 }
 
-function service(verify: () => PaystackTransaction, start = 0) {
+async function service(verify: () => PaystackTransaction, start = 0) {
   let clock = start;
   const fake = fakePaystack(verify);
   const svc = paymentService({
     paystack: fake.paystack,
+    store: paymentStore(await testDb()),
     siteUrl: 'https://cravins-app.vercel.app/',
     testMode: true,
     now: () => clock,
@@ -41,7 +44,7 @@ function service(verify: () => PaystackTransaction, start = 0) {
 const pending = () => ({ status: 'ongoing', amount: 14_300, currency: 'GHS' });
 
 test('MoMo starts pay_offline with 180 seconds to approve', async () => {
-  const { svc, calls } = service(pending);
+  const { svc, calls } = await service(pending);
   const p = await svc.start(
     { charge, method: 'momo', momo: { phone: '+233241234567', provider: 'mtn' } },
     'key-1',
@@ -54,7 +57,7 @@ test('MoMo starts pay_offline with 180 seconds to approve', async () => {
 });
 
 test('a card goes to Paystack checkout and comes back to the venue pay page', async () => {
-  const { svc, calls } = service(pending);
+  const { svc, calls } = await service(pending);
   const p = await svc.start({ charge, method: 'card' }, 'key-1');
   assert.equal(p.status, 'open_url');
   assert.equal(p.authorizationUrl, 'https://checkout.paystack.com/abc');
@@ -63,7 +66,7 @@ test('a card goes to Paystack checkout and comes back to the venue pay page', as
 });
 
 test('the same Idempotency-Key never charges twice', async () => {
-  const { svc, calls } = service(pending);
+  const { svc, calls } = await service(pending);
   const input = { charge, method: 'momo' as const, momo: { phone: '+233241234567', provider: 'mtn' as const } };
   const a = await svc.start(input, 'key-1');
   const b = await svc.start(input, 'key-1');
@@ -72,7 +75,7 @@ test('the same Idempotency-Key never charges twice', async () => {
 });
 
 test('verify with Paystack success and the right amount is paid', async () => {
-  const { svc } = service(() => ({ status: 'success', amount: 14_300, currency: 'GHS' }));
+  const { svc } = await service(() => ({ status: 'success', amount: 14_300, currency: 'GHS' }));
   await svc.start({ charge, method: 'card' }, 'key-1');
   const p = await svc.verify('pay_1');
   assert.equal(p?.status, 'succeeded');
@@ -80,14 +83,14 @@ test('verify with Paystack success and the right amount is paid', async () => {
 });
 
 test('a success for another amount is never paid', async () => {
-  const { svc } = service(() => ({ status: 'success', amount: 100, currency: 'GHS' }));
+  const { svc } = await service(() => ({ status: 'success', amount: 100, currency: 'GHS' }));
   await svc.start({ charge, method: 'card' }, 'key-1');
   const p = await svc.verify('pay_1');
   assert.equal(p?.status, 'failed');
 });
 
 test('GET asks Paystack again only every few seconds while the payment is open', async () => {
-  const { svc, calls, tick } = service(pending);
+  const { svc, calls, tick } = await service(pending);
   await svc.start({ charge, method: 'momo', momo: { phone: '+233241234567', provider: 'mtn' } }, 'key-1');
   await svc.get('pay_1');
   tick(4_000);
@@ -100,41 +103,41 @@ test('GET asks Paystack again only every few seconds while the payment is open',
 
 test('a finished payment never changes again, whatever comes later', async () => {
   let answer: PaystackTransaction = { status: 'success', amount: 14_300, currency: 'GHS' };
-  const { svc } = service(() => answer);
+  const { svc } = await service(() => answer);
   await svc.start({ charge, method: 'card' }, 'key-1');
   await svc.verify('pay_1');
   answer = { status: 'failed', amount: 14_300, currency: 'GHS' };
   assert.equal((await svc.verify('pay_1'))?.status, 'succeeded');
-  assert.equal(svc.fromWebhook('pay_1', answer)?.status, 'succeeded');
+  assert.equal((await svc.fromWebhook('pay_1', answer))?.status, 'succeeded');
 });
 
 test('an unknown reference is null, and webhooks for it are ignored', async () => {
-  const { svc } = service(pending);
+  const { svc } = await service(pending);
   assert.equal(await svc.get('nope'), null);
-  assert.equal(svc.fromWebhook('nope', pending()), null);
+  assert.equal(await svc.fromWebhook('nope', pending()), null);
 });
 
 test('a card payer who came back early and then paid is still paid', async () => {
   let answer: PaystackTransaction = { status: 'abandoned', amount: 14_300, currency: 'GHS' };
-  const { svc } = service(() => answer);
+  const { svc } = await service(() => answer);
   await svc.start({ charge, method: 'card' }, 'key-1');
   // Back in the app before paying: Paystack says abandoned.
   assert.equal((await svc.verify('pay_1'))?.status, 'abandoned');
   // They go back to Paystack's page and pay. The money moved, so the payment must count.
   answer = { status: 'success', amount: 14_300, currency: 'GHS' };
-  assert.equal(svc.fromWebhook('pay_1', answer)?.status, 'succeeded');
+  assert.equal((await svc.fromWebhook('pay_1', answer))?.status, 'succeeded');
 });
 
 test('after abandoned, a success for the wrong amount is still not paid', async () => {
-  const { svc } = service(() => ({ status: 'abandoned', amount: 14_300, currency: 'GHS' }));
+  const { svc } = await service(() => ({ status: 'abandoned', amount: 14_300, currency: 'GHS' }));
   await svc.start({ charge, method: 'card' }, 'key-1');
   await svc.verify('pay_1');
-  const late = svc.fromWebhook('pay_1', { status: 'success', amount: 100, currency: 'GHS' });
+  const late = await svc.fromWebhook('pay_1', { status: 'success', amount: 100, currency: 'GHS' });
   assert.equal(late?.status, 'failed');
 });
 
 test('two taps at the same moment with one Idempotency-Key charge once', async () => {
-  const { svc, calls } = service(pending);
+  const { svc, calls } = await service(pending);
   const input = { charge, method: 'momo' as const, momo: { phone: '+233241234567', provider: 'mtn' as const } };
   const [a, b] = await Promise.all([svc.start(input, 'key-1'), svc.start(input, 'key-1')]);
   assert.equal(a.reference, b.reference);

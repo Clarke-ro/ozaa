@@ -2,20 +2,26 @@
   "name": "cravins-server",
   "private": true,
   "type": "module",
-  "description": "Cravins server. Phase 2b: only the Paystack sandbox payment slice.",
+  "description": "Cravins server (Phase 5): Hono on Postgres. Payments are the first part moved over.",
   "scripts": {
     "dev": "tsx watch --env-file-if-exists=.env src/index.ts",
     "start": "tsx --env-file-if-exists=.env src/index.ts",
     "test": "node --import tsx --test \"src/**/*.test.ts\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx --env-file-if-exists=.env src/db/migrate.ts"
   },
   "dependencies": {
     "@hono/node-server": "^2.1.6",
+    "drizzle-orm": "^0.44.7",
     "hono": "^4.13.17",
+    "postgres": "^3.4.7",
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.3.11",
     "@types/node": "^26.6.6",
+    "drizzle-kit": "^0.31.6",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
   }
