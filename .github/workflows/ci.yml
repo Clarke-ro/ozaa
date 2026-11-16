@@ -4,6 +4,12 @@ on:
   push:
     branches: [main]
 
+# Actions minutes are limited (3,000 a month on this plan). A new push to a PR stops the run still
+# going for the old one, since only the newest result matters.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -29,11 +35,16 @@ jobs:
 
       - run: '! git grep -nI -i -e takeorder -e scanchop -- src app.config.ts'
 
+      # The browser tests are the slow half of the run. They already passed on the PR, so the run
+      # after merging into main skips them and keeps only the quick checks above.
       - run: npx expo export -p web
+        if: github.event_name == 'pull_request'
       - run: npx playwright install --with-deps chromium
+        if: github.event_name == 'pull_request'
       - run: npx playwright test
+        if: github.event_name == 'pull_request'
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && github.event_name == 'pull_request'
         with:
           name: playwright-report
           path: |
