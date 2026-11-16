@@ -26,7 +26,18 @@ import { SampleLogins, SAMPLES } from './SampleLogins';
 
 // Demo builds only: sample staff from the mock, typed the way a Ghanaian number is (024…).
 
+/** The sign-in page always uses the Cravins look, never a venue's colours. */
 export function OwnerLogin() {
+  return (
+    <ThemeProvider theme={cravinsTheme}>
+      <LoginForm />
+    </ThemeProvider>
+  );
+}
+
+// Its own component so useTheme and useStyles run inside the provider above. Called outside it,
+// they read the outer theme, and in dark mode the text took dark colours on a light card.
+function LoginForm() {
   const theme = useTheme();
   const styles = useStyles();
   const { t } = useTranslation();
@@ -88,131 +99,129 @@ export function OwnerLogin() {
   };
 
   return (
-    <ThemeProvider theme={cravinsTheme}>
-      <SafeScreen>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={styles.keyboardAvoid}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 24 : 0}
+    <SafeScreen>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.keyboardAvoid}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 24 : 0}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          showsVerticalScrollIndicator={false}
         >
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="on-drag"
-            showsVerticalScrollIndicator={false}
-          >
-            <Pressable style={styles.touchableDismissArea} onPress={dismissKeyboard}>
-              <DeskCard style={styles.authCard}>
-                {/* Cravins brand lockup */}
-                <View style={styles.brandLockup}>
-                  <CravinsMark size={44} />
-                  <Text variant="caption" style={styles.brandLabel}>
-                    {t('owner.loginBrand')}
-                  </Text>
-                  <Text variant="display-m" style={styles.title}>
-                    {t('owner.login')}
-                  </Text>
-                  <Text variant="body" style={styles.subtitle}>
-                    {sent ? t('owner.codeLead') : t('owner.loginLead')}
-                  </Text>
-                </View>
+          <Pressable style={styles.touchableDismissArea} onPress={dismissKeyboard}>
+            <DeskCard style={styles.authCard}>
+              {/* Cravins brand lockup */}
+              <View style={styles.brandLockup}>
+                <CravinsMark size={44} />
+                <Text variant="caption" style={styles.brandLabel}>
+                  {t('owner.loginBrand')}
+                </Text>
+                <Text variant="display-m" style={styles.title}>
+                  {t('owner.login')}
+                </Text>
+                <Text variant="body" style={styles.subtitle}>
+                  {sent ? t('owner.codeLead') : t('owner.loginLead')}
+                </Text>
+              </View>
 
-                {/* Phone input */}
-                <View style={styles.formGroup}>
-                  <Text variant="caption" style={styles.inputLabel}>
-                    {t('owner.phone')}
-                  </Text>
-                  <View style={styles.phoneInputWrapper}>
-                    <View style={styles.phonePrefixBadge}>
-                      <Text variant="body-strong" style={styles.prefixText}>
-                        🇬🇭 +233
-                      </Text>
-                    </View>
-                    <TextInput
-                      accessibilityLabel={t('owner.phone')}
-                      value={phone}
-                      onChangeText={setPhone}
-                      placeholder="024 123 4567"
-                      placeholderTextColor={theme.meta}
-                      keyboardType="phone-pad"
-                      inputMode="tel"
-                      returnKeyType={sent ? 'done' : 'next'}
-                      onSubmitEditing={() => {
-                        if (!sent) handleSubmit();
-                        else dismissKeyboard();
-                      }}
-                      editable={!sent}
-                      style={styles.phoneInput}
-                    />
-                  </View>
-                </View>
-
-                {/* OTP Code input */}
-                {sent ? (
-                  <View style={styles.formGroup}>
-                    <View style={styles.codeHeaderRow}>
-                      <Text variant="caption" style={styles.inputLabel}>
-                        {t('owner.code')}
-                      </Text>
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel={t('owner.changeNumber')}
-                        onPress={() => setSent(false)}
-                      >
-                        <Text variant="caption" style={{ color: theme.ink, fontWeight: '600' }}>
-                          {t('owner.changeNumber')}
-                        </Text>
-                      </Pressable>
-                    </View>
-                    <TextInput
-                      accessibilityLabel={t('owner.code')}
-                      value={code}
-                      onChangeText={setCode}
-                      placeholder="123456"
-                      placeholderTextColor={theme.meta}
-                      keyboardType="number-pad"
-                      inputMode="numeric"
-                      maxLength={6}
-                      returnKeyType="done"
-                      onSubmitEditing={handleSubmit}
-                      autoFocus
-                      style={styles.codeInput}
-                    />
-                  </View>
-                ) : null}
-
-                {error ? (
-                  <View style={styles.errorBox}>
-                    <Text variant="caption" style={{ color: theme.error, fontWeight: '600' }}>
-                      {t('errors.generic')}
+              {/* Phone input */}
+              <View style={styles.formGroup}>
+                <Text variant="caption" style={styles.inputLabel}>
+                  {t('owner.phone')}
+                </Text>
+                <View style={styles.phoneInputWrapper}>
+                  <View style={styles.phonePrefixBadge}>
+                    <Text variant="body-strong" style={styles.prefixText}>
+                      🇬🇭 +233
                     </Text>
                   </View>
-                ) : null}
-
-                {/* Submit button */}
-                <Button
-                  label={sent ? t('owner.enter') : t('owner.send')}
-                  onPress={handleSubmit}
-                  loading={loading}
-                  disabled={!phone.trim() || (sent && !code.trim())}
-                />
-
-                {/* Sample logins: demo builds only, the accounts exist only in the mock. */}
-                {!sent && DEMO ? (
-                  <SampleLogins
-                    phone={phone}
-                    onPick={(local) => {
-                      dismissKeyboard();
-                      setPhone(local);
+                  <TextInput
+                    accessibilityLabel={t('owner.phone')}
+                    value={phone}
+                    onChangeText={setPhone}
+                    placeholder="024 123 4567"
+                    placeholderTextColor={theme.meta}
+                    keyboardType="phone-pad"
+                    inputMode="tel"
+                    returnKeyType={sent ? 'done' : 'next'}
+                    onSubmitEditing={() => {
+                      if (!sent) handleSubmit();
+                      else dismissKeyboard();
                     }}
+                    editable={!sent}
+                    style={styles.phoneInput}
                   />
-                ) : null}
-              </DeskCard>
-            </Pressable>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </SafeScreen>
-    </ThemeProvider>
+                </View>
+              </View>
+
+              {/* OTP Code input */}
+              {sent ? (
+                <View style={styles.formGroup}>
+                  <View style={styles.codeHeaderRow}>
+                    <Text variant="caption" style={styles.inputLabel}>
+                      {t('owner.code')}
+                    </Text>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={t('owner.changeNumber')}
+                      onPress={() => setSent(false)}
+                    >
+                      <Text variant="caption" style={{ color: theme.ink, fontWeight: '600' }}>
+                        {t('owner.changeNumber')}
+                      </Text>
+                    </Pressable>
+                  </View>
+                  <TextInput
+                    accessibilityLabel={t('owner.code')}
+                    value={code}
+                    onChangeText={setCode}
+                    placeholder="123456"
+                    placeholderTextColor={theme.meta}
+                    keyboardType="number-pad"
+                    inputMode="numeric"
+                    maxLength={6}
+                    returnKeyType="done"
+                    onSubmitEditing={handleSubmit}
+                    autoFocus
+                    style={styles.codeInput}
+                  />
+                </View>
+              ) : null}
+
+              {error ? (
+                <View style={styles.errorBox}>
+                  <Text variant="caption" style={{ color: theme.error, fontWeight: '600' }}>
+                    {t('errors.generic')}
+                  </Text>
+                </View>
+              ) : null}
+
+              {/* Submit button */}
+              <Button
+                label={sent ? t('owner.enter') : t('owner.send')}
+                onPress={handleSubmit}
+                loading={loading}
+                disabled={!phone.trim() || (sent && !code.trim())}
+              />
+
+              {/* Sample logins: demo builds only, the accounts exist only in the mock. */}
+              {!sent && DEMO ? (
+                <SampleLogins
+                  phone={phone}
+                  onPick={(local) => {
+                    dismissKeyboard();
+                    setPhone(local);
+                  }}
+                />
+              ) : null}
+            </DeskCard>
+          </Pressable>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeScreen>
   );
 }
 

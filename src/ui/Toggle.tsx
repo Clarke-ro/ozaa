@@ -18,7 +18,7 @@ const PAD = 3;
 const TRAVEL = WIDTH - KNOB - PAD * 2;
 
 /**
- * On/off switch drawn to match owner-services.png (orange track, white knob). The knob slides and
+ * On/off switch for guest and owner screens, drawn to match owner-services.png (orange track, white knob). The knob slides and
  * the track colour fades in the same 180 ms as the tap's haptic, so sight and touch agree
  * (apple-motion §13). With Reduce Motion on, it changes at once.
  */

@@ -79,14 +79,18 @@ export function DishGallery({ photos, name }: { photos: Photo[]; name: string })
               accessibilityRole="button"
               accessibilityLabel={t('menu.photoOf', { index: index + 1, count: photos.length })}
               accessibilityState={{ selected: on }}
-              hitSlop={{ top: 16, bottom: 16, left: 6, right: 6 }}
+              hitSlop={{ top: 10, bottom: 10 }}
               onPress={() => goTo(index)}
-              style={[
-                styles.dot,
-                on ? styles.dotOn : null,
-                { backgroundColor: on ? theme.ink : theme.line },
-              ]}
-            />
+              style={styles.dotHit}
+            >
+              <View
+                style={[
+                  styles.dot,
+                  on ? styles.dotOn : null,
+                  { backgroundColor: on ? theme.ink : theme.line },
+                ]}
+              />
+            </Pressable>
           );
         })}
       </View>
@@ -100,7 +104,9 @@ const styles = StyleSheet.create({
   full: { width: '100%' },
   // Rounded inside the soft panel on the dish page.
   photo: { width: '100%', aspectRatio: RATIO, borderRadius: tokens.radius.lg },
-  dots: { flexDirection: 'row', justifyContent: 'center', gap: tokens.space[2] },
+  dots: { flexDirection: 'row', justifyContent: 'center' },
+  // The dot is small to look at, but the tap area is 24 px (web ignores hitSlop).
+  dotHit: { minWidth: 24, height: 24, paddingHorizontal: 4, alignItems: 'center', justifyContent: 'center' },
   dot: { width: 8, height: 8, borderRadius: 4 },
   dotOn: { width: 22 },
 });

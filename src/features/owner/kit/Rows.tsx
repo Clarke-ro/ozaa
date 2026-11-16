@@ -11,7 +11,7 @@ import { ChevronRight, type LucideIcon } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
-import { Toggle } from './Toggle';
+import { Toggle } from '@/ui/Toggle';
 
 // Above this text size a label and its control no longer fit side by side, so they stack.
 const STACK_AT = 1.35;

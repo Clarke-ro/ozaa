@@ -49,11 +49,12 @@ const config: ExpoConfig = {
     [
       'expo-camera',
       {
-        // The camera scans loyalty cards (owner app) and records video reviews (guests); the store
-        // review checks this text matches every use.
-        cameraPermission:
-          'Cravins uses the camera to scan loyalty cards and to record your video review.',
-        microphonePermission: 'Cravins records sound with your video review.',
+        // The camera only scans loyalty cards in the owner app (video reviews were dropped, BUILD.md
+        // 4.2). Store review checks this text matches the real use, and rejects a microphone
+        // permission the app never uses, so that one is switched off.
+        cameraPermission: 'Cravins uses the camera to scan loyalty cards.',
+        microphonePermission: false,
+        recordAudioAndroid: false,
       },
     ],
     [
