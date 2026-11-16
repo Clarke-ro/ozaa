@@ -26,6 +26,17 @@ import { SampleLogins, SAMPLES } from './SampleLogins';
 
 // Demo builds only: sample staff from the mock, typed the way a Ghanaian number is (024…).
 
+// Real builds sign in by email code for now (src/lib/auth/clerkOwnerAuth.ts); the demo by phone.
+const byEmail = ownerAuth.identifier === 'email';
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** What sendCode gets: a +233 number, or a lower-case email. Null while it isn't valid yet. */
+function signInAddress(typed: string): string | null {
+  if (!byEmail) return parseGhanaPhone(typed)?.phone ?? null;
+  const email = typed.trim().toLowerCase();
+  return EMAIL.test(email) ? email : null;
+}
+
 /** The sign-in page always uses the Cravins look, never a venue's colours. */
 export function OwnerLogin() {
   return (
@@ -58,14 +69,14 @@ function LoginForm() {
 
   const handleSubmit = () => {
     dismissKeyboard();
-    const parsed = parseGhanaPhone(phone);
-    if (!parsed) return;
+    const address = signInAddress(phone);
+    if (!address) return;
     setError(false);
     setLoading(true);
 
     if (!sent) {
       void ownerAuth
-        .sendCode(parsed.phone)
+        .sendCode(address)
         .then(() => {
           setSent(true);
           setLoading(false);
@@ -120,29 +131,33 @@ function LoginForm() {
                   {t('owner.login')}
                 </Text>
                 <Text variant="body" style={styles.subtitle}>
-                  {sent ? t('owner.codeLead') : t('owner.loginLead')}
+                  {sent ? t(byEmail ? 'owner.codeLeadEmail' : 'owner.codeLead') : t('owner.loginLead')}
                 </Text>
               </View>
 
-              {/* Phone input */}
+              {/* Email or phone input */}
               <View style={styles.formGroup}>
                 <Text variant="caption" style={styles.inputLabel}>
-                  {t('owner.phone')}
+                  {t(byEmail ? 'owner.email' : 'owner.phone')}
                 </Text>
                 <View style={styles.phoneInputWrapper}>
-                  <View style={styles.phonePrefixBadge}>
-                    <Text variant="body-strong" style={styles.prefixText}>
-                      🇬🇭 +233
-                    </Text>
-                  </View>
+                  {byEmail ? null : (
+                    <View style={styles.phonePrefixBadge}>
+                      <Text variant="body-strong" style={styles.prefixText}>
+                        🇬🇭 +233
+                      </Text>
+                    </View>
+                  )}
                   <TextInput
-                    accessibilityLabel={t('owner.phone')}
+                    accessibilityLabel={t(byEmail ? 'owner.email' : 'owner.phone')}
                     value={phone}
                     onChangeText={setPhone}
-                    placeholder="024 123 4567"
+                    placeholder={byEmail ? 'you@example.com' : '024 123 4567'}
                     placeholderTextColor={theme.meta}
-                    keyboardType="phone-pad"
-                    inputMode="tel"
+                    keyboardType={byEmail ? 'email-address' : 'phone-pad'}
+                    inputMode={byEmail ? 'email' : 'tel'}
+                    autoCapitalize="none"
+                    autoComplete={byEmail ? 'email' : 'tel'}
                     returnKeyType={sent ? 'done' : 'next'}
                     onSubmitEditing={() => {
                       if (!sent) handleSubmit();
@@ -163,11 +178,11 @@ function LoginForm() {
                     </Text>
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel={t('owner.changeNumber')}
+                      accessibilityLabel={t(byEmail ? 'owner.changeEmail' : 'owner.changeNumber')}
                       onPress={() => setSent(false)}
                     >
                       <Text variant="caption" style={{ color: theme.ink, fontWeight: '600' }}>
-                        {t('owner.changeNumber')}
+                        {t(byEmail ? 'owner.changeEmail' : 'owner.changeNumber')}
                       </Text>
                     </Pressable>
                   </View>

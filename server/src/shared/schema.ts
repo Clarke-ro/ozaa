@@ -91,8 +91,9 @@ export interface paths {
         /**
          * The signed-in staff member.
          * @description The app calls this straight after Clerk signs someone in. The server matches the Clerk user to a
-         *     staff record by its verified phone number the first time, then by Clerk user id. The phone here is
-         *     always the one Clerk has verified, so a number changed in Clerk shows up on the next call.
+         *     staff record by its verified email (staff sign in by email code while Clerk can't text Ghana
+         *     numbers) or verified phone the first time, then by Clerk user id. A phone number changed in Clerk
+         *     shows up on the next call.
          */
         get: operations["getMe"];
         put?: never;
@@ -3321,7 +3322,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
-            /** @description Signed in with Clerk, but this number is on no Cravins team (code `not_staff`). The app asks them to get an invite from their venue owner. */
+            /** @description Signed in with Clerk, but this email or number is on no Cravins team (code `not_staff`). The app asks them to get an invite from their venue owner. */
             403: {
                 headers: {
                     [name: string]: unknown;

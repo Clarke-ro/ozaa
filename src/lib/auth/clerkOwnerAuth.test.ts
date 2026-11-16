@@ -8,6 +8,7 @@ function fakeClerk(options: { knownPhone?: string; code?: string } = {}) {
   const clerkError = (status: number, errorCode: string) =>
     Object.assign(new Error(errorCode), { status, errors: [{ code: errorCode }] });
   let attempts = 0;
+  const strategies: string[] = [];
   const phones = [{ id: 'idn_old', destroy: async () => void calls.push('destroy idn_old') }];
   const clerk: ClerkLike = {
     loaded: true,
@@ -18,9 +19,15 @@ function fakeClerk(options: { knownPhone?: string; code?: string } = {}) {
           const known = identifier === (options.knownPhone ?? identifier);
           return {
             supportedFirstFactors: known
-              ? [{ strategy: 'phone_code', phoneNumberId: 'idn_1' }]
+              ? [
+                  { strategy: 'phone_code', phoneNumberId: 'idn_1' },
+                  { strategy: 'email_code', emailAddressId: 'idn_mail' },
+                ]
               : [],
-            prepareFirstFactor: async () => void calls.push('prepare'),
+            prepareFirstFactor: async (params) => {
+              calls.push('prepare');
+              strategies.push(params.strategy);
+            },
             attemptFirstFactor: async (params) => {
               attempts += 1;
               if (attempts > 3) throw clerkError(429, 'too_many_requests');
@@ -56,7 +63,7 @@ function fakeClerk(options: { knownPhone?: string; code?: string } = {}) {
       clerk.session = null;
     },
   };
-  return { clerk, calls };
+  return { clerk, calls, strategies };
 }
 
 test("the right code signs in with Clerk, and owner calls get Clerk's token", async () => {
@@ -82,6 +89,21 @@ test("a wrong code is 401 bad_code, and Clerk's limit is 429", async () => {
     status: 429,
     code: 'rate_limited',
   });
+});
+
+test('real builds sign in by email code (Clerk keeps SMS to Ghana locked); the demo can still use phone', async () => {
+  const email = fakeClerk();
+  const byEmail = clerkOwnerAuth(async () => email.clerk);
+  expect(byEmail.identifier).toBe('email');
+  await byEmail.sendCode(' owner@example.com ');
+  await byEmail.verifyCode('424242');
+  expect(email.calls[0]).toBe('create owner@example.com');
+  expect(email.strategies).toEqual(['email_code']);
+
+  const phone = fakeClerk();
+  const byPhone = clerkOwnerAuth(async () => phone.clerk, 'phone');
+  await byPhone.sendCode('+233241234567');
+  expect(phone.strategies).toEqual(['phone_code']);
 });
 
 test('an unknown number looks the same as a known one until the code fails (no probing)', async () => {
