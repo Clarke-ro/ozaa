@@ -7,7 +7,9 @@ test('owner setup: skip Wi-Fi and payments, then see what was set up', async ({ 
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
 
+  // Akosua runs Auntie Akos, the sample with no Paystack yet, so the payments step offers to connect.
   await page.goto('/owner/login', { waitUntil: 'domcontentloaded' });
+  await page.getByRole('textbox', { name: 'Phone number' }).fill('024 000 0005');
   await page.getByRole('button', { name: 'Send code', exact: true }).click();
   await page.getByRole('textbox', { name: 'Code', exact: true }).fill('123456');
   await page.getByRole('button', { name: 'Enter', exact: true }).click();

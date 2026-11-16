@@ -17,6 +17,8 @@ export type MockOptions = {
   tokens?: TokenSource;
   /** Whether the device has a connection. While it doesn't, every call fails like a real network. */
   isOnline?: () => boolean;
+  /** Runs once before the first call answers, e.g. to read saved demo settings (demoMemory.ts). */
+  beforeFirstCall?: (world: ReturnType<typeof createWorld>) => Promise<void>;
 };
 
 /** Everything the mock calls share: the in-memory world, the tokens, the clock and the order rules. */
@@ -31,8 +33,10 @@ export function createMockContext(options: MockOptions = {}) {
   const random = options.random ?? Math.random;
   const fast = options.fast ?? false;
   const isOnline = options.isOnline ?? (() => true);
+  const ready = options.beforeFirstCall?.(world) ?? Promise.resolve();
 
   async function gate(): Promise<void> {
+    await ready;
     if (!isOnline() || random() < failRate) throw new OfflineError();
     if (latencyMs > 0) {
       const wait = latencyMs * (0.5 + random());

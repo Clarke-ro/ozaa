@@ -1,8 +1,12 @@
-import { ownerApi } from './testOwner';
+import { signedInMock } from './testOwner';
+
+// Auntie Akos is the sample that takes payment in person, with no online ordering, until its
+// owner (Akosua) sets them up. Mama's Kitchen and Bean There start with both on.
+const AKOSUA = '+233240000005';
 
 test('online ordering is off until the owner saves it, then guests can read it', async () => {
-  const api = await ownerApi();
-  const venue = await api.getVenue('mamas-kitchen');
+  const api = (await signedInMock(Date.now(), AKOSUA)).api;
+  const venue = await api.getVenue('auntie-akos');
   expect(venue.onlineOrdering).toBeUndefined();
   const onlineOrdering = {
     enabled: true,
@@ -16,6 +20,6 @@ test('online ordering is off until the owner saves it, then guests can read it',
     },
   };
   await api.ownerUpdateVenue(venue.id, { onlineOrdering });
-  expect((await api.getVenue('mamas-kitchen')).onlineOrdering).toEqual(onlineOrdering);
+  expect((await api.getVenue('auntie-akos')).onlineOrdering).toEqual(onlineOrdering);
   expect((await api.ownerGetVenue(venue.id)).onlineOrdering).toEqual(onlineOrdering);
 });

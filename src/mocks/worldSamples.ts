@@ -80,47 +80,60 @@ export function tablesFor(slug: string, code: string): Table[] {
 }
 
 /**
- * Sample data: Bean There has connected its own Paystack (test keys), so the demo shows a guest
- * paying in the app. Mama's Kitchen and Auntie Akos take payment in person.
+ * Sample data: Mama's Kitchen (the venue the demo opens) and Bean There have connected their own
+ * Paystack (test keys), so guests can pay in the app. Auntie Akos takes payment in person, so that
+ * case can be tried too.
  */
 export function samplePaymentSettings(
   venues: Record<string, VenuePublic>,
   now: number,
 ): Record<string, PaymentSettings> {
-  const bean = Object.values(venues).find((venue) => venue.slug === 'bean-there');
-  if (!bean) return {};
   const at = new Date(now).toISOString();
-  return {
-    [bean.id]: {
+  const settings: Record<string, PaymentSettings> = {};
+  for (const [slug, key] of [
+    ['mamas-kitchen', 'pk_test_mamaskitchen0sample'],
+    ['bean-there', 'pk_test_beanthere0sample'],
+  ] as const) {
+    const venue = venues[slug];
+    if (!venue) continue;
+    settings[venue.id] = {
       ...defaultPaymentSettings(),
       paystack: {
         mode: 'test',
-        publicKey: 'pk_test_beanthere0sample',
+        publicKey: key,
         secretKeyHint: '••••0000',
         connectedAt: at,
         lastCheckedAt: at,
       },
-    },
-  };
+    };
+  }
+  return settings;
 }
 
 /**
- * Bean There takes menu-link orders for pickup, so the demo shows online ordering (BUILD.md 4b.15).
- * Delivery stays off: the sample venue has no map pin, and delivery needs one to work out distance.
- * Mama's Kitchen and Auntie Akos take orders at the table only.
+ * Menu-link orders (BUILD.md 4b.15). Mama's Kitchen takes pickup and delivery: it has a map pin on
+ * Oxford Street, Osu, which delivery needs to work out the distance. Bean There takes pickup only.
+ * Auntie Akos takes orders at the table only.
  */
 export function withSampleOnlineOrdering(venues: Record<string, VenuePublic>): void {
-  const bean = venues['bean-there'];
-  if (!bean) return;
-  bean.onlineOrdering = {
-    enabled: true,
-    pickup: { enabled: true, prepMinutes: 15 },
-    delivery: {
-      enabled: false,
-      minimumFeePesewas: 1500,
-      feePerKmPesewas: 300,
-      maxDistanceKm: 8,
-      freeOverPesewas: null,
-    },
+  const delivery = {
+    enabled: false,
+    minimumFeePesewas: 1500,
+    feePerKmPesewas: 300,
+    maxDistanceKm: 8,
+    freeOverPesewas: null,
   };
+  const mamas = venues['mamas-kitchen'];
+  if (mamas) {
+    mamas.location = { ...mamas.location, lat: 5.556, lng: -0.1822 };
+    mamas.onlineOrdering = {
+      enabled: true,
+      pickup: { enabled: true, prepMinutes: 20 },
+      delivery: { ...delivery, enabled: true, freeOverPesewas: 20000 },
+    };
+  }
+  const bean = venues['bean-there'];
+  if (bean) {
+    bean.onlineOrdering = { enabled: true, pickup: { enabled: true, prepMinutes: 15 }, delivery };
+  }
 }

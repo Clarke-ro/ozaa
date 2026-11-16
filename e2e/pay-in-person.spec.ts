@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
-// A venue without Paystack: guests pay in person and staff mark the bill paid. Nothing a guest or
+// A venue without Paystack (Auntie Akos in the samples): guests pay in person and staff mark the
+// bill paid. Nothing a guest or
 // an owner can reach should offer the old in-app payment or payout screens.
 const PAY_WORDS = /Pay & split bill|MoMo or card|Mark paid in cash|Payouts?\b|Refund/;
 
@@ -21,7 +22,7 @@ test('guest at a venue with no Paystack: order, ask for the bill, and never see 
   page,
 }) => {
   const errors = watchErrors(page);
-  await page.goto('/mamas-kitchen/t/12', { waitUntil: 'domcontentloaded' });
+  await page.goto('/auntie-akos/t/7', { waitUntil: 'domcontentloaded' });
   await expect(page.getByText('Call waiter').first()).toBeVisible({ timeout: 15_000 });
   await noPayWords(page);
   await page.screenshot({ path: 'test-results/pay-in-person-guest-home.png' });
@@ -52,8 +53,8 @@ test('guest at a venue with no Paystack: order, ask for the bill, and never see 
   await page.screenshot({ path: 'test-results/pay-in-person-guest-bill.png' });
 
   // An old Pay link goes to the order instead of a 404.
-  await page.goto('/mamas-kitchen/pay', { waitUntil: 'domcontentloaded' });
-  await expect(page).toHaveURL(/\/mamas-kitchen\/status$/, { timeout: 15_000 });
+  await page.goto('/auntie-akos/pay', { waitUntil: 'domcontentloaded' });
+  await expect(page).toHaveURL(/\/auntie-akos\/status$/, { timeout: 15_000 });
 
   expect(errors).toEqual([]);
 });

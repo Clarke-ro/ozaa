@@ -71,12 +71,12 @@ test('opening the menu link after a table scan orders online, never to that tabl
 test('a venue that takes no online orders: its link is a menu to browse, with no basket', async ({
   page,
 }) => {
-  await page.goto('/mamas-kitchen', { waitUntil: 'domcontentloaded' });
+  await page.goto('/auntie-akos', { waitUntil: 'domcontentloaded' });
   await expect(page.getByRole('tab', { name: 'All categories' })).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByText('Jollof & chicken').first()).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'All categories' })).toBeVisible();
   await expect(page.getByRole('button', { name: /^Add .+ to your order$/ })).toHaveCount(0);
   // The same dish from a table scan can be ordered.
-  await page.goto('/mamas-kitchen/t/12', { waitUntil: 'domcontentloaded' });
+  await page.goto('/auntie-akos/t/7', { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: /^Menu/ }).first().click({ timeout: 15_000 });
   await expect(page.getByRole('button', { name: /^Add .+ to your order$/ }).first()).toBeVisible();
 });

@@ -74,6 +74,8 @@ const mock = mocks?.createMockApi({
   tokens,
   // Lets the demo go offline like a real phone, so the offline screens can be tried and tested.
   isOnline: () => onlineManager.isOnline(),
+  // The owner's changes stay on this device across reloads (src/mocks/demoMemory.ts).
+  remember: true,
 });
 
 const base: ApiClient = mock ? withLivePayments(mock.api) : http;
