@@ -28,3 +28,10 @@ export function readConfig(env: Record<string, string | undefined> = process.env
   if (!parsed.success) throw new Error(parsed.error.issues.map((i) => i.message).join('\n'));
   return parsed.data;
 }
+
+/** Only the database address, for `npm run db:migrate`, which needs nothing else. */
+export function readDatabaseUrl(env: Record<string, string | undefined> = process.env): string {
+  const parsed = schema.pick({ DATABASE_URL: true }).safeParse(env);
+  if (!parsed.success) throw new Error(parsed.error.issues.map((i) => i.message).join('\n'));
+  return parsed.data.DATABASE_URL;
+}

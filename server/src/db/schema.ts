@@ -36,4 +36,7 @@ export const payments = pgTable(
     check('payments_amount_positive', sql`${t.amountPesewas} > 0`),
     check('payments_tip_not_negative', sql`${t.tipPesewas} >= 0`),
   ],
-);
+  // Row Level Security on, with no rules: Supabase's public web API (and its anon key, which ships
+  // in apps) can't read or write payments at all. The server connects as the table's owner, which
+  // RLS doesn't restrict, so it is unaffected. Every new table gets .enableRLS() too.
+).enableRLS();

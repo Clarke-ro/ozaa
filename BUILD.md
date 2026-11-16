@@ -646,7 +646,7 @@ Approved by Clarke on 2026-11-12: build the canvas redesign on the mock first, b
 
 ### Phase 5: Backend for products 1–4
 
-- [x] 5.1 `server/`: Hono + TypeScript, Postgres with Drizzle migrations, config parsed with zod, structured logs without personal data. Done 2026-11-16: payments moved from memory to Postgres with a unique Idempotency-Key, `src/log.ts` scrubs personal data, and tests run on PGlite.
+- [x] 5.1 `server/`: Hono + TypeScript, Postgres with Drizzle migrations, config parsed with zod, structured logs without personal data. Done 2026-11-16: payments moved from memory to Postgres with a unique Idempotency-Key, `src/log.ts` scrubs personal data, and tests run on PGlite. Supabase project "Cravins" has migrations 0000 and 0001 applied (payments, with Row Level Security on).
 - [ ] 5.2 Implement the contract exactly. Run contract tests that call every operation and validate responses against `openapi.yaml`, and reuse the fixtures as seed data.
   - Tenant checks (audit N6, 2026-11-11): for **every** `/owner/...` operation, a staff member of venue A gets 403 for venue B's venue, order, table, call, menu item and loyalty data. The mock doesn't enforce this (most mock owner calls skip it), so these tests are the first real line.
   - Role checks: each owner call is tested with every `StaffRole` in the contract (owner, manager, waiter, kitchen, viewer, staff_scanner) against what that role may do.

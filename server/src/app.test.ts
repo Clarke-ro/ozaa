@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHmac } from 'node:crypto';
 import { createApp, SANDBOX_QUOTE } from './app.ts';
-import { readConfig } from './config.ts';
+import { readConfig, readDatabaseUrl } from './config.ts';
 import type { Paystack } from './paystack.ts';
 import { paymentStore } from './db/paymentStore.ts';
 import { testDb } from './db/testDb.ts';
@@ -96,4 +96,9 @@ test('the server needs a Postgres address, and never prints its password', () =>
       return true;
     },
   );
+});
+
+test('migrations need only the database address', () => {
+  assert.equal(readDatabaseUrl({ DATABASE_URL: 'postgresql://u:p@localhost/c' }), 'postgresql://u:p@localhost/c');
+  assert.throws(() => readDatabaseUrl({}), /DATABASE_URL is missing/);
 });

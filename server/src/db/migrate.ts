@@ -1,4 +1,4 @@
-import { readConfig } from '../config.ts';
+import { readDatabaseUrl } from '../config.ts';
 import { createLog } from '../log.ts';
 import { migrateDb } from './client.ts';
 
@@ -6,5 +6,5 @@ import { migrateDb } from './client.ts';
 // drizzle/. Run it before starting a new version of the server, never from the server itself,
 // so two copies starting at once can't both try to change the tables.
 const log = createLog();
-await migrateDb(readConfig().DATABASE_URL);
+await migrateDb(readDatabaseUrl());
 log({ event: 'migrated' });
