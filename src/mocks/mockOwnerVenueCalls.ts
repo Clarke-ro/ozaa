@@ -6,6 +6,8 @@ import { nextId, serviceSettings, venueById } from './world';
 import type { World } from './world';
 import { accessOf, themeOf } from './mockRules';
 import type { MockContext } from './mockContext';
+import { tableLink } from '@/lib/tableLink';
+import { env } from '@/lib/env';
 
 /** Mock calls: the owner sets up the venue: details, theme, staff, menu and tables. */
 export function mockOwnerVenueCalls(ctx: MockContext) {
@@ -247,7 +249,7 @@ export function mockOwnerVenueCalls(ctx: MockContext) {
         id: `tbl_${venue.slug}_${code}`,
         code,
         label: `Table ${code}`,
-        qrUrl: `https://cravins.app/${venue.slug}/t/${code}`,
+        qrUrl: tableLink(env.EXPO_PUBLIC_SITE_URL, venue.slug, code),
       }));
       world.tables[venueId] = [...(world.tables[venueId] ?? []), ...created];
       return { items: created };

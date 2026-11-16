@@ -15,7 +15,12 @@ export function OnlineMenuScreen({ slug }: { slug: string }) {
   const insets = useSafeAreaInsets();
   const venue = useVenue(slug);
   const startOnlineVisit = useGuestSession((state) => state.startOnlineVisit);
-  useEffect(() => startOnlineVisit(slug), [slug, startOnlineVisit]);
+  // Only once the saved visit has been read back (a moment after start on phones), so the
+  // change isn't undone by the old copy arriving later.
+  const hydrated = useGuestSession((state) => state.hydrated);
+  useEffect(() => {
+    if (hydrated) startOnlineVisit(slug);
+  }, [slug, hydrated, startOnlineVisit]);
 
   if (venue.isLoading) return <LoadingState />;
   if (venue.isError || !venue.data) return <ErrorState onRetry={() => void venue.refetch()} />;

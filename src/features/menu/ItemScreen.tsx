@@ -24,6 +24,7 @@ import { DishGallery } from './DishGallery';
 import { RelatedDishes } from './RelatedDishes';
 import { guestKeys } from '@/lib/queryKeys';
 import { SHADOW_INK } from '@/theme/palette';
+import { canOrderHere, useAtTable } from '@/features/session';
 
 /** One dish: swipeable photos, what is in it, the venue's add-on choices, and Add with the full price. */
 export function ItemScreen({ slug, itemId }: { slug: string; itemId: string }) {
@@ -32,8 +33,11 @@ export function ItemScreen({ slug, itemId }: { slug: string; itemId: string }) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const add = useCart((state) => state.add);
+  const atTable = useAtTable(slug);
   const menu = useQuery({ queryKey: guestKeys.menu(slug), queryFn: () => api.getMenu(slug) });
   const venue = useVenue(slug);
+  // Browse only from the venue link when the venue takes no online orders.
+  const canOrder = canOrderHere(atTable, venue.data);
   const [quantity, setQuantity] = useState(1);
   const [note, setNote] = useState('');
   const [picks, setPicks] = useState<Record<string, string[]>>({});
@@ -207,27 +211,29 @@ export function ItemScreen({ slug, itemId }: { slug: string; itemId: string }) {
         <ArrowLeft size={22} color={theme.black} />
       </Pressable>
 
-      <View
-        style={[
-          styles.footer,
-          {
-            paddingBottom: Math.max(insets.bottom, 12),
-            backgroundColor: theme.white,
-            borderTopColor: theme.line,
-          },
-        ]}
-      >
-        {showMissing && missing ? (
-          <Text variant="caption" accessibilityLiveRegion="polite" style={{ color: theme.error }}>
-            {t('menu.choose', { group: missing.name.en })}
-          </Text>
-        ) : null}
-        <Button
-          label={item.available ? t('menu.add', { price: money(total) }) : t('menu.soldOut')}
-          disabled={!item.available}
-          onPress={submit}
-        />
-      </View>
+      {canOrder ? (
+        <View
+          style={[
+            styles.footer,
+            {
+              paddingBottom: Math.max(insets.bottom, 12),
+              backgroundColor: theme.white,
+              borderTopColor: theme.line,
+            },
+          ]}
+        >
+          {showMissing && missing ? (
+            <Text variant="caption" accessibilityLiveRegion="polite" style={{ color: theme.error }}>
+              {t('menu.choose', { group: missing.name.en })}
+            </Text>
+          ) : null}
+          <Button
+            label={item.available ? t('menu.add', { price: money(total) }) : t('menu.soldOut')}
+            disabled={!item.available}
+            onPress={submit}
+          />
+        </View>
+      ) : null}
     </View>
   );
 }

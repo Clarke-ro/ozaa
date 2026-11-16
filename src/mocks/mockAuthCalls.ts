@@ -8,6 +8,8 @@ import type { MockContext } from './mockContext';
 import type { World } from './worldTypes';
 import type { StaffPrefs, StaffUser } from '@/lib/api/types';
 import { mockUploadedImage } from './mediaRegistry';
+import { tableLink } from '@/lib/tableLink';
+import { env } from '@/lib/env';
 
 const DEFAULT_PREFS: StaffPrefs = {
   language: 'en',
@@ -135,7 +137,7 @@ export function mockAuthCalls(ctx: MockContext) {
               id: `tbl_${tableCode}`,
               code: tableCode,
               label: `Table ${tableCode}`,
-              qrUrl: `https://cravins.app/${venue.slug}/t/${tableCode}`,
+              qrUrl: tableLink(env.EXPO_PUBLIC_SITE_URL, venue.slug, tableCode),
             }
           : undefined);
       return {

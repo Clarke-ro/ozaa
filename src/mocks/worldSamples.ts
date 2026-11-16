@@ -1,5 +1,7 @@
 import type { PaymentSettings, Table, VenuePublic } from '@/lib/api/types';
 import { defaultPaymentSettings } from './worldLookups';
+import { tableLink } from '@/lib/tableLink';
+import { env } from '@/lib/env';
 
 /** Small sample data the world starts with: staff details, tables, a test Paystack. */
 
@@ -73,7 +75,7 @@ export function tablesFor(slug: string, code: string): Table[] {
     id: `tbl_${slug}_${item}`,
     code: item,
     label: `Table ${item}`,
-    qrUrl: `https://cravins.app/${slug}/t/${item}`,
+    qrUrl: tableLink(env.EXPO_PUBLIC_SITE_URL, slug, item),
   }));
 }
 
@@ -113,6 +115,12 @@ export function withSampleOnlineOrdering(venues: Record<string, VenuePublic>): v
   bean.onlineOrdering = {
     enabled: true,
     pickup: { enabled: true, prepMinutes: 15 },
-    delivery: { enabled: false, minimumFeePesewas: 1500, feePerKmPesewas: 300, maxDistanceKm: 8, freeOverPesewas: null },
+    delivery: {
+      enabled: false,
+      minimumFeePesewas: 1500,
+      feePerKmPesewas: 300,
+      maxDistanceKm: 8,
+      freeOverPesewas: null,
+    },
   };
 }
