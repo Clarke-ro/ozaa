@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
@@ -20,6 +21,7 @@ import { useTheme } from '@/ui/theme';
 import { StatusTimeline } from './StatusTimeline';
 import { guestKeys } from '@/lib/queryKeys';
 import { POLL_MS } from '@/lib/polling';
+import { useOrderHistory } from '@/features/history';
 
 /** Where the order is: now, the steps, what was ordered, and what to do next. */
 export function StatusScreen({ slug }: { slug: string }) {
@@ -36,6 +38,11 @@ export function StatusScreen({ slug }: { slug: string }) {
     enabled: Boolean(orderId),
     refetchInterval: POLL_MS.guest,
   });
+  // Keeps My orders up to date with what this page sees.
+  const setStatus = useOrderHistory((state) => state.setStatus);
+  useEffect(() => {
+    if (order.data) setStatus(order.data.id, order.data.status);
+  }, [order.data, setStatus]);
 
   // On phones the saved visit takes a moment to load; don't flash "no order" meanwhile.
   if (!hydrated) return <LoadingState />;
