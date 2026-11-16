@@ -7,7 +7,7 @@ Connected today: Supabase "Cravins" (migrations 0000–0001), Clerk "Cravins" (d
 ## A. Sign-in moves to Clerk
 
 1. [x] **Contract PR**: `ownerAuth` is Clerk's session token. Owner codes, refresh, log-out and phone change leave the contract. `GET /me` gives 403 `not_staff`. PIN sign-in returns a one-time Clerk token. App: `src/lib/auth/ownerAuth.ts` seam with a mock stand-in.
-2. [ ] **Clerk set-up** (dashboard, no code): phone code sign-in only, sign-ups restricted (only invited numbers), Ghana +233 allowed, session token lifetime 60 s, our app origins on the allow list.
+2. [x] **Clerk set-up** (development instance, done 2026-11-16): phone code sign-in only, no password or email, sign-ups restricted so only numbers the server invites can sign in, Google and Apple off. _Still to do with the Clerk screens: the allowed app origins and Ghana-only phone numbers._
 3. [ ] **Clerk screens in the app**: `@clerk/clerk-expo` behind the seam on our own screens (custom flows). Clerk loads only on owner routes, so the guest web bundle stays the same size (check with `expo export`). Phone change through Clerk. Publishable key in `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY`.
 
 ## B. Server: the contract, exactly (BUILD.md 5.2)
@@ -26,7 +26,7 @@ Connected today: Supabase "Cravins" (migrations 0000–0001), Clerk "Cravins" (d
 
 ## C. Hosting
 
-15. [ ] **Heroku app for the server**: a new app, `Procfile` with `release: npm run db:migrate`, config vars (`DATABASE_URL`, `PAYSTACK_SECRET_KEY`, `CLERK_SECRET_KEY`, `ALLOWED_ORIGINS`, `SITE_URL`), `GET /v1/health`. Eco while building.
+15. [ ] **Heroku app for the server**: _app `cravins-api` created 2026-11-16 (EU region, Node buildpack, `NODE_ENV`, `SITE_URL`, `ALLOWED_ORIGINS` and `CLERK_PUBLISHABLE_KEY` set). Clarke pastes `DATABASE_URL`, `PAYSTACK_SECRET_KEY` and `CLERK_SECRET_KEY` in Heroku's Settings > Config Vars._ Still to do in a PR: `Procfile` with `release: npm run db:migrate`, `GET /v1/health`, deploying `server/` from the monorepo. Eco while building.
 16. [ ] **Sentry on the server**, with personal data scrubbed the same way as `src/log.ts`.
 17. [ ] **CI job for `server/`**: typecheck and tests on every PR.
 
