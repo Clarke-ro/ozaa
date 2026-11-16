@@ -38,6 +38,39 @@ In `payWhen.ts`, change `input.fulfilment === 'table' ? 'later' : 'now'` to alwa
 
 ---
 
+## 2026-11-16 · The table QR that couldn't be scanned
+
+**What we built**
+
+Three fixes so scanning a table always gives the table menu:
+
+- **Table QR codes now open our app.** They held `https://cravins.app/…`, a domain we don't own yet, so scanning one went nowhere. They now use the app's own address (`EXPO_PUBLIC_SITE_URL`, today `https://cravins-app.vercel.app`).
+- **The menu link is for browsing when a venue takes no online orders.** No add buttons, no basket. Before, a guest could fill a basket there and only learn at the end that it "takes orders at the table".
+- **Phones wait for the saved visit.** On a phone the last visit is read back from secure storage a moment after start. The table page used to save the new table first, and then the old visit (with no table) overwrote it.
+
+**How it works**
+
+```
+QR: https://cravins-app.vercel.app/mamas-kitchen/t/12 → table visit → order to table 12
+link: https://cravins-app.vercel.app/mamas-kitchen → online ordering on? order : browse only
+```
+
+**Files to look at**
+
+- `src/lib/tableLink.ts`: the QR address.
+- `src/features/session/useCanOrder.ts`: who may fill a basket.
+- `src/features/venue/TableEntryScreen.tsx` and its test: the wait for the saved visit.
+
+**New idea: a race**
+
+Two things that start together and finish in an unknown order are a *race*. Here, "read the saved visit" and "save the new table" raced, and the slower one won. The fix is to make one wait for the other (`hydrated`). The test reproduces the race, and it failed until the fix went in.
+
+**Try it yourself**
+
+In the owner app, open **QR codes and links**, download a table's QR and scan it with your phone camera. It opens that table's page on the live site.
+
+---
+
 ## 2026-11-16 · The menu was blank on iPhone and Android
 
 **What we built**
