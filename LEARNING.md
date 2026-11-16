@@ -4,6 +4,39 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-16 · A feature that waits behind a switch
+
+**What we built**
+
+A place for the owner to enter a WhatsApp number for new-order alerts. It lives on Integrations. It stays hidden for now, because nothing can send WhatsApp messages until the real server exists.
+
+**How it works**
+
+```text
+WHATSAPP_ALERTS_ENABLED = false ─► "WhatsApp Business · Coming soon"   (what owners see today)
+WHATSAPP_ALERTS_ENABLED = true  ─► switch + number field + Save number
+                                   saves VenueSettings.whatsappAlerts
+```
+
+- The number is the owner's own line, so it sits on the owner-only settings, never on the public venue. A test checks that a guest's venue never contains it.
+- Switching alerts off saves straight away. Switching them on waits for a valid number and the Save button.
+
+**Files to look at**
+
+- `src/lib/features.ts`: the switch.
+- `src/features/owner/screens/integrations/WhatsAppAlertsCard.tsx`: the card.
+- `src/features/owner/screens/integrations/whatsappAlerts.ts`: what gets saved.
+
+**New idea: a feature flag**
+
+A feature flag is a constant that decides whether a finished piece of code shows. It lets us merge work early and keep it dark until the rest is ready. Here the flag is a plain `false`, not a setting, so turning it on is a code change you approve.
+
+**Try it yourself**
+
+Set the flag to `true`, run `npx expo start --web`, sign in, and open Integrations. Type `024 123` and press Save to see the error, then a full number.
+
+---
+
 ## 2026-11-16 · When the signal drops
 
 **What we built**

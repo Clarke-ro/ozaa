@@ -2796,6 +2796,11 @@
     "tripadvisorSub": "Guests can review you on Tripadvisor",
     "whatsapp": "WhatsApp Business",
     "whatsappSub": "Order alerts and replies to guests on WhatsApp",
+    "alertsSub": "A message on WhatsApp for every new order",
+    "alertsNumber": "WhatsApp number for alerts",
+    "alertsHint": "Use a number staff check during service. Guests never see it.",
+    "alertsError": "Enter a full phone number, like 024 123 4567.",
+    "alertsSave": "Save number",
     "soon": "Coming soon",
     "notConnected": "Not connected",
     "connectedMode": "Connected · {{mode}}"
