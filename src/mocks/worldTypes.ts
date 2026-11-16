@@ -58,6 +58,8 @@ export type World = {
   devices: (ScannerDevice & { venueId: string })[];
   /** E-VAT setup by venue id. Kept off the public venue: the TIN is the owner's business. */
   tax: Record<string, TaxSetup>;
+  /** Owner-only, by venue id: the WhatsApp number for order alerts. Never on the public venue. */
+  whatsappAlerts: Record<string, string | null>;
   promos: (Promo & { venueId: string })[];
   /** Venues that switched off the automatic stamp on paid orders. */
   noAutoStamp: Set<string>;

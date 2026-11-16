@@ -2663,6 +2663,9 @@ components:
               allOf: [{ $ref: '#/components/schemas/StoreNotices' }]
               description: Every notice as the owner set it, including ones switched off or outside their times.
             tax: { $ref: '#/components/schemas/TaxSetup' }
+            whatsappAlerts:
+              oneOf: [{ $ref: '#/components/schemas/GhanaPhone' }, { type: 'null' }]
+              description: "The number that gets new-order alerts on WhatsApp (Settings > Integrations). Owner only, never shown to guests. Null or missing means no alerts. Sending them waits for Phase 5."
     VenueSettingsPatch:
       type: object
       properties:
@@ -2692,6 +2695,9 @@ components:
         published: { type: boolean }
         onlineOrdering: { $ref: '#/components/schemas/OnlineOrdering' }
         tax: { $ref: '#/components/schemas/TaxSetup' }
+        whatsappAlerts:
+          oneOf: [{ $ref: '#/components/schemas/GhanaPhone' }, { type: 'null' }]
+          description: "See VenueSettings.whatsappAlerts. Null turns the alerts off."
     Wifi:
       type: object
       required: [ssid, security]

@@ -217,6 +217,7 @@ export function createWorld(now: number): World {
     },
     devices: [],
     tax: {},
+    whatsappAlerts: {},
     promos: [],
     noAutoStamp: new Set(),
     notificationReads: new Map(),
