@@ -36,6 +36,35 @@ In `src/mocks/mockOwnerAuth.ts`, change `fails >= 3` to `fails >= 1`. Run the ap
 
 ---
 
+## 2026-11-16 · A table for everything (BUILD.md 5.2, step 4)
+
+**What we built**
+
+The database now has a place for everything the app shows: venues, menus, orders, waiter calls, staff, loyalty, reviews, promos and more. 26 new tables, made by one migration.
+
+**How it works**
+
+```
+src/db/tables/*.ts  →  npm run db:generate  →  drizzle/0002_everything.sql  →  Heroku runs it on deploy
+```
+
+Each table has **columns** for what the server searches or checks (venue, status, money, times), and **JSON** for things that are always read and saved whole (a venue's theme, opening hours, a dish's add-on groups).
+
+**Files to look at**
+
+- `server/src/db/tables/`: one file per area (venues, staff, menu, orders, guests, owner).
+- `server/src/db/tables.test.ts`: proves the database itself refuses bad data.
+
+**New idea: let the database say no**
+
+Code has bugs. So the most important rules also live in the database as *checks*: an order can never be paid more than its total, a sale price must be below the normal price, stock can't go below zero. Even if the server code gets it wrong one day, Postgres refuses the write.
+
+**Try it yourself**
+
+In `tables.test.ts`, change `paidPesewas: 5001` to `5000` and run `npm test` in `server/`. That test now fails: paying exactly the total is allowed, so the database no longer says no.
+
+---
+
 ## 2026-11-16 · The server gets a memory
 
 **What we built**
