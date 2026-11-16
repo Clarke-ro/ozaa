@@ -119,7 +119,15 @@ function LoginForm() {
           keyboardDismissMode="on-drag"
           showsVerticalScrollIndicator={false}
         >
-          <Pressable style={styles.touchableDismissArea} onPress={dismissKeyboard}>
+          {/* Tapping beside the fields closes the phone keyboard. Not on the web: there a tap on
+              a field also counted as a tap here, and closing the keyboard took focus straight
+              back off the field, so nothing could be typed. Browsers close it on their own. */}
+          <Pressable
+            style={styles.touchableDismissArea}
+            onPress={Platform.OS === 'web' ? undefined : dismissKeyboard}
+            accessible={false}
+            focusable={false}
+          >
             <DeskCard style={styles.authCard}>
               {/* Cravins brand lockup */}
               <View style={styles.brandLockup}>
@@ -157,7 +165,10 @@ function LoginForm() {
                     keyboardType={byEmail ? 'email-address' : 'phone-pad'}
                     inputMode={byEmail ? 'email' : 'tel'}
                     autoCapitalize="none"
+                    autoCorrect={false}
+                    spellCheck={false}
                     autoComplete={byEmail ? 'email' : 'tel'}
+                    textContentType={byEmail ? 'emailAddress' : 'telephoneNumber'}
                     returnKeyType={sent ? 'done' : 'next'}
                     onSubmitEditing={() => {
                       if (!sent) handleSubmit();
@@ -179,7 +190,11 @@ function LoginForm() {
                     <Pressable
                       accessibilityRole="button"
                       accessibilityLabel={t(byEmail ? 'owner.changeEmail' : 'owner.changeNumber')}
-                      onPress={() => setSent(false)}
+                      onPress={() => {
+                        setSent(false);
+                        setCode('');
+                        setError(false);
+                      }}
                     >
                       <Text variant="caption" style={{ color: theme.ink, fontWeight: '600' }}>
                         {t(byEmail ? 'owner.changeEmail' : 'owner.changeNumber')}
