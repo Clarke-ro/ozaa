@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import type { PayUiEvent, PayUiState } from './paymentMachine';
-import { eventFor, secondsLeft } from './paymentWatch';
-import { POLL_MS } from '@/lib/polling';
+import { eventFor, pollDelay, secondsLeft } from './paymentWatch';
+import { focusManager } from '@tanstack/react-query';
 
 const TICK_MS = 1000;
 
 /**
  * Keeps the screen in step with the server for one MoMo payment:
- * - while waiting, reads the payment every few seconds and ticks the countdown;
+ * - while waiting, reads the payment every 3 s, backing off to 10 s, and ticks the countdown;
  * - when the countdown ends, asks the server to verify a few times before giving up.
  * Returns the seconds left to approve.
  */
@@ -55,11 +55,22 @@ export function usePaymentWatch(
         // Offline or a blip: ask again on the next tick. Nothing changes on screen.
       }
     };
-    void ask();
-    const id = setInterval(() => void ask(), POLL_MS.guestWaiting);
+    // Waits a little longer each time (pollDelay), and skips checks while the app is hidden: the
+    // guest is in their MoMo prompt or another app. Coming back checks straight away.
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let attempt = 0;
+    const loop = () => {
+      if (focusManager.isFocused()) void ask();
+      timer = setTimeout(loop, pollDelay(attempt++));
+    };
+    loop();
+    const unsubscribe = focusManager.subscribe((focused) => {
+      if (focused && !stopped) void ask();
+    });
     return () => {
       stopped = true;
-      clearInterval(id);
+      clearTimeout(timer);
+      unsubscribe();
     };
   }, [reference, checking, send, fallback]);
 

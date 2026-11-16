@@ -51,3 +51,5 @@ coverage/
 
 expo-env.d.ts
 # @end expo-cli
+# A machine-only Playwright config (local browser path); never committed.
+playwright.local.config.ts

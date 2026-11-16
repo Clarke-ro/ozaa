@@ -23,9 +23,10 @@ export function useOnline(): boolean {
 
 /**
  * A quiet line when the phone is offline, saying how old the saved data is
- * ("You're offline. Showing what we saved 2 minutes ago."). Hidden when online.
+ * ("You're offline. Showing what we saved 2 minutes ago."). On a screen that sends something
+ * (basket, call waiter), `sending` says that instead. Hidden when online.
  */
-export function OfflineNote({ savedAt }: { savedAt?: number }) {
+export function OfflineNote({ savedAt, sending }: { savedAt?: number; sending?: boolean }) {
   const { t } = useTranslation();
   const theme = useTheme();
   const online = useOnline();
@@ -46,9 +47,11 @@ export function OfflineNote({ savedAt }: { savedAt?: number }) {
     >
       <WifiOff size={16} color={theme.muted} />
       <Text variant="caption" style={[styles.text, { color: theme.text }]}>
-        {minutes != null && minutes >= 1
-          ? t('errors.offlineAgo', { count: minutes })
-          : t('errors.offline')}
+        {sending
+          ? t('errors.offlineSend')
+          : minutes != null && minutes >= 1
+            ? t('errors.offlineAgo', { count: minutes })
+            : t('errors.offline')}
       </Text>
     </View>
   );

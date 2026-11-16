@@ -15,6 +15,8 @@ export type MockOptions = {
   fast?: boolean;
   random?: () => number;
   tokens?: TokenSource;
+  /** Whether the device has a connection. While it doesn't, every call fails like a real network. */
+  isOnline?: () => boolean;
 };
 
 /** Everything the mock calls share: the in-memory world, the tokens, the clock and the order rules. */
@@ -28,9 +30,10 @@ export function createMockContext(options: MockOptions = {}) {
   const failRate = options.failRate ?? 0;
   const random = options.random ?? Math.random;
   const fast = options.fast ?? false;
+  const isOnline = options.isOnline ?? (() => true);
 
   async function gate(): Promise<void> {
-    if (random() < failRate) throw new OfflineError();
+    if (!isOnline() || random() < failRate) throw new OfflineError();
     if (latencyMs > 0) {
       const wait = latencyMs * (0.5 + random());
       await new Promise((resolve) => setTimeout(resolve, wait));

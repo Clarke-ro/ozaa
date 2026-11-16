@@ -1,4 +1,5 @@
 import type { ApiClient } from './client';
+import { onlineManager } from '@tanstack/react-query';
 import { env } from '../env';
 import { createHttpClient } from './http';
 import { withOwnerRetry, type OnUnauthorized } from './ownerRetry';
@@ -70,6 +71,8 @@ const base: ApiClient = mocks
         failRate: env.EXPO_PUBLIC_MOCK_FAIL_RATE,
         fast: env.EXPO_PUBLIC_MOCK_FAST === '1',
         tokens,
+        // Lets the demo go offline like a real phone, so the offline screens can be tried and tested.
+        isOnline: () => onlineManager.isOnline(),
       }),
     )
   : http;
