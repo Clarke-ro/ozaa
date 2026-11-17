@@ -20,7 +20,7 @@ export function InlineRow({
     <View style={styles.row}>
       <Icon size={20} color={theme.muted} />
       {/* One line that shrinks a little beside a wide control (Clarke, 2026-11-17). */}
-      <FitText variant="body" style={styles.label} min={12}>
+      <FitText variant="body" style={styles.label}>
         {label}
       </FitText>
       {/* The control may shrink, so a three-way switch never runs off a phone screen. */}

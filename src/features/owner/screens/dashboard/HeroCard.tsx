@@ -11,10 +11,10 @@ const c = tokens.owner.controls;
 const GRAIN = require('../../../../../assets/images/grain.png');
 
 /**
- * The day's main number on a yellow card, the first thing on Today ("Sales today GH₵1,250").
- * The yellow and its dark text stay the same in dark mode, like a printed card (SALES_CARD).
+ * The day's main number on a bright burgundy card, the first thing on Today ("Sales today
+ * GH₵1,250"). The burgundy and its white text stay the same in dark mode (SALES_CARD).
  * A small pill opens the page behind the number when this person may. A fine grain sits over the
- * yellow for texture (Clarke, 2026-11-17); it is faint, so the text keeps its contrast.
+ * burgundy for texture (Clarke, 2026-11-17); it is faint, so the text keeps its contrast.
  */
 export function HeroCard({
   label,
@@ -59,7 +59,7 @@ export function HeroCard({
             hitSlop={tokens.space[2]}
             style={({ pressed }) => [styles.pill, { opacity: pressed ? 0.7 : 1 }]}
           >
-            {/* A see-through layer of the ink, so the pill reads on the yellow. */}
+            {/* A see-through layer of the ink, so the pill reads on the burgundy. */}
             <View style={[StyleSheet.absoluteFill, styles.pillFill, { backgroundColor: ink }]} />
             <Text variant="caption" style={[styles.pillText, { color: ink }]}>
               {link}

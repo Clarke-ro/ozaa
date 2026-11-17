@@ -3673,7 +3673,7 @@ guest ticks:   ✓ Accepted ✓ Being prepared ✓ Ready     ✓ Served / Picked
 
 **Files to look at**
 
-- `src/features/orders/guestTimeline.ts` and its test: `timelineSteps`, `finishWord`, `statusKey`.
+- `src/lib/orderTimeline.ts` and its test: `timelineSteps`, `finishWord`, `statusKey`.
 
 **New idea: "done" vs "current"**
 
@@ -3681,4 +3681,4 @@ The old timeline treated the status as "the step we're on", so the step wasn't d
 
 **Try it yourself**
 
-In `guestTimeline.test.ts`, check what `timelineSteps('ready')` returns.
+In `orderTimeline.test.ts`, check what `timelineSteps('ready')` returns.

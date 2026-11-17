@@ -1,5 +1,5 @@
 import type { Order, WaiterCall } from '@/lib/api/types';
-import { finishWord } from '@/features/orders/guestTimeline';
+import { finishWord } from '@/lib/orderTimeline';
 
 export type GuestNoteKind =
   | 'order_sent'

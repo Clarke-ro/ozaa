@@ -3,21 +3,28 @@ import { Platform, StyleSheet, type Text as NativeText } from 'react-native';
 import { fitFontSize } from './fitText';
 import { Text } from './Text';
 
-type Props = ComponentProps<typeof Text> & {
-  /** The smallest size it may shrink to, in px. Below that the line ends in "…". */
-  min?: number;
-};
+type Props = ComponentProps<typeof Text>;
+
+// On phones adjustsFontSizeToFit stops at this share of the size; low enough that every word fits.
+const NATIVE_MIN_SCALE = 0.3;
 
 /**
- * One line of text that shrinks to fit its box instead of wrapping: stat labels such as
- * "Pending orders" and big numbers in narrow phone tiles (Clarke, 2026-11-17).
+ * One line of text that shrinks to fit its box instead of wrapping or ending in "…": stat
+ * labels such as "Pending orders" and big numbers in narrow phone tiles. Every word always
+ * shows (Clarke, 2026-11-17).
  * Phones use React Native's own adjustsFontSizeToFit. Browsers ignore that prop, so on the web
  * this measures the words against their box and sets a smaller size itself.
  */
-export function FitText({ min = 10, style, children, ...rest }: Props) {
+export function FitText({ style, children, ...rest }: Props) {
   const flat = StyleSheet.flatten(style) ?? {};
   const base = typeof flat.fontSize === 'number' ? flat.fontSize : 14;
-  const [size, setSize] = useState(base);
+  // A size belongs to the words (and full size) it was measured for; new words start again at
+  // full size without an extra render.
+  const words = typeof children === 'string' || typeof children === 'number' ? children : null;
+  const key = `${words}|${base}`;
+  const [fit, setFit] = useState({ key, size: base });
+  const size = fit.key === key ? fit.size : base;
+  const setSize = (next: number) => setFit({ key, size: next });
   const box = useRef<ComponentRef<typeof NativeText>>(null);
   const width = useRef(0);
 
@@ -26,16 +33,16 @@ export function FitText({ min = 10, style, children, ...rest }: Props) {
     const el = box.current as unknown as HTMLElement | null;
     if (!el?.clientWidth) return;
     // The exact width of the words (scrollWidth rounds to whole pixels, so 105.4 px of text in a
-    // 105 px box looked like it fit and still got "…"). Width grows with size, so scale it up.
+    // 105 px box looked like it fit and still got "…").
     const range = document.createRange();
     range.selectNodeContents(el);
     const drawn = range.getBoundingClientRect().width;
-    const natural = (drawn * base) / size;
     const room = el.getBoundingClientRect().width;
-    const next = fitFontSize({ size: base, natural, available: room, min });
-    if (Math.abs(next - size) > 0.25) setSize(next);
+    // Only step down while the words overflow, sized from the current size. Fixed letter spacing
+    // doesn't shrink with the font, so this can take a second step, and then it stops.
+    if (drawn > room) setSize(fitFontSize({ size, natural: drawn, available: room }));
   };
-  // Measure again after each size change and when the words change.
+  // Measure again after each size change.
   useLayoutEffect(measure);
 
   const lineHeight =
@@ -46,7 +53,7 @@ export function FitText({ min = 10, style, children, ...rest }: Props) {
       ref={box}
       numberOfLines={1}
       adjustsFontSizeToFit
-      minimumFontScale={Math.min(1, min / base)}
+      minimumFontScale={NATIVE_MIN_SCALE}
       onLayout={(event) => {
         // A wider box (phone turned, window resized) starts again from the full size.
         const next = event.nativeEvent.layout.width;

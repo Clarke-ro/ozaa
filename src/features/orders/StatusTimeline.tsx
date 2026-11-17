@@ -9,7 +9,7 @@ import {
   type LucideIcon,
 } from 'lucide-react-native';
 import type { Order } from '@/lib/api/types';
-import { finishWord, TIMELINE, timelineSteps } from './guestTimeline';
+import { finishWord, TIMELINE, timelineSteps } from '@/lib/orderTimeline';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';

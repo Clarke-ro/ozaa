@@ -28,13 +28,8 @@ export function StatCard({
   const theme = useTheme();
   const body = compact ? (
     <>
-      <FitText style={styles.small} min={16}>
-        {value}
-      </FitText>
-      {/* 9 px only on the smallest phones (iPhone SE): one line beats a cut-off "Pending o…". */}
-      <FitText style={[styles.smallLabel, { color: theme.muted }]} min={9}>
-        {label}
-      </FitText>
+      <FitText style={styles.small}>{value}</FitText>
+      <FitText style={[styles.smallLabel, { color: theme.muted }]}>{label}</FitText>
     </>
   ) : (
     <>
@@ -42,9 +37,7 @@ export function StatCard({
       <View style={styles.top}>
         <FitText style={[styles.label, { color: theme.muted }]}>{label}</FitText>
       </View>
-      <FitText style={styles.value} min={20}>
-        {value}
-      </FitText>
+      <FitText style={styles.value}>{value}</FitText>
     </>
   );
   const spoken = `${label} ${value}`;

@@ -45,7 +45,7 @@ export function StatTile({
           </View>
         ) : null}
       </View>
-      <FitText variant="display-m" style={styles.value} min={18}>
+      <FitText variant="display-m" style={styles.value}>
         {value}
       </FitText>
       {note ? (

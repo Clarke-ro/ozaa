@@ -60,7 +60,6 @@ export function FigureCard({
       <FitText
         variant="caption"
         style={[styles.trendText, compact && styles.small, { color: trendInk }]}
-        min={9}
       >
         {trendText}
       </FitText>
