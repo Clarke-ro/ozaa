@@ -162,6 +162,10 @@ export function ownerRoutes(deps: OwnerRouteDeps) {
     if (!statuses.success) throw new Problem(400, 'validation', 'Unknown order status.');
     const since = c.req.query('since');
     const until = c.req.query('until');
+    // A date that doesn't parse would reach Postgres as "Invalid Date" and fail as a 500.
+    for (const value of [since, until]) {
+      if (value !== undefined && Number.isNaN(Date.parse(value))) throw new Problem(400, 'validation', 'Use a date like 2026-11-17T09:00:00Z.');
+    }
     const rows = await db
       .select()
       .from(orders)
@@ -186,13 +190,11 @@ export function ownerRoutes(deps: OwnerRouteDeps) {
             ),
           )
       : [];
+    // Grouped once, not filtered per order: up to 300 orders, polled every few seconds.
+    const byOrder = new Map<string, typeof lines>();
+    for (const line of lines) byOrder.set(line.orderId, [...(byOrder.get(line.orderId) ?? []), line]);
     return c.json({
-      items: rows.map((row) =>
-        orderFromRows(
-          row,
-          lines.filter((l) => l.orderId === row.id),
-        ),
-      ),
+      items: rows.map((row) => orderFromRows(row, byOrder.get(row.id) ?? [])),
       nextCursor: null,
     });
   });

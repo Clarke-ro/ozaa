@@ -1,4 +1,4 @@
-import { integer, pgTable, text } from 'drizzle-orm/pg-core';
+import { index, integer, pgTable, text } from 'drizzle-orm/pg-core';
 import { at } from './columns.ts';
 import { venues } from './venues.ts';
 
@@ -16,4 +16,4 @@ export const media = pgTable('media', {
   width: integer('width'),
   height: integer('height'),
   createdAt: at('created_at').notNull().defaultNow(),
-}).enableRLS();
+}, (t) => [index('media_venue').on(t.venueId)]).enableRLS();

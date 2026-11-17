@@ -8,6 +8,8 @@ import type { VerifyOwner } from './clerk.ts';
 
 export type OwnerDeps = { db: Db; verify: VerifyOwner | null; now: () => number };
 
+const ACTIVE_EVERY_MS = 60_000;
+
 type UserRow = typeof staffUsers.$inferSelect;
 type MembershipRow = typeof staffMemberships.$inferSelect;
 export type SignedIn = { user: UserRow; memberships: MembershipRow[] };
@@ -48,15 +50,26 @@ export async function signedIn(c: Context, deps: OwnerDeps): Promise<SignedIn> {
     if (!user) throw new Problem(401, 'unauthorized', 'Sign in again.');
   }
   const at = new Date(deps.now());
-  await db
-    .update(staffMemberships)
-    .set({ status: 'active', joinedAt: at })
-    .where(and(eq(staffMemberships.userId, user.id), eq(staffMemberships.status, 'invited')));
-  const memberships = await db
-    .update(staffMemberships)
-    .set({ lastActiveAt: at })
-    .where(and(eq(staffMemberships.userId, user.id), ne(staffMemberships.status, 'removed')))
-    .returning();
+  // The app polls every few seconds, so this runs a lot: read first, and write only what changed.
+  let memberships = await db
+    .select()
+    .from(staffMemberships)
+    .where(and(eq(staffMemberships.userId, user.id), ne(staffMemberships.status, 'removed')));
+  if (memberships.some((m) => m.status === 'invited')) {
+    await db
+      .update(staffMemberships)
+      .set({ status: 'active', joinedAt: at })
+      .where(and(eq(staffMemberships.userId, user.id), eq(staffMemberships.status, 'invited')));
+  }
+  // "Last active" only needs to be right to the minute.
+  const stale = memberships.filter((m) => m.status === 'invited' || !m.lastActiveAt || at.getTime() - m.lastActiveAt.getTime() >= ACTIVE_EVERY_MS);
+  if (stale.length) {
+    await db.update(staffMemberships).set({ lastActiveAt: at }).where(inArray(staffMemberships.id, stale.map((m) => m.id)));
+    memberships = await db
+      .select()
+      .from(staffMemberships)
+      .where(and(eq(staffMemberships.userId, user.id), ne(staffMemberships.status, 'removed')));
+  }
   if (memberships.length === 0) throw new Problem(403, 'not_staff', 'You are not on any team right now.');
   return { user, memberships };
 }

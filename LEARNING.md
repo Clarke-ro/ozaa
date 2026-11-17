@@ -3714,3 +3714,34 @@ The invite test plays the attacker: a second owner tries the trick. It failed be
 **Try it yourself**
 
 In `rateLimit.test.ts`, change the limit to 2 and watch which assertions fail.
+
+## 2026-11-17 · Indexes: how the database finds rows fast
+
+**What we built**
+
+Migration `0005` adds 17 indexes, a rule that two staff can't share an email, and a rule that every payment belongs to a real order. Owner requests also stopped writing to the database on every poll.
+
+**How it works**
+
+Without an index, finding an order's lines means reading *every* line in the table. With an index on `order_lines(order_id)`, Postgres jumps straight to them, like a book's index instead of reading every page.
+
+```
+no index:   scan 1, 2, 3 … 90,000 lines → keep the 3 that match
+index:      look up "ord_42" → the 3 lines
+```
+
+The screens that poll every few seconds (Orders, Today, the call queue, the guest menu) each got the index that matches their query.
+
+**Files to look at**
+
+- `server/drizzle/0005_indexes_and_integrity.sql`: the migration.
+- `server/src/db/tables/*.ts`: each `index(...)` has a comment saying which screen it's for.
+- `server/src/db/tables.test.ts`: the database refuses a duplicate email or an orphan payment.
+
+**New idea: let the database enforce the rule**
+
+The app already checked for duplicate emails. But two invites at the exact same moment could both pass that check. A unique index can't be raced: the second insert simply fails.
+
+**Try it yourself**
+
+In Supabase's SQL editor, run `explain select * from order_lines where order_id = 'x';` before and after the deploy. Look for "Index Scan" instead of "Seq Scan".

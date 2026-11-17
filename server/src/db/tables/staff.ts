@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { check, integer, jsonb, pgTable, text, unique } from 'drizzle-orm/pg-core';
+import { check, index, integer, jsonb, pgTable, text, unique, uniqueIndex } from 'drizzle-orm/pg-core';
 import { at } from './columns.ts';
 import { venues } from './venues.ts';
 
@@ -26,7 +26,12 @@ export const staffUsers = pgTable(
     pinFails: integer('pin_fails').notNull().default(0),
     createdAt: at('created_at').notNull().defaultNow(),
   },
-  (t) => [check('staff_users_phone_e164', sql`${t.phone} ~ '^\\+233[0-9]{9}$'`)],
+  (t) => [
+    check('staff_users_phone_e164', sql`${t.phone} ~ '^\\+233[0-9]{9}$'`),
+    // The email is a sign-in, so two people can't share one. The app checks too, but two invites
+    // at the same moment could both pass that check; the database can't be raced.
+    uniqueIndex('staff_users_email').on(sql`lower(${t.email})`).where(sql`${t.email} is not null`),
+  ],
 ).enableRLS();
 
 /**
@@ -49,7 +54,8 @@ export const staffMemberships = pgTable(
     lastActiveAt: at('last_active_at'),
     createdAt: at('created_at').notNull().defaultNow(),
   },
-  (t) => [unique('staff_memberships_venue_user').on(t.venueId, t.userId)],
+  // Every owner request looks up the caller's memberships by user.
+  (t) => [unique('staff_memberships_venue_user').on(t.venueId, t.userId), index('staff_memberships_user').on(t.userId)],
 ).enableRLS();
 
 /** Shared scanner phones at the door or the counter (ScannerDevice). */
@@ -62,4 +68,4 @@ export const scannerDevices = pgTable('scanner_devices', {
   pairedAt: at('paired_at').notNull().defaultNow(),
   lastSeen: at('last_seen').notNull().defaultNow(),
   revokedAt: at('revoked_at'),
-}).enableRLS();
+}, (t) => [index('scanner_devices_venue').on(t.venueId)]).enableRLS();

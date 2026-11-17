@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { sql } from 'drizzle-orm';
-import { businesses, menuCategories, menuItems, orders, venues } from './schema.ts';
-import { testDb } from './testDb.ts';
+import { businesses, menuCategories, menuItems, orders, payments, staffUsers, venues } from './schema.ts';
+import { testDb, testDbWithOrder } from './testDb.ts';
 
 const rows = (result: unknown) =>
   (Array.isArray(result) ? result : (result as { rows: unknown[] }).rows) as Record<string, unknown>[];
@@ -54,4 +54,21 @@ test('an order can never be paid more than its total, and its number is unique f
   await db.insert(orders).values({ ...order, id: 'ord_1', number: 1 });
   await assert.rejects(db.insert(orders).values({ ...order, id: 'ord_2', number: 1 }));
   await db.insert(orders).values({ ...order, id: 'ord_3', number: 1, businessDay: '2026-11-17' });
+});
+
+test('a payment must belong to a real order, and two staff can never share a sign-in email', async () => {
+  const db = await testDbWithOrder();
+  const payment = {
+    reference: 'pay_x', idempotencyKey: 'k1', venueSlug: 'bean-there', method: 'momo' as const,
+    amountPesewas: 100, status: 'pending' as const, testMode: true, createdAt: new Date(),
+  };
+  await assert.rejects(db.insert(payments).values({ ...payment, orderId: 'ord_missing' }));
+  await db.insert(payments).values({ ...payment, orderId: 'ord_1' });
+
+  await db.insert(staffUsers).values({ id: 'usr_a', phone: '+233200000011', firstName: 'A', email: 'esi@example.com' });
+  // Even in another case: the app lower-cases emails, and the index does too.
+  await assert.rejects(db.insert(staffUsers).values({ id: 'usr_b', phone: '+233200000012', firstName: 'B', email: 'Esi@Example.com' }));
+  // Many people can have no email.
+  await db.insert(staffUsers).values({ id: 'usr_c', phone: '+233200000013', firstName: 'C' });
+  await db.insert(staffUsers).values({ id: 'usr_d', phone: '+233200000014', firstName: 'D' });
 });

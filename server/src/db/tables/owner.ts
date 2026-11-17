@@ -18,7 +18,7 @@ export const promos = pgTable('promos', {
   discountGivenPesewas: money('discount_given_pesewas').notNull().default(0),
   createdAt: at('created_at').notNull().defaultNow(),
   deletedAt: at('deleted_at'),
-}).enableRLS();
+}, (t) => [index('promos_venue').on(t.venueId)]).enableRLS();
 
 /** The owner app's feed (OwnerNotification). One row per event, for the whole venue. */
 export const notifications = pgTable('notifications', {
@@ -56,7 +56,7 @@ export const customLinks = pgTable('custom_links', {
   sortOrder: integer('sort_order').notNull().default(0),
   clicks: integer('clicks').notNull().default(0),
   enabled: boolean('enabled').notNull().default(true),
-}).enableRLS();
+}, (t) => [index('custom_links_venue').on(t.venueId)]).enableRLS();
 
 /**
  * Idempotency-Key store (5.3, used by every POST that creates something). The first answer is

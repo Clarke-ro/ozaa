@@ -1,6 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
+import { eq } from 'drizzle-orm';
+import { staffMemberships } from '../db/schema.ts';
 import { expectContract } from '../contract/contract.ts';
 import { as, KITCHEN, OWNER, ownerSetup as setup, WAITER } from './ownerTestSetup.ts';
 
@@ -135,4 +137,21 @@ test('the orders desk: staff see the venue’s orders, move them by role, and ma
   assert.equal(paid.json.paymentMethod, 'cash');
   const again = await call('POST', pay, { method: 'momo_merchant' }, as('user_waiter', WAITER));
   assert.equal(again.json.paymentMethod, 'cash');
+});
+
+test('polling the owner app writes "last active" at most once a minute, and bad dates are a 400', async () => {
+  const { call, db, mamas, tick } = await setup();
+  const lastActive = async () =>
+    (await db.select().from(staffMemberships).where(eq(staffMemberships.venueId, mamas))).find((m) => m.role === 'owner')!.lastActiveAt!.getTime();
+  await call('GET', '/me', undefined, as('user_owner', OWNER));
+  const first = await lastActive();
+  tick(30_000);
+  await call('GET', '/me', undefined, as('user_owner', OWNER));
+  assert.equal(await lastActive(), first, 'no write within the minute');
+  tick(31_000);
+  await call('GET', '/me', undefined, as('user_owner', OWNER));
+  assert.equal(await lastActive(), first + 61_000);
+
+  const bad = await call('GET', `/owner/venues/${mamas}/orders?since=yesterday`, undefined, as('user_owner', OWNER));
+  assert.equal(bad.status, 400);
 });
