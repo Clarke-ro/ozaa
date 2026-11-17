@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { Image, StyleSheet, View } from 'react-native';
 import { PressableScale } from '@/ui/PressableScale';
 import { ChevronRight } from 'lucide-react-native';
 import { SALES_CARD } from '@/theme/palette';
@@ -7,11 +7,14 @@ import { Text } from '@/ui/Text';
 import { fontFamily } from '@/ui/theme';
 
 const c = tokens.owner.controls;
+// A 128 px tile of faint dark and light specks, repeated across the card.
+const GRAIN = require('../../../../../assets/images/grain.png');
 
 /**
  * The day's main number on a yellow card, the first thing on Today ("Sales today GH₵1,250").
  * The yellow and its dark text stay the same in dark mode, like a printed card (SALES_CARD).
- * A small pill opens the page behind the number when this person may.
+ * A small pill opens the page behind the number when this person may. A fine grain sits over the
+ * yellow for texture (Clarke, 2026-11-17); it is faint, so the text keeps its contrast.
  */
 export function HeroCard({
   label,
@@ -36,6 +39,14 @@ export function HeroCard({
 
   return (
     <View style={[styles.card, compact && styles.compact, { backgroundColor: bg }]}>
+      <Image
+        source={GRAIN}
+        resizeMode="repeat"
+        accessibilityIgnoresInvertColors
+        aria-hidden
+        pointerEvents="none"
+        style={[StyleSheet.absoluteFill, styles.grain]}
+      />
       <View style={styles.top}>
         <Text variant="body-strong" style={{ color: ink }} numberOfLines={1}>
           {label}
@@ -83,7 +94,9 @@ const styles = StyleSheet.create({
     borderCurve: 'continuous',
     padding: c.statPadding,
     gap: c.statGap,
+    overflow: 'hidden',
   },
+  grain: { width: '100%', height: '100%', opacity: 0.6 },
   top: {
     flexDirection: 'row',
     alignItems: 'center',
