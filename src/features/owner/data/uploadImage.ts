@@ -2,6 +2,7 @@ import { Platform } from 'react-native';
 import { api } from '@/lib/api';
 import { env } from '@/lib/env';
 import { registerMockUpload } from '@/mocks/mediaRegistry';
+import { shrinkImage } from './shrinkImage';
 
 export type MediaKind = 'banner' | 'logo' | 'dish_photo';
 
@@ -41,9 +42,12 @@ function measure(url: string): Promise<{ width: number; height: number }> {
 /** Lets the owner choose a photo, then uploads it. Returns the media id to save on the dish or venue. */
 export async function pickAndUploadImage(venueId: string, kind: MediaKind): Promise<UploadResult> {
   if (!canPickImages) return { ok: false, reason: 'unsupported' };
-  const file = await pickFile();
-  if (!file) return { ok: false, reason: 'cancelled' };
-  if (!TYPES.includes(file.type)) return { ok: false, reason: 'type' };
+  const picked = await pickFile();
+  if (!picked) return { ok: false, reason: 'cancelled' };
+  if (!TYPES.includes(picked.type)) return { ok: false, reason: 'type' };
+  // Shrunk first, so guests download a few hundred KB instead of the phone's full photo, and a
+  // big photo that shrinks under the limit is accepted instead of refused.
+  const file = await shrinkImage(picked, kind);
   if (file.size > MAX_BYTES) return { ok: false, reason: 'size' };
   try {
     const slot = await api.ownerCreateMediaUpload(venueId, {
