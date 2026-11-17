@@ -1,7 +1,13 @@
 import type { Order, WaiterCall } from '@/lib/api/types';
 
 export type GuestNoteKind =
-  'order_sent' | 'order_cooking' | 'order_ready' | 'order_served' | 'call_sent' | 'call_coming';
+  | 'order_sent'
+  | 'order_accepted'
+  | 'order_cooking'
+  | 'order_ready'
+  | 'order_served'
+  | 'call_sent'
+  | 'call_coming';
 
 export type GuestNote = {
   id: string;
@@ -15,16 +21,17 @@ export type GuestNote = {
 
 const STEP: Record<GuestNoteKind, number> = {
   order_sent: 0,
-  order_cooking: 1,
-  order_ready: 2,
-  order_served: 3,
+  order_accepted: 1,
+  order_cooking: 2,
+  order_ready: 3,
+  order_served: 4,
   call_sent: 0,
   call_coming: 1,
 };
 
 /**
  * The guest's in-app notifications, built from their order and waiter calls (no extra API):
- * order sent, being prepared, ready, served; call sent and who is coming. Newest first.
+ * order sent, accepted, being prepared, ready, served; call sent and who is coming. Newest first.
  */
 export function buildGuestNotes(src: {
   order: Pick<Order, 'id' | 'number' | 'status' | 'createdAt' | 'updatedAt' | 'readyAt'> | null;
@@ -38,6 +45,15 @@ export function buildGuestNotes(src: {
   if (o && o.status !== 'cancelled') {
     const vars = { number: o.number };
     notes.push({ id: `${o.id}-sent`, kind: 'order_sent', at: o.createdAt, href: 'status', vars });
+    if (o.status === 'accepted') {
+      notes.push({
+        id: `${o.id}-accepted`,
+        kind: 'order_accepted',
+        at: o.updatedAt,
+        href: 'status',
+        vars,
+      });
+    }
     if (o.status === 'preparing') {
       notes.push({
         id: `${o.id}-cooking`,

@@ -1,16 +1,17 @@
 import type { Order } from '@/lib/api/types';
 
-export type OrderStepId = 'received' | 'preparing' | 'ready' | 'served' | 'cancelled';
+export type OrderStepId = 'received' | 'accepted' | 'preparing' | 'ready' | 'served' | 'cancelled';
 
 /** One stage on an order's timeline. `at` is only known for some stages (see below). */
 export type OrderStep = { id: OrderStepId; state: 'done' | 'current' | 'todo'; at: string | null };
 
-const FLOW: readonly OrderStepId[] = ['received', 'preparing', 'ready', 'served'];
+const FLOW: readonly OrderStepId[] = ['received', 'accepted', 'preparing', 'ready', 'served'];
 
 /**
  * The stages an order goes through, for its own page. The contract keeps three times: when it
  * came in (createdAt), when the food was ready (readyAt) and the last change (updatedAt), which
- * is when it was served or cancelled once it is finished. "Preparing" has no time of its own.
+ * is when it was served or cancelled once it is finished. "Accepted" and "Preparing" have no
+ * time of their own.
  */
 export function orderSteps(
   order: Pick<Order, 'status' | 'createdAt' | 'updatedAt'> & { readyAt?: string | null },

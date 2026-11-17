@@ -12,6 +12,7 @@ import { usePrintTicket } from './usePrintTicket';
 // Canvas tag colours: new orange, cooking blue, ready and served green; paid green, owed amber.
 const STAGE_TAG: Record<Order['status'], StatusTone> = {
   received: 'order',
+  accepted: 'order',
   preparing: 'info',
   ready: 'success',
   served: 'success',

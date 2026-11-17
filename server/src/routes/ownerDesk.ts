@@ -1,7 +1,16 @@
 import { Hono, type Context } from 'hono';
 import { and, eq, gte, inArray, lt, ne, notInArray, or } from 'drizzle-orm';
 import type { Db } from '../db/client.ts';
-import { diningTables, feedback, menuItems, orderLines, orders, visits, waiterCalls, writtenReviews } from '../db/schema.ts';
+import {
+  diningTables,
+  feedback,
+  menuItems,
+  orderLines,
+  orders,
+  visits,
+  waiterCalls,
+  writtenReviews,
+} from '../db/schema.ts';
 import { orderFromRows } from '../orders/orderStore.ts';
 import { roleAt, ROLES, signedIn, type OwnerDeps } from '../owner/staff.ts';
 import { calendarDay, summarizeDay } from '../shared/daySummary.ts';
@@ -17,7 +26,11 @@ import { venueRowById } from '../venues/venueData.ts';
 const DAY_MS = 86_400_000;
 
 /** Orders with their lines, created in [since, until), plus any still open when `open` is set. */
-async function ordersOf(db: Db, venueId: string, range: { since?: Date; until?: Date; open?: boolean }): Promise<Order[]> {
+async function ordersOf(
+  db: Db,
+  venueId: string,
+  range: { since?: Date; until?: Date; open?: boolean },
+): Promise<Order[]> {
   const inRange = and(
     range.since ? gte(orders.createdAt, range.since) : undefined,
     range.until ? lt(orders.createdAt, range.until) : undefined,
@@ -25,10 +38,28 @@ async function ordersOf(db: Db, venueId: string, range: { since?: Date; until?: 
   const rows = await db
     .select()
     .from(orders)
-    .where(and(eq(orders.venueId, venueId), range.open ? or(inRange, notInArray(orders.status, ['served', 'cancelled'])) : inRange));
+    .where(
+      and(
+        eq(orders.venueId, venueId),
+        range.open ? or(inRange, notInArray(orders.status, ['served', 'cancelled'])) : inRange,
+      ),
+    );
   if (rows.length === 0) return [];
-  const lines = await db.select().from(orderLines).where(inArray(orderLines.orderId, rows.map((r) => r.id)));
-  return rows.map((row) => orderFromRows(row, lines.filter((l) => l.orderId === row.id)));
+  const lines = await db
+    .select()
+    .from(orderLines)
+    .where(
+      inArray(
+        orderLines.orderId,
+        rows.map((r) => r.id),
+      ),
+    );
+  return rows.map((row) =>
+    orderFromRows(
+      row,
+      lines.filter((l) => l.orderId === row.id),
+    ),
+  );
 }
 
 /** The owner home, the floor and Sales (api/openapi.yaml owner-desk). */
@@ -46,11 +77,19 @@ export function ownerDeskRoutes(deps: OwnerDeps & { siteUrl: string }) {
     const [tables, recent, calls] = await Promise.all([
       db.select().from(diningTables).where(eq(diningTables.venueId, venueId)),
       ordersOf(db, venueId, { since: new Date(now - DAY_MS), open: true }),
-      db.select().from(waiterCalls).where(and(eq(waiterCalls.venueId, venueId), ne(waiterCalls.status, 'resolved'))),
+      db
+        .select()
+        .from(waiterCalls)
+        .where(and(eq(waiterCalls.venueId, venueId), ne(waiterCalls.status, 'resolved'))),
     ]);
     tables.sort((a, b) => a.code.localeCompare(b.code, 'en', { numeric: true }));
     const floor = deriveFloor({
-      tables: tables.map((t) => ({ id: t.id, code: t.code, label: t.label ?? `Table ${t.code}`, qrUrl: tableLink(deps.siteUrl, slug, t.code) })),
+      tables: tables.map((t) => ({
+        id: t.id,
+        code: t.code,
+        label: t.label ?? `Table ${t.code}`,
+        qrUrl: tableLink(deps.siteUrl, slug, t.code),
+      })),
       orders: recent,
       calls: calls.map((call) => ({ ...call, createdAt: call.createdAt.toISOString() })),
       // "Seat a table" by hand is a demo-only tap for now; real tables go busy with their first order.
@@ -60,7 +99,12 @@ export function ownerDeskRoutes(deps: OwnerDeps & { siteUrl: string }) {
       const call = calls.find((item) => item.id === table.waiterCallId);
       const order = recent.find((item) => item.id === table.orderId);
       // How long the table has been like this: since the call, or since the order last moved.
-      const since = table.status === 'needs_waiter' ? (call?.createdAt.toISOString() ?? null) : table.status === 'free' ? null : (order?.updatedAt ?? null);
+      const since =
+        table.status === 'needs_waiter'
+          ? (call?.createdAt.toISOString() ?? null)
+          : table.status === 'free'
+            ? null
+            : (order?.updatedAt ?? null);
       return { ...table, since, waiterFirstName: call?.staffFirstName ?? null };
     });
   };
@@ -78,10 +122,24 @@ export function ownerDeskRoutes(deps: OwnerDeps & { siteUrl: string }) {
     const [recent, floor, openCalls, reviews, soldOut, visitRows] = await Promise.all([
       ordersOf(db, venue.id, { since: new Date(now - 2 * DAY_MS), open: true }),
       floorOf(venue.id, venue.slug, now),
-      db.select({ id: waiterCalls.id }).from(waiterCalls).where(and(eq(waiterCalls.venueId, venue.id), ne(waiterCalls.status, 'resolved'))),
-      db.select({ stars: writtenReviews.stars }).from(writtenReviews).where(eq(writtenReviews.venueId, venue.id)),
-      db.select({ name: menuItems.name, deletedAt: menuItems.deletedAt }).from(menuItems).where(and(eq(menuItems.venueId, venue.id), eq(menuItems.available, false))),
-      db.select({ startedAt: visits.startedAt }).from(visits).where(and(eq(visits.venueId, venue.id), gte(visits.startedAt, new Date(now - 2 * DAY_MS)))),
+      db
+        .select({ id: waiterCalls.id })
+        .from(waiterCalls)
+        .where(and(eq(waiterCalls.venueId, venue.id), ne(waiterCalls.status, 'resolved'))),
+      db
+        .select({ stars: writtenReviews.stars })
+        .from(writtenReviews)
+        .where(eq(writtenReviews.venueId, venue.id)),
+      db
+        .select({ name: menuItems.name, deletedAt: menuItems.deletedAt })
+        .from(menuItems)
+        .where(and(eq(menuItems.venueId, venue.id), eq(menuItems.available, false))),
+      db
+        .select({ startedAt: visits.startedAt })
+        .from(visits)
+        .where(
+          and(eq(visits.venueId, venue.id), gte(visits.startedAt, new Date(now - 2 * DAY_MS))),
+        ),
     ]);
     const today = calendarDay(new Date(now).toISOString(), timeZone);
     const yesterday = calendarDay(new Date(now - DAY_MS).toISOString(), timeZone);
@@ -95,7 +153,9 @@ export function ownerDeskRoutes(deps: OwnerDeps & { siteUrl: string }) {
       nowIso: new Date(now).toISOString(),
       timeZone,
       yesterdayPesewas,
-      soldOut: soldOut.filter((item) => !item.deletedAt).map((item) => (item.name as { en?: string }).en ?? ''),
+      soldOut: soldOut
+        .filter((item) => !item.deletedAt)
+        .map((item) => (item.name as { en?: string }).en ?? ''),
     });
     const dashboard: OwnerDashboard = {
       salesTodayPesewas: summary.salesTodayPesewas,
@@ -103,7 +163,13 @@ export function ownerDeskRoutes(deps: OwnerDeps & { siteUrl: string }) {
       changePercent: summary.changePercent,
       direction: summary.direction,
       openTables: floor.filter((table) => table.status !== 'free').length,
-      liveOrders: recent.filter((o) => o.status === 'received' || o.status === 'preparing' || o.status === 'ready').length,
+      liveOrders: recent.filter(
+        (o) =>
+          o.status === 'received' ||
+          o.status === 'accepted' ||
+          o.status === 'preparing' ||
+          o.status === 'ready',
+      ).length,
       openCalls: openCalls.length,
       ratingAverage: summary.ratingAverage,
       ratingCount: summary.ratingCount,
@@ -111,7 +177,9 @@ export function ownerDeskRoutes(deps: OwnerDeps & { siteUrl: string }) {
       ordersToday: summary.ordersToday,
       pendingOrders: summary.pendingOrders,
       // A visit is one QR scan or one opened menu link: counted when the guest session starts.
-      visitorsToday: visitRows.filter((v) => calendarDay(v.startedAt.toISOString(), timeZone) === today).length,
+      visitorsToday: visitRows.filter(
+        (v) => calendarDay(v.startedAt.toISOString(), timeZone) === today,
+      ).length,
     };
     return c.json(dashboard);
   });
@@ -121,11 +189,17 @@ export function ownerDeskRoutes(deps: OwnerDeps & { siteUrl: string }) {
     const venue = await venueFor(c, ROLES.menu);
     const since = c.req.query('since');
     const until = c.req.query('until');
-    const range = (from?: string, to?: string) => ordersOf(db, venue.id, { since: from ? new Date(from) : undefined, until: to ? new Date(to) : undefined });
+    const range = (from?: string, to?: string) =>
+      ordersOf(db, venue.id, {
+        since: from ? new Date(from) : undefined,
+        until: to ? new Date(to) : undefined,
+      });
     const taxEnabled = (venue.tax as { enabled?: boolean } | null)?.enabled ?? false;
     const current = salesReport(await range(since, until), venue.timeZone, { taxEnabled });
     const window = previousWindow(since, until ?? new Date(deps.now()).toISOString());
-    const before = window ? salesReport(await range(window.since, window.until), venue.timeZone) : null;
+    const before = window
+      ? salesReport(await range(window.since, window.until), venue.timeZone)
+      : null;
     const report: SalesReport = {
       currency: venue.currency,
       ...current,
@@ -133,7 +207,12 @@ export function ownerDeskRoutes(deps: OwnerDeps & { siteUrl: string }) {
       refundsPesewas: 0,
       previous:
         window && before && before.orderCount > 0
-          ? { ...window, orderCount: before.orderCount, valuePesewas: before.valuePesewas, avgPesewas: before.avgPesewas }
+          ? {
+              ...window,
+              orderCount: before.orderCount,
+              valuePesewas: before.valuePesewas,
+              avgPesewas: before.avgPesewas,
+            }
           : null,
     };
     return c.json(report);
@@ -146,25 +225,50 @@ export function ownerDeskRoutes(deps: OwnerDeps & { siteUrl: string }) {
   app.get('/owner/venues/:venueId/insights', async (c) => {
     const venue = await venueFor(c, ROLES.menu);
     const range = (c.req.query('range') ?? '7d') as 'today' | '7d' | '30d' | '90d' | 'custom';
-    if (!['today', '7d', '30d', '90d', 'custom'].includes(range)) throw new Problem(400, 'validation', 'Pick a range.');
+    if (!['today', '7d', '30d', '90d', 'custom'].includes(range))
+      throw new Problem(400, 'validation', 'Pick a range.');
     const now = deps.now();
     const since = c.req.query('since');
     const until = c.req.query('until');
-    if (range === 'custom' && (!since || !until)) throw new Problem(400, 'validation', 'Pick a start and end date.');
+    if (range === 'custom' && (!since || !until))
+      throw new Problem(400, 'validation', 'Pick a start and end date.');
     // A preset range runs up to and including this moment, so a visit made just now counts.
-    const span = range === 'custom' ? { since: since!, until: until! } : rangeWindow(range, now + 1, venue.timeZone);
+    const span =
+      range === 'custom'
+        ? { since: since!, until: until! }
+        : rangeWindow(range, now + 1, venue.timeZone);
     const from = new Date(span.since);
     const to = new Date(span.until);
     const [orderList, visitRows, notes, loyalty] = await Promise.all([
       ordersOf(db, venue.id, { since: from, until: to }),
-      db.select({ startedAt: visits.startedAt }).from(visits).where(and(eq(visits.venueId, venue.id), gte(visits.startedAt, from), lt(visits.startedAt, to))),
-      db.select({ sentiment: feedback.sentiment, createdAt: feedback.createdAt }).from(feedback).where(and(eq(feedback.venueId, venue.id), gte(feedback.createdAt, from), lt(feedback.createdAt, to))),
+      db
+        .select({ startedAt: visits.startedAt })
+        .from(visits)
+        .where(
+          and(eq(visits.venueId, venue.id), gte(visits.startedAt, from), lt(visits.startedAt, to)),
+        ),
+      db
+        .select({ sentiment: feedback.sentiment, createdAt: feedback.createdAt })
+        .from(feedback)
+        .where(
+          and(
+            eq(feedback.venueId, venue.id),
+            gte(feedback.createdAt, from),
+            lt(feedback.createdAt, to),
+          ),
+        ),
       db.transaction((tx) => loadLoyalty(tx, venue.id, venue.currency, 'all')),
     ]);
     let visited = 0;
     let repeat = 0;
     for (const member of Object.values(loyalty.members)) {
-      const paidVisits = member.facts.filter((f) => f.kind === 'earn' && f.source.type === 'paid_visit' && Date.parse(f.at) >= from.getTime() && Date.parse(f.at) < to.getTime()).length;
+      const paidVisits = member.facts.filter(
+        (f) =>
+          f.kind === 'earn' &&
+          f.source.type === 'paid_visit' &&
+          Date.parse(f.at) >= from.getTime() &&
+          Date.parse(f.at) < to.getTime(),
+      ).length;
       if (paidVisits > 0) visited += 1;
       if (paidVisits > 1) repeat += 1;
     }
@@ -175,8 +279,14 @@ export function ownerDeskRoutes(deps: OwnerDeps & { siteUrl: string }) {
       timeZone: venue.timeZone,
       orders: orderList,
       visits: visitRows.map((v) => ({ startedAt: v.startedAt.toISOString() })),
-      feedback: notes.map((n) => ({ sentiment: n.sentiment, createdAt: n.createdAt.toISOString() })),
-      repeatGuests: { count: repeat, sharePercent: visited === 0 ? 0 : Math.round((repeat / visited) * 100) },
+      feedback: notes.map((n) => ({
+        sentiment: n.sentiment,
+        createdAt: n.createdAt.toISOString(),
+      })),
+      repeatGuests: {
+        count: repeat,
+        sharePercent: visited === 0 ? 0 : Math.round((repeat / visited) * 100),
+      },
     });
     return c.json({ ...report, currency: venue.currency });
   });

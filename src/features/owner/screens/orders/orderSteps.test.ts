@@ -11,23 +11,30 @@ describe('orderSteps', () => {
     const steps = orderSteps({ ...at, status: 'received', readyAt: null });
     expect(steps.map((s) => [s.id, s.state])).toEqual([
       ['received', 'done'],
-      ['preparing', 'current'],
+      ['accepted', 'current'],
+      ['preparing', 'todo'],
       ['ready', 'todo'],
       ['served', 'todo'],
     ]);
     expect(steps[0]?.at).toBe(at.createdAt);
   });
 
+  it('puts Start cooking next once the order is accepted', () => {
+    const steps = orderSteps({ ...at, status: 'accepted', readyAt: null });
+    expect(steps.map((s) => s.state)).toEqual(['done', 'done', 'current', 'todo', 'todo']);
+    expect(steps[1]?.at).toBeNull();
+  });
+
   it('shows the ready time once the food is ready', () => {
     const steps = orderSteps({ ...at, status: 'ready' });
-    expect(steps.map((s) => s.state)).toEqual(['done', 'done', 'done', 'current']);
-    expect(steps[2]?.at).toBe(at.readyAt);
+    expect(steps.map((s) => s.state)).toEqual(['done', 'done', 'done', 'done', 'current']);
+    expect(steps[3]?.at).toBe(at.readyAt);
   });
 
   it('marks every stage done once served, using the last update as the served time', () => {
     const steps = orderSteps({ ...at, status: 'served' });
     expect(steps.every((s) => s.state === 'done')).toBe(true);
-    expect(steps[3]?.at).toBe(at.updatedAt);
+    expect(steps[4]?.at).toBe(at.updatedAt);
   });
 
   it('ends a cancelled order on a cancelled step', () => {

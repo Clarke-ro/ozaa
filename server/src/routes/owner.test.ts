@@ -112,6 +112,12 @@ test('the orders desk: staff see the venue’s orders, move them by role, and ma
   assert.equal((await call('GET', `/owner/venues/ven_bean_there/orders`, undefined, as('user_kitchen', KITCHEN))).status, 403);
 
   const status = `/owner/orders/${order.id}/status`;
+  // A new order is accepted before anyone can start cooking it.
+  const skipped = await call('PUT', status, { status: 'preparing' }, as('user_kitchen', KITCHEN));
+  expectContract('ownerSetOrderStatus', 409, skipped.json);
+  const accepted = await call('PUT', status, { status: 'accepted' }, as('user_waiter', WAITER));
+  expectContract('ownerSetOrderStatus', 200, accepted.json);
+  assert.equal((await call('GET', `/orders/${order.id}`, undefined, { Authorization: `Bearer ${token}` })).json.status, 'accepted');
   const waiterStart = await call('PUT', status, { status: 'preparing' }, as('user_waiter', WAITER));
   expectContract('ownerSetOrderStatus', 409, waiterStart.json);
   const started = await call('PUT', status, { status: 'preparing' }, as('user_kitchen', KITCHEN));

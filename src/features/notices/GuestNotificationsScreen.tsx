@@ -10,6 +10,7 @@ import {
   CircleCheck,
   ClipboardCheck,
   Footprints,
+  ThumbsUp,
   type LucideIcon,
 } from 'lucide-react-native';
 import { timeAgo } from '@/lib/time';
@@ -23,6 +24,7 @@ import { useGuestNotes, useGuestNotesSeen } from './useGuestNotes';
 
 const ICON: Record<GuestNoteKind, LucideIcon> = {
   order_sent: ClipboardCheck,
+  order_accepted: ThumbsUp,
   order_cooking: ChefHat,
   order_ready: BellRing,
   order_served: CircleCheck,

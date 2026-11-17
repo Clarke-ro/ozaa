@@ -21,6 +21,7 @@ const PREVIEW_LINES_PHONE = 2;
 /** The next step's button takes the colour of the stage it moves the ticket out of (canvas). */
 const NEXT_TINT: Record<Order['status'], StatusTone> = {
   received: 'order',
+  accepted: 'order',
   preparing: 'info',
   ready: 'success',
   served: 'success',
@@ -69,7 +70,10 @@ export function OrderCard({
   const shown = order.lines.slice(0, compact ? PREVIEW_LINES_PHONE : PREVIEW_LINES);
   const hidden = order.lines.length - shown.length;
   // As on the canvas, "Mark paid" sits beside the first step only; later it lives on the order page.
-  const canMarkPaid = onMarkPaid && order.paymentStatus !== 'paid' && order.status === 'received';
+  const canMarkPaid =
+    onMarkPaid &&
+    order.paymentStatus !== 'paid' &&
+    (order.status === 'received' || order.status === 'accepted');
   const tones = STATUS_TONES[theme.scheme];
   // Amber past 10 minutes, red past 20 (ticketAge); otherwise a quiet grey.
   const ageInk =
@@ -101,6 +105,8 @@ export function OrderCard({
               numberOfLines={1}
             >
               #{order.number} · {time}
+              {/* Both sit under New; this tells an accepted ticket from one nobody has taken yet. */}
+              {order.status === 'accepted' ? ` · ${t('statusLabel.accepted')}` : ''}
             </Text>
           </View>
           {live ? (

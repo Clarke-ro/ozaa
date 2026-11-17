@@ -21,7 +21,12 @@ export function PageHeader({
   const router = useRouter();
   return (
     <View style={[styles.bar, { borderColor: theme.line, backgroundColor: theme.white }]}>
-      <IconButton label={t('common.back')} onPress={() => router.back()} style={styles.control}>
+      <IconButton
+        plain
+        label={t('common.back')}
+        onPress={() => router.back()}
+        style={styles.control}
+      >
         <ArrowLeft color={theme.black} size={22} strokeWidth={2} />
       </IconButton>
       <View pointerEvents="none" style={styles.titles}>

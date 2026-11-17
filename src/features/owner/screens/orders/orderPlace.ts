@@ -37,6 +37,7 @@ export function waitedLabel(minutes: number, t: TFunction): string {
 /** Pill colour for an order's stage, once it has left the live tabs. */
 export const STATUS_TONE: Record<Order['status'], PillTone> = {
   received: 'waiting',
+  accepted: 'waiting',
   preparing: 'accent',
   ready: 'success',
   served: 'neutral',

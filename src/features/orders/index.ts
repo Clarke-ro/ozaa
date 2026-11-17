@@ -1,6 +1,7 @@
 export { OrderScreen } from './OrderScreen';
 export { StatusScreen } from './StatusScreen';
 export {
+  moveFor,
   nextOrderMove,
   orderToast,
   orderTransition,

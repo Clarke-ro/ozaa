@@ -10,7 +10,7 @@ import { meOf, roleAt, ROLES, signedIn, type OwnerDeps } from '../owner/staff.ts
 import type { MediaStorage } from '../media/storage.ts';
 import type { ClerkAdmin } from '../owner/clerkAdmin.ts';
 import type { Paystack } from '../paystack.ts';
-import { orderTransition, type OrderMove } from '../shared/orderMachine.ts';
+import { moveFor, orderTransition } from '../shared/orderMachine.ts';
 import { checkManualPayments, checkPaystackKeys } from '../shared/payments.ts';
 import type { ManualPayments, OrderStatus } from '../shared/types.ts';
 import { paymentSettingsOf, venueRowById } from '../venues/venueData.ts';
@@ -32,8 +32,7 @@ export type OwnerRouteDeps = OwnerDeps & {
 // Test keys only until Clarke switches live on (AGENTS.md rule 5, src/lib/features.ts).
 const LIVE_PAYMENTS_ENABLED = false;
 
-const STATUS = z.enum(['received', 'preparing', 'ready', 'served', 'cancelled']);
-const MOVE: Partial<Record<OrderStatus, OrderMove>> = { preparing: 'start', ready: 'ready', served: 'serve', cancelled: 'cancel' };
+const STATUS = z.enum(['received', 'accepted', 'preparing', 'ready', 'served', 'cancelled']);
 const manualBody = z.object({
   cash: z.boolean(),
   cardMachine: z.boolean(),
@@ -51,7 +50,11 @@ const manualBody = z.object({
   }),
 });
 const feeBody = z.object({ enabled: z.boolean(), percent: z.number().int().min(1).max(100) });
-const keysBody = z.object({ mode: z.enum(['test', 'live']), publicKey: z.string().max(200), secretKey: z.string().max(200) });
+const keysBody = z.object({
+  mode: z.enum(['test', 'live']),
+  publicKey: z.string().max(200),
+  secretKey: z.string().max(200),
+});
 
 /** Owner and staff calls (api/openapi.yaml: auth /me, owner-payments, owner-orders). */
 export function ownerRoutes(deps: OwnerRouteDeps) {
@@ -68,22 +71,32 @@ export function ownerRoutes(deps: OwnerRouteDeps) {
     return venueId;
   };
 
-  app.get('/owner/venues/:venueId/payment-settings', async (c) => c.json(await paymentSettingsOf(db, await ownerOf(c))));
+  app.get('/owner/venues/:venueId/payment-settings', async (c) =>
+    c.json(await paymentSettingsOf(db, await ownerOf(c))),
+  );
 
   app.put('/owner/venues/:venueId/payment-settings/manual', async (c) => {
     const venueId = await ownerOf(c);
     const manual = (await body(c, manualBody)) as ManualPayments;
     const check = checkManualPayments(manual);
-    if (!check.ok) throw new Problem(400, `manual_${check.field}_incomplete`, 'Add the details first.');
-    await db.update(paymentSettings).set({ manual, updatedAt: new Date(deps.now()) }).where(eq(paymentSettings.venueId, venueId));
+    if (!check.ok)
+      throw new Problem(400, `manual_${check.field}_incomplete`, 'Add the details first.');
+    await db
+      .update(paymentSettings)
+      .set({ manual, updatedAt: new Date(deps.now()) })
+      .where(eq(paymentSettings.venueId, venueId));
     return c.json(await paymentSettingsOf(db, venueId));
   });
 
   app.put('/owner/venues/:venueId/payment-settings/fees', async (c) => {
     const venueId = await ownerOf(c);
     const input = feeBody.safeParse(await c.req.json().catch(() => null));
-    if (!input.success) throw new Problem(400, 'fee_percent_invalid', 'Pick a share from 1% to 100%.');
-    await db.update(paymentSettings).set({ feePassing: input.data, updatedAt: new Date(deps.now()) }).where(eq(paymentSettings.venueId, venueId));
+    if (!input.success)
+      throw new Problem(400, 'fee_percent_invalid', 'Pick a share from 1% to 100%.');
+    await db
+      .update(paymentSettings)
+      .set({ feePassing: input.data, updatedAt: new Date(deps.now()) })
+      .where(eq(paymentSettings.venueId, venueId));
     return c.json(await paymentSettingsOf(db, venueId));
   });
 
@@ -94,13 +107,21 @@ export function ownerRoutes(deps: OwnerRouteDeps) {
   app.put('/owner/venues/:venueId/payment-settings/paystack', async (c) => {
     const venueId = await ownerOf(c);
     const input = await body(c, keysBody);
-    const keys = { mode: input.mode, publicKey: input.publicKey.trim(), secretKey: input.secretKey.trim() };
+    const keys = {
+      mode: input.mode,
+      publicKey: input.publicKey.trim(),
+      secretKey: input.secretKey.trim(),
+    };
     const shape = checkPaystackKeys(keys, LIVE_PAYMENTS_ENABLED);
     if (!shape.ok) throw new Problem(422, shape.code, 'Paystack did not accept these keys.');
     try {
       await deps.paystackClient(keys.secretKey).checkKey();
     } catch {
-      throw new Problem(422, 'paystack_keys_invalid', 'Paystack did not accept this secret key. Copy it again from your Paystack dashboard.');
+      throw new Problem(
+        422,
+        'paystack_keys_invalid',
+        'Paystack did not accept this secret key. Copy it again from your Paystack dashboard.',
+      );
     }
     await deps.venueKeys.save(venueId, keys, deps.now());
     deps.log({ event: 'paystack_connected', venueId, mode: keys.mode });
@@ -118,12 +139,17 @@ export function ownerRoutes(deps: OwnerRouteDeps) {
     const venueId = await ownerOf(c);
     const checkedAt = new Date(deps.now()).toISOString();
     const venue = await deps.venueKeys.forVenueId(venueId);
-    if (!venue) return c.json({ ok: false, checkedAt, message: 'Connect your Paystack account first.' });
+    if (!venue)
+      return c.json({ ok: false, checkedAt, message: 'Connect your Paystack account first.' });
     try {
       await venue.paystack.checkKey();
       return c.json({ ok: true, checkedAt });
     } catch {
-      return c.json({ ok: false, checkedAt, message: 'Paystack refused the saved key. Connect again with your current keys.' });
+      return c.json({
+        ok: false,
+        checkedAt,
+        message: 'Paystack refused the saved key. Connect again with your current keys.',
+      });
     }
   });
 
@@ -149,8 +175,26 @@ export function ownerRoutes(deps: OwnerRouteDeps) {
       )
       .orderBy(desc(orders.createdAt))
       .limit(300);
-    const lines = rows.length ? await db.select().from(orderLines).where(inArray(orderLines.orderId, rows.map((r) => r.id))) : [];
-    return c.json({ items: rows.map((row) => orderFromRows(row, lines.filter((l) => l.orderId === row.id))), nextCursor: null });
+    const lines = rows.length
+      ? await db
+          .select()
+          .from(orderLines)
+          .where(
+            inArray(
+              orderLines.orderId,
+              rows.map((r) => r.id),
+            ),
+          )
+      : [];
+    return c.json({
+      items: rows.map((row) =>
+        orderFromRows(
+          row,
+          lines.filter((l) => l.orderId === row.id),
+        ),
+      ),
+      nextCursor: null,
+    });
   });
 
   /** An order and the caller's role at its venue, if allowed. */
@@ -163,10 +207,14 @@ export function ownerRoutes(deps: OwnerRouteDeps) {
 
   app.put('/owner/orders/:orderId/status', async (c) => {
     const { found, role } = await staffOrder(c, ROLES.moveOrder);
-    const input = await body(c, z.object({ status: STATUS, cancelReason: z.string().max(200).optional() }));
-    const move = MOVE[input.status];
+    const input = await body(
+      c,
+      z.object({ status: STATUS, cancelReason: z.string().max(200).optional() }),
+    );
+    const move = moveFor(input.status);
     const next = move ? orderTransition(found.row.status, move, role) : null;
-    if (!next || next !== input.status) throw new Problem(409, 'illegal_move', 'That status change is not allowed.');
+    if (!next || next !== input.status)
+      throw new Problem(409, 'illegal_move', 'That status change is not allowed.');
     const at = new Date(deps.now());
     // Only moves from the status we read, so two staff tapping at once can't skip a step.
     const [moved] = await db
@@ -180,23 +228,40 @@ export function ownerRoutes(deps: OwnerRouteDeps) {
       })
       .where(and(eq(orders.id, found.row.id), eq(orders.status, found.row.status)))
       .returning();
-    if (!moved) throw new Problem(409, 'illegal_move', 'Someone else just changed this order. Refresh and try again.');
+    if (!moved)
+      throw new Problem(
+        409,
+        'illegal_move',
+        'Someone else just changed this order. Refresh and try again.',
+      );
     return c.json((await orderById(db, moved.id))?.order);
   });
 
   app.post('/owner/orders/:orderId/manual-payment', async (c) => {
     const { found } = await staffOrder(c, ROLES.markPaid);
-    const input = await body(c, z.object({ method: z.enum(['cash', 'card_machine', 'bank_transfer', 'momo_merchant']) }));
+    const input = await body(
+      c,
+      z.object({ method: z.enum(['cash', 'card_machine', 'bank_transfer', 'momo_merchant']) }),
+    );
     const key = c.req.header('Idempotency-Key');
     if (key) {
-      const [seen] = await db.select().from(idempotencyKeys).where(and(eq(idempotencyKeys.scope, `manual:${found.row.id}`), eq(idempotencyKeys.key, key)));
+      const [seen] = await db
+        .select()
+        .from(idempotencyKeys)
+        .where(
+          and(eq(idempotencyKeys.scope, `manual:${found.row.id}`), eq(idempotencyKeys.key, key)),
+        );
       if (seen) return c.json((await orderById(db, found.row.id))?.order);
     }
     // Already paid: nothing changes, so a double tap is harmless. The whole total is marked paid.
     await db.transaction(async (tx) => {
       const [paid] = await tx
         .update(orders)
-        .set({ paidPesewas: sql`${orders.totalPesewas}`, paymentMethod: input.method, updatedAt: new Date(deps.now()) })
+        .set({
+          paidPesewas: sql`${orders.totalPesewas}`,
+          paymentMethod: input.method,
+          updatedAt: new Date(deps.now()),
+        })
         .where(and(eq(orders.id, found.row.id), lt(orders.paidPesewas, orders.totalPesewas)))
         .returning({ id: orders.id });
       if (paid) {
@@ -204,7 +269,11 @@ export function ownerRoutes(deps: OwnerRouteDeps) {
         // Paid in cash or the like still counts as a visit for the guest's loyalty card.
         await stampPaidOrder(tx, found.row.id, deps.now());
       }
-      if (key) await tx.insert(idempotencyKeys).values({ scope: `manual:${found.row.id}`, key, status: 200, body: {} }).onConflictDoNothing();
+      if (key)
+        await tx
+          .insert(idempotencyKeys)
+          .values({ scope: `manual:${found.row.id}`, key, status: 200, body: {} })
+          .onConflictDoNothing();
     });
     return c.json((await orderById(db, found.row.id))?.order);
   });

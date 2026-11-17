@@ -15,14 +15,20 @@ export const orders = pgTable(
   'orders',
   {
     id: text('id').primaryKey(),
-    venueId: text('venue_id').notNull().references(() => venues.id),
+    venueId: text('venue_id')
+      .notNull()
+      .references(() => venues.id),
     // Short number for guests and staff. Starts again at 1 each day in the venue's time zone.
     number: integer('number').notNull(),
     businessDay: date('business_day').notNull(),
     tableCode: text('table_code'),
-    source: text('source', { enum: ['table', 'pickup', 'delivery'] }).notNull().default('table'),
+    source: text('source', { enum: ['table', 'pickup', 'delivery'] })
+      .notNull()
+      .default('table'),
     // A rejected order is cancelled with a cancelReason (contract OrderStatus).
-    status: text('status', { enum: ['received', 'preparing', 'ready', 'served', 'cancelled'] }).notNull(),
+    status: text('status', {
+      enum: ['received', 'accepted', 'preparing', 'ready', 'served', 'cancelled'],
+    }).notNull(),
     subtotalPesewas: money('subtotal_pesewas').notNull(),
     taxes: jsonb('taxes').notNull().default([]),
     promoDiscounts: jsonb('promo_discounts').notNull().default([]),
@@ -39,7 +45,9 @@ export const orders = pgTable(
     guestSessionId: text('guest_session_id'),
     // The guest's loyalty card, when they placed the order with their loyalty token: the card's id,
     // never their phone. Paying the order stamps that card. Erasing the member clears it.
-    loyaltyMemberId: text('loyalty_member_id').references(() => loyaltyMembers.id, { onDelete: 'set null' }),
+    loyaltyMemberId: text('loyalty_member_id').references(() => loyaltyMembers.id, {
+      onDelete: 'set null',
+    }),
     createdByStaffId: text('created_by_staff_id'),
     createdAt: at('created_at').notNull().defaultNow(),
     updatedAt: at('updated_at').notNull().defaultNow(),
@@ -48,7 +56,10 @@ export const orders = pgTable(
   },
   (t) => [
     unique('orders_daily_number').on(t.venueId, t.businessDay, t.number),
-    check('orders_money', sql`${t.subtotalPesewas} >= 0 and ${t.totalPesewas} >= 0 and ${t.paidPesewas} between 0 and ${t.totalPesewas}`),
+    check(
+      'orders_money',
+      sql`${t.subtotalPesewas} >= 0 and ${t.totalPesewas} >= 0 and ${t.paidPesewas} between 0 and ${t.totalPesewas}`,
+    ),
   ],
 ).enableRLS();
 
@@ -57,7 +68,9 @@ export const orderLines = pgTable(
   'order_lines',
   {
     id: text('id').primaryKey(),
-    orderId: text('order_id').notNull().references(() => orders.id, { onDelete: 'cascade' }),
+    orderId: text('order_id')
+      .notNull()
+      .references(() => orders.id, { onDelete: 'cascade' }),
     position: integer('position').notNull(),
     menuItemId: text('menu_item_id').notNull(),
     name: text('name').notNull(),
@@ -79,9 +92,14 @@ export const orderLines = pgTable(
  */
 export const billQuotes = pgTable('bill_quotes', {
   id: text('id').primaryKey(),
-  orderId: text('order_id').notNull().references(() => orders.id, { onDelete: 'cascade' }),
+  orderId: text('order_id')
+    .notNull()
+    .references(() => orders.id, { onDelete: 'cascade' }),
   mode: text('mode', { enum: ['whole', 'equal', 'items'] }).notNull(),
-  lineIds: text('line_ids').array().notNull().default(sql`'{}'::text[]`),
+  lineIds: text('line_ids')
+    .array()
+    .notNull()
+    .default(sql`'{}'::text[]`),
   sharePesewas: money('share_pesewas').notNull(),
   tipPesewas: money('tip_pesewas').notNull(),
   feePesewas: money('fee_pesewas').notNull().default(0),
@@ -94,13 +112,17 @@ export const billQuotes = pgTable('bill_quotes', {
 /** "Call the waiter" (WaiterCall), with the owner app's reply and snooze. */
 export const waiterCalls = pgTable('waiter_calls', {
   id: text('id').primaryKey(),
-  venueId: text('venue_id').notNull().references(() => venues.id),
+  venueId: text('venue_id')
+    .notNull()
+    .references(() => venues.id),
   tableCode: text('table_code').notNull(),
   reason: text('reason', {
     enum: ['water', 'bill', 'cutlery', 'order_more', 'clean_table', 'other'],
   }).notNull(),
   note: text('note'),
-  status: text('status', { enum: ['open', 'acknowledged', 'resolved'] }).notNull().default('open'),
+  status: text('status', { enum: ['open', 'acknowledged', 'resolved'] })
+    .notNull()
+    .default('open'),
   staffMembershipId: text('staff_membership_id'),
   staffFirstName: text('staff_first_name'),
   reply: text('reply'),

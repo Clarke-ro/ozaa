@@ -4,7 +4,7 @@ export type FloorOrder = {
   id: string;
   number: number;
   tableCode: string | null;
-  status: 'received' | 'preparing' | 'ready' | 'served' | 'cancelled';
+  status: 'received' | 'accepted' | 'preparing' | 'ready' | 'served' | 'cancelled';
   paymentStatus: 'unpaid' | 'part_paid' | 'paid' | 'refunded';
   totalPesewas: number;
   createdAt: string;
@@ -37,7 +37,7 @@ export type FloorTableView = FloorTableInput & {
   waiterReason: FloorCall['reason'] | null;
 };
 
-const OPEN_KITCHEN = new Set<FloorOrder['status']>(['received', 'preparing', 'ready']);
+const OPEN_KITCHEN = new Set<FloorOrder['status']>(['received', 'accepted', 'preparing', 'ready']);
 
 function latestOrder(orders: FloorOrder[], code: string): FloorOrder | null {
   const matches = orders.filter(

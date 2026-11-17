@@ -2858,8 +2858,11 @@ components:
 
     OrderStatus:
       type: string
-      enum: [received, preparing, ready, served, cancelled]
-      description: Legal moves received->preparing->ready->served, and received or preparing->cancelled.
+      enum: [received, accepted, preparing, ready, served, cancelled]
+      description: >-
+        Legal moves received->accepted->preparing->ready->served, and received, accepted or
+        preparing->cancelled. `received` is a new order nobody has accepted yet; staff accept it
+        before the kitchen starts cooking, and the guest sees it as accepted.
     PaymentStatusSummary:
       type: string
       enum: [unpaid, part_paid, paid, refunded]
@@ -3376,7 +3379,7 @@ components:
       properties:
         salesTodayPesewas: { $ref: '#/components/schemas/Pesewas' }
         ordersToday: { type: integer, minimum: 0, description: "Orders placed since midnight in the venue's time zone, not counting cancelled ones." }
-        pendingOrders: { type: integer, minimum: 0, description: "Orders still waiting for the kitchen to start (status received)." }
+        pendingOrders: { type: integer, minimum: 0, description: "New orders still waiting to be accepted (status received)." }
         visitorsToday: { type: integer, minimum: 0, description: "Guest visits since midnight in the venue's time zone. One table scan or one opened menu link is one visit; no guest is identified." }
         currency: { $ref: '#/components/schemas/Currency' }
         changePercent: { type: ['integer', 'null'], description: Versus the same venue yesterday. Null when yesterday was zero. }
@@ -3591,9 +3594,10 @@ components:
                 totalPesewas: { $ref: '#/components/schemas/Pesewas' }
         byStatus:
           type: object
-          required: [received, preparing, ready, served, cancelled]
+          required: [received, accepted, preparing, ready, served, cancelled]
           properties:
             received: { type: integer }
+            accepted: { type: integer }
             preparing: { type: integer }
             ready: { type: integer }
             served: { type: integer }

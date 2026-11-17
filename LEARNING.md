@@ -3585,3 +3585,33 @@ One message for every error is easy to write and impossible to fix. A message pe
 **Try it yourself**
 
 Turn your phone's Wi-Fi and data off, then tap Send code. Which message and reference do you see?
+
+## 2026-11-17 · Accept before cooking
+
+**What we built**
+
+A new order now has to be accepted before the kitchen can start it:
+
+```
+New ──Accept order──► Accepted ──Start cooking──► Cooking ──► Ready ──► Served
+```
+
+- **Staff:** a new ticket shows **Accept order**. Once accepted, it stays under New, marked "· Accepted", and its button becomes **Start cooking**. Waiters, the kitchen, managers and owners can all accept. The Orders badge counts only orders nobody has accepted yet.
+- **Guests:** the timeline reads Accepted · Being prepared · Ready · Served. Until someone accepts, the first step says "Waiting for the restaurant to accept", with the time the order was sent. The guest also gets an "Order accepted" notification.
+
+The same PR also makes Quick actions and All tables two columns on phones, removes the circle behind the back arrow, and gives the Sales card a soft orange tint.
+
+**Files to look at**
+
+- `api/openapi.yaml`: `OrderStatus` gains `accepted`.
+- `src/features/orders/orderMachine.ts` and its test: the moves, who may make them, and `moveFor`.
+- `src/features/orders/StatusTimeline.tsx`: the guest's steps.
+- `server/src/routes/owner.ts`: the server uses the same rules.
+
+**New idea: one source of truth for the rules**
+
+The demo and the real server both used to turn "set it to preparing" into the move "start", each in its own code. Now both call `moveFor()` from the shared order machine. A new step is added in one place, and the demo and the server can't disagree.
+
+**Try it yourself**
+
+In `orderMachine.test.ts`, check that a waiter can accept an order but can't start cooking it.

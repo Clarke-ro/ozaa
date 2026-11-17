@@ -95,6 +95,7 @@ export function salesReport(
 ): SalesNumbers {
   const byStatus: SalesNumbers['byStatus'] = {
     received: 0,
+    accepted: 0,
     preparing: 0,
     ready: 0,
     served: 0,

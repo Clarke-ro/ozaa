@@ -16,7 +16,9 @@ export const ORDER_VIEWS: readonly OrderView[] = [
 /** Which Orders tab a ticket belongs in. A cancelled order shows as Rejected to staff. */
 export function orderTab(status: Order['status']): OrderTab {
   switch (status) {
+    // An accepted order stays under New until the kitchen starts it; its button says Start cooking.
     case 'received':
+    case 'accepted':
       return 'new';
     case 'preparing':
       return 'cooking';

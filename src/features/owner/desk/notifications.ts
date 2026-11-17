@@ -1,10 +1,4 @@
-import type {
-  FeedbackItem,
-  Order,
-  OwnerDashboard,
-  StaffMember,
-  WaiterCall,
-} from '@/lib/api/types';
+import type { FeedbackItem, Order, OwnerDashboard, StaffMember, WaiterCall } from '@/lib/api/types';
 
 // A new team member is news for a week; after that they are just on the Staff page.
 // Same line as the Orders screen: a ticket waiting 20 minutes needs someone to act.
@@ -100,7 +94,7 @@ export function buildNotifications(src: NoteSources, now: number): Note[] {
   }
   for (const o of src.orders) {
     const late =
-      (o.status === 'received' || o.status === 'preparing') &&
+      (o.status === 'received' || o.status === 'accepted' || o.status === 'preparing') &&
       now - Date.parse(o.createdAt) >= LATE_MS;
     if (late) {
       timed.push({

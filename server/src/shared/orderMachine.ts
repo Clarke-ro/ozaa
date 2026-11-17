@@ -1,12 +1,15 @@
 // Generated from src/features/orders/orderMachine.ts by scripts/sync-server-shared.mjs. Do not edit here.
 import type { StaffRole } from './types.ts';
 
-export type OrderStatus = 'received' | 'preparing' | 'ready' | 'served' | 'cancelled';
-export type OrderMove = 'start' | 'ready' | 'serve' | 'cancel';
+export type OrderStatus = 'received' | 'accepted' | 'preparing' | 'ready' | 'served' | 'cancelled';
+export type OrderMove = 'accept' | 'start' | 'ready' | 'serve' | 'cancel';
 export type { StaffRole };
 
 const NEXT: Record<OrderStatus, Partial<Record<OrderMove, OrderStatus>>> = {
-  received: { start: 'preparing', cancel: 'cancelled' },
+  // A new order is accepted first (Clarke, 2026-11-17): the guest sees someone has it, and
+  // only then can the kitchen start cooking.
+  received: { accept: 'accepted', cancel: 'cancelled' },
+  accepted: { start: 'preparing', cancel: 'cancelled' },
   preparing: { ready: 'ready', cancel: 'cancelled' },
   ready: { serve: 'served' },
   served: {},
@@ -14,10 +17,11 @@ const NEXT: Record<OrderStatus, Partial<Record<OrderMove, OrderStatus>>> = {
 };
 
 const ALLOWED: Record<StaffRole, OrderMove[]> = {
-  owner: ['start', 'ready', 'serve', 'cancel'],
-  manager: ['start', 'ready', 'serve', 'cancel'],
-  waiter: ['serve'],
-  kitchen: ['start', 'ready'],
+  owner: ['accept', 'start', 'ready', 'serve', 'cancel'],
+  manager: ['accept', 'start', 'ready', 'serve', 'cancel'],
+  // Whoever sees a new order first, on the floor or in the kitchen, can accept it.
+  waiter: ['accept', 'serve'],
+  kitchen: ['accept', 'start', 'ready'],
   viewer: [],
   staff_scanner: [],
 };
@@ -32,12 +36,12 @@ export function showsFoodReady(status: OrderStatus): boolean {
  * "ready" when it's done, nothing after it's served or cancelled.
  */
 export function orderToast(status: OrderStatus): 'working' | 'ready' | null {
-  if (status === 'received' || status === 'preparing') return 'working';
+  if (status === 'received' || status === 'accepted' || status === 'preparing') return 'working';
   if (status === 'ready') return 'ready';
   return null;
 }
 
-const FORWARD: OrderMove[] = ['start', 'ready', 'serve'];
+const FORWARD: OrderMove[] = ['accept', 'start', 'ready', 'serve'];
 
 export function nextOrderMove(
   status: OrderStatus,
@@ -57,4 +61,17 @@ export function orderTransition(
 ): OrderStatus | null {
   if (!ALLOWED[role].includes(move)) return null;
   return NEXT[status][move] ?? null;
+}
+
+const MOVE_TO: Partial<Record<OrderStatus, OrderMove>> = {
+  accepted: 'accept',
+  preparing: 'start',
+  ready: 'ready',
+  served: 'serve',
+  cancelled: 'cancel',
+};
+
+/** Staff ask for a status ("set it to accepted"); this is the move that gets there. None reaches received. */
+export function moveFor(target: OrderStatus): OrderMove | null {
+  return MOVE_TO[target] ?? null;
 }
