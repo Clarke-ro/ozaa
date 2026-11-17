@@ -27,7 +27,8 @@ const patchBody = z
     phone,
     whatsapp: phone,
     whatsappAlerts: phone.nullable(),
-    googleReviewUrl: z.url().nullable(),
+    // Shown to guests as a link, so only https: never javascript: or another scheme.
+    googleReviewUrl: z.url({ protocol: /^https$/ }).nullable(),
     published: z.boolean(),
     languages: z.array(z.string().min(2).max(5)).max(10),
     hours: obj,

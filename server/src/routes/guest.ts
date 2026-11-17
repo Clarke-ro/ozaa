@@ -1,6 +1,7 @@
 import { Hono, type Context } from 'hono';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
+import { slidingWindow } from '../http/rateLimit.ts';
 import type { Db } from '../db/client.ts';
 import { promos, visits } from '../db/schema.ts';
 import { GUEST_TTL_MS, readGuestToken, signGuestToken, type GuestClaims } from '../guest/token.ts';
@@ -86,9 +87,15 @@ export function canSeeOrder(
 }
 
 /** Guest calls (api/openapi.yaml: guest-session, venues, menu, orders). No personal data in logs. */
+// One table visit placing more than this many orders in 10 minutes is a script, not a guest:
+// it would flood the kitchen. Retries of the same order count too, which is fine at this level.
+const ORDERS_PER_VISIT = 20;
+const ORDER_WINDOW_MS = 10 * 60_000;
+
 export function guestRoutes(deps: GuestDeps) {
   const app = new Hono();
   const { db } = deps;
+  const ordersPerVisit = slidingWindow({ limit: ORDERS_PER_VISIT, windowMs: ORDER_WINDOW_MS, now: deps.now });
 
   app.post('/guest-sessions', async (c) => {
     const input = await body(c, sessionBody);
@@ -145,6 +152,7 @@ export function guestRoutes(deps: GuestDeps) {
 
   app.post('/orders', async (c) => {
     const guest = guestOf(c, deps);
+    if (!ordersPerVisit.hit(guest.sid)) throw new Problem(429, 'rate_limited', 'Too many orders at once. Ask a waiter if something is wrong.');
     const input = await body(c, orderBody);
     const row = await venueRowById(db, guest.venueId);
     const venue = await publicVenue(db, row, deps.now());

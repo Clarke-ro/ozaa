@@ -47,6 +47,8 @@ export function otpRoutes(deps: OtpDeps) {
     if (!deps.sms) throw new Problem(503, 'sms_not_ready', 'Texts are not set up on this server yet.');
     // Heroku's router adds the caller's address last; earlier entries can be faked.
     const ip = c.req.header('x-forwarded-for')?.split(',').at(-1)?.trim() ?? 'unknown';
+    // Forget addresses with nothing in the last hour, so the map doesn't grow for ever.
+    if (byIp.size > 5_000) for (const [key, times] of byIp) if (times.every((t) => t <= now - 3_600_000)) byIp.delete(key);
     const recent = (byIp.get(ip) ?? []).filter((t) => t > now - 3_600_000);
     if (recent.length >= PER_IP_PER_HOUR) throw limited('rate_limited', 3600);
 

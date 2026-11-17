@@ -3682,3 +3682,35 @@ The old timeline treated the status as "the step we're on", so the step wasn't d
 **Try it yourself**
 
 In `orderTimeline.test.ts`, check what `timelineSteps('ready')` returns.
+
+## 2026-11-17 · A security audit, and the one real hole it found
+
+**What we built**
+
+I read every server route, the payment flow, uploads, the hosting config and the workflows, and searched all of git history for leaked keys. The full report is `docs/SECURITY_AUDIT_2026-11-17.md`.
+
+One real hole turned up, now fixed. An owner could invite someone else's phone number with *their own* email, then sign in as that person. Now an invite only adds an email for someone who works nowhere but the inviting owner's venues.
+
+The audit also added rate limits for guests, security headers, a request size cap, a fix for a payment status race, and patched packages.
+
+**How it works**
+
+```
+request ─► HTTPS? ─► size ok? ─► under the rate limit? ─► route ─► "is this your venue?"
+```
+
+Each layer refuses early, so a bad request never reaches the database.
+
+**Files to look at**
+
+- `server/src/routes/ownerStaff.ts`: the invite rule, plus its test in `ownerStaff.test.ts`.
+- `server/src/http/rateLimit.ts`: a sliding-window counter.
+- `server/src/hardening.test.ts`: headers, HTTPS, size cap and rate limits.
+
+**New idea: test the attack, not just the feature**
+
+The invite test plays the attacker: a second owner tries the trick. It failed before the fix (the server said 201) and passes after (409). A test that only checks the happy path would never have caught this.
+
+**Try it yourself**
+
+In `rateLimit.test.ts`, change the limit to 2 and watch which assertions fail.

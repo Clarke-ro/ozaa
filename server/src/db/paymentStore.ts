@@ -101,7 +101,11 @@ export function paymentStore(db: Db) {
      */
     async save(payment: Payment): Promise<void> {
       if (payment.status !== 'succeeded') {
-        await db.update(payments).set(changes(payment)).where(eq(payments.reference, payment.reference));
+        // Never over a success: a slower answer read before the webhook must not undo it.
+        await db
+          .update(payments)
+          .set(changes(payment))
+          .where(and(eq(payments.reference, payment.reference), ne(payments.status, 'succeeded')));
         return;
       }
       await db.transaction(async (tx) => {

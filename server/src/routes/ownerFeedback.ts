@@ -46,9 +46,11 @@ export function ownerFeedbackRoutes(deps: OwnerDeps) {
   });
 
   app.post('/owner/written-reviews/:writtenReviewId/reply', async (c) => {
+    // Signed in first, so someone without a sign-in can't learn which review ids exist.
+    const who = await signedIn(c, deps);
     const [row] = await db.select().from(writtenReviews).where(eq(writtenReviews.id, c.req.param('writtenReviewId')));
     if (!row) throw new Problem(404, 'not_found', 'That review is gone.');
-    await managerAt(c, row.venueId);
+    roleAt(who, row.venueId, ROLES.menu);
     const input = await body(c, z.object({ text: z.string().trim().min(1).max(400) }));
     const [saved] = await db.update(writtenReviews).set({ reply: input.text }).where(eq(writtenReviews.id, row.id)).returning();
     return c.json(reviewOf(saved!));
