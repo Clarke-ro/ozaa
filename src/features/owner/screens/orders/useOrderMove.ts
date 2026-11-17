@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
 import { nextOrderMove, type OrderStatus, type StaffRole } from '@/features/orders';
 import type { Order } from '@/lib/api/types';
+import { finishWord, statusKey } from '@/features/orders/guestTimeline';
 import { invalidateOwnerQueries } from '../../data/invalidateOwnerQueries';
 import { ownerKeys } from '../../data/keys';
 import { toast } from '../../kit';
@@ -15,10 +16,10 @@ export function useOrderMove(venueId: string, role: StaffRole) {
   const { t } = useTranslation();
   const client = useQueryClient();
   const move = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: OrderStatus }) =>
+    mutationFn: ({ id, status }: { id: string; status: OrderStatus; source?: Order['source'] }) =>
       api.ownerSetOrderStatus(id, { status }),
-    onSuccess: (_o, { status }) => {
-      toast.success(t(`statusLabel.${status}`));
+    onSuccess: (_o, { status, source }) => {
+      toast.success(t(statusKey({ status, source })));
       invalidateOwnerQueries(client, [
         ownerKeys.orders(venueId),
         ownerKeys.floor(venueId),
@@ -31,12 +32,16 @@ export function useOrderMove(venueId: string, role: StaffRole) {
     /** The next-step label for this person, or null when they have none for this ticket. */
     label: (order: Order) => {
       const next = nextOrderMove(order.status, role);
-      return next ? t(`ownerOrders.move.${next.move}`) : null;
+      if (!next) return null;
+      // Pickup and delivery orders end as picked up or delivered, not served.
+      return next.move === 'serve'
+        ? t(`ownerOrders.move.${finishWord(order.source)}`)
+        : t(`ownerOrders.move.${next.move}`);
     },
     busy: (order: Order) => move.isPending && move.variables?.id === order.id,
     run: (order: Order) => {
       const next = nextOrderMove(order.status, role);
-      if (next) move.mutate({ id: order.id, status: next.status });
+      if (next) move.mutate({ id: order.id, status: next.status, source: order.source });
     },
   };
 }

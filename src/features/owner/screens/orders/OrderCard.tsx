@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { statusKey } from '@/features/orders/guestTimeline';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { Order } from '@/lib/api/types';
@@ -121,7 +122,7 @@ export function OrderCard({
             </Text>
           ) : (
             <Text style={[styles.sub, compact && styles.subSm, { color: theme.meta }]}>
-              {t(`statusLabel.${order.status}`)}
+              {t(statusKey(order))}
             </Text>
           )}
         </View>

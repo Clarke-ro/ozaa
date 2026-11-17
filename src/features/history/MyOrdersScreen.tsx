@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { statusKey } from '@/features/orders/guestTimeline';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
@@ -134,7 +135,7 @@ function OrderCard({
             variant="caption"
             style={[styles.strong, { color: live ? theme.ink : theme.muted }]}
           >
-            {t(`statusLabel.${order.status}`)}
+            {t(statusKey(order))}
           </Text>
           <Text variant="caption" style={{ color: theme.meta }}>
             {when}

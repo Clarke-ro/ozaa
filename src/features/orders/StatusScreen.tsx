@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { statusKey } from './guestTimeline';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
@@ -91,7 +92,7 @@ export function StatusScreen({ slug }: { slug: string }) {
           <Text variant="caption" style={{ color: theme.meta }}>
             {t('status.now')}
           </Text>
-          <Text variant="display-m">{t(`statusLabel.${o.status}`)}</Text>
+          <Text variant="display-m">{t(statusKey(o))}</Text>
           {/* Only the kitchen's own estimate; no estimate means no time shown. */}
           {o.etaMinutes != null &&
           (o.status === 'received' || o.status === 'accepted' || o.status === 'preparing') ? (

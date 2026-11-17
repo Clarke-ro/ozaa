@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { finishWord } from '@/features/orders/guestTimeline';
 import { StyleSheet, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
@@ -131,6 +132,7 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
               <StepRows
                 steps={orderSteps(order)}
                 firstNote={t(`ownerOrders.detail.from.${source}`)}
+                finish={finishWord(order.source)}
               />
             </TitledSection>
             {mayCancel ? (

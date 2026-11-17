@@ -6,7 +6,16 @@ import { useTheme } from '@/ui/theme';
 import type { OrderStep } from './orderSteps';
 
 /** The canvas timeline: one row a stage, with its time on the right or "Not yet". */
-export function StepRows({ steps, firstNote }: { steps: OrderStep[]; firstNote?: string }) {
+export function StepRows({
+  steps,
+  firstNote,
+  finish = 'served',
+}: {
+  steps: OrderStep[];
+  firstNote?: string;
+  /** How the order ends: the last row reads Served, Picked up or Delivered. */
+  finish?: 'served' | 'pickedUp' | 'delivered';
+}) {
   const theme = useTheme();
   const { t, i18n } = useTranslation();
   const clock = (at: string) =>
@@ -25,7 +34,7 @@ export function StepRows({ steps, firstNote }: { steps: OrderStep[]; firstNote?:
                 variant="body"
                 style={{ color: step.id === 'cancelled' ? theme.error : theme.text }}
               >
-                {t(`ownerOrders.detail.step.${step.id}`)}
+                {t(`ownerOrders.detail.step.${step.id === 'served' ? finish : step.id}`)}
               </Text>
               {i === 0 && firstNote ? (
                 <Text variant="caption" style={{ color: theme.muted }}>

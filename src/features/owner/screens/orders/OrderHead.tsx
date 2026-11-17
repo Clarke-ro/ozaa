@@ -1,4 +1,5 @@
 import { StyleSheet, View } from 'react-native';
+import { statusKey } from '@/features/orders/guestTimeline';
 import { useTranslation } from 'react-i18next';
 import type { Order } from '@/lib/api/types';
 import type { StatusTone } from '@/theme/palette';
@@ -44,7 +45,7 @@ export function OrderHead({
   return (
     <View style={styles.head}>
       <View style={styles.row}>
-        <ToneTag label={t(`statusLabel.${order.status}`)} tone={STAGE_TAG[order.status]} />
+        <ToneTag label={t(statusKey(order))} tone={STAGE_TAG[order.status]} />
         <ToneTag label={paidLabel(order, t)} tone={PAID_TAG[order.paymentStatus]} />
       </View>
       <View style={styles.row}>

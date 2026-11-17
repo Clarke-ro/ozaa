@@ -3649,3 +3649,36 @@ React Native has `adjustsFontSizeToFit`, but browsers ignore it. `FitText` uses 
 **Try it yourself**
 
 Open Sales in a narrow browser window and drag the window wider. The labels grow back to full size.
+
+## 2026-11-17 · The guest timeline keeps pace
+
+**What we built**
+
+The guest's timeline was always one step behind the owner app. A step only got its tick once the *next* step started, so Served never ticked at all. Now a step is ticked the moment staff mark it, and the step after it is highlighted.
+
+Pickup and delivery orders end as **Picked up** or **Delivered** instead of Served. The wording changes on:
+- the guest timeline and status title
+- My orders and the guest's notifications
+- the owner's button ("Mark picked up" / "Mark delivered")
+- the owner's order page
+
+The API status is still `served`; only the words change. Drivers and the delivery map come later.
+
+**How it works**
+
+```
+owner marks:   Accept   Start cooking   Mark ready   Mark served
+guest ticks:   ✓ Accepted ✓ Being prepared ✓ Ready     ✓ Served / Picked up / Delivered
+```
+
+**Files to look at**
+
+- `src/features/orders/guestTimeline.ts` and its test: `timelineSteps`, `finishWord`, `statusKey`.
+
+**New idea: "done" vs "current"**
+
+The old timeline treated the status as "the step we're on", so the step wasn't done yet. But a status means "staff have done this", so the step is done. Picking the right meaning fixed the off-by-one.
+
+**Try it yourself**
+
+In `guestTimeline.test.ts`, check what `timelineSteps('ready')` returns.
