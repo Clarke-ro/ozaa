@@ -11,7 +11,7 @@ const c = tokens.owner.controls;
 const GRAIN = require('../../../../../assets/images/grain.png');
 
 /**
- * The day's main number on a deep burgundy card, the first thing on Today ("Sales today
+ * The day's main number on a bright burgundy card, the first thing on Today ("Sales today
  * GH₵1,250"). The burgundy and its white text stay the same in dark mode (SALES_CARD).
  * A small pill opens the page behind the number when this person may. A fine grain sits over the
  * burgundy for texture (Clarke, 2026-11-17); it is faint, so the text keeps its contrast.
