@@ -1,3 +1,4 @@
+import type { ComponentRef, Ref } from 'react';
 import { StyleSheet, Text as NativeText, type TextProps, type TextStyle } from 'react-native';
 import { tokens } from '@/theme/tokens';
 import { useTheme, type TextVariant } from './theme';
@@ -35,7 +36,7 @@ export function Text({
   children,
   style,
   ...rest
-}: TextProps & { variant?: Variant }) {
+}: TextProps & { variant?: Variant; ref?: Ref<ComponentRef<typeof NativeText>> }) {
   const theme = useTheme();
   const display = variant === 'display-l' || variant === 'display-m';
   const strong = variant === 'title' || variant === 'body-strong' || variant === 'button';

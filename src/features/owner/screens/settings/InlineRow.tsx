@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { LucideIcon } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
-import { Text } from '@/ui/Text';
+import { FitText } from '@/ui/FitText';
 import { useTheme } from '@/ui/theme';
 
 /** A settings row with its control on the right, like "Appearance  [Light | Dark | Follow]". */
@@ -19,10 +19,10 @@ export function InlineRow({
   return (
     <View style={styles.row}>
       <Icon size={20} color={theme.muted} />
-      {/* Two lines rather than "Stamps on a full …" when the control beside it is wide. */}
-      <Text variant="body" style={styles.label} numberOfLines={2}>
+      {/* One line that shrinks a little beside a wide control (Clarke, 2026-11-17). */}
+      <FitText variant="body" style={styles.label} min={12}>
         {label}
-      </Text>
+      </FitText>
       {/* The control may shrink, so a three-way switch never runs off a phone screen. */}
       <View style={styles.control}>{children}</View>
     </View>

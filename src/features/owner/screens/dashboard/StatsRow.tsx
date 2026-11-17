@@ -38,7 +38,7 @@ export function StatsRow({ dashboard: d }: { dashboard: OwnerDashboard }) {
 
   return (
     <View style={wide ? styles.row : styles.stack}>
-      <View style={wide ? styles.heroWide : undefined}>
+      <View style={wide ? styles.heroWide : styles.heroPhone}>
         <HeroCard
           label={top.label}
           value={top.value}
@@ -59,5 +59,8 @@ const styles = StyleSheet.create({
   // The dark card takes two parts of the row and the three small cards three, so the dark card
   // is about twice as wide as one small card.
   heroWide: { flex: 2 },
+  // Phones only (Clarke, 2026-11-17): about 0.25 cm (10 px) wider than the page column, reaching
+  // 5 px into each side margin.
+  heroPhone: { marginHorizontal: -5 },
   smallWide: { flex: 3 },
 });

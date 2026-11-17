@@ -1,6 +1,7 @@
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
+import { FitText } from '@/ui/FitText';
 import { fontFamily, useTheme } from '@/ui/theme';
 import { CardGrid } from './CardGrid';
 import { cardStyle } from './cardStyle';
@@ -44,9 +45,7 @@ export function FigureRow({
             accessibilityLabel={`${item.label}: ${item.value}`}
             style={[cardStyle(theme), styles.card]}
           >
-            <Text style={[styles.label, { color: theme.muted }]} numberOfLines={2}>
-              {item.label}
-            </Text>
+            <FitText style={[styles.label, { color: theme.muted }]}>{item.label}</FitText>
             <Text
               style={[styles.value, { fontSize: size, lineHeight: size + 6 }]}
               numberOfLines={1}
@@ -61,12 +60,12 @@ export function FigureRow({
             accessibilityLabel={`${item.label}: ${item.value}`}
             style={[cardStyle(theme), styles.tile]}
           >
-            <Text style={[styles.value, styles.tileValue]} numberOfLines={1} adjustsFontSizeToFit>
+            <FitText style={[styles.value, styles.tileValue]} min={16}>
               {item.value}
-            </Text>
-            <Text style={[styles.tileLabel, { color: theme.muted }]} numberOfLines={2}>
+            </FitText>
+            <FitText style={[styles.tileLabel, { color: theme.muted }]}>
               {item.short ?? item.label}
-            </Text>
+            </FitText>
           </View>
         ),
       )}

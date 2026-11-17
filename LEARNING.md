@@ -3615,3 +3615,37 @@ The demo and the real server both used to turn "set it to preparing" into the mo
 **Try it yourself**
 
 In `orderMachine.test.ts`, check that a waiter can accept an order but can't start cooking it.
+
+## 2026-11-17 · Text that shrinks to fit
+
+**What we built**
+
+Stat labels such as "Pending orders" used to break onto two lines, or end in "…", on phones. Now they stay on one line and get a little smaller when there isn't room. The same goes for Quick actions labels, the big numbers on the stat cards, the trend lines on Sales, and settings rows like "Stamps on a full card".
+
+Also in this change:
+- Quick actions are three across on phones again.
+- The Sales card is about 0.25 cm wider, on phones only.
+- The last row of Quick actions now lines up with the rows above it.
+
+**How it works**
+
+```
+measure the words ──► fits? ──yes──► keep the size
+                         │
+                         no ──► size × room ÷ words (never below 9–10 px)
+```
+
+React Native has `adjustsFontSizeToFit`, but browsers ignore it. `FitText` uses it on phones. On the web, it measures the words with `document.createRange()`, which gives the exact width, and sets a smaller size.
+
+**Files to look at**
+
+- `src/ui/fitText.ts` and its test: the sizing rule.
+- `src/ui/FitText.tsx`: the component.
+
+**New idea: rounding bugs**
+
+`scrollWidth` rounds to whole pixels. Text 105.4 px wide in a 105 px box looked like it fit, but the browser still cut it off. Measuring the exact width fixed it.
+
+**Try it yourself**
+
+Open Sales in a narrow browser window and drag the window wider. The labels grow back to full size.

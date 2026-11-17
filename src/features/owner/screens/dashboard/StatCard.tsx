@@ -1,7 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 import { tokens } from '@/theme/tokens';
 import { PressableScale } from '@/ui/PressableScale';
-import { Text } from '@/ui/Text';
+import { FitText } from '@/ui/FitText';
 import { fontFamily, useTheme } from '@/ui/theme';
 import { cardStyle } from '../../kit/cardStyle';
 
@@ -28,24 +28,23 @@ export function StatCard({
   const theme = useTheme();
   const body = compact ? (
     <>
-      <Text style={styles.small} numberOfLines={1} adjustsFontSizeToFit>
+      <FitText style={styles.small} min={16}>
         {value}
-      </Text>
-      <Text style={[styles.smallLabel, { color: theme.muted }]} numberOfLines={2}>
+      </FitText>
+      {/* 9 px only on the smallest phones (iPhone SE): one line beats a cut-off "Pending o…". */}
+      <FitText style={[styles.smallLabel, { color: theme.muted }]} min={9}>
         {label}
-      </Text>
+      </FitText>
     </>
   ) : (
     <>
       {/* Same height as the dark card's top line, so the numbers line up across the row. */}
       <View style={styles.top}>
-        <Text style={[styles.label, { color: theme.muted }]} numberOfLines={2}>
-          {label}
-        </Text>
+        <FitText style={[styles.label, { color: theme.muted }]}>{label}</FitText>
       </View>
-      <Text style={styles.value} numberOfLines={1} adjustsFontSizeToFit>
+      <FitText style={styles.value} min={20}>
         {value}
-      </Text>
+      </FitText>
     </>
   );
   const spoken = `${label} ${value}`;
@@ -82,7 +81,7 @@ const styles = StyleSheet.create({
   compact: {
     minHeight: 0,
     paddingVertical: 14,
-    paddingHorizontal: 14,
+    paddingHorizontal: 10,
     gap: 2,
   },
   top: { minHeight: 30, justifyContent: 'center' },
