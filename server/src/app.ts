@@ -11,6 +11,7 @@ import { mediaRoutes } from './routes/media.ts';
 import { ownerDeskRoutes } from './routes/ownerDesk.ts';
 import { ownerLoyaltyRoutes } from './routes/ownerLoyalty.ts';
 import { ownerMenuRoutes } from './routes/ownerMenu.ts';
+import { ownerPromoRoutes } from './routes/ownerPromos.ts';
 import { ownerStaffRoutes } from './routes/ownerStaff.ts';
 import { ownerTablesRoutes } from './routes/ownerTables.ts';
 import { ownerVenueRoutes } from './routes/ownerVenue.ts';
@@ -80,6 +81,7 @@ export function createApp(deps: {
   if (deps.owner) app.route('/', ownerStaffRoutes(deps.owner));
   if (deps.owner) app.route('/', ownerFeedbackRoutes(deps.owner));
   if (deps.owner) app.route('/', ownerLoyaltyRoutes(deps.owner));
+  if (deps.owner) app.route('/', ownerPromoRoutes(deps.owner));
   if (deps.owner) app.route('/', ownerVenueRoutes(deps.owner));
   if (deps.guest && deps.owner) app.route('/', waiterRoutes({ ...deps.guest, ...deps.owner }));
 
