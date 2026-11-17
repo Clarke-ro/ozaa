@@ -4,7 +4,7 @@ import { PressableScale } from '@/ui/PressableScale';
 import { tokens } from '@/theme/tokens';
 import { useTheme } from '@/ui/theme';
 
-/** The flat bordered card owner screens use for one item. For lists, prefer Panel with PanelRows. */
+/** The flat bordered card owner screens use for one item. */
 export function DeskCard({
   children,
   onPress,
