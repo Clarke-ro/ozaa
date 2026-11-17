@@ -3437,3 +3437,31 @@ Marking the order paid and adding the stamp happen together. If one fails, neith
 **Try it yourself**
 
 In `paidOrder.test.ts`, mark the same order paid three times and check the stamps stay at 1.
+
+## 2026-11-17 · Promos and coupons on the real server
+
+**What we built**
+
+Owners and managers create promos (percent off, an amount off, or a free dish), with an optional coupon code, days, hours, dates, a channel (table, online or both) and a usage limit. The order a guest places uses the best one that applies. Each use is counted, so a "first 50 orders" promo ends by itself.
+
+**How it works**
+
+```
+owner → POST /owner/venues/{id}/promos {Ten off, 10%, code JOLLOF10, limit 1}
+guest → order with promoCode "jollof10" → server applies it, counts 1 use, adds the discount given
+next guest → same code → "That code doesn't work right now" (limit reached → ended)
+```
+
+**Files to look at**
+
+- `server/src/routes/ownerPromos.ts`: the routes and the checks.
+- `src/lib/promos.ts`: when a promo is running, and which one is best (shared).
+- `server/src/orders/orderStore.ts`: counting a use when the order is saved.
+
+**New idea: counting inside the same transaction**
+
+The order and the promo's use count are saved together. Two guests racing for the last use can't both get it without both being counted.
+
+**Try it yourself**
+
+In `ownerPromos.test.ts`, change `usageLimit` to 2 and place a third order. It's refused only on the third.

@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { and, asc, eq, max, sql } from 'drizzle-orm';
 import type { Db } from '../db/client.ts';
-import { idempotencyKeys, menuItems, orderLines, orders } from '../db/schema.ts';
+import { idempotencyKeys, menuItems, orderLines, orders, promos } from '../db/schema.ts';
 import { Problem } from '../http/problem.ts';
 import type { Order } from '../shared/types.ts';
 import type { PricedOrder } from './priceOrder.ts';
@@ -147,6 +147,13 @@ export async function saveOrder(
         note: line.note ?? null,
       })),
     );
+    // The promo it used counts this order: its usage limit and "discount given" stay true.
+    for (const applied of p.promoDiscounts) {
+      await tx
+        .update(promos)
+        .set({ usageCount: sql`${promos.usageCount} + 1`, discountGivenPesewas: sql`${promos.discountGivenPesewas} + ${applied.pesewas}` })
+        .where(eq(promos.id, applied.promoId));
+    }
     await tx.insert(idempotencyKeys).values({ scope, key: input.clientOrderId, status: 201, body: { orderId: id } });
     return id;
   });
