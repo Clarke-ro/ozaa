@@ -3377,3 +3377,35 @@ Like a bank statement, nothing is overwritten. "4 stamps" is worked out from fou
 **Try it yourself**
 
 In `loyalty.test.ts`, play the game three times in one day after joining. Only the first win adds a stamp: find the "once a day" rule in `facts.ts`.
+
+## 2026-11-17 · The owner's loyalty desk on the real server
+
+**What we built**
+
+Owners and staff can now run loyalty for real: set up the programme (rewards, tiers, the card's look), scan a guest's card to add a stamp or give a reward, confirm a guest's 6-letter code, look up members, see who stamped what today, read analytics, and erase a member on request.
+
+**How it works**
+
+```
+staff scans card → stamp (once an hour per guest) → "Esi: 4 stamps, reward unlocked!"
+staff taps Redeem → the cheapest reward they can afford, claimed and confirmed in one go
+guest shows code ABC123 → staff confirm → stamps come off (only staff can do this)
+```
+
+Every stamp records who gave it, so "Today" on Scan and stamp is just the ledger lines with a name, newest first.
+
+**Files to look at**
+
+- `server/src/routes/ownerLoyalty.ts`: the routes.
+- `server/src/loyalty/counter.ts`: stamp and reward at the counter.
+- `server/src/loyalty/desk.ts`: customers, analytics, the scan log.
+
+**New idea: idempotent actions**
+
+Confirming the same code twice doesn't take stamps off twice. The rule sees the code is already confirmed and just shows the card again. Network retries and double taps become harmless.
+
+**Try it yourself**
+
+In `ownerLoyalty.test.ts`, remove one of the `tick(61 * 60_000)` lines. A stamp gets refused with `cooldownViolated: true`.
+
+**Not yet:** the automatic stamp when an order is paid. That needs the order to know whose card it is.

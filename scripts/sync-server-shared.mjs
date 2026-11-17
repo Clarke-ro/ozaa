@@ -36,6 +36,7 @@ const FILES = {
   'src/features/loyalty/factsHistory.ts': 'factsHistory.ts',
   'src/features/loyalty/factsWire.ts': 'factsWire.ts',
   'src/features/loyalty/facts.ts': 'loyaltyFacts.ts',
+  'src/features/loyalty/customers.ts': 'loyaltyCustomers.ts',
   'src/lib/api/types.ts': 'types.ts',
   'src/lib/api/schema.ts': 'schema.ts',
 };

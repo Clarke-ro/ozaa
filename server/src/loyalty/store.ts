@@ -33,15 +33,21 @@ function memberOf(row: MemberRow, facts: FactRow[]): Member {
  * just the members a step needs. Inside a transaction the member rows are locked, so two taps at
  * once (say, two redeem buttons) run one after the other and can't both spend the same stamps.
  */
-export async function loadLoyalty(tx: Tx, venueId: string, currency: string, who: { phone: string } | { memberId: string } | 'none'): Promise<VenueLoyalty> {
+export async function loadLoyalty(tx: Tx, venueId: string, currency: string, who: { phone: string } | { memberId: string } | 'none' | 'all'): Promise<VenueLoyalty> {
   const [programmeRow] = await tx.select().from(loyaltyPrograms).where(eq(loyaltyPrograms.venueId, venueId));
   const programme = programmeRow ? programmeFromWire(programmeRow.programme) : blankVenue(venueId, currency).programme;
   let members: MemberRow[] = [];
   if (who !== 'none') {
-    const match = 'phone' in who ? eq(loyaltyMembers.phone, who.phone) : eq(loyaltyMembers.id, who.memberId);
+    // 'all' is for staff steps that search the whole card list (a claim code, a scanned card).
+    const match = who === 'all' ? undefined : 'phone' in who ? eq(loyaltyMembers.phone, who.phone) : eq(loyaltyMembers.id, who.memberId);
     members = await tx.select().from(loyaltyMembers).where(and(eq(loyaltyMembers.venueId, venueId), match, isNull(loyaltyMembers.leftAt))).for('update');
   }
-  const facts = members.length ? await tx.select().from(loyaltyFacts).where(eq(loyaltyFacts.memberId, members[0]!.id)) : [];
+  const facts =
+    members.length === 0
+      ? []
+      : members.length === 1
+        ? await tx.select().from(loyaltyFacts).where(eq(loyaltyFacts.memberId, members[0]!.id))
+        : await tx.select().from(loyaltyFacts).where(eq(loyaltyFacts.venueId, venueId));
   return brand({ venueId, programme, members: Object.fromEntries(members.map((m) => [m.id, memberOf(m, facts)])) });
 }
 
@@ -49,7 +55,7 @@ export async function loadLoyalty(tx: Tx, venueId: string, currency: string, who
  * Runs one command through the shared rules and saves what changed: a new member, changed member
  * details, new facts (the ledger only grows) or a member who left (their row and facts go).
  */
-export async function step(tx: Tx, before: VenueLoyalty, command: Command, now: number): Promise<{ after: VenueLoyalty; effect: 'posted' | 'duplicate' | 'skipped'; memberId: string | null }> {
+export async function step(tx: Tx, before: VenueLoyalty, command: Command, now: number, by: string | null = null): Promise<{ after: VenueLoyalty; effect: 'posted' | 'duplicate' | 'skipped'; memberId: string | null }> {
   const result = apply(before, command, new Date(now).toISOString());
   if (!result.ok) {
     const problem = LOYALTY_PROBLEMS[result.error.code];
@@ -74,7 +80,8 @@ export async function step(tx: Tx, before: VenueLoyalty, command: Command, now: 
     const added = member.facts.filter((f) => !known.has(f.id));
     if (added.length) {
       await tx.insert(loyaltyFacts).values(
-        added.map(({ kind, id, at, units, ...details }) => ({ id, memberId: member.id, venueId: after.venueId, kind, at: new Date(at), units, details })),
+        // `by` names the staff member or scanner for the scan log; null for guest and game steps.
+        added.map(({ kind, id, at, units, ...details }) => ({ id, memberId: member.id, venueId: after.venueId, kind, at: new Date(at), units, details, by })),
       );
     }
   }
