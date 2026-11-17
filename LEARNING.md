@@ -3198,6 +3198,35 @@ Plain text sorting puts "10" before "2". `localeCompare(…, { numeric: true })`
 
 In a Node prompt, sort `['10', '2', '1']` with and without `{ numeric: true }`, and compare the results.
 
+## 2026-11-17 · Venue settings on the real server
+
+**What we built**
+
+The Customise screens now save to the real server: the venue name, tagline, hours, location, Wi-Fi, tax, the WhatsApp alerts number, the logo and banner, the brand colour and font, and which services guests see.
+
+**How it works**
+
+```
+owner → PATCH /owner/venues/{id} {name, wifi, logoMediaId…}   (owner or manager)
+owner → PUT …/theme {accent "#FFE600"} → server runs deriveTheme → safe colours
+owner → PUT …/services {services, game}
+guest → GET /venues/{slug} → only the public parts (no TIN, no alerts number)
+```
+
+**Files to look at**
+
+- `server/src/routes/ownerVenue.ts`: the routes.
+- `server/src/venues/venueSettings.ts`: what the owner sees, and the theme.
+- `src/features/theming/deriveTheme.ts`: the colour rules, shared by the app and the server.
+
+**New idea: never trust the client with safety rules**
+
+The app already darkens a too-light colour before showing it. The server runs the same check again, because a guest's phone should never get white text on yellow, whatever app version the owner used.
+
+**Try it yourself**
+
+In `ownerVenue.test.ts`, change the accent to `#B5432A` (a dark red). Then look at `derived.fill`: the server keeps it as it is, because it already passes contrast.
+
 ## 2026-11-17 · Inviting staff on the real server
 
 **What we built**

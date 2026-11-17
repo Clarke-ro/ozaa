@@ -24,6 +24,8 @@ const FILES = {
   'src/features/waiter/callUpdate.ts': 'callUpdate.ts',
   'src/lib/tableLink.ts': 'tableLink.ts',
   'src/lib/qrSvg.ts': 'qrSvg.ts',
+  'src/features/theming/colour.ts': 'colour.ts',
+  'src/features/theming/deriveTheme.ts': 'deriveTheme.ts',
   'src/lib/api/types.ts': 'types.ts',
   'src/lib/api/schema.ts': 'schema.ts',
 };
