@@ -2019,10 +2019,10 @@ export interface components {
             items: components["schemas"]["MenuItem"][];
         };
         /**
-         * @description Legal moves received->preparing->ready->served, and received or preparing->cancelled.
+         * @description Legal moves received->accepted->preparing->ready->served, and received, accepted or preparing->cancelled. `received` is a new order nobody has accepted yet; staff accept it before the kitchen starts cooking, and the guest sees it as accepted.
          * @enum {string}
          */
-        OrderStatus: "received" | "preparing" | "ready" | "served" | "cancelled";
+        OrderStatus: "received" | "accepted" | "preparing" | "ready" | "served" | "cancelled";
         /** @enum {string} */
         PaymentStatusSummary: "unpaid" | "part_paid" | "paid" | "refunded";
         OrderLineInput: {
@@ -2496,7 +2496,7 @@ export interface components {
             salesTodayPesewas: components["schemas"]["Pesewas"];
             /** @description Orders placed since midnight in the venue's time zone, not counting cancelled ones. */
             ordersToday: number;
-            /** @description Orders still waiting for the kitchen to start (status received). */
+            /** @description New orders still waiting to be accepted (status received). */
             pendingOrders: number;
             /** @description Guest visits since midnight in the venue's time zone. One table scan or one opened menu link is one visit; no guest is identified. */
             visitorsToday: number;
@@ -2674,6 +2674,7 @@ export interface components {
             };
             byStatus: {
                 received: number;
+                accepted: number;
                 preparing: number;
                 ready: number;
                 served: number;

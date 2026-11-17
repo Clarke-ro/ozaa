@@ -8,9 +8,10 @@ import { fontFamily, useTheme } from '@/ui/theme';
 const c = tokens.owner.controls;
 
 /**
- * The day's main number in a dark card, the first thing on Today ("Sales today GH₵1,250").
- * Light mode uses the brand black; dark mode can't go darker than the page, so it uses the
- * raised grey instead. A small pill opens the page behind the number when this person may.
+ * The day's main number on a soft orange card, the first thing on Today ("Sales today GH₵1,250").
+ * Clarke chose the tint over the old black card (2026-11-17). The theme's tint has its own
+ * dark-mode shade, so the text keeps its contrast in both. A small pill opens the page behind
+ * the number when this person may.
  */
 export function HeroCard({
   label,
@@ -31,9 +32,8 @@ export function HeroCard({
   compact?: boolean;
 }) {
   const theme = useTheme();
-  const dark = theme.scheme === 'dark';
-  const bg = dark ? theme.wash : theme.black;
-  const ink = dark ? theme.text : theme.white;
+  const bg = theme.tint;
+  const ink = theme.text;
 
   return (
     <View style={[styles.card, compact && styles.compact, { backgroundColor: bg }]}>
@@ -49,7 +49,7 @@ export function HeroCard({
             hitSlop={tokens.space[2]}
             style={({ pressed }) => [styles.pill, { opacity: pressed ? 0.7 : 1 }]}
           >
-            {/* A see-through layer of the ink, so the pill reads on black and on dark grey. */}
+            {/* A see-through layer of the ink, so the pill reads on the tint in light and dark mode. */}
             <View style={[StyleSheet.absoluteFill, styles.pillFill, { backgroundColor: ink }]} />
             <Text variant="caption" style={[styles.pillText, { color: ink }]}>
               {link}

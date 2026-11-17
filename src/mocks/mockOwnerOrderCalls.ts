@@ -1,4 +1,4 @@
-import { orderTransition } from '../features/orders/orderMachine';
+import { moveFor, orderTransition } from '../features/orders/orderMachine';
 import { applyCallUpdate, isInQueue } from '../features/waiter/callUpdate';
 import type { ApiClient } from '@/lib/api/client';
 import { ApiError } from '@/lib/api/errors';
@@ -62,16 +62,7 @@ export function mockOwnerOrderCalls(ctx: MockContext) {
       const row = accessOf(world, tokens);
       const staff = STAFF.find((person) => person.phone === row.phone);
       const live = findOrder(world, orderId);
-      const move =
-        body.status === 'preparing'
-          ? 'start'
-          : body.status === 'ready'
-            ? 'ready'
-            : body.status === 'served'
-              ? 'serve'
-              : body.status === 'cancelled'
-                ? 'cancel'
-                : null;
+      const move = moveFor(body.status);
       const next = move && staff ? orderTransition(live.order.status, move, staff.role) : null;
       if (!next || next !== body.status)
         throw new ApiError(409, 'illegal_move', 'That status change is not allowed');

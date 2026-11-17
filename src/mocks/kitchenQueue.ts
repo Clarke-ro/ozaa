@@ -30,7 +30,7 @@ const QUEUE: {
   },
   {
     table: null,
-    status: 'received',
+    status: 'accepted',
     minutesAgo: 6,
     lines: [['Jollof & chicken', 'itm_mamas0', 3, 6500]],
   },

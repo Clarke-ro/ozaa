@@ -93,7 +93,7 @@ test('owner: Today leads with sales, and a served table is marked paid from Floo
   await expect(table3).toBeVisible({ timeout: 15_000 });
   await expect(waitingForBill).toHaveCount(0);
   await table3.click();
-  for (const step of ['Start cooking', 'Mark ready', 'Mark served']) {
+  for (const step of ['Accept order', 'Start cooking', 'Mark ready', 'Mark served']) {
     await page.getByRole('button', { name: step }).click();
   }
   await expect(waitingForBill).toBeVisible({ timeout: 15_000 });

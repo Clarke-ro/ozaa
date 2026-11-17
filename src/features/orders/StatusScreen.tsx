@@ -93,7 +93,8 @@ export function StatusScreen({ slug }: { slug: string }) {
           </Text>
           <Text variant="display-m">{t(`statusLabel.${o.status}`)}</Text>
           {/* Only the kitchen's own estimate; no estimate means no time shown. */}
-          {o.etaMinutes != null && (o.status === 'received' || o.status === 'preparing') ? (
+          {o.etaMinutes != null &&
+          (o.status === 'received' || o.status === 'accepted' || o.status === 'preparing') ? (
             <Text variant="body" style={{ color: theme.muted }}>
               {t('status.eta', { minutes: o.etaMinutes })}
             </Text>

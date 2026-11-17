@@ -48,16 +48,18 @@ test('answering a call moves Calls, Floor, Today and the badge together', async 
   expect(errors).toEqual([]);
 });
 
-test('starting an order moves it off New and lowers the Orders badge', async ({ page }) => {
+test('accepting a new order lowers the Orders badge, then Start cooking shows', async ({ page }) => {
   await signIn(page);
   await expect(page.getByRole('button', { name: 'Today', exact: true })).toBeVisible();
   // The badge appears once the orders have loaded.
   await expect.poll(() => badge(page, 'Orders')).toBeGreaterThan(0);
   const before = await badge(page, 'Orders');
   await nav(page, 'Orders');
-  await page.getByRole('button', { name: 'Start cooking', exact: true }).first().click();
+  await page.getByRole('button', { name: 'Accept order', exact: true }).first().click();
   // The sample kitchen moves other tickets on its own over time, so only "fewer" is certain.
   await expect.poll(() => badge(page, 'Orders')).toBeLessThan(before);
+  // An accepted ticket stays under New, with Start cooking as its next step.
+  await expect(page.getByRole('button', { name: 'Start cooking', exact: true }).first()).toBeVisible();
 });
 
 test('switching location changes the whole dashboard', async ({ page }) => {

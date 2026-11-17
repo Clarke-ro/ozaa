@@ -9,12 +9,15 @@ export function IconButton({
   onPress,
   children,
   light,
+  plain,
   style,
 }: {
   label: string;
   onPress: () => void;
   children: ReactNode;
   light?: boolean;
+  /** No circle behind the icon, only a dim while pressed: the back arrow in page headers (Clarke, 2026-11-17). */
+  plain?: boolean;
   style?: ViewStyle;
 }) {
   const theme = useTheme();
@@ -23,7 +26,13 @@ export function IconButton({
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
-      style={[styles.base, { backgroundColor: light ? PHOTO_VEIL : theme.tint }, style]}
+      style={({ pressed }) => [
+        styles.base,
+        plain
+          ? { opacity: pressed ? 0.5 : 1 }
+          : { backgroundColor: light ? PHOTO_VEIL : theme.tint },
+        style,
+      ]}
     >
       {children}
     </Pressable>

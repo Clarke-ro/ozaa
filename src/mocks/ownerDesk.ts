@@ -106,7 +106,10 @@ export function dashboardFor(world: World, venueId: string, now: number): OwnerD
   });
   const liveOrders = orders.filter(
     (order) =>
-      order.status === 'received' || order.status === 'preparing' || order.status === 'ready',
+      order.status === 'received' ||
+      order.status === 'accepted' ||
+      order.status === 'preparing' ||
+      order.status === 'ready',
   ).length;
   return {
     salesTodayPesewas: summary.salesTodayPesewas,

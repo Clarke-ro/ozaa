@@ -91,7 +91,8 @@
     "items_other": "{{count}} items"
   },
   "statusLabel": {
-    "received": "Received",
+    "received": "Sent",
+    "accepted": "Accepted",
     "preparing": "Being prepared",
     "ready": "Ready",
     "served": "Served",
@@ -185,6 +186,9 @@
     "now": "Right now",
     "eta": "About {{minutes}} minutes. Your bell lights up when it's ready.",
     "received": "Order received",
+    "accepted": "Accepted",
+    "waiting": "Waiting for the restaurant to accept",
+    "sentAt": "Sent at {{time}}",
     "preparing": "Being prepared",
     "ready": "Ready",
     "served": "Served",
@@ -1389,6 +1393,7 @@
     },
     "stage": {
       "received": "New order",
+      "accepted": "Accepted",
       "preparing": "Cooking",
       "ready": "Ready to serve",
       "served": "Served"
@@ -1811,6 +1816,7 @@
       "by": "Paid · {{method}}"
     },
     "move": {
+      "accept": "Accept order",
       "start": "Start cooking",
       "ready": "Mark ready",
       "serve": "Mark served"
@@ -1918,6 +1924,7 @@
       "notYet": "Not yet",
       "step": {
         "received": "Ordered",
+        "accepted": "Accepted",
         "preparing": "Started cooking",
         "ready": "Ready",
         "served": "Served",
@@ -2357,6 +2364,7 @@
     "bellA11y_other": "Notifications, {{count}} new",
     "kind": {
       "order_sent": "Order #{{number}} went to the kitchen",
+      "order_accepted": "Order #{{number}} was accepted",
       "order_cooking": "Order #{{number}} is being prepared",
       "order_ready": "Order #{{number}} is ready",
       "order_served": "Order #{{number}} was served. Enjoy!",

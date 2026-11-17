@@ -6,6 +6,7 @@ import type { Table } from '@/lib/api/types';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
+import { useOwnerLayout } from '../../chrome/layout';
 import { SectionHead } from '../dashboard/SectionHead';
 import { IconAction } from './IconAction';
 import { canPrint } from './qrActions';
@@ -27,7 +28,8 @@ export function AllTables({
   tables: Table[];
   styleLabel: string;
   name: (table: Table) => string;
-  renderCard: (table: Table) => React.ReactNode;
+  /** `width` is the column's width, so the card can shrink to fit a narrow phone. */
+  renderCard: (table: Table, width: number) => React.ReactNode;
   onPrint: (table: Table) => void;
   onDownload: (table: Table) => void;
   onNfc: (table: Table) => void;
@@ -35,7 +37,10 @@ export function AllTables({
   const theme = useTheme();
   const { t } = useTranslation();
   const [width, setWidth] = useState(0);
-  const columns = Math.max(1, Math.floor((width + GAP) / (MIN + GAP)));
+  const { wide } = useOwnerLayout();
+  // Phones always get two cards a row (Clarke, 2026-11-17); wider screens fit as many as they can.
+  const fit = Math.max(1, Math.floor((width + GAP) / (MIN + GAP)));
+  const columns = wide ? fit : 2;
   const cell = width ? (width - GAP * (columns - 1)) / columns : MIN;
   return (
     <View style={styles.stack}>
@@ -48,7 +53,9 @@ export function AllTables({
       <View style={styles.grid} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
         {tables.map((table) => (
           <View key={table.id} style={[styles.item, { width: cell }]}>
-            <View style={[styles.tile, { backgroundColor: theme.line }]}>{renderCard(table)}</View>
+            <View style={[styles.tile, { backgroundColor: theme.line }]}>
+              {renderCard(table, cell)}
+            </View>
             <View style={styles.foot}>
               <Text style={styles.name} numberOfLines={1}>
                 {name(table)}

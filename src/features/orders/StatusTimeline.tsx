@@ -13,9 +13,9 @@ import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
 
-const STEPS = ['received', 'preparing', 'ready', 'served'] as const;
+const STEPS = ['accepted', 'preparing', 'ready', 'served'] as const;
 const ICON: Record<(typeof STEPS)[number], LucideIcon> = {
-  received: ClipboardCheck,
+  accepted: ClipboardCheck,
   preparing: ChefHat,
   ready: BellRing,
   served: Utensils,
@@ -25,7 +25,8 @@ const MARK = 36;
 /**
  * The order's four steps top to bottom, joined by a line that fills as the kitchen goes.
  * Done steps get a tick, the current one its icon in the venue colour, later ones stay grey.
- * Real times show where the API has them (sent, ready); nothing is guessed.
+ * Until staff accept a new order, the first step reads "Waiting for the restaurant to accept"
+ * with the time it was sent. Real times show where the API has them (sent, ready); nothing is guessed.
  */
 export function StatusTimeline({
   order,
@@ -34,13 +35,17 @@ export function StatusTimeline({
 }) {
   const { t, i18n } = useTranslation();
   const theme = useTheme();
-  const current = STEPS.indexOf(order.status as (typeof STEPS)[number]);
+  // A new order (received) has reached no step yet: the first one shows as waiting.
+  const reached = STEPS.indexOf(order.status as (typeof STEPS)[number]);
+  const waiting = order.status === 'received';
+  const current = waiting ? 0 : reached;
   const clock = (iso: string | null | undefined) =>
     iso
       ? new Date(iso).toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' })
       : null;
+  const sent = clock(order.createdAt);
   const when: Partial<Record<(typeof STEPS)[number], string | null>> = {
-    received: clock(order.createdAt),
+    accepted: waiting && sent ? t('status.sentAt', { time: sent }) : null,
     ready: clock(order.readyAt),
   };
 
@@ -81,7 +86,7 @@ export function StatusTimeline({
                   fontFamily: on ? fontFamily.strong : undefined,
                 }}
               >
-                {t(`status.${step}`)}
+                {t(waiting && step === 'accepted' ? 'status.waiting' : `status.${step}`)}
               </Text>
               {when[step] && (done || on) ? (
                 <Text variant="caption" style={{ color: theme.muted }}>

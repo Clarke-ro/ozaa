@@ -25,8 +25,11 @@ import { TableQrCard } from './TableQrCard';
 import { NfcTagSheet } from './NfcTagSheet';
 import { CARD_ACCENTS } from './TableCardPreview';
 
-// The canvas draws the All tables cards at 62% of the big preview.
+// The canvas draws the All tables cards at 62% of the big preview, smaller if the column is
+// narrower. 250 is the widest card style (the sticker); 16 is the tile's side padding.
 const CARD_IN_GRID = 0.62;
+const WIDEST_CARD = 250;
+const TILE_PADDING = 16;
 
 /**
  * QR codes and links (canvas): the menu's own QR code and link, the website embed, the table
@@ -169,7 +172,9 @@ export function TablesScreen() {
                   tables={items}
                   styleLabel={t(`ownerTables.styles.${template}`)}
                   name={name}
-                  renderCard={(table) => card(table, CARD_IN_GRID)}
+                  renderCard={(table, width) =>
+                    card(table, Math.min(CARD_IN_GRID, (width - TILE_PADDING) / WIDEST_CARD))
+                  }
                   onPrint={(table) => print([table])}
                   onDownload={(table) =>
                     table.qrUrl &&

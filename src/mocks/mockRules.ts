@@ -31,6 +31,7 @@ export function fresh(world: World, live: LiveOrder, now: number, fast: boolean)
     if (elapsed >= 90_000) status = 'served';
     else if (elapsed >= 60_000) status = 'ready';
     else if (elapsed >= 20_000) status = 'preparing';
+    else if (elapsed >= 10_000) status = 'accepted';
     if (status !== live.order.status) {
       live.order = {
         ...live.order,

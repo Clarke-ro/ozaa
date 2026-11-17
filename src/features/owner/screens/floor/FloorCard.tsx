@@ -17,6 +17,7 @@ const LATE_MINUTES = 10;
 /** What the card says about a table with an order: where that order is in the kitchen. */
 const ORDER_WORD: Record<string, { key: string; tone: StatusTone | null }> = {
   received: { key: 'ownerFloor.stage.received', tone: 'order' },
+  accepted: { key: 'ownerFloor.stage.accepted', tone: 'order' },
   preparing: { key: 'ownerFloor.stage.preparing', tone: 'info' },
   ready: { key: 'ownerFloor.stage.ready', tone: 'success' },
   served: { key: 'ownerFloor.stage.served', tone: null },

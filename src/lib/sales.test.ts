@@ -18,7 +18,7 @@ test('money and counts leave cancelled orders out of the money but in the status
   );
   expect(report.orderCount).toBe(2);
   expect(report.valuePesewas).toBe(10000);
-  expect(report.byStatus).toEqual({ received: 1, preparing: 0, ready: 0, served: 1, cancelled: 1 });
+  expect(report.byStatus).toEqual({ received: 1, accepted: 0, preparing: 0, ready: 0, served: 1, cancelled: 1 });
 });
 
 test('discounts and delivery fees add up across orders', () => {

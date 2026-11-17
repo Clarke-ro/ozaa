@@ -1,9 +1,10 @@
+import type { OrderMove } from '@/features/orders';
 import type { FloorTable, Order } from '@/lib/api/types';
 
 export type DetailTable = Pick<FloorTable, 'status' | 'orderId' | 'waiterCallId'>;
 
 /** The order's next kitchen step for this person, from nextOrderMove(), or null. */
-export type NextStep = { move: 'start' | 'ready' | 'serve' | 'cancel'; status: Order['status'] };
+export type NextStep = { move: OrderMove; status: Order['status'] };
 
 export type ActionTone = 'primary' | 'secondary' | 'ghost';
 
