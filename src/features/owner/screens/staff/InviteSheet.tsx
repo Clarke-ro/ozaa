@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { api } from '@/lib/api';
+import { api, ownerAuth } from '@/lib/api';
 import type { StaffRole } from '@/lib/api/types';
 import { parsePhone } from '@/lib/phone';
 import { Button } from '@/ui/Button';
@@ -20,22 +20,35 @@ export const INVITE_ROLES: StaffRole[] = [
   'staff_scanner',
 ];
 
-/** Invite a teammate by phone. They sign in with a code sent to that phone. */
+// Real builds sign in by email code (src/lib/auth/clerkOwnerAuth.ts), so an invite needs the
+// email the code goes to. The demo signs in by phone and leaves it out.
+const needsEmail = ownerAuth.identifier === 'email';
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Invite a teammate. They sign in with a code sent to their email (or phone in the demo). */
 export function InviteSheet({ venueId, onClose }: { venueId: string; onClose: () => void }) {
   const theme = useTheme();
   const { t } = useTranslation();
   const client = useQueryClient();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [role, setRole] = useState<StaffRole>('waiter');
   const [showErrors, setShowErrors] = useState(false);
   const parsed = parsePhone(phone);
   const nameError = showErrors && !name.trim() ? t('ownerStaff.needName') : undefined;
   const phoneError = showErrors && !parsed ? t('ownerStaff.needPhone') : undefined;
+  const emailOk = !needsEmail || EMAIL.test(email.trim());
+  const emailError = showErrors && !emailOk ? t('ownerStaff.needEmail') : undefined;
 
   const invite = useMutation({
     mutationFn: () =>
-      api.ownerInviteStaff(venueId, { firstName: name.trim(), phone: parsed?.phone ?? '', role }),
+      api.ownerInviteStaff(venueId, {
+        firstName: name.trim(),
+        phone: parsed?.phone ?? '',
+        role,
+        ...(needsEmail ? { email: email.trim().toLowerCase() } : {}),
+      }),
     onSuccess: () => {
       toast.success(t('ownerStaff.invited', { name: name.trim() }));
       void client.invalidateQueries({ queryKey: ownerKeys.staff(venueId) });
@@ -54,7 +67,7 @@ export function InviteSheet({ venueId, onClose }: { venueId: string; onClose: ()
           label={t('ownerStaff.sendInvite')}
           style={styles.flex}
           loading={invite.isPending}
-          onPress={() => (name.trim() && parsed ? invite.mutate() : setShowErrors(true))}
+          onPress={() => (name.trim() && parsed && emailOk ? invite.mutate() : setShowErrors(true))}
         />
       }
     >
@@ -75,6 +88,19 @@ export function InviteSheet({ venueId, onClose }: { venueId: string; onClose: ()
         placeholder="024 123 4567"
         error={phoneError}
       />
+      {needsEmail ? (
+        <Field
+          label={t('owner.email')}
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
+          textContentType="emailAddress"
+          placeholder="name@example.com"
+          error={emailError}
+        />
+      ) : null}
       <Text variant="body-strong">{t('owner.role')}</Text>
       <Chips
         single

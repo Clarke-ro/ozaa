@@ -806,11 +806,16 @@ paths:
               required: [phone, firstName, role]
               properties:
                 phone: { $ref: '#/components/schemas/GhanaPhone' }
+                email:
+                  type: string
+                  format: email
+                  maxLength: 254
+                  description: Where their sign-in code goes. Needed while staff sign in by email code (Clerk can't text Ghana numbers yet); without it they can only sign in once SMS works.
                 firstName: { type: string, maxLength: 40 }
                 role: { $ref: '#/components/schemas/StaffRole' }
       responses:
         '201':
-          description: Invited. The server also creates their Clerk sign-in for this number, so they can sign in with an SMS code.
+          description: Invited. The server also creates their Clerk sign-in, so they can sign in with a code sent to their email (or, once Clerk can text Ghana numbers, their phone).
           content:
             application/json:
               schema: { $ref: '#/components/schemas/StaffMember' }
@@ -1897,7 +1902,7 @@ paths:
     post:
       tags: [owner-venue]
       operationId: ownerResetStaffPin
-      summary: Clear someone's sign-in PIN. They sign in with an SMS code next time and set a new one.
+      summary: Clear someone's sign-in PIN. They sign in with a code next time and set a new one.
       description: Owner only.
       security: [{ ownerAuth: [] }]
       parameters:
@@ -1911,7 +1916,7 @@ paths:
     post:
       tags: [owner-venue]
       operationId: ownerSignOutStaff
-      summary: End someone's shift by signing them out on every device (the server revokes their Clerk sessions). They sign in again with an SMS code.
+      summary: End someone's shift by signing them out on every device (the server revokes their Clerk sessions). They sign in again with a code.
       description: Owner only. Signing out the owner is refused (409); they use Sign out in Settings.
       security: [{ ownerAuth: [] }]
       parameters:
