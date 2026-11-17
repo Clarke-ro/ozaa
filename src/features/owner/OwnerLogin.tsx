@@ -12,6 +12,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { api, ownerAuth, setAccessToken } from '@/lib/api';
+import { ApiError } from '@/lib/api/errors';
 import { DEMO } from '@/lib/demo';
 import { parseGhanaPhone } from '@/lib/phone';
 import { useOwnerSession } from '@/features/session';
@@ -23,6 +24,7 @@ import { cravinsTheme, ThemeProvider, useTheme } from '@/ui/theme';
 import { DeskCard, CravinsMark } from './kit';
 import { SHADOW_INK } from '@/theme/palette';
 import { SampleLogins, SAMPLES } from './SampleLogins';
+import { loginError, type LoginStep } from './loginError';
 
 // Demo builds only: sample staff from the mock, typed the way a Ghanaian number is (024…).
 
@@ -58,7 +60,7 @@ function LoginForm() {
   const [code, setCode] = useState('');
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<{ message: string; ref: string } | null>(null);
 
   const dismissKeyboard = () => {
     Keyboard.dismiss();
@@ -71,7 +73,7 @@ function LoginForm() {
     dismissKeyboard();
     const address = signInAddress(phone);
     if (!address) return;
-    setError(false);
+    setError(null);
     setLoading(true);
 
     if (!sent) {
@@ -81,28 +83,38 @@ function LoginForm() {
           setSent(true);
           setLoading(false);
         })
-        .catch(() => {
-          setError(true);
+        .catch((caught: unknown) => {
+          setError(loginError(caught, 'send'));
           setLoading(false);
         });
       return;
     }
 
     // Clerk checks the code; then the server says which venues this person works at.
+    let step: LoginStep = 'code';
     void (async () => {
       await ownerAuth.verifyCode(code);
+      step = 'token';
       const accessToken = await ownerAuth.getToken();
       if (!accessToken) throw new Error('no token');
       setAccessToken(accessToken);
+      step = 'me';
       const me = await api.getMe();
       const venue = me.venues[0];
-      if (!venue) throw new Error('no venue');
+      if (!venue) throw new ApiError(403, 'not_staff', 'No venue');
       saveOwner({ accessToken, venueId: venue.venueId, role: venue.role, firstName: me.firstName });
       setLoading(false);
       router.replace(venue.role === 'kitchen' ? '/owner/orders' : '/owner');
-    })().catch(() => {
-      setError(true);
+    })().catch((caught: unknown) => {
+      setError(loginError(caught, step));
       setLoading(false);
+      // Clerk already took the code, so that code can't be used again. Sign out of Clerk and go
+      // back to the email, so the next try starts clean instead of failing on the old session.
+      if (step !== 'code') {
+        setSent(false);
+        setCode('');
+        void ownerAuth.signOut().catch(() => undefined);
+      }
     });
   };
 
@@ -139,7 +151,9 @@ function LoginForm() {
                   {t('owner.login')}
                 </Text>
                 <Text variant="body" style={styles.subtitle}>
-                  {sent ? t(byEmail ? 'owner.codeLeadEmail' : 'owner.codeLead') : t('owner.loginLead')}
+                  {sent
+                    ? t(byEmail ? 'owner.codeLeadEmail' : 'owner.codeLead')
+                    : t('owner.loginLead')}
                 </Text>
               </View>
 
@@ -193,7 +207,7 @@ function LoginForm() {
                       onPress={() => {
                         setSent(false);
                         setCode('');
-                        setError(false);
+                        setError(null);
                       }}
                     >
                       <Text variant="caption" style={{ color: theme.ink, fontWeight: '600' }}>
@@ -219,9 +233,12 @@ function LoginForm() {
               ) : null}
 
               {error ? (
-                <View style={styles.errorBox}>
+                <View style={styles.errorBox} accessibilityLiveRegion="polite">
                   <Text variant="caption" style={{ color: theme.error, fontWeight: '600' }}>
-                    {t('errors.generic')}
+                    {t(error.message)}
+                  </Text>
+                  <Text variant="caption" style={{ color: theme.muted }}>
+                    {t('owner.err.ref', { ref: error.ref })}
                   </Text>
                 </View>
               ) : null}

@@ -3553,3 +3553,35 @@ We don't ask "is this Android?". We ask "does this browser have `NDEFReader`?". 
 **Try it yourself**
 
 In `nfc.test.ts`, make the fake reader throw a `NetworkError`. What does `writeNfcTag` return, and what does the sheet say then?
+
+## 2026-11-17 · Sign-in that says what went wrong
+
+**What we built**
+
+Two fixes to owner sign-in:
+
+- **Leftover sessions:** sometimes Clerk accepted the code but a later step failed. Clerk then kept that phone signed in, and refused every new "Send code". Now sign-in clears a leftover session first.
+- **Clear errors:** the screen used to say "Something went wrong" for every failure. Now it names the problem (wrong code, no connection, email not on a venue, sign-in not answering) and shows a short reference such as `me-500-internal`.
+
+**How it works**
+
+```
+Send code ─► Clerk checks code ─► Clerk token ─► server /me ─► Today
+  "send"          "code"            "token"         "me"
+```
+
+The screen tracks which step it is on. If a step fails after Clerk took the code, it signs out of Clerk and goes back to the email step, because that code can't be used twice.
+
+**Files to look at**
+
+- `src/features/owner/loginError.ts` and its test
+- `src/lib/auth/clerkOwnerAuth.ts`: `sendCode`
+- `src/features/owner/OwnerLogin.tsx`
+
+**New idea: errors people can act on**
+
+One message for every error is easy to write and impossible to fix. A message per cause tells the person what to do. The reference tells the developer where to look.
+
+**Try it yourself**
+
+Turn your phone's Wi-Fi and data off, then tap Send code. Which message and reference do you see?

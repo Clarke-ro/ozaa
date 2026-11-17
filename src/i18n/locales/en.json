@@ -667,7 +667,13 @@
     "integrations": "Integrations",
     "billing": "Billing",
     "ordering": "Online ordering",
-    "sales": "Sales"
+    "sales": "Sales",
+    "err": {
+      "unreachable": "Can't reach Cravins. Check your connection and try again.",
+      "notStaff": "That email isn't linked to a Cravins venue. Check the spelling, or ask the owner to add you.",
+      "unavailable": "Sign-in isn't answering right now. Try again in a minute.",
+      "ref": "Reference: {{ref}}"
+    }
   },
   "errors": {
     "generic": "Something went wrong. Try again.",
