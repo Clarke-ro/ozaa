@@ -26,6 +26,9 @@ const FILES = {
   'src/lib/qrSvg.ts': 'qrSvg.ts',
   'src/features/theming/colour.ts': 'colour.ts',
   'src/features/theming/deriveTheme.ts': 'deriveTheme.ts',
+  'src/features/owner/desk/daySummary.ts': 'daySummary.ts',
+  'src/features/owner/floor/floorStatus.ts': 'floorStatus.ts',
+  'src/lib/sales.ts': 'sales.ts',
   'src/lib/api/types.ts': 'types.ts',
   'src/lib/api/schema.ts': 'schema.ts',
 };

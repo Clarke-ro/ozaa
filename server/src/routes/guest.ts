@@ -2,7 +2,7 @@ import { Hono, type Context } from 'hono';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import type { Db } from '../db/client.ts';
-import { promos } from '../db/schema.ts';
+import { promos, visits } from '../db/schema.ts';
 import { GUEST_TTL_MS, readGuestToken, signGuestToken, type GuestClaims } from '../guest/token.ts';
 import { body, Problem } from '../http/problem.ts';
 import { makeQuote } from '../orders/billQuote.ts';
@@ -91,6 +91,14 @@ export function guestRoutes(deps: GuestDeps) {
       table = await tableOf(db, row.id, input.tableCode);
       if (!table) throw new Problem(404, 'venue_not_found', 'That table code is not at this venue.');
     }
+    // One row per scan or opened link, for "visitors today". No personal data: venue, table, time.
+    await db.insert(visits).values({
+      id: `vis_${crypto.randomUUID().replaceAll('-', '')}`,
+      venueId: row.id,
+      tableCode: table?.code ?? null,
+      source: table ? 'table' : 'link',
+      startedAt: new Date(deps.now()),
+    });
     const exp = deps.now() + GUEST_TTL_MS;
     const guestToken = signGuestToken(deps.guestSecret, { venueId: row.id, tableCode: table?.code ?? null, exp });
     return c.json(

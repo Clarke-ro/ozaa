@@ -3254,3 +3254,33 @@ The invite calls Clerk before saving the membership. If Clerk fails, nothing is 
 **Try it yourself**
 
 In `ownerStaff.test.ts`, try to change the owner's role. The server answers `owner_role` (409). Only support can add or change an owner, because owners decide where the money goes.
+
+## 2026-11-17 · The Today page, the floor and Sales on real data
+
+**What we built**
+
+The owner's Today page, the floor map and the Sales page now read real orders, waiter calls, reviews and visits from the database.
+
+**How it works**
+
+```
+guest scans → a "visit" row (venue, table, time; nothing personal)
+Today  → sales taken today, live orders, open tables, calls, sold-out alerts, visitors
+Floor  → each table's status worked out from its latest order and any open call
+Sales  → totals, top dishes, by source and day, compared with the same span before
+```
+
+Nothing about a table's status is stored. It's worked out from orders and calls each time (the shared `deriveFloor`), so a table can never be marked "free" while it still has an unpaid bill.
+
+**Files to look at**
+
+- `server/src/routes/ownerDesk.ts`
+- `src/features/owner/desk/daySummary.ts`, `src/features/owner/floor/floorStatus.ts`, `src/lib/sales.ts`: the shared rules.
+
+**New idea: derived state**
+
+If two stored facts can disagree, they eventually will. Keeping only orders and calls, and working out the table status from them, removes a whole class of bugs.
+
+**Try it yourself**
+
+In `ownerDesk.test.ts`, mark the order paid and served, then read the floor. Table 4 goes back to free on its own.
