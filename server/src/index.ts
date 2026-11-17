@@ -10,6 +10,7 @@ import { paystackClient } from './paystack.ts';
 import { encryptionKey } from './secrets/sealed.ts';
 import { venuePaystack } from './venues/venuePaystack.ts';
 import { clerkVerifier } from './owner/clerk.ts';
+import { clerkAdmin } from './owner/clerkAdmin.ts';
 import { supabaseStorage } from './media/storage.ts';
 
 const config = readConfig();
@@ -35,6 +36,7 @@ const app = createApp({
     venueKeys,
     paystackClient: (secret) => paystackClient(secret),
     siteUrl: config.SITE_URL,
+    clerkAdmin: config.CLERK_SECRET_KEY ? clerkAdmin(config.CLERK_SECRET_KEY) : null,
     storage:
       config.SUPABASE_URL && config.SUPABASE_SECRET_KEY
         ? supabaseStorage({ url: config.SUPABASE_URL, secretKey: config.SUPABASE_SECRET_KEY, bucket: config.MEDIA_BUCKET })

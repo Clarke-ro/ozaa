@@ -7,6 +7,7 @@ import type { PaymentService } from '../payments.ts';
 import { PaystackError, type Paystack } from '../paystack.ts';
 import { venuePaystack } from '../venues/venuePaystack.ts';
 import type { MediaStorage } from '../media/storage.ts';
+import type { ClerkAdmin } from '../owner/clerkAdmin.ts';
 import { TEST_KEY } from './testHelpers.ts';
 
 /**
@@ -58,6 +59,15 @@ export async function ownerSetup(options: { verify?: VerifyOwner | null } = {}) 
     measure: async (path) => (arrived.has(path) ? { width: 800, height: 600 } : null),
   };
   const upload = (uploadUrl: string) => arrived.add(new URL(uploadUrl).pathname.replace('/upload/', ''));
+  // Clerk's admin side: remembers the users it made and the sign-outs it was asked for.
+  const clerkCalls: string[] = [];
+  const clerkAdmin: ClerkAdmin = {
+    ensureUser: async ({ email }) => {
+      clerkCalls.push(`user ${email}`);
+      return `user_clerk_${email.split('@')[0]}`;
+    },
+    revokeSessions: async (id) => void clerkCalls.push(`sign out ${id}`),
+  };
   const logs: Record<string, unknown>[] = [];
   const app = createApp({
     guest: { db, guestSecret: 'test-guest-secret-that-is-long-enough', now: () => clock },
@@ -69,6 +79,7 @@ export async function ownerSetup(options: { verify?: VerifyOwner | null } = {}) 
       paystackClient: client,
       storage,
       siteUrl: 'https://cravins-app.vercel.app',
+      clerkAdmin,
     },
     payments: {} as PaymentService,
     allowedOrigins: [],
@@ -91,5 +102,5 @@ export async function ownerSetup(options: { verify?: VerifyOwner | null } = {}) 
     }
     return { status: res.status, json, text, type: res.headers.get('Content-Type') ?? '' };
   };
-  return { db, call, logs, mamas, upload, tick: (ms: number) => (clock += ms) };
+  return { db, call, logs, mamas, upload, clerkCalls, tick: (ms: number) => (clock += ms) };
 }

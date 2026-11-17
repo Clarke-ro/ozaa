@@ -7,6 +7,7 @@ import { guestRoutes, type GuestDeps } from './routes/guest.ts';
 import { ownerRoutes, type OwnerRouteDeps } from './routes/owner.ts';
 import { mediaRoutes } from './routes/media.ts';
 import { ownerMenuRoutes } from './routes/ownerMenu.ts';
+import { ownerStaffRoutes } from './routes/ownerStaff.ts';
 import { ownerTablesRoutes } from './routes/ownerTables.ts';
 import { paymentRoutes } from './routes/payments.ts';
 import { waiterRoutes } from './routes/waiter.ts';
@@ -63,6 +64,7 @@ export function createApp(deps: {
   if (deps.owner) app.route('/', ownerMenuRoutes(deps.owner));
   if (deps.owner) app.route('/', mediaRoutes(deps.owner));
   if (deps.owner) app.route('/', ownerTablesRoutes(deps.owner));
+  if (deps.owner) app.route('/', ownerStaffRoutes(deps.owner));
   if (deps.guest && deps.owner) app.route('/', waiterRoutes({ ...deps.guest, ...deps.owner }));
 
   return app;
