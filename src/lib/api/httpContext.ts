@@ -34,6 +34,8 @@ export function createHttpContext(baseUrl: string, tokens: TokenSource) {
     if (call?.idempotencyKey) value['Idempotency-Key'] = call.idempotencyKey;
     if (call?.ifNoneMatch) value['If-None-Match'] = call.ifNoneMatch;
     if (call?.deleteToken) value['X-Delete-Token'] = call.deleteToken;
+    const loyalty = call?.withLoyalty ? tokens.loyalty?.() : null;
+    if (loyalty) value['X-Loyalty-Token'] = loyalty;
     return value;
   };
 

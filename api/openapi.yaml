@@ -619,7 +619,10 @@ paths:
       operationId: submitScore
       security: [{ guestAuth: [] }]
       summary: Save a score. Nickname is optional; without one nothing personal is stored.
-      parameters: [{ $ref: '#/components/parameters/VenueSlug' }, { $ref: '#/components/parameters/IdempotencyKey' }]
+      parameters:
+        - { $ref: '#/components/parameters/VenueSlug' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+        - { $ref: '#/components/parameters/LoyaltyTokenHeader' }
       requestBody:
         required: true
         content:
@@ -2193,6 +2196,15 @@ components:
       required: false
       schema: { type: string, format: uuid }
       description: A new UUID per user action. Reuse it when retrying the same action.
+    LoyaltyTokenHeader:
+      in: header
+      name: X-Loyalty-Token
+      required: false
+      schema: { type: string }
+      description: |
+        The guest's loyalty token (POST /auth/otp/verify), sent beside the guest token when a call
+        can also count toward their loyalty card, such as a game win earning a stamp. Without it
+        the call works the same and nothing goes on a card.
     AcceptLanguage:
       in: header
       name: Accept-Language

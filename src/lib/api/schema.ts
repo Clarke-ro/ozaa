@@ -3151,6 +3151,12 @@ export interface components {
     parameters: {
         /** @description A new UUID per user action. Reuse it when retrying the same action. */
         IdempotencyKey: string;
+        /**
+         * @description The guest's loyalty token (POST /auth/otp/verify), sent beside the guest token when a call
+         *     can also count toward their loyalty card, such as a game win earning a stamp. Without it
+         *     the call works the same and nothing goes on a card.
+         */
+        LoyaltyTokenHeader: string;
         AcceptLanguage: string;
         VenueSlug: components["schemas"]["Slug"];
         VenueId: string;
@@ -3949,6 +3955,12 @@ export interface operations {
             header?: {
                 /** @description A new UUID per user action. Reuse it when retrying the same action. */
                 "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description The guest's loyalty token (POST /auth/otp/verify), sent beside the guest token when a call
+                 *     can also count toward their loyalty card, such as a game win earning a stamp. Without it
+                 *     the call works the same and nothing goes on a card.
+                 */
+                "X-Loyalty-Token"?: components["parameters"]["LoyaltyTokenHeader"];
             };
             path: {
                 venueSlug: components["parameters"]["VenueSlug"];

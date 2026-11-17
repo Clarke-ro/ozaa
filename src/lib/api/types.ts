@@ -104,6 +104,8 @@ export type GuestSession = {
 
 export type Call = {
   idempotencyKey?: string;
+  /** Sends the guest's loyalty token beside the guest token (X-Loyalty-Token), e.g. for game stamps. */
+  withLoyalty?: boolean;
   ifNoneMatch?: string;
   deleteToken?: string;
 };
