@@ -4,6 +4,8 @@ import type { PaymentService } from './payments.ts';
 import type { Log } from './log.ts';
 import { Problem, problemResponse } from './http/problem.ts';
 import { guestRoutes, type GuestDeps } from './routes/guest.ts';
+import { guestExtraRoutes } from './routes/guestExtras.ts';
+import { ownerFeedbackRoutes } from './routes/ownerFeedback.ts';
 import { ownerRoutes, type OwnerRouteDeps } from './routes/owner.ts';
 import { mediaRoutes } from './routes/media.ts';
 import { ownerDeskRoutes } from './routes/ownerDesk.ts';
@@ -60,6 +62,7 @@ export function createApp(deps: {
 
   if (deps.guest) {
     app.route('/', guestRoutes(deps.guest));
+    app.route('/', guestExtraRoutes(deps.guest));
     app.route('/', paymentRoutes({ ...deps.guest, payments: deps.payments, log: deps.log }));
   }
   if (deps.owner) app.route('/', ownerRoutes({ ...deps.owner, log: deps.log }));
@@ -68,6 +71,7 @@ export function createApp(deps: {
   if (deps.owner) app.route('/', ownerTablesRoutes(deps.owner));
   if (deps.owner) app.route('/', ownerDeskRoutes(deps.owner));
   if (deps.owner) app.route('/', ownerStaffRoutes(deps.owner));
+  if (deps.owner) app.route('/', ownerFeedbackRoutes(deps.owner));
   if (deps.owner) app.route('/', ownerVenueRoutes(deps.owner));
   if (deps.guest && deps.owner) app.route('/', waiterRoutes({ ...deps.guest, ...deps.owner }));
 

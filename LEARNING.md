@@ -3284,3 +3284,34 @@ If two stored facts can disagree, they eventually will. Keeping only orders and 
 **Try it yourself**
 
 In `ownerDesk.test.ts`, mark the order paid and served, then read the floor. Table 4 goes back to free on its own.
+
+## 2026-11-17 · Reviews, guest notes and the game on the real server
+
+**What we built**
+
+- **Reviews:** guests leave stars, highlights and a few words. Owners see them and can reply. Every guest gets the same thank-you, whatever their stars.
+- **Private notes:** a guest can send the manager a note, with a phone number only if they choose. The server reads its mood, so unhappy notes stand out, and keeps it hidden for two hours so it can't be matched to whoever just sat down. "Ask about my feedback" sums the notes up.
+- **The game:** scores go on this week's top-5 board. A score that came faster than a person can tap is refused.
+
+**How it works**
+
+```
+note "Food was cold, waiter was rude" → mood: negative (score 1) → visible after 2 h
+game score 40 in 1 second → 40 taps × 0.2 s = 8 s minimum → refused
+```
+
+**Files to look at**
+
+- `server/src/routes/guestExtras.ts`: reviews, notes, game.
+- `server/src/routes/ownerFeedback.ts`: the owner side.
+- `server/src/feedback/mood.ts`: the mood word lists.
+
+**New idea: privacy by delay**
+
+A note that appears the moment it's sent points straight at the one table that just left. Holding it back two hours keeps the guest anonymous, with no extra data needed.
+
+**Try it yourself**
+
+In `mood.test.ts`, try "not bad at all". Then look at how "not" flips the next word.
+
+**Not yet:** a game stamp needs a loyalty card, and loyalty waits for the SMS provider.

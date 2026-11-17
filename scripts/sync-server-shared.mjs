@@ -29,6 +29,7 @@ const FILES = {
   'src/features/owner/desk/daySummary.ts': 'daySummary.ts',
   'src/features/owner/floor/floorStatus.ts': 'floorStatus.ts',
   'src/lib/sales.ts': 'sales.ts',
+  'src/lib/feedbackSummary.ts': 'feedbackSummary.ts',
   'src/lib/api/types.ts': 'types.ts',
   'src/lib/api/schema.ts': 'schema.ts',
 };
