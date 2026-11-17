@@ -13,6 +13,7 @@ import { ownerMenuRoutes } from './routes/ownerMenu.ts';
 import { ownerStaffRoutes } from './routes/ownerStaff.ts';
 import { ownerTablesRoutes } from './routes/ownerTables.ts';
 import { ownerVenueRoutes } from './routes/ownerVenue.ts';
+import { otpRoutes, type OtpDeps } from './routes/otp.ts';
 import { paymentRoutes } from './routes/payments.ts';
 import { waiterRoutes } from './routes/waiter.ts';
 
@@ -22,6 +23,8 @@ export function createApp(deps: {
   payments: PaymentService;
   /** Owner and staff calls. Missing in the tests that don't sign anyone in. */
   owner?: Omit<OwnerRouteDeps, 'log'>;
+  /** Guest phone codes for loyalty. Missing in tests that don't use them. */
+  otp?: Omit<OtpDeps, 'log'>;
   allowedOrigins: string[];
   log: Log;
   /** Throws when the database doesn't answer. Used by the health check. */
@@ -65,6 +68,7 @@ export function createApp(deps: {
     app.route('/', guestExtraRoutes(deps.guest));
     app.route('/', paymentRoutes({ ...deps.guest, payments: deps.payments, log: deps.log }));
   }
+  if (deps.otp) app.route('/', otpRoutes({ ...deps.otp, log: deps.log }));
   if (deps.owner) app.route('/', ownerRoutes({ ...deps.owner, log: deps.log }));
   if (deps.owner) app.route('/', ownerMenuRoutes(deps.owner));
   if (deps.owner) app.route('/', mediaRoutes(deps.owner));

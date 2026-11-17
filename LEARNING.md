@@ -3315,3 +3315,34 @@ A note that appears the moment it's sent points straight at the one table that j
 In `mood.test.ts`, try "not bad at all". Then look at how "not" flips the next word.
 
 **Not yet:** a game stamp needs a loyalty card, and loyalty waits for the SMS provider.
+
+## 2026-11-17 · Guests prove their phone with an SMS code
+
+**What we built**
+
+Before a guest joins a loyalty card, they prove the phone number is theirs. The server texts a 6-digit code through Arkesel, the guest types it in, and the app gets a loyalty token.
+
+**How it works**
+
+```
+guest → POST /auth/otp/request {+233…}  → Arkesel texts "123456 is your Cravins code"
+guest → POST /auth/otp/verify {code}    → loyalty token (sealed, 30 days)
+```
+
+- The database never holds the phone or the code, only scrambled fingerprints (HMAC hashes) of them.
+- Every number gets the same answer, so nobody can use the screen to find out who is a member.
+- SMS costs money and anyone can ask, so there are limits: 30 s between texts, 5 per phone and 10 per internet address per hour, 5 guesses per code, and a daily total for all of Cravins.
+
+**Files to look at**
+
+- `server/src/routes/otp.ts`: request and verify.
+- `server/src/sms/arkesel.ts`: talks to Arkesel.
+- `server/src/guest/loyaltyToken.ts`: the sealed token.
+
+**New idea: rate limiting**
+
+A rate limit counts recent tries and says "wait" past a number. Without one, a bot could send thousands of texts on Cravins's bill.
+
+**Try it yourself**
+
+In `otp.test.ts`, change `PER_PHONE_PER_HOUR` to 2 in `otp.ts` and rerun the tests. Watch which test notices.
