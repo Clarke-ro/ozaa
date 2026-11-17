@@ -3,17 +3,16 @@ import { Stack, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { guestScheme, isPublished, menuStyleOf } from '@/lib/menuStyle';
 import { NotOpenState } from '@/ui/states';
-import { z } from 'zod/mini';
 import { themeFromAccent, ThemeProvider } from '@/ui/theme';
 import { useVenue } from '@/features/venue';
 import type { FontPair } from '@/ui/theme';
 
-const slugSchema = z.string().check(z.regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/));
+const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 export default function VenueLayout() {
   const params = useLocalSearchParams<{ venue: string }>();
-  const parsed = slugSchema.safeParse(params.venue);
-  const slug = parsed.success ? parsed.data : '';
+  // Only a well-formed slug reaches the API; anything else shows as not found.
+  const slug = typeof params.venue === 'string' && SLUG.test(params.venue) ? params.venue : '';
   const venue = useVenue(slug);
   const font = venue.data?.theme.fontPair;
   const fontPair: FontPair =

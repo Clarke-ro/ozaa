@@ -3774,3 +3774,36 @@ crash ─► scrub (drop headers, body, query, user, breadcrumbs) ─► Sentry
 **Try it yourself**
 
 Open Sentry (cravins-app.sentry.io) after something breaks. You'll see the error and the page path, but no names, phones or tokens.
+
+## 2026-11-17 · Making the app lighter for guests
+
+**What we built**
+
+- **Every page is 97 KB lighter** (gzipped). A guest's table page went from 648 KB to 551 KB of JavaScript.
+- **Owners' photos are shrunk before upload.** A 4,000 px phone photo becomes 1,600 px and a few hundred KB, so guests don't download megabytes per dish. Photos over 5 MB are now accepted, because they shrink under the limit.
+
+**How it works**
+
+The 97 KB was a validation library, Zod. Even its "mini" version pulled in its error messages for every language, only to check about a dozen settings and two URL parts. Those are now plain `if` checks, and the same tests prove they behave the same.
+
+```
+before: 648 KB  ███████████████████████████
+after:  551 KB  ███████████████████████
+budget: 350 KB  ███████████████
+```
+
+The rest is mostly the framework (Expo Router, React Native for web, React) and the animation library (Reanimated). Getting under the 350 KB budget means loading animations later, which is a bigger change for another day.
+
+**Files to look at**
+
+- `src/lib/env.ts`: settings without a library.
+- `src/features/owner/data/shrinkImage.ts`: draw the photo smaller on a canvas, then save it as JPEG.
+- `e2e/photo-shrink.spec.ts`: uploads an 11 MB photo and checks a 1600 px JPEG comes out.
+
+**New idea: measure what's actually in the bundle**
+
+A library's size on disk isn't what users download. The build drops the unused parts, so I measured each library's share of the *final* file using its source map. That showed Zod at 481 KB, while all the icons together were only 79 KB.
+
+**Try it yourself**
+
+Upload a phone photo to a dish, then open the photo in a new tab. Check its size and width.

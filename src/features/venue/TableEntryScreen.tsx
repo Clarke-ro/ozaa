@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { z } from 'zod/mini';
 import { api } from '@/lib/api';
 import { useGuestSession } from '@/features/session';
 // Mock only: the contract does not return the open order on the session yet, so the mock keeps
@@ -9,7 +8,7 @@ import { peekOpenOrder } from '@/mocks/openOrder';
 import { ErrorState, LoadingState } from '@/ui/states';
 import { HomeScreen } from './HomeScreen';
 
-const tableSchema = z.string().check(z.regex(/^[A-Za-z0-9-]{1,12}$/));
+const TABLE_CODE = /^[A-Za-z0-9-]{1,12}$/;
 
 /**
  * Where a table's QR code lands (/slug/t/12), and the table guest's home from then on: open a
@@ -19,8 +18,7 @@ const tableSchema = z.string().check(z.regex(/^[A-Za-z0-9-]{1,12}$/));
  */
 export function TableEntryScreen({ slug, table }: { slug: string; table: string | undefined }) {
   const router = useRouter();
-  const parsed = tableSchema.safeParse(table);
-  const tableCode = parsed.success ? parsed.data : null;
+  const tableCode = typeof table === 'string' && TABLE_CODE.test(table) ? table : null;
   const saveGuest = useGuestSession((state) => state.saveGuest);
   // On phones the saved visit is read back a moment after start. Saving the table before that
   // finished let the old visit (no table) overwrite it, and orders then said "table only".
