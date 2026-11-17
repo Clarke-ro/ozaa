@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { boolean, check, date, integer, jsonb, pgTable, text, unique } from 'drizzle-orm/pg-core';
 import { at, money } from './columns.ts';
+import { loyaltyMembers } from './guests.ts';
 import { venues } from './venues.ts';
 
 /**
@@ -36,6 +37,9 @@ export const orders = pgTable(
     cancelReason: text('cancel_reason'),
     // The guest session that placed it, so only that guest can read it with a guest token.
     guestSessionId: text('guest_session_id'),
+    // The guest's loyalty card, when they placed the order with their loyalty token: the card's id,
+    // never their phone. Paying the order stamps that card. Erasing the member clears it.
+    loyaltyMemberId: text('loyalty_member_id').references(() => loyaltyMembers.id, { onDelete: 'set null' }),
     createdByStaffId: text('created_by_staff_id'),
     createdAt: at('created_at').notNull().defaultNow(),
     updatedAt: at('updated_at').notNull().defaultNow(),

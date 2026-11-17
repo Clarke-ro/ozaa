@@ -5,6 +5,7 @@ import type { Db } from '../db/client.ts';
 import { promos, visits } from '../db/schema.ts';
 import { GUEST_TTL_MS, readGuestToken, signGuestToken, type GuestClaims } from '../guest/token.ts';
 import { body, Problem } from '../http/problem.ts';
+import { memberForOrder } from '../loyalty/paidOrder.ts';
 import { makeQuote } from '../orders/billQuote.ts';
 import { orderById, saveOrder } from '../orders/orderStore.ts';
 import { priceOrder } from '../orders/priceOrder.ts';
@@ -161,8 +162,10 @@ export function guestRoutes(deps: GuestDeps) {
       tableCode: guest.tableCode,
       now: deps.now(),
     });
+    const loyaltyMemberId = await memberForOrder(db, deps.loyaltyKey, c.req.header('X-Loyalty-Token'), row.id, deps.now());
     const order = await saveOrder(db, {
       venueId: row.id,
+      loyaltyMemberId,
       guestSessionId: guest.sid,
       clientOrderId: input.clientOrderId,
       tableCode: guest.tableCode,

@@ -3409,3 +3409,31 @@ Confirming the same code twice doesn't take stamps off twice. The rule sees the 
 In `ownerLoyalty.test.ts`, remove one of the `tick(61 * 60_000)` lines. A stamp gets refused with `cooldownViolated: true`.
 
 **Not yet:** the automatic stamp when an order is paid. That needs the order to know whose card it is.
+
+## 2026-11-17 · Paying for an order stamps the loyalty card
+
+**What we built**
+
+A guest with a loyalty card who orders and pays now gets a stamp automatically, whether they pay online or staff mark it paid in cash. The owner can switch this off in the loyalty settings.
+
+**How it works**
+
+```
+order placed with X-Loyalty-Token → order keeps the card's id (never the phone)
+order fully paid (Paystack success or "Mark paid") → one stamp, same transaction
+paid twice / webhook + verify → still one stamp (keyed by order id)
+member erased → their old orders lose the link, but stay for tax
+```
+
+**Files to look at**
+
+- `server/src/loyalty/paidOrder.ts`: link at order time, stamp at payment time.
+- `server/drizzle/0004_order_loyalty.sql`: the new column.
+
+**New idea: doing two things in one transaction**
+
+Marking the order paid and adding the stamp happen together. If one fails, neither is saved, so you never get a paid order with a missing stamp, or a stamp for an unpaid order.
+
+**Try it yourself**
+
+In `paidOrder.test.ts`, mark the same order paid three times and check the stamps stay at 1.

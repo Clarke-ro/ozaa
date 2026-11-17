@@ -71,6 +71,8 @@ export async function saveOrder(
   db: Db,
   input: {
     venueId: string;
+    /** The guest's loyalty card here, if they ordered with their loyalty token. */
+    loyaltyMemberId?: string | null;
     guestSessionId: string;
     clientOrderId: string;
     tableCode: string | null;
@@ -126,6 +128,7 @@ export async function saveOrder(
       deliveryAddress: p.deliveryAddress,
       etaMinutes: p.etaMinutes,
       guestSessionId: input.guestSessionId,
+      loyaltyMemberId: input.loyaltyMemberId ?? null,
       createdAt: at,
       updatedAt: at,
     });
