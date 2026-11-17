@@ -553,7 +553,7 @@ Work top to bottom. Each box is one small PR that ends in a verifiable state (ps
   - the payment check backs off from 3 s to 10 s and pauses while the app is hidden;
   - the mock fails while offline, like a real network;
   - `e2e/offline.spec.ts` covers it.
-- [ ] 1.15 JS budget (section 11). The real-server build loads about 635 KB gzipped on the guest home against the 350 KB budget. The framework alone (Expo Router, React Native Web, React DOM) is about 286 KB. Next: load zod, Reanimated, FlashList and the full icon set only on the screens that use them, and ask Clarke whether to raise the budget or try static rendering. Expo's tree shaking (`EXPO_UNSTABLE_TREE_SHAKING`) was tried and saved nothing.
+- [ ] 1.15 JS budget (section 11). The real-server build loads about 551 KB gzipped on the guest home against the 350 KB budget (2026-11-17, after zod left the app: it carried every locale, 96 KB gz). The framework alone (Expo Router, React Native Web, React DOM) is about 288 KB; Reanimated about 104 KB. Icons tree-shake fine (79 KB raw for the ones used). Next: load Reanimated only on the screens that animate, and ask Clarke whether to raise the budget or try static rendering.
 - [ ] **Review:** screenshots of every Phase 1 screen, side by side with the render, for all 3 venues.
 
 ### Phase 1b: Table (product 1), owner side, on mocks

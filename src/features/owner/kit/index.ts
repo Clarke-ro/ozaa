@@ -1,16 +1,12 @@
 export { ChipRow } from './ChipRow';
-export { CodeTile } from './CodeTile';
 // Shared with the guest app, so it lives in src/ui.
 export { ConfirmDialog } from '@/ui/ConfirmDialog';
 export { DeskCard } from './DeskCard';
-export { DeskTabs, type DeskTab } from './DeskTabs';
 export { EmptyCard } from './EmptyCard';
 export { Field } from './Field';
 export { IconTile } from './IconTile';
 export { ModalSheet } from './ModalSheet';
 export { CravinsMark } from './CravinsMark';
-export { Panel } from './Panel';
-export { PanelRow } from './PanelRow';
 export { SectionLabel } from './SectionLabel';
 export { StatTile } from './StatTile';
 export { StatusPill, type PillTone } from './StatusPill';
@@ -29,7 +25,6 @@ export { CardGrid } from './CardGrid';
 export { cardStyle } from './cardStyle';
 export { FigureCard, type Trend } from './FigureCard';
 export { PeriodSelect } from './PeriodSelect';
-export { RankTable, type RankRow } from './RankTable';
 export { RowMenu, type RowAction } from './RowMenu';
 export { downloadCsv } from './downloadCsv';
 export { FigureRow, type Figure } from './FigureRow';

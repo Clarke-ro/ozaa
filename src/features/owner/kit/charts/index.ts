@@ -1,7 +1,5 @@
 export { AreaChart, type Point } from './AreaChart';
 export { BarChart, type Bar } from './BarChart';
 export { ChartCard, type TableRow } from './ChartCard';
-export { HourStrip, hourLabel } from './HourStrip';
-export { RankBars, type Ranked } from './RankBars';
-export { SplitBar, type Part } from './SplitBar';
+export { hourLabel } from './hourLabel';
 export { Donut, type DonutPart } from './Donut';
