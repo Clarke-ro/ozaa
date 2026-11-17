@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { idempotencyKeys, orderLines, orders, paymentSettings } from '../db/schema.ts';
 import { body, Problem } from '../http/problem.ts';
 import type { Log } from '../log.ts';
+import { stampPaidOrder } from '../loyalty/paidOrder.ts';
 import { orderById, orderFromRows } from '../orders/orderStore.ts';
 import { meOf, roleAt, ROLES, signedIn, type OwnerDeps } from '../owner/staff.ts';
 import type { MediaStorage } from '../media/storage.ts';
@@ -198,7 +199,11 @@ export function ownerRoutes(deps: OwnerRouteDeps) {
         .set({ paidPesewas: sql`${orders.totalPesewas}`, paymentMethod: input.method, updatedAt: new Date(deps.now()) })
         .where(and(eq(orders.id, found.row.id), lt(orders.paidPesewas, orders.totalPesewas)))
         .returning({ id: orders.id });
-      if (paid) await tx.update(orderLines).set({ paid: true }).where(eq(orderLines.orderId, found.row.id));
+      if (paid) {
+        await tx.update(orderLines).set({ paid: true }).where(eq(orderLines.orderId, found.row.id));
+        // Paid in cash or the like still counts as a visit for the guest's loyalty card.
+        await stampPaidOrder(tx, found.row.id, deps.now());
+      }
       if (key) await tx.insert(idempotencyKeys).values({ scope: `manual:${found.row.id}`, key, status: 200, body: {} }).onConflictDoNothing();
     });
     return c.json((await orderById(db, found.row.id))?.order);

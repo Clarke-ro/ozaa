@@ -2,6 +2,7 @@ import { and, eq, inArray, ne, sql } from 'drizzle-orm';
 import type { Payment } from '../payments.ts';
 import type { Db } from './client.ts';
 import { billQuotes, orderLines, orders, payments } from './schema.ts';
+import { stampPaidOrder } from '../loyalty/paidOrder.ts';
 
 type Row = typeof payments.$inferSelect;
 
@@ -131,6 +132,8 @@ export function paymentStore(db: Db) {
         }
         if (order.paidPesewas >= order.totalPesewas) {
           await tx.update(orderLines).set({ paid: true }).where(eq(orderLines.orderId, order.id));
+          // A fully paid order stamps the guest's loyalty card, in the same transaction.
+          await stampPaidOrder(tx, order.id, payment.paidAt ? Date.parse(payment.paidAt) : Date.now());
         }
       });
     },

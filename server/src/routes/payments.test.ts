@@ -13,6 +13,7 @@ import type { Paystack } from '../paystack.ts';
 import type { PaystackTransaction } from '../status.ts';
 import { connectTestPaystack, TEST_KEY, VENUE_SECRET } from './testHelpers.ts';
 import { venuePaystack } from '../venues/venuePaystack.ts';
+import { signLoyaltyToken } from '../guest/loyaltyToken.ts';
 
 const NOW = Date.parse('2026-11-16T12:00:00Z');
 
@@ -49,7 +50,7 @@ async function setup(options: { connect?: boolean } = {}) {
   const logs: Record<string, unknown>[] = [];
   let clock = NOW;
   const app = createApp({
-    guest: { db, guestSecret: 'test-guest-secret-that-is-long-enough', now: () => clock },
+    guest: { db, guestSecret: 'test-guest-secret-that-is-long-enough', now: () => clock, loyaltyKey: TEST_KEY },
     payments: paymentService({
       paystackFor: (slug) => keys.forVenueSlug(slug),
       store: paymentStore(db),
@@ -211,4 +212,21 @@ test('paying for your own items marks just those lines paid, and the order part 
   assert.equal(after.paidPesewas, order.lines[0].totalPesewas);
   assert.deepEqual(after.lines.map((line: { paid: boolean }) => line.paid), [true, false]);
   assert.equal(after.paymentMethod, 'online_card');
+});
+
+test('an online payment that pays the order off stamps the guest\'s loyalty card', async () => {
+  const { call, fake, momo } = await setup();
+  const loyalty = signLoyaltyToken(TEST_KEY, '+233241234567', Date.parse('2027-01-01'));
+  const card = { Authorization: `Bearer ${loyalty}` };
+  await call('PUT', '/venues/mamas-kitchen/loyalty/me', { consent: { loyalty: true, marketing: false, textVersion: 'v1' } }, card);
+  const token = (await call('POST', '/guest-sessions', { venueSlug: 'mamas-kitchen', tableCode: '9' })).json.guestToken;
+  const auth = { Authorization: `Bearer ${token}` };
+  const dish = (await call('GET', '/venues/mamas-kitchen/menu')).json.items[0];
+  const order = (await call('POST', '/orders', { clientOrderId: randomUUID(), lines: [{ menuItemId: dish.id, quantity: 1 }] }, { ...auth, 'X-Loyalty-Token': loyalty })).json;
+  const quote = (await call('POST', `/orders/${order.id}/bill`, { mode: 'whole' }, auth)).json;
+  const started = (await call('POST', '/payments', momo(quote.quoteId), { ...auth, 'Idempotency-Key': 'k1' })).json;
+  fake.succeed();
+  await call('POST', `/payments/${started.reference}/verify`, undefined, auth);
+  const facts = (await call('GET', '/venues/mamas-kitchen/loyalty/me', undefined, card)).json.member.facts;
+  assert.equal(facts.filter((f: { kind: string }) => f.kind === 'earn').length, 1);
 });
