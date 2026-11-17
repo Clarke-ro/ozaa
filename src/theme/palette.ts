@@ -19,6 +19,12 @@ export const QR_PAPER = '#FFFFFF';
 /** The dark of a QR code and of printed table cards: near-black, never following dark mode. */
 export const QR_INK = '#111111';
 
+/**
+ * The Sales card on Today: Clarke's yellow (2026-11-17), with near-black text on it in both
+ * schemes. Black on this yellow is about 13:1, far past the 4.5:1 text needs.
+ */
+export const SALES_CARD = { fill: '#FFC501', ink: '#111111' } as const;
+
 /** Venue colours offered in Branding (canvas). Names come from ownerBranding.swatch.<id>. */
 export const VENUE_SWATCHES = [
   { id: 'clay', hex: '#B5432A' },
