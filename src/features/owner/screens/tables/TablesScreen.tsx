@@ -22,6 +22,7 @@ import { AllTables } from './AllTables';
 import { downloadQr, printHtml } from './qrActions';
 import { TableCard } from './TableCard';
 import { TableQrCard } from './TableQrCard';
+import { NfcTagSheet } from './NfcTagSheet';
 import { CARD_ACCENTS } from './TableCardPreview';
 
 // The canvas draws the All tables cards at 62% of the big preview.
@@ -29,7 +30,7 @@ const CARD_IN_GRID = 0.62;
 
 /**
  * QR codes and links (canvas): the menu's own QR code and link, the website embed, the table
- * card style and colour with a preview, then every table's card with its own Print and Download.
+ * card style and colour with a preview, then every table's card with its own Print, Download and NFC tag.
  */
 export function TablesScreen() {
   const { desktop } = useOwnerLayout();
@@ -39,6 +40,9 @@ export function TablesScreen() {
   const [template, setTemplate] = useState<TableCardTemplate>('folded_tent');
   const [accent, setAccent] = useState<string>(CARD_ACCENTS[0].hex);
   const [adding, setAdding] = useState(false);
+  // Cards with an NFC sticker say "scan or tap"; the tag holds the same link as the QR code.
+  const [tap, setTap] = useState(false);
+  const [tagFor, setTagFor] = useState<Table | null>(null);
 
   const tables = useQuery({
     queryKey: ownerKeys.tables(venueId),
@@ -67,8 +71,17 @@ export function TablesScreen() {
   const venueAccent = venue.data?.theme.accent ?? CARD_ACCENTS[0].hex;
   const logoUrl = venue.data?.logo?.url ?? null;
   // Printed cards only promise paying by phone where the venue takes payment online.
-  const cta = t(canPayOnline(venue.data) ? 'ownerTables.cta' : 'ownerTables.ctaNoPay');
-  const shortText = t('ownerTables.scanToOrder');
+  const pays = canPayOnline(venue.data);
+  const cta = t(
+    tap
+      ? pays
+        ? 'ownerTables.ctaTap'
+        : 'ownerTables.ctaTapNoPay'
+      : pays
+        ? 'ownerTables.cta'
+        : 'ownerTables.ctaNoPay',
+  );
+  const shortText = t(tap ? 'ownerTables.scanOrTap' : 'ownerTables.scanToOrder');
   const name = (table: Table) => table.label ?? t('ownerOrders.table', { code: table.code });
 
   const print = (targets: Table[], pdf = false) => {
@@ -148,6 +161,8 @@ export function TablesScreen() {
                   venueAccent={venueAccent}
                   onPrintAll={() => print(items)}
                   onPdfAll={() => print(items, true)}
+                  tap={tap}
+                  onTap={setTap}
                   side={desktop}
                 />
                 <AllTables
@@ -160,12 +175,18 @@ export function TablesScreen() {
                     table.qrUrl &&
                     downloadQr(table.qrUrl, `${venueName}-${table.code}`.replace(/\s+/g, '-'))
                   }
+                  onNfc={setTagFor}
                 />
               </View>
             )}
           </DeskWait>
         </View>
       </View>
+      <NfcTagSheet
+        table={tagFor ? name(tagFor) : null}
+        url={tagFor?.qrUrl ?? ''}
+        onClose={() => setTagFor(null)}
+      />
       <AddTablesSheet
         visible={adding}
         onClose={() => setAdding(false)}

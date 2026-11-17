@@ -3521,3 +3521,35 @@ A profile saves only what the person changed. The server fills in the rest from 
 **Try it yourself**
 
 In `ownerRemaining.test.ts`, turn off the "order" notification in a profile. Then check that the other four switches still come back as true.
+
+## 2026-11-17 · Tap to open: NFC tags on table cards
+
+**What we built**
+
+A guest can now tap their phone on the table card instead of scanning. On the Tables page, each table has an NFC button. A switch, "Cards with an NFC tag", changes the printed words to "Scan or tap".
+
+**How it works**
+
+An NFC sticker can hold a web link, just like a QR code. We write the same table link to both:
+
+```
+QR code  ─┐
+          ├─► https://…/mamas-kitchen/t/12 ─► the table's menu
+NFC tag  ─┘
+```
+
+Phones read link tags on their own (iPhone XS and newer, and most Android phones), so the guest app needed no change. Writing a tag is the new part. Chrome on Android can do it from a web page with `NDEFReader`. Safari can't, so on an iPhone or a computer the sheet shows the link to copy into a free app such as NFC Tools.
+
+**Files to look at**
+
+- `src/features/owner/screens/tables/nfc.ts` and `nfc.test.ts`: writing the tag, and naming why it failed.
+- `NfcTagSheet.tsx`: the sheet.
+- `e2e/nfc-tags.spec.ts`: a fake `NDEFReader` records what would be written.
+
+**New idea: feature detection**
+
+We don't ask "is this Android?". We ask "does this browser have `NDEFReader`?". The answer stays right when Safari adds NFC one day, or a phone has NFC switched off.
+
+**Try it yourself**
+
+In `nfc.test.ts`, make the fake reader throw a `NetworkError`. What does `writeNfcTag` return, and what does the sheet say then?
