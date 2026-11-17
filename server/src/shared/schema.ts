@@ -4255,6 +4255,15 @@ export interface operations {
                     "application/json": components["schemas"]["StaffMember"];
                 };
             };
+            /** @description `already_staff` (on the team already), `email_taken` (another person signs in with that email) or `email_not_yours` (that number has an account at a venue you don't own, so you can't set its sign-in email; they add it themselves). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
         };
     };
     ownerListCategories: {

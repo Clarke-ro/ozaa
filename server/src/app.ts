@@ -1,5 +1,8 @@
 import { Hono } from 'hono';
+import { bodyLimit } from 'hono/body-limit';
 import { cors } from 'hono/cors';
+import { secureHeaders } from 'hono/secure-headers';
+import { clientIp, slidingWindow } from './http/rateLimit.ts';
 import type { PaymentService } from './payments.ts';
 import type { Log } from './log.ts';
 import { Problem, problemResponse } from './http/problem.ts';
@@ -49,6 +52,45 @@ export function createApp(deps: {
       500,
       { 'Content-Type': 'application/problem+json' },
     );
+  });
+  // Answers are JSON for our own apps: no framing, no sniffing, no referrer, HTTPS remembered.
+  // Cross-origin reads stay allowed (CORS below decides who), so CORP is left off.
+  app.use('*', secureHeaders({ crossOriginResourcePolicy: false, crossOriginEmbedderPolicy: false }));
+  // Heroku ends HTTPS at its router and says how the request came in. A plain-HTTP call would
+  // have sent its token in the clear, so it is refused rather than answered.
+  app.use('*', async (c, next) => {
+    if (c.req.header('x-forwarded-proto') === 'http') {
+      throw new Problem(400, 'https_required', 'Use https.');
+    }
+    await next();
+  });
+  // The biggest real request (a venue's settings) is a few KB; nothing needs more than this.
+  app.use(
+    '*',
+    bodyLimit({
+      maxSize: 256 * 1024,
+      onError: () => {
+        throw new Problem(413, 'too_large', 'That request is too big.');
+      },
+    }),
+  );
+  // Guests need no sign-in, so their writes are counted per address. A whole restaurant can
+  // share one Wi-Fi address, so the limit is generous; starting visits is held tighter. Staff
+  // calls need a Clerk sign-in, Paystack's webhook is checked by signature, and phone codes have
+  // their own limits, so those are left out.
+  const now = deps.guest?.now ?? Date.now;
+  const guestWrites = slidingWindow({ limit: 120, windowMs: 60_000, now });
+  const newVisits = slidingWindow({ limit: 30, windowMs: 60_000, now });
+  app.use('*', async (c, next) => {
+    const path = c.req.path;
+    const write = c.req.method !== 'GET' && c.req.method !== 'OPTIONS';
+    const exempt = path.startsWith('/v1/owner') || path.startsWith('/v1/webhooks') || path.startsWith('/v1/auth/otp');
+    if (write && !exempt) {
+      const ip = clientIp(c.req.header('x-forwarded-for'));
+      const ok = path === '/v1/guest-sessions' ? newVisits.hit(ip) : guestWrites.hit(ip);
+      if (!ok) throw new Problem(429, 'rate_limited', 'Too many requests. Wait a minute and try again.');
+    }
+    await next();
   });
   app.use(
     '*',

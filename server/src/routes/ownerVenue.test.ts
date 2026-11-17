@@ -85,3 +85,12 @@ test('guests see a switched-on service only once it is set up: no Rewards tile w
   const services = (await call('GET', `/owner/venues/${mamas}/services`, undefined, owner)).json.services;
   assert.ok(services.some((s: { id: string; enabled: boolean }) => s.id === 'loyalty' && s.enabled));
 });
+
+test('the Google review link must be https, so guests are never sent to a script link', async () => {
+  const { call, mamas } = await ownerSetup();
+  const path = `/owner/venues/${mamas}`;
+  for (const bad of ['javascript:alert(1)', 'data:text/html,hi', 'http://g.page/r/x']) {
+    assert.equal((await call('PATCH', path, { googleReviewUrl: bad }, owner)).status, 400, bad);
+  }
+  assert.equal((await call('PATCH', path, { googleReviewUrl: 'https://g.page/r/mamas/review' }, owner)).status, 200);
+});

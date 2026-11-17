@@ -56,3 +56,12 @@ test('refuses a payment of zero or less', async () => {
   const store = paymentStore(await testDb());
   await assert.rejects(store.claim('key-4', { ...base, amountPesewas: 0 }, 'bean-there'));
 });
+
+test('a late "failed" answer never undoes a success that already counted', async () => {
+  // A webhook says success while a slower verify, read before it, comes back "failed".
+  const store = paymentStore(await testDb());
+  await store.claim('key-5', base, 'bean-there');
+  await store.save({ ...base, status: 'succeeded', paidAt: '2026-11-16T10:01:00.000Z' });
+  await store.save({ ...base, status: 'failed', failureReason: 'Declined' });
+  assert.equal((await store.get('pay_1'))?.payment.status, 'succeeded');
+});

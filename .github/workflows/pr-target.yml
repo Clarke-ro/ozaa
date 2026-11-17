@@ -5,6 +5,10 @@ on:
   pull_request:
     types: [opened, reopened, synchronize, edited]
 
+# The GitHub token only needs to read the code.
+permissions:
+  contents: read
+
 jobs:
   into-main:
     runs-on: ubuntu-latest

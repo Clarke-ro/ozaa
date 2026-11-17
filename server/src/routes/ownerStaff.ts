@@ -70,7 +70,10 @@ export function ownerStaffRoutes(deps: OwnerDeps & { clerkAdmin: ClerkAdmin | nu
    * removed brings them back.
    */
   app.post('/owner/venues/:venueId/staff', async (c) => {
-    const venueId = await ownerAt(c);
+    const who = await signedIn(c, deps);
+    const venueId = c.req.param('venueId') ?? '';
+    roleAt(who, venueId, ROLES.payments);
+    await venueRowById(db, venueId);
     const input = await body(c, inviteBody);
     const email = input.email?.toLowerCase() ?? null;
     let [user] = await db.select().from(staffUsers).where(eq(staffUsers.phone, input.phone));
@@ -86,6 +89,17 @@ export function ownerStaffRoutes(deps: OwnerDeps & { clerkAdmin: ClerkAdmin | nu
         .values({ id: `usr_${crypto.randomUUID().replaceAll('-', '')}`, phone: input.phone, email, firstName: input.firstName })
         .returning();
     } else if (email && !user.email) {
+      // The email becomes their sign-in. Another venue's owner must not be able to put their own
+      // email on someone's account and sign in as them, so it is only added for a person with no
+      // sign-in yet who works nowhere but the inviting owner's venues.
+      const theirs = await db
+        .select({ venueId: staffMemberships.venueId })
+        .from(staffMemberships)
+        .where(and(eq(staffMemberships.userId, user.id), ne(staffMemberships.status, 'removed')));
+      const owned = new Set(who.memberships.filter((m) => m.role === 'owner').map((m) => m.venueId));
+      if (user.clerkUserId || theirs.some((m) => !owned.has(m.venueId))) {
+        throw new Problem(409, 'email_not_yours', 'That number already has a Cravins account. Invite them without an email; they add it themselves.');
+      }
       [user] = await db.update(staffUsers).set({ email }).where(eq(staffUsers.id, user.id)).returning();
     }
     user = user!;

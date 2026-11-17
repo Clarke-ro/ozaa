@@ -1,6 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { eq } from 'drizzle-orm';
 import { expectContract } from '../contract/contract.ts';
+import { staffMemberships, staffUsers } from '../db/schema.ts';
 import { as, OWNER, ownerSetup, WAITER } from './ownerTestSetup.ts';
 
 const owner = as('user_owner', OWNER);
@@ -59,4 +61,29 @@ test('role and tables change, a PIN resets, and removing someone signs them out;
   const back = await call('POST', base, { phone: '+233249990000', firstName: 'Esi', role: 'viewer' }, owner);
   assert.equal(back.json.id, esi.id);
   assert.equal(back.json.role, 'viewer');
+});
+
+test("another venue's owner can't put their email on someone's account and sign in as them", async () => {
+  const { call, db, mamas } = await ownerSetup();
+  const bean = (await db.select().from(staffMemberships)).find((m) => m.venueId.includes('bean'))!.venueId;
+  // Kojo works at Bean There and was invited by phone only, so he has no email and no sign-in yet.
+  await db.insert(staffUsers).values({ id: 'usr_kojo', phone: '+233249991111', firstName: 'Kojo' });
+  await db.insert(staffMemberships).values({ id: 'mem_kojo', venueId: bean, userId: 'usr_kojo', role: 'manager', status: 'invited' });
+  // Rival owns Mama's Kitchen only.
+  await db.insert(staffUsers).values({ id: 'usr_rival', phone: '+233249992222', firstName: 'Rival', clerkUserId: 'user_rival' });
+  await db.insert(staffMemberships).values({ id: 'mem_rival', venueId: mamas, userId: 'usr_rival', role: 'owner', status: 'active' });
+
+  const grab = await call('POST', `/owner/venues/${mamas}/staff`, { phone: '+233249991111', email: 'rival@example.com', firstName: 'Kojo', role: 'waiter' }, as('user_rival'));
+  assert.equal(grab.status, 409);
+  expectContract('ownerInviteStaff', 409, grab.json);
+  assert.equal(grab.json.code, 'email_not_yours');
+  const [kojo] = await db.select().from(staffUsers).where(eq(staffUsers.id, 'usr_kojo'));
+  assert.equal(kojo!.email, null);
+  assert.equal(kojo!.clerkUserId, null);
+  // And signing in with that email finds nobody.
+  assert.equal((await call('GET', '/me', undefined, as('user_clerk_rival2', 'rival@example.com'))).json.code, 'not_staff');
+
+  // The owner of every venue Kojo works at can still add his email.
+  const fine = await call('POST', `/owner/venues/${mamas}/staff`, { phone: '+233249991111', email: 'kojo@example.com', firstName: 'Kojo', role: 'waiter' }, owner);
+  assert.equal(fine.status, 201);
 });
