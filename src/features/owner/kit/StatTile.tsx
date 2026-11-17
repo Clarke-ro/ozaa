@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import { PressableScale } from '@/ui/PressableScale';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
+import { FitText } from '@/ui/FitText';
 import { useTheme } from '@/ui/theme';
 
 /**
@@ -35,18 +36,18 @@ export function StatTile({
   const body = (
     <>
       <View style={styles.head}>
-        <Text variant="caption" style={[styles.label, { color: theme.muted }]} numberOfLines={2}>
+        <FitText variant="caption" style={[styles.label, { color: theme.muted }]}>
           {label}
-        </Text>
+        </FitText>
         {Icon ? (
           <View style={[styles.icon, { backgroundColor: alert ? theme.errorTint : theme.wash }]}>
             <Icon size={16} color={alert ? theme.error : theme.ink} />
           </View>
         ) : null}
       </View>
-      <Text variant="display-m" style={styles.value} numberOfLines={1} adjustsFontSizeToFit>
+      <FitText variant="display-m" style={styles.value} min={18}>
         {value}
-      </Text>
+      </FitText>
       {note ? (
         <View style={styles.note}>
           <Text variant="caption" style={{ color: noteInk }} numberOfLines={1}>

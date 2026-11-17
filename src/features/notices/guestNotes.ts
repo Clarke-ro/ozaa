@@ -1,4 +1,5 @@
 import type { Order, WaiterCall } from '@/lib/api/types';
+import { finishWord } from '@/features/orders/guestTimeline';
 
 export type GuestNoteKind =
   | 'order_sent'
@@ -34,7 +35,10 @@ const STEP: Record<GuestNoteKind, number> = {
  * order sent, accepted, being prepared, ready, served; call sent and who is coming. Newest first.
  */
 export function buildGuestNotes(src: {
-  order: Pick<Order, 'id' | 'number' | 'status' | 'createdAt' | 'updatedAt' | 'readyAt'> | null;
+  order: Pick<
+    Order,
+    'id' | 'number' | 'status' | 'createdAt' | 'updatedAt' | 'readyAt' | 'source'
+  > | null;
   calls: Pick<
     WaiterCall,
     'id' | 'reason' | 'status' | 'createdAt' | 'acknowledgedAt' | 'staffFirstName'
@@ -78,7 +82,8 @@ export function buildGuestNotes(src: {
         kind: 'order_served',
         at: o.updatedAt,
         href: 'status',
-        vars,
+        // Pickup and delivery read "picked up" / "delivered" instead of "served".
+        vars: { ...vars, how: finishWord(o.source) },
       });
     }
   }

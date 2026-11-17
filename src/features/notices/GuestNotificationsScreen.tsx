@@ -84,7 +84,12 @@ function NoteRow({ note, now, onPress }: { note: GuestNote; now: number; onPress
   const Icon = ICON[note.kind];
   const reason =
     typeof note.vars.reason === 'string' ? t(`waiter.reasons.${note.vars.reason}`) : '';
-  const title = t(`notices.kind.${note.kind}`, { ...note.vars, reason });
+  // A pickup or delivery order reads "was picked up" / "was delivered" instead of "was served".
+  const how = note.vars.how;
+  const title =
+    note.kind === 'order_served' && (how === 'pickedUp' || how === 'delivered')
+      ? t(`notices.kind.order_served_${how}`, note.vars)
+      : t(`notices.kind.${note.kind}`, { ...note.vars, reason });
   return (
     <Pressable
       accessibilityRole="button"

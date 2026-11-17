@@ -96,6 +96,8 @@
     "preparing": "Being prepared",
     "ready": "Ready",
     "served": "Served",
+    "pickedUp": "Picked up",
+    "delivered": "Delivered",
     "cancelled": "Cancelled"
   },
   "menu": {
@@ -192,6 +194,8 @@
     "preparing": "Being prepared",
     "ready": "Ready",
     "served": "Served",
+    "pickedUp": "Picked up",
+    "delivered": "Delivered",
     "readyHint": "We bring it to your table",
     "servedHint": "Enjoy your meal",
     "view": "View",
@@ -1819,7 +1823,10 @@
       "accept": "Accept order",
       "start": "Start cooking",
       "ready": "Mark ready",
-      "serve": "Mark served"
+      "serve": "Mark served",
+      "served": "Mark served",
+      "pickedUp": "Mark picked up",
+      "delivered": "Mark delivered"
     },
     "empty": {
       "new": "No new orders",
@@ -1928,6 +1935,8 @@
         "preparing": "Started cooking",
         "ready": "Ready",
         "served": "Served",
+        "pickedUp": "Picked up",
+        "delivered": "Delivered",
         "cancelled": "Cancelled"
       },
       "from": {
@@ -2368,6 +2377,8 @@
       "order_cooking": "Order #{{number}} is being prepared",
       "order_ready": "Order #{{number}} is ready",
       "order_served": "Order #{{number}} was served. Enjoy!",
+      "order_served_pickedUp": "Order #{{number}} was picked up. Enjoy!",
+      "order_served_delivered": "Order #{{number}} was delivered. Enjoy!",
       "call_sent": "You asked for: {{reason}}",
       "call_coming": "{{name}} is on the way with: {{reason}}"
     },

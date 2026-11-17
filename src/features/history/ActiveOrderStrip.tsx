@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, View } from 'react-native';
+import { statusKey } from '@/features/orders/guestTimeline';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -37,7 +38,7 @@ export function ActiveOrderStrip({ slug }: { slug: string }) {
         numberOfLines={1}
         style={[styles.flex, styles.strong, { color: theme.ink }]}
       >
-        {t('myOrders.track', { number: o.number, status: t(`statusLabel.${o.status}`) })}
+        {t('myOrders.track', { number: o.number, status: t(statusKey(o)) })}
       </Text>
       <Text variant="caption" style={[styles.strong, { color: theme.ink }]}>
         {t('myOrders.trackAction')}

@@ -4,6 +4,7 @@ import { Minus, TrendingDown, TrendingUp } from 'lucide-react-native';
 import { useOwnerLayout } from '../chrome/layout';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
+import { FitText } from '@/ui/FitText';
 import { fontFamily, useTheme } from '@/ui/theme';
 import { cardStyle } from './cardStyle';
 
@@ -56,13 +57,13 @@ export function FigureCard({
   const trendRow = trend ? (
     <View style={styles.trend}>
       <Arrow size={14} color={trendInk} />
-      <Text
+      <FitText
         variant="caption"
         style={[styles.trendText, compact && styles.small, { color: trendInk }]}
-        numberOfLines={2}
+        min={9}
       >
         {trendText}
-      </Text>
+      </FitText>
     </View>
   ) : null;
   const figure = (
@@ -90,12 +91,9 @@ export function FigureCard({
   const body =
     order === 'labelFirst' ? (
       <>
-        <Text
-          style={[styles.label, compact && styles.compactLabel, { color: theme.muted }]}
-          numberOfLines={2}
-        >
+        <FitText style={[styles.label, compact && styles.compactLabel, { color: theme.muted }]}>
           {label}
-        </Text>
+        </FitText>
         {number}
         <View style={compact ? styles.bottom : styles.notes}>
           {trendRow}
@@ -113,9 +111,9 @@ export function FigureCard({
     ) : (
       <>
         {number}
-        <Text variant="body" style={{ color: theme.muted }} numberOfLines={2}>
+        <FitText variant="body" style={{ color: theme.muted }}>
           {label}
-        </Text>
+        </FitText>
         {trendRow}
       </>
     );
@@ -198,7 +196,7 @@ const styles = StyleSheet.create({
   tallValue: { fontSize: 34, lineHeight: 40 },
   asideRow: { flexDirection: 'row', alignItems: 'baseline', gap: 10 },
   aside: { fontSize: 14, lineHeight: 20, fontFamily: fontFamily.strong },
-  trend: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.space[1] },
-  // flexShrink lets a long trend wrap inside the card instead of running past it.
-  trendText: { fontFamily: fontFamily.strong, flexShrink: 1 },
+  trend: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[1] },
+  // The rest of the row after the arrow: one line that shrinks to fit (FitText).
+  trendText: { fontFamily: fontFamily.strong, flex: 1, minWidth: 0 },
 });
