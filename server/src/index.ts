@@ -11,6 +11,7 @@ import { encryptionKey } from './secrets/sealed.ts';
 import { venuePaystack } from './venues/venuePaystack.ts';
 import { clerkVerifier } from './owner/clerk.ts';
 import { clerkAdmin } from './owner/clerkAdmin.ts';
+import { arkeselSender } from './sms/arkesel.ts';
 import { supabaseStorage } from './media/storage.ts';
 
 const config = readConfig();
@@ -26,6 +27,14 @@ const payments = paymentService({
 const app = createApp({
   guest: { db, guestSecret: config.GUEST_TOKEN_SECRET, now: Date.now },
   payments,
+  otp: {
+    db,
+    now: Date.now,
+    hashSecret: config.GUEST_TOKEN_SECRET,
+    loyaltyKey: encryptionKey(config.ENCRYPTION_KEY),
+    sms: config.ARKESEL_API_KEY ? arkeselSender({ apiKey: config.ARKESEL_API_KEY, sender: config.ARKESEL_SENDER_ID }) : null,
+    dailyLimit: config.SMS_DAILY_LIMIT,
+  },
   owner: {
     db,
     // Clerk's tokens name the site that asked for them (azp); only our own sites count.

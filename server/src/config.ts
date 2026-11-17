@@ -35,6 +35,11 @@ const schema = z.object({
   SUPABASE_URL: z.url().optional(),
   SUPABASE_SECRET_KEY: z.string().min(20).optional(),
   MEDIA_BUCKET: z.string().default('media'),
+  // Arkesel SMS, for the codes guests get when joining loyalty. The sender ID must be approved in
+  // Arkesel's dashboard. SMS_DAILY_LIMIT caps texts per day as a cost fuse.
+  ARKESEL_API_KEY: z.string().min(8).optional(),
+  ARKESEL_SENDER_ID: z.string().min(3).max(11).default('Cravins'),
+  SMS_DAILY_LIMIT: z.coerce.number().int().positive().default(300),
   PORT: z.coerce.number().int().positive().default(4000),
   // Where Paystack sends a card payer back: {SITE_URL}/{venueSlug}/pay (api/openapi.yaml).
   SITE_URL: z.url().default('http://localhost:8081'),
