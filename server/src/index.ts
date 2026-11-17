@@ -34,6 +34,7 @@ const app = createApp({
     now: Date.now,
     venueKeys,
     paystackClient: (secret) => paystackClient(secret),
+    siteUrl: config.SITE_URL,
     storage:
       config.SUPABASE_URL && config.SUPABASE_SECRET_KEY
         ? supabaseStorage({ url: config.SUPABASE_URL, secretKey: config.SUPABASE_SECRET_KEY, bucket: config.MEDIA_BUCKET })

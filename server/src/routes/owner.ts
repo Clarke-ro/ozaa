@@ -17,6 +17,8 @@ import type { VenuePaystackStore } from '../venues/venuePaystack.ts';
 export type OwnerRouteDeps = OwnerDeps & {
   /** Photo uploads (Supabase Storage). Null until the server has the storage key. */
   storage: MediaStorage | null;
+  /** The real app's address, for table QR codes (SITE_URL). */
+  siteUrl: string;
   venueKeys: VenuePaystackStore;
   /** A Paystack client for a key being connected, before it is saved. */
   paystackClient: (secret: string) => Paystack;
