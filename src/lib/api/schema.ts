@@ -200,7 +200,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Place an order: for the guest's table, or from the menu link for pickup or delivery (send fulfilment). The server prices it from the menu, adds any delivery fee, and its total wins. */
+        /**
+         * Place an order: for the guest's table, or from the menu link for pickup or delivery (send fulfilment). The server prices it from the menu, adds any delivery fee, and its total wins.
+         * @description With X-Loyalty-Token, the order is linked to the guest's loyalty card at this venue (by the card's id,
+         *     never the phone). When the order is paid and the venue stamps paid orders, one stamp goes on that card.
+         */
         post: operations["createOrder"];
         delete?: never;
         options?: never;
@@ -3497,6 +3501,12 @@ export interface operations {
             header?: {
                 /** @description A new UUID per user action. Reuse it when retrying the same action. */
                 "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description The guest's loyalty token (POST /auth/otp/verify), sent beside the guest token when a call
+                 *     can also count toward their loyalty card, such as a game win earning a stamp. Without it
+                 *     the call works the same and nothing goes on a card.
+                 */
+                "X-Loyalty-Token"?: components["parameters"]["LoyaltyTokenHeader"];
             };
             path?: never;
             cookie?: never;
