@@ -3226,3 +3226,31 @@ The app already darkens a too-light colour before showing it. The server runs th
 **Try it yourself**
 
 In `ownerVenue.test.ts`, change the accent to `#B5432A` (a dark red). Then look at `derived.fill`: the server keeps it as it is, because it already passes contrast.
+
+## 2026-11-17 · Inviting staff on the real server
+
+**What we built**
+
+An owner invites a teammate with their name, phone, email and role. The server creates their Clerk sign-in at once, so they can sign in with a code sent to their email. On their first sign-in they become an active member of the team. The owner can change someone's role or tables, reset their PIN, sign them out everywhere, or remove them.
+
+**How it works**
+
+```
+owner → POST /owner/venues/{id}/staff {Esi, phone, esi@…, waiter}
+server → staff record + "invited" membership + Clerk user for esi@…
+Esi → signs in with the email code → GET /me → membership turns "active"
+owner → DELETE …/staff/{id} → "removed" + Clerk signs her out on every device
+```
+
+**Files to look at**
+
+- `server/src/routes/ownerStaff.ts`: the routes.
+- `server/src/owner/clerkAdmin.ts`: the two Clerk calls (make a user, sign them out).
+
+**New idea: do the risky step first**
+
+The invite calls Clerk before saving the membership. If Clerk fails, nothing is half done, so the owner can simply try again.
+
+**Try it yourself**
+
+In `ownerStaff.test.ts`, try to change the owner's role. The server answers `owner_role` (409). Only support can add or change an owner, because owners decide where the money goes.

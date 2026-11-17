@@ -7,6 +7,7 @@ import type { Log } from '../log.ts';
 import { orderById, orderFromRows } from '../orders/orderStore.ts';
 import { meOf, roleAt, ROLES, signedIn, type OwnerDeps } from '../owner/staff.ts';
 import type { MediaStorage } from '../media/storage.ts';
+import type { ClerkAdmin } from '../owner/clerkAdmin.ts';
 import type { Paystack } from '../paystack.ts';
 import { orderTransition, type OrderMove } from '../shared/orderMachine.ts';
 import { checkManualPayments, checkPaystackKeys } from '../shared/payments.ts';
@@ -17,6 +18,8 @@ import type { VenuePaystackStore } from '../venues/venuePaystack.ts';
 export type OwnerRouteDeps = OwnerDeps & {
   /** Photo uploads (Supabase Storage). Null until the server has the storage key. */
   storage: MediaStorage | null;
+  /** Creates staff sign-ins and signs people out (Clerk). Null without CLERK_SECRET_KEY. */
+  clerkAdmin: ClerkAdmin | null;
   /** The real app's address, for table QR codes (SITE_URL). */
   siteUrl: string;
   venueKeys: VenuePaystackStore;
