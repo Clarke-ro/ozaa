@@ -57,6 +57,8 @@ export const loyaltyFacts = pgTable(
   },
   (t) => [
     index('loyalty_facts_member').on(t.memberId, t.at),
+    // The owner's loyalty screens read a whole venue's facts.
+    index('loyalty_facts_venue').on(t.venueId),
     check('loyalty_facts_units', sql`${t.units} >= 0`),
   ],
 ).enableRLS();
@@ -86,7 +88,7 @@ export const writtenReviews = pgTable('written_reviews', {
   highlights: text('highlights').array().notNull().default(sql`'{}'::text[]`),
   reply: text('reply'),
   createdAt: at('created_at').notNull().defaultNow(),
-}, (t) => [check('written_reviews_stars', sql`${t.stars} between 1 and 5`)]).enableRLS();
+}, (t) => [check('written_reviews_stars', sql`${t.stars} between 1 and 5`), index('written_reviews_venue_created').on(t.venueId, t.createdAt)]).enableRLS();
 
 /** Private notes to the manager (FeedbackItem). A phone only if the guest chose to leave one. */
 export const feedback = pgTable('feedback', {
@@ -101,7 +103,7 @@ export const feedback = pgTable('feedback', {
   archived: boolean('archived').notNull().default(false),
   visibleAfter: at('visible_after').notNull().defaultNow(),
   createdAt: at('created_at').notNull().defaultNow(),
-}).enableRLS();
+}, (t) => [index('feedback_venue_created').on(t.venueId, t.createdAt)]).enableRLS();
 
 /** Game scores for the weekly leaderboard. runId is unique, so a replayed score counts once. */
 export const gameScores = pgTable('game_scores', {

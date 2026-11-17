@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import type { Paystack } from './paystack.ts';
 import { paymentStore } from './db/paymentStore.ts';
-import { testDb } from './db/testDb.ts';
+import { testDbWithOrder as testDb } from './db/testDb.ts';
 import { paymentService } from './payments.ts';
 import type { PaystackTransaction } from './status.ts';
 

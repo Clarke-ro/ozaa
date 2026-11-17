@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { boolean, check, integer, jsonb, pgTable, text } from 'drizzle-orm/pg-core';
+import { boolean, check, index, integer, jsonb, pgTable, text } from 'drizzle-orm/pg-core';
 import { at, money } from './columns.ts';
 import { venues } from './venues.ts';
 
@@ -12,7 +12,7 @@ export const menuCategories = pgTable('menu_categories', {
   position: integer('position').notNull(),
   hidden: boolean('hidden').notNull().default(false),
   schedule: jsonb('schedule'),
-}).enableRLS();
+}, (t) => [index('menu_categories_venue').on(t.venueId)]).enableRLS();
 
 /**
  * A dish (MenuItem). Price, stock and quantity limits are columns because the server checks them
@@ -43,6 +43,8 @@ export const menuItems = pgTable(
     check('menu_items_price', sql`${t.pricePesewas} >= 0`),
     check('menu_items_sale_below_price', sql`${t.salePricePesewas} is null or ${t.salePricePesewas} < ${t.pricePesewas}`),
     check('menu_items_stock', sql`${t.stockCount} is null or ${t.stockCount} >= 0`),
+    // Every guest menu load reads a venue's dishes.
+    index('menu_items_venue').on(t.venueId),
     check('menu_items_quantity', sql`${t.minQuantity} between 1 and 50 and ${t.maxQuantity} between ${t.minQuantity} and 50`),
   ],
 ).enableRLS();

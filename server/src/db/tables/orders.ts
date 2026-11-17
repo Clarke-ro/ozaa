@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { boolean, check, date, integer, jsonb, pgTable, text, unique } from 'drizzle-orm/pg-core';
+import { boolean, check, date, index, integer, jsonb, pgTable, text, unique } from 'drizzle-orm/pg-core';
 import { at, money } from './columns.ts';
 import { loyaltyMembers } from './guests.ts';
 import { venues } from './venues.ts';
@@ -56,6 +56,8 @@ export const orders = pgTable(
   },
   (t) => [
     unique('orders_daily_number').on(t.venueId, t.businessDay, t.number),
+    // The owner's Orders, Today and Floor screens poll a venue's recent orders every few seconds.
+    index('orders_venue_created').on(t.venueId, t.createdAt),
     check(
       'orders_money',
       sql`${t.subtotalPesewas} >= 0 and ${t.totalPesewas} >= 0 and ${t.paidPesewas} between 0 and ${t.totalPesewas}`,
@@ -83,7 +85,8 @@ export const orderLines = pgTable(
     // True once paid in a "my items" split.
     paid: boolean('paid').notNull().default(false),
   },
-  (t) => [check('order_lines_quantity', sql`${t.quantity} >= 1`)],
+  // Every order read loads its lines.
+  (t) => [check('order_lines_quantity', sql`${t.quantity} >= 1`), index('order_lines_order').on(t.orderId)],
 ).enableRLS();
 
 /**
@@ -107,7 +110,7 @@ export const billQuotes = pgTable('bill_quotes', {
   remainingAfterPesewas: money('remaining_after_pesewas').notNull(),
   expiresAt: at('expires_at').notNull(),
   createdAt: at('created_at').notNull().defaultNow(),
-}).enableRLS();
+}, (t) => [index('bill_quotes_order').on(t.orderId)]).enableRLS();
 
 /** "Call the waiter" (WaiterCall), with the owner app's reply and snooze. */
 export const waiterCalls = pgTable('waiter_calls', {
@@ -132,4 +135,5 @@ export const waiterCalls = pgTable('waiter_calls', {
   resolvedAt: at('resolved_at'),
   repliedAt: at('replied_at'),
   snoozedUntil: at('snoozed_until'),
-}).enableRLS();
+  // The owner's call queue polls a venue's calls every few seconds.
+}, (t) => [index('waiter_calls_venue_created').on(t.venueId, t.createdAt)]).enableRLS();

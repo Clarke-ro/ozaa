@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import type { Payment } from '../payments.ts';
 import { paymentStore } from './paymentStore.ts';
-import { testDb } from './testDb.ts';
+import { testDbWithOrder as testDb } from './testDb.ts';
 
 const base: Payment = {
   id: 'pay_1',
