@@ -131,3 +131,13 @@ test('a number someone else signs in with is 409 phone_taken', async () => {
     code: 'phone_taken',
   });
 });
+
+test('a session left from an earlier try is signed out before a new code is sent', async () => {
+  // Clerk accepted the code last time but a later step failed, so Clerk still has a session.
+  // Clerk refuses a new sign-in while one is active ("session_exists"), which kept the phone stuck.
+  const { clerk, calls } = fakeClerk();
+  clerk.session = { getToken: async () => 'jwt_old' };
+  const auth = clerkOwnerAuth(async () => clerk);
+  await auth.sendCode('+233241234567');
+  expect(calls).toEqual(['sign out', 'create +233241234567', 'prepare']);
+});

@@ -54,6 +54,8 @@ function toApiError(error: unknown): ApiError {
   const code = e?.errors?.[0]?.code;
   if (e?.status === 429 || code === 'too_many_requests')
     return new ApiError(429, 'rate_limited', 'Too many tries');
+  if (code === 'session_exists')
+    return new ApiError(409, 'session_exists', 'Already signed in on this device');
   if (code === 'form_identifier_exists')
     return new ApiError(409, 'phone_taken', 'Someone already signs in with that number');
   if (code?.startsWith('form_') || code?.startsWith('verification_'))
@@ -92,14 +94,24 @@ export function clerkOwnerAuth(
     sendCode: (address) =>
       run(async (clerk) => {
         if (!clerk.client) throw new ApiError(503, 'auth_unavailable', 'Sign-in is not ready');
+        // A session can be left over when Clerk took the code but a later step failed (no
+        // token, or the server didn't answer). Clerk refuses a new sign-in while one is active,
+        // so without this every retry on that phone failed. Start clean instead.
+        if (clerk.session) await clerk.signOut();
         attempt = await clerk.client.signIn.create({ identifier: address.trim() });
         const factor = attempt.supportedFirstFactors?.find((f) => f.strategy === strategy);
         // With strict enumeration protection an unknown address gets no factor and no code.
         // We still move on to the code step, so the screen looks the same either way.
         if (factor?.emailAddressId) {
-          await attempt.prepareFirstFactor({ strategy: 'email_code', emailAddressId: factor.emailAddressId });
+          await attempt.prepareFirstFactor({
+            strategy: 'email_code',
+            emailAddressId: factor.emailAddressId,
+          });
         } else if (factor?.phoneNumberId) {
-          await attempt.prepareFirstFactor({ strategy: 'phone_code', phoneNumberId: factor.phoneNumberId });
+          await attempt.prepareFirstFactor({
+            strategy: 'phone_code',
+            phoneNumberId: factor.phoneNumberId,
+          });
         }
       }),
     verifyCode: (code) =>
