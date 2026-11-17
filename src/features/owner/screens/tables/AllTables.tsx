@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Download, Printer } from 'lucide-react-native';
+import { Download, Nfc, Printer } from 'lucide-react-native';
 import type { Table } from '@/lib/api/types';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
@@ -14,7 +14,7 @@ import { canPrint } from './qrActions';
 const MIN = 176;
 const GAP = 16;
 
-/** Every table's card in the chosen style, each with its own Print and Download. */
+/** Every table's card in the chosen style, each with its own Print, Download and NFC tag. */
 export function AllTables({
   tables,
   styleLabel,
@@ -22,6 +22,7 @@ export function AllTables({
   renderCard,
   onPrint,
   onDownload,
+  onNfc,
 }: {
   tables: Table[];
   styleLabel: string;
@@ -29,6 +30,7 @@ export function AllTables({
   renderCard: (table: Table) => React.ReactNode;
   onPrint: (table: Table) => void;
   onDownload: (table: Table) => void;
+  onNfc: (table: Table) => void;
 }) {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -67,6 +69,12 @@ export function AllTables({
                   />
                 </>
               ) : null}
+              <IconAction
+                icon={Nfc}
+                label={t('ownerTables.nfcOne', { name: name(table) })}
+                onPress={() => onNfc(table)}
+                compact
+              />
             </View>
           </View>
         ))}
