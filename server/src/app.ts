@@ -13,6 +13,7 @@ import { ownerMenuRoutes } from './routes/ownerMenu.ts';
 import { ownerStaffRoutes } from './routes/ownerStaff.ts';
 import { ownerTablesRoutes } from './routes/ownerTables.ts';
 import { ownerVenueRoutes } from './routes/ownerVenue.ts';
+import { loyaltyRoutes } from './routes/loyalty.ts';
 import { otpRoutes, type OtpDeps } from './routes/otp.ts';
 import { paymentRoutes } from './routes/payments.ts';
 import { waiterRoutes } from './routes/waiter.ts';
@@ -66,6 +67,7 @@ export function createApp(deps: {
   if (deps.guest) {
     app.route('/', guestRoutes(deps.guest));
     app.route('/', guestExtraRoutes(deps.guest));
+    if (deps.guest.loyaltyKey) app.route('/', loyaltyRoutes({ ...deps.guest, loyaltyKey: deps.guest.loyaltyKey }));
     app.route('/', paymentRoutes({ ...deps.guest, payments: deps.payments, log: deps.log }));
   }
   if (deps.otp) app.route('/', otpRoutes({ ...deps.otp, log: deps.log }));

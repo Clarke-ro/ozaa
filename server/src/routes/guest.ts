@@ -22,7 +22,13 @@ import {
   wifiOf,
 } from '../venues/venueData.ts';
 
-export type GuestDeps = { db: Db; guestSecret: string; now: () => number };
+export type GuestDeps = {
+  db: Db;
+  guestSecret: string;
+  now: () => number;
+  /** Opens loyalty tokens (the server's encryption key). Loyalty is off without it. */
+  loyaltyKey?: Buffer;
+};
 
 const slug = z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/);
 const sessionBody = z.object({ venueSlug: slug, tableCode: z.string().min(1).max(12).optional(), language: z.string().optional() });

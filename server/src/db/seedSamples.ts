@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import type { Db } from './client.ts';
 import { eq } from 'drizzle-orm';
-import { businesses, diningTables, menuCategories, menuItems, paymentSettings, staffMemberships, staffUsers, venues } from './schema.ts';
+import { businesses, diningTables, loyaltyPrograms, menuCategories, menuItems, paymentSettings, staffMemberships, staffUsers, venues } from './schema.ts';
 import type { Menu, MenuItem, Offer, OnlineOrdering, VenuePublic, Wifi } from '../shared/types.ts';
 import { NO_MANUAL, type VenueProfile } from '../venues/venueData.ts';
 
@@ -45,6 +45,7 @@ export async function seedSamples(db: Db): Promise<{ venueIds: string[]; items: 
   const menuFile = read<Menu>('menus');
   const offerFile = read<{ items: Offer[] }>('offers');
   const wifiFile = read<Wifi>('wifi');
+  const cardsFile = read<{ programme: Record<string, unknown> }>('loyaltyCards');
   let itemCount = 0;
 
   for (const [slug, venue] of Object.entries(venueFile)) {
@@ -80,6 +81,10 @@ export async function seedSamples(db: Db): Promise<{ venueIds: string[]; items: 
         .values({ id: `tbl_${slug}_${code}`, venueId: id, code, label: `Table ${code}` })
         .onConflictDoNothing();
     }
+
+    // The sample loyalty programme (its rewards and tiers), with no members: those are real guests.
+    const loyalty = cardsFile[slug]?.programme;
+    if (loyalty) await db.insert(loyaltyPrograms).values({ venueId: id, programme: { ...loyalty, memberCount: 0 } }).onConflictDoNothing();
 
     const menu = menuFile[slug];
     if (!menu) continue;

@@ -6,6 +6,9 @@ import { moodOf } from '../feedback/mood.ts';
 import { body, Problem } from '../http/problem.ts';
 import { venueRowBySlug, type VenueProfile } from '../venues/venueData.ts';
 import { guestOf, type GuestDeps } from './guest.ts';
+import { readLoyaltyToken } from '../guest/loyaltyToken.ts';
+import { loadLoyalty, step } from '../loyalty/store.ts';
+import { ghanaPhone } from '../shared/brand.ts';
 
 // Game tuning: every point is one tap that drops a plate, and nobody lands a plate faster than
 // this. A score that would need quicker taps is refused as impossible.
@@ -111,9 +114,20 @@ export function guestExtraRoutes(deps: GuestDeps) {
       .select({ n: count() })
       .from(gameScores)
       .where(and(eq(gameScores.venueId, row.id), gte(gameScores.createdAt, weekStart(deps.now())), gt(gameScores.score, input.score)));
-    // A stamp needs a loyalty card, and joining loyalty waits for the SMS provider. Until then a
-    // score never earns one on the real server.
-    return c.json({ rank: n < 50 ? n + 1 : null, stampEarned: false }, 201);
+    // A win earns a stamp only for a guest with a card here (their loyalty token rides beside the
+    // guest token), only when the venue's rule is on, and at most once a day: the shared rules decide.
+    let stampEarned = false;
+    const phone = deps.loyaltyKey ? readLoyaltyToken(deps.loyaltyKey, c.req.header('X-Loyalty-Token'), deps.now()) : null;
+    if (phone) {
+      const game = (row.profile as VenueProfile).game ?? { enabled: false, minScore: 15 };
+      stampEarned = await db.transaction(async (tx) => {
+        const before = await loadLoyalty(tx, row.id, row.currency, { phone });
+        if (Object.keys(before.members).length === 0) return false;
+        const command = { type: 'game_win' as const, phone: ghanaPhone(phone), runId: input.runId, score: input.score, minScore: game.minScore, enabled: game.enabled };
+        return (await step(tx, before, command, deps.now())).effect === 'posted';
+      });
+    }
+    return c.json({ rank: n < 50 ? n + 1 : null, stampEarned }, 201);
   });
 
   return app;

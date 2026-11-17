@@ -25,7 +25,7 @@ const payments = paymentService({
   siteUrl: config.SITE_URL,
 });
 const app = createApp({
-  guest: { db, guestSecret: config.GUEST_TOKEN_SECRET, now: Date.now },
+  guest: { db, guestSecret: config.GUEST_TOKEN_SECRET, now: Date.now, loyaltyKey: encryptionKey(config.ENCRYPTION_KEY) },
   payments,
   otp: {
     db,

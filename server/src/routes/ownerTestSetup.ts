@@ -70,7 +70,7 @@ export async function ownerSetup(options: { verify?: VerifyOwner | null } = {}) 
   };
   const logs: Record<string, unknown>[] = [];
   const app = createApp({
-    guest: { db, guestSecret: 'test-guest-secret-that-is-long-enough', now: () => clock },
+    guest: { db, guestSecret: 'test-guest-secret-that-is-long-enough', now: () => clock, loyaltyKey: TEST_KEY },
     owner: {
       db,
       verify: options.verify === undefined ? fakeClerk : options.verify,
