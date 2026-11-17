@@ -1,3 +1,4 @@
+import { setupOf } from './worldLookups';
 import { DEMO_CODE } from './demo';
 import type { ApiClient } from '@/lib/api/client';
 import { ApiError } from '@/lib/api/errors';
@@ -148,6 +149,7 @@ export function mockAuthCalls(ctx: MockContext) {
           world.notices[venue.slug],
           now(),
           world.paymentSettings[venue.id],
+          setupOf(world, venue),
         ),
         table,
       };

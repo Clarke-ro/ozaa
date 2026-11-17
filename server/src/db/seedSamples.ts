@@ -7,8 +7,14 @@ import type { Menu, MenuItem, Offer, OnlineOrdering, VenuePublic, Wifi } from '.
 import { NO_MANUAL, type VenueProfile } from '../venues/venueData.ts';
 
 const SEED = fileURLToPath(new URL('../../seed', import.meta.url));
-const read = <T>(name: string): Record<string, T> =>
-  JSON.parse(readFileSync(`${SEED}/${name}.json`, 'utf8')) as Record<string, T>;
+// The sample photos' made-up address (the demo build ships the files inside the app). For the real
+// server they point at the real app's own copy instead: the web build serves assets/sample at /sample.
+const DEMO_MEDIA = 'https://mock.cravins.app/media/';
+let mediaBase: string | null = null;
+const read = <T>(name: string): Record<string, T> => {
+  const text = readFileSync(`${SEED}/${name}.json`, 'utf8');
+  return JSON.parse(mediaBase ? text.split(DEMO_MEDIA).join(mediaBase) : text) as Record<string, T>;
+};
 
 /**
  * Online ordering for the samples, the same as the demo (src/mocks/worldSamples.ts): Mama's Kitchen
@@ -40,7 +46,8 @@ const TABLE_CODES = Array.from({ length: 12 }, (_, i) => String(i + 1));
  * their menus, tables, Wi-Fi and offers. Safe to run again: rows that exist are left alone.
  * No staff and no Paystack keys: owners sign in with Clerk and connect their own keys.
  */
-export async function seedSamples(db: Db): Promise<{ venueIds: string[]; items: number }> {
+export async function seedSamples(db: Db, options: { siteUrl?: string } = {}): Promise<{ venueIds: string[]; items: number }> {
+  mediaBase = options.siteUrl ? `${options.siteUrl.replace(/\/+$/, '')}/sample/` : null;
   const venueFile = read<VenuePublic>('venues');
   const menuFile = read<Menu>('menus');
   const offerFile = read<{ items: Offer[] }>('offers');

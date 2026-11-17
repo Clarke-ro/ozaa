@@ -21,7 +21,7 @@ if (process.env.SEED_SAMPLES !== 'true') {
   const config = readConfig();
   const { db, close } = connect(config.DATABASE_URL);
   try {
-    const { venueIds, items } = await seedSamples(db);
+    const { venueIds, items } = await seedSamples(db, { siteUrl: config.SITE_URL });
     log({ event: 'seeded', venues: venueIds.length, items });
     if (process.env.SAMPLE_OWNER_PHONE) {
       await seedOwner(db, { phone: process.env.SAMPLE_OWNER_PHONE, email: process.env.SAMPLE_OWNER_EMAIL, firstName: process.env.SAMPLE_OWNER_NAME || 'Owner', venueIds });

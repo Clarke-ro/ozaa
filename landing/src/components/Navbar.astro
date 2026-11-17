@@ -87,6 +87,9 @@ const isActive = (href: string) => href === here;
     const root = document.querySelector<HTMLElement>("#mobile-menu");
     const label = toggle?.querySelector<HTMLElement>("[data-toggle-label]");
     if (!toggle || !root || !label) return;
+    // Set up once per page: it runs both straight away and on Astro's page-load event.
+    if (toggle.dataset.ready === "1") return;
+    toggle.dataset.ready = "1";
     document.body.style.overflow = "";
     const focusables = () => [...root.querySelectorAll<HTMLElement>("a, button:not([tabindex='-1'])")];
     const open = () => {
@@ -103,8 +106,15 @@ const isActive = (href: string) => href === here;
       label.textContent = toggle.dataset.open ?? "";
       document.body.style.overflow = "";
       const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-      if (reduce) root.hidden = true;
-      else root.addEventListener("transitionend", () => (root.hidden = true), { once: true });
+      const hide = () => {
+        if (!root.classList.contains("is-open")) root.hidden = true;
+      };
+      if (reduce) hide();
+      else {
+        root.addEventListener("transitionend", hide, { once: true });
+        // Safari doesn't always send transitionend; hide it after the animation anyway.
+        setTimeout(hide, 600);
+      }
       if (refocus) toggle.focus();
     };
     toggle.addEventListener("click", () => (root.hidden ? open() : close()));
@@ -115,7 +125,11 @@ const isActive = (href: string) => href === here;
     current = { open, close, root };
   }
 
+  // Astro's page-load event sets it up after each page change; calling it now as well means the
+  // menu works even if that event never fires on a phone's first load.
   document.addEventListener("astro:page-load", setUp);
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", setUp);
+  else setUp();
   document.addEventListener("keydown", (event) => {
     if (!current || current.root.hidden) return;
     if (event.key === "Escape") current.close();
@@ -132,7 +146,11 @@ const isActive = (href: string) => href === here;
       }
     }
   });
-  matchMedia("(min-width: 741px)").addEventListener("change", (event) => {
+  // Older iPhones only have addListener on media queries; a missing addEventListener used to throw here.
+  const wide = matchMedia("(min-width: 741px)");
+  const onWide = (event: MediaQueryListEvent) => {
     if (event.matches && current && !current.root.hidden) current.close(false);
-  });
+  };
+  if (wide.addEventListener) wide.addEventListener("change", onWide);
+  else wide.addListener(onWide);
 </script>

@@ -1,8 +1,18 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "git": { "deploymentEnabled": { "main": true, "**": false } },
+  "git": {
+    "deploymentEnabled": {
+      "main": true,
+      "**": false
+    }
+  },
   "ignoreCommand": "bash scripts/vercel-skip-app.sh",
-  "buildCommand": "npx expo export -p web",
+  "buildCommand": "npx expo export -p web && mkdir -p dist/sample && cp -R assets/sample/. dist/sample/",
   "outputDirectory": "dist",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }

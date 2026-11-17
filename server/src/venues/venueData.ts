@@ -1,6 +1,7 @@
+import { guestServices } from '../shared/guestServices.ts';
 import { and, asc, eq, isNull } from 'drizzle-orm';
 import type { Db } from '../db/client.ts';
-import { diningTables, menuCategories, menuItems, paymentSettings, venues } from '../db/schema.ts';
+import { diningTables, loyaltyPrograms, menuCategories, menuItems, paymentSettings, venues } from '../db/schema.ts';
 import { Problem } from '../http/problem.ts';
 import { liveNotices } from '../shared/notices.ts';
 import { guestPayMethods } from '../shared/payments.ts';
@@ -58,6 +59,7 @@ export async function paymentSettingsOf(db: Db, venueId: string): Promise<Paymen
 export async function publicVenue(db: Db, row: VenueRow, now: number): Promise<VenuePublic> {
   const { noticeSettings, offers: _offers, ...profile } = row.profile as VenueProfile;
   const pay = await paymentSettingsOf(db, row.id);
+  const [loyalty] = await db.select({ programme: loyaltyPrograms.programme }).from(loyaltyPrograms).where(eq(loyaltyPrograms.venueId, row.id));
   return {
     ...profile,
     id: row.id,
@@ -65,7 +67,13 @@ export async function publicVenue(db: Db, row: VenueRow, now: number): Promise<V
     name: row.name,
     currency: row.currency,
     published: row.published,
-    services: (row.services as VenuePublic['services']).filter((service) => service.enabled),
+    // Switched on and set up (src/lib/guestServices.ts): no Wi-Fi tile without a network, no
+    // Rewards without a programme, no Offers without an offer.
+    services: guestServices(row.services as VenuePublic['services'], {
+      wifi: Boolean((row.wifi as { ssid?: string } | null)?.ssid),
+      loyalty: (loyalty?.programme as { enabled?: boolean } | undefined)?.enabled === true,
+      offers: offersOf(row).length > 0,
+    }),
     notices: liveNotices(noticeSettings, now),
     payMethods: guestPayMethods(pay),
     payEnabled: pay.paystack !== null,

@@ -72,3 +72,16 @@ test('the theme is made contrast-safe on the server; services and the game rule 
   const twice = await call('PUT', `/owner/venues/${mamas}/services`, { services: [off[0], off[0]], game: { enabled: false, minScore: 15 } }, owner);
   assert.equal(twice.status, 400);
 });
+
+test('guests see a switched-on service only once it is set up: no Rewards tile while loyalty is off', async () => {
+  const { call, mamas } = await ownerSetup();
+  const ids = async () => (await call('GET', '/venues/mamas-kitchen')).json.services.map((s: { id: string }) => s.id);
+  assert.ok((await ids()).includes('loyalty'));
+  assert.ok((await ids()).includes('wifi'));
+  const programme = (await call('GET', `/owner/venues/${mamas}/loyalty`, undefined, owner)).json;
+  await call('PUT', `/owner/venues/${mamas}/loyalty`, { ...programme, enabled: false }, owner);
+  assert.ok(!(await ids()).includes('loyalty'));
+  // The owner still sees it switched on in Services, ready for when the programme is back.
+  const services = (await call('GET', `/owner/venues/${mamas}/services`, undefined, owner)).json.services;
+  assert.ok(services.some((s: { id: string; enabled: boolean }) => s.id === 'loyalty' && s.enabled));
+});

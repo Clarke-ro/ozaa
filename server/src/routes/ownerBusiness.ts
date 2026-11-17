@@ -113,7 +113,9 @@ export function ownerBusinessRoutes(deps: OwnerDeps) {
   app.get('/owner/business', async (c) => {
     const who = await signedIn(c, deps);
     const business = await businessOf(who);
-    const rows = await db.select().from(venues).where(eq(venues.businessId, business.id));
+    // Every venue this person works at is a location they can switch to, even when the venues
+    // belong to different businesses (the sample venues are three businesses with one owner).
+    const rows = await db.select().from(venues).where(inArray(venues.id, who.memberships.map((m) => m.venueId)));
     const [owner] = await db.select({ userId: staffMemberships.userId }).from(staffMemberships).where(and(inArray(staffMemberships.venueId, rows.map((r) => r.id)), eq(staffMemberships.role, 'owner'))).limit(1);
     return c.json({ business: businessView(business, owner?.userId ?? who.user.id), locations: await Promise.all(rows.map(locationOf)) });
   });

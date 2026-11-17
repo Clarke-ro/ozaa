@@ -39,6 +39,7 @@ const FILES = {
   'src/features/loyalty/customers.ts': 'loyaltyCustomers.ts',
   'src/lib/notificationFeed.ts': 'notificationFeed.ts',
   'src/lib/insights.ts': 'insights.ts',
+  'src/lib/guestServices.ts': 'guestServices.ts',
   'src/lib/api/types.ts': 'types.ts',
   'src/lib/api/schema.ts': 'schema.ts',
 };
