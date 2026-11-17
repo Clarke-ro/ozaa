@@ -3,7 +3,7 @@ import type { Context } from 'hono';
 import type { Db } from '../db/client.ts';
 import { staffMemberships, staffUsers, venues } from '../db/schema.ts';
 import { Problem } from '../http/problem.ts';
-import type { StaffRole, StaffUser } from '../shared/types.ts';
+import type { StaffPrefs, StaffRole, StaffUser } from '../shared/types.ts';
 import type { VerifyOwner } from './clerk.ts';
 
 export type OwnerDeps = { db: Db; verify: VerifyOwner | null; now: () => number };
@@ -61,6 +61,20 @@ export async function signedIn(c: Context, deps: OwnerDeps): Promise<SignedIn> {
   return { user, memberships };
 }
 
+// The app's own defaults (src/features/owner/screens/settings/useProfile.ts). A saved profile
+// only holds what the person changed; the reply always carries the full set.
+const DEFAULT_PREFS: StaffPrefs = {
+  language: 'en',
+  appearance: 'system',
+  soundForNewOrders: true,
+  notify: { order: true, call: true, bill: true, guest_note: true, review: true },
+};
+
+export function prefsOf(saved: unknown): StaffPrefs {
+  const p = (saved ?? {}) as Partial<StaffPrefs>;
+  return { ...DEFAULT_PREFS, ...p, notify: { ...DEFAULT_PREFS.notify, ...(p.notify ?? {}) } };
+}
+
 /** GET /me: the person and the venues they can manage. */
 export async function meOf(db: Db, who: SignedIn): Promise<StaffUser> {
   const ids = who.memberships.map((m) => m.venueId);
@@ -72,7 +86,7 @@ export async function meOf(db: Db, who: SignedIn): Promise<StaffUser> {
     phone: who.user.phone,
     email: who.user.email,
     photo: (who.user.photo as StaffUser['photo']) ?? null,
-    ...(who.user.prefs ? { prefs: who.user.prefs as StaffUser['prefs'] } : {}),
+    prefs: prefsOf(who.user.prefs),
     venues: who.memberships.map((m) => ({
       venueId: m.venueId,
       name: names.find((v) => v.id === m.venueId)?.name ?? '',

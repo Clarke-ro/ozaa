@@ -3493,3 +3493,31 @@ One list, many readers. The list is the same for everyone; the "read" ticks live
 **Try it yourself**
 
 In `ownerNotifications.test.ts`, have the kitchen mark everything read, then check the owner's unread count. It doesn't change.
+
+## 2026-11-17 · The last owner screens on the real server
+
+**What we built**
+
+The owner app's remaining screens now save to the real server:
+
+- **Staff take orders:** for a table, at the counter, or a phone pickup with the customer's details.
+- **Insights:** sales, top dishes, peak hours, visits to orders, guest mood, repeat guests.
+- **Business and locations:** the business profile, and adding a location (a new venue that starts unpublished, with your look and hours to edit).
+- **Scanner devices:** pair a door or counter phone with a 6-digit code, list devices, revoke one.
+- **Your profile:** name, email, photo, preferences. Saving one switch keeps the others.
+- **Deleting an account:** staff can delete theirs. An owner is sent to support, because an owner's account holds venues and tax records.
+
+It also fixes a bug: archiving a guest note used the wrong method (POST instead of PATCH), so the app's Archive button failed on the real server.
+
+**Files to look at**
+
+- `server/src/routes/ownerOrderEntry.ts`, `ownerBusiness.ts`, `me.ts`
+- `server/src/routes/ownerRemaining.test.ts`: one test per screen.
+
+**New idea: defaults at read time**
+
+A profile saves only what the person changed. The server fills in the rest from defaults every time it answers. A new setting added later works for everyone, without changing anyone's saved data.
+
+**Try it yourself**
+
+In `ownerRemaining.test.ts`, turn off the "order" notification in a profile. Then check that the other four switches still come back as true.

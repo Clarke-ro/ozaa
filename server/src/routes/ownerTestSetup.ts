@@ -67,6 +67,7 @@ export async function ownerSetup(options: { verify?: VerifyOwner | null } = {}) 
       return `user_clerk_${email.split('@')[0]}`;
     },
     revokeSessions: async (id) => void clerkCalls.push(`sign out ${id}`),
+    deleteUser: async (id) => void clerkCalls.push(`delete ${id}`),
   };
   const logs: Record<string, unknown>[] = [];
   const app = createApp({

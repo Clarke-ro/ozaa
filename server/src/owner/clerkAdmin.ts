@@ -6,6 +6,8 @@ export type ClerkAdmin = {
   ensureUser(input: { email: string; firstName: string }): Promise<string>;
   /** Signs them out on every device: each active session is revoked. */
   revokeSessions(clerkUserId: string): Promise<void>;
+  /** Removes their Clerk sign-in (account deletion). */
+  deleteUser(clerkUserId: string): Promise<void>;
 };
 
 /**
@@ -27,6 +29,9 @@ export function clerkAdmin(secretKey: string): ClerkAdmin {
     async revokeSessions(clerkUserId) {
       const sessions = await clerk.sessions.getSessionList({ userId: clerkUserId, status: 'active' });
       await Promise.all(sessions.data.map((session) => clerk.sessions.revokeSession(session.id)));
+    },
+    async deleteUser(clerkUserId) {
+      await clerk.users.deleteUser(clerkUserId);
     },
   };
 }

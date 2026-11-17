@@ -44,6 +44,8 @@ export function priceOrder(input: {
   body: Pick<CreateOrderRequest, 'lines' | 'promoCode' | 'fulfilment'>;
   tableCode: string | null;
   now: number;
+  /** Staff taking an order at the counter or by phone: no table and no customer details needed. */
+  counter?: boolean;
 }): PricedOrder {
   const { items, venue, body, tableCode } = input;
   if (body.lines.length === 0) throw new Problem(400, 'validation', 'Add at least one dish.');
@@ -84,6 +86,8 @@ export function priceOrder(input: {
   let online: Omit<PricedOrder, 'lines' | 'subtotalPesewas' | 'taxes' | 'promoDiscounts' | 'totalPesewas' | 'stock'>;
   if (tableCode) {
     online = { source: 'table', contact: null, deliveryAddress: null, deliveryFeePesewas: 0, etaMinutes: 12 };
+  } else if (input.counter && !body.fulfilment) {
+    online = { source: 'pickup', contact: null, deliveryAddress: null, deliveryFeePesewas: 0, etaMinutes: 15 };
   } else {
     if (!body.fulfilment) throw new Problem(400, 'missing_contact', 'Add your name and phone number.');
     const pin =
