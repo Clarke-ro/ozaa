@@ -136,7 +136,8 @@ export function httpGuestCalls({ client, headers, ok }: HttpContext) {
         client.POST('/venues/{venueSlug}/game/scores', {
           body,
           params: { path: { venueSlug: slug } },
-          headers: headers('loyalty'),
+          // The guest token proves the visit; the loyalty token, if any, lets a win earn a stamp.
+          headers: headers('guest', { withLoyalty: true }),
         }),
       ),
     async sendFeedback(body) {

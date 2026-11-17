@@ -47,7 +47,7 @@ export function createApp(deps: {
     cors({
       origin: deps.allowedOrigins,
       allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-      allowHeaders: ['Authorization', 'Content-Type', 'Idempotency-Key'],
+      allowHeaders: ['Authorization', 'Content-Type', 'Idempotency-Key', 'X-Loyalty-Token'],
     }),
   );
 
