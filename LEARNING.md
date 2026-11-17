@@ -3465,3 +3465,31 @@ The order and the promo's use count are saved together. Two guests racing for th
 **Try it yourself**
 
 In `ownerPromos.test.ts`, change `usageLimit` to 2 and place a third order. It's refused only on the third.
+
+## 2026-11-17 · Notifications on the real server
+
+**What we built**
+
+The bell in the owner app now shows real events from the last day: new orders, waiter calls, bill requests, guest notes and reviews. Each person has their own read state. The kitchen only sees orders, waiters also see calls and bills, and owners see everything.
+
+**How it works**
+
+```
+GET /owner/venues/{id}/notifications → built fresh from orders, calls, notes, reviews (last 24 h)
+POST …/notifications/read {ids}      → saved for this person only
+```
+
+The feed isn't stored. It's worked out from the same rows the queues use (the shared `notificationFeed`), so the bell and the orders board can never disagree. Only "who has read what" is saved.
+
+**Files to look at**
+
+- `server/src/routes/ownerNotifications.ts`
+- `src/lib/notificationFeed.ts`: the shared feed builder.
+
+**New idea: per-user state on shared data**
+
+One list, many readers. The list is the same for everyone; the "read" ticks live in a separate table keyed by person, so Kwesi reading a call doesn't hide it from Ama.
+
+**Try it yourself**
+
+In `ownerNotifications.test.ts`, have the kitchen mark everything read, then check the owner's unread count. It doesn't change.
