@@ -1,12 +1,15 @@
 import { Hono, type Context } from 'hono';
 import { and, eq, gte, inArray, lt, ne, notInArray, or } from 'drizzle-orm';
 import type { Db } from '../db/client.ts';
-import { diningTables, menuItems, orderLines, orders, visits, waiterCalls, writtenReviews } from '../db/schema.ts';
+import { diningTables, feedback, menuItems, orderLines, orders, visits, waiterCalls, writtenReviews } from '../db/schema.ts';
 import { orderFromRows } from '../orders/orderStore.ts';
 import { roleAt, ROLES, signedIn, type OwnerDeps } from '../owner/staff.ts';
 import { calendarDay, summarizeDay } from '../shared/daySummary.ts';
 import { deriveFloor } from '../shared/floorStatus.ts';
 import { previousWindow, salesReport } from '../shared/sales.ts';
+import { insightsReport, rangeWindow } from '../shared/insights.ts';
+import { loadLoyalty } from '../loyalty/store.ts';
+import { Problem } from '../http/problem.ts';
 import { tableLink } from '../shared/tableLink.ts';
 import type { Order, OwnerDashboard, SalesReport, StaffRole } from '../shared/types.ts';
 import { venueRowById } from '../venues/venueData.ts';
@@ -134,6 +137,48 @@ export function ownerDeskRoutes(deps: OwnerDeps & { siteUrl: string }) {
           : null,
     };
     return c.json(report);
+  });
+
+  /**
+   * Insights for a range: sales, top dishes, peak hours, the visit-to-order funnel, guest mood and
+   * repeat guests (loyalty members with two or more paid visits). The shared insightsReport.
+   */
+  app.get('/owner/venues/:venueId/insights', async (c) => {
+    const venue = await venueFor(c, ROLES.menu);
+    const range = (c.req.query('range') ?? '7d') as 'today' | '7d' | '30d' | '90d' | 'custom';
+    if (!['today', '7d', '30d', '90d', 'custom'].includes(range)) throw new Problem(400, 'validation', 'Pick a range.');
+    const now = deps.now();
+    const since = c.req.query('since');
+    const until = c.req.query('until');
+    if (range === 'custom' && (!since || !until)) throw new Problem(400, 'validation', 'Pick a start and end date.');
+    // A preset range runs up to and including this moment, so a visit made just now counts.
+    const span = range === 'custom' ? { since: since!, until: until! } : rangeWindow(range, now + 1, venue.timeZone);
+    const from = new Date(span.since);
+    const to = new Date(span.until);
+    const [orderList, visitRows, notes, loyalty] = await Promise.all([
+      ordersOf(db, venue.id, { since: from, until: to }),
+      db.select({ startedAt: visits.startedAt }).from(visits).where(and(eq(visits.venueId, venue.id), gte(visits.startedAt, from), lt(visits.startedAt, to))),
+      db.select({ sentiment: feedback.sentiment, createdAt: feedback.createdAt }).from(feedback).where(and(eq(feedback.venueId, venue.id), gte(feedback.createdAt, from), lt(feedback.createdAt, to))),
+      db.transaction((tx) => loadLoyalty(tx, venue.id, venue.currency, 'all')),
+    ]);
+    let visited = 0;
+    let repeat = 0;
+    for (const member of Object.values(loyalty.members)) {
+      const paidVisits = member.facts.filter((f) => f.kind === 'earn' && f.source.type === 'paid_visit' && Date.parse(f.at) >= from.getTime() && Date.parse(f.at) < to.getTime()).length;
+      if (paidVisits > 0) visited += 1;
+      if (paidVisits > 1) repeat += 1;
+    }
+    const report = insightsReport({
+      range,
+      since: span.since,
+      until: span.until,
+      timeZone: venue.timeZone,
+      orders: orderList,
+      visits: visitRows.map((v) => ({ startedAt: v.startedAt.toISOString() })),
+      feedback: notes.map((n) => ({ sentiment: n.sentiment, createdAt: n.createdAt.toISOString() })),
+      repeatGuests: { count: repeat, sharePercent: visited === 0 ? 0 : Math.round((repeat / visited) * 100) },
+    });
+    return c.json({ ...report, currency: venue.currency });
   });
 
   /**

@@ -42,7 +42,7 @@ test('a private note is scored for mood, hidden for two hours, then listed, sear
   const cold = notes.json.items.find((n: { sentiment: string }) => n.sentiment === 'negative');
   assert.equal((await call('GET', `/owner/venues/${mamas}/feedback?search=cold`, undefined, owner)).json.items.length, 1);
 
-  const archived = await call('POST', `/owner/venues/${mamas}/feedback/${cold.id}/archive`, { archived: true }, owner);
+  const archived = await call('PATCH', `/owner/venues/${mamas}/feedback/${cold.id}/archive`, { archived: true }, owner);
   expectContract('ownerArchiveFeedback', 200, archived.json);
   assert.equal((await list()).json.items.length, 1);
   assert.equal((await call('GET', `/owner/venues/${mamas}/feedback?state=archived`, undefined, owner)).json.items.length, 1);

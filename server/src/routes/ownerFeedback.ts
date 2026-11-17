@@ -74,7 +74,7 @@ export function ownerFeedbackRoutes(deps: OwnerDeps) {
     return c.json({ items: items.map(noteOf) });
   });
 
-  app.post('/owner/venues/:venueId/feedback/:feedbackId/archive', async (c) => {
+  app.patch('/owner/venues/:venueId/feedback/:feedbackId/archive', async (c) => {
     const venueId = c.req.param('venueId');
     await managerAt(c, venueId);
     const input = await body(c, z.object({ archived: z.boolean() }));
