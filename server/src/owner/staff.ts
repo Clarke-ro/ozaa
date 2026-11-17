@@ -92,6 +92,8 @@ export const ROLES = {
   markPaid: ['owner', 'manager', 'waiter'],
   moveOrder: ['owner', 'manager', 'waiter', 'kitchen'],
   menu: ['owner', 'manager'],
+  // Scanning cards, adding stamps and confirming reward codes at the counter.
+  loyaltyDesk: ['owner', 'manager', 'waiter', 'staff_scanner'],
 } satisfies Record<string, StaffRole[]>;
 
 /** The caller's role at this venue, if it is one of `allowed`; otherwise 403. */
