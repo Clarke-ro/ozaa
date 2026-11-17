@@ -12,6 +12,7 @@ import { I18nextProvider, useTranslation } from 'react-i18next';
 import i18n from '@/i18n';
 import { applyTextDirection, textDirection } from '@/i18n/direction';
 import { applySavedLanguage } from '@/features/venue';
+import { watchUncaughtErrors } from '@/lib/monitor';
 import { pausePollingInBackground } from '@/lib/queryLifecycle';
 import { shouldPersistQuery } from '@/lib/queryPersist';
 import { GestureRoot } from '@/ui/GestureRoot';
@@ -22,6 +23,8 @@ import { ThemeProvider, cravinsTheme } from '@/ui/theme';
 export { AppErrorBoundary as ErrorBoundary } from '@/ui/AppErrorBoundary';
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
+// Unexpected errors go to monitoring (web, real-server builds with a DSN only).
+watchUncaughtErrors();
 
 const STALE_MS = 30_000;
 const PERSIST_MAX_AGE_MS = 60 * 60 * 1000;

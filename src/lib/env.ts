@@ -32,6 +32,11 @@ const schema = z.object({
    * start page can offer the sample restaurants without ordering at a real venue. Empty: no link.
    */
   EXPO_PUBLIC_DEMO_URL: z._default(z.string(), ''),
+  /**
+   * Error monitoring (Sentry) for real-server web builds. A DSN only lets you send errors, so it
+   * is meant to be public. Empty: no reports.
+   */
+  EXPO_PUBLIC_SENTRY_DSN: z._default(z.string(), ''),
 });
 
 export type Env = z.infer<typeof schema>;
@@ -55,6 +60,7 @@ const fromBuild: Source = {
   EXPO_PUBLIC_SUPPORT_WHATSAPP: process.env.EXPO_PUBLIC_SUPPORT_WHATSAPP,
   EXPO_PUBLIC_DEMO_URL: process.env.EXPO_PUBLIC_DEMO_URL,
   EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY,
+  EXPO_PUBLIC_SENTRY_DSN: process.env.EXPO_PUBLIC_SENTRY_DSN,
 };
 
 const LOCAL = /^(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+)$/;

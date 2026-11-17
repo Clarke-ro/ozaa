@@ -15,6 +15,7 @@
   "dependencies": {
     "@clerk/backend": "^2.33.9",
     "@hono/node-server": "^2.1.6",
+    "@sentry/node": "^10.78.0",
     "drizzle-orm": "^0.45.4",
     "hono": "^4.13.17",
     "image-size": "^2.1.0",

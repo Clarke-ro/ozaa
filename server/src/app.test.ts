@@ -86,3 +86,23 @@ test('migrations need only the database address', () => {
   assert.equal(readDatabaseUrl({ DATABASE_URL: 'postgresql://u:p@localhost/c' }), 'postgresql://u:p@localhost/c');
   assert.throws(() => readDatabaseUrl({}), /DATABASE_URL is missing/);
 });
+
+test('unexpected errors go to monitoring; expected answers (a Problem) never do', async () => {
+  const reported: string[] = [];
+  const payments = paymentService({ paystackFor: async () => null, store: paymentStore(await testDb()), siteUrl: 'http://localhost:8081' });
+  const app = createApp({
+    payments,
+    allowedOrigins: [],
+    log: () => undefined,
+    ping: async () => {
+      throw new Error('boom');
+    },
+    report: (error) => reported.push(error.message),
+  });
+  app.get('/crash', () => {
+    throw new TypeError('x is undefined');
+  });
+  assert.equal((await app.request('/v1/crash')).status, 500);
+  assert.equal((await app.request('/v1/nowhere')).status, 404);
+  assert.deepEqual(reported, ['x is undefined']);
+});

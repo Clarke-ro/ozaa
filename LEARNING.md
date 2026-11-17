@@ -3745,3 +3745,32 @@ The app already checked for duplicate emails. But two invites at the exact same 
 **Try it yourself**
 
 In Supabase's SQL editor, run `explain select * from order_lines where order_id = 'x';` before and after the deploy. Look for "Index Scan" instead of "Seq Scan".
+
+## 2026-11-17 · Error monitoring that keeps guests' data private
+
+**What we built**
+
+Unexpected errors now go to Sentry, so we hear about a crash before a restaurant has to tell us. There are two Sentry projects: **cravins-api** (the server) and **cravins-web** (the web app).
+
+**How it works**
+
+```
+crash ─► scrub (drop headers, body, query, user, breadcrumbs) ─► Sentry
+```
+
+- **Server:** only unexpected errors are reported, never a normal answer like "wrong code".
+- **App:** Sentry's code is downloaded *only after the first error*, in its own 52 KB file. A guest on a normal visit downloads nothing extra.
+- **Demo:** sends nothing.
+
+**Files to look at**
+
+- `server/src/monitor.ts` and `src/lib/monitorScrub.ts`: the scrubbing, with tests that try to leak a phone, a token and an email.
+- `src/lib/monitor.ts`: the lazy loading.
+
+**New idea: lazy loading**
+
+`import('./sentryClient')` (with brackets) tells the bundler to put that code in a separate file and fetch it only when this line runs. The main bundle stayed exactly the same size: 295,204 bytes gzipped, against 295,208 before.
+
+**Try it yourself**
+
+Open Sentry (cravins-app.sentry.io) after something breaks. You'll see the error and the page path, but no names, phones or tokens.

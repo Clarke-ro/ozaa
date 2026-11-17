@@ -6,6 +6,7 @@ describe('readEnv', () => {
       EXPO_PUBLIC_API_MODE: 'mock',
       EXPO_PUBLIC_API_URL: 'http://localhost:4000/v1',
       EXPO_PUBLIC_MOCK_LATENCY_MS: 400,
+      EXPO_PUBLIC_SENTRY_DSN: '',
       EXPO_PUBLIC_MOCK_FAIL_RATE: 0,
       EXPO_PUBLIC_MOCK_FAST: '0',
       EXPO_PUBLIC_SITE_URL: 'https://cravins.app',
