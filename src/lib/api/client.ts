@@ -155,7 +155,7 @@ export type ApiClient = {
   ownerListStaff(venueId: string): Promise<{ items: StaffMember[] }>;
   ownerInviteStaff(
     venueId: string,
-    body: { phone: string; role: StaffRole; firstName: string },
+    body: { phone: string; role: StaffRole; firstName: string; email?: string },
   ): Promise<StaffMember>;
   ownerRevokeStaff(venueId: string, staffId: string): Promise<void>;
   /** Owner only. The owner's own role can't change, and nobody can be made owner (409). */

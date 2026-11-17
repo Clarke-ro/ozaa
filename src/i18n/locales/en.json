@@ -2007,6 +2007,7 @@
     "emptyBody": "Invite waiters and kitchen staff. They sign in with a code sent to their phone.",
     "needName": "Add their first name.",
     "needPhone": "Enter a phone number, like 024 123 4567.",
+    "needEmail": "Add the email their sign-in code goes to.",
     "invited": "Invite sent to {{name}}",
     "removed": "Removed from the team",
     "remove": "Remove {{name}}",

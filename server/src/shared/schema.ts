@@ -1328,7 +1328,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Clear someone's sign-in PIN. They sign in with an SMS code next time and set a new one.
+         * Clear someone's sign-in PIN. They sign in with a code next time and set a new one.
          * @description Owner only.
          */
         post: operations["ownerResetStaffPin"];
@@ -1348,7 +1348,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * End someone's shift by signing them out on every device (the server revokes their Clerk sessions). They sign in again with an SMS code.
+         * End someone's shift by signing them out on every device (the server revokes their Clerk sessions). They sign in again with a code.
          * @description Owner only. Signing out the owner is refused (409); they use Sign out in Settings.
          */
         post: operations["ownerSignOutStaff"];
@@ -4212,13 +4212,18 @@ export interface operations {
             content: {
                 "application/json": {
                     phone: components["schemas"]["GhanaPhone"];
+                    /**
+                     * Format: email
+                     * @description Where their sign-in code goes. Needed while staff sign in by email code (Clerk can't text Ghana numbers yet); without it they can only sign in once SMS works.
+                     */
+                    email?: string;
                     firstName: string;
                     role: components["schemas"]["StaffRole"];
                 };
             };
         };
         responses: {
-            /** @description Invited. The server also creates their Clerk sign-in for this number, so they can sign in with an SMS code. */
+            /** @description Invited. The server also creates their Clerk sign-in, so they can sign in with a code sent to their email (or, once Clerk can text Ghana numbers, their phone). */
             201: {
                 headers: {
                     [name: string]: unknown;
