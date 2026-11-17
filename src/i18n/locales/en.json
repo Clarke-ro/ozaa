@@ -888,7 +888,30 @@
     "scanToOrder": "Scan to order",
     "allTables": "All tables",
     "downloadOne": "Download {{name}}",
-    "previewLabel": "Preview of the card style, shown for the first table"
+    "previewLabel": "Preview of the card style, shown for the first table",
+    "scanOrTap": "Scan or tap to order",
+    "ctaTap": "Scan or tap your phone here to see the menu, call a waiter and pay",
+    "ctaTapNoPay": "Scan or tap your phone here to see the menu, order and call a waiter",
+    "tapCards": "Cards with an NFC tag",
+    "tapCardsHint": "Says “scan or tap” on the card. Stick an NFC tag on each card and write its table's link to it.",
+    "nfcOne": "Write {{name}} to an NFC tag",
+    "nfc": {
+      "title": "NFC tag for {{name}}",
+      "hold": "Tap Write tag, then hold the NFC tag to the back of your phone and keep it still.",
+      "written": "Done. Tap the tag with any phone to check it opens this table.",
+      "cancelled": "Stopped before a tag was written.",
+      "not_allowed": "Chrome wasn't allowed to use NFC. Allow NFC for this site, then try again.",
+      "unsupported": "This phone can't write NFC tags. Turn on NFC in Settings, or copy the link into an NFC app.",
+      "failed": "That tag couldn't be written. Try another tag, or hold it still for longer.",
+      "otherPhone": "Writing tags from this page needs Chrome on an Android phone. Or copy this link and write it with an NFC app, such as NFC Tools.",
+      "copyLink": "Copy link",
+      "copied": "Link copied",
+      "done": "Done",
+      "cancel": "Cancel",
+      "again": "Try again",
+      "start": "Write tag",
+      "waiting": "Hold the NFC tag to the back of your phone and keep it still."
+    }
   },
   "ownerFeedback": {
     "lead": "Private notes guests leave from the table. Only you and your managers see them.",
