@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { statusKey } from '@/features/orders/guestTimeline';
+import { statusKey } from '@/lib/orderTimeline';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { Order } from '@/lib/api/types';

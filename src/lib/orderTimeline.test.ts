@@ -1,4 +1,4 @@
-import { finishWord, statusKey, timelineSteps } from './guestTimeline';
+import { finishWord, statusKey, timelineSteps } from './orderTimeline';
 
 describe('timelineSteps', () => {
   it('ticks a step the moment staff mark it, and highlights the next one', () => {

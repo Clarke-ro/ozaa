@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { finishWord } from '@/features/orders/guestTimeline';
+import { finishWord } from '@/lib/orderTimeline';
 import { StyleSheet, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';

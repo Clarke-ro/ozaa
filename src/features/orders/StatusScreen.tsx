@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { statusKey } from './guestTimeline';
+import { statusKey } from '@/lib/orderTimeline';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
