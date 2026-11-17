@@ -3346,3 +3346,34 @@ A rate limit counts recent tries and says "wait" past a number. Without one, a b
 **Try it yourself**
 
 In `otp.test.ts`, change `PER_PHONE_PER_HOUR` to 2 in `otp.ts` and rerun the tests. Watch which test notices.
+
+## 2026-11-17 · The guest loyalty card on the real server
+
+**What we built**
+
+A guest who proved their phone by SMS can join a venue's loyalty card (consent recorded), see their stamps and rewards, open a reward code for staff, earn a stamp by winning the game, and leave, which deletes their card.
+
+**How it works**
+
+```
+PUT  /venues/{slug}/loyalty/me   join (consent + text version saved, Act 843)
+GET  /venues/{slug}/loyalty/me   the card: programme, stamps, history
+POST …/loyalty/me/redeem         a 6-letter code; only staff confirming it takes stamps off
+POST …/game/scores + X-Loyalty-Token → a win can add one stamp a day
+DELETE /venues/{slug}/loyalty/me leave: their card and history are deleted
+```
+
+The rules are the app's own (`src/features/loyalty/facts.ts`). The server loads one member, runs `apply`, and saves only what changed. The ledger only ever grows: stamps are never edited, a balance is always the sum of the facts.
+
+**Files to look at**
+
+- `server/src/loyalty/store.ts`: load, step, save.
+- `server/src/routes/loyalty.ts`: the guest routes.
+
+**New idea: an append-only ledger**
+
+Like a bank statement, nothing is overwritten. "4 stamps" is worked out from four "earn" lines. Mistakes are fixed by adding a line, so the history always explains the balance.
+
+**Try it yourself**
+
+In `loyalty.test.ts`, play the game three times in one day after joining. Only the first win adds a stamp: find the "once a day" rule in `facts.ts`.

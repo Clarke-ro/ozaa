@@ -30,6 +30,12 @@ const FILES = {
   'src/features/owner/floor/floorStatus.ts': 'floorStatus.ts',
   'src/lib/sales.ts': 'sales.ts',
   'src/lib/feedbackSummary.ts': 'feedbackSummary.ts',
+  'src/features/loyalty/factsTypes.ts': 'factsTypes.ts',
+  'src/features/loyalty/factsFold.ts': 'factsFold.ts',
+  'src/features/loyalty/factsParse.ts': 'factsParse.ts',
+  'src/features/loyalty/factsHistory.ts': 'factsHistory.ts',
+  'src/features/loyalty/factsWire.ts': 'factsWire.ts',
+  'src/features/loyalty/facts.ts': 'loyaltyFacts.ts',
   'src/lib/api/types.ts': 'types.ts',
   'src/lib/api/schema.ts': 'schema.ts',
 };
@@ -61,7 +67,7 @@ console.log(`server/src/shared: ${Object.keys(FILES).length} files`);
 const seed = path.join(root, 'server/seed');
 fs.rmSync(seed, { recursive: true, force: true });
 fs.mkdirSync(seed, { recursive: true });
-for (const name of ['venues', 'menus', 'offers', 'wifi']) {
+for (const name of ['venues', 'menus', 'offers', 'wifi', 'loyaltyCards']) {
   fs.copyFileSync(path.join(root, `api/fixtures/${name}.json`), path.join(seed, `${name}.json`));
 }
 console.log('server/seed: sample venues copied');
