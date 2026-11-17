@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
 import { nextOrderMove, type OrderStatus, type StaffRole } from '@/features/orders';
 import type { Order } from '@/lib/api/types';
-import { finishWord, statusKey } from '@/features/orders/guestTimeline';
+import { finishWord, statusKey } from '@/lib/orderTimeline';
 import { invalidateOwnerQueries } from '../../data/invalidateOwnerQueries';
 import { ownerKeys } from '../../data/keys';
 import { toast } from '../../kit';
