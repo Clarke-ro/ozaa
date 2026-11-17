@@ -60,9 +60,7 @@ export function FigureRow({
             accessibilityLabel={`${item.label}: ${item.value}`}
             style={[cardStyle(theme), styles.tile]}
           >
-            <FitText style={[styles.value, styles.tileValue]} min={16}>
-              {item.value}
-            </FitText>
+            <FitText style={[styles.value, styles.tileValue]}>{item.value}</FitText>
             <FitText style={[styles.tileLabel, { color: theme.muted }]}>
               {item.short ?? item.label}
             </FitText>

@@ -3,18 +3,19 @@ import { Platform, StyleSheet, type Text as NativeText } from 'react-native';
 import { fitFontSize } from './fitText';
 import { Text } from './Text';
 
-type Props = ComponentProps<typeof Text> & {
-  /** The smallest size it may shrink to, in px. Below that the line ends in "…". */
-  min?: number;
-};
+type Props = ComponentProps<typeof Text>;
+
+// On phones adjustsFontSizeToFit stops at this share of the size; low enough that every word fits.
+const NATIVE_MIN_SCALE = 0.3;
 
 /**
- * One line of text that shrinks to fit its box instead of wrapping: stat labels such as
- * "Pending orders" and big numbers in narrow phone tiles (Clarke, 2026-11-17).
+ * One line of text that shrinks to fit its box instead of wrapping or ending in "…": stat
+ * labels such as "Pending orders" and big numbers in narrow phone tiles. Every word always
+ * shows (Clarke, 2026-11-17).
  * Phones use React Native's own adjustsFontSizeToFit. Browsers ignore that prop, so on the web
  * this measures the words against their box and sets a smaller size itself.
  */
-export function FitText({ min = 10, style, children, ...rest }: Props) {
+export function FitText({ style, children, ...rest }: Props) {
   const flat = StyleSheet.flatten(style) ?? {};
   const base = typeof flat.fontSize === 'number' ? flat.fontSize : 14;
   const [size, setSize] = useState(base);
@@ -32,8 +33,9 @@ export function FitText({ min = 10, style, children, ...rest }: Props) {
     const drawn = range.getBoundingClientRect().width;
     const natural = (drawn * base) / size;
     const room = el.getBoundingClientRect().width;
-    const next = fitFontSize({ size: base, natural, available: room, min });
-    if (Math.abs(next - size) > 0.25) setSize(next);
+    const next = fitFontSize({ size: base, natural, available: room });
+    // Even a small step down matters: a fraction of a pixel too wide still cuts the line off.
+    if (next < size - 0.01 || next > size + 0.25) setSize(next);
   };
   // Measure again after each size change and when the words change.
   useLayoutEffect(measure);
@@ -46,7 +48,7 @@ export function FitText({ min = 10, style, children, ...rest }: Props) {
       ref={box}
       numberOfLines={1}
       adjustsFontSizeToFit
-      minimumFontScale={Math.min(1, min / base)}
+      minimumFontScale={NATIVE_MIN_SCALE}
       onLayout={(event) => {
         // A wider box (phone turned, window resized) starts again from the full size.
         const next = event.nativeEvent.layout.width;
