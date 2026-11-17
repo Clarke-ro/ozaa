@@ -1,3 +1,4 @@
+import { guestServices, type ServiceSetup } from '@/lib/guestServices';
 import { apply, blankVenue, featured, LOYALTY_PROBLEMS } from '../features/loyalty/facts';
 import type { Command, VenueLoyalty } from '../features/loyalty/facts';
 import { ApiError } from '@/lib/api/errors';
@@ -67,10 +68,12 @@ export function publicVenue(
   notices: StoreNotices | undefined,
   now: number,
   payment: PaymentSettings = defaultPaymentSettings(),
+  setup: ServiceSetup = { wifi: true, loyalty: true, offers: true },
 ): VenuePublic {
   return {
     ...venue,
-    services: venue.services.filter((service) => service.enabled),
+    // Switched on and set up (src/lib/guestServices.ts), the same rule as the server.
+    services: guestServices(venue.services, setup),
     // Like the server: guests get only what should show right now.
     notices: liveNotices(notices, now),
     // Guests learn how they can pay; never a key.
@@ -92,4 +95,13 @@ export function findOrder(world: World, orderId: string): LiveOrder {
 
 export function serviceSettings(venue: VenuePublic): ServiceSettings {
   return { services: venue.services, game: venue.game ?? { enabled: false, minScore: 15 } };
+}
+
+/** What a venue has set up in the demo, for which services guests see. */
+export function setupOf(world: World, venue: VenuePublic): ServiceSetup {
+  return {
+    wifi: Boolean(world.wifi[venue.slug]?.ssid),
+    loyalty: world.loyalty[venue.id]?.programme.enabled ?? false,
+    offers: (world.offers[venue.slug] ?? []).length > 0,
+  };
 }

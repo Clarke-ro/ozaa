@@ -1,3 +1,4 @@
+import { setupOf } from './worldLookups';
 import { quoteBill } from '../features/pay/quoteBill';
 import { passedFee } from '@/lib/paystackFee';
 import { pesewas } from '@/lib/brand';
@@ -20,6 +21,7 @@ export function mockGuestCalls(ctx: MockContext) {
         world.notices[found.slug],
         now(),
         world.paymentSettings[found.id],
+        setupOf(world, found),
       );
       const tag = etag(venue);
       if (call?.ifNoneMatch === tag) throw new ApiError(304, 'not_modified', 'Not modified');

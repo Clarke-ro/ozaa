@@ -377,6 +377,9 @@ a {
 }
 .navbar-toggle {
   display: none;
+  /* iPhone Safari: no 300 ms tap delay, no grey flash, and the tap always lands on the button. */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   align-items: center;
   justify-content: center;
   width: 48px;
@@ -415,6 +418,10 @@ a {
 
 /* Small-screen menu: the page dims and a white card springs down under the navbar, with big
    links and the two buttons side by side. */
+.navbar-toggle svg {
+  /* A tap on the drawn bars counts as a tap on the button (older Safari skipped those). */
+  pointer-events: none;
+}
 .navbar-toggle .toggle-close,
 .navbar-toggle[aria-expanded="true"] .toggle-open {
   display: none;
@@ -424,12 +431,19 @@ a {
 }
 .mobile-menu {
   position: fixed;
-  inset: 0;
+  /* The four sides, not "inset": iPhones before iOS 14.5 ignore "inset" and the menu opened at zero size. */
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 100;
 }
 .mobile-backdrop {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   border: 0;
   background: rgba(0, 0, 0, 0.5);
   opacity: 0;
