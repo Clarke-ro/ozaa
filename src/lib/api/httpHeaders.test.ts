@@ -33,3 +33,13 @@ test('without a loyalty card the score still goes with the guest token, never th
   expect(sent[0]?.get('Authorization')).toBe('Bearer gst.a');
   expect(sent[0]?.has('X-Loyalty-Token')).toBe(false);
 });
+
+test('an order carries the loyalty token beside the guest token, so paying for it can stamp the card', async () => {
+  const { api, sent } = clientWith({ guest: 'gst.a', access: 'owner', loyalty: 'lty.b' });
+  await api
+    .createOrder({ clientOrderId: '7b0f7f6e-1d1a-4c3e-9b1a-1a2b3c4d5e6f', lines: [] }, { idempotencyKey: 'k1' })
+    .catch(() => undefined);
+  expect(sent[0]?.get('Authorization')).toBe('Bearer gst.a');
+  expect(sent[0]?.get('X-Loyalty-Token')).toBe('lty.b');
+  expect(sent[0]?.get('Idempotency-Key')).toBe('k1');
+});

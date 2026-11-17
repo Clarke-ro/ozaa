@@ -27,7 +27,8 @@ export function httpGuestCalls({ client, headers, ok }: HttpContext) {
         client.POST('/orders', {
           body,
           params: { header: { 'Idempotency-Key': call.idempotencyKey ?? '' } },
-          headers: headers('guest', call),
+          // A paid order can earn a stamp: the loyalty token, if any, rides beside the guest token.
+          headers: headers('guest', { ...call, withLoyalty: true }),
         }),
       ),
     getOrder: (orderId, call) =>
