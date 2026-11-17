@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import type { ErrorBoundaryProps } from 'expo-router';
+import { reportError } from '@/lib/monitor';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { useAppFonts } from '@/theme/fonts';
@@ -17,6 +19,8 @@ export function AppErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   const theme = useTheme();
   // The layout that loads the fonts may be the part that crashed, so load them here too.
   useAppFonts();
+  // A crash that reached this screen is a bug: send it to monitoring (scrubbed, web only).
+  useEffect(() => reportError(error), [error]);
   return (
     <View style={[styles.page, { backgroundColor: theme.bg }]} accessibilityRole="alert">
       <Text variant="display-m">{t('errors.crashTitle')}</Text>

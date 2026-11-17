@@ -40,6 +40,8 @@ export function createApp(deps: {
   log: Log;
   /** Throws when the database doesn't answer. Used by the health check. */
   ping: () => Promise<void>;
+  /** Sends unexpected errors to monitoring (Sentry). Missing in tests and without a DSN. */
+  report?: (error: Error) => void;
 }) {
   const app = new Hono().basePath('/v1');
   // Any Problem thrown in a route becomes the contract's error shape; anything else is logged
@@ -47,6 +49,7 @@ export function createApp(deps: {
   app.onError((error, c) => {
     if (error instanceof Problem) return problemResponse(c, error);
     deps.log({ event: 'server_error', name: error.name });
+    deps.report?.(error);
     return c.json(
       { type: 'https://cravins.app/problems/server_error', title: 'Something went wrong.', status: 500, code: 'server_error' },
       500,

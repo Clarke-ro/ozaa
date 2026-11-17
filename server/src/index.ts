@@ -13,9 +13,17 @@ import { clerkVerifier } from './owner/clerk.ts';
 import { clerkAdmin } from './owner/clerkAdmin.ts';
 import { arkeselSender } from './sms/arkesel.ts';
 import { supabaseStorage } from './media/storage.ts';
+import { sentryReport } from './monitor.ts';
 
 const config = readConfig();
 const log = createLog();
+const report = config.SENTRY_DSN ? sentryReport(config.SENTRY_DSN, config.SENTRY_ENVIRONMENT) : undefined;
+// Errors outside a request (a timer, a forgotten promise) are reported too, then logged by name only.
+process.on('unhandledRejection', (reason) => {
+  const error = reason instanceof Error ? reason : new Error('Unhandled rejection');
+  log({ event: 'unhandled_rejection', name: error.name });
+  report?.(error);
+});
 const { db, close } = connect(config.DATABASE_URL);
 // Each payment is charged with the Paystack key of the venue whose bill it is.
 const venueKeys = venuePaystack({ db, key: encryptionKey(config.ENCRYPTION_KEY), client: (secret) => paystackClient(secret) });
@@ -53,6 +61,7 @@ const app = createApp({
   },
   allowedOrigins: config.ALLOWED_ORIGINS,
   log,
+  report,
   ping: async () => {
     await db.execute(sql`select 1`);
   },

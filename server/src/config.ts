@@ -35,6 +35,9 @@ const schema = z.object({
   SUPABASE_URL: z.url().optional(),
   SUPABASE_SECRET_KEY: z.string().min(20).optional(),
   MEDIA_BUCKET: z.string().default('media'),
+  // Error monitoring (Sentry). Off without it. A DSN only lets you send errors, so it isn't a secret.
+  SENTRY_DSN: z.url().optional(),
+  SENTRY_ENVIRONMENT: z.string().default('production'),
   // Arkesel SMS, for the codes guests get when joining loyalty. The sender ID must be approved in
   // Arkesel's dashboard. SMS_DAILY_LIMIT caps texts per day as a cost fuse.
   ARKESEL_API_KEY: z.string().min(8).optional(),
