@@ -8,6 +8,7 @@ import { GUEST_TTL_MS, readGuestToken, signGuestToken, type GuestClaims } from '
 import { body, Problem } from '../http/problem.ts';
 import { memberForOrder } from '../loyalty/paidOrder.ts';
 import { makeQuote } from '../orders/billQuote.ts';
+import { releaseExpiredHolds } from '../orders/orderInventory.ts';
 import { orderById, saveOrder } from '../orders/orderStore.ts';
 import { priceOrder } from '../orders/priceOrder.ts';
 import { pesewas } from '../shared/brand.ts';
@@ -133,6 +134,7 @@ export function guestRoutes(deps: GuestDeps) {
 
   app.get('/venues/:slug/menu', async (c) => {
     const row = await venueRowBySlug(db, c.req.param('slug'));
+    await releaseExpiredHolds(db, deps.now(), row.id);
     return c.json(await menuOf(db, row.id));
   });
 
@@ -153,6 +155,7 @@ export function guestRoutes(deps: GuestDeps) {
   app.post('/orders', async (c) => {
     const guest = guestOf(c, deps);
     if (!ordersPerVisit.hit(guest.sid)) throw new Problem(429, 'rate_limited', 'Too many orders at once. Ask a waiter if something is wrong.');
+    await releaseExpiredHolds(db, deps.now(), guest.venueId);
     const input = await body(c, orderBody);
     const row = await venueRowById(db, guest.venueId);
     const venue = await publicVenue(db, row, deps.now());
@@ -186,6 +189,7 @@ export function guestRoutes(deps: GuestDeps) {
   /** An order this guest may see: their own, or their table's while it is still open. */
   async function visibleOrder(c: Context) {
     const guest = guestOf(c, deps);
+    await releaseExpiredHolds(db, deps.now(), guest.venueId);
     const found = await orderById(db, c.req.param('orderId') ?? '');
     if (!found || !canSeeOrder(guest, found.row)) throw new Problem(404, 'order_not_found', 'We could not find that order.');
     return found;
@@ -195,6 +199,7 @@ export function guestRoutes(deps: GuestDeps) {
 
   app.post('/orders/:orderId/bill', async (c) => {
     const { order } = await visibleOrder(c);
+    if (order.status === 'cancelled') throw new Problem(409, 'quote_expired', 'This order was cancelled. Place it again.');
     const input = await body(c, quoteBody);
     // A custom tip arrives as a plain number; the shared rules want it marked as whole pesewas.
     const request = {

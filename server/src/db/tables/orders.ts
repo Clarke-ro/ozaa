@@ -53,11 +53,24 @@ export const orders = pgTable(
     updatedAt: at('updated_at').notNull().defaultNow(),
     readyAt: at('ready_at'),
     servedAt: at('served_at'),
+    // Set when this order's stock and promo use were given back. Null means it still holds them,
+    // so a second cancel can't give them back twice.
+    inventoryReleasedAt: at('inventory_released_at'),
   },
   (t) => [
     unique('orders_daily_number').on(t.venueId, t.businessDay, t.number),
     // The owner's Orders, Today and Floor screens poll a venue's recent orders every few seconds.
     index('orders_venue_created').on(t.venueId, t.createdAt),
+    // Finding unpaid guest orders whose hold has run out, per venue.
+    index('orders_guest_holds')
+      .on(t.venueId, t.createdAt)
+      .where(
+        sql`${t.status} = 'received' and ${t.paidPesewas} = 0 and ${t.inventoryReleasedAt} is null and (${t.guestSessionId} is null or ${t.guestSessionId} not like 'staff:%')`,
+      ),
+    // Counting the unpaid orders one visit still has waiting.
+    index('orders_session_open')
+      .on(t.guestSessionId)
+      .where(sql`${t.status} = 'received' and ${t.paidPesewas} = 0`),
     check(
       'orders_money',
       sql`${t.subtotalPesewas} >= 0 and ${t.totalPesewas} >= 0 and ${t.paidPesewas} between 0 and ${t.totalPesewas}`,
