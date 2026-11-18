@@ -7,9 +7,15 @@ import { roleAt, ROLES, signedIn, type OwnerDeps } from '../owner/staff.ts';
 import type { StaffRole } from '../shared/types.ts';
 import { venueRowById, type VenueProfile } from '../venues/venueData.ts';
 import { saveProfile, servicesOf, settingsOf, themeOf } from '../venues/venueSettings.ts';
+import {
+  hoursInput,
+  menuStyleInput,
+  noticeSettingsInput,
+  onlineOrderingInput,
+  socialsInput,
+} from '../venues/settingsInput.ts';
 
 const phone = z.string().regex(/^\+233\d{9}$/);
-const obj = z.record(z.string(), z.unknown());
 const service = z.object({
   id: z.string().min(1),
   section: z.string().min(1),
@@ -17,8 +23,7 @@ const service = z.object({
   subtitle: z.string().max(60).optional(),
 });
 
-// The fields the Customise screens send. Nested settings (hours, menu style, socials, online
-// ordering, notices) are saved as the app sends them; the app's own forms check their parts.
+// The fields the Customise screens send. Nested settings are checked in settingsInput.ts.
 const patchBody = z
   .object({
     name: z.string().trim().min(1).max(60),
@@ -31,12 +36,12 @@ const patchBody = z
     googleReviewUrl: z.url({ protocol: /^https$/ }).nullable(),
     published: z.boolean(),
     languages: z.array(z.string().min(2).max(5)).max(10),
-    hours: obj,
+    hours: hoursInput,
     location: z.object({ label: z.string().max(120).optional(), lat: z.number().min(-90).max(90).optional(), lng: z.number().min(-180).max(180).optional() }),
-    menuStyle: obj,
-    socials: obj,
-    onlineOrdering: obj,
-    noticeSettings: obj,
+    menuStyle: menuStyleInput,
+    socials: socialsInput,
+    onlineOrdering: onlineOrderingInput,
+    noticeSettings: noticeSettingsInput,
     stylePreset: z.enum(['default', 'classic', 'editorial', 'modern']),
     buttonTint: z.enum(['auto', 'light', 'dark']),
     buttonOrder: z.array(z.string()).max(20),

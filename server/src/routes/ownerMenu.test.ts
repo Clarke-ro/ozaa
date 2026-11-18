@@ -1,6 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
+import { eq } from 'drizzle-orm';
+import { menuCategories, menuItems, staffMemberships, staffUsers } from '../db/schema.ts';
 import { expectContract } from '../contract/contract.ts';
 import { as, KITCHEN, OWNER, ownerSetup } from './ownerTestSetup.ts';
 
@@ -55,4 +57,70 @@ test('dishes: add, edit price and stock, sell out, hide and delete; guests see t
   assert.equal((await call('DELETE', `${base}/${id}`, undefined, owner)).status, 204);
   assert.equal(await guestMenu(), undefined);
   assert.equal((await call('PATCH', `${base}/${id}`, { pricePesewas: 1 }, owner)).status, 404);
+});
+
+test('add-on prices are whole pesewas and cannot be negative', async () => {
+  const { call, mamas } = await ownerSetup();
+  const section = (await call('GET', `/owner/venues/${mamas}/menu/categories`, undefined, owner)).json.items[0];
+  const group = {
+    id: 'mod_spice',
+    name: { en: 'Spice' },
+    min: 0,
+    max: 1,
+    options: [{ id: 'opt_mild', name: { en: 'Mild' }, pricePesewas: 0 }],
+  };
+  const made = await call('POST', `/owner/venues/${mamas}/menu/items`, { categoryId: section.id, name: { en: 'Kelewele' }, pricePesewas: 1500, modifierGroups: [group] }, owner);
+  assert.equal(made.status, 201);
+  assert.equal(made.json.modifierGroups[0].options[0].pricePesewas, 0);
+  const bad = await call(
+    'PATCH',
+    `/owner/venues/${mamas}/menu/items/${made.json.id}`,
+    { modifierGroups: [{ ...group, options: [{ id: 'opt_hot', name: { en: 'Hot' }, pricePesewas: -50 }] }] },
+    owner,
+  );
+  assert.equal(bad.status, 400);
+  const saved = (await call('GET', '/venues/mamas-kitchen/menu')).json.items.find((item: { id: string }) => item.id === made.json.id);
+  assert.equal(saved.modifierGroups[0].options[0].pricePesewas, 0);
+});
+
+test("a manager cannot delete or reveal another venue's section", async () => {
+  const { call, db, mamas } = await ownerSetup();
+  await db.insert(staffUsers).values({ id: 'usr_manager', phone: '+233200000004', firstName: 'Kojo', clerkUserId: 'user_manager' });
+  await db.insert(staffMemberships).values({ id: 'mem_usr_manager', venueId: mamas, userId: 'usr_manager', role: 'manager', status: 'active' });
+  const manager = as('user_manager', '+233200000004');
+  const beanMenu = (await call('GET', '/venues/bean-there/menu')).json;
+  const bean = beanMenu.venueId as string;
+  const foreignId = beanMenu.categories.find((section: { id: string }) => beanMenu.items.some((item: { categoryId: string }) => item.categoryId === section.id)).id as string;
+  const before = await db.select().from(menuItems).where(eq(menuItems.categoryId, foreignId));
+
+  // A live section elsewhere used to answer 409, which told the caller it had dishes.
+  const live = await call('DELETE', `/owner/venues/${mamas}/menu/categories/${foreignId}`, undefined, manager);
+  assert.equal(live.status, 204);
+  assert.equal(live.json, null);
+  const [section] = await db.select().from(menuCategories).where(eq(menuCategories.id, foreignId));
+  assert.equal(section?.venueId, bean);
+  const after = await db.select().from(menuItems).where(eq(menuItems.categoryId, foreignId));
+  assert.equal(after.length, before.length);
+
+  // An empty section elsewhere, including dishes already taken off the menu, stays put.
+  const made = await call('POST', `/owner/venues/${bean}/menu/categories`, { name: { en: 'Specials' }, kind: 'food' }, owner);
+  const dish = await call('POST', `/owner/venues/${bean}/menu/items`, { categoryId: made.json.id, name: { en: 'Gone' }, pricePesewas: 100 }, owner);
+  assert.equal((await call('DELETE', `/owner/venues/${bean}/menu/items/${dish.json.id}`, undefined, owner)).status, 204);
+  const attack = await call('DELETE', `/owner/venues/${mamas}/menu/categories/${made.json.id}`, undefined, manager);
+  assert.equal(attack.status, 204);
+  const [keptSection] = await db.select().from(menuCategories).where(eq(menuCategories.id, made.json.id));
+  const [keptDish] = await db.select().from(menuItems).where(eq(menuItems.id, dish.json.id));
+  assert.equal(keptSection?.venueId, bean);
+  assert.ok(keptDish?.deletedAt);
+
+  // Their own empty section still deletes, and another venue's dish does not.
+  const own = await call('POST', `/owner/venues/${mamas}/menu/categories`, { name: { en: 'Tonight' }, kind: 'food' }, manager);
+  assert.equal((await call('DELETE', `/owner/venues/${mamas}/menu/categories/${own.json.id}`, undefined, manager)).status, 204);
+  const [gone] = await db.select().from(menuCategories).where(eq(menuCategories.id, own.json.id));
+  assert.equal(gone, undefined);
+  const otherDish = beanMenu.items[0];
+  assert.equal((await call('DELETE', `/owner/venues/${mamas}/menu/items/${otherDish.id}`, undefined, manager)).status, 204);
+  assert.equal((await call('PATCH', `/owner/venues/${mamas}/menu/items/${otherDish.id}`, { pricePesewas: 1 }, manager)).status, 404);
+  const still = (await call('GET', '/venues/bean-there/menu')).json.items.find((item: { id: string }) => item.id === otherDish.id);
+  assert.equal(still.pricePesewas, otherDish.pricePesewas);
 });
