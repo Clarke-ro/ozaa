@@ -73,27 +73,25 @@ export function FloorScreen() {
     enabled: Boolean(venueId),
     refetchInterval: POLL_MS.owner,
   });
-  // Polled with the floor: a table's details show its bill only once the order is here, so a
-  // table that has just ordered must not open with "No open bill".
-  const orders = useQuery({
-    queryKey: ownerKeys.orders(venueId),
-    queryFn: () => api.ownerListOrders(venueId),
-    enabled: Boolean(venueId),
-    refetchInterval: POLL_MS.owner,
-  });
 
   const items = floor.data?.items ?? [];
   const counts = floorFilterCounts(items);
-  const orderOf = (table: FloorTable) =>
-    orders.data?.items.find((item) => item.id === table.orderId) ?? null;
+  const table = items.find((item) => item.id === picked || item.code === picked) ?? null;
+  // The sheet asks for this table's order only, once the table is open. The floor itself
+  // already carries the amount, so the room does not download every order.
+  const billQuery = useQuery({
+    queryKey: ownerKeys.order(venueId, table?.orderId ?? ''),
+    queryFn: () => api.ownerGetOrder(table?.orderId ?? ''),
+    enabled: Boolean(venueId && table?.orderId),
+    refetchInterval: POLL_MS.owner,
+  });
+  const bill = billQuery.data ?? null;
   // How long the table has been like this, from the server: since the call, or since the order moved.
   const minutesOf = (item: FloorTable) => {
     if (item.since) return ticketAge(item.since, now).minutes;
-    const order = orderOf(item);
-    return order ? ticketAge(order.createdAt, now).minutes : null;
+    if (bill && item.orderId === bill.id) return ticketAge(bill.createdAt, now).minutes;
+    return null;
   };
-  const table = items.find((item) => item.id === picked || item.code === picked) ?? null;
-  const bill = table ? orderOf(table) : null;
   const currency = venue.data?.currency ?? DEFAULT_CURRENCY;
   const mayTakePay = role === 'owner' || role === 'manager' || role === 'waiter';
 
@@ -110,13 +108,22 @@ export function FloorScreen() {
         onPress: () => actions.answerCall(id, next),
       };
     }
-    const order = orderOf(item);
-    if (item.status === 'waiting_to_pay' && order && mayTakePay) {
+    if (item.status === 'waiting_to_pay' && item.orderId && mayTakePay) {
+      const id = item.orderId;
       return {
         label: t('ownerOrders.markPaid.open'),
         busy: false,
         tint: 'bill' as const,
-        onPress: () => setPaying(order),
+        onPress: () => {
+          if (bill?.id === id) {
+            setPaying(bill);
+            return;
+          }
+          void api
+            .ownerGetOrder(id)
+            .then(setPaying)
+            .catch(() => undefined);
+        },
       };
     }
     return undefined;
@@ -217,7 +224,9 @@ export function FloorScreen() {
           </View>
         )}
       </DeskWait>
-      {table ? <TableDetail table={table} {...detail} onClose={() => setPicked(null)} /> : null}
+      {table && (!table.orderId || bill || billQuery.isError) ? (
+        <TableDetail table={table} {...detail} onClose={() => setPicked(null)} />
+      ) : null}
       {paying ? (
         <MarkPaidSheet
           order={paying}

@@ -60,6 +60,11 @@ test('accepting a new order lowers the Orders badge, then Start cooking shows', 
   await expect.poll(() => badge(page, 'Orders')).toBeLessThan(before);
   // An accepted ticket stays under New, with Start cooking as its next step.
   await expect(page.getByRole('button', { name: 'Start cooking', exact: true }).first()).toBeVisible();
+  // Opening one ticket loads that order on its own page, not the whole list.
+  await page.getByRole('button', { name: /, #\d+/ }).first().click();
+  await expect(page).toHaveURL(/\/owner\/orders\/ord_/);
+  await expect(page.getByRole('heading', { level: 1, name: /#\d+/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Mark paid', exact: true })).toBeVisible();
 });
 
 test('switching location changes the whole dashboard', async ({ page }) => {

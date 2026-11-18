@@ -1,4 +1,5 @@
 import { imageSize } from 'image-size';
+import { isTimeout, outboundSignal } from '../http/outbound.ts';
 
 /** Where photo files live. The real one is Supabase Storage; tests pass a small fake. */
 export type MediaStorage = {
@@ -24,15 +25,28 @@ export function supabaseStorage(options: {
   secretKey: string;
   bucket: string;
   fetchFn?: typeof fetch;
+  timeoutMs?: number;
 }): MediaStorage {
   const base = `${options.url.replace(/\/+$/, '')}/storage/v1`;
   const fetchFn = options.fetchFn ?? fetch;
   const auth = { apikey: options.secretKey, Authorization: `Bearer ${options.secretKey}` };
   const publicUrl = (path: string) => `${base}/object/public/${options.bucket}/${path}`;
+  const call = async (url: string, init: RequestInit) => {
+    try {
+      return await fetchFn(url, { ...init, signal: outboundSignal(options.timeoutMs) });
+    } catch (error) {
+      if (isTimeout(error)) {
+        const timeout = new Error('Storage took too long');
+        timeout.name = 'UpstreamTimeout';
+        throw timeout;
+      }
+      throw error;
+    }
+  };
 
   return {
     async signUpload(path) {
-      const res = await fetchFn(`${base}/object/upload/sign/${options.bucket}/${path}`, {
+      const res = await call(`${base}/object/upload/sign/${options.bucket}/${path}`, {
         method: 'POST',
         headers: { ...auth, 'Content-Type': 'application/json' },
         body: '{}',
@@ -43,7 +57,7 @@ export function supabaseStorage(options: {
     },
     publicUrl,
     async measure(path) {
-      const res = await fetchFn(publicUrl(path), { headers: { Range: `bytes=0-${HEAD_BYTES - 1}` } });
+      const res = await call(publicUrl(path), { headers: { Range: `bytes=0-${HEAD_BYTES - 1}` } });
       if (!res.ok) return null;
       try {
         const size = imageSize(new Uint8Array(await res.arrayBuffer()));

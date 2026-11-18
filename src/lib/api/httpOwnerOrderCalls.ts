@@ -7,7 +7,22 @@ export function httpOwnerOrderCalls({ client, headers, ok }: HttpContext) {
     ownerListOrders: (venueId, filter) =>
       ok(
         client.GET('/owner/venues/{venueId}/orders', {
-          params: { path: { venueId }, query: { since: filter?.since, until: filter?.until } },
+          params: {
+            path: { venueId },
+            query: {
+              since: filter?.since,
+              until: filter?.until,
+              updatedSince: filter?.updatedSince,
+              ...(filter?.live ? { live: true } : {}),
+            },
+          },
+          headers: headers('access'),
+        }),
+      ),
+    ownerGetOrder: (orderId) =>
+      ok(
+        client.GET('/owner/orders/{orderId}', {
+          params: { path: { orderId } },
           headers: headers('access'),
         }),
       ),
