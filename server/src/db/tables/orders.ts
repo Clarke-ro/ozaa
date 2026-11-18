@@ -49,6 +49,13 @@ export const orders = pgTable(
       onDelete: 'set null',
     }),
     createdByStaffId: text('created_by_staff_id'),
+    // Who marked the bill paid by hand (cash, card machine, transfer, MoMo), and when.
+    // Null when the guest paid online, or when the order was paid before this was recorded.
+    // A membership, not a user: the same person can work at more than one venue.
+    paidByMembershipId: text('paid_by_membership_id'),
+    paidAt: at('paid_at'),
+    // Who cancelled it. Cancel is the last change, so updatedAt is that moment.
+    cancelledByMembershipId: text('cancelled_by_membership_id'),
     createdAt: at('created_at').notNull().defaultNow(),
     updatedAt: at('updated_at').notNull().defaultNow(),
     readyAt: at('ready_at'),
