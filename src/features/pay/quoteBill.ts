@@ -1,8 +1,12 @@
-import { pesewas, type Pesewas } from '@/lib/brand';
+import { isPesewas, pesewas, type Pesewas } from '@/lib/brand';
 import { percentOf } from '@/lib/money';
 
 export type BillLine = { id: string; totalPesewas: Pesewas; paid: boolean };
 export type TipChoice = { percent?: 0 | 5 | 10 | 15; customPesewas?: Pesewas };
+
+/** GHS 10,000. A custom tip has no share to scale with, and the quote is a 32-bit integer column. */
+export const MAX_CUSTOM_TIP_PESEWAS = 1_000_000;
+const SQL_INT_MAX = 2_147_483_647;
 export type BillMode = 'whole' | 'equal' | 'items';
 
 export type BillRequest = {
@@ -67,13 +71,20 @@ export function quoteBill(bill: Bill, request: BillRequest): BillShare {
     }
   }
   if (share > remaining) share = remaining;
+  const custom = request.tip?.customPesewas;
   const tip =
-    request.tip?.customPesewas !== undefined
-      ? request.tip.customPesewas
-      : percentOf(pesewas(share), request.tip?.percent ?? 0);
+    custom !== undefined ? custom : percentOf(pesewas(share), request.tip?.percent ?? 0);
+  // Percent tips are already a fraction of this share. A typed amount is not, so it stops at
+  // GHS 10,000, and either kind is refused when the quote would not fit the integer column.
+  if (custom !== undefined && (!Number.isInteger(custom) || custom < 0 || custom > MAX_CUSTOM_TIP_PESEWAS)) {
+    throw new BillError('tip_too_high');
+  }
+  // pesewas() refuses anything above GHS 1,000,000, and the column refuses anything above
+  // a signed 32-bit integer. Either one used to come back as a 500.
+  if (!isPesewas(tip) || !isPesewas(share + tip) || share + tip > SQL_INT_MAX) throw new BillError('tip_too_high');
   return {
     sharePesewas: pesewas(share),
-    tipPesewas: tip,
+    tipPesewas: pesewas(tip),
     totalPesewas: pesewas(share + tip),
     remainingAfterPesewas: pesewas(remaining - share),
   };

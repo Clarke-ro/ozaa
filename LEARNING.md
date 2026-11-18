@@ -4,6 +4,39 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-18 · Guests can't cheapen a delivery, stamp, or flood the manager
+
+**What we built**
+
+The server now checks five things a phone used to be able to invent. A delivery fee is the far edge of the venue's zone. A game stamp needs a paid order. A photo has to be a real jpeg, png, or webp under 5 MB. A review needs an order, one per order. A typed tip stops at GHS 10,000.
+
+**How it works**
+
+```
+delivery pin inside the zone? → charge maxDistanceKm, not the pin
+game score looks possible? → save it → stamp only if this card paid in the last day
+photo attached → read the bytes → wrong file is deleted
+review → this visit's order, and that order already reviewed? return the same one
+custom tip over GHS 10,000 → 400, not a crash
+```
+
+**Files to look at**
+
+- `src/lib/onlineOrdering.ts`: the zone check. The server copy is generated from this file.
+- `server/src/routes/guestExtras.ts`: reviews, notes, and game stamps.
+- `server/src/media/storage.ts`: what a signed upload is allowed to contain.
+- `src/features/pay/quoteBill.ts`: the tip cap.
+
+**New idea: the phone is not a witness**
+
+The app can show a fee or a score before the server answers. Anyone can send a different number. The server has to decide from something the phone cannot edit, such as the venue's own zone, a paid order, or the bytes in the file.
+
+**Try it yourself**
+
+In `src/lib/onlineOrdering.test.ts`, change the pin to the venue's own coordinates. The fee should stay the zone-edge amount. Run `npx jest src/lib/onlineOrdering.test.ts`.
+
+---
+
 ## 2026-11-16 · One Payment step, and doors that stay shut
 
 **What we built**

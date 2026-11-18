@@ -6,6 +6,7 @@ import * as Crypto from 'expo-crypto';
 import { useTranslation } from 'react-i18next';
 import { CircleCheck, Star } from 'lucide-react-native';
 import { api } from '@/lib/api';
+import { toMessageKey } from '@/lib/api/errors';
 import { useVenue } from '@/features/venue';
 import { Button } from '@/ui/Button';
 import { PageHeader } from '@/ui/PageHeader';
@@ -24,6 +25,7 @@ export function ReviewScreen({ slug }: { slug: string }) {
   const router = useRouter();
   // Back to this guest's own home: their table, or the online menu.
   const tableCode = useGuestSession((state) => (state.slug === slug ? state.tableCode : null));
+  const orderId = useGuestSession((state) => (state.slug === slug ? state.orderId : null));
   const venue = useVenue(slug);
   // Nothing is chosen for the guest: a pre-filled rating would nudge the score.
   const [stars, setStars] = useState(0);
@@ -35,7 +37,12 @@ export function ReviewScreen({ slug }: { slug: string }) {
   const post = useMutation({
     mutationFn: () =>
       api.createReview(
-        { stars, highlights: picked, text: text.trim() || undefined },
+        {
+          stars,
+          highlights: picked,
+          text: text.trim() || undefined,
+          ...(orderId ? { orderId } : {}),
+        },
         { idempotencyKey: key },
       ),
   });
@@ -135,7 +142,7 @@ export function ReviewScreen({ slug }: { slug: string }) {
         />
         {post.isError ? (
           <Text variant="body" accessibilityLiveRegion="polite" style={{ color: theme.error }}>
-            {t('review.failed')}
+            {t(toMessageKey(post.error))}
           </Text>
         ) : null}
         <Button

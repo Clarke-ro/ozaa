@@ -12,17 +12,42 @@ async function setup() {
   return { ...app, guest: { Authorization: `Bearer ${token}` } };
 }
 
+async function placeOrder(call: Awaited<ReturnType<typeof setup>>['call'], guest: { Authorization: string }) {
+  const dish = (await call('GET', '/venues/mamas-kitchen/menu')).json.items[0];
+  const made = await call('POST', '/orders', { clientOrderId: randomUUID(), lines: [{ menuItemId: dish.id, quantity: 1 }] }, guest);
+  assert.equal(made.status, 201);
+  return made.json.id as string;
+}
+
 test('a review reaches the owner with the same thank-you for any stars; the owner can reply', async () => {
   const { call, mamas, guest } = await setup();
-  for (const stars of [1, 5]) {
-    const made = await call('POST', '/reviews', { stars, highlights: ['food'], text: 'Jollof!' }, guest);
-    expectContract('createReview', 201, made.json);
-    assert.equal(made.json.googleReviewUrl, null);
+  const firstOrder = await placeOrder(call, guest);
+  const secondOrder = await placeOrder(call, guest);
+  const made = [];
+  for (const [stars, orderId] of [[1, firstOrder], [5, secondOrder]] as const) {
+    const review = await call('POST', '/reviews', { stars, highlights: ['food'], text: 'Jollof!', orderId }, guest);
+    expectContract('createReview', 201, review.json);
+    assert.equal(review.json.googleReviewUrl, null);
+    made.push(review.json.id);
   }
+  // One review per order. A retry returns the first one and does not add another.
+  const again = await call('POST', '/reviews', { stars: 1, orderId: firstOrder }, guest);
+  assert.equal(again.status, 201);
+  assert.equal(again.json.id, made[0]);
+  // No order yet: nothing to review. An order id from somewhere else is the same answer.
+  const fresh = (await call('POST', '/guest-sessions', { venueSlug: 'mamas-kitchen', tableCode: '5' })).json.guestToken;
+  const none = await call('POST', '/reviews', { stars: 4 }, { Authorization: `Bearer ${fresh}` });
+  assert.equal(none.status, 422);
+  assert.equal(none.json.code, 'review_needs_order');
+  assert.equal((await call('POST', '/reviews', { stars: 4, orderId: firstOrder }, { Authorization: `Bearer ${fresh}` })).json.code, 'review_needs_order');
+  // An older app sends no order id. The visit's latest order is used.
+  await placeOrder(call, guest);
+  const inferred = await call('POST', '/reviews', { stars: 4, text: 'No id sent' }, guest);
+  assert.equal(inferred.status, 201);
   assert.equal((await call('POST', '/reviews', { stars: 6 }, guest)).status, 400);
   const list = await call('GET', `/owner/venues/${mamas}/written-reviews`, undefined, owner);
   expectContract('ownerListWrittenReviews', 200, list.json);
-  assert.equal(list.json.items.length, 2);
+  assert.equal(list.json.items.length, 3);
   assert.equal((await call('GET', `/owner/venues/${mamas}/written-reviews`, undefined, as('user_kitchen', KITCHEN))).status, 403);
   const replied = await call('POST', `/owner/written-reviews/${list.json.items[0].id}/reply`, { text: 'Thank you, come again!' }, owner);
   expectContract('ownerReplyToReview', 200, replied.json);
@@ -53,6 +78,16 @@ test('a private note is scored for mood, hidden for two hours, then listed, sear
   assert.match(answer.json.reply, /cold/);
 });
 
+test('a visit can leave a few notes, and then no more', async () => {
+  const { call, guest } = await setup();
+  for (let i = 0; i < 3; i += 1) {
+    assert.equal((await call('POST', '/feedback', { message: `Note number ${i} from the table` }, guest)).status, 201);
+  }
+  const extra = await call('POST', '/feedback', { message: 'And another note on top of those' }, guest);
+  assert.equal(extra.status, 429);
+  assert.equal(extra.json.code, 'feedback_limit');
+});
+
 test('the game: scores rank this week, impossible ones are refused, the board shows the best per nickname', async () => {
   const { call, guest } = await setup();
   const play = (score: number, nickname?: string, durationMs = 60_000) =>
@@ -66,6 +101,9 @@ test('the game: scores rank this week, impossible ones are refused, the board sh
   await play(30);
   const fast = await play(40, 'Cheat', 1000);
   expectContract('submitScore', 422, fast.json);
+  const slow = await play(1, 'Cheat', 13 * 60 * 60 * 1000);
+  assert.equal(slow.status, 422);
+  assert.equal(slow.json.code, 'score_not_possible');
 
   const board = await call('GET', '/venues/mamas-kitchen/game/leaderboard');
   expectContract('getLeaderboard', 200, board.json);

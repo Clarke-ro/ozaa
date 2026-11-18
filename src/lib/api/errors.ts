@@ -40,6 +40,8 @@ export const MESSAGES: Record<string, string> = {
   not_modified: 'errors.notModified',
   unauthorized: 'errors.unauthorized',
   bad_code: 'errors.badCode',
+  review_needs_order: 'review.needsOrder',
+  feedback_limit: 'simple.feedbackLimit',
 };
 
 export function toMessageKey(error: unknown): string {

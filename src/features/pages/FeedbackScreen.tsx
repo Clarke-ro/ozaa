@@ -6,6 +6,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { CircleCheck } from 'lucide-react-native';
 import { api } from '@/lib/api';
+import { toMessageKey } from '@/lib/api/errors';
 import { asGhanaPhone, parsePhone } from '@/lib/phone';
 import { useVenue } from '@/features/venue';
 import { Button } from '@/ui/Button';
@@ -129,7 +130,7 @@ export function FeedbackScreen({ slug }: { slug: string }) {
         ) : null}
         {send.isError ? (
           <Text variant="body" style={{ color: theme.error }}>
-            {t('review.failed')}
+            {t(toMessageKey(send.error))}
           </Text>
         ) : null}
         <Button

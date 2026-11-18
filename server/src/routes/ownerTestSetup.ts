@@ -56,7 +56,10 @@ export async function ownerSetup(options: { verify?: VerifyOwner | null } = {}) 
   const storage: MediaStorage = {
     signUpload: async (path) => `https://storage.test/upload/${path}?token=t`,
     publicUrl: (path) => `https://storage.test/public/${path}`,
-    measure: async (path) => (arrived.has(path) ? { width: 800, height: 600 } : null),
+    inspect: async (path) => (arrived.has(path) ? { ok: true, width: 800, height: 600 } : { ok: false, reason: 'missing' }),
+    remove: async (path) => {
+      arrived.delete(path);
+    },
   };
   const upload = (uploadUrl: string) => arrived.add(new URL(uploadUrl).pathname.replace('/upload/', ''));
   // Clerk's admin side: remembers the users it made and the sign-outs it was asked for.

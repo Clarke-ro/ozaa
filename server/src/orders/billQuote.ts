@@ -30,7 +30,10 @@ export async function makeQuote(
       request,
     );
   } catch (error) {
-    if (error instanceof BillError) throw new Problem(400, error.code, 'Check how you want to split the bill.');
+    if (error instanceof BillError) {
+      const detail = error.code === 'tip_too_high' ? 'That tip is above the limit.' : 'Check how you want to split the bill.';
+      throw new Problem(400, error.code, detail);
+    }
     throw error;
   }
   if (share.sharePesewas <= 0) throw new Problem(409, 'nothing_to_pay', 'This bill is already paid.');

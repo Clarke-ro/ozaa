@@ -43,6 +43,13 @@
       "when": 1794928956009,
       "tag": "0005_indexes_and_integrity",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794995727852,
+      "tag": "0006_guest_limits",
+      "breakpoints": true
     }
   ]
 }
