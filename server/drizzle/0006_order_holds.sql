@@ -1,0 +1,3 @@
+ALTER TABLE "orders" ADD COLUMN "inventory_released_at" timestamp with time zone;--> statement-breakpoint
+CREATE INDEX "orders_guest_holds" ON "orders" USING btree ("venue_id","created_at") WHERE "orders"."status" = 'received' and "orders"."paid_pesewas" = 0 and "orders"."inventory_released_at" is null and ("orders"."guest_session_id" is null or "orders"."guest_session_id" not like 'staff:%');--> statement-breakpoint
+CREATE INDEX "orders_session_open" ON "orders" USING btree ("guest_session_id") WHERE "orders"."status" = 'received' and "orders"."paid_pesewas" = 0;

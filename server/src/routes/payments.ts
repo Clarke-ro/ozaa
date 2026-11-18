@@ -5,6 +5,7 @@ import type { Db } from '../db/client.ts';
 import { billQuotes, payments as paymentRows, venues } from '../db/schema.ts';
 import { Problem } from '../http/problem.ts';
 import type { Log } from '../log.ts';
+import { releaseExpiredHolds } from '../orders/orderInventory.ts';
 import { orderById } from '../orders/orderStore.ts';
 import type { PaymentService } from '../payments.ts';
 import { isFromPaystack } from '../signature.ts';
@@ -64,8 +65,15 @@ export function paymentRoutes(deps: PaymentRouteDeps) {
     // A retry with the same key gets its first payment back, even after the quote has expired.
     const [repeat] = await db.select({ reference: paymentRows.reference }).from(paymentRows).where(eq(paymentRows.idempotencyKey, key));
     if (!repeat) {
+      // An unpaid order that sat too long has given its dish back. Don't charge it, and don't
+      // start a payment that would keep the hold alive. Paystack is called later, in start().
+      await releaseExpiredHolds(db, deps.now(), found.row.venueId);
+      const fresh = await orderById(db, quote.orderId);
+      if (!fresh || fresh.order.status === 'cancelled') {
+        throw new Problem(409, 'quote_expired', 'This order was cancelled. Place it again.');
+      }
       if (quote.expiresAt.getTime() < deps.now()) throw new Problem(409, 'quote_expired', 'Your bill changed. Check it and try again.');
-      if (found.order.paymentStatus === 'paid') throw new Problem(409, 'nothing_to_pay', 'This bill is already paid.');
+      if (fresh.order.paymentStatus === 'paid') throw new Problem(409, 'nothing_to_pay', 'This bill is already paid.');
     }
     const [venue] = await db.select({ slug: venues.slug }).from(venues).where(eq(venues.id, found.row.venueId));
     if (!venue) throw new Problem(404, 'venue_not_found', 'We could not find that venue.');

@@ -5,7 +5,8 @@ import { idempotencyKeys, orderLines, orders, paymentSettings } from '../db/sche
 import { body, Problem } from '../http/problem.ts';
 import type { Log } from '../log.ts';
 import { stampPaidOrder } from '../loyalty/paidOrder.ts';
-import { orderById, orderFromRows } from '../orders/orderStore.ts';
+import { releaseExpiredHolds } from '../orders/orderInventory.ts';
+import { cancelOrder, orderById, orderFromRows } from '../orders/orderStore.ts';
 import { meOf, roleAt, ROLES, signedIn, type OwnerDeps } from '../owner/staff.ts';
 import type { MediaStorage } from '../media/storage.ts';
 import type { ClerkAdmin } from '../owner/clerkAdmin.ts';
@@ -160,6 +161,7 @@ export function ownerRoutes(deps: OwnerRouteDeps) {
     const wanted = (c.req.query('status') ?? '').split(',').filter(Boolean);
     const statuses = z.array(STATUS).safeParse(wanted);
     if (!statuses.success) throw new Problem(400, 'validation', 'Unknown order status.');
+    await releaseExpiredHolds(db, deps.now(), venueId);
     const since = c.req.query('since');
     const until = c.req.query('until');
     // A date that doesn't parse would reach Postgres as "Invalid Date" and fail as a 500.
@@ -217,6 +219,18 @@ export function ownerRoutes(deps: OwnerRouteDeps) {
     const next = move ? orderTransition(found.row.status, move, role) : null;
     if (!next || next !== input.status)
       throw new Problem(409, 'illegal_move', 'That status change is not allowed.');
+    if (next === 'cancelled') {
+      const order = await cancelOrder(db, {
+        id: found.row.id,
+        fromStatus: found.row.status,
+        reason: input.cancelReason?.trim() || null,
+        now: deps.now(),
+      });
+      if (!order) {
+        throw new Problem(409, 'illegal_move', 'Someone else just changed this order. Refresh and try again.');
+      }
+      return c.json(order);
+    }
     const at = new Date(deps.now());
     // Only moves from the status we read, so two staff tapping at once can't skip a step.
     const [moved] = await db
@@ -226,7 +240,6 @@ export function ownerRoutes(deps: OwnerRouteDeps) {
         updatedAt: at,
         ...(next === 'ready' ? { readyAt: at } : {}),
         ...(next === 'served' ? { servedAt: at } : {}),
-        ...(next === 'cancelled' ? { cancelReason: input.cancelReason?.trim() || null } : {}),
       })
       .where(and(eq(orders.id, found.row.id), eq(orders.status, found.row.status)))
       .returning();

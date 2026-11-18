@@ -4,6 +4,39 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-18 · Unpaid orders give the dish back
+
+**What we built**
+
+Placing an order still sets the dish aside, so two tables can't both be promised the last portion. Cancel the order, or leave an unpaid guest order unaccepted for 30 minutes, and the dish and the promo use go back. A cash payment, a part payment, an order the kitchen has accepted, and a MoMo prompt that is still open keep the hold. One visit can have 20 unpaid orders waiting, the same burst it could already place. If two orders would get the same number for the day, the server tries the save again and the order still goes through.
+
+**How it works**
+
+```
+place order → hold the dish and the promo
+  kitchen accepts, or any money is taken → hold stays until staff cancel
+  still waiting and unpaid after 30 minutes → cancelled, dish and promo return
+  staff cancel before the food is ready → dish and promo return
+two orders read the same daily number → try the insert again
+```
+
+**Files to look at**
+
+- `server/src/orders/orderInventory.ts`: taking the hold, giving it back, and the 30 minute sweep
+- `server/src/orders/orderStore.ts`: saving the order, the visit cap, and cancel
+- `server/src/orders/orderNumber.ts`: spotting a duplicate daily number and trying again
+- `server/drizzle/0006_order_holds.sql`: the column that records a hold already given back
+
+**New idea: a hold**
+
+A hold is a reservation with an end. The dish count drops when the order is placed, which is what stops an oversell. The count comes back if the order is cancelled or the hold runs out. Once someone pays, or a waiter accepts the order, the food is spoken for and the clock stops.
+
+**Try it yourself**
+
+In `server/src/orders/orderInventory.ts`, change `UNPAID_HOLD_MS` to `60 * 1000`. From `server/`, run `npm test -- src/orders/orderHold.test.ts`. The expiry test fails, because it still waits half an hour before it expects the order to drop. Put `30 * 60_000` back when you're done.
+
+---
+
 ## 2026-11-16 · One Payment step, and doors that stay shut
 
 **What we built**

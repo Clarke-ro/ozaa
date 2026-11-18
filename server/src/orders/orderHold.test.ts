@@ -15,8 +15,9 @@ const owner = as('user_owner', OWNER);
 const waiter = as('user_waiter', WAITER);
 // A guest order that nobody accepts only keeps its dish and promo for half an hour.
 const HOLD_MS = 30 * 60_000;
-// One visit can leave this many orders waiting. The 20-in-10-minutes limit still applies on top.
-const OPEN_CAP = 8;
+// One visit can leave this many orders waiting. Same size as the 20-in-10-minutes burst.
+const OPEN_CAP = 20;
+const ORDER_WINDOW_MS = 10 * 60_000;
 
 async function guestToken(call: Awaited<ReturnType<typeof ownerSetup>>['call'], tableCode = '4') {
   const res = await call('POST', '/guest-sessions', { venueSlug: 'mamas-kitchen', tableCode });
@@ -191,23 +192,21 @@ test('a payment that is still in progress keeps the hold; a failed one does not'
 });
 
 test('one visit cannot leave a pile of unpaid orders waiting', async () => {
-  const { call } = await ownerSetup();
+  const { call, tick } = await ownerSetup();
   const token = await guestToken(call);
   const dish = await dishOf(call);
   const firstId = randomUUID();
-  let stoppedAt = -1;
   let savedId = '';
-  for (let i = 0; i < OPEN_CAP + 4; i += 1) {
+  for (let i = 0; i < OPEN_CAP; i += 1) {
     const res = await place(call, token, dish.id, {}, i === 0 ? firstId : randomUUID());
-    if (res.status === 429) {
-      stoppedAt = i;
-      assert.equal(res.json.code, 'too_many_open_orders');
-      break;
-    }
     assert.equal(res.status, 201);
     if (i === 0) savedId = res.json.id;
   }
-  assert.equal(stoppedAt, OPEN_CAP);
+  // The 10 minute visit limit has to age out, or it would answer before the cap does.
+  tick(ORDER_WINDOW_MS + 1);
+  const blocked = await place(call, token, dish.id);
+  assert.equal(blocked.status, 429);
+  assert.equal(blocked.json.code, 'too_many_open_orders');
 
   const retry = await place(call, token, dish.id, {}, firstId);
   assert.equal(retry.status, 201);

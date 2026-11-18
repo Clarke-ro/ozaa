@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { promos } from '../db/schema.ts';
 import { body, Problem } from '../http/problem.ts';
+import { releaseExpiredHolds } from '../orders/orderInventory.ts';
 import { saveOrder } from '../orders/orderStore.ts';
 import { priceOrder } from '../orders/priceOrder.ts';
 import { roleAt, ROLES, signedIn, type OwnerDeps } from '../owner/staff.ts';
@@ -48,6 +49,7 @@ export function ownerOrderEntryRoutes(deps: OwnerDeps) {
     const row = await venueRowById(db, venueId);
     const tableCode = input.tableCode ?? null;
     if (tableCode && !(await tableOf(db, venueId, tableCode))) throw new Problem(422, 'validation', 'That table is not at this venue.');
+    await releaseExpiredHolds(db, deps.now(), venueId);
     const [venue, menu, rules] = await Promise.all([publicVenue(db, row, deps.now()), menuOf(db, venueId), db.select().from(promos).where(eq(promos.venueId, venueId))]);
     const priced = priceOrder({
       items: menu.items,
