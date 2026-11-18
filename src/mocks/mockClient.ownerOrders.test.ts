@@ -55,6 +55,17 @@ test('the date filter keeps orders inside since and before until', async () => {
     until: '2100-01-01T00:00:00Z',
   });
   expect(window.items.length).toBe(all.length);
+  const changed = await api.ownerListOrders(id, { updatedSince: '2099-01-01T00:00:00.000Z' });
+  expect(changed.items).toEqual([]);
+  const one = all[0];
+  expect(one).toBeTruthy();
+  expect((await api.ownerGetOrder(one!.id)).id).toBe(one!.id);
+  const open = await api.ownerListOrders(id, { live: true });
+  expect(
+    open.items.every((order) =>
+      ['received', 'accepted', 'preparing', 'ready'].includes(order.status),
+    ),
+  ).toBe(true);
 });
 
 test('an order with no dishes is refused, as the contract says (at least one line)', async () => {

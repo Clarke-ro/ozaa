@@ -1013,6 +1013,14 @@ paths:
           name: until
           description: Only orders created before this moment. With since, a date range such as one day in the venue's time zone.
           schema: { type: string, format: date-time }
+        - in: query
+          name: updatedSince
+          description: Only orders changed at or after this moment. Leave it out to keep the newest 300, which older apps still receive.
+          schema: { type: string, format: date-time }
+        - in: query
+          name: live
+          description: When true, only orders the kitchen still has (received, accepted, preparing, ready).
+          schema: { type: boolean }
         - { $ref: '#/components/parameters/Cursor' }
       responses:
         '200':
@@ -1043,6 +1051,21 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '422': { $ref: '#/components/responses/Unprocessable' }
+  /owner/orders/{orderId}:
+    get:
+      tags: [owner-orders]
+      operationId: ownerGetOrder
+      security: [{ ownerAuth: [] }]
+      summary: One order, for the order page. Older apps still find it in the list.
+      parameters: [{ $ref: '#/components/parameters/OrderId' }]
+      responses:
+        '200':
+          description: The order, including dishes placed before the newest 300.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
   /owner/orders/{orderId}/status:
     put:
       tags: [owner-orders]

@@ -1,8 +1,17 @@
 import { Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
+import { compress } from 'hono/compress';
 import { cors } from 'hono/cors';
 import { secureHeaders } from 'hono/secure-headers';
-import { clientIp, slidingWindow } from './http/rateLimit.ts';
+import { readGuestToken } from './guest/token.ts';
+import { isTimeout } from './http/outbound.ts';
+import {
+  clientIp,
+  GUEST_IP_WRITES_PER_MIN,
+  GUEST_NEW_VISITS_PER_MIN,
+  GUEST_SESSION_WRITES_PER_MIN,
+  slidingWindow,
+} from './http/rateLimit.ts';
 import type { PaymentService } from './payments.ts';
 import type { Log } from './log.ts';
 import { Problem, problemResponse } from './http/problem.ts';
@@ -38,6 +47,15 @@ export function createApp(deps: {
   otp?: Omit<OtpDeps, 'log'>;
   allowedOrigins: string[];
   log: Log;
+  /**
+   * Guest write caps. Defaults suit a busy venue on one shared Wi-Fi address. Tests pass small
+   * numbers so they can prove the cap without hundreds of requests.
+   */
+  guestLimits?: {
+    newVisitsPerMinute?: number;
+    sessionWritesPerMinute?: number;
+    ipWritesPerMinute?: number;
+  };
   /** Throws when the database doesn't answer. Used by the health check. */
   ping: () => Promise<void>;
   /** Sends unexpected errors to monitoring (Sentry). Missing in tests and without a DSN. */
@@ -48,17 +66,41 @@ export function createApp(deps: {
   // without its details (they can hold personal data) and answered with a plain 500.
   app.onError((error, c) => {
     if (error instanceof Problem) return problemResponse(c, error);
+    if (isTimeout(error)) {
+      deps.log({ event: 'upstream_timeout', name: error.name });
+      return c.json(
+        {
+          type: 'https://cravins.app/problems/upstream_timeout',
+          title: 'A service took too long. Try again.',
+          status: 503,
+          code: 'upstream_timeout',
+        },
+        503,
+        { 'Content-Type': 'application/problem+json' },
+      );
+    }
     deps.log({ event: 'server_error', name: error.name });
     deps.report?.(error);
     return c.json(
-      { type: 'https://cravins.app/problems/server_error', title: 'Something went wrong.', status: 500, code: 'server_error' },
+      {
+        type: 'https://cravins.app/problems/server_error',
+        title: 'Something went wrong.',
+        status: 500,
+        code: 'server_error',
+      },
       500,
       { 'Content-Type': 'application/problem+json' },
     );
   });
   // Answers are JSON for our own apps: no framing, no sniffing, no referrer, HTTPS remembered.
   // Cross-origin reads stay allowed (CORS below decides who), so CORP is left off.
-  app.use('*', secureHeaders({ crossOriginResourcePolicy: false, crossOriginEmbedderPolicy: false }));
+  app.use(
+    '*',
+    secureHeaders({ crossOriginResourcePolicy: false, crossOriginEmbedderPolicy: false }),
+  );
+  // Staff polls used to send hundreds of kilobytes of JSON every few seconds. Gzip shrinks that
+  // when the phone asks for it. Clients that don't send Accept-Encoding still get plain JSON.
+  app.use('*', compress());
   // Heroku ends HTTPS at its router and says how the request came in. A plain-HTTP call would
   // have sent its token in the clear, so it is refused rather than answered.
   app.use('*', async (c, next) => {
@@ -77,21 +119,52 @@ export function createApp(deps: {
       },
     }),
   );
-  // Guests need no sign-in, so their writes are counted per address. A whole restaurant can
-  // share one Wi-Fi address, so the limit is generous; starting visits is held tighter. Staff
-  // calls need a Clerk sign-in, Paystack's webhook is checked by signature, and phone codes have
-  // their own limits, so those are left out.
+  // Guests need no sign-in. Many phones share one public address (a venue's Wi-Fi, or a mobile
+  // network), so a visit is counted on that phone's session, and the address is only a high
+  // backstop. Starting a visit has no session yet, so that one stays per address, at a level a
+  // whole dining room can pass. Staff calls need a Clerk sign-in, Paystack's webhook is checked
+  // by signature, and phone codes have their own limits, so those are left out.
   const now = deps.guest?.now ?? Date.now;
-  const guestWrites = slidingWindow({ limit: 120, windowMs: 60_000, now });
-  const newVisits = slidingWindow({ limit: 30, windowMs: 60_000, now });
+  const limits = deps.guestLimits ?? {};
+  const sessionWrites = slidingWindow({
+    limit: limits.sessionWritesPerMinute ?? GUEST_SESSION_WRITES_PER_MIN,
+    windowMs: 60_000,
+    now,
+  });
+  const guestWrites = slidingWindow({
+    limit: limits.ipWritesPerMinute ?? GUEST_IP_WRITES_PER_MIN,
+    windowMs: 60_000,
+    now,
+  });
+  const newVisits = slidingWindow({
+    limit: limits.newVisitsPerMinute ?? GUEST_NEW_VISITS_PER_MIN,
+    windowMs: 60_000,
+    now,
+  });
+  const limited = (path: string): never => {
+    deps.log({ event: 'rate_limited', path });
+    throw new Problem(429, 'rate_limited', 'Too many requests. Wait a minute and try again.');
+  };
   app.use('*', async (c, next) => {
     const path = c.req.path;
     const write = c.req.method !== 'GET' && c.req.method !== 'OPTIONS';
-    const exempt = path.startsWith('/v1/owner') || path.startsWith('/v1/webhooks') || path.startsWith('/v1/auth/otp');
+    const exempt =
+      path.startsWith('/v1/owner') ||
+      path.startsWith('/v1/webhooks') ||
+      path.startsWith('/v1/auth/otp');
     if (write && !exempt) {
       const ip = clientIp(c.req.header('x-forwarded-for'));
-      const ok = path === '/v1/guest-sessions' ? newVisits.hit(ip) : guestWrites.hit(ip);
-      if (!ok) throw new Problem(429, 'rate_limited', 'Too many requests. Wait a minute and try again.');
+      if (path === '/v1/guest-sessions') {
+        if (!newVisits.hit(ip)) limited(path);
+      } else {
+        const header = c.req.header('Authorization');
+        const token = header?.startsWith('Bearer ') ? header.slice('Bearer '.length) : undefined;
+        const sessionId = deps.guest
+          ? readGuestToken(deps.guest.guestSecret, token, now())?.sid
+          : null;
+        if (sessionId && !sessionWrites.hit(sessionId)) limited(path);
+        if (!guestWrites.hit(ip)) limited(path);
+      }
     }
     await next();
   });
@@ -119,7 +192,8 @@ export function createApp(deps: {
   if (deps.guest) {
     app.route('/', guestRoutes(deps.guest));
     app.route('/', guestExtraRoutes(deps.guest));
-    if (deps.guest.loyaltyKey) app.route('/', loyaltyRoutes({ ...deps.guest, loyaltyKey: deps.guest.loyaltyKey }));
+    if (deps.guest.loyaltyKey)
+      app.route('/', loyaltyRoutes({ ...deps.guest, loyaltyKey: deps.guest.loyaltyKey }));
     app.route('/', paymentRoutes({ ...deps.guest, payments: deps.payments, log: deps.log }));
   }
   if (deps.otp) app.route('/', otpRoutes({ ...deps.otp, log: deps.log }));

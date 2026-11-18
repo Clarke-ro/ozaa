@@ -13,7 +13,9 @@ const CODE_TTL_MS = 5 * 60_000;
 const RESEND_MS = 30_000;
 // Each SMS costs money and anyone can ask for one, so the caps are tight.
 const PER_PHONE_PER_HOUR = 5;
-const PER_IP_PER_HOUR = 10;
+// A venue's Wi-Fi, or a mobile network, is one address for many phones. The per-phone cap and the
+// daily fuse are what stop a run on SMS cost. This address cap only stops one address flooding.
+const PER_IP_PER_HOUR = 1_000;
 const MAX_TRIES = 5;
 
 export type OtpDeps = {
@@ -26,10 +28,15 @@ export type OtpDeps = {
   sms: SmsSender | null;
   /** The most codes sent in a day across Cravins: a fuse against a run on SMS costs. */
   dailyLimit: number;
+  /** Tests pass a small address cap. Production uses PER_IP_PER_HOUR. */
+  ipPerHour?: number;
   log: Log;
 };
 
-const request = z.object({ phone: z.string().regex(/^\+233\d{9}$/), purpose: z.literal('guest_loyalty') });
+const request = z.object({
+  phone: z.string().regex(/^\+233\d{9}$/),
+  purpose: z.literal('guest_loyalty'),
+});
 const verify = request.extend({ code: z.string().regex(/^\d{6}$/) });
 
 /** Guest phone codes for loyalty (api/openapi.yaml auth/otp). Staff sign in with Clerk. */
@@ -39,32 +46,60 @@ export function otpRoutes(deps: OtpDeps) {
   const hash = (text: string) => createHmac('sha256', deps.hashSecret).update(text).digest('hex');
   // Per-IP counts live in memory: one Basic dyno serves every request. A restart clears them.
   const byIp = new Map<string, number[]>();
-  const limited = (code: string, seconds: number) => new Problem(429, code, `Too many tries. Wait ${seconds} seconds and try again.`);
+  const limited = (code: string, seconds: number) =>
+    new Problem(429, code, `Too many tries. Wait ${seconds} seconds and try again.`);
 
   app.post('/auth/otp/request', async (c) => {
     const input = await body(c, request);
     const now = deps.now();
-    if (!deps.sms) throw new Problem(503, 'sms_not_ready', 'Texts are not set up on this server yet.');
+    if (!deps.sms)
+      throw new Problem(503, 'sms_not_ready', 'Texts are not set up on this server yet.');
     // Heroku's router adds the caller's address last; earlier entries can be faked.
     const ip = c.req.header('x-forwarded-for')?.split(',').at(-1)?.trim() ?? 'unknown';
     // Forget addresses with nothing in the last hour, so the map doesn't grow for ever.
-    if (byIp.size > 5_000) for (const [key, times] of byIp) if (times.every((t) => t <= now - 3_600_000)) byIp.delete(key);
+    if (byIp.size > 5_000)
+      for (const [key, times] of byIp)
+        if (times.every((t) => t <= now - 3_600_000)) byIp.delete(key);
     const recent = (byIp.get(ip) ?? []).filter((t) => t > now - 3_600_000);
-    if (recent.length >= PER_IP_PER_HOUR) throw limited('rate_limited', 3600);
+    if (recent.length >= (deps.ipPerHour ?? PER_IP_PER_HOUR)) throw limited('rate_limited', 3600);
 
     const phoneHash = hash(input.phone);
-    const [last] = await db.select().from(otpCodes).where(eq(otpCodes.phoneHash, phoneHash)).orderBy(desc(otpCodes.sentAt)).limit(1);
+    const [last] = await db
+      .select()
+      .from(otpCodes)
+      .where(eq(otpCodes.phoneHash, phoneHash))
+      .orderBy(desc(otpCodes.sentAt))
+      .limit(1);
     if (last && last.sentAt.getTime() > now - RESEND_MS) throw limited('resend_too_soon', 30);
-    const [{ n: hourCount } = { n: 0 }] = await db.select({ n: count() }).from(otpCodes).where(and(eq(otpCodes.phoneHash, phoneHash), gte(otpCodes.sentAt, new Date(now - 3_600_000))));
+    const [{ n: hourCount } = { n: 0 }] = await db
+      .select({ n: count() })
+      .from(otpCodes)
+      .where(
+        and(eq(otpCodes.phoneHash, phoneHash), gte(otpCodes.sentAt, new Date(now - 3_600_000))),
+      );
     if (hourCount >= PER_PHONE_PER_HOUR) throw limited('rate_limited', 3600);
-    const [{ n: dayCount } = { n: 0 }] = await db.select({ n: count() }).from(otpCodes).where(gte(otpCodes.sentAt, new Date(now - 86_400_000)));
+    const [{ n: dayCount } = { n: 0 }] = await db
+      .select({ n: count() })
+      .from(otpCodes)
+      .where(gte(otpCodes.sentAt, new Date(now - 86_400_000)));
     if (dayCount >= deps.dailyLimit) {
       deps.log({ event: 'otp_daily_limit' });
       throw new Problem(503, 'sms_busy', 'Texts are paused for now. Try again later.');
     }
 
     const code = String(randomInt(0, 1_000_000)).padStart(6, '0');
-    await deps.sms(input.phone, `${code} is your Cravins code. It expires in 5 minutes. Don't share it.`);
+    try {
+      await deps.sms(
+        input.phone,
+        `${code} is your Cravins code. It expires in 5 minutes. Don't share it.`,
+      );
+    } catch {
+      throw new Problem(
+        503,
+        'sms_unavailable',
+        'The text could not be sent. Try again in a moment.',
+      );
+    }
     await db.insert(otpCodes).values({
       id: `otp_${crypto.randomUUID().replaceAll('-', '')}`,
       phoneHash,
@@ -86,21 +121,40 @@ export function otpRoutes(deps: OtpDeps) {
     const [row] = await db
       .select()
       .from(otpCodes)
-      .where(and(eq(otpCodes.phoneHash, phoneHash), isNull(otpCodes.usedAt), gte(otpCodes.expiresAt, new Date(now))))
+      .where(
+        and(
+          eq(otpCodes.phoneHash, phoneHash),
+          isNull(otpCodes.usedAt),
+          gte(otpCodes.expiresAt, new Date(now)),
+        ),
+      )
       .orderBy(desc(otpCodes.sentAt))
       .limit(1);
-    const wrong = new Problem(401, 'bad_code', 'That code didn’t work. Check it, or ask for a new one.');
+    const wrong = new Problem(
+      401,
+      'bad_code',
+      'That code didn’t work. Check it, or ask for a new one.',
+    );
     if (!row) throw wrong;
     if (row.attempts >= MAX_TRIES) throw limited('rate_limited', 300);
     const given = Buffer.from(hash(`${phoneHash}:${input.code}`));
     if (!timingSafeEqual(given, Buffer.from(row.codeHash))) {
-      await db.update(otpCodes).set({ attempts: row.attempts + 1 }).where(eq(otpCodes.id, row.id));
+      await db
+        .update(otpCodes)
+        .set({ attempts: row.attempts + 1 })
+        .where(eq(otpCodes.id, row.id));
       throw wrong;
     }
     // One use only: a code can't sign in twice.
-    await db.update(otpCodes).set({ usedAt: new Date(now) }).where(eq(otpCodes.id, row.id));
+    await db
+      .update(otpCodes)
+      .set({ usedAt: new Date(now) })
+      .where(eq(otpCodes.id, row.id));
     const exp = now + LOYALTY_TTL_MS;
-    return c.json({ accessToken: signLoyaltyToken(deps.loyaltyKey, input.phone, exp), expiresAt: new Date(exp).toISOString() });
+    return c.json({
+      accessToken: signLoyaltyToken(deps.loyaltyKey, input.phone, exp),
+      expiresAt: new Date(exp).toISOString(),
+    });
   });
 
   return app;

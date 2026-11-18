@@ -19,20 +19,42 @@ if (process.env.SEED_SAMPLES !== 'true') {
   log({ event: 'seed_skipped' });
 } else {
   const config = readConfig();
-  const { db, close } = connect(config.DATABASE_URL);
+  const { db, close } = connect(config.DATABASE_URL, config.DATABASE_POOL_MAX);
   try {
     const { venueIds, items } = await seedSamples(db, { siteUrl: config.SITE_URL });
     log({ event: 'seeded', venues: venueIds.length, items });
     if (process.env.SAMPLE_OWNER_PHONE) {
-      await seedOwner(db, { phone: process.env.SAMPLE_OWNER_PHONE, email: process.env.SAMPLE_OWNER_EMAIL, firstName: process.env.SAMPLE_OWNER_NAME || 'Owner', venueIds });
+      await seedOwner(db, {
+        phone: process.env.SAMPLE_OWNER_PHONE,
+        email: process.env.SAMPLE_OWNER_EMAIL,
+        firstName: process.env.SAMPLE_OWNER_NAME || 'Owner',
+        venueIds,
+      });
       log({ event: 'sample_owner_ready' });
     }
     if (config.PAYSTACK_SECRET_KEY && config.PAYSTACK_PUBLIC_KEY) {
-      const keys = venuePaystack({ db, key: encryptionKey(config.ENCRYPTION_KEY), client: () => { throw new Error('not used'); } });
-      const rows = await db.select().from(paymentSettings).where(inArray(paymentSettings.venueId, venueIds));
+      const keys = venuePaystack({
+        db,
+        key: encryptionKey(config.ENCRYPTION_KEY),
+        client: () => {
+          throw new Error('not used');
+        },
+      });
+      const rows = await db
+        .select()
+        .from(paymentSettings)
+        .where(inArray(paymentSettings.venueId, venueIds));
       let connected = 0;
       for (const row of rows.filter((r) => !r.paystackSecretEncrypted)) {
-        await keys.save(row.venueId, { mode: 'test', publicKey: config.PAYSTACK_PUBLIC_KEY, secretKey: config.PAYSTACK_SECRET_KEY }, Date.now());
+        await keys.save(
+          row.venueId,
+          {
+            mode: 'test',
+            publicKey: config.PAYSTACK_PUBLIC_KEY,
+            secretKey: config.PAYSTACK_SECRET_KEY,
+          },
+          Date.now(),
+        );
         connected += 1;
       }
       log({ event: 'sample_paystack_connected', venues: connected });

@@ -15,16 +15,29 @@ async function setup(dailyLimit = 300) {
   const texts: { to: string; text: string }[] = [];
   const app = createApp({
     payments: {} as PaymentService,
-    otp: { db, now: () => clock, hashSecret: 'x'.repeat(32), loyaltyKey: TEST_KEY, sms: async (to, text) => void texts.push({ to, text }), dailyLimit },
+    otp: {
+      db,
+      now: () => clock,
+      hashSecret: 'x'.repeat(32),
+      loyaltyKey: TEST_KEY,
+      sms: async (to, text) => void texts.push({ to, text }),
+      dailyLimit,
+      ipPerHour: 10,
+    },
     allowedOrigins: [],
     log: () => undefined,
     ping: async () => undefined,
   });
   const call = async (path: string, body: unknown, ip = '1.2.3.4') => {
-    const res = await app.request(`/v1${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-forwarded-for': `9.9.9.9, ${ip}` }, body: JSON.stringify(body) });
+    const res = await app.request(`/v1${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-forwarded-for': `9.9.9.9, ${ip}` },
+      body: JSON.stringify(body),
+    });
     return { status: res.status, json: await res.json().catch(() => null) };
   };
-  const ask = (phone = PHONE, ip?: string) => call('/auth/otp/request', { phone, purpose: 'guest_loyalty' }, ip);
+  const ask = (phone = PHONE, ip?: string) =>
+    call('/auth/otp/request', { phone, purpose: 'guest_loyalty' }, ip);
   const codeIn = (i = -1) => texts.at(i)!.text.slice(0, 6);
   return { db, call, ask, texts, codeIn, tick: (ms: number) => (clock += ms), now: () => clock };
 }
@@ -34,17 +47,29 @@ test('a code by SMS, once, proves the phone; the token holds the number sealed',
   const sent = await ask();
   expectContract('requestOtp', 202, sent.json);
   assert.equal(texts[0]!.to, PHONE);
-  const wrong = await call('/auth/otp/verify', { phone: PHONE, code: codeIn() === '000000' ? '111111' : '000000', purpose: 'guest_loyalty' });
+  const wrong = await call('/auth/otp/verify', {
+    phone: PHONE,
+    code: codeIn() === '000000' ? '111111' : '000000',
+    purpose: 'guest_loyalty',
+  });
   expectContract('verifyOtp', 401, wrong.json);
-  const ok = await call('/auth/otp/verify', { phone: PHONE, code: codeIn(), purpose: 'guest_loyalty' });
+  const ok = await call('/auth/otp/verify', {
+    phone: PHONE,
+    code: codeIn(),
+    purpose: 'guest_loyalty',
+  });
   expectContract('verifyOtp', 200, ok.json);
   assert.ok(!ok.json.accessToken.includes('241234567'));
   assert.equal(readLoyaltyToken(TEST_KEY, ok.json.accessToken, now()), PHONE);
   // The same code can't be used twice.
-  assert.equal((await call('/auth/otp/verify', { phone: PHONE, code: codeIn(), purpose: 'guest_loyalty' })).status, 401);
+  assert.equal(
+    (await call('/auth/otp/verify', { phone: PHONE, code: codeIn(), purpose: 'guest_loyalty' }))
+      .status,
+    401,
+  );
 });
 
-test('limits: 30 seconds between texts, 5 a phone an hour, 10 an IP an hour, 5 guesses a code', async () => {
+test('limits: 30 seconds between texts, 5 a phone an hour, the address cap, 5 guesses a code', async () => {
   const { call, ask, tick } = await setup();
   await ask();
   assert.equal((await ask()).json.code, 'resend_too_soon');
@@ -60,8 +85,22 @@ test('limits: 30 seconds between texts, 5 a phone an hour, 10 an IP an hour, 5 g
 
   tick(31_000);
   await ask('+233270000000', '8.8.8.8');
-  for (let i = 0; i < 5; i += 1) await call('/auth/otp/verify', { phone: '+233270000000', code: '999999', purpose: 'guest_loyalty' });
-  assert.equal((await call('/auth/otp/verify', { phone: '+233270000000', code: '999999', purpose: 'guest_loyalty' })).status, 429);
+  for (let i = 0; i < 5; i += 1)
+    await call('/auth/otp/verify', {
+      phone: '+233270000000',
+      code: '999999',
+      purpose: 'guest_loyalty',
+    });
+  assert.equal(
+    (
+      await call('/auth/otp/verify', {
+        phone: '+233270000000',
+        code: '999999',
+        purpose: 'guest_loyalty',
+      })
+    ).status,
+    429,
+  );
 });
 
 test('a daily cap pauses all texts, and a bad number never reaches the SMS provider', async () => {
