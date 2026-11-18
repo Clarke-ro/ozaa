@@ -43,6 +43,13 @@
       "when": 1794928956009,
       "tag": "0005_indexes_and_integrity",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794995655633,
+      "tag": "0006_otp_limits",
+      "breakpoints": true
     }
   ]
 }
