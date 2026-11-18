@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { boolean, check, index, integer, jsonb, pgTable, text, unique } from 'drizzle-orm/pg-core';
+import { boolean, check, index, integer, jsonb, pgTable, text, unique, uniqueIndex } from 'drizzle-orm/pg-core';
 import { at } from './columns.ts';
 import { venues } from './venues.ts';
 
@@ -88,7 +88,12 @@ export const writtenReviews = pgTable('written_reviews', {
   highlights: text('highlights').array().notNull().default(sql`'{}'::text[]`),
   reply: text('reply'),
   createdAt: at('created_at').notNull().defaultNow(),
-}, (t) => [check('written_reviews_stars', sql`${t.stars} between 1 and 5`), index('written_reviews_venue_created').on(t.venueId, t.createdAt)]).enableRLS();
+}, (t) => [
+  check('written_reviews_stars', sql`${t.stars} between 1 and 5`),
+  index('written_reviews_venue_created').on(t.venueId, t.createdAt),
+  // One review per order. Null order ids (notes from before this rule) stay allowed, many of them.
+  uniqueIndex('written_reviews_one_order').on(t.orderId).where(sql`${t.orderId} is not null`),
+]).enableRLS();
 
 /** Private notes to the manager (FeedbackItem). A phone only if the guest chose to leave one. */
 export const feedback = pgTable('feedback', {
@@ -103,7 +108,12 @@ export const feedback = pgTable('feedback', {
   archived: boolean('archived').notNull().default(false),
   visibleAfter: at('visible_after').notNull().defaultNow(),
   createdAt: at('created_at').notNull().defaultNow(),
-}, (t) => [index('feedback_venue_created').on(t.venueId, t.createdAt)]).enableRLS();
+  // Which visit sent the note, so one session can't fill the manager's list. Not shown to anyone.
+  guestSessionId: text('guest_session_id'),
+}, (t) => [
+  index('feedback_venue_created').on(t.venueId, t.createdAt),
+  index('feedback_session').on(t.venueId, t.guestSessionId),
+]).enableRLS();
 
 /** Game scores for the weekly leaderboard. runId is unique, so a replayed score counts once. */
 export const gameScores = pgTable('game_scores', {

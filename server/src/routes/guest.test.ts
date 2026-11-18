@@ -146,4 +146,39 @@ test('the bill quote: refused without Paystack; with it, the share, tip and pass
   assert.equal(quote.json.tipPesewas, Math.round(order.totalPesewas * 0.1));
   assert.ok(quote.json.feePesewas > 0);
   assert.equal(quote.json.totalPesewas, quote.json.sharePesewas + quote.json.tipPesewas + quote.json.feePesewas);
+
+  const atCap = await call('POST', `/orders/${order.id}/bill`, { mode: 'whole', tip: { customPesewas: 1_000_000 } }, token);
+  assert.equal(atCap.status, 200);
+  assert.equal(atCap.json.tipPesewas, 1_000_000);
+  const over = await call('POST', `/orders/${order.id}/bill`, { mode: 'whole', tip: { customPesewas: 1_000_001 } }, token);
+  assert.equal(over.status, 400);
+  const overflow = await call('POST', `/orders/${order.id}/bill`, { mode: 'whole', tip: { customPesewas: 2_000_000_000 } }, token);
+  assert.equal(overflow.status, 400);
+});
+
+test('a delivery fee is the far edge of the zone, not the phone pin', async () => {
+  const { call, session } = await setup();
+  const token = await session('mamas-kitchen');
+  const dish = (await call('GET', '/venues/mamas-kitchen/menu')).json.items[0];
+  const order = await call(
+    'POST',
+    '/orders',
+    {
+      clientOrderId: randomUUID(),
+      lines: [{ menuItemId: dish.id, quantity: 1 }],
+      fulfilment: {
+        type: 'delivery',
+        contact: { name: 'Ama', phone: '+233241234567' },
+        address: 'House 12, East Legon',
+        location: { lat: 5.556, lng: -0.1822 },
+      },
+    },
+    token,
+  );
+  assert.equal(order.status, 201);
+  // Mama's zone is 8 km at 300 pesewas. A pin on the restaurant used to pay the 1500 minimum.
+  assert.equal(order.json.deliveryFeePesewas, 2400);
+  const tax = (order.json.taxes as { amountPesewas: number }[]).reduce((sum, line) => sum + line.amountPesewas, 0);
+  const promo = (order.json.promoDiscounts as { pesewas: number }[]).reduce((sum, line) => sum + line.pesewas, 0);
+  assert.equal(order.json.totalPesewas, order.json.subtotalPesewas - promo + tax + 2400);
 });
