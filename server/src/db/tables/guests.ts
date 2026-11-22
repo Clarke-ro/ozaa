@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { boolean, check, index, integer, jsonb, pgTable, text, unique } from 'drizzle-orm/pg-core';
+import { boolean, check, index, integer, jsonb, pgTable, text, timestamp, unique } from 'drizzle-orm/pg-core';
 import { at } from './columns.ts';
 import { venues } from './venues.ts';
 
@@ -76,6 +76,28 @@ export const otpCodes = pgTable('otp_codes', {
   expiresAt: at('expires_at').notNull(),
   usedAt: at('used_at'),
 }, (t) => [index('otp_codes_phone').on(t.phoneHash, t.sentAt)]).enableRLS();
+
+/**
+ * Per-phone counters for loyalty texts. The row holds hashes and times only, never the number.
+ * `sentAt` is the rolling hour of texts we reserved; its length is the hourly cap. A wrong-guess
+ * streak lives here too, so a new code cannot reset the lock.
+ */
+export const otpPhoneLimits = pgTable('otp_phone_limits', {
+  phoneHash: text('phone_hash').primaryKey(),
+  sentAt: timestamp('sent_at', { withTimezone: true }).array().notNull().default(sql`'{}'::timestamptz[]`),
+  failCount: integer('fail_count').notNull().default(0),
+  failWindowStartedAt: at('fail_window_started_at').notNull(),
+  lockedUntil: at('locked_until'),
+}).enableRLS();
+
+/**
+ * How many loyalty texts one venue has reserved in the rolling day. Requests with no guest
+ * session share the bucket `unscoped`, so they cannot spend another venue's allowance.
+ */
+export const otpSendBuckets = pgTable('otp_send_buckets', {
+  bucket: text('bucket').primaryKey(),
+  sentAt: timestamp('sent_at', { withTimezone: true }).array().notNull().default(sql`'{}'::timestamptz[]`),
+}).enableRLS();
 
 /** Written reviews (WrittenReview). First name only; no phone. */
 export const writtenReviews = pgTable('written_reviews', {
