@@ -26,7 +26,7 @@ export function OrderStageScreen({ stage }: { stage: BoardColumn }) {
       back={{ label: t('owner.orders'), onPress: () => router.back() }}
     >
       <DeskWait
-        loading={desk.orders.isLoading}
+        loading={desk.orders.isPending}
         error={desk.orders.isError}
         onRetry={() => void desk.orders.refetch()}
       >

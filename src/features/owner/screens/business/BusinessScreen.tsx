@@ -44,7 +44,7 @@ export function BusinessScreen() {
 
   return (
     <OwnerPage title={t('owner.business')} subtitle={t('ownerLead.business')}>
-      <DeskWait loading={data.isLoading} error={data.isError} onRetry={() => void data.refetch()}>
+      <DeskWait loading={data.isPending} error={data.isError} onRetry={() => void data.refetch()}>
         {business ? (
           <BusinessDetails
             key={business.name}

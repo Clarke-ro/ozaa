@@ -116,7 +116,7 @@ export function PromosScreen() {
       action={<Button label={t('ownerPromos.new')} onPress={() => setEditing('new')} />}
     >
       <DeskWait
-        loading={promos.isLoading}
+        loading={promos.isPending}
         error={promos.isError}
         onRetry={() => void promos.refetch()}
       >

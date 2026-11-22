@@ -89,7 +89,7 @@ export function OnlineOrderingScreen() {
       }
     >
       <DeskWait
-        loading={venue.isLoading}
+        loading={venue.isPending}
         error={venue.isError}
         onRetry={() => void venue.refetch()}
       >

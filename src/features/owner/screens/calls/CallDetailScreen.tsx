@@ -89,7 +89,7 @@ export function CallDetailScreen({ callId }: { callId: string }) {
       back={{ label: t('ownerCalls.detail.back'), onPress: back }}
     >
       <DeskWait
-        loading={calls.isLoading}
+        loading={calls.isPending}
         error={calls.isError}
         onRetry={() => void calls.refetch()}
       >
