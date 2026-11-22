@@ -16,7 +16,22 @@ export const MIGRATIONS = fileURLToPath(new URL('../../drizzle', import.meta.url
  */
 export function connect(url: string, max = 10): { db: Db; close: () => Promise<void> } {
   const client = postgres(url, { prepare: false, max });
-  return { db: drizzle(client, { schema }), close: () => client.end() };
+  return { db: drizzleClient(client), close: () => client.end() };
+}
+
+/**
+ * Drizzle over postgres-js. Drizzle turns off postgres-js's own date handling because it formats
+ * dates itself, but only for its query builder. A Date inside a hand-written sql`` query then
+ * reached the driver unformatted and the query failed, in production only: tests use PGlite,
+ * which formats dates by itself. So a Date sent as a timestamp becomes an ISO string again;
+ * the strings Drizzle already formats pass through unchanged.
+ */
+export function drizzleClient(client: postgres.Sql): Db {
+  const db = drizzle(client, { schema });
+  const passThrough = client.options.serializers[1184];
+  client.options.serializers[1184] = (value: unknown) =>
+    value instanceof Date ? value.toISOString() : passThrough ? passThrough(value) : value;
+  return db;
 }
 
 /** Brings the database up to the newest migration in drizzle/. Safe to run again. */
