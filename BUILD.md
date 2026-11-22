@@ -400,7 +400,8 @@ Most guests are on mobile data with a 2–3 GB phone. Treat these as requirement
 
 - **Budget:**
   - Guest home usable in under 3 s on Playwright "Slow 4G" with 4× CPU throttle.
-  - JS for the first route under about 350 KB gzipped; measure with `npx expo export -p web` and source-map-explorer.
+  - JS for the guest table home at most 510 KB gzipped, checked in CI by `e2e/js-budget.spec.ts`. This is a ceiling, not a target: about 290 KB is the framework (React, React Native Web, Expo Router), so lower it whenever the page gets lighter, and never raise it without asking Clarke (2026-11-22; was 350 KB).
+  - Code and image files have their fingerprint in the name, so they're cached for a year (`vercel.json`). A returning guest downloads almost no JavaScript.
   - Lighthouse mobile performance 85 or higher for `/mamas-kitchen`.
 - **Images:**
   - expo-image with `cachePolicy="memory-disk"` and a blurhash or a grey placeholder.
@@ -553,7 +554,7 @@ Work top to bottom. Each box is one small PR that ends in a verifiable state (ps
   - the payment check backs off from 3 s to 10 s and pauses while the app is hidden;
   - the mock fails while offline, like a real network;
   - `e2e/offline.spec.ts` covers it.
-- [ ] 1.15 JS budget (section 11). The real-server build loads about 457 KB gzipped on the guest home against the 350 KB budget (2026-11-22). Done so far: zod left the app (it carried every locale, 96 KB gz), and Reanimated no longer loads on guest pages (buttons, switches and the notice banner animate with CSS or plain JS on the web, 94 KB gz). What is left is mostly the framework itself (Expo Router, React Native Web, React DOM, about 288 KB). Under 350 KB would need static rendering or a lighter router; ask Clarke whether to raise the budget instead.
+- [x] 1.15 JS budget (section 11). The guest table home loads 503 KB gzipped (2026-11-22), against a 510 KB ceiling that CI checks (`e2e/js-budget.spec.ts`). Clarke chose a ceiling over static rendering: most of it is the framework, and static rendering wouldn't shrink the download. Done along the way: zod left the app (96 KB gz), Reanimated no longer loads on guest pages, and fingerprinted files are cached for a year so returning guests download almost nothing.
 - [ ] **Review:** screenshots of every Phase 1 screen, side by side with the render, for all 3 venues.
 
 ### Phase 1b: Table (product 1), owner side, on mocks
