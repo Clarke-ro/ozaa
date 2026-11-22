@@ -1,9 +1,11 @@
 import { randomUUID } from 'node:crypto';
-import { and, asc, eq, max, sql } from 'drizzle-orm';
+import { and, asc, count, eq, isNull, max, sql } from 'drizzle-orm';
 import type { Db } from '../db/client.ts';
-import { idempotencyKeys, menuItems, orderLines, orders, promos } from '../db/schema.ts';
+import { idempotencyKeys, orderLines, orders } from '../db/schema.ts';
 import { Problem } from '../http/problem.ts';
 import type { Order } from '../shared/types.ts';
+import { claimPromos, MAX_OPEN_UNPAID_ORDERS, releaseExpiredHolds, restoreInventory, takeStock } from './orderInventory.ts';
+import { retryOnDailyNumberCollision } from './orderNumber.ts';
 import type { PricedOrder } from './priceOrder.ts';
 
 type OrderRow = typeof orders.$inferSelect;
@@ -63,47 +65,56 @@ export async function orderById(db: Db, orderId: string): Promise<{ order: Order
   return { order: orderFromRows(row, lines), row };
 }
 
+type SaveInput = {
+  venueId: string;
+  /** The guest's loyalty card here, if they ordered with their loyalty token. */
+  loyaltyMemberId?: string | null;
+  guestSessionId: string;
+  clientOrderId: string;
+  tableCode: string | null;
+  priced: PricedOrder;
+  now: number;
+};
+
 /**
- * Saves a priced order in one transaction: the next daily number, its lines, and the stock it
- * takes. `clientOrderId` makes a retry return the first order instead of a second one.
+ * Saves a priced order: the next daily number, its lines, and the stock and promo it holds.
+ * `clientOrderId` makes a retry return the first order instead of a second one. The hold is
+ * given back on cancel, or when an unpaid guest order expires. Paystack is not called here.
  */
-export async function saveOrder(
-  db: Db,
-  input: {
-    venueId: string;
-    /** The guest's loyalty card here, if they ordered with their loyalty token. */
-    loyaltyMemberId?: string | null;
-    guestSessionId: string;
-    clientOrderId: string;
-    tableCode: string | null;
-    priced: PricedOrder;
-    now: number;
-  },
-): Promise<Order> {
+export async function saveOrder(db: Db, input: SaveInput): Promise<Order> {
+  // Free expired holds before this order takes anything, and commit that on its own. A number
+  // clash retries the insert below, and that retry must not undo a hold that already expired.
+  await releaseExpiredHolds(db, input.now, input.venueId);
+  const orderId = await retryOnDailyNumberCollision(() => insertOrder(db, input));
+  const saved = await orderById(db, orderId);
+  if (!saved) throw new Problem(404, 'order_not_found', 'Order not found.');
+  return saved.order;
+}
+
+async function insertOrder(db: Db, input: SaveInput): Promise<string> {
   const scope = `order:${input.guestSessionId}`;
-  const orderId = await db.transaction(async (tx) => {
+  return db.transaction(async (tx) => {
     const [seen] = await tx
       .select()
       .from(idempotencyKeys)
       .where(and(eq(idempotencyKeys.scope, scope), eq(idempotencyKeys.key, input.clientOrderId)));
     if (seen) return (seen.body as { orderId: string }).orderId;
 
-    // Take the stock first: the update only matches while enough is left, so two guests can't
-    // both get the last portion.
-    for (const [itemId, quantity] of input.priced.stock) {
-      const taken = await tx
-        .update(menuItems)
-        .set({
-          stockCount: sql`case when ${menuItems.stockCount} is null then null else ${menuItems.stockCount} - ${quantity} end`,
-          available: sql`case when ${menuItems.stockCount} is null then ${menuItems.available} else ${menuItems.stockCount} - ${quantity} > 0 end`,
-        })
-        .where(and(eq(menuItems.id, itemId), sql`(${menuItems.stockCount} is null or ${menuItems.stockCount} >= ${quantity})`))
-        .returning({ id: menuItems.id });
-      if (taken.length === 0) throw new Problem(422, 'item_sold_out', 'Something in your order just sold out.');
-    }
-
-    // Order numbers start again each day in the venue's time zone. Ghana is UTC all year.
+    // One order at a time for this venue today. That makes the daily number and the open-order
+    // cap exact, and stock updates can't deadlock by locking dishes in different orders.
+    // A clash on the unique index still retries the whole insert.
     const businessDay = new Date(input.now).toISOString().slice(0, 10);
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${`${input.venueId}:${businessDay}`}))`);
+    if (!input.guestSessionId.startsWith('staff:')) {
+      const [{ n } = { n: 0 }] = await tx
+        .select({ n: count() })
+        .from(orders)
+        .where(and(eq(orders.guestSessionId, input.guestSessionId), eq(orders.status, 'received'), eq(orders.paidPesewas, 0)));
+      if (n >= MAX_OPEN_UNPAID_ORDERS) {
+        throw new Problem(429, 'too_many_open_orders', 'You already have a few orders waiting. Ask a waiter if one of them is yours.');
+      }
+    }
+    await takeStock(tx, input.priced.stock);
     const [last] = await tx
       .select({ n: max(orders.number) })
       .from(orders)
@@ -147,17 +158,44 @@ export async function saveOrder(
         note: line.note ?? null,
       })),
     );
-    // The promo it used counts this order: its usage limit and "discount given" stay true.
-    for (const applied of p.promoDiscounts) {
-      await tx
-        .update(promos)
-        .set({ usageCount: sql`${promos.usageCount} + 1`, discountGivenPesewas: sql`${promos.discountGivenPesewas} + ${applied.pesewas}` })
-        .where(eq(promos.id, applied.promoId));
-    }
+    await claimPromos(tx, p.promoDiscounts);
     await tx.insert(idempotencyKeys).values({ scope, key: input.clientOrderId, status: 201, body: { orderId: id } });
     return id;
   });
-  const saved = await orderById(db, orderId);
-  if (!saved) throw new Problem(404, 'order_not_found', 'Order not found.');
-  return saved.order;
+}
+
+/**
+ * Cancels an order and gives its dish and promo back, once. The status check is the same
+ * optimistic lock as the other moves, so two staff can't both cancel it.
+ */
+export async function cancelOrder(
+  db: Db,
+  input: {
+    id: string;
+    fromStatus: Order['status'];
+    reason: string | null;
+    /** The staff member who cancelled it, for the order's audit trail. */
+    byMembershipId: string | null;
+    now: number;
+  },
+): Promise<Order | null> {
+  const at = new Date(input.now);
+  const released = await db.transaction(async (tx) => {
+    const [moved] = await tx
+      .update(orders)
+      .set({
+        status: 'cancelled',
+        cancelReason: input.reason,
+        cancelledByMembershipId: input.byMembershipId,
+        updatedAt: at,
+        inventoryReleasedAt: at,
+      })
+      .where(and(eq(orders.id, input.id), eq(orders.status, input.fromStatus), isNull(orders.inventoryReleasedAt)))
+      .returning({ id: orders.id });
+    if (!moved) return false;
+    await restoreInventory(tx, input.id);
+    return true;
+  });
+  if (!released) return null;
+  return (await orderById(db, input.id))?.order ?? null;
 }

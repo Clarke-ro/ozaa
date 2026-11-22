@@ -20,6 +20,7 @@ export const MESSAGES: Record<string, string> = {
   order_not_found: 'errors.orderNotFound',
   payment_declined: 'errors.paymentDeclined',
   rate_limited: 'errors.rateLimited',
+  too_many_open_orders: 'errors.tooManyOpenOrders',
   item_sold_out: 'errors.soldOut',
   quantity_out_of_range: 'errors.quantityRange',
   venue_not_published: 'errors.notPublished',

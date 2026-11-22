@@ -14,6 +14,7 @@ import type { PaystackTransaction } from '../status.ts';
 import { connectTestPaystack, TEST_KEY, VENUE_SECRET } from './testHelpers.ts';
 import { venuePaystack } from '../venues/venuePaystack.ts';
 import { signLoyaltyToken } from '../guest/loyaltyToken.ts';
+import { UNPAID_HOLD_MS } from '../orders/orderInventory.ts';
 
 const NOW = Date.parse('2026-11-16T12:00:00Z');
 
@@ -126,6 +127,20 @@ test('the same Idempotency-Key gives back the first payment, and charges once', 
   const second = await call('POST', '/payments', momo(quote.quoteId), { ...auth, 'Idempotency-Key': 'same' });
   assert.equal(second.json.reference, first.json.reference);
   assert.equal(fake.used.length, 1);
+});
+
+test('a hold that already ended cannot be paid, so the dish is not sold twice', async () => {
+  const { call, fake, tableBill, momo, tick } = await setup();
+  const { auth, order } = await tableBill();
+  // A fresh quote, taken just before the hold ends, would still be valid afterwards.
+  tick(UNPAID_HOLD_MS - 60_000);
+  const quote = (await call('POST', `/orders/${order.id}/bill`, { mode: 'whole' }, auth)).json;
+  tick(2 * 60_000);
+  const pay = await call('POST', '/payments', momo(quote.quoteId), { ...auth, 'Idempotency-Key': 'after-hold' });
+  assert.equal(pay.status, 409);
+  assert.equal(pay.json.code, 'quote_expired');
+  assert.equal(fake.used.length, 0, 'Paystack is not called for an order that was given back');
+  assert.equal((await call('GET', `/orders/${order.id}`, undefined, auth)).json.status, 'cancelled');
 });
 
 test('refusals: no key, no token, a quote from another table, an expired quote, Paystack not connected', async () => {

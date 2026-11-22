@@ -71,6 +71,13 @@
       "when": 1795386444406,
       "tag": "0009_guest_limits",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795386659460,
+      "tag": "0010_order_holds",
+      "breakpoints": true
     }
   ]
 }
