@@ -30,7 +30,7 @@ export function IntegrationsScreen() {
   return (
     <OwnerPage title={t('owner.integrations')} subtitle={t('ownerPay.lead')}>
       <DeskWait
-        loading={settings.isLoading}
+        loading={settings.isPending}
         error={settings.isError}
         onRetry={() => void settings.refetch()}
       >

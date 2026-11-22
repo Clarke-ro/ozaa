@@ -124,7 +124,7 @@ export function FeedbackScreen() {
             </View>
           </View>
           <DeskWait
-            loading={list.isLoading}
+            loading={list.isPending}
             error={list.isError}
             onRetry={() => void list.refetch()}
           >

@@ -107,7 +107,7 @@ export function MenuScreen() {
       }
     >
       <DeskWait
-        loading={desk.menu.isLoading || desk.venue.isLoading}
+        loading={desk.menu.isPending || desk.venue.isPending}
         error={desk.menu.isError || desk.venue.isError}
         onRetry={() => void desk.menu.refetch()}
       >

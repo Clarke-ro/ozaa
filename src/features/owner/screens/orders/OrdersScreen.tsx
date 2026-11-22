@@ -72,13 +72,14 @@ export function OrdersScreen() {
       <OrdersToolbar
         filter={filter}
         filters={filters}
-        counts={counts}
+        // No numbers until the orders have loaded: offline, "New 0" would say the kitchen is clear.
+        counts={desk.orders.data ? counts : undefined}
         onFilter={setPicked}
         layout={layout}
         onLayout={wide ? setLayout : undefined}
       />
       <DeskWait
-        loading={desk.orders.isLoading}
+        loading={desk.orders.isPending}
         error={desk.orders.isError}
         onRetry={() => void desk.orders.refetch()}
       >

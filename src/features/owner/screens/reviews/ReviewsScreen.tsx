@@ -58,7 +58,7 @@ export function ReviewsScreen() {
   return (
     <OwnerPage title={t('owner.reviews')} subtitle={t('ownerLead.reviews')}>
       <DeskWait
-        loading={reviews.isLoading}
+        loading={reviews.isPending}
         error={reviews.isError}
         onRetry={() => void reviews.refetch()}
       >

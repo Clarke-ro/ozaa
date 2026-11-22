@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { tokens } from '@/theme/tokens';
+import { OfflineNote } from '@/ui/OfflineNote';
 import { useTheme } from '@/ui/theme';
 import { useOwnerSession } from '@/features/session';
 import { useOwnerLayout } from './layout';
@@ -80,6 +81,8 @@ export function OwnerPage({
           back={back}
           compact={compactTitle && !wide}
         />
+        {/* Offline, numbers on screen may be old and new orders won't arrive: say so on every page. */}
+        <OfflineNote />
         <View style={[styles.body, wide && styles.bodyWide]}>{children}</View>
       </ScrollView>
       {footer}
