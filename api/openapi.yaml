@@ -595,6 +595,10 @@ paths:
                 properties:
                   id: { type: string }
                   googleReviewUrl: { type: ['string', 'null'], format: uri, description: 'Always null. Kept so older clients still parse; reviews are not routed by stars.' }
+        '422':
+          description: 'review_needs_order: this visit (or its table) has no order to review yet.'
+          content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
   # ---------------------------------------------------------------- game: Play while you wait
   /venues/{venueSlug}/game/leaderboard:
     get:

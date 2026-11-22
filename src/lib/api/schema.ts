@@ -3947,6 +3947,16 @@ export interface operations {
                     };
                 };
             };
+            /** @description review_needs_order: this visit (or its table) has no order to review yet. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            429: components["responses"]["TooManyRequests"];
         };
     };
     getLeaderboard: {
