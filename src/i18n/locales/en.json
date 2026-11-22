@@ -379,6 +379,7 @@
     "thanksBody": "Your review goes to {{venue}}. It helps them get better.",
     "backHome": "Back to the page",
     "failed": "That did not post. Check your connection and try again.",
+    "needsOrder": "Order first, then you can leave a review.",
     "starsA11y_one": "1 star",
     "starsA11y_other": "{{count}} stars"
   },
@@ -409,6 +410,7 @@
     "offers": "Today's deals",
     "feedback": "Tell the manager",
     "feedbackLead": "This goes to the manager only and is never posted.",
+    "feedbackLimit": "The manager already has your notes from this visit.",
     "send": "Send",
     "sent": "Sent to the manager.",
     "feedbackHint": "What went well, or what we should fix",
@@ -703,6 +705,8 @@
     "loading": "Loading",
     "crashTitle": "This page stopped working",
     "crashBody": "Something broke on our side. Try again to reload it.",
+    "offlinePageTitle": "You're offline",
+    "offlinePage": "This page opens as soon as you're back online.",
     "quantityRange": "One dish in your order is for too few or too many. Change how many and send it again.",
     "notPublished": "This menu isn’t open yet, so the order wasn’t sent.",
     "forbidden": "Your role can’t do this. Ask the owner."
@@ -725,6 +729,7 @@
     "blockedBody": "Ask the owner if you need it.",
     "goToday": "Go to Today",
     "loadFailed": "This did not load. Check the connection and try again.",
+    "offlineWait": "You're offline. This page loads as soon as you're back online.",
     "saved": "Saved",
     "saveFailed": "That did not save. Check the connection and try again.",
     "tryAgain": "Try again",

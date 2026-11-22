@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { boolean, check, index, integer, jsonb, pgTable, text, unique } from 'drizzle-orm/pg-core';
+import { boolean, check, index, integer, jsonb, pgTable, text, timestamp, unique, uniqueIndex } from 'drizzle-orm/pg-core';
 import { at } from './columns.ts';
 import { venues } from './venues.ts';
 
@@ -77,6 +77,28 @@ export const otpCodes = pgTable('otp_codes', {
   usedAt: at('used_at'),
 }, (t) => [index('otp_codes_phone').on(t.phoneHash, t.sentAt)]).enableRLS();
 
+/**
+ * Per-phone counters for loyalty texts. The row holds hashes and times only, never the number.
+ * `sentAt` is the rolling hour of texts we reserved; its length is the hourly cap. A wrong-guess
+ * streak lives here too, so a new code cannot reset the lock.
+ */
+export const otpPhoneLimits = pgTable('otp_phone_limits', {
+  phoneHash: text('phone_hash').primaryKey(),
+  sentAt: timestamp('sent_at', { withTimezone: true }).array().notNull().default(sql`'{}'::timestamptz[]`),
+  failCount: integer('fail_count').notNull().default(0),
+  failWindowStartedAt: at('fail_window_started_at').notNull(),
+  lockedUntil: at('locked_until'),
+}).enableRLS();
+
+/**
+ * How many loyalty texts one venue has reserved in the rolling day. Requests with no guest
+ * session share the bucket `unscoped`, so they cannot spend another venue's allowance.
+ */
+export const otpSendBuckets = pgTable('otp_send_buckets', {
+  bucket: text('bucket').primaryKey(),
+  sentAt: timestamp('sent_at', { withTimezone: true }).array().notNull().default(sql`'{}'::timestamptz[]`),
+}).enableRLS();
+
 /** Written reviews (WrittenReview). First name only; no phone. */
 export const writtenReviews = pgTable('written_reviews', {
   id: text('id').primaryKey(),
@@ -88,7 +110,12 @@ export const writtenReviews = pgTable('written_reviews', {
   highlights: text('highlights').array().notNull().default(sql`'{}'::text[]`),
   reply: text('reply'),
   createdAt: at('created_at').notNull().defaultNow(),
-}, (t) => [check('written_reviews_stars', sql`${t.stars} between 1 and 5`), index('written_reviews_venue_created').on(t.venueId, t.createdAt)]).enableRLS();
+}, (t) => [
+  check('written_reviews_stars', sql`${t.stars} between 1 and 5`),
+  index('written_reviews_venue_created').on(t.venueId, t.createdAt),
+  // One review per order. Null order ids (notes from before this rule) stay allowed, many of them.
+  uniqueIndex('written_reviews_one_order').on(t.orderId).where(sql`${t.orderId} is not null`),
+]).enableRLS();
 
 /** Private notes to the manager (FeedbackItem). A phone only if the guest chose to leave one. */
 export const feedback = pgTable('feedback', {
@@ -103,7 +130,12 @@ export const feedback = pgTable('feedback', {
   archived: boolean('archived').notNull().default(false),
   visibleAfter: at('visible_after').notNull().defaultNow(),
   createdAt: at('created_at').notNull().defaultNow(),
-}, (t) => [index('feedback_venue_created').on(t.venueId, t.createdAt)]).enableRLS();
+  // Which visit sent the note, so one session can't fill the manager's list. Not shown to anyone.
+  guestSessionId: text('guest_session_id'),
+}, (t) => [
+  index('feedback_venue_created').on(t.venueId, t.createdAt),
+  index('feedback_session').on(t.venueId, t.guestSessionId),
+]).enableRLS();
 
 /** Game scores for the weekly leaderboard. runId is unique, so a replayed score counts once. */
 export const gameScores = pgTable('game_scores', {

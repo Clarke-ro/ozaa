@@ -1,5 +1,15 @@
 import { sql } from 'drizzle-orm';
-import { boolean, check, date, index, integer, jsonb, pgTable, text, unique } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  check,
+  date,
+  index,
+  integer,
+  jsonb,
+  pgTable,
+  text,
+  unique,
+} from 'drizzle-orm/pg-core';
 import { at, money } from './columns.ts';
 import { loyaltyMembers } from './guests.ts';
 import { venues } from './venues.ts';
@@ -49,6 +59,13 @@ export const orders = pgTable(
       onDelete: 'set null',
     }),
     createdByStaffId: text('created_by_staff_id'),
+    // Who marked the bill paid by hand (cash, card machine, transfer, MoMo), and when.
+    // Null when the guest paid online, or when the order was paid before this was recorded.
+    // A membership, not a user: the same person can work at more than one venue.
+    paidByMembershipId: text('paid_by_membership_id'),
+    paidAt: at('paid_at'),
+    // Who cancelled it. Cancel is the last change, so updatedAt is that moment.
+    cancelledByMembershipId: text('cancelled_by_membership_id'),
     createdAt: at('created_at').notNull().defaultNow(),
     updatedAt: at('updated_at').notNull().defaultNow(),
     readyAt: at('ready_at'),
@@ -71,6 +88,12 @@ export const orders = pgTable(
     index('orders_session_open')
       .on(t.guestSessionId)
       .where(sql`${t.status} = 'received' and ${t.paidPesewas} = 0`),
+    // "What changed since I last asked?" polls by updated_at, not by when the order was placed.
+    index('orders_venue_updated').on(t.venueId, t.updatedAt),
+    // Open tickets are a handful. A partial index keeps that poll off the venue's whole history.
+    index('orders_venue_open')
+      .on(t.venueId, t.updatedAt)
+      .where(sql`${t.status} in ('received', 'accepted', 'preparing', 'ready')`),
     check(
       'orders_money',
       sql`${t.subtotalPesewas} >= 0 and ${t.totalPesewas} >= 0 and ${t.paidPesewas} between 0 and ${t.totalPesewas}`,
@@ -99,54 +122,71 @@ export const orderLines = pgTable(
     paid: boolean('paid').notNull().default(false),
   },
   // Every order read loads its lines.
-  (t) => [check('order_lines_quantity', sql`${t.quantity} >= 1`), index('order_lines_order').on(t.orderId)],
+  (t) => [
+    check('order_lines_quantity', sql`${t.quantity} >= 1`),
+    index('order_lines_order').on(t.orderId),
+  ],
 ).enableRLS();
 
 /**
  * A bill quote (BillQuote): what one guest will pay now. A payment can only start from a quote
  * that hasn't expired, so the amount Paystack charges is always the server's own figure.
  */
-export const billQuotes = pgTable('bill_quotes', {
-  id: text('id').primaryKey(),
-  orderId: text('order_id')
-    .notNull()
-    .references(() => orders.id, { onDelete: 'cascade' }),
-  mode: text('mode', { enum: ['whole', 'equal', 'items'] }).notNull(),
-  lineIds: text('line_ids')
-    .array()
-    .notNull()
-    .default(sql`'{}'::text[]`),
-  sharePesewas: money('share_pesewas').notNull(),
-  tipPesewas: money('tip_pesewas').notNull(),
-  feePesewas: money('fee_pesewas').notNull().default(0),
-  totalPesewas: money('total_pesewas').notNull(),
-  remainingAfterPesewas: money('remaining_after_pesewas').notNull(),
-  expiresAt: at('expires_at').notNull(),
-  createdAt: at('created_at').notNull().defaultNow(),
-}, (t) => [index('bill_quotes_order').on(t.orderId)]).enableRLS();
+export const billQuotes = pgTable(
+  'bill_quotes',
+  {
+    id: text('id').primaryKey(),
+    orderId: text('order_id')
+      .notNull()
+      .references(() => orders.id, { onDelete: 'cascade' }),
+    mode: text('mode', { enum: ['whole', 'equal', 'items'] }).notNull(),
+    lineIds: text('line_ids')
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
+    sharePesewas: money('share_pesewas').notNull(),
+    tipPesewas: money('tip_pesewas').notNull(),
+    feePesewas: money('fee_pesewas').notNull().default(0),
+    totalPesewas: money('total_pesewas').notNull(),
+    remainingAfterPesewas: money('remaining_after_pesewas').notNull(),
+    expiresAt: at('expires_at').notNull(),
+    createdAt: at('created_at').notNull().defaultNow(),
+  },
+  (t) => [index('bill_quotes_order').on(t.orderId)],
+).enableRLS();
 
 /** "Call the waiter" (WaiterCall), with the owner app's reply and snooze. */
-export const waiterCalls = pgTable('waiter_calls', {
-  id: text('id').primaryKey(),
-  venueId: text('venue_id')
-    .notNull()
-    .references(() => venues.id),
-  tableCode: text('table_code').notNull(),
-  reason: text('reason', {
-    enum: ['water', 'bill', 'cutlery', 'order_more', 'clean_table', 'other'],
-  }).notNull(),
-  note: text('note'),
-  status: text('status', { enum: ['open', 'acknowledged', 'resolved'] })
-    .notNull()
-    .default('open'),
-  staffMembershipId: text('staff_membership_id'),
-  staffFirstName: text('staff_first_name'),
-  reply: text('reply'),
-  guestSessionId: text('guest_session_id'),
-  createdAt: at('created_at').notNull().defaultNow(),
-  acknowledgedAt: at('acknowledged_at'),
-  resolvedAt: at('resolved_at'),
-  repliedAt: at('replied_at'),
-  snoozedUntil: at('snoozed_until'),
-  // The owner's call queue polls a venue's calls every few seconds.
-}, (t) => [index('waiter_calls_venue_created').on(t.venueId, t.createdAt)]).enableRLS();
+export const waiterCalls = pgTable(
+  'waiter_calls',
+  {
+    id: text('id').primaryKey(),
+    venueId: text('venue_id')
+      .notNull()
+      .references(() => venues.id),
+    tableCode: text('table_code').notNull(),
+    reason: text('reason', {
+      enum: ['water', 'bill', 'cutlery', 'order_more', 'clean_table', 'other'],
+    }).notNull(),
+    note: text('note'),
+    status: text('status', { enum: ['open', 'acknowledged', 'resolved'] })
+      .notNull()
+      .default('open'),
+    staffMembershipId: text('staff_membership_id'),
+    staffFirstName: text('staff_first_name'),
+    reply: text('reply'),
+    guestSessionId: text('guest_session_id'),
+    createdAt: at('created_at').notNull().defaultNow(),
+    acknowledgedAt: at('acknowledged_at'),
+    resolvedAt: at('resolved_at'),
+    repliedAt: at('replied_at'),
+    snoozedUntil: at('snoozed_until'),
+    // The owner's call queue polls a venue's calls every few seconds.
+  },
+  (t) => [
+    index('waiter_calls_venue_created').on(t.venueId, t.createdAt),
+    // Open calls are the ones the floor and the dashboard count every few seconds.
+    index('waiter_calls_venue_open')
+      .on(t.venueId)
+      .where(sql`${t.status} <> 'resolved'`),
+  ],
+).enableRLS();

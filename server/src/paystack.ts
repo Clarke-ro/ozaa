@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isTimeout, outboundSignal } from './http/outbound.ts';
 import type { PaystackTransaction } from './status.ts';
 
 export class PaystackError extends Error {
@@ -21,7 +22,10 @@ const txData = z.object({
   status: z.string(),
   amount: z.number().int(),
   currency: z.string(),
-  gateway_response: z.string().nullish().transform((v) => v ?? undefined),
+  gateway_response: z
+    .string()
+    .nullish()
+    .transform((v) => v ?? undefined),
 });
 
 export type Paystack = ReturnType<typeof paystackClient>;
@@ -31,16 +35,31 @@ export type Paystack = ReturnType<typeof paystackClient>;
  * and nowhere else. Amounts are in pesewas, which is what Paystack expects for GHS.
  * Every answer is checked with zod: we never act on a shape we didn't expect.
  */
-export function paystackClient(secret: string, fetchFn: typeof fetch = fetch, base = 'https://api.paystack.co') {
+export function paystackClient(
+  secret: string,
+  fetchFn: typeof fetch = fetch,
+  base = 'https://api.paystack.co',
+  timeoutMs?: number,
+) {
   const call = async (path: string, init: { method: 'GET' | 'POST'; body?: unknown }) => {
-    const res = await fetchFn(`${base}${path}`, {
-      method: init.method,
-      headers: { Authorization: `Bearer ${secret}`, 'Content-Type': 'application/json' },
-      body: init.body === undefined ? undefined : JSON.stringify(init.body),
-    });
+    let res: Response;
+    try {
+      res = await fetchFn(`${base}${path}`, {
+        method: init.method,
+        headers: { Authorization: `Bearer ${secret}`, 'Content-Type': 'application/json' },
+        body: init.body === undefined ? undefined : JSON.stringify(init.body),
+        signal: outboundSignal(timeoutMs),
+      });
+    } catch (error) {
+      if (isTimeout(error)) throw new PaystackError('Paystack took too long. Try again.', 503);
+      throw error;
+    }
     const parsed = envelope.safeParse(await res.json().catch(() => null));
     if (!res.ok || !parsed.success || !parsed.data.status) {
-      throw new PaystackError(parsed.success ? parsed.data.message : 'Unexpected Paystack reply', res.status);
+      throw new PaystackError(
+        parsed.success ? parsed.data.message : 'Unexpected Paystack reply',
+        res.status,
+      );
     }
     return parsed.data.data;
   };
@@ -97,7 +116,9 @@ export function paystackClient(secret: string, fetchFn: typeof fetch = fetch, ba
     },
 
     async verify(reference: string): Promise<PaystackTransaction> {
-      const data = await call(`/transaction/verify/${encodeURIComponent(reference)}`, { method: 'GET' });
+      const data = await call(`/transaction/verify/${encodeURIComponent(reference)}`, {
+        method: 'GET',
+      });
       return txData.parse(data);
     },
   };

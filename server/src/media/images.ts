@@ -14,9 +14,14 @@ export async function imageFor(db: Db, storage: MediaStorage | null, venueId: st
   if (!row || !storage) throw new Problem(422, 'media_not_found', 'That photo did not finish uploading. Try again.');
   let { width, height } = row;
   if (!width || !height) {
-    const size = await storage.measure(row.path);
-    if (!size) throw new Problem(422, 'media_not_found', 'That photo did not finish uploading. Try again.');
-    ({ width, height } = size);
+    const seen = await storage.inspect(row.path, row.contentType);
+    if (!seen.ok) {
+      // A signed URL can be filled with anything. Drop a file that is not the photo we signed for
+      // so the public bucket does not keep serving it.
+      if (seen.reason === 'rejected') await storage.remove(row.path).catch(() => undefined);
+      throw new Problem(422, 'media_not_found', 'That photo did not finish uploading. Try again.');
+    }
+    ({ width, height } = seen);
     await db.update(media).set({ width, height }).where(eq(media.id, row.id));
   }
   return { url: storage.publicUrl(row.path), width, height };

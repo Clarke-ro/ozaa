@@ -52,7 +52,7 @@ export function CallsScreen() {
         columns={desktop ? 4 : 2}
       />
       <DeskWait
-        loading={calls.isLoading}
+        loading={calls.isPending}
         error={calls.isError}
         onRetry={() => void calls.refetch()}
       >

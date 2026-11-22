@@ -37,6 +37,72 @@ In `server/src/orders/orderInventory.ts`, change `UNPAID_HOLD_MS` to `60 * 1000`
 
 ---
 
+## 2026-11-18 · Guests can't cheapen a delivery, stamp, or flood the manager
+
+**What we built**
+
+The server now checks five things a phone used to be able to invent. A delivery fee is the far edge of the venue's zone. A game stamp needs a paid order. A photo has to be a real jpeg, png, or webp under 5 MB. A review needs an order, one per order. A typed tip stops at GHS 10,000.
+
+**How it works**
+
+```
+delivery pin inside the zone? → charge maxDistanceKm, not the pin
+game score looks possible? → save it → stamp only if this card paid in the last day
+photo attached → read the bytes → wrong file is deleted
+review → this visit's order, and that order already reviewed? return the same one
+custom tip over GHS 10,000 → 400, not a crash
+```
+
+**Files to look at**
+
+- `src/lib/onlineOrdering.ts`: the zone check. The server copy is generated from this file.
+- `server/src/routes/guestExtras.ts`: reviews, notes, and game stamps.
+- `server/src/media/storage.ts`: what a signed upload is allowed to contain.
+- `src/features/pay/quoteBill.ts`: the tip cap.
+
+**New idea: the phone is not a witness**
+
+The app can show a fee or a score before the server answers. Anyone can send a different number. The server has to decide from something the phone cannot edit, such as the venue's own zone, a paid order, or the bytes in the file.
+
+**Try it yourself**
+
+In `src/lib/onlineOrdering.test.ts`, change the pin to the venue's own coordinates. The fee should stay the zone-edge amount. Run `npx jest src/lib/onlineOrdering.test.ts`.
+
+---
+
+## 2026-11-18 · Staff phones ask only for what changed
+
+**What we built**
+
+Every owner screen used to download up to 300 orders, with every dish, every 5 seconds. The order page did the same just to show one ticket, so anything older than those 300 could not be opened. The home numbers were added up in JavaScript from two days of orders. Now a poll asks for orders that changed, the order page loads one order, and the home totals are one database query kept for 4 seconds.
+
+**How it works**
+
+```
+first open of Orders → newest 300
+every 5 seconds → orders with updatedAt at or after the newest one already on screen
+order page → GET /owner/orders/{id}
+home → one SQL totals row, reused for 4 seconds
+```
+
+An older app that does not send `updatedSince` still gets the full page. A guest's write limit follows their visit, not the Wi-Fi address. The address is only a high backstop, so a dining room on one network is not treated as one person.
+
+**Files to look at**
+
+- `server/src/orders/listOrders.ts`: the order list and the change filter.
+- `server/src/routes/deskStats.ts`: home totals in SQL.
+- `src/features/owner/desk/mergeOrders.ts`: folding a small poll into the list already on screen.
+
+**New idea: a watermark**
+
+A watermark is the newest `updatedAt` the phone has already seen. The next poll sends that time. The server returns orders at that time or later, so a status change is not missed when two orders share a millisecond. The phone remembers order ids it has already chimed for, so a short poll still rings only for a new one.
+
+**Try it yourself**
+
+In `server/src/http/rateLimit.ts`, set `GUEST_SESSION_WRITES_PER_MIN` to 2 and start the server. Place three orders from one table visit. The third is refused. A second table on the same address can still order.
+
+---
+
 ## 2026-11-16 · One Payment step, and doors that stay shut
 
 **What we built**
@@ -91,7 +157,7 @@ theme.white   → buttons on photos (always pure white)
 
 **New idea: name colours by job, not by look**
 
-`surface` means "a card", `bg` means "the page". Because the code says what each colour is *for*, changing the page from white to canvas was one line, and the cards stayed white without touching them.
+`surface` means "a card", `bg` means "the page". Because the code says what each colour is _for_, changing the page from white to canvas was one line, and the cards stayed white without touching them.
 
 **Try it yourself**
 
@@ -136,6 +202,7 @@ In the owner app as Akosua (`0240000005`), connect Paystack with `pk_test_…` a
 **What we built**
 
 Before sending an order, a guest at a venue that takes payments in the app picks **Pay now** or **Pay later**:
+
 - **At a table:** pay later ("Ask for the bill after your meal") is ticked first, because that's how most people eat out.
 - **Pickup or delivery:** pay now is ticked first. Later means "Pay when you collect" or "Pay when it arrives".
 - **Pay now** sends the order, then opens the Pay page (MoMo or card, Paystack test).
@@ -157,7 +224,7 @@ Send → order made → now ? /slug/pay : /slug/status
 
 **New idea: a flaky test**
 
-A test that sometimes passes and sometimes fails is *flaky*. `guest-orders` reloaded the page right after tapping Menu. If the reload was faster than the tap, it reloaded the home page and failed. Waiting for the address to change first made it pass every time.
+A test that sometimes passes and sometimes fails is _flaky_. `guest-orders` reloaded the page right after tapping Menu. If the reload was faster than the tap, it reloaded the home page and failed. Waiting for the address to change first made it pass every time.
 
 **Try it yourself**
 
@@ -190,7 +257,7 @@ link: https://cravins-app.vercel.app/mamas-kitchen → online ordering on? order
 
 **New idea: a race**
 
-Two things that start together and finish in an unknown order are a *race*. Here, "read the saved visit" and "save the new table" raced, and the slower one won. The fix is to make one wait for the other (`hydrated`). The test reproduces the race, and it failed until the fix went in.
+Two things that start together and finish in an unknown order are a _race_. Here, "read the saved visit" and "save the new table" raced, and the slower one won. The fix is to make one wait for the other (`hydrated`). The test reproduces the race, and it failed until the fix went in.
 
 **Try it yourself**
 
@@ -203,6 +270,7 @@ In the owner app, open **QR codes and links**, download a table's QR and scan it
 **What we built**
 
 Customers ordering from a venue's link now have:
+
 - **Track strip.** While an order is on its way, the venue page shows "Order #673 · Received — Track ›". Tap it to open the live status page.
 - **My orders** (the receipt button on the banner). The order on its way, followed live, and earlier orders from this phone, with their dishes, total, date and last status.
 - **Notifications** (the bell on the banner, with a count of new ones). The same page table guests have: order updates as they happen.
@@ -3656,6 +3724,7 @@ In `orderMachine.test.ts`, check that a waiter can accept an order but can't sta
 Stat labels such as "Pending orders" used to break onto two lines, or end in "…", on phones. Now they stay on one line and get a little smaller when there isn't room. The same goes for Quick actions labels, the big numbers on the stat cards, the trend lines on Sales, and settings rows like "Stamps on a full card".
 
 Also in this change:
+
 - Quick actions are three across on phones again.
 - The Sales card is about 0.25 cm wider, on phones only.
 - The last row of Quick actions now lines up with the rows above it.
@@ -3687,9 +3756,10 @@ Open Sales in a narrow browser window and drag the window wider. The labels grow
 
 **What we built**
 
-The guest's timeline was always one step behind the owner app. A step only got its tick once the *next* step started, so Served never ticked at all. Now a step is ticked the moment staff mark it, and the step after it is highlighted.
+The guest's timeline was always one step behind the owner app. A step only got its tick once the _next_ step started, so Served never ticked at all. Now a step is ticked the moment staff mark it, and the step after it is highlighted.
 
 Pickup and delivery orders end as **Picked up** or **Delivered** instead of Served. The wording changes on:
+
 - the guest timeline and status title
 - My orders and the guest's notifications
 - the owner's button ("Mark picked up" / "Mark delivered")
@@ -3722,7 +3792,7 @@ In `orderTimeline.test.ts`, check what `timelineSteps('ready')` returns.
 
 I read every server route, the payment flow, uploads, the hosting config and the workflows, and searched all of git history for leaked keys. The full report is `docs/SECURITY_AUDIT_2026-11-17.md`.
 
-One real hole turned up, now fixed. An owner could invite someone else's phone number with *their own* email, then sign in as that person. Now an invite only adds an email for someone who works nowhere but the inviting owner's venues.
+One real hole turned up, now fixed. An owner could invite someone else's phone number with _their own_ email, then sign in as that person. Now an invite only adds an email for someone who works nowhere but the inviting owner's venues.
 
 The audit also added rate limits for guests, security headers, a request size cap, a fix for a payment status race, and patched packages.
 
@@ -3756,7 +3826,7 @@ Migration `0005` adds 17 indexes, a rule that two staff can't share an email, an
 
 **How it works**
 
-Without an index, finding an order's lines means reading *every* line in the table. With an index on `order_lines(order_id)`, Postgres jumps straight to them, like a book's index instead of reading every page.
+Without an index, finding an order's lines means reading _every_ line in the table. With an index on `order_lines(order_id)`, Postgres jumps straight to them, like a book's index instead of reading every page.
 
 ```
 no index:   scan 1, 2, 3 … 90,000 lines → keep the 3 that match
@@ -3792,7 +3862,7 @@ crash ─► scrub (drop headers, body, query, user, breadcrumbs) ─► Sentry
 ```
 
 - **Server:** only unexpected errors are reported, never a normal answer like "wrong code".
-- **App:** Sentry's code is downloaded *only after the first error*, in its own 52 KB file. A guest on a normal visit downloads nothing extra.
+- **App:** Sentry's code is downloaded _only after the first error_, in its own 52 KB file. A guest on a normal visit downloads nothing extra.
 - **Demo:** sends nothing.
 
 **Files to look at**
@@ -3835,8 +3905,40 @@ The rest is mostly the framework (Expo Router, React Native for web, React) and 
 
 **New idea: measure what's actually in the bundle**
 
-A library's size on disk isn't what users download. The build drops the unused parts, so I measured each library's share of the *final* file using its source map. That showed Zod at 481 KB, while all the icons together were only 79 KB.
+A library's size on disk isn't what users download. The build drops the unused parts, so I measured each library's share of the _final_ file using its source map. That showed Zod at 481 KB, while all the icons together were only 79 KB.
 
 **Try it yourself**
 
 Upload a phone photo to a dish, then open the photo in a new tab. Check its size and width.
+
+## 2026-11-22 · When the restaurant Wi-Fi drops
+
+**What we built**
+
+I tested every owner page with the connection off. Two real problems turned up, and both are fixed:
+
+1. **False empty screens.** Offline, Orders said "No new orders" and Menu said "No sections yet". A busy kitchen could believe there was nothing to cook. Now each page says "You're offline. This page loads as soon as you're back online", and every owner page shows the offline bar.
+2. **The crash screen.** Each page's code is a separate file, downloaded the first time you open it. Offline, that download failed and the app showed "This page stopped working". It now says "You're offline" and opens the page by itself when the connection is back. After a new deploy, the old file names are gone, so the app reloads once to pick up the new version.
+
+**How it works**
+
+```
+request offline ─► waits (paused)  ─► isLoading = false, data = none  ─► "No new orders"  ✗
+                                      isPending = true                ─► "You're offline" ✓
+```
+
+`isLoading` means "fetching right now". A request waiting for the network isn't fetching, so the screen thought it was done. `isPending` means "no data yet", which is what the screen needs to know.
+
+**Files to look at**
+
+- `src/features/owner/chrome/DeskWait.tsx`: the offline message.
+- `src/ui/AppErrorBoundary.tsx` and `src/ui/chunkError.ts`: the page-file case.
+- `e2e/owner-offline.spec.ts`: both cases, tested in a real browser.
+
+**New idea: test the unhappy path**
+
+Everything looked fine online. Only switching the connection off showed what a waiter on bad Wi-Fi would see.
+
+**Try it yourself**
+
+In Chrome's developer tools, go to Network → Offline, then tap through the owner app.

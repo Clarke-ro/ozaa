@@ -63,7 +63,7 @@ export function StaffDetailScreen({ memberId }: { memberId: string }) {
       back={{ label: t('owner.staff'), onPress: back }}
     >
       <DeskWait
-        loading={staff.isLoading}
+        loading={staff.isPending}
         error={staff.isError}
         onRetry={() => void staff.refetch()}
       >

@@ -18,6 +18,10 @@ export const ownerKeys = {
   insights: (venueId: string, range?: string) =>
     (range ? ['owner-insights', venueId, range] : ['owner-insights', venueId]) as readonly string[],
   orders: (venueId: string) => ['owner-orders', venueId] as const,
+  /** One order. Sits under `orders`, so saving an order refreshes this page too. */
+  order: (venueId: string, orderId = '') => ['owner-orders', venueId, orderId] as const,
+  /** The new-order chime. Open tickets, then only what changed. Not the history list. */
+  liveOrders: (venueId: string) => ['owner-live-orders', venueId] as const,
   floor: (venueId: string) => ['owner-floor', venueId] as const,
   calls: (venueId: string) => ['owner-calls', venueId] as const,
   tables: (venueId: string) => ['owner-tables', venueId] as const,

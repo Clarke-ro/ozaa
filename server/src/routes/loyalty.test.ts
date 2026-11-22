@@ -47,6 +47,18 @@ test('game wins earn one stamp a day when the venue switches it on; a reward nee
   await setGame(false);
   assert.equal((await play()).json.stampEarned, false, 'no stamp while the venue has the rule off');
   await setGame(true);
+  assert.equal((await play()).json.stampEarned, false, 'no stamp without a paid order');
+  const dish = (await call('GET', '/venues/mamas-kitchen/menu')).json.items[0];
+  const placed = await call(
+    'POST',
+    '/orders',
+    { clientOrderId: randomUUID(), lines: [{ menuItemId: dish.id, quantity: 1 }] },
+    { Authorization: `Bearer ${token}` },
+  );
+  assert.equal(placed.status, 201);
+  assert.equal((await play()).json.stampEarned, false, 'an unpaid order does not earn a stamp');
+  const paid = await call('POST', `/owner/orders/${placed.json.id}/manual-payment`, { method: 'cash' }, { ...as('user_owner', OWNER), 'Idempotency-Key': 'pay-game' });
+  assert.equal(paid.status, 200);
   assert.equal((await play()).json.stampEarned, true);
   assert.equal((await play()).json.stampEarned, false, 'one game stamp a day');
 

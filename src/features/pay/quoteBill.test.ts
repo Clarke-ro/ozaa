@@ -70,6 +70,22 @@ test('my items never asks for more than is left on the bill', () => {
   expect(quote.remainingAfterPesewas).toBe(0);
 });
 
+test('a custom tip stops at GHS 10,000, and a percent tip can still be larger', () => {
+  expect(() => quoteBill(bill(), { mode: 'whole', tip: { customPesewas: pesewas(1_000_001) } })).toThrow(
+    'tip_too_high',
+  );
+  const atCap = quoteBill(bill(), { mode: 'whole', tip: { customPesewas: pesewas(1_000_000) } });
+  expect(atCap.tipPesewas).toBe(1_000_000);
+  const percent = quoteBill(
+    bill({
+      lines: [{ id: 'a', totalPesewas: pesewas(20_000_000), paid: false }],
+      totalPesewas: pesewas(20_000_000),
+    }),
+    { mode: 'whole', tip: { percent: 15 } },
+  );
+  expect(percent.tipPesewas).toBe(3_000_000);
+});
+
 test('a paid line cannot be selected again', () => {
   expect(() => quoteBill(bill(), { mode: 'items', lineIds: ['missing'] })).toThrow(
     'line_unavailable',

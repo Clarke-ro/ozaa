@@ -24,14 +24,24 @@ export function mockOwnerOrderCalls(ctx: MockContext) {
       await gate();
       const since = filter?.since ? Date.parse(filter.since) : -Infinity;
       const until = filter?.until ? Date.parse(filter.until) : Infinity;
+      const updatedSince = filter?.updatedSince ? Date.parse(filter.updatedSince) : -Infinity;
+      const live = new Set(['received', 'accepted', 'preparing', 'ready']);
       const items = world.orders
         .filter((item) => item.order.venueId === venueId)
-        .filter((item) => {
-          const at = Date.parse(item.order.createdAt);
-          return at >= since && at < until;
-        })
-        .map((item) => fresh(world, item, now(), fast));
+        .map((item) => fresh(world, item, now(), fast))
+        .filter((order) => {
+          const at = Date.parse(order.createdAt);
+          if (at < since || at >= until) return false;
+          if (Date.parse(order.updatedAt) < updatedSince) return false;
+          if (filter?.live && !live.has(order.status)) return false;
+          return true;
+        });
       return { items, nextCursor: null as string | null };
+    },
+    async ownerGetOrder(orderId) {
+      await gate();
+      accessOf(world, tokens);
+      return fresh(world, findOrder(world, orderId), now(), fast);
     },
     async ownerCreateOrder(venueId, body, call) {
       await gate();

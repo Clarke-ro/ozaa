@@ -170,13 +170,26 @@ async function insertOrder(db: Db, input: SaveInput): Promise<string> {
  */
 export async function cancelOrder(
   db: Db,
-  input: { id: string; fromStatus: Order['status']; reason: string | null; now: number },
+  input: {
+    id: string;
+    fromStatus: Order['status'];
+    reason: string | null;
+    /** The staff member who cancelled it, for the order's audit trail. */
+    byMembershipId: string | null;
+    now: number;
+  },
 ): Promise<Order | null> {
   const at = new Date(input.now);
   const released = await db.transaction(async (tx) => {
     const [moved] = await tx
       .update(orders)
-      .set({ status: 'cancelled', cancelReason: input.reason, updatedAt: at, inventoryReleasedAt: at })
+      .set({
+        status: 'cancelled',
+        cancelReason: input.reason,
+        cancelledByMembershipId: input.byMembershipId,
+        updatedAt: at,
+        inventoryReleasedAt: at,
+      })
       .where(and(eq(orders.id, input.id), eq(orders.status, input.fromStatus), isNull(orders.inventoryReleasedAt)))
       .returning({ id: orders.id });
     if (!moved) return false;

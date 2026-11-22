@@ -65,7 +65,7 @@ export function StaffScreen() {
       action={<Button label={t('ownerStaff.inviteSomeone')} onPress={() => setInviting(true)} />}
     >
       <DeskWait
-        loading={staff.isLoading}
+        loading={staff.isPending}
         error={staff.isError}
         onRetry={() => void staff.refetch()}
       >

@@ -1,4 +1,6 @@
 # Generated files: CI regenerates these and fails if they differ, so Prettier must not touch them.
+# The contract is hand-written in a compact style. Prettier's YAML wrap rewrites the whole file.
+api/openapi.yaml
 src/lib/api/schema.ts
 src/theme/tokens.ts
 src/mocks/media.ts

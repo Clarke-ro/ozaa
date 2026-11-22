@@ -15,20 +15,35 @@ const schema = z.object({
   // Seals each venue's Paystack secret key in the database (src/secrets/sealed.ts). 64 hex
   // characters. Losing or changing it means every venue has to connect Paystack again.
   ENCRYPTION_KEY: z
-    .string({ error: 'ENCRYPTION_KEY is missing. Put 64 random hex characters in server/.env (openssl rand -hex 32).' })
-    .regex(/^[0-9a-fA-F]{64}$/, { error: 'ENCRYPTION_KEY must be 64 hex characters (openssl rand -hex 32).' }),
+    .string({
+      error:
+        'ENCRYPTION_KEY is missing. Put 64 random hex characters in server/.env (openssl rand -hex 32).',
+    })
+    .regex(/^[0-9a-fA-F]{64}$/, {
+      error: 'ENCRYPTION_KEY must be 64 hex characters (openssl rand -hex 32).',
+    }),
   // Postgres, e.g. Supabase's pooled connection string (Project Settings > Database). Holds a
   // password, so it lives in server/.env and Vercel's settings, never in git or a log.
   DATABASE_URL: z
-    .string({ error: 'DATABASE_URL is missing. Put your Postgres connection string in server/.env.' })
-    .regex(/^postgres(ql)?:\/\//, { error: 'DATABASE_URL must start with postgres:// or postgresql://.' }),
+    .string({
+      error: 'DATABASE_URL is missing. Put your Postgres connection string in server/.env.',
+    })
+    .regex(/^postgres(ql)?:\/\//, {
+      error: 'DATABASE_URL must start with postgres:// or postgresql://.',
+    }),
+  // Connections this process keeps open. Supabase's session pooler on a small plan is often 15,
+  // so 10 leaves room for a migration. Raise it only after checking that pooler's limit.
+  DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(20).default(10),
   // Signs guest tokens (src/guest/token.ts). A long random string; changing it ends every visit.
   GUEST_TOKEN_SECRET: z
     .string({ error: 'GUEST_TOKEN_SECRET is missing. Put a long random string in server/.env.' })
     .min(32, { error: 'GUEST_TOKEN_SECRET must be at least 32 characters.' }),
   // Clerk's secret key (sk_test_… for the development instance). Checks owner and staff sign-ins.
   // Without it the server still serves guests, and owner calls answer "sign-in not set up".
-  CLERK_SECRET_KEY: z.string().startsWith('sk_', { error: 'CLERK_SECRET_KEY must start with sk_.' }).optional(),
+  CLERK_SECRET_KEY: z
+    .string()
+    .startsWith('sk_', { error: 'CLERK_SECRET_KEY must start with sk_.' })
+    .optional(),
   // Supabase Storage for owner photo uploads (src/media/storage.ts). The URL is public; the secret
   // key (sb_secret_… or the service_role key) signs one-file upload URLs and stays on the server.
   // Without both, uploads answer "not set up" and everything else works.
@@ -39,7 +54,9 @@ const schema = z.object({
   SENTRY_DSN: z.url().optional(),
   SENTRY_ENVIRONMENT: z.string().default('production'),
   // Arkesel SMS, for the codes guests get when joining loyalty. The sender ID must be approved in
-  // Arkesel's dashboard. SMS_DAILY_LIMIT caps texts per day as a cost fuse.
+  // Arkesel's dashboard. SMS_DAILY_LIMIT is how many loyalty texts one venue may send per
+  // rolling day. Requests with no guest session share a separate bucket of the same size.
+  // Arkesel's own balance is the account-wide cost stop.
   ARKESEL_API_KEY: z.string().min(8).optional(),
   ARKESEL_SENDER_ID: z.string().min(3).max(11).default('Cravins'),
   SMS_DAILY_LIMIT: z.coerce.number().int().positive().default(300),
@@ -50,7 +67,12 @@ const schema = z.object({
   ALLOWED_ORIGINS: z
     .string()
     .default('http://localhost:8081')
-    .transform((s) => s.split(',').map((x) => x.trim()).filter(Boolean)),
+    .transform((s) =>
+      s
+        .split(',')
+        .map((x) => x.trim())
+        .filter(Boolean),
+    ),
 });
 
 export type Config = z.infer<typeof schema>;

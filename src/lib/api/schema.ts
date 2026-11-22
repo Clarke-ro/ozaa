@@ -702,6 +702,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/owner/orders/{orderId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One order, for the order page. Older apps still find it in the list. */
+        get: operations["ownerGetOrder"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/owner/orders/{orderId}/status": {
         parameters: {
             query?: never;
@@ -4527,6 +4544,10 @@ export interface operations {
                 since?: string;
                 /** @description Only orders created before this moment. With since, a date range such as one day in the venue's time zone. */
                 until?: string;
+                /** @description Only orders changed at or after this moment. Leave it out to keep the newest 300, which older apps still receive. */
+                updatedSince?: string;
+                /** @description When true, only orders the kitchen still has (received, accepted, preparing, ready). */
+                live?: boolean;
                 cursor?: components["parameters"]["Cursor"];
             };
             header?: never;
@@ -4578,6 +4599,30 @@ export interface operations {
             400: components["responses"]["BadRequest"];
             403: components["responses"]["Forbidden"];
             422: components["responses"]["Unprocessable"];
+        };
+    };
+    ownerGetOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                orderId: components["parameters"]["OrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The order, including dishes placed before the newest 300. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Order"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
     ownerSetOrderStatus: {

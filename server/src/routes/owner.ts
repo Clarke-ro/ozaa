@@ -1,12 +1,14 @@
 import { Hono, type Context } from 'hono';
-import { and, desc, eq, gte, inArray, lt, sql } from 'drizzle-orm';
+import { and, eq, lt, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { idempotencyKeys, orderLines, orders, paymentSettings } from '../db/schema.ts';
 import { body, Problem } from '../http/problem.ts';
 import type { Log } from '../log.ts';
 import { stampPaidOrder } from '../loyalty/paidOrder.ts';
+import { listOwnerOrders } from '../orders/listOrders.ts';
 import { releaseExpiredHolds } from '../orders/orderInventory.ts';
-import { cancelOrder, orderById, orderFromRows } from '../orders/orderStore.ts';
+import { cancelOrder, orderById } from '../orders/orderStore.ts';
+import { PaystackError } from '../paystack.ts';
 import { meOf, roleAt, ROLES, signedIn, type OwnerDeps } from '../owner/staff.ts';
 import type { MediaStorage } from '../media/storage.ts';
 import type { ClerkAdmin } from '../owner/clerkAdmin.ts';
@@ -117,7 +119,10 @@ export function ownerRoutes(deps: OwnerRouteDeps) {
     if (!shape.ok) throw new Problem(422, shape.code, 'Paystack did not accept these keys.');
     try {
       await deps.paystackClient(keys.secretKey).checkKey();
-    } catch {
+    } catch (error) {
+      if (error instanceof PaystackError && error.httpStatus === 503) {
+        throw new Problem(503, 'paystack_unavailable', 'Paystack took too long. Try again.');
+      }
       throw new Problem(
         422,
         'paystack_keys_invalid',
@@ -145,11 +150,14 @@ export function ownerRoutes(deps: OwnerRouteDeps) {
     try {
       await venue.paystack.checkKey();
       return c.json({ ok: true, checkedAt });
-    } catch {
+    } catch (error) {
+      const slow = error instanceof PaystackError && error.httpStatus === 503;
       return c.json({
         ok: false,
         checkedAt,
-        message: 'Paystack refused the saved key. Connect again with your current keys.',
+        message: slow
+          ? 'Paystack took too long. Try again.'
+          : 'Paystack refused the saved key. Connect again with your current keys.',
       });
     }
   });
@@ -164,53 +172,39 @@ export function ownerRoutes(deps: OwnerRouteDeps) {
     await releaseExpiredHolds(db, deps.now(), venueId);
     const since = c.req.query('since');
     const until = c.req.query('until');
+    const updatedSince = c.req.query('updatedSince');
     // A date that doesn't parse would reach Postgres as "Invalid Date" and fail as a 500.
-    for (const value of [since, until]) {
-      if (value !== undefined && Number.isNaN(Date.parse(value))) throw new Problem(400, 'validation', 'Use a date like 2026-11-17T09:00:00Z.');
+    for (const value of [since, until, updatedSince]) {
+      if (value !== undefined && Number.isNaN(Date.parse(value)))
+        throw new Problem(400, 'validation', 'Use a date like 2026-11-17T09:00:00Z.');
     }
-    const rows = await db
-      .select()
-      .from(orders)
-      .where(
-        and(
-          eq(orders.venueId, venueId),
-          statuses.data.length ? inArray(orders.status, statuses.data) : undefined,
-          since ? gte(orders.createdAt, new Date(since)) : undefined,
-          until ? lt(orders.createdAt, new Date(until)) : undefined,
-        ),
-      )
-      .orderBy(desc(orders.createdAt))
-      .limit(300);
-    const lines = rows.length
-      ? await db
-          .select()
-          .from(orderLines)
-          .where(
-            inArray(
-              orderLines.orderId,
-              rows.map((r) => r.id),
-            ),
-          )
-      : [];
-    // Grouped once, not filtered per order: up to 300 orders, polled every few seconds.
-    const byOrder = new Map<string, typeof lines>();
-    for (const line of lines) byOrder.set(line.orderId, [...(byOrder.get(line.orderId) ?? []), line]);
-    return c.json({
-      items: rows.map((row) => orderFromRows(row, byOrder.get(row.id) ?? [])),
-      nextCursor: null,
+    const items = await listOwnerOrders(db, venueId, {
+      statuses: statuses.data,
+      since: since ? new Date(since) : undefined,
+      until: until ? new Date(until) : undefined,
+      updatedSince: updatedSince ? new Date(updatedSince) : undefined,
+      live: c.req.query('live') === 'true',
     });
+    return c.json({ items, nextCursor: null });
   });
 
-  /** An order and the caller's role at its venue, if allowed. */
+  /** An order, the caller's role at its venue, and their membership there, if allowed. */
   const staffOrder = async (c: Context, allowed: typeof ROLES.orders) => {
     const who = await signedIn(c, deps);
     const found = await orderById(db, c.req.param('orderId') ?? '');
     if (!found) throw new Problem(404, 'order_not_found', 'We could not find that order.');
-    return { found, role: roleAt(who, found.row.venueId, allowed) };
+    const role = roleAt(who, found.row.venueId, allowed);
+    const membershipId = who.memberships.find((m) => m.venueId === found.row.venueId)?.id ?? null;
+    return { found, role, membershipId };
   };
 
+  app.get('/owner/orders/:orderId', async (c) => {
+    const { found } = await staffOrder(c, ROLES.orders);
+    return c.json(found.order);
+  });
+
   app.put('/owner/orders/:orderId/status', async (c) => {
-    const { found, role } = await staffOrder(c, ROLES.moveOrder);
+    const { found, role, membershipId } = await staffOrder(c, ROLES.moveOrder);
     const input = await body(
       c,
       z.object({ status: STATUS, cancelReason: z.string().max(200).optional() }),
@@ -224,6 +218,7 @@ export function ownerRoutes(deps: OwnerRouteDeps) {
         id: found.row.id,
         fromStatus: found.row.status,
         reason: input.cancelReason?.trim() || null,
+        byMembershipId: membershipId,
         now: deps.now(),
       });
       if (!order) {
@@ -253,7 +248,7 @@ export function ownerRoutes(deps: OwnerRouteDeps) {
   });
 
   app.post('/owner/orders/:orderId/manual-payment', async (c) => {
-    const { found } = await staffOrder(c, ROLES.markPaid);
+    const { found, membershipId } = await staffOrder(c, ROLES.markPaid);
     const input = await body(
       c,
       z.object({ method: z.enum(['cash', 'card_machine', 'bank_transfer', 'momo_merchant']) }),
@@ -269,13 +264,17 @@ export function ownerRoutes(deps: OwnerRouteDeps) {
       if (seen) return c.json((await orderById(db, found.row.id))?.order);
     }
     // Already paid: nothing changes, so a double tap is harmless. The whole total is marked paid.
+    // The first person to mark it keeps the credit: the update only matches while money is still owed.
+    const at = new Date(deps.now());
     await db.transaction(async (tx) => {
       const [paid] = await tx
         .update(orders)
         .set({
           paidPesewas: sql`${orders.totalPesewas}`,
           paymentMethod: input.method,
-          updatedAt: new Date(deps.now()),
+          paidByMembershipId: membershipId,
+          paidAt: at,
+          updatedAt: at,
         })
         .where(and(eq(orders.id, found.row.id), lt(orders.paidPesewas, orders.totalPesewas)))
         .returning({ id: orders.id });

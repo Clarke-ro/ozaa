@@ -14,6 +14,18 @@ import { itemFromRow, menuOf, venueRowById } from '../venues/venueData.ts';
 const text = z.record(z.string(), z.string().max(400)).refine((t) => typeof t.en === 'string', 'English is required');
 const name = z.record(z.string(), z.string().max(80)).refine((t) => !!t.en?.trim(), 'Add a name');
 const pesewas = z.number().int().min(0).max(100_000_000);
+const modifierGroup = z
+  .object({
+    id: z.string().min(1).max(80),
+    name,
+    min: z.number().int().min(0).max(80),
+    max: z.number().int().min(1).max(80),
+    options: z
+      .array(z.object({ id: z.string().min(1).max(80), name, pricePesewas: pesewas }))
+      .min(1)
+      .max(80),
+  })
+  .refine((group) => group.min <= group.max && group.min <= group.options.length);
 
 const categoryBody = z.object({
   name,
@@ -30,7 +42,7 @@ const categoryBody = z.object({
     .optional(),
 });
 
-// Dish details the server stores as they come (shown, never used to price): checked for shape only.
+// Photos and labels are stored as the app sends them. Add-on prices are checked: they change the bill.
 const itemBody = z.object({
   categoryId: z.string().min(1).optional(),
   name: name.optional(),
@@ -49,7 +61,9 @@ const itemBody = z.object({
   allergens: z.array(z.string().max(40)).max(20).optional(),
   calories: z.number().int().min(0).max(10_000).optional(),
   badges: z.array(z.enum(['popular', 'new', 'chef_pick'])).optional(),
-  modifierGroups: z.array(z.record(z.string(), z.unknown())).max(12).optional(),
+  // Add-on prices are added to the dish. They have to be real pesewas, or a negative price
+  // would shrink the bill. The shape is the one the dish form saves.
+  modifierGroups: z.array(modifierGroup).max(12).optional(),
   prepMinutes: z.number().int().min(0).max(600).optional(),
 });
 type ItemInput = z.infer<typeof itemBody>;
@@ -135,19 +149,32 @@ export function ownerMenuRoutes(deps: OwnerDeps & { storage: MediaStorage | null
     return c.json(categoryFromRow(row));
   });
 
-  /** Only an empty section can go: dishes in it would vanish from the menu with it. */
+  /**
+   * Only an empty section can go: dishes in it would vanish from the menu with it.
+   * The section has to belong to this venue. Category ids are on every guest menu, so looking
+   * dishes up by category id alone would let one venue delete another's old dishes, or learn
+   * whether that section still has live ones (409 versus 204). A section that isn't here gets
+   * the same 204 as one already removed, so a second tap still succeeds.
+   */
   app.delete('/owner/venues/:venueId/menu/categories/:categoryId', async (c) => {
     const venueId = await editorAt(c);
     const categoryId = c.req.param('categoryId');
+    const [category] = await db
+      .select({ id: menuCategories.id })
+      .from(menuCategories)
+      .where(and(eq(menuCategories.id, categoryId), eq(menuCategories.venueId, venueId)));
+    if (!category) return c.body(null, 204);
     const [{ n } = { n: 0 }] = await db
       .select({ n: count() })
       .from(menuItems)
-      .where(and(eq(menuItems.categoryId, categoryId), isNull(menuItems.deletedAt)));
+      .where(and(eq(menuItems.categoryId, categoryId), eq(menuItems.venueId, venueId), isNull(menuItems.deletedAt)));
     if (n > 0) throw new Problem(409, 'category_not_empty', 'Move or delete the dishes in this section first.');
     await db.transaction(async (tx) => {
       // Dishes deleted earlier still point at the section. Past orders keep their own copy of the
       // name and price, so these rows can go now.
-      await tx.delete(menuItems).where(and(eq(menuItems.categoryId, categoryId), isNotNull(menuItems.deletedAt)));
+      await tx
+        .delete(menuItems)
+        .where(and(eq(menuItems.categoryId, categoryId), eq(menuItems.venueId, venueId), isNotNull(menuItems.deletedAt)));
       await tx.delete(menuCategories).where(and(eq(menuCategories.id, categoryId), eq(menuCategories.venueId, venueId)));
     });
     return c.body(null, 204);
@@ -163,7 +190,7 @@ export function ownerMenuRoutes(deps: OwnerDeps & { storage: MediaStorage | null
     const [{ n } = { n: 0 }] = await db
       .select({ n: count() })
       .from(menuItems)
-      .where(and(eq(menuItems.categoryId, input.categoryId), isNull(menuItems.deletedAt)));
+      .where(and(eq(menuItems.categoryId, input.categoryId), eq(menuItems.venueId, venueId), isNull(menuItems.deletedAt)));
     const blank: MenuItem = {
       id: `itm_${crypto.randomUUID().replaceAll('-', '')}`,
       categoryId: input.categoryId,

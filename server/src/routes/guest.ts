@@ -12,6 +12,7 @@ import { releaseExpiredHolds } from '../orders/orderInventory.ts';
 import { orderById, saveOrder } from '../orders/orderStore.ts';
 import { priceOrder } from '../orders/priceOrder.ts';
 import { pesewas } from '../shared/brand.ts';
+import { MAX_CUSTOM_TIP_PESEWAS } from '../shared/quoteBill.ts';
 import type { PromoRule } from '../shared/promos.ts';
 import type { TaxSetup } from '../shared/types.ts';
 import {
@@ -56,7 +57,7 @@ const orderBody = z.object({
       type: z.enum(['pickup', 'delivery']),
       contact: z.object({ name: z.string().min(1).max(60), phone }),
       address: z.string().max(200).optional(),
-      location: z.object({ lat: z.number(), lng: z.number() }).optional(),
+      location: z.object({ lat: z.number().finite().min(-90).max(90), lng: z.number().finite().min(-180).max(180) }).optional(),
     })
     .optional(),
 });
@@ -65,7 +66,11 @@ const quoteBody = z.object({
   parts: z.number().int().min(2).max(20).optional(),
   lineIds: z.array(z.string()).optional(),
   tip: z
-    .object({ percent: z.union([z.literal(0), z.literal(5), z.literal(10), z.literal(15)]).optional(), customPesewas: z.number().int().min(0).optional() })
+    .object({
+      percent: z.union([z.literal(0), z.literal(5), z.literal(10), z.literal(15)]).optional(),
+      // A typed tip has no share to scale with. GHS 10,000 is the cap (quoteBill).
+      customPesewas: z.number().int().min(0).max(MAX_CUSTOM_TIP_PESEWAS).optional(),
+    })
     .optional(),
 });
 
