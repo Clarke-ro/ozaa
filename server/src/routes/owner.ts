@@ -186,12 +186,14 @@ export function ownerRoutes(deps: OwnerRouteDeps) {
     return c.json({ items, nextCursor: null });
   });
 
-  /** An order and the caller's role at its venue, if allowed. */
+  /** An order, the caller's role at its venue, and their membership there, if allowed. */
   const staffOrder = async (c: Context, allowed: typeof ROLES.orders) => {
     const who = await signedIn(c, deps);
     const found = await orderById(db, c.req.param('orderId') ?? '');
     if (!found) throw new Problem(404, 'order_not_found', 'We could not find that order.');
-    return { found, role: roleAt(who, found.row.venueId, allowed) };
+    const role = roleAt(who, found.row.venueId, allowed);
+    const membershipId = who.memberships.find((m) => m.venueId === found.row.venueId)?.id ?? null;
+    return { found, role, membershipId };
   };
 
   app.get('/owner/orders/:orderId', async (c) => {
@@ -200,7 +202,7 @@ export function ownerRoutes(deps: OwnerRouteDeps) {
   });
 
   app.put('/owner/orders/:orderId/status', async (c) => {
-    const { found, role } = await staffOrder(c, ROLES.moveOrder);
+    const { found, role, membershipId } = await staffOrder(c, ROLES.moveOrder);
     const input = await body(
       c,
       z.object({ status: STATUS, cancelReason: z.string().max(200).optional() }),
@@ -218,7 +220,9 @@ export function ownerRoutes(deps: OwnerRouteDeps) {
         updatedAt: at,
         ...(next === 'ready' ? { readyAt: at } : {}),
         ...(next === 'served' ? { servedAt: at } : {}),
-        ...(next === 'cancelled' ? { cancelReason: input.cancelReason?.trim() || null } : {}),
+        ...(next === 'cancelled'
+          ? { cancelReason: input.cancelReason?.trim() || null, cancelledByMembershipId: membershipId }
+          : {}),
       })
       .where(and(eq(orders.id, found.row.id), eq(orders.status, found.row.status)))
       .returning();
@@ -232,7 +236,7 @@ export function ownerRoutes(deps: OwnerRouteDeps) {
   });
 
   app.post('/owner/orders/:orderId/manual-payment', async (c) => {
-    const { found } = await staffOrder(c, ROLES.markPaid);
+    const { found, membershipId } = await staffOrder(c, ROLES.markPaid);
     const input = await body(
       c,
       z.object({ method: z.enum(['cash', 'card_machine', 'bank_transfer', 'momo_merchant']) }),
@@ -248,13 +252,17 @@ export function ownerRoutes(deps: OwnerRouteDeps) {
       if (seen) return c.json((await orderById(db, found.row.id))?.order);
     }
     // Already paid: nothing changes, so a double tap is harmless. The whole total is marked paid.
+    // The first person to mark it keeps the credit: the update only matches while money is still owed.
+    const at = new Date(deps.now());
     await db.transaction(async (tx) => {
       const [paid] = await tx
         .update(orders)
         .set({
           paidPesewas: sql`${orders.totalPesewas}`,
           paymentMethod: input.method,
-          updatedAt: new Date(deps.now()),
+          paidByMembershipId: membershipId,
+          paidAt: at,
+          updatedAt: at,
         })
         .where(and(eq(orders.id, found.row.id), lt(orders.paidPesewas, orders.totalPesewas)))
         .returning({ id: orders.id });

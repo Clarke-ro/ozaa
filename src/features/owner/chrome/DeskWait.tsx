@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { CloudOff } from 'lucide-react-native';
+import { CloudOff, WifiOff } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
+import { useOnline } from '@/ui/OfflineNote';
 import { useTheme } from '@/ui/theme';
 
 /** Grey blocks in the shape of the content while it loads, so nothing jumps when it arrives. */
@@ -38,6 +39,23 @@ export function DeskWait({
 }) {
   const { t } = useTranslation();
   const theme = useTheme();
+  const online = useOnline();
+  // Offline, a request waits instead of failing, so "still loading" would last for ever and the
+  // screen underneath would draw its empty state ("No new orders"). Say what is going on instead.
+  if (!online && (loading || error)) {
+    return (
+      <View
+        style={[styles.error, { borderColor: theme.line, backgroundColor: theme.surface }]}
+        accessibilityRole="alert"
+      >
+        <WifiOff size={28} color={theme.muted} />
+        <Text variant="body" style={styles.center}>
+          {t('ownerKit.offlineWait')}
+        </Text>
+        <Button label={t('ownerKit.tryAgain')} onPress={onRetry} tone="secondary" size="md" />
+      </View>
+    );
+  }
   if (loading) {
     return (
       <View

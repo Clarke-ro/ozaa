@@ -93,7 +93,7 @@ export function ServicesScreen() {
       }
     >
       <DeskWait
-        loading={services.isLoading}
+        loading={services.isPending}
         error={services.isError}
         onRetry={() => void services.refetch()}
       >

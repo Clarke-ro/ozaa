@@ -3844,3 +3844,35 @@ A library's size on disk isn't what users download. The build drops the unused p
 **Try it yourself**
 
 Upload a phone photo to a dish, then open the photo in a new tab. Check its size and width.
+
+## 2026-11-22 · When the restaurant Wi-Fi drops
+
+**What we built**
+
+I tested every owner page with the connection off. Two real problems turned up, and both are fixed:
+
+1. **False empty screens.** Offline, Orders said "No new orders" and Menu said "No sections yet". A busy kitchen could believe there was nothing to cook. Now each page says "You're offline. This page loads as soon as you're back online", and every owner page shows the offline bar.
+2. **The crash screen.** Each page's code is a separate file, downloaded the first time you open it. Offline, that download failed and the app showed "This page stopped working". It now says "You're offline" and opens the page by itself when the connection is back. After a new deploy, the old file names are gone, so the app reloads once to pick up the new version.
+
+**How it works**
+
+```
+request offline ─► waits (paused)  ─► isLoading = false, data = none  ─► "No new orders"  ✗
+                                      isPending = true                ─► "You're offline" ✓
+```
+
+`isLoading` means "fetching right now". A request waiting for the network isn't fetching, so the screen thought it was done. `isPending` means "no data yet", which is what the screen needs to know.
+
+**Files to look at**
+
+- `src/features/owner/chrome/DeskWait.tsx`: the offline message.
+- `src/ui/AppErrorBoundary.tsx` and `src/ui/chunkError.ts`: the page-file case.
+- `e2e/owner-offline.spec.ts`: both cases, tested in a real browser.
+
+**New idea: test the unhappy path**
+
+Everything looked fine online. Only switching the connection off showed what a waiter on bad Wi-Fi would see.
+
+**Try it yourself**
+
+In Chrome's developer tools, go to Network → Offline, then tap through the owner app.

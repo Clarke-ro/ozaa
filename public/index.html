@@ -14,6 +14,17 @@
     <link rel="manifest" href="/manifest.json" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-title" content="Cravins" />
+    <!--
+      Link previews (WhatsApp, Facebook, X) read this file only, never the app's JavaScript, so
+      every shared Cravins link shows the brand card. The image lives on the landing site so one
+      absolute address works for the real app and the demo alike.
+    -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Cravins" />
+    <meta property="og:title" content="Cravins" />
+    <meta property="og:description" content="Order and pay from your table." />
+    <meta property="og:image" content="https://cravins-landing.vercel.app/og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
     <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
     <style id="expo-reset">
       /* These styles make the body full-height */

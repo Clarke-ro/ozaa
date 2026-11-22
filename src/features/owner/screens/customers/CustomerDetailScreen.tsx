@@ -93,7 +93,7 @@ export function CustomerDetailScreen({ customerId }: { customerId: string }) {
       back={{ label: t('owner.customers'), onPress: back }}
     >
       <DeskWait
-        loading={detail.isLoading}
+        loading={detail.isPending}
         error={detail.isError && !detail.data}
         onRetry={() => void detail.refetch()}
       >

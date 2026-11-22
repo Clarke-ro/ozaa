@@ -47,8 +47,15 @@
     {
       "idx": 6,
       "version": "7",
-      "when": 1794996366916,
-      "tag": "0006_open_order_indexes",
+      "when": 1794995251530,
+      "tag": "0006_order_staff_audit",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795385419347,
+      "tag": "0007_open_order_indexes",
       "breakpoints": true
     }
   ]

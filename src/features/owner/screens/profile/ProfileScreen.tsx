@@ -58,7 +58,7 @@ export function ProfileScreen() {
       subtitle={t('ownerProfile.lead')}
       back={{ label: t('owner.settings'), onPress: () => router.push('/owner/settings') }}
     >
-      <DeskWait loading={me.isLoading} error={me.isError} onRetry={() => void me.refetch()}>
+      <DeskWait loading={me.isPending} error={me.isError} onRetry={() => void me.refetch()}>
         {u ? (
           <View style={styles.stack}>
             <ProfilePhoto

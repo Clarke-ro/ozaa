@@ -65,7 +65,7 @@ export function NoticeScreen() {
   return (
     <OwnerPage width="mid" title={t('owner.notice')} subtitle={t('ownerNotice.lead')}>
       <DeskWait
-        loading={venue.isLoading}
+        loading={venue.isPending}
         error={venue.isError}
         onRetry={() => void venue.refetch()}
       >

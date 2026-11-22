@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { eq } from 'drizzle-orm';
-import { staffMemberships } from '../db/schema.ts';
+import { orders, staffMemberships } from '../db/schema.ts';
 import { expectContract } from '../contract/contract.ts';
 import { as, KITCHEN, OWNER, ownerSetup as setup, WAITER } from './ownerTestSetup.ts';
 
@@ -127,7 +127,7 @@ test('manual methods need their details, and the fee share must be 1 to 100%', a
 });
 
 test('the orders desk: staff see the venue’s orders, move them by role, and mark them paid once', async () => {
-  const { call, mamas } = await setup();
+  const { call, db, mamas } = await setup();
   const token = (
     await call('POST', '/guest-sessions', { venueSlug: 'mamas-kitchen', tableCode: '4' })
   ).json.guestToken;
@@ -203,8 +203,32 @@ test('the orders desk: staff see the venue’s orders, move them by role, and ma
   expectContract('ownerRecordManualPayment', 200, paid.json);
   assert.equal(paid.json.paymentStatus, 'paid');
   assert.equal(paid.json.paymentMethod, 'cash');
+  const waiter = (await db.select().from(staffMemberships).where(eq(staffMemberships.venueId, mamas))).find((m) => m.role === 'waiter');
+  const [marked] = await db.select().from(orders).where(eq(orders.id, order.id));
+  assert.equal(marked?.paidByMembershipId, waiter?.id);
+  assert.ok(marked?.paidAt);
   const again = await call('POST', pay, { method: 'momo_merchant' }, as('user_waiter', WAITER));
   assert.equal(again.json.paymentMethod, 'cash');
+  // A second tap does not replace who marked it paid.
+  const [still] = await db.select().from(orders).where(eq(orders.id, order.id));
+  assert.equal(still?.paidByMembershipId, waiter?.id);
+  assert.equal(still?.paidAt?.getTime(), marked?.paidAt?.getTime());
+});
+
+test('cancelling an order records which owner or manager did it', async () => {
+  const { call, db, mamas } = await setup();
+  const token = (await call('POST', '/guest-sessions', { venueSlug: 'mamas-kitchen', tableCode: '4' })).json.guestToken;
+  const dish = (await call('GET', '/venues/mamas-kitchen/menu')).json.items[0];
+  const order = (
+    await call('POST', '/orders', { clientOrderId: randomUUID(), lines: [{ menuItemId: dish.id, quantity: 1 }] }, { Authorization: `Bearer ${token}` })
+  ).json;
+  const cancelled = await call('PUT', `/owner/orders/${order.id}/status`, { status: 'cancelled', cancelReason: 'Wrong table' }, as('user_owner', OWNER));
+  expectContract('ownerSetOrderStatus', 200, cancelled.json);
+  assert.equal(cancelled.json.status, 'cancelled');
+  const ownerRow = (await db.select().from(staffMemberships).where(eq(staffMemberships.venueId, mamas))).find((m) => m.role === 'owner');
+  const [row] = await db.select().from(orders).where(eq(orders.id, order.id));
+  assert.equal(row?.cancelledByMembershipId, ownerRow?.id);
+  assert.equal(row?.paidByMembershipId, null);
 });
 
 test('polling the owner app writes "last active" at most once a minute, and bad dates are a 400', async () => {

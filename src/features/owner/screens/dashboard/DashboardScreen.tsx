@@ -63,7 +63,7 @@ export function DashboardScreen() {
       barStart={<LocationSwitcher variant="chip" />}
     >
       <DeskWait
-        loading={desk.isLoading}
+        loading={desk.isPending}
         error={desk.isError}
         onRetry={() => void desk.refetch()}
         skeleton={

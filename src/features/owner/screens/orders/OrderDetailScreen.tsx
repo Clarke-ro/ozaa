@@ -93,7 +93,7 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
       back={{ label: t('owner.orders'), onPress: back }}
     >
       <DeskWait
-        loading={orders.isLoading}
+        loading={orders.isPending && !missing}
         error={orders.isError && !missing}
         onRetry={() => void orders.refetch()}
       >

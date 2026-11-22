@@ -21,7 +21,8 @@ export function OrdersToolbar({
   filter: OrderFilter;
   /** Which chips to show, in order: the board's on wide screens, the stages on phones. */
   filters: readonly OrderFilter[];
-  counts: Record<OrderFilter, number>;
+  /** Missing until the orders have loaded, so the chips show no numbers. */
+  counts?: Record<OrderFilter, number>;
   onFilter: (id: OrderFilter) => void;
   layout: OrderLayout;
   /** Missing on phones, which always show the board for open orders. */
@@ -38,7 +39,7 @@ export function OrdersToolbar({
           items={filters.map((id) => ({
             id,
             label: t(`ownerOrders.tabs.${id}`),
-            count: counts[id],
+            count: counts?.[id],
           }))}
         />
       </View>
