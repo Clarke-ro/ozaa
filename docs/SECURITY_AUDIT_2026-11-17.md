@@ -100,3 +100,30 @@ This audit found **1 high (P1)** issue, several medium (P2) gaps and a set of sm
    - Check Supabase backups and point-in-time recovery on the paid plan.
    - Switch Clerk to a production instance.
 4. **Heroku:** the app runs one Basic dyno. Keep it at one until the rate limits move off memory (see above).
+
+## Content-Security-Policy (added 2026-11-22, report-only)
+
+The web app (`vercel.json`) sends `Content-Security-Policy-Report-Only`. The browser reports anything the policy *would* block to Sentry (project `cravins-web`, its security endpoint), but blocks nothing yet.
+
+| Directive | Allows | Why |
+|---|---|---|
+| `default-src 'self'` | our own site | Everything not listed below |
+| `script-src` | self, `*.clerk.accounts.dev`, `challenges.cloudflare.com` | Our bundles. Clerk loads its sign-in script from its own address and may show Cloudflare's bot check. There are no inline scripts in the build. |
+| `style-src` | self, `'unsafe-inline'` | React Native Web writes its styles inline |
+| `img-src` | self, `data:`, `blob:`, any `https:` | Venue photos (Supabase), Clerk avatars, map tiles, photo previews before upload |
+| `media-src` | self, `blob:`, `*.supabase.co` | Sample review video, uploaded media |
+| `connect-src` | self, `*.herokuapp.com`, `*.supabase.co`, `*.clerk.accounts.dev`, `clerk-telemetry.com`, `*.ingest.de.sentry.io` | The API, photo uploads, Clerk sign-in, error reports |
+| `frame-src` | `challenges.cloudflare.com` | Clerk's bot check |
+| `worker-src` | self, `blob:` | |
+| `object-src 'none'`, `base-uri 'self'`, `form-action 'self'` | | Common attack routes, closed |
+
+Paystack is a full-page redirect to its checkout, so it needs no entry.
+
+**How it was checked:** the demo build was served with this policy *enforced*. All 71 Playwright tests passed, and a crawl of 22 guest and owner pages logged no violation events. The real build's third-party hosts can't be reached from the test environment, so it ships report-only first.
+
+**To enforce it:**
+1. Watch Sentry `cravins-web` for "CSP" events for about a week of normal use: sign-ins, payments, photo uploads, the scanner.
+2. Add any legitimate host that shows up.
+3. Rename the header in `vercel.json` from `Content-Security-Policy-Report-Only` to `Content-Security-Policy`.
+
+**When Clerk moves to production** (a custom domain such as `clerk.<your-domain>`), add that address to `script-src` and `connect-src`.
