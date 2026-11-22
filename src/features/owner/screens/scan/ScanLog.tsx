@@ -24,7 +24,7 @@ export function ScanLog({ venueId, since }: { venueId: string; since: string }) 
       <SectionLabel title={t('ownerScan.today')} />
       {items.length === 0 ? (
         <Text variant="body" style={{ color: theme.muted }}>
-          {log.isLoading ? '' : t('ownerScan.noneToday')}
+          {log.isPending ? '' : t('ownerScan.noneToday')}
         </Text>
       ) : (
         <View style={cardStyle(theme)}>

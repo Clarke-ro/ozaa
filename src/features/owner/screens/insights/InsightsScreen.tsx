@@ -97,7 +97,7 @@ export function InsightsScreen() {
         </View>
       ) : null}
       <DeskWait
-        loading={report.isLoading && ready}
+        loading={report.isPending && ready}
         error={report.isError}
         onRetry={() => void report.refetch()}
         skeleton={<SkeletonBlock height={260} />}

@@ -46,7 +46,7 @@ export function ResultsTab({ venueId }: { venueId: string }) {
         }))}
       />
       <DeskWait
-        loading={report.isLoading}
+        loading={report.isPending}
         error={report.isError}
         onRetry={() => void report.refetch()}
         skeleton={<SkeletonBlock height={220} />}

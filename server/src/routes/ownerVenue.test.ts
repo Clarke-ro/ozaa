@@ -86,6 +86,73 @@ test('guests see a switched-on service only once it is set up: no Rewards tile w
   assert.ok(services.some((s: { id: string; enabled: boolean }) => s.id === 'loyalty' && s.enabled));
 });
 
+test('hours, menu style, socials, online ordering and notices keep the app’s shapes', async () => {
+  const { call, mamas } = await ownerSetup();
+  const path = `/owner/venues/${mamas}`;
+  const before = (await call('GET', path, undefined, owner)).json;
+
+  const hours = await call('PATCH', path, { hours: before.hours }, owner);
+  assert.equal(hours.status, 200);
+  assert.deepEqual(hours.json.hours, before.hours);
+
+  const style = await call('PATCH', path, { menuStyle: { itemSort: 'manual', layout: 'list', colorScheme: 'dark' } }, owner);
+  assert.equal(style.status, 200);
+  assert.equal(style.json.menuStyle.colorScheme, 'dark');
+  const part = await call('PATCH', path, { menuStyle: { layout: 'grid' } }, owner);
+  assert.equal(part.json.menuStyle.layout, 'grid');
+  assert.equal(part.json.menuStyle.colorScheme, 'dark');
+
+  const socials = await call(
+    'PATCH',
+    path,
+    { socials: { instagram: 'mamaskitchen', phone: '024 123 4567', email: null, website: 'https://mamas.example', googleReviewUrl: null } },
+    owner,
+  );
+  assert.equal(socials.status, 200);
+  assert.equal(socials.json.socials.instagram, 'mamaskitchen');
+  assert.equal(socials.json.socials.phone, '024 123 4567');
+
+  const ordering = {
+    enabled: true,
+    pickup: { enabled: true, prepMinutes: 20 },
+    delivery: { enabled: false, minimumFeePesewas: 0, feePerKmPesewas: 0, maxDistanceKm: 5, freeOverPesewas: null },
+  };
+  assert.equal((await call('PATCH', path, { onlineOrdering: ordering }, owner)).status, 200);
+  const on = {
+    ...ordering,
+    delivery: { enabled: true, minimumFeePesewas: 1500, feePerKmPesewas: 300, maxDistanceKm: 8, freeOverPesewas: 20000 },
+  };
+  assert.equal((await call('PATCH', path, { onlineOrdering: on }, owner)).json.onlineOrdering.delivery.minimumFeePesewas, 1500);
+
+  const notice = await call(
+    'PATCH',
+    path,
+    {
+      noticeSettings: {
+        banner: { enabled: true, text: 'Kitchen closes at 9 tonight', startsAt: null, endsAt: null },
+        popup: { enabled: true, title: 'Tomorrow', text: 'Live band', startsAt: '2026-11-05T18:00:00.000Z', endsAt: null },
+      },
+    },
+    owner,
+  );
+  assert.equal(notice.status, 200);
+  // Saving only the popup keeps the banner, including a notice with no start time.
+  const popupOnly = await call('PATCH', path, { noticeSettings: { popup: { enabled: false, text: 'Hi' } } }, owner);
+  assert.equal(popupOnly.status, 200);
+  assert.equal(popupOnly.json.noticeSettings.banner.text, 'Kitchen closes at 9 tonight');
+  assert.equal(popupOnly.json.noticeSettings.popup.text, 'Hi');
+
+  assert.equal((await call('PATCH', path, { hours: { timezone: 'Africa/Accra', weekly: [] } }, owner)).status, 400);
+  assert.equal((await call('PATCH', path, { menuStyle: { layout: 'carousel' } }, owner)).status, 400);
+  assert.equal((await call('PATCH', path, { onlineOrdering: { ...on, pickup: { enabled: true, prepMinutes: '20' } } }, owner)).status, 400);
+  assert.equal((await call('PATCH', path, { onlineOrdering: { ...on, delivery: { ...on.delivery, minimumFeePesewas: -100 } } }, owner)).status, 400);
+  assert.equal((await call('GET', path, undefined, owner)).json.onlineOrdering.delivery.minimumFeePesewas, 1500);
+  assert.equal((await call('PATCH', path, { noticeSettings: { banner: { enabled: true, text: 'x'.repeat(281) } } }, owner)).status, 400);
+  assert.equal((await call('PATCH', path, { socials: { instagram: 12 } }, owner)).status, 400);
+  // A bad save leaves the hours the app already had.
+  assert.deepEqual((await call('GET', path, undefined, owner)).json.hours, before.hours);
+});
+
 test('the Google review link must be https, so guests are never sent to a script link', async () => {
   const { call, mamas } = await ownerSetup();
   const path = `/owner/venues/${mamas}`;

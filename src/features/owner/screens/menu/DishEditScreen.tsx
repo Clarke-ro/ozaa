@@ -29,7 +29,7 @@ export function DishEditScreen({ dishId, sectionId }: { dishId: string; sectionI
   const item = fresh ? null : (desk.menu.data?.items.find((i) => i.id === dishId) ?? null);
   const sections: MenuCategory[] = [...desk.sectionsOf('food'), ...desk.sectionsOf('drinks')];
   const section = sections.find((s) => s.id === item?.categoryId);
-  const loading = desk.menu.isLoading || desk.venue.isLoading;
+  const loading = desk.menu.isPending || desk.venue.isPending;
 
   return (
     <OwnerPage

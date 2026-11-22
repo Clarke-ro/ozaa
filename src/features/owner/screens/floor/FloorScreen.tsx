@@ -190,7 +190,7 @@ export function FloorScreen() {
       }
     >
       <DeskWait
-        loading={floor.isLoading}
+        loading={floor.isPending}
         error={floor.isError}
         onRetry={() => void floor.refetch()}
       >
