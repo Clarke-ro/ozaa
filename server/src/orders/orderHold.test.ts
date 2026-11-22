@@ -14,7 +14,7 @@ import { saveOrder } from './orderStore.ts';
 const owner = as('user_owner', OWNER);
 const waiter = as('user_waiter', WAITER);
 // A guest order that nobody accepts only keeps its dish and promo for half an hour.
-const HOLD_MS = 30 * 60_000;
+const HOLD_MS = 60 * 60_000;
 // One visit can leave this many orders waiting. Same size as the 20-in-10-minutes burst.
 const OPEN_CAP = 20;
 const ORDER_WINDOW_MS = 10 * 60_000;

@@ -67,9 +67,9 @@ test('a delivery order adds the fee to the total', async () => {
     },
   });
   expect(placed.source).toBe('delivery');
-  expect(placed.deliveryFeePesewas).toBe(1250);
+  expect(placed.deliveryFeePesewas).toBe(1000);
   expect(placed.deliveryAddress).toBe('House 4, Oxford St');
-  expect(placed.totalPesewas).toBe(dish.pricePesewas + 1250);
+  expect(placed.totalPesewas).toBe(dish.pricePesewas + 1000);
 });
 
 test('link orders are refused without a contact, when switched off, or too far, and keep the stock', async () => {

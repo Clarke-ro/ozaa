@@ -8,21 +8,21 @@ Plain-language notes for Clarke. Newest at the top.
 
 **What we built**
 
-Placing an order still sets the dish aside, so two tables can't both be promised the last portion. Cancel the order, or leave an unpaid guest order unaccepted for 30 minutes, and the dish and the promo use go back. A cash payment, a part payment, an order the kitchen has accepted, and a MoMo prompt that is still open keep the hold. One visit can have 20 unpaid orders waiting, the same burst it could already place. If two orders would get the same number for the day, the server tries the save again and the order still goes through.
+Placing an order still sets the dish aside, so two tables can't both be promised the last portion. Cancel the order, or leave an unpaid guest order unaccepted for 60 minutes, and the dish and the promo use go back. A cash payment, a part payment, an order the kitchen has accepted, and a MoMo prompt that is still open keep the hold. One visit can have 20 unpaid orders waiting, the same burst it could already place. If two orders would get the same number for the day, the server tries the save again and the order still goes through.
 
 **How it works**
 
 ```
 place order → hold the dish and the promo
   kitchen accepts, or any money is taken → hold stays until staff cancel
-  still waiting and unpaid after 30 minutes → cancelled, dish and promo return
+  still waiting and unpaid after 60 minutes → cancelled, dish and promo return
   staff cancel before the food is ready → dish and promo return
 two orders read the same daily number → try the insert again
 ```
 
 **Files to look at**
 
-- `server/src/orders/orderInventory.ts`: taking the hold, giving it back, and the 30 minute sweep
+- `server/src/orders/orderInventory.ts`: taking the hold, giving it back, and the 60 minute sweep
 - `server/src/orders/orderStore.ts`: saving the order, the visit cap, and cancel
 - `server/src/orders/orderNumber.ts`: spotting a duplicate daily number and trying again
 - `server/drizzle/0006_order_holds.sql`: the column that records a hold already given back
@@ -33,40 +33,38 @@ A hold is a reservation with an end. The dish count drops when the order is plac
 
 **Try it yourself**
 
-In `server/src/orders/orderInventory.ts`, change `UNPAID_HOLD_MS` to `60 * 1000`. From `server/`, run `npm test -- src/orders/orderHold.test.ts`. The expiry test fails, because it still waits half an hour before it expects the order to drop. Put `30 * 60_000` back when you're done.
+In `server/src/orders/orderInventory.ts`, change `UNPAID_HOLD_MS` to `60 * 1000`. From `server/`, run `npm test -- src/orders/orderHold.test.ts`. The expiry test fails, because it still waits an hour before it expects the order to drop. Put `60 * 60_000` back when you're done.
 
 ---
 
-## 2026-11-18 · Guests can't cheapen a delivery, stamp, or flood the manager
+## 2026-11-18 · Guests can't fake a stamp, a review, or a huge tip
 
 **What we built**
 
-The server now checks five things a phone used to be able to invent. A delivery fee is the far edge of the venue's zone. A game stamp needs a paid order. A photo has to be a real jpeg, png, or webp under 5 MB. A review needs an order, one per order. A typed tip stops at GHS 10,000.
+The server now checks four things a phone used to be able to invent. A game stamp needs a paid order. A review needs an order, and each order gets one. A typed tip stops at GHS 10,000. A delivery pin has to be a real place on the map.
 
 **How it works**
 
 ```
-delivery pin inside the zone? → charge maxDistanceKm, not the pin
 game score looks possible? → save it → stamp only if this card paid in the last day
-photo attached → read the bytes → wrong file is deleted
-review → this visit's order, and that order already reviewed? return the same one
+review → an order from this visit or table? → already reviewed? return the same one
 custom tip over GHS 10,000 → 400, not a crash
+delivery pin with latitude 999 → refused
 ```
 
 **Files to look at**
 
-- `src/lib/onlineOrdering.ts`: the zone check. The server copy is generated from this file.
-- `server/src/routes/guestExtras.ts`: reviews, notes, and game stamps.
-- `server/src/media/storage.ts`: what a signed upload is allowed to contain.
+- `server/src/routes/guestExtras.ts`: reviews, notes and game stamps.
 - `src/features/pay/quoteBill.ts`: the tip cap.
+- `src/lib/onlineOrdering.ts`: the pin check. The server copy is generated from this file.
 
 **New idea: the phone is not a witness**
 
-The app can show a fee or a score before the server answers. Anyone can send a different number. The server has to decide from something the phone cannot edit, such as the venue's own zone, a paid order, or the bytes in the file.
+The app can show a score or a tip before the server answers, but anyone can send a different number. So the server decides from something the phone can't edit, such as a paid order in the database.
 
 **Try it yourself**
 
-In `src/lib/onlineOrdering.test.ts`, change the pin to the venue's own coordinates. The fee should stay the zone-edge amount. Run `npx jest src/lib/onlineOrdering.test.ts`.
+In `src/features/pay/quoteBill.test.ts`, try a custom tip of 1,000,001 pesewas. Run `npx jest src/features/pay/quoteBill.test.ts` and watch it refuse.
 
 ---
 

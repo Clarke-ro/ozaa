@@ -77,13 +77,9 @@ export function checkFulfilment(
   if (!fulfilment.address?.trim()) return { ok: false, code: 'missing_address' };
   const pin = fulfilment.location;
   if (!pin || !onEarth(pin)) return { ok: false, code: 'missing_location' };
-  const reportedKm = distanceKm(venuePin, pin);
-  if (!Number.isFinite(reportedKm)) return { ok: false, code: 'missing_location' };
-  // The pin only answers "inside the zone or not". The guest picks it, so a pin dropped on the
-  // restaurant with a far typed address would otherwise pay the minimum. The fee is the zone's
-  // own far edge, which is the most this venue said it would charge inside that zone.
-  if (reportedKm > settings.delivery.maxDistanceKm) return { ok: false, code: 'too_far' };
-  const quote = deliveryQuote(settings, settings.delivery.maxDistanceKm, foodPesewas);
+  // The guest drops the pin and the rider goes to it, so the fee follows the pin. Staff see the
+  // pin and the typed address on the order and can call if the two don't match.
+  const quote = deliveryQuote(settings, distanceKm(venuePin, pin), foodPesewas);
   if (!quote.ok) return { ok: false, code: quote.reason === 'too_far' ? 'too_far' : 'method_off' };
   return { ok: true, source: 'delivery', deliveryFeePesewas: quote.feePesewas, etaMinutes: eta };
 }

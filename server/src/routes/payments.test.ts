@@ -14,6 +14,7 @@ import type { PaystackTransaction } from '../status.ts';
 import { connectTestPaystack, TEST_KEY, VENUE_SECRET } from './testHelpers.ts';
 import { venuePaystack } from '../venues/venuePaystack.ts';
 import { signLoyaltyToken } from '../guest/loyaltyToken.ts';
+import { UNPAID_HOLD_MS } from '../orders/orderInventory.ts';
 
 const NOW = Date.parse('2026-11-16T12:00:00Z');
 
@@ -132,7 +133,7 @@ test('a hold that already ended cannot be paid, so the dish is not sold twice', 
   const { call, fake, tableBill, momo, tick } = await setup();
   const { auth, order } = await tableBill();
   // A fresh quote, taken just before the hold ends, would still be valid afterwards.
-  tick(29 * 60_000);
+  tick(UNPAID_HOLD_MS - 60_000);
   const quote = (await call('POST', `/orders/${order.id}/bill`, { mode: 'whole' }, auth)).json;
   tick(2 * 60_000);
   const pay = await call('POST', '/payments', momo(quote.quoteId), { ...auth, 'Idempotency-Key': 'after-hold' });

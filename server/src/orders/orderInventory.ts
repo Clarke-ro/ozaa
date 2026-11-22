@@ -9,7 +9,7 @@ import type { AppliedPromo } from '../shared/types.ts';
  * Long enough for a waiter to accept it. Short enough that a script can't sell a dish out
  * for the whole service. Staff orders are left alone: a waiter typed those in.
  */
-export const UNPAID_HOLD_MS = 30 * 60_000;
+export const UNPAID_HOLD_MS = 60 * 60_000;
 
 /**
  * Unaccepted unpaid orders one guest visit may have open at once. Staff orders are not counted.
