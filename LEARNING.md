@@ -4,6 +4,37 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-18 · Guests can't fake a stamp, a review, or a huge tip
+
+**What we built**
+
+The server now checks four things a phone used to be able to invent. A game stamp needs a paid order. A review needs an order, and each order gets one. A typed tip stops at GHS 10,000. A delivery pin has to be a real place on the map.
+
+**How it works**
+
+```
+game score looks possible? → save it → stamp only if this card paid in the last day
+review → an order from this visit or table? → already reviewed? return the same one
+custom tip over GHS 10,000 → 400, not a crash
+delivery pin with latitude 999 → refused
+```
+
+**Files to look at**
+
+- `server/src/routes/guestExtras.ts`: reviews, notes and game stamps.
+- `src/features/pay/quoteBill.ts`: the tip cap.
+- `src/lib/onlineOrdering.ts`: the pin check. The server copy is generated from this file.
+
+**New idea: the phone is not a witness**
+
+The app can show a score or a tip before the server answers, but anyone can send a different number. So the server decides from something the phone can't edit, such as a paid order in the database.
+
+**Try it yourself**
+
+In `src/features/pay/quoteBill.test.ts`, try a custom tip of 1,000,001 pesewas. Run `npx jest src/features/pay/quoteBill.test.ts` and watch it refuse.
+
+---
+
 ## 2026-11-18 · Staff phones ask only for what changed
 
 **What we built**

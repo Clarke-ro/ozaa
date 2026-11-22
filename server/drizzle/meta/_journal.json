@@ -64,6 +64,13 @@
       "when": 1795386098013,
       "tag": "0008_open_order_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795386444406,
+      "tag": "0009_guest_limits",
+      "breakpoints": true
     }
   ]
 }

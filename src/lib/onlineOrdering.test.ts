@@ -94,6 +94,14 @@ describe('checkFulfilment', () => {
     });
   });
 
+  test('a pin that is not a place on earth is refused', () => {
+    const order = { type: 'delivery' as const, contact, address: 'House 4', location: near };
+    expect(checkFulfilment(settings, venuePin, { ...order, location: { lat: 999, lng: 0 } }, 5000)).toEqual({
+      ok: false,
+      code: 'missing_location',
+    });
+  });
+
   test('delivery is refused without the venue pin, the address or the location, or when too far', () => {
     const order = { type: 'delivery' as const, contact, address: 'House 4', location: near };
     expect(checkFulfilment(settings, null, order, 5000)).toEqual({
