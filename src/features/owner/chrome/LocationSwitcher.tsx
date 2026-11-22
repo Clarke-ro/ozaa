@@ -82,7 +82,7 @@ export function LocationSwitcher({ variant }: { variant: 'chip' | 'block' | 'rai
   const locations = business.data?.locations ?? [];
   const active = locations.find((location) => location.id === venueId);
   // Never show a made-up venue name while loading.
-  const name = active?.name ?? (business.isLoading ? '' : t('ownerKit.chooseLocation'));
+  const name = active?.name ?? (business.isPending ? '' : t('ownerKit.chooseLocation'));
   const block = variant === 'block';
   const rail = variant === 'rail';
   const parts = splitLocationName(name);

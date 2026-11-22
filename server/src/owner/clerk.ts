@@ -1,4 +1,6 @@
 import { createClerkClient, verifyToken } from '@clerk/backend';
+import { isTimeout, withTimeout } from '../http/outbound.ts';
+import { Problem } from '../http/problem.ts';
 
 /** Who Clerk says is calling: their Clerk user id and the email and phone Clerk has verified. */
 export type ClerkIdentity = {
@@ -19,30 +21,48 @@ const USER_CACHE_MS = 60_000;
  * The real check, with Clerk's backend SDK: the signature (Clerk's public key), the expiry, and
  * that the token was made for one of our own sites (`authorizedParties`, Clerk's `azp`).
  */
-export function clerkVerifier(options: { secretKey: string; authorizedParties: string[] }): VerifyOwner {
+export function clerkVerifier(options: {
+  secretKey: string;
+  authorizedParties: string[];
+  timeoutMs?: number;
+}): VerifyOwner {
   const clerk = createClerkClient({ secretKey: options.secretKey });
   const cache = new Map<string, { identity: ClerkIdentity; until: number }>();
   return async (token) => {
     let userId: string;
     try {
-      const claims = await verifyToken(token, {
-        secretKey: options.secretKey,
-        authorizedParties: options.authorizedParties,
-      });
+      const claims = await withTimeout(
+        verifyToken(token, {
+          secretKey: options.secretKey,
+          authorizedParties: options.authorizedParties,
+        }),
+        options.timeoutMs,
+      );
       userId = claims.sub;
-    } catch {
+    } catch (error) {
+      if (isTimeout(error))
+        throw new Problem(503, 'sign_in_slow', 'Sign-in is busy. Try again in a moment.');
       return null;
     }
     const hit = cache.get(userId);
     if (hit && hit.until > Date.now()) return hit.identity;
-    const user = await clerk.users.getUser(userId);
+    let user;
+    try {
+      user = await withTimeout(clerk.users.getUser(userId), options.timeoutMs);
+    } catch (error) {
+      if (isTimeout(error))
+        throw new Problem(503, 'sign_in_slow', 'Sign-in is busy. Try again in a moment.');
+      throw error;
+    }
     // Only an address Clerk has verified with a code counts: that's what proves who this is.
     const email =
-      user.emailAddresses.find((e) => e.id === user.primaryEmailAddressId && e.verification?.status === 'verified') ??
-      user.emailAddresses.find((e) => e.verification?.status === 'verified');
+      user.emailAddresses.find(
+        (e) => e.id === user.primaryEmailAddressId && e.verification?.status === 'verified',
+      ) ?? user.emailAddresses.find((e) => e.verification?.status === 'verified');
     const phone =
-      user.phoneNumbers.find((p) => p.id === user.primaryPhoneNumberId && p.verification?.status === 'verified') ??
-      user.phoneNumbers.find((p) => p.verification?.status === 'verified');
+      user.phoneNumbers.find(
+        (p) => p.id === user.primaryPhoneNumberId && p.verification?.status === 'verified',
+      ) ?? user.phoneNumbers.find((p) => p.verification?.status === 'verified');
     const identity = {
       clerkUserId: userId,
       email: email?.emailAddress.toLowerCase() ?? null,

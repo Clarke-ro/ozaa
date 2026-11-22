@@ -1,19 +1,31 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { Paystack } from './paystack.ts';
+import { PaystackError, type Paystack } from './paystack.ts';
+import { Problem } from './http/problem.ts';
 import { paymentStore } from './db/paymentStore.ts';
 import { testDbWithOrder as testDb } from './db/testDb.ts';
 import { paymentService } from './payments.ts';
 import type { PaystackTransaction } from './status.ts';
 
-const charge = { orderId: 'ord_1', venueSlug: 'bean-there', quoteId: null, amountPesewas: 14_300, tipPesewas: 1_300, feePesewas: 0 };
+const charge = {
+  orderId: 'ord_1',
+  venueSlug: 'bean-there',
+  quoteId: null,
+  amountPesewas: 14_300,
+  tipPesewas: 1_300,
+  feePesewas: 0,
+};
 
 function fakePaystack(verify: () => PaystackTransaction) {
   const calls: string[] = [];
   const paystack: Paystack = {
     chargeMomo: async (input) => {
       calls.push(`charge ${input.phone} ${input.provider} ${input.amountPesewas}`);
-      return { status: 'pay_offline', reference: input.reference, display_text: 'Approve on your phone' };
+      return {
+        status: 'pay_offline',
+        reference: input.reference,
+        display_text: 'Approve on your phone',
+      };
     },
     initializeCard: async (input) => {
       calls.push(`card ${input.callbackUrl}`);
@@ -43,6 +55,48 @@ async function service(verify: () => PaystackTransaction, start = 0) {
 
 const pending = () => ({ status: 'ongoing', amount: 14_300, currency: 'GHS' });
 
+test('a slow Paystack check leaves the payment as it was, and a slow charge stays pending', async () => {
+  const { svc, tick } = await service(() => {
+    throw new PaystackError('Paystack took too long. Try again.', 503);
+  });
+  const started = await svc.start({ charge, method: 'card' }, 'key-1');
+  tick(5_000);
+  const still = await svc.get('pay_1');
+  assert.equal(still?.status, 'open_url');
+  assert.equal(still?.reference, started.reference);
+
+  let clock = 0;
+  const slow: Paystack = {
+    chargeMomo: async () => {
+      throw new PaystackError('Paystack took too long. Try again.', 503);
+    },
+    initializeCard: async () => ({
+      authorization_url: 'https://checkout.paystack.com/abc',
+      reference: 'x',
+    }),
+    checkKey: async () => undefined,
+    verify: async () => pending(),
+  };
+  const again = paymentService({
+    paystackFor: async () => ({ paystack: slow, secret: 'sk_test_venue', testMode: true }),
+    store: paymentStore(await testDb()),
+    siteUrl: 'https://cravins-app.vercel.app/',
+    now: () => clock,
+    newReference: () => 'pay_slow',
+  });
+  const input = {
+    charge,
+    method: 'momo' as const,
+    momo: { phone: '+233241234567', provider: 'mtn' as const },
+  };
+  await assert.rejects(
+    again.start(input, 'key-slow'),
+    (error: Problem) => error instanceof Problem && error.status === 503,
+  );
+  const saved = await again.start(input, 'key-slow');
+  assert.equal(saved.status, 'pending');
+});
+
 test('MoMo starts pay_offline with 180 seconds to approve', async () => {
   const { svc, calls } = await service(pending);
   const p = await svc.start(
@@ -67,7 +121,11 @@ test('a card goes to Paystack checkout and comes back to the venue pay page', as
 
 test('the same Idempotency-Key never charges twice', async () => {
   const { svc, calls } = await service(pending);
-  const input = { charge, method: 'momo' as const, momo: { phone: '+233241234567', provider: 'mtn' as const } };
+  const input = {
+    charge,
+    method: 'momo' as const,
+    momo: { phone: '+233241234567', provider: 'mtn' as const },
+  };
   const a = await svc.start(input, 'key-1');
   const b = await svc.start(input, 'key-1');
   assert.equal(a.reference, b.reference);
@@ -91,7 +149,10 @@ test('a success for another amount is never paid', async () => {
 
 test('GET asks Paystack again only every few seconds while the payment is open', async () => {
   const { svc, calls, tick } = await service(pending);
-  await svc.start({ charge, method: 'momo', momo: { phone: '+233241234567', provider: 'mtn' } }, 'key-1');
+  await svc.start(
+    { charge, method: 'momo', momo: { phone: '+233241234567', provider: 'mtn' } },
+    'key-1',
+  );
   await svc.get('pay_1');
   tick(4_000);
   await svc.get('pay_1');
@@ -138,7 +199,11 @@ test('after abandoned, a success for the wrong amount is still not paid', async 
 
 test('two taps at the same moment with one Idempotency-Key charge once', async () => {
   const { svc, calls } = await service(pending);
-  const input = { charge, method: 'momo' as const, momo: { phone: '+233241234567', provider: 'mtn' as const } };
+  const input = {
+    charge,
+    method: 'momo' as const,
+    momo: { phone: '+233241234567', provider: 'mtn' as const },
+  };
   const [a, b] = await Promise.all([svc.start(input, 'key-1'), svc.start(input, 'key-1')]);
   assert.equal(a.reference, b.reference);
   assert.equal(calls.length, 1);

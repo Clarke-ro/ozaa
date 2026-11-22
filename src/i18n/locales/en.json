@@ -704,6 +704,8 @@
     "loading": "Loading",
     "crashTitle": "This page stopped working",
     "crashBody": "Something broke on our side. Try again to reload it.",
+    "offlinePageTitle": "You're offline",
+    "offlinePage": "This page opens as soon as you're back online.",
     "quantityRange": "One dish in your order is for too few or too many. Change how many and send it again.",
     "notPublished": "This menu isn’t open yet, so the order wasn’t sent.",
     "forbidden": "Your role can’t do this. Ask the owner."
@@ -726,6 +728,7 @@
     "blockedBody": "Ask the owner if you need it.",
     "goToday": "Go to Today",
     "loadFailed": "This did not load. Check the connection and try again.",
+    "offlineWait": "You're offline. This page loads as soon as you're back online.",
     "saved": "Saved",
     "saveFailed": "That did not save. Check the connection and try again.",
     "tryAgain": "Try again",

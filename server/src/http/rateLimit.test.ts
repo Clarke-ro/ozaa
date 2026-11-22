@@ -11,6 +11,16 @@ test('allows up to the limit in the window, then refuses until old hits age out'
   assert.equal(limit.hit('a'), true);
 });
 
+test('a counted hit can be given back when that request does not go through', () => {
+  let now = 0;
+  const limit = slidingWindow({ limit: 1, windowMs: 1000, now: () => now });
+  assert.equal(limit.hit('a'), true);
+  assert.equal(limit.hit('a'), false);
+  limit.drop('a');
+  assert.equal(limit.hit('a'), true);
+  limit.drop('missing');
+});
+
 test('forgets callers whose hits have all aged out, so memory does not grow', () => {
   let now = 0;
   const limit = slidingWindow({ limit: 5, windowMs: 1000, now: () => now });

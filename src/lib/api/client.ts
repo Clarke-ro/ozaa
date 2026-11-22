@@ -186,11 +186,16 @@ export type ApiClient = {
     tableId: string,
     format?: 'svg' | 'png' | 'pdf',
   ): Promise<string>;
-  /** `since` (inclusive) and `until` (exclusive) are ISO times; leave both out for every order. */
+  /**
+   * `since` (inclusive) and `until` (exclusive) are ISO times; leave both out for the newest orders.
+   * `updatedSince` asks only for orders changed since then. `live` keeps the ones still in the kitchen.
+   */
   ownerListOrders(
     venueId: string,
-    filter?: { since?: string; until?: string },
+    filter?: { since?: string; until?: string; updatedSince?: string; live?: boolean },
   ): Promise<{ items: Order[]; nextCursor?: string | null }>;
+  /** One order. Use this for the order page, including orders older than the newest 300. */
+  ownerGetOrder(orderId: string): Promise<Order>;
   ownerCreateOrder(venueId: string, body: OwnerCreateOrderRequest, call: Call): Promise<Order>;
   ownerSetOrderStatus(
     orderId: string,

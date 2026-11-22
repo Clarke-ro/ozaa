@@ -81,7 +81,7 @@ export function LinksScreen() {
       action={<Button label={t('ownerLinks.add')} onPress={() => setEditing(null)} />}
     >
       <DeskWait
-        loading={links.isLoading}
+        loading={links.isPending}
         error={links.isError}
         onRetry={() => void links.refetch()}
       >

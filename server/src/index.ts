@@ -17,37 +17,54 @@ import { sentryReport } from './monitor.ts';
 
 const config = readConfig();
 const log = createLog();
-const report = config.SENTRY_DSN ? sentryReport(config.SENTRY_DSN, config.SENTRY_ENVIRONMENT) : undefined;
+const report = config.SENTRY_DSN
+  ? sentryReport(config.SENTRY_DSN, config.SENTRY_ENVIRONMENT)
+  : undefined;
 // Errors outside a request (a timer, a forgotten promise) are reported too, then logged by name only.
 process.on('unhandledRejection', (reason) => {
   const error = reason instanceof Error ? reason : new Error('Unhandled rejection');
   log({ event: 'unhandled_rejection', name: error.name });
   report?.(error);
 });
-const { db, close } = connect(config.DATABASE_URL);
+const { db, close } = connect(config.DATABASE_URL, config.DATABASE_POOL_MAX);
 // Each payment is charged with the Paystack key of the venue whose bill it is.
-const venueKeys = venuePaystack({ db, key: encryptionKey(config.ENCRYPTION_KEY), client: (secret) => paystackClient(secret) });
+const venueKeys = venuePaystack({
+  db,
+  key: encryptionKey(config.ENCRYPTION_KEY),
+  client: (secret) => paystackClient(secret),
+});
 const payments = paymentService({
   paystackFor: (slug) => venueKeys.forVenueSlug(slug),
   store: paymentStore(db),
   siteUrl: config.SITE_URL,
 });
 const app = createApp({
-  guest: { db, guestSecret: config.GUEST_TOKEN_SECRET, now: Date.now, loyaltyKey: encryptionKey(config.ENCRYPTION_KEY) },
+  guest: {
+    db,
+    guestSecret: config.GUEST_TOKEN_SECRET,
+    now: Date.now,
+    loyaltyKey: encryptionKey(config.ENCRYPTION_KEY),
+  },
   payments,
   otp: {
     db,
     now: Date.now,
     hashSecret: config.GUEST_TOKEN_SECRET,
     loyaltyKey: encryptionKey(config.ENCRYPTION_KEY),
-    sms: config.ARKESEL_API_KEY ? arkeselSender({ apiKey: config.ARKESEL_API_KEY, sender: config.ARKESEL_SENDER_ID }) : null,
+    sms: config.ARKESEL_API_KEY
+      ? arkeselSender({ apiKey: config.ARKESEL_API_KEY, sender: config.ARKESEL_SENDER_ID })
+      : null,
     dailyLimit: config.SMS_DAILY_LIMIT,
+    guestSecret: config.GUEST_TOKEN_SECRET,
   },
   owner: {
     db,
     // Clerk's tokens name the site that asked for them (azp); only our own sites count.
     verify: config.CLERK_SECRET_KEY
-      ? clerkVerifier({ secretKey: config.CLERK_SECRET_KEY, authorizedParties: config.ALLOWED_ORIGINS })
+      ? clerkVerifier({
+          secretKey: config.CLERK_SECRET_KEY,
+          authorizedParties: config.ALLOWED_ORIGINS,
+        })
       : null,
     now: Date.now,
     venueKeys,
@@ -56,7 +73,11 @@ const app = createApp({
     clerkAdmin: config.CLERK_SECRET_KEY ? clerkAdmin(config.CLERK_SECRET_KEY) : null,
     storage:
       config.SUPABASE_URL && config.SUPABASE_SECRET_KEY
-        ? supabaseStorage({ url: config.SUPABASE_URL, secretKey: config.SUPABASE_SECRET_KEY, bucket: config.MEDIA_BUCKET })
+        ? supabaseStorage({
+            url: config.SUPABASE_URL,
+            secretKey: config.SUPABASE_SECRET_KEY,
+            bucket: config.MEDIA_BUCKET,
+          })
         : null,
   },
   allowedOrigins: config.ALLOWED_ORIGINS,

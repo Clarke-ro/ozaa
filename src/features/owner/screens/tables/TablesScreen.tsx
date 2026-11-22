@@ -140,7 +140,7 @@ export function TablesScreen() {
             {t('ownerTables.tableCodesTitle')}
           </Text>
           <DeskWait
-            loading={tables.isLoading}
+            loading={tables.isPending}
             error={tables.isError}
             onRetry={() => void tables.refetch()}
           >

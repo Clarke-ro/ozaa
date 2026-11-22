@@ -146,7 +146,7 @@ export function BrandingScreen() {
   return (
     <OwnerPage width="mid" title={t('owner.branding')} subtitle={t('ownerLead.branding')}>
       <DeskWait
-        loading={venue.isLoading}
+        loading={venue.isPending}
         error={venue.isError}
         onRetry={() => void venue.refetch()}
       >

@@ -1,4 +1,5 @@
 import { imageSize } from 'image-size';
+import { isTimeout, outboundSignal } from '../http/outbound.ts';
 
 /** Photos the owner app is allowed to put in the bucket. Same list as the upload request. */
 export const UPLOAD_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
@@ -79,15 +80,28 @@ export function supabaseStorage(options: {
   secretKey: string;
   bucket: string;
   fetchFn?: typeof fetch;
+  timeoutMs?: number;
 }): MediaStorage {
   const base = `${options.url.replace(/\/+$/, '')}/storage/v1`;
   const fetchFn = options.fetchFn ?? fetch;
   const auth = { apikey: options.secretKey, Authorization: `Bearer ${options.secretKey}` };
   const publicUrl = (path: string) => `${base}/object/public/${options.bucket}/${path}`;
+  const call = async (url: string, init: RequestInit) => {
+    try {
+      return await fetchFn(url, { ...init, signal: outboundSignal(options.timeoutMs) });
+    } catch (error) {
+      if (isTimeout(error)) {
+        const timeout = new Error('Storage took too long');
+        timeout.name = 'UpstreamTimeout';
+        throw timeout;
+      }
+      throw error;
+    }
+  };
 
   return {
     async signUpload(path) {
-      const res = await fetchFn(`${base}/object/upload/sign/${options.bucket}/${path}`, {
+      const res = await call(`${base}/object/upload/sign/${options.bucket}/${path}`, {
         method: 'POST',
         headers: { ...auth, 'Content-Type': 'application/json' },
         body: '{}',
@@ -100,7 +114,7 @@ export function supabaseStorage(options: {
     async inspect(path, expectedType) {
       if (!isUploadType(expectedType)) return { ok: false, reason: 'rejected' };
       const url = publicUrl(path);
-      const head = await fetchFn(url, { method: 'HEAD' });
+      const head = await call(url, { method: 'HEAD' });
       let headLength: number | null = null;
       // A failed HEAD is not proof the file is missing. Some stores answer 400 or 405 to HEAD
       // and still serve the file on GET, which is how photos were read before this check.
@@ -112,7 +126,7 @@ export function supabaseStorage(options: {
           return { ok: false, reason: 'rejected' };
         }
       }
-      const res = await fetchFn(url, { headers: { Range: `bytes=0-${HEAD_BYTES - 1}` } });
+      const res = await call(url, { headers: { Range: `bytes=0-${HEAD_BYTES - 1}` } });
       if (res.status === 400 || res.status === 404) return { ok: false, reason: 'missing' };
       if (!res.ok && res.status !== 206) return { ok: false, reason: 'missing' };
       const total =
@@ -132,7 +146,7 @@ export function supabaseStorage(options: {
     },
     async remove(path) {
       const encoded = path.split('/').map((part) => encodeURIComponent(part)).join('/');
-      await fetchFn(`${base}/object/${options.bucket}/${encoded}`, { method: 'DELETE', headers: auth }).catch(() => undefined);
+      await call(`${base}/object/${options.bucket}/${encoded}`, { method: 'DELETE', headers: auth }).catch(() => undefined);
     },
   };
 }

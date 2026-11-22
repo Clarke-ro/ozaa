@@ -4,6 +4,7 @@ import { useAudioPlayer } from 'expo-audio';
 import { api } from '@/lib/api';
 import { useOwnerSession } from '@/features/session';
 import { chimeStep, type ChimeState } from '../desk/arrivals';
+import { latestUpdatedAt } from '../desk/mergeOrders';
 import { ownerKeys } from './keys';
 import { useOwnerPrefs } from './ownerPrefs';
 import { POLL_MS } from '@/lib/polling';
@@ -23,10 +24,24 @@ export function useArrivalChime() {
     role === 'owner' || role === 'manager' || role === 'waiter' || role === 'kitchen';
   const hearsCalls = role === 'owner' || role === 'manager' || role === 'waiter';
   const player = useAudioPlayer(CHIME);
+  // After the first answer, each poll asks only for orders changed since the newest one we have.
+  // The venue id is stored with it so a location switch does not reuse the previous watermark.
+  const since = useRef<{ venueId: string; at?: string }>({ venueId: '' });
 
   const orders = useQuery({
-    queryKey: ownerKeys.orders(venueId),
-    queryFn: () => api.ownerListOrders(venueId),
+    queryKey: ownerKeys.liveOrders(venueId),
+    queryFn: async () => {
+      const startedAtVenue = since.current.venueId;
+      const mine = startedAtVenue === venueId ? since.current.at : undefined;
+      const page = await api.ownerListOrders(venueId, { live: true, updatedSince: mine });
+      const latest = latestUpdatedAt(page.items);
+      // A slow answer from the previous venue must not wipe this venue's watermark.
+      const currentVenue = since.current.venueId;
+      const claim =
+        currentVenue === venueId || (mine === undefined && currentVenue === startedAtVenue);
+      if (claim) since.current = { venueId, at: latest ?? mine };
+      return page;
+    },
     enabled: Boolean(venueId) && hearsOrders,
     refetchInterval: POLL_MS.owner,
   });

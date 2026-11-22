@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { SearchX } from 'lucide-react-native';
 import { api } from '@/lib/api';
+import { ApiError } from '@/lib/api/errors';
 import { useOwnerSession } from '@/features/session';
 import { DEFAULT_CURRENCY } from '@/lib/money';
 import { timeAgo } from '@/lib/time';
@@ -31,7 +32,7 @@ import { POLL_MS } from '@/lib/polling';
 /**
  * One order on its own page (canvas): its kitchen and payment state with the next step, the
  * dishes, the sums the server worked out, payment, the timeline, and Cancel for owners and
- * managers. The order comes from the same live list as Orders, so it costs no extra call.
+ * managers. It asks for this one order, including one older than the newest 300.
  */
 export function OrderDetailScreen({ orderId }: { orderId: string }) {
   const { t } = useTranslation();
@@ -46,13 +47,14 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
   const client = useQueryClient();
   const { venue, methods } = useVenuePay(venueId);
   const orders = useQuery({
-    queryKey: ownerKeys.orders(venueId),
-    queryFn: () => api.ownerListOrders(venueId),
-    enabled: Boolean(venueId),
+    queryKey: ownerKeys.order(venueId, orderId),
+    queryFn: () => api.ownerGetOrder(orderId),
+    enabled: Boolean(venueId && orderId),
     refetchInterval: POLL_MS.owner,
   });
   const move = useOrderMove(venueId, role);
-  const order = orders.data?.items.find((item) => item.id === orderId) ?? null;
+  const order = orders.data ?? null;
+  const missing = orders.error instanceof ApiError && orders.error.status === 404;
   const currency = venue.data?.currency ?? DEFAULT_CURRENCY;
   const canMarkPaid =
     (role === 'owner' || role === 'manager' || role === 'waiter') &&
@@ -91,8 +93,8 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
       back={{ label: t('owner.orders'), onPress: back }}
     >
       <DeskWait
-        loading={orders.isLoading}
-        error={orders.isError}
+        loading={orders.isPending && !missing}
+        error={orders.isError && !missing}
         onRetry={() => void orders.refetch()}
       >
         {order ? (

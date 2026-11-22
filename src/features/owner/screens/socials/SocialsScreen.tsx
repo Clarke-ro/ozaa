@@ -83,7 +83,7 @@ export function SocialsScreen() {
   return (
     <OwnerPage title={t('ownerPages.socialsTitle')} subtitle={t('ownerLead.socials')}>
       <DeskWait
-        loading={venue.isLoading}
+        loading={venue.isPending}
         error={venue.isError}
         onRetry={() => void venue.refetch()}
       >

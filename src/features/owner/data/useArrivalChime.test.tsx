@@ -43,7 +43,7 @@ async function setup(role: 'owner' | 'kitchen') {
   const hook = await renderHook(() => useArrivalChime(), { wrapper });
   // Both first loads must land, and the hook must take them in, before a test adds anything new.
   await waitFor(() => {
-    expect(client.getQueryData(ownerKeys.orders('ven_1'))).toBeTruthy();
+    expect(client.getQueryData(ownerKeys.liveOrders('ven_1'))).toBeTruthy();
     if (role !== 'kitchen') expect(client.getQueryData(ownerKeys.calls('ven_1'))).toBeTruthy();
   }, WAIT);
   await act(async () => {});
@@ -70,12 +70,15 @@ afterEach(() => {
 
 test('rings for a new order after the first load, not for the orders already there', async () => {
   const client = await setup('owner');
-  await waitFor(() => expect(client.getQueryData(ownerKeys.orders('ven_1'))).toBeTruthy(), WAIT);
+  await waitFor(
+    () => expect(client.getQueryData(ownerKeys.liveOrders('ven_1'))).toBeTruthy(),
+    WAIT,
+  );
   // Let the hook take in the first load before anything new arrives.
   await act(async () => {});
   expect(mockPlayer.play).not.toHaveBeenCalled();
   await act(() =>
-    client.setQueryData(ownerKeys.orders('ven_1'), { items: [{ id: 'o1' }, { id: 'o2' }] }),
+    client.setQueryData(ownerKeys.liveOrders('ven_1'), { items: [{ id: 'o1' }, { id: 'o2' }] }),
   );
   await waitFor(() => expect(mockPlayer.play).toHaveBeenCalledTimes(1), WAIT);
 });

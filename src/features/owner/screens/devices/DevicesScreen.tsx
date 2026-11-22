@@ -52,7 +52,7 @@ export function DevicesScreen() {
   return (
     <OwnerPage title={t('owner.devices')} subtitle={t('ownerLead.devices')}>
       <DeskWait
-        loading={devices.isLoading}
+        loading={devices.isPending}
         error={devices.isError}
         onRetry={() => void devices.refetch()}
       >

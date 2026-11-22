@@ -1,47 +1,32 @@
 import { Hono, type Context } from 'hono';
-import { and, eq, gte, inArray, lt, ne, notInArray, or } from 'drizzle-orm';
+import { and, eq, gte, inArray, lt } from 'drizzle-orm';
 import type { Db } from '../db/client.ts';
-import {
-  diningTables,
-  feedback,
-  menuItems,
-  orderLines,
-  orders,
-  visits,
-  waiterCalls,
-  writtenReviews,
-} from '../db/schema.ts';
+import { feedback, orderLines, orders, visits } from '../db/schema.ts';
 import { orderFromRows } from '../orders/orderStore.ts';
 import { roleAt, ROLES, signedIn, type OwnerDeps } from '../owner/staff.ts';
-import { calendarDay, summarizeDay } from '../shared/daySummary.ts';
-import { deriveFloor } from '../shared/floorStatus.ts';
 import { previousWindow, salesReport } from '../shared/sales.ts';
 import { insightsReport, rangeWindow } from '../shared/insights.ts';
 import { loadLoyalty } from '../loyalty/store.ts';
 import { Problem } from '../http/problem.ts';
-import { tableLink } from '../shared/tableLink.ts';
-import type { Order, OwnerDashboard, SalesReport, StaffRole } from '../shared/types.ts';
+import { memoFor } from '../http/venueMemo.ts';
+import type { Order, SalesReport, StaffRole } from '../shared/types.ts';
 import { venueRowById } from '../venues/venueData.ts';
+import { dashboardOf, floorOf } from './deskStats.ts';
 
-const DAY_MS = 86_400_000;
-
-/** Orders with their lines, created in [since, until), plus any still open when `open` is set. */
+/** Orders with their lines, created in [since, until). Sales and Insights still need the dishes. */
 async function ordersOf(
   db: Db,
   venueId: string,
-  range: { since?: Date; until?: Date; open?: boolean },
+  range: { since?: Date; until?: Date },
 ): Promise<Order[]> {
-  const inRange = and(
-    range.since ? gte(orders.createdAt, range.since) : undefined,
-    range.until ? lt(orders.createdAt, range.until) : undefined,
-  );
   const rows = await db
     .select()
     .from(orders)
     .where(
       and(
         eq(orders.venueId, venueId),
-        range.open ? or(inRange, notInArray(orders.status, ['served', 'cancelled'])) : inRange,
+        range.since ? gte(orders.createdAt, range.since) : undefined,
+        range.until ? lt(orders.createdAt, range.until) : undefined,
       ),
     );
   if (rows.length === 0) return [];
@@ -54,134 +39,48 @@ async function ordersOf(
         rows.map((r) => r.id),
       ),
     );
-  return rows.map((row) =>
-    orderFromRows(
-      row,
-      lines.filter((l) => l.orderId === row.id),
-    ),
-  );
+  const byOrder = new Map<string, typeof lines>();
+  for (const line of lines) {
+    const list = byOrder.get(line.orderId);
+    if (list) list.push(line);
+    else byOrder.set(line.orderId, [line]);
+  }
+  return rows.map((row) => orderFromRows(row, byOrder.get(row.id) ?? []));
 }
+
+/** Several staff phones poll the home page together. One answer serves them for a few seconds. */
+const DASHBOARD_TTL_MS = 4_000;
 
 /** The owner home, the floor and Sales (api/openapi.yaml owner-desk). */
 export function ownerDeskRoutes(deps: OwnerDeps & { siteUrl: string }) {
   const app = new Hono();
   const { db } = deps;
+  const dashboardCache = memoFor<Awaited<ReturnType<typeof dashboardOf>>>(
+    DASHBOARD_TTL_MS,
+    deps.now,
+  );
 
   const venueFor = async (c: Context, allowed: StaffRole[]) => {
     roleAt(await signedIn(c, deps), c.req.param('venueId') ?? '', allowed);
     return venueRowById(db, c.req.param('venueId') ?? '');
   };
 
-  /** Tables with a status worked out from orders and calls (the shared deriveFloor). */
-  const floorOf = async (venueId: string, slug: string, now: number) => {
-    const [tables, recent, calls] = await Promise.all([
-      db.select().from(diningTables).where(eq(diningTables.venueId, venueId)),
-      ordersOf(db, venueId, { since: new Date(now - DAY_MS), open: true }),
-      db
-        .select()
-        .from(waiterCalls)
-        .where(and(eq(waiterCalls.venueId, venueId), ne(waiterCalls.status, 'resolved'))),
-    ]);
-    tables.sort((a, b) => a.code.localeCompare(b.code, 'en', { numeric: true }));
-    const floor = deriveFloor({
-      tables: tables.map((t) => ({
-        id: t.id,
-        code: t.code,
-        label: t.label ?? `Table ${t.code}`,
-        qrUrl: tableLink(deps.siteUrl, slug, t.code),
-      })),
-      orders: recent,
-      calls: calls.map((call) => ({ ...call, createdAt: call.createdAt.toISOString() })),
-      // "Seat a table" by hand is a demo-only tap for now; real tables go busy with their first order.
-      seatedCodes: [],
-    });
-    return floor.map((table) => {
-      const call = calls.find((item) => item.id === table.waiterCallId);
-      const order = recent.find((item) => item.id === table.orderId);
-      // How long the table has been like this: since the call, or since the order last moved.
-      const since =
-        table.status === 'needs_waiter'
-          ? (call?.createdAt.toISOString() ?? null)
-          : table.status === 'free'
-            ? null
-            : (order?.updatedAt ?? null);
-      return { ...table, since, waiterFirstName: call?.staffFirstName ?? null };
-    });
-  };
-
   app.get('/owner/venues/:venueId/floor', async (c) => {
     const venue = await venueFor(c, ROLES.orders);
-    return c.json({ items: await floorOf(venue.id, venue.slug, deps.now()) });
+    const floor = await floorOf(db, venue.id, venue.slug, deps.now(), deps.siteUrl);
+    return c.json({ items: floor.items });
   });
 
-  /** Today at a glance. Sales count money already taken; "today" is the venue's own calendar day. */
+  /**
+   * Today at a glance. Sales count money already taken; "today" is the venue's own calendar day.
+   * The sums are done in Postgres, then kept for a few seconds so every phone on the desk shares them.
+   */
   app.get('/owner/venues/:venueId/dashboard', async (c) => {
     const venue = await venueFor(c, ROLES.orders);
     const now = deps.now();
-    const timeZone = venue.timeZone;
-    const [recent, floor, openCalls, reviews, soldOut, visitRows] = await Promise.all([
-      ordersOf(db, venue.id, { since: new Date(now - 2 * DAY_MS), open: true }),
-      floorOf(venue.id, venue.slug, now),
-      db
-        .select({ id: waiterCalls.id })
-        .from(waiterCalls)
-        .where(and(eq(waiterCalls.venueId, venue.id), ne(waiterCalls.status, 'resolved'))),
-      db
-        .select({ stars: writtenReviews.stars })
-        .from(writtenReviews)
-        .where(eq(writtenReviews.venueId, venue.id)),
-      db
-        .select({ name: menuItems.name, deletedAt: menuItems.deletedAt })
-        .from(menuItems)
-        .where(and(eq(menuItems.venueId, venue.id), eq(menuItems.available, false))),
-      db
-        .select({ startedAt: visits.startedAt })
-        .from(visits)
-        .where(
-          and(eq(visits.venueId, venue.id), gte(visits.startedAt, new Date(now - 2 * DAY_MS))),
-        ),
-    ]);
-    const today = calendarDay(new Date(now).toISOString(), timeZone);
-    const yesterday = calendarDay(new Date(now - DAY_MS).toISOString(), timeZone);
-    const yesterdayPesewas = recent
-      .filter((o) => o.status !== 'cancelled' && calendarDay(o.createdAt, timeZone) === yesterday)
-      .reduce((sum, o) => sum + o.totalPesewas, 0);
-    const summary = summarizeDay({
-      orders: recent,
-      openCalls: openCalls.length,
-      ratings: reviews.map((r) => r.stars),
-      nowIso: new Date(now).toISOString(),
-      timeZone,
-      yesterdayPesewas,
-      soldOut: soldOut
-        .filter((item) => !item.deletedAt)
-        .map((item) => (item.name as { en?: string }).en ?? ''),
-    });
-    const dashboard: OwnerDashboard = {
-      salesTodayPesewas: summary.salesTodayPesewas,
-      currency: venue.currency,
-      changePercent: summary.changePercent,
-      direction: summary.direction,
-      openTables: floor.filter((table) => table.status !== 'free').length,
-      liveOrders: recent.filter(
-        (o) =>
-          o.status === 'received' ||
-          o.status === 'accepted' ||
-          o.status === 'preparing' ||
-          o.status === 'ready',
-      ).length,
-      openCalls: openCalls.length,
-      ratingAverage: summary.ratingAverage,
-      ratingCount: summary.ratingCount,
-      alerts: summary.alerts,
-      ordersToday: summary.ordersToday,
-      pendingOrders: summary.pendingOrders,
-      // A visit is one QR scan or one opened menu link: counted when the guest session starts.
-      visitorsToday: visitRows.filter(
-        (v) => calendarDay(v.startedAt.toISOString(), timeZone) === today,
-      ).length,
-    };
-    return c.json(dashboard);
+    return c.json(
+      await dashboardCache.read(venue.id, () => dashboardOf(db, venue, now, deps.siteUrl)),
+    );
   });
 
   /** Sales for a date range, with the same window before it to compare. Owners and managers. */
