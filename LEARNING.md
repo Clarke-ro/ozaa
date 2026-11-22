@@ -4,6 +4,35 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-22 · A ceiling for the guest page, and a second visit that's nearly free
+
+**What we built**
+
+A test in CI that measures how much JavaScript the guest table home downloads (503 KB gzipped today) and fails above 510 KB. And a rule that lets phones keep the app's code files for a year.
+
+**How it works**
+
+```
+first visit:  phone downloads 503 KB of code → keeps it (1 year)
+next visit:   index.html is fresh → names the same files → phone already has them → 0 KB
+new deploy:   new code means new file names → phone fetches only what changed
+```
+
+Every code file has a fingerprint in its name, like `entry-2c6e21….js`. If the code changes, the name changes. So a file with a given name never changes, and a phone can safely keep it.
+
+**Files to look at**
+
+- `e2e/js-budget.spec.ts`: the ceiling test.
+- `vercel.json`: the `Cache-Control` rules for `/_expo/static/` and `/assets/`, and the catch-all rewrite that leaves those folders alone.
+
+**New idea: a ceiling, not a target**
+
+About 290 KB of the page is the framework, so we can't reach 350 KB without leaving Expo. A ceiling still helps: nothing can quietly make the page heavier. When a change makes it lighter, lower the number.
+
+**Try it yourself**
+
+In `e2e/js-budget.spec.ts`, set `GUEST_HOME_BUDGET_KB` to 400. Run `EXPO_PUBLIC_API_MODE=mock npx expo export -p web`, then `npx playwright test e2e/js-budget.spec.ts`, and watch it fail with the real number. Put it back to 510.
+
 ## 2026-11-18 · Unpaid orders give the dish back
 
 **What we built**
