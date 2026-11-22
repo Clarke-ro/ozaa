@@ -6,7 +6,6 @@ import { orders, staffMemberships } from '../db/schema.ts';
 import { expectContract } from '../contract/contract.ts';
 import { as, KITCHEN, OWNER, ownerSetup as setup, WAITER } from './ownerTestSetup.ts';
 
-
 test('GET /me links the Clerk user by verified phone, then knows them by Clerk id', async () => {
   const { call } = await setup();
   assert.equal((await call('GET', '/me')).status, 401);
@@ -49,10 +48,19 @@ test('connecting Paystack: checked with Paystack, stored sealed, never returned;
   const { call, logs, mamas } = await setup();
   const owner = as('user_owner', OWNER);
   const path = `/owner/venues/${mamas}/payment-settings/paystack`;
-  const good = { mode: 'test', publicKey: 'pk_test_goodkey12345', secretKey: 'sk_test_goodkey12345' };
+  const good = {
+    mode: 'test',
+    publicKey: 'pk_test_goodkey12345',
+    secretKey: 'sk_test_goodkey12345',
+  };
 
   assert.equal((await call('PUT', path, good, as('user_waiter', WAITER))).status, 403);
-  const live = await call('PUT', path, { mode: 'live', publicKey: 'pk_live_goodkey12345', secretKey: 'sk_live_goodkey12345' }, owner);
+  const live = await call(
+    'PUT',
+    path,
+    { mode: 'live', publicKey: 'pk_live_goodkey12345', secretKey: 'sk_live_goodkey12345' },
+    owner,
+  );
   assert.equal(live.json.code, 'live_not_enabled');
   const mismatch = await call('PUT', path, { ...good, publicKey: 'pk_live_goodkey12345' }, owner);
   assert.equal(mismatch.json.code, 'paystack_mode_mismatch');
@@ -86,14 +94,33 @@ test('manual methods need their details, and the fee share must be 1 to 100%', a
   expectContract('ownerGetPaymentSettings', 200, read.json);
   assert.equal((await call('GET', base, undefined, as('user_kitchen', KITCHEN))).status, 403);
 
-  const manual = { cash: true, cardMachine: true, bankTransfer: { enabled: true }, momo: { enabled: false } };
+  const manual = {
+    cash: true,
+    cardMachine: true,
+    bankTransfer: { enabled: true },
+    momo: { enabled: false },
+  };
   const missing = await call('PUT', `${base}/manual`, manual, owner);
   assert.equal(missing.json.code, 'manual_bank_incomplete');
-  const saved = await call('PUT', `${base}/manual`, { ...manual, bankTransfer: { enabled: true, accountName: 'Mama K', accountNumber: '1234567890' } }, owner);
+  const saved = await call(
+    'PUT',
+    `${base}/manual`,
+    {
+      ...manual,
+      bankTransfer: { enabled: true, accountName: 'Mama K', accountNumber: '1234567890' },
+    },
+    owner,
+  );
   expectContract('ownerSetManualPayments', 200, saved.json);
-  assert.equal((await call('GET', '/venues/mamas-kitchen')).json.payMethods.bankTransfer.accountNumber, '1234567890');
+  assert.equal(
+    (await call('GET', '/venues/mamas-kitchen')).json.payMethods.bankTransfer.accountNumber,
+    '1234567890',
+  );
 
-  assert.equal((await call('PUT', `${base}/fees`, { enabled: true, percent: 0 }, owner)).json.code, 'fee_percent_invalid');
+  assert.equal(
+    (await call('PUT', `${base}/fees`, { enabled: true, percent: 0 }, owner)).json.code,
+    'fee_percent_invalid',
+  );
   const fees = await call('PUT', `${base}/fees`, { enabled: true, percent: 50 }, owner);
   expectContract('ownerSetFeePassing', 200, fees.json);
   assert.deepEqual(fees.json.feePassing, { enabled: true, percent: 50 });
@@ -101,17 +128,42 @@ test('manual methods need their details, and the fee share must be 1 to 100%', a
 
 test('the orders desk: staff see the venue’s orders, move them by role, and mark them paid once', async () => {
   const { call, db, mamas } = await setup();
-  const token = (await call('POST', '/guest-sessions', { venueSlug: 'mamas-kitchen', tableCode: '4' })).json.guestToken;
+  const token = (
+    await call('POST', '/guest-sessions', { venueSlug: 'mamas-kitchen', tableCode: '4' })
+  ).json.guestToken;
   const dish = (await call('GET', '/venues/mamas-kitchen/menu')).json.items[0];
   const order = (
-    await call('POST', '/orders', { clientOrderId: randomUUID(), lines: [{ menuItemId: dish.id, quantity: 1 }] }, { Authorization: `Bearer ${token}` })
+    await call(
+      'POST',
+      '/orders',
+      { clientOrderId: randomUUID(), lines: [{ menuItemId: dish.id, quantity: 1 }] },
+      { Authorization: `Bearer ${token}` },
+    )
   ).json;
 
-  const list = await call('GET', `/owner/venues/${mamas}/orders?status=received`, undefined, as('user_kitchen', KITCHEN));
+  const list = await call(
+    'GET',
+    `/owner/venues/${mamas}/orders?status=received`,
+    undefined,
+    as('user_kitchen', KITCHEN),
+  );
   expectContract('ownerListOrders', 200, list.json);
-  assert.deepEqual(list.json.items.map((o: { id: string }) => o.id), [order.id]);
+  assert.deepEqual(
+    list.json.items.map((o: { id: string }) => o.id),
+    [order.id],
+  );
   // Another venue's staff list: not theirs.
-  assert.equal((await call('GET', `/owner/venues/ven_bean_there/orders`, undefined, as('user_kitchen', KITCHEN))).status, 403);
+  assert.equal(
+    (
+      await call(
+        'GET',
+        `/owner/venues/ven_bean_there/orders`,
+        undefined,
+        as('user_kitchen', KITCHEN),
+      )
+    ).status,
+    403,
+  );
 
   const status = `/owner/orders/${order.id}/status`;
   // A new order is accepted before anyone can start cooking it.
@@ -119,7 +171,11 @@ test('the orders desk: staff see the venue’s orders, move them by role, and ma
   expectContract('ownerSetOrderStatus', 409, skipped.json);
   const accepted = await call('PUT', status, { status: 'accepted' }, as('user_waiter', WAITER));
   expectContract('ownerSetOrderStatus', 200, accepted.json);
-  assert.equal((await call('GET', `/orders/${order.id}`, undefined, { Authorization: `Bearer ${token}` })).json.status, 'accepted');
+  assert.equal(
+    (await call('GET', `/orders/${order.id}`, undefined, { Authorization: `Bearer ${token}` })).json
+      .status,
+    'accepted',
+  );
   const waiterStart = await call('PUT', status, { status: 'preparing' }, as('user_waiter', WAITER));
   expectContract('ownerSetOrderStatus', 409, waiterStart.json);
   const started = await call('PUT', status, { status: 'preparing' }, as('user_kitchen', KITCHEN));
@@ -127,11 +183,23 @@ test('the orders desk: staff see the venue’s orders, move them by role, and ma
   assert.equal(started.json.status, 'preparing');
   const ready = await call('PUT', status, { status: 'ready' }, as('user_kitchen', KITCHEN));
   assert.ok(ready.json.readyAt);
-  assert.equal((await call('GET', `/orders/${order.id}`, undefined, { Authorization: `Bearer ${token}` })).json.status, 'ready');
+  assert.equal(
+    (await call('GET', `/orders/${order.id}`, undefined, { Authorization: `Bearer ${token}` })).json
+      .status,
+    'ready',
+  );
 
   const pay = `/owner/orders/${order.id}/manual-payment`;
-  assert.equal((await call('POST', pay, { method: 'cash' }, as('user_kitchen', KITCHEN))).status, 403);
-  const paid = await call('POST', pay, { method: 'cash' }, { ...as('user_waiter', WAITER), 'Idempotency-Key': 'k1' });
+  assert.equal(
+    (await call('POST', pay, { method: 'cash' }, as('user_kitchen', KITCHEN))).status,
+    403,
+  );
+  const paid = await call(
+    'POST',
+    pay,
+    { method: 'cash' },
+    { ...as('user_waiter', WAITER), 'Idempotency-Key': 'k1' },
+  );
   expectContract('ownerRecordManualPayment', 200, paid.json);
   assert.equal(paid.json.paymentStatus, 'paid');
   assert.equal(paid.json.paymentMethod, 'cash');
@@ -166,7 +234,9 @@ test('cancelling an order records which owner or manager did it', async () => {
 test('polling the owner app writes "last active" at most once a minute, and bad dates are a 400', async () => {
   const { call, db, mamas, tick } = await setup();
   const lastActive = async () =>
-    (await db.select().from(staffMemberships).where(eq(staffMemberships.venueId, mamas))).find((m) => m.role === 'owner')!.lastActiveAt!.getTime();
+    (await db.select().from(staffMemberships).where(eq(staffMemberships.venueId, mamas)))
+      .find((m) => m.role === 'owner')!
+      .lastActiveAt!.getTime();
   await call('GET', '/me', undefined, as('user_owner', OWNER));
   const first = await lastActive();
   tick(30_000);
@@ -176,6 +246,97 @@ test('polling the owner app writes "last active" at most once a minute, and bad 
   await call('GET', '/me', undefined, as('user_owner', OWNER));
   assert.equal(await lastActive(), first + 61_000);
 
-  const bad = await call('GET', `/owner/venues/${mamas}/orders?since=yesterday`, undefined, as('user_owner', OWNER));
+  const bad = await call(
+    'GET',
+    `/owner/venues/${mamas}/orders?since=yesterday`,
+    undefined,
+    as('user_owner', OWNER),
+  );
   assert.equal(bad.status, 400);
+  assert.equal(
+    (
+      await call(
+        'GET',
+        `/owner/venues/${mamas}/orders?updatedSince=not-a-date`,
+        undefined,
+        as('user_owner', OWNER),
+      )
+    ).status,
+    400,
+  );
+});
+
+test('one order can be opened on its own, and a poll can ask only for what changed', async () => {
+  const { call, mamas } = await setup();
+  const token = (
+    await call('POST', '/guest-sessions', { venueSlug: 'mamas-kitchen', tableCode: '4' })
+  ).json.guestToken;
+  const dish = (await call('GET', '/venues/mamas-kitchen/menu')).json.items[0];
+  const order = (
+    await call(
+      'POST',
+      '/orders',
+      { clientOrderId: randomUUID(), lines: [{ menuItemId: dish.id, quantity: 1 }] },
+      { Authorization: `Bearer ${token}` },
+    )
+  ).json;
+  const kitchen = as('user_kitchen', KITCHEN);
+
+  const one = await call('GET', `/owner/orders/${order.id}`, undefined, kitchen);
+  expectContract('ownerGetOrder', 200, one.json);
+  assert.equal(one.json.id, order.id);
+  assert.equal(one.json.lines.length, 1);
+  assert.equal((await call('GET', '/owner/orders/ord_missing', undefined, kitchen)).status, 404);
+  assert.equal(
+    (
+      await call(
+        'GET',
+        `/owner/orders/${order.id}`,
+        undefined,
+        as('user_stranger', '+233209999999'),
+      )
+    ).status,
+    403,
+  );
+
+  const owner = as('user_owner', OWNER);
+  const future = await call(
+    'GET',
+    `/owner/venues/${mamas}/orders?updatedSince=2099-01-01T00:00:00.000Z`,
+    undefined,
+    owner,
+  );
+  assert.deepEqual(future.json.items, []);
+  const since = await call(
+    'GET',
+    `/owner/venues/${mamas}/orders?updatedSince=2000-01-01T00:00:00.000Z&live=true`,
+    undefined,
+    owner,
+  );
+  assert.deepEqual(
+    since.json.items.map((item: { id: string }) => item.id),
+    [order.id],
+  );
+
+  await call(
+    'PUT',
+    `/owner/orders/${order.id}/status`,
+    { status: 'accepted' },
+    as('user_waiter', WAITER),
+  );
+  await call('PUT', `/owner/orders/${order.id}/status`, { status: 'preparing' }, kitchen);
+  await call('PUT', `/owner/orders/${order.id}/status`, { status: 'ready' }, kitchen);
+  await call(
+    'PUT',
+    `/owner/orders/${order.id}/status`,
+    { status: 'served' },
+    as('user_waiter', WAITER),
+  );
+  const live = await call('GET', `/owner/venues/${mamas}/orders?live=true`, undefined, owner);
+  assert.equal(
+    live.json.items.some((item: { id: string }) => item.id === order.id),
+    false,
+  );
+  const still = await call('GET', `/owner/orders/${order.id}`, undefined, kitchen);
+  assert.equal(still.json.status, 'served');
 });

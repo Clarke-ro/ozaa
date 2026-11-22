@@ -1,4 +1,5 @@
 import { createClerkClient } from '@clerk/backend';
+import { withTimeout } from '../http/outbound.ts';
 
 /** The Clerk calls staff management needs. Tests pass a fake with the same shape. */
 export type ClerkAdmin = {
@@ -16,22 +17,29 @@ export type ClerkAdmin = {
  * The email counts as verified because the owner who invited them vouches for it, the same way
  * the first owner was set up (BUILD.md section 4).
  */
-export function clerkAdmin(secretKey: string): ClerkAdmin {
+export function clerkAdmin(secretKey: string, timeoutMs?: number): ClerkAdmin {
   const clerk = createClerkClient({ secretKey });
+  const wait = <T>(work: Promise<T>) => withTimeout(work, timeoutMs);
   return {
     async ensureUser({ email, firstName }) {
-      const found = await clerk.users.getUserList({ emailAddress: [email], limit: 1 });
+      const found = await wait(clerk.users.getUserList({ emailAddress: [email], limit: 1 }));
       const existing = found.data[0];
       if (existing) return existing.id;
-      const made = await clerk.users.createUser({ emailAddress: [email], firstName, skipPasswordRequirement: true });
+      const made = await wait(
+        clerk.users.createUser({ emailAddress: [email], firstName, skipPasswordRequirement: true }),
+      );
       return made.id;
     },
     async revokeSessions(clerkUserId) {
-      const sessions = await clerk.sessions.getSessionList({ userId: clerkUserId, status: 'active' });
-      await Promise.all(sessions.data.map((session) => clerk.sessions.revokeSession(session.id)));
+      const sessions = await wait(
+        clerk.sessions.getSessionList({ userId: clerkUserId, status: 'active' }),
+      );
+      await Promise.all(
+        sessions.data.map((session) => wait(clerk.sessions.revokeSession(session.id))),
+      );
     },
     async deleteUser(clerkUserId) {
-      await clerk.users.deleteUser(clerkUserId);
+      await wait(clerk.users.deleteUser(clerkUserId));
     },
   };
 }

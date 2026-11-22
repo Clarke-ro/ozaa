@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { PaymentStore } from './db/paymentStore.ts';
 import { Problem } from './http/problem.ts';
-import type { Paystack, PaystackError } from './paystack.ts';
+import { PaystackError, type Paystack } from './paystack.ts';
 import { fromPaystack, type PaymentStatus, type PaystackTransaction } from './status.ts';
 
 /** A payment as the contract describes it (api/openapi.yaml Payment). */
@@ -36,7 +36,9 @@ export type Charge = {
 };
 
 /** The Paystack account of the venue whose bill it is, or null when the venue hasn't connected one. */
-export type PaystackFor = (venueSlug: string) => Promise<{ paystack: Paystack; secret: string; testMode: boolean } | null>;
+export type PaystackFor = (
+  venueSlug: string,
+) => Promise<{ paystack: Paystack; secret: string; testMode: boolean } | null>;
 
 export type StartInput = {
   charge: Charge;
@@ -73,12 +75,18 @@ export function paymentService(deps: {
     // Abandoned is not the end for a card: the guest can go back to Paystack's page and pay.
     // Only a success (checked for amount below) moves it on; anything else leaves it abandoned.
     if (payment.status === 'abandoned' && tx.status !== 'success') return payment;
-    const next = fromPaystack(tx, { amountPesewas: payment.amountPesewas, currency: 'GHS' }, payment.status);
+    const next = fromPaystack(
+      tx,
+      { amountPesewas: payment.amountPesewas, currency: 'GHS' },
+      payment.status,
+    );
     const updated: Payment = {
       ...payment,
       status: next.status,
       failureReason:
-        next.failureReason === 'amount_mismatch' ? MISMATCH : (next.failureReason ?? payment.failureReason),
+        next.failureReason === 'amount_mismatch'
+          ? MISMATCH
+          : (next.failureReason ?? payment.failureReason),
       paidAt: next.status === 'succeeded' ? new Date(now()).toISOString() : payment.paidAt,
     };
     await store.save(updated);
@@ -90,7 +98,13 @@ export function paymentService(deps: {
     // The venue disconnected Paystack since: we can't ask, so we keep what we know.
     if (!venue) return payment;
     await store.asked(payment.reference, now());
-    return apply(payment, await venue.paystack.verify(payment.reference));
+    try {
+      return await apply(payment, await venue.paystack.verify(payment.reference));
+    } catch (error) {
+      // A slow Paystack is not a failed payment. The next poll, or the webhook, asks again.
+      if (error instanceof PaystackError && error.httpStatus === 503) return payment;
+      throw error;
+    }
   };
 
   /** Asks Paystack to start the charge for a claimed payment. Never throws: a refusal is saved as failed. */
@@ -116,6 +130,15 @@ export function paymentService(deps: {
         payment = { ...base, status: 'open_url', authorizationUrl: res.authorization_url };
       }
     } catch (error) {
+      // The charge may already have reached Paystack. Leave it pending so a webhook can still
+      // mark it paid, and tell the guest to wait instead of recording a failure.
+      if (error instanceof PaystackError && error.httpStatus === 503) {
+        throw new Problem(
+          503,
+          'paystack_unavailable',
+          'Paystack took too long. Wait a moment, then check the payment.',
+        );
+      }
       payment = { ...base, status: 'failed', failureReason: (error as PaystackError).message };
     }
     await store.save(payment);
@@ -130,7 +153,12 @@ export function paymentService(deps: {
      */
     async start(input: StartInput, idempotencyKey: string): Promise<Payment> {
       const venue = await deps.paystackFor(input.charge.venueSlug);
-      if (!venue) throw new Problem(409, 'online_pay_off', 'Pay at the counter, or ask your waiter for the bill.');
+      if (!venue)
+        throw new Problem(
+          409,
+          'online_pay_off',
+          'Pay at the counter, or ask your waiter for the bill.',
+        );
       const reference = newReference();
       const created = now();
       const base: Payment = {
@@ -149,9 +177,15 @@ export function paymentService(deps: {
         paidAt: null,
         testMode: venue.testMode,
       };
-      const claim = await store.claim(idempotencyKey, base, input.charge.venueSlug, input.charge.quoteId);
+      const claim = await store.claim(
+        idempotencyKey,
+        base,
+        input.charge.venueSlug,
+        input.charge.quoteId,
+      );
       // A repeat: the latest word on the first payment, in case it has moved on since it started.
-      if (!claim.created) return (await store.get(claim.payment.reference))?.payment ?? claim.payment;
+      if (!claim.created)
+        return (await store.get(claim.payment.reference))?.payment ?? claim.payment;
       return charge(claim.payment, input, venue.paystack);
     },
 

@@ -26,7 +26,9 @@ import {
 } from './otpQuota.ts';
 
 const CODE_TTL_MS = 5 * 60_000;
-const PER_IP_PER_HOUR = 10;
+// A venue's Wi-Fi, or a mobile network, is one address for many phones. The per-phone and per-venue
+// caps are what stop a run on SMS cost. This address cap only stops one address flooding.
+const PER_IP_PER_HOUR = 1_000;
 // A person tries a code a few times. These stop a burst of guesses, not a busy dining room.
 const VERIFY_PER_PHONE_PER_MINUTE = 30;
 const VERIFY_PER_IP_PER_MINUTE = 60;
@@ -43,6 +45,8 @@ export type OtpDeps = {
   sms: SmsSender | null;
   /** Texts one venue may send per rolling day. No session shares a separate bucket of this size. */
   dailyLimit: number;
+  /** Tests pass a small address cap. Production uses PER_IP_PER_HOUR. */
+  ipPerHour?: number;
   log: Log;
 };
 
@@ -67,7 +71,7 @@ export function otpRoutes(deps: OtpDeps) {
   const { db } = deps;
   const hash = (text: string) => createHmac('sha256', deps.hashSecret).update(text).digest('hex');
   // Per-IP counts live in memory: one dyno serves every request. A restart clears them.
-  const sendsByIp = slidingWindow({ limit: PER_IP_PER_HOUR, windowMs: 60 * 60_000, now: deps.now });
+  const sendsByIp = slidingWindow({ limit: deps.ipPerHour ?? PER_IP_PER_HOUR, windowMs: 60 * 60_000, now: deps.now });
   const verifyByIp = slidingWindow({ limit: VERIFY_PER_IP_PER_MINUTE, windowMs: 60_000, now: deps.now });
   const verifyByPhone = slidingWindow({ limit: VERIFY_PER_PHONE_PER_MINUTE, windowMs: 60_000, now: deps.now });
   const limited = (code: 'rate_limited' | 'resend_too_soon', seconds: number) =>
@@ -107,7 +111,12 @@ export function otpRoutes(deps: OtpDeps) {
         sentAt: new Date(now),
         expiresAt: new Date(now + CODE_TTL_MS),
       });
-      await deps.sms(input.phone, `${code} is your Cravins code. It expires in 5 minutes. Don't share it.`);
+      try {
+        await deps.sms(input.phone, `${code} is your Cravins code. It expires in 5 minutes. Don't share it.`);
+      } catch {
+        // The SMS provider failed or timed out. The guest can try again; it's not a server bug.
+        throw new Problem(503, 'sms_unavailable', 'The text could not be sent. Try again in a moment.');
+      }
     } catch (error) {
       sendsByIp.drop(ip);
       // The text did not go out, so the code and the reserved slots must not stand.

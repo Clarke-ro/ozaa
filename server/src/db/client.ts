@@ -14,8 +14,8 @@ export const MIGRATIONS = fileURLToPath(new URL('../../drizzle', import.meta.url
  * Connects to Postgres. `prepare: false` because Supabase's connection pooler (the address to use
  * from Vercel Functions, which open many short connections) can't keep prepared statements.
  */
-export function connect(url: string): { db: Db; close: () => Promise<void> } {
-  const client = postgres(url, { prepare: false, max: 5 });
+export function connect(url: string, max = 10): { db: Db; close: () => Promise<void> } {
+  const client = postgres(url, { prepare: false, max });
   return { db: drizzle(client, { schema }), close: () => client.end() };
 }
 

@@ -20,7 +20,7 @@ async function setup(dailyLimit = 300, sms?: SmsSender) {
   const send = sms ?? (async (to: string, text: string) => void texts.push({ to, text }));
   const app = createApp({
     payments: {} as PaymentService,
-    otp: { db, now: () => clock, hashSecret: SECRET, guestSecret: SECRET, loyaltyKey: TEST_KEY, sms: send, dailyLimit },
+    otp: { db, now: () => clock, hashSecret: SECRET, guestSecret: SECRET, loyaltyKey: TEST_KEY, sms: send, dailyLimit, ipPerHour: 10 },
     allowedOrigins: [],
     log: () => undefined,
     ping: async () => undefined,
@@ -55,7 +55,7 @@ test('a code by SMS, once, proves the phone; the token holds the number sealed',
   assert.equal((await call('/auth/otp/verify', { phone: PHONE, code: codeIn(), purpose: 'guest_loyalty' })).status, 401);
 });
 
-test('limits: 30 seconds between texts, 5 a phone an hour, 10 an IP an hour, 5 guesses a code', async () => {
+test('limits: 30 seconds between texts, 5 a phone an hour, the address cap, 5 guesses a code', async () => {
   const { call, ask, tick } = await setup();
   await ask();
   assert.equal((await ask()).json.code, 'resend_too_soon');
@@ -156,7 +156,9 @@ test('a text that fails to send does not use up the resend gap or the daily cap'
     if (down) throw new Error('sms down');
     texts.push({ to, text });
   });
-  assert.equal((await ask('+233200000001', '3.3.3.1')).status, 500);
+  const failed = await ask('+233200000001', '3.3.3.1');
+  assert.equal(failed.status, 503);
+  assert.equal(failed.json.code, 'sms_unavailable');
   down = false;
   assert.equal((await ask('+233200000001', '3.3.3.1')).status, 202);
   assert.equal((await ask('+233200000002', '3.3.3.2')).status, 202);

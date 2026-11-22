@@ -1,0 +1,3 @@
+CREATE INDEX "orders_venue_updated" ON "orders" USING btree ("venue_id","updated_at");--> statement-breakpoint
+CREATE INDEX "orders_venue_open" ON "orders" USING btree ("venue_id","updated_at") WHERE "orders"."status" in ('received', 'accepted', 'preparing', 'ready');--> statement-breakpoint
+CREATE INDEX "waiter_calls_venue_open" ON "waiter_calls" USING btree ("venue_id") WHERE "waiter_calls"."status" <> 'resolved';

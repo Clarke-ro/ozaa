@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { api } from '@/lib/api';
@@ -7,6 +7,7 @@ import type { Order } from '@/lib/api/types';
 import { DEFAULT_CURRENCY } from '@/lib/money';
 import { POLL_MS } from '@/lib/polling';
 import { ownerKeys } from '../../data/keys';
+import { latestUpdatedAt, mergeOrderPages } from '../../desk/mergeOrders';
 import { orderRange, type OrderRange } from '../../desk/orderRange';
 import { MarkPaidSheet } from './MarkPaidSheet';
 import { OrderCard } from './OrderCard';
@@ -33,12 +34,23 @@ export function useOrderDesk(range: OrderRange, compact: boolean) {
   const { venue, methods } = useVenuePay(venueId);
   // The range's days start at midnight where the venue is, not where this phone is.
   const period = orderRange(range, now, venue.data?.hours.timezone ?? FALLBACK_ZONE);
-  // "All time" shares the cache with the chime and Today; a range gets its own entry under it,
-  // so any save that refreshes the orders refreshes this list too.
+  // A range gets its own entry under the orders key, so a save refreshes this list too.
+  // The chime keeps its own small poll and does not download this list.
   const key = range === 'all' ? ownerKeys.orders(venueId) : [...ownerKeys.orders(venueId), range];
+  const held = useRef<{ key: string; items: Order[] } | null>(null);
   const orders = useQuery({
     queryKey: key,
-    queryFn: () => api.ownerListOrders(venueId, period),
+    queryFn: async () => {
+      const cacheKey = `${venueId}:${period.since ?? ''}:${period.until ?? ''}`;
+      const previous = held.current?.key === cacheKey ? held.current.items : null;
+      const page = await api.ownerListOrders(venueId, {
+        ...period,
+        updatedSince: previous ? latestUpdatedAt(previous) : undefined,
+      });
+      const items = mergeOrderPages(previous, page.items);
+      held.current = { key: cacheKey, items };
+      return { items, nextCursor: null };
+    },
     enabled: Boolean(venueId),
     refetchInterval: POLL_MS.owner,
   });
