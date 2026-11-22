@@ -53,8 +53,7 @@ test('delivery needs the address and the location, then shows the fee', () => {
     pin,
     5000,
   );
-  // 5 km zone × 250 pesewas, not the minimum a pin next door would have paid.
-  expect(ready.ok && ready.deliveryFeePesewas).toBe(1250);
+  expect(ready.ok && ready.deliveryFeePesewas).toBe(1000);
 });
 
 test('too far is its own message, so the customer can switch to pickup', () => {

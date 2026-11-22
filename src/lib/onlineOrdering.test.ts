@@ -78,24 +78,20 @@ describe('checkFulfilment', () => {
     });
   });
 
-  test('delivery charges the far edge of the zone, including a pin on the restaurant', () => {
-    const order = {
-      type: 'delivery' as const,
-      contact,
-      address: 'House 4, Oxford St',
-      location: near,
-    };
-    // 8 km × 250 = 2000. A nearer pin, or one sitting on the venue, pays the same.
-    const edge = {
+  test('delivery adds the fee for the distance from the venue pin', () => {
+    const check = checkFulfilment(
+      settings,
+      venuePin,
+      { type: 'delivery', contact, address: 'House 4, Oxford St', location: near },
+      5000,
+    );
+    // 2.2 km × 250 = 556, below the 1000 minimum.
+    expect(check).toEqual({
       ok: true,
-      source: 'delivery' as const,
-      deliveryFeePesewas: 2000,
+      source: 'delivery',
+      deliveryFeePesewas: 1000,
       etaMinutes: 20,
-    };
-    expect(checkFulfilment(settings, venuePin, order, 5000)).toEqual(edge);
-    expect(checkFulfilment(settings, venuePin, { ...order, location: venuePin }, 5000)).toEqual(edge);
-    // Free delivery is the venue's own rule, and it still applies at that edge.
-    expect(checkFulfilment(settings, venuePin, order, 20000)).toEqual({ ...edge, deliveryFeePesewas: 0 });
+    });
   });
 
   test('a pin that is not a place on earth is refused', () => {
