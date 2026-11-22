@@ -54,7 +54,9 @@ const schema = z.object({
   SENTRY_DSN: z.url().optional(),
   SENTRY_ENVIRONMENT: z.string().default('production'),
   // Arkesel SMS, for the codes guests get when joining loyalty. The sender ID must be approved in
-  // Arkesel's dashboard. SMS_DAILY_LIMIT caps texts per day as a cost fuse.
+  // Arkesel's dashboard. SMS_DAILY_LIMIT is how many loyalty texts one venue may send per
+  // rolling day. Requests with no guest session share a separate bucket of the same size.
+  // Arkesel's own balance is the account-wide cost stop.
   ARKESEL_API_KEY: z.string().min(8).optional(),
   ARKESEL_SENDER_ID: z.string().min(3).max(11).default('Cravins'),
   SMS_DAILY_LIMIT: z.coerce.number().int().positive().default(300),

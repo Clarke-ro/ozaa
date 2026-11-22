@@ -55,6 +55,7 @@ const app = createApp({
       ? arkeselSender({ apiKey: config.ARKESEL_API_KEY, sender: config.ARKESEL_SENDER_ID })
       : null,
     dailyLimit: config.SMS_DAILY_LIMIT,
+    guestSecret: config.GUEST_TOKEN_SECRET,
   },
   owner: {
     db,

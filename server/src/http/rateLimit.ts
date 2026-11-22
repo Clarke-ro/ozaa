@@ -29,6 +29,13 @@ export function slidingWindow(options: { limit: number; windowMs: number; now: (
       hits.set(key, recent);
       return true;
     },
+    /** Gives back the newest hit. A send that was refused after being counted calls this. */
+    drop(key: string): void {
+      const recent = hits.get(key);
+      if (!recent?.length) return;
+      recent.pop();
+      if (recent.length === 0) hits.delete(key);
+    },
     size: () => hits.size,
   };
 }
