@@ -77,7 +77,7 @@ export function CustomerList({
 
   return (
     <DeskWait
-      loading={customers.isLoading}
+      loading={customers.isPending}
       error={customers.isError}
       onRetry={() => void customers.refetch()}
     >

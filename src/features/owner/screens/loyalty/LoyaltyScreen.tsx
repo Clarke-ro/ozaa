@@ -58,7 +58,7 @@ export function LoyaltyScreen() {
         }))}
       />
       <DeskWait
-        loading={loyalty.isLoading}
+        loading={loyalty.isPending}
         error={loyalty.isError}
         onRetry={() => void loyalty.refetch()}
       >

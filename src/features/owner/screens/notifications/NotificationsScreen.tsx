@@ -51,7 +51,7 @@ export function NotificationsScreen() {
         ) : undefined
       }
     >
-      <DeskWait loading={feed.isLoading} error={feed.isError} onRetry={() => void feed.refetch()}>
+      <DeskWait loading={feed.isPending} error={feed.isError} onRetry={() => void feed.refetch()}>
         {items.length === 0 ? (
           <EmptyCard
             icon={BellOff}

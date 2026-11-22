@@ -132,7 +132,7 @@ export function SalesScreen() {
         </View>
       ) : null}
       <DeskWait
-        loading={sales.isLoading && ready}
+        loading={sales.isPending && ready}
         error={sales.isError}
         onRetry={() => void sales.refetch()}
       >

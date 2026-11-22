@@ -24,7 +24,7 @@ export function LoyaltyOverview({ venueId }: { venueId: string }) {
   });
   const r = report.data;
   // No numbers until the server sends them; never a made-up zero.
-  if (!r) return report.isLoading ? <SkeletonBlock height={128} /> : null;
+  if (!r) return report.isPending ? <SkeletonBlock height={128} /> : null;
   const n = (v: number) => v.toLocaleString(i18n.language);
   return (
     <FigureRow

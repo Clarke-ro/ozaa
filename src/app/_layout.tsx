@@ -1,6 +1,6 @@
 import { useEffect, type ReactNode } from 'react';
 import { View } from 'react-native';
-import { Stack } from 'expo-router';
+import { Stack, usePathname } from 'expo-router';
 import { QueryClient, type Query } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
@@ -13,6 +13,7 @@ import i18n from '@/i18n';
 import { applyTextDirection, textDirection } from '@/i18n/direction';
 import { applySavedLanguage } from '@/features/venue';
 import { watchUncaughtErrors } from '@/lib/monitor';
+import { rememberPath } from '@/ui/chunkError';
 import { pausePollingInBackground } from '@/lib/queryLifecycle';
 import { shouldPersistQuery } from '@/lib/queryPersist';
 import { GestureRoot } from '@/ui/GestureRoot';
@@ -62,6 +63,9 @@ function DirectionFrame({ children }: { children: ReactNode }) {
 
 export default function RootLayout() {
   const fontsReady = useAppFonts();
+  // Where the person is, so a page that fails to load while offline can be reopened (chunkError.ts).
+  const pathname = usePathname();
+  useEffect(() => rememberPath(pathname), [pathname]);
   useEffect(() => {
     void applySavedLanguage();
   }, []);
