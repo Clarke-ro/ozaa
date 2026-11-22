@@ -1,3 +1,6 @@
+# The owner app and dev tools are private. A table's page (/venue/t/12) is one visit at one
+# table, so only the venue's own page (/venue) is for search results.
 User-agent: *
 Disallow: /owner
 Disallow: /dev
+Disallow: /*/t/
