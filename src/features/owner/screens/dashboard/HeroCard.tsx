@@ -10,9 +10,9 @@ const c = tokens.owner.controls;
 const GRAIN = require('../../../../../assets/images/grain.png');
 
 /**
- * The day's main number on a card in the theme's primary colour, the first thing on Today
- * ("Sales today GH₵1,250"). Fill and text come from the theme (Clarke, 2026-11-23), so the card
- * follows the venue colour, and deriveTheme has already checked the text contrast.
+ * The day's main number on a black card with white text, the first thing on Today ("Sales today
+ * GH₵1,250"; Clarke, 2026-11-23). White on #111111 is about 19:1. The card stays black in dark
+ * mode, with a 1 px edge so it doesn't sink into the near-black page.
  * A small pill opens the page behind the number when this person may. A fine grain sits over the
  * colour for texture (Clarke, 2026-11-17); it is faint, so the text keeps its contrast.
  */
@@ -35,11 +35,14 @@ export function HeroCard({
   compact?: boolean;
 }) {
   const theme = useTheme();
-  const bg = theme.fill;
-  const ink = theme.onFill;
+  const bg = tokens.color.black.hex;
+  const ink = tokens.color.white.hex;
+  const edge = theme.scheme === 'dark' ? theme.line : bg;
 
   return (
-    <View style={[styles.card, compact && styles.compact, { backgroundColor: bg }]}>
+    <View
+      style={[styles.card, compact && styles.compact, { backgroundColor: bg, borderColor: edge }]}
+    >
       <Image
         source={GRAIN}
         resizeMode="repeat"
@@ -60,7 +63,7 @@ export function HeroCard({
             hitSlop={tokens.space[2]}
             style={({ pressed }) => [styles.pill, { opacity: pressed ? 0.7 : 1 }]}
           >
-            {/* A see-through layer of the ink, so the pill reads on the fill. */}
+            {/* A see-through layer of the ink, so the pill reads on the black. */}
             <View style={[StyleSheet.absoluteFill, styles.pillFill, { backgroundColor: ink }]} />
             <Text variant="caption" style={[styles.pillText, { color: ink }]}>
               {link}
@@ -95,12 +98,12 @@ const styles = StyleSheet.create({
     borderCurve: 'continuous',
     padding: c.statPadding,
     gap: c.statGap,
+    borderWidth: 1,
     overflow: 'hidden',
   },
-  // 0.3, not 0.6: the tile has more dark specks than light, so at 0.6 it pulled the orange down to
-  // a muddy #C73F03. At 0.3 the card averages about #CC3E01 and reads as the same orange as the
-  // buttons and badges (Clarke, 2026-11-23).
-  grain: { width: '100%', height: '100%', opacity: 0.3 },
+  // On black only the tile's light specks show (the dark ones vanish), so it can sit at 0.6 and
+  // still read as a fine texture without greying the card.
+  grain: { width: '100%', height: '100%', opacity: 0.6 },
   top: {
     flexDirection: 'row',
     alignItems: 'center',
