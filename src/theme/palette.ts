@@ -20,10 +20,11 @@ export const QR_PAPER = '#FFFFFF';
 export const QR_INK = '#111111';
 
 /**
- * The Sales card on Today: a bright burgundy (Clarke, 2026-11-17) with white text, the same in
- * both schemes. White on this burgundy is about 7:1, far past the 4.5:1 text needs.
+ * The Sales card on Today: a warm off-white with near-black text and a grey edge, the same in
+ * both schemes (Clarke, 2026-11-23; it was burgundy before). The ink on this fill is about 17:1,
+ * far past the 4.5:1 text needs. The edge keeps the card visible on the cool grey canvas.
  */
-export const SALES_CARD = { fill: '#A3263F', ink: '#FFFFFF' } as const;
+export const SALES_CARD = { fill: '#F3F3F0', ink: '#111111', edge: '#E4E4E7' } as const;
 
 /** Venue colours offered in Branding (canvas). Names come from ownerBranding.swatch.<id>. */
 export const VENUE_SWATCHES = [
