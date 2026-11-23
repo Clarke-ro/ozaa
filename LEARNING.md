@@ -4,6 +4,79 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-23 · Menu cards with a description
+
+**What we built**
+The walk-in menu from the design canvas: a back arrow and the venue's name at the top, a white page, and each dish as a white card with its name, two lines of description, the price, and the photo on the right with a round add button.
+
+**How it works**
+`MenuScreen` draws one `DishRow` per dish. `DishRow` lays the words out on the left and the photo on the right, and cuts the description off after two lines so every card stays about the same height.
+
+**Files to look at**
+
+- `src/features/menu/DishRow.tsx`: one dish card
+- `src/features/menu/MenuScreen.tsx`: the page, the header and the white background
+- `src/ui/PageHeader.tsx`: the new `plain` header (no line, bold title on the left)
+
+**New idea: `numberOfLines`**
+A long description would make one card much taller than the rest. `numberOfLines={2}` tells the text to stop after two lines and end with "…". The guest still sees the full text on the dish's own page.
+
+**Try it yourself**
+In `DishRow.tsx`, change the description's `numberOfLines={2}` to `{1}` and look at the menu: every card gets shorter.
+
+## 2026-11-23 · A table home whose banner stays still
+
+**What we built**
+The table home from the design canvas. The banner photo is a little taller and stays put while the page slides up over it on a white sheet. Under the name, two small boxes show the table and whether the venue is open.
+
+**How it works**
+
+```
+guest scrolls 60 px → ScrollView reports y = 60 → banner moves down 60 px → it looks still
+                                                → the white sheet moves up 60 px over it
+```
+
+**Files to look at**
+
+- `src/features/venue/VenueHomeBody.tsx`: banner, white sheet, header, gap and services
+- `src/features/venue/HomeScreen.tsx`: the scroll view that reports how far the guest scrolled
+- `src/features/venue/InfoBoxes.tsx`: the row of small boxes
+- `src/lib/time.ts`: `hoursBox`, which splits "Open now · until 10 PM" into two lines
+
+**New idea: moving with the scroll to stay still**
+Anything inside a scroll view moves when you scroll. To make the banner look fixed, we move it down by exactly the distance the guest scrolled, so the two cancel out. `Animated.event` copies the scroll distance straight into the banner's position, frame by frame, without waiting for React to re-render.
+
+**Try it yourself**
+In `HomeScreen.tsx`, remove the `scrollY={scrollY}` line, run the web app, and scroll: the banner now leaves with the page.
+
+## 2026-11-23 · A new font for guest pages
+
+**What we built**
+Every guest page now uses one font, Noto Sans: body text, bold labels and headings. The owner app keeps Inter.
+
+**How it works**
+
+```
+theme (guest) → fonts: NotoSans_400 / NotoSans_600, headings NotoSans_800
+theme (owner) → fonts: Inter_400 / Inter_600
+<Text> reads the theme, so the same component draws the right font in each app
+```
+
+Guest screens that style a text box directly use `guestFont` from `src/ui/theme.tsx`.
+
+**Files to look at**
+
+- `src/ui/theme.tsx`: `guestFont`, and the new `fonts` on each theme
+- `src/ui/Text.tsx`: picks the font from the theme
+- `src/theme/fonts.ts` and `fonts.web.ts`: load the font files
+- `assets/fonts/NotoSans-*.woff2`: the files the browser downloads
+
+**New idea: font subsets and glyph coverage**
+A font file only draws the letters it contains. Each letter shape is a glyph. Plus Jakarta Sans has no glyph for ɛ or ɔ, so "Kɛlɛwɛlɛ" would borrow those two letters from a backup font and look patchy. We checked 20 fonts; only Noto Sans and Inter had every Ghanaian letter plus ₵. A subset is a copy of the font with only the letters we need (about 230), which keeps each file near 13 KB instead of 500 KB.
+
+**Try it yourself**
+In `src/ui/theme.tsx`, change `guestFont.heavy` to `'NotoSans_600'`, run `npx expo start --web`, and watch the guest headings get lighter.
+
 ## 2026-11-23 · A bug only real data could show
 
 **What we built**
@@ -4179,76 +4252,3 @@ Everything looked fine online. Only switching the connection off showed what a w
 **Try it yourself**
 
 In Chrome's developer tools, go to Network → Offline, then tap through the owner app.
-
-## 2026-11-23 · A new font for guest pages
-
-**What we built**
-Every guest page now uses one font, Noto Sans: body text, bold labels and headings. The owner app keeps Inter.
-
-**How it works**
-
-```
-theme (guest) → fonts: NotoSans_400 / NotoSans_600, headings NotoSans_800
-theme (owner) → fonts: Inter_400 / Inter_600
-<Text> reads the theme, so the same component draws the right font in each app
-```
-
-Guest screens that style a text box directly use `guestFont` from `src/ui/theme.tsx`.
-
-**Files to look at**
-
-- `src/ui/theme.tsx`: `guestFont`, and the new `fonts` on each theme
-- `src/ui/Text.tsx`: picks the font from the theme
-- `src/theme/fonts.ts` and `fonts.web.ts`: load the font files
-- `assets/fonts/NotoSans-*.woff2`: the files the browser downloads
-
-**New idea: font subsets and glyph coverage**
-A font file only draws the letters it contains. Each letter shape is a glyph. Plus Jakarta Sans has no glyph for ɛ or ɔ, so "Kɛlɛwɛlɛ" would borrow those two letters from a backup font and look patchy. We checked 20 fonts; only Noto Sans and Inter had every Ghanaian letter plus ₵. A subset is a copy of the font with only the letters we need (about 230), which keeps each file near 13 KB instead of 500 KB.
-
-**Try it yourself**
-In `src/ui/theme.tsx`, change `guestFont.heavy` to `'NotoSans_600'`, run `npx expo start --web`, and watch the guest headings get lighter.
-
-## 2026-11-23 · A table home whose banner stays still
-
-**What we built**
-The table home from the design canvas. The banner photo is a little taller and stays put while the page slides up over it on a white sheet. Under the name, two small boxes show the table and whether the venue is open.
-
-**How it works**
-
-```
-guest scrolls 60 px → ScrollView reports y = 60 → banner moves down 60 px → it looks still
-                                                → the white sheet moves up 60 px over it
-```
-
-**Files to look at**
-
-- `src/features/venue/VenueHomeBody.tsx`: banner, white sheet, header, gap and services
-- `src/features/venue/HomeScreen.tsx`: the scroll view that reports how far the guest scrolled
-- `src/features/venue/InfoBoxes.tsx`: the row of small boxes
-- `src/lib/time.ts`: `hoursBox`, which splits "Open now · until 10 PM" into two lines
-
-**New idea: moving with the scroll to stay still**
-Anything inside a scroll view moves when you scroll. To make the banner look fixed, we move it down by exactly the distance the guest scrolled, so the two cancel out. `Animated.event` copies the scroll distance straight into the banner's position, frame by frame, without waiting for React to re-render.
-
-**Try it yourself**
-In `HomeScreen.tsx`, remove the `scrollY={scrollY}` line, run the web app, and scroll: the banner now leaves with the page.
-
-## 2026-11-23 · Menu cards with a description
-
-**What we built**
-The walk-in menu from the design canvas: a back arrow and the venue's name at the top, a white page, and each dish as a white card with its name, two lines of description, the price, and the photo on the right with a round add button.
-
-**How it works**
-`MenuScreen` draws one `DishRow` per dish. `DishRow` lays the words out on the left and the photo on the right, and cuts the description off after two lines so every card stays about the same height.
-
-**Files to look at**
-
-- `src/features/menu/DishRow.tsx`: one dish card
-- `src/features/menu/MenuScreen.tsx`: the page, the header and the white background
-- `src/ui/PageHeader.tsx`: the new `plain` header (no line, bold title on the left)
-
-**New idea: `numberOfLines`**
-A long description would make one card much taller than the rest. `numberOfLines={2}` tells the text to stop after two lines and end with "…". The guest still sees the full text on the dish's own page.
-
-**Try it yourself**
-In `DishRow.tsx`, change the description's `numberOfLines={2}` to `{1}` and look at the menu: every card gets shorter.
