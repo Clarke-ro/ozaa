@@ -92,20 +92,19 @@ export function ownerLinkRoutes(deps: OwnerDeps) {
     const startDate = when(input.startDate);
     const endDate = when(input.endDate);
     checkDates(startDate === undefined ? current.startDate : startDate, endDate === undefined ? current.endDate : endDate);
-    const [row] = await db
-      .update(customLinks)
-      .set({
-        ...(input.title !== undefined ? { title: input.title } : {}),
-        ...(input.url !== undefined ? { url: input.url } : {}),
-        ...(input.icon !== undefined ? { icon: input.icon } : {}),
-        ...(input.placement !== undefined ? { placement: input.placement } : {}),
-        ...(startDate !== undefined ? { startDate } : {}),
-        ...(endDate !== undefined ? { endDate } : {}),
-        ...(input.sortOrder !== undefined ? { sortOrder: input.sortOrder } : {}),
-        ...(input.enabled !== undefined ? { enabled: input.enabled } : {}),
-      })
-      .where(eq(customLinks.id, current.id))
-      .returning();
+    const changes = {
+      ...(input.title !== undefined ? { title: input.title } : {}),
+      ...(input.url !== undefined ? { url: input.url } : {}),
+      ...(input.icon !== undefined ? { icon: input.icon } : {}),
+      ...(input.placement !== undefined ? { placement: input.placement } : {}),
+      ...(startDate !== undefined ? { startDate } : {}),
+      ...(endDate !== undefined ? { endDate } : {}),
+      ...(input.sortOrder !== undefined ? { sortOrder: input.sortOrder } : {}),
+      ...(input.enabled !== undefined ? { enabled: input.enabled } : {}),
+    };
+    // Nothing to change: the database library refuses an empty update, which was a 500.
+    if (Object.keys(changes).length === 0) return c.json(linkOf(current));
+    const [row] = await db.update(customLinks).set(changes).where(eq(customLinks.id, current.id)).returning();
     return c.json(linkOf(row!));
   });
 

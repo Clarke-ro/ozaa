@@ -4,6 +4,36 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-23 · Who may do what, tested for every call
+
+**What we built**
+
+A test that signs in as each of the six staff roles (owner, manager, waiter, kitchen, viewer, scanner) and tries all 75 owner calls. It also signs in as the owner of a different restaurant and tries every call on Mama's Kitchen. It found one crash: editing a custom link with nothing to change was a server error. That's fixed.
+
+**How it works**
+
+```
+for each owner call (from api/openapi.yaml)
+  for each role, weakest first
+    call it → 403?  must match the role table in the test
+another venue's owner → every call on Mama's must be 403 or 404
+a new call in the contract with no row in the table → the test fails
+```
+
+**Files to look at**
+
+- `server/src/routes/ownerRoles.test.ts`: the role table (`ALLOWED`) and the three tests.
+- `server/src/routes/ownerGridSetup.ts`: one person per role, a rival owner, and one real order, table, link and so on, so each call reaches its role check.
+- `server/src/owner/staff.ts`: `ROLES`, what the server itself enforces.
+
+**New idea: a permission matrix**
+
+Rows are actions, columns are roles, each cell says yes or no. Writing it down in one place makes "can a cook see the sales?" a question you answer by reading a table, not by reading 75 routes.
+
+**Try it yourself**
+
+In `ownerRoles.test.ts`, change `ownerGetPaymentSettings: OWNER` to `DESK`. From `server/`, run `npm test -- src/routes/ownerRoles.test.ts`. It fails and names the exact call and role. Put it back.
+
 ## 2026-11-23 · A payment nobody came back for still gets counted
 
 **What we built**
