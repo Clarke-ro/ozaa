@@ -97,7 +97,10 @@ const styles = StyleSheet.create({
     gap: c.statGap,
     overflow: 'hidden',
   },
-  grain: { width: '100%', height: '100%', opacity: 0.6 },
+  // 0.3, not 0.6: the tile has more dark specks than light, so at 0.6 it pulled the orange down to
+  // a muddy #C73F03. At 0.3 the card averages about #CC3E01 and reads as the same orange as the
+  // buttons and badges (Clarke, 2026-11-23).
+  grain: { width: '100%', height: '100%', opacity: 0.3 },
   top: {
     flexDirection: 'row',
     alignItems: 'center',
