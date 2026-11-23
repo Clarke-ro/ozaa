@@ -144,3 +144,26 @@ test('staff mark an order paid by method; doing it twice changes nothing; the ki
     'forbidden',
   );
 });
+
+test('MoMo without a phone opens the checkout page, like card (Clarke, 2026-11-23)', async () => {
+  const { api, setGuest } = await signedInMock(Date.now(), AKOSUA);
+  const { id } = await api.getVenue('auntie-akos');
+  await api.ownerConnectPaystack(id, keys);
+  const dish = (await api.getMenu('auntie-akos')).items[0]!;
+  setGuest((await api.createGuestSession({ venueSlug: 'auntie-akos', tableCode: '4' })).guestToken);
+  const order = await api.createOrder(
+    { clientOrderId: crypto.randomUUID(), lines: [{ menuItemId: dish.id, quantity: 1 }] },
+    { idempotencyKey: crypto.randomUUID() },
+  );
+  const quote = await api.quoteBill(order.id, { mode: 'whole' });
+  const payment = await api.initializePayment(
+    { quoteId: quote.quoteId, method: 'momo' },
+    { idempotencyKey: crypto.randomUUID() },
+  );
+  expect(payment.status).toBe('open_url');
+  expect(payment.method).toBe('momo');
+  expect(payment.authorizationUrl).toBeTruthy();
+  expect(payment.displayText).toBeUndefined();
+  decideMockCard(payment.reference, 'succeeded');
+  expect((await api.verifyPayment(payment.reference)).status).toBe('succeeded');
+});

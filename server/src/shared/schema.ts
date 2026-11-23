@@ -261,9 +261,13 @@ export interface paths {
          * @description The server calls Paystack with the venue's own secret key (payment-settings/paystack), so the
          *     money goes straight to the venue's Paystack account. Cravins never holds funds and takes no cut.
          *     Fails with 409 online_pay_off when the venue has no Paystack connected (`payMethods.online` is false).
-         *     MoMo returns `pay_offline`: show `displayText` and poll `GET /payments/{reference}`.
-         *     The guest has 180 seconds to approve on their phone (network limit).
-         *     Card returns `open_url` with a Paystack checkout URL: on the web open it in the same tab, in
+         *     MoMo without `momo` details (what the guest app sends, Clarke 2026-11-23) and card both
+         *     return `open_url` with a Paystack checkout URL. For MoMo the page offers mobile money
+         *     only: the guest picks the network, enters the number and approves there.
+         *     MoMo with `momo` details charges the phone directly and returns `pay_offline`: show
+         *     `displayText` and poll `GET /payments/{reference}`. The guest has 180 seconds to approve
+         *     on their phone (network limit).
+         *     For `open_url`: on the web open the URL in the same tab, in
          *     the app open it in the in-app browser. The server sets Paystack's callback URL to
          *     `{site}/{venueSlug}/pay`, and Paystack adds `?reference=…&trxref=…` when it sends the guest
          *     back. The app then calls `POST /payments/{reference}/verify`. Only `succeeded` counts; a card
@@ -1680,7 +1684,7 @@ export interface components {
          */
         ServiceSection: "table" | "rewards" | "fun" | "more";
         /**
-         * @description cravins Unbounded+Inter, serif Noto Serif+Inter, bold Montserrat+Inter.
+         * @description Guest heading font; body text is Noto Sans (2026-11-23). cravins Noto Sans, serif Noto Serif, bold Montserrat.
          * @enum {string}
          */
         FontPair: "cravins" | "serif" | "bold";
@@ -2196,6 +2200,7 @@ export interface components {
             quoteId: string;
             /** @enum {string} */
             method: "momo" | "card";
+            /** @description Optional. Leave it out to send the guest to Paystack's page; send it to charge this phone directly. */
             momo?: {
                 phone: components["schemas"]["GhanaPhone"];
                 provider: components["schemas"]["MomoProvider"];

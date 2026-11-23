@@ -9,7 +9,7 @@ import { paymentService } from './payments.ts';
 
 const paystack: Paystack = {
   chargeMomo: async (i) => ({ status: 'pay_offline', reference: i.reference, display_text: 'Approve' }),
-  initializeCard: async (i) => ({ authorization_url: 'https://checkout.paystack.com/x', reference: i.reference }),
+  initializeCheckout: async (i) => ({ authorization_url: 'https://checkout.paystack.com/x', reference: i.reference }),
   checkKey: async () => undefined,
   verify: async () => ({ status: 'ongoing', amount: 3_800, currency: 'GHS' }),
 };

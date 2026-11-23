@@ -45,7 +45,7 @@ export async function ownerSetup(options: { verify?: VerifyOwner | null } = {}) 
   // Paystack accepts only the key "sk_test_goodkey12345".
   const client = (secret: string): Paystack => ({
     chargeMomo: async () => ({ status: 'pay_offline', reference: 'x' }),
-    initializeCard: async () => ({ authorization_url: 'https://checkout.paystack.com/x', reference: 'x' }),
+    initializeCheckout: async () => ({ authorization_url: 'https://checkout.paystack.com/x', reference: 'x' }),
     verify: async () => ({ status: 'ongoing', amount: 0, currency: 'GHS' }),
     checkKey: async () => {
       if (secret !== 'sk_test_goodkey12345') throw new PaystackError('Invalid key', 401);

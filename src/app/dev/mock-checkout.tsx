@@ -14,7 +14,7 @@ export default function MockCheckout() {
   const router = useRouter();
   const { ref, back } = useLocalSearchParams<{ ref?: string; back?: string }>();
   const reference = ref ?? '';
-  // A stand-in for the Paystack card page, so it only exists while the app runs on the mock.
+  // A stand-in for the Paystack checkout page (card, and MoMo without a phone), so it only exists while the app runs on the mock.
   if (env.EXPO_PUBLIC_API_MODE !== 'mock' || !mocks) return <Redirect href="/" />;
 
   // Like Paystack's callback: back to the venue's pay page with the reference added. Only a path
