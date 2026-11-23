@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { and, count, desc, eq, gt, gte, isNotNull, ne, or } from 'drizzle-orm';
+import { and, count, desc, eq, gt, gte, isNotNull, isNull, ne, or, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { feedback, gameScores, orders, writtenReviews } from '../db/schema.ts';
 import { moodOf } from '../feedback/mood.ts';
@@ -208,11 +208,17 @@ export function guestExtraRoutes(deps: GuestDeps) {
       .from(gameScores)
       .where(and(eq(gameScores.guestSessionId, guest.sid), gte(gameScores.createdAt, dayStart(deps.now()))));
     if (played >= SCORES_PER_VISIT) throw new Problem(429, 'rate_limited', 'Too many scores from this visit. Try again tomorrow.');
-    // runId is the key: a replayed save counts once.
+    // runId is the key: a replayed save counts once. The app sends the round when it ends and
+    // again if the guest then types a name, so a replay may add a name to an unnamed score from
+    // the same visit. Nothing else changes: not the score, not a name already given.
     await db
       .insert(gameScores)
       .values({ runId: input.runId, venueId: row.id, guestSessionId: guest.sid, score: input.score, durationMs: input.durationMs, nickname: input.nickname ?? null, createdAt: new Date(deps.now()) })
-      .onConflictDoNothing();
+      .onConflictDoUpdate({
+        target: gameScores.runId,
+        set: { nickname: sql`excluded.nickname` },
+        setWhere: and(isNull(gameScores.nickname), eq(gameScores.guestSessionId, guest.sid)),
+      });
     const [{ n } = { n: 0 }] = await db
       .select({ n: count() })
       .from(gameScores)

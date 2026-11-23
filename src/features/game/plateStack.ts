@@ -24,8 +24,6 @@ export type StackState = {
 
 export type StampRule = { minScore: number; alreadyToday: boolean };
 
-export type BoardRow = { nickname: string; score: number; sample?: boolean; mine?: boolean };
-
 export function plateSpeed(score: number): number {
   return Math.min(150 + score * 11, 420);
 }
@@ -137,12 +135,4 @@ export function stepStack(state: StackState, dtSeconds: number): StackState {
     }))
     .filter((plate) => plate.y > -8);
   return { ...state, dir, current: { ...state.current, x }, falling };
-}
-
-/** The five best: this phone's saved scores, plus any sample rows (demo builds only). */
-export function topOfBoard(
-  saved: readonly BoardRow[],
-  samples: readonly BoardRow[] = [],
-): BoardRow[] {
-  return [...saved, ...samples].sort((left, right) => right.score - left.score).slice(0, 5);
 }

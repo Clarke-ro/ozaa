@@ -1,11 +1,9 @@
 import { useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 import * as Crypto from 'expo-crypto';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
-import { DEMO } from '@/lib/demo';
-import { DEMO_BOARD } from '@/mocks/demo';
 import { guestKeys } from '@/lib/queryKeys';
 import { useVenue } from '@/features/venue';
 import { Button } from '@/ui/Button';
@@ -14,7 +12,6 @@ import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { GameBoard } from './GameBoard';
-import { topOfBoard } from './plateStack';
 
 // The contract's example stamp rule, used until the venue's own rule has loaded.
 const DEFAULT_MIN_SCORE = 15;
@@ -30,7 +27,18 @@ export function GameScreen({ slug }: { slug: string }) {
   const [score, setScore] = useState(0);
   const [best, setBest] = useState(0);
   const [nick, setNick] = useState('');
-  const [saved, setSaved] = useState<{ nickname: string; score: number; mine: true }[]>([]);
+  // The round just played. Save sends it again with the name, so the server names that score.
+  const [round, setRound] = useState<{ runId: string; score: number; durationMs: number } | null>(
+    null,
+  );
+  const [savedName, setSavedName] = useState<string | null>(null);
+  // Which round the name was saved for, so "Saved as …" shows for that round only.
+  const [savedRun, setSavedRun] = useState<string | null>(null);
+  // This week's top five at the venue, from the server (the demo mixes in sample players).
+  const board = useQuery({
+    queryKey: guestKeys.leaderboard(slug),
+    queryFn: () => api.getLeaderboard(slug),
+  });
   const [stampEarned, setStampEarned] = useState(false);
   const [sendFailed, setSendFailed] = useState(false);
 
@@ -41,11 +49,27 @@ export function GameScreen({ slug }: { slug: string }) {
 
   const finish = (finalScore: number, durationMs: number) => {
     setBest((value) => Math.max(value, finalScore));
+    const played = { runId: Crypto.randomUUID(), score: finalScore, durationMs };
+    setRound(played);
     api
-      .submitScore(slug, { score: finalScore, runId: Crypto.randomUUID(), durationMs })
+      .submitScore(slug, played)
       .then((res) => {
         if (res.stampEarned) setStampEarned(true);
         void client.invalidateQueries({ queryKey: guestKeys.loyaltyAll() });
+        void client.invalidateQueries({ queryKey: guestKeys.leaderboard(slug) });
+      })
+      .catch(() => setSendFailed(true));
+  };
+
+  const saveName = () => {
+    const nickname = nick.trim();
+    if (!nickname || !round) return;
+    api
+      .submitScore(slug, { ...round, nickname })
+      .then(() => {
+        setSavedName(nickname);
+        setSavedRun(round.runId);
+        void client.invalidateQueries({ queryKey: guestKeys.leaderboard(slug) });
       })
       .catch(() => setSendFailed(true));
   };
@@ -77,12 +101,12 @@ export function GameScreen({ slug }: { slug: string }) {
         placeholder={t('game.nick')}
         style={[styles.nick, { borderColor: theme.line }]}
       />
-      <Button
-        label={t('game.save')}
-        onPress={() =>
-          nick.trim() && setSaved((rows) => [...rows, { nickname: nick.trim(), score, mine: true }])
-        }
-      />
+      <Button label={t('game.save')} onPress={saveName} />
+      {savedName && savedRun === round?.runId ? (
+        <Text variant="caption" style={{ color: theme.meta }}>
+          {t('game.saved', { name: savedName })}
+        </Text>
+      ) : null}
       <Button label={t('game.again')} tone="secondary" onPress={playAgain} />
     </>
   );
@@ -109,10 +133,11 @@ export function GameScreen({ slug }: { slug: string }) {
           overOverlay={overOverlay}
         />
         <Text variant="body-strong">{t('game.board', { name: venue.data?.name ?? '' })}</Text>
-        {topOfBoard(saved, DEMO ? DEMO_BOARD : []).map((row, index) => (
-          <Text key={`${row.nickname}-${index}`}>
-            {index + 1} {row.nickname}{' '}
-            {row.sample ? t('game.sample') : row.mine ? t('game.you') : ''} {row.score}
+        {(board.data?.entries ?? []).map((row) => (
+          <Text key={`${row.rank}-${row.nickname}`}>
+            {row.rank} {row.nickname}{' '}
+            {row.sample ? t('game.sample') : row.nickname === savedName ? t('game.you') : ''}{' '}
+            {row.score}
           </Text>
         ))}
         <Text variant="caption" style={{ color: theme.meta }}>

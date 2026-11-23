@@ -3,6 +3,8 @@ import { ghanaPhone, isGhanaPhone } from '@/lib/brand';
 import type { ApiClient } from '@/lib/api/client';
 import { ApiError } from '@/lib/api/errors';
 import type { LoyaltyCard, LoyaltyProgram } from '@/lib/api/types';
+import { saveScore, weekBoard, weekStart, type ScoreRow } from '../features/game/leaderboard';
+import { DEMO_BOARD } from './demo';
 import { keepLoyalty, nextId, venueBySlug } from './world';
 import { loyaltyOf, sessionOf } from './mockRules';
 import type { MockContext } from './mockContext';
@@ -10,6 +12,8 @@ import type { MockContext } from './mockContext';
 /** Mock calls: a guest's loyalty card, reviews, the game and feedback. */
 export function mockGuestExtraCalls(ctx: MockContext) {
   const { world, tokens, now, random, gate, remember } = ctx;
+  // Rounds played on this mock, per venue id. The demo's sample players are mixed into the board.
+  const scores = new Map<string, ScoreRow[]>();
   return {
     async getVenueLoyaltyProgram(slug) {
       await gate();
@@ -100,13 +104,25 @@ export function mockGuestExtraCalls(ctx: MockContext) {
       const venue = venueBySlug(world, slug);
       return {
         period: 'week',
-        entries: [],
+        entries: weekBoard(scores.get(venue.id) ?? [], now(), DEMO_BOARD),
         stampRule: venue.game ?? { enabled: false, minScore: 15 },
       };
     },
     async submitScore(slug, body) {
       await gate();
       const venue = venueBySlug(world, slug);
+      sessionOf(world, tokens);
+      const rows = saveScore(scores.get(venue.id) ?? [], {
+        runId: body.runId,
+        visit: tokens.guest() ?? '',
+        nickname: body.nickname ?? null,
+        score: body.score,
+        at: now(),
+      });
+      scores.set(venue.id, rows);
+      // Like the server: this week's rounds that beat it, named or not; outside the top 50 is null.
+      const since = weekStart(now());
+      const ahead = rows.filter((row) => row.at >= since && row.score > body.score).length;
       const target = venue.game?.minScore ?? 15;
       const loyaltyToken = tokens.loyalty?.() ?? tokens.access();
       const loyalty = loyaltyToken ? world.access.get(loyaltyToken) : undefined;
@@ -127,7 +143,7 @@ export function mockGuestExtraCalls(ctx: MockContext) {
         );
         stampEarned = step.effect === 'posted';
       }
-      return { rank: body.score > 0 ? 1 : null, stampEarned };
+      return { rank: ahead < 50 ? ahead + 1 : null, stampEarned };
     },
     async sendFeedback(body) {
       await gate();
