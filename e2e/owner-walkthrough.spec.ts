@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { signIn as signInStaff, type DemoStaff } from './signIn';
+import { SERVER } from './tags';
 
 // BUILD.md 4c.9: walk the redesigned owner app end to end on the mock, the way an owner would.
 // Pages are opened from the sidebar (not by URL) so the in-browser mock keeps its state.
@@ -71,7 +72,7 @@ test('accepting a new order lowers the Orders badge, then Start cooking shows', 
   await expect(page.getByRole('button', { name: 'Mark paid', exact: true })).toBeVisible();
 });
 
-test('switching location changes the whole dashboard', async ({ page }) => {
+test('switching location changes the whole dashboard', SERVER, async ({ page }) => {
   await signIn(page);
   await expect(page.getByText("Here's how Mama's Kitchen is doing today")).toBeVisible();
   await page.getByRole('button', { name: /^Location: / }).click();
@@ -92,7 +93,7 @@ test('a stamp shows on the customer, in Customers and in the scan log', async ({
   await expect(page.getByRole('button', { name: 'Esi', exact: true })).toBeVisible();
 });
 
-test('a waiter sees only the floor jobs, and Sales is closed to them', async ({ page }) => {
+test('a waiter sees only the floor jobs, and Sales is closed to them', SERVER, async ({ page }) => {
   await signIn(page, 'Kwesi');
   await expect(page.getByRole('button', { name: 'Floor', exact: true }).first()).toBeVisible();
   for (const hidden of [
@@ -106,16 +107,20 @@ test('a waiter sees only the floor jobs, and Sales is closed to them', async ({ 
   }
 });
 
-test('a venue with no history shows honest empty states, not sample numbers', async ({ page }) => {
-  const errors: string[] = [];
-  page.on('pageerror', (error) => errors.push(error.message));
-  await signIn(page, 'Akosua');
-  await expect(page.getByRole('button', { name: 'Today', exact: true })).toBeVisible();
-  await nav(page, 'Promos and coupons');
-  await expect(page.getByText('No promos yet')).toBeVisible();
-  await nav(page, 'Insights');
-  await expect(page.getByText('Sample', { exact: true })).toHaveCount(0);
-  await nav(page, 'Sales');
-  await expect(page.getByText('No earlier period to compare with.')).toBeVisible();
-  expect(errors).toEqual([]);
-});
+test(
+  'a venue with no history shows honest empty states, not sample numbers',
+  SERVER,
+  async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await signIn(page, 'Akosua');
+    await expect(page.getByRole('button', { name: 'Today', exact: true })).toBeVisible();
+    await nav(page, 'Promos and coupons');
+    await expect(page.getByText('No promos yet')).toBeVisible();
+    await nav(page, 'Insights');
+    await expect(page.getByText('Sample', { exact: true })).toHaveCount(0);
+    await nav(page, 'Sales');
+    await expect(page.getByText('No earlier period to compare with.')).toBeVisible();
+    expect(errors).toEqual([]);
+  },
+);

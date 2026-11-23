@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { signIn as signInStaff } from './signIn';
+import { SERVER } from './tags';
 
 // The owner's phone tabs (see tabsFor in src/features/owner/chrome/nav.ts).
 const tabs = [
@@ -51,44 +52,46 @@ async function signInAsOwner(page: Page, wide = false) {
   await waitLoaded(page);
 }
 
-test('owner screens on phone (390x844): every tab and every More item opens, with a way back', async ({
-  page,
-}) => {
-  test.setTimeout(120_000);
-  await page.setViewportSize({ width: 390, height: 844 });
-  await signInAsOwner(page);
-  for (const [label, name] of tabs) {
-    await page.getByRole('tab', { name: label, exact: true }).click();
-    await waitLoaded(page);
-    // Tabs are roots: no back button.
-    await expect(page.getByRole('button', { name: 'Back', exact: true })).toHaveCount(0);
-    await page.screenshot({ path: `test-results/${name}-phone.png`, fullPage: false });
-  }
-  for (const [label, name] of moreItems) {
-    await page.getByRole('tab', { name: 'More', exact: true }).click();
-    await waitLoaded(page);
-    await page.getByRole('button', { name: label, exact: true }).click();
-    await waitLoaded(page);
-    if (name === 'owner-tables') {
-      // The canvas shows every table's card under All tables, with its own Print and Download.
-      await expect(page.getByRole('heading', { name: 'All tables' })).toBeVisible();
-    }
-    await page.screenshot({ path: `test-results/${name}-phone.png`, fullPage: false });
-    // Phones have no Back arrow (Clarke, 2026-11-14): the way back is the system's back (swipe
-    // on iPhone, the back gesture on Android, the browser here). Setup stands alone with Close.
-    if (name === 'owner-setup') {
-      await page.getByRole('button', { name: 'Close', exact: true }).click();
-    } else {
+test(
+  'owner screens on phone (390x844): every tab and every More item opens, with a way back',
+  SERVER,
+  async ({ page }) => {
+    test.setTimeout(120_000);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await signInAsOwner(page);
+    for (const [label, name] of tabs) {
+      await page.getByRole('tab', { name: label, exact: true }).click();
+      await waitLoaded(page);
+      // Tabs are roots: no back button.
       await expect(page.getByRole('button', { name: 'Back', exact: true })).toHaveCount(0);
-      await page.goBack();
+      await page.screenshot({ path: `test-results/${name}-phone.png`, fullPage: false });
     }
-    await expect(
-      page.getByRole('tab', { name: 'More', exact: true, selected: true }),
-    ).toBeVisible();
-  }
-});
+    for (const [label, name] of moreItems) {
+      await page.getByRole('tab', { name: 'More', exact: true }).click();
+      await waitLoaded(page);
+      await page.getByRole('button', { name: label, exact: true }).click();
+      await waitLoaded(page);
+      if (name === 'owner-tables') {
+        // The canvas shows every table's card under All tables, with its own Print and Download.
+        await expect(page.getByRole('heading', { name: 'All tables' })).toBeVisible();
+      }
+      await page.screenshot({ path: `test-results/${name}-phone.png`, fullPage: false });
+      // Phones have no Back arrow (Clarke, 2026-11-14): the way back is the system's back (swipe
+      // on iPhone, the back gesture on Android, the browser here). Setup stands alone with Close.
+      if (name === 'owner-setup') {
+        await page.getByRole('button', { name: 'Close', exact: true }).click();
+      } else {
+        await expect(page.getByRole('button', { name: 'Back', exact: true })).toHaveCount(0);
+        await page.goBack();
+      }
+      await expect(
+        page.getByRole('tab', { name: 'More', exact: true, selected: true }),
+      ).toBeVisible();
+    }
+  },
+);
 
-test('owner screens on tablet (1024x768) use the sidebar', async ({ page }) => {
+test('owner screens on tablet (1024x768) use the sidebar', SERVER, async ({ page }) => {
   await page.setViewportSize({ width: 1024, height: 768 });
   await signInAsOwner(page, true);
   // Settings isn't a sidebar row: the owner button at the foot of the sidebar opens it.
@@ -102,7 +105,7 @@ test('owner screens on tablet (1024x768) use the sidebar', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Help', exact: true })).toBeVisible();
 });
 
-test('the folded sidebar stays folded on the next page', async ({ page }) => {
+test('the folded sidebar stays folded on the next page', SERVER, async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await signInAsOwner(page, true);
   await page.getByRole('button', { name: 'Collapse sidebar', exact: true }).click();

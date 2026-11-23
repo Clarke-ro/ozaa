@@ -85,17 +85,6 @@ jobs:
       - run: npx playwright test --config playwright.server.config.ts
         env:
           CI: 'true'
-      # TEMPORARY (removed before merge): which sign-in tests already pass against the real server.
-      - name: Survey the sign-in tests
-        if: always()
-        continue-on-error: true
-        run: >-
-          npx playwright test --config playwright.server.config.ts --reporter=list
-          e2e/owner.spec.ts e2e/owner-walkthrough.spec.ts e2e/owner-offline.spec.ts
-          e2e/nfc-tags.spec.ts e2e/integrations.spec.ts e2e/pay-in-person.spec.ts e2e/web-motion.spec.ts
-        env:
-          CI: 'true'
-          E2E_ALL: '1'
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

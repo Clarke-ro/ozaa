@@ -4,6 +4,34 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-23 · Signing in for real, in a test
+
+**What we built**
+
+The browser tests can now sign in to the real server through Clerk, the service that signs in owners and staff. Clerk's development instance has a "test mode": an address like `ama+clerk_test@example.com` accepts the code `424242`, and no email is ever sent. 16 more tests now run against the real server.
+
+**How it works**
+
+```
+CI: seed the 5 demo staff (Ama, Kwesi, Yaw, Kojo, Akosua) + make their Clerk users
+test: signIn(page, 'Kwesi')
+   mock        → phone 024 000 0002 + code 123456
+   real server → kwesi+clerk_test@example.com + code 424242 → Clerk session → the server checks it
+```
+
+**Files to look at**
+
+- `e2e/signIn.ts`: one sign-in for every test, either way.
+- `server/src/db/seedE2eStaff.ts`: the test staff. It refuses any database that isn't on the same machine.
+
+**New idea: test mode**
+
+Services that send codes or move money (Clerk, Paystack) offer a test mode, so automated tests can use the real service without real emails, texts or payments. It's safer than switching the service off, because the real path still runs.
+
+**Try it yourself**
+
+In `e2e/signIn.ts`, change `'424242'` to `'000000'`. Push to a branch with a PR open, and the real-server job fails at sign-in while the mock tests still pass. Put it back.
+
 ## 2026-11-23 · Testing against the real server, not just the pretend one
 
 **What we built**

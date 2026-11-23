@@ -30,10 +30,13 @@ test('the demo staff become real staff with Clerk test emails, once, however oft
   )[0]!;
   assert.equal(ama.phone, '+233240000001');
   const roles = await db.select().from(staffMemberships).where(eq(staffMemberships.userId, ama.id));
+  // The business owner, at all three locations.
   assert.deepEqual(
     roles.map((r) => r.role),
-    ['owner'],
+    ['owner', 'owner', 'owner'],
   );
-  assert.equal((await db.select().from(staffUsers)).length, E2E_STAFF.length);
+  const people = new Set(E2E_STAFF.map((person) => person.phone)).size;
+  assert.equal((await db.select().from(staffUsers)).length, people);
+  assert.equal((await db.select().from(staffMemberships)).length, E2E_STAFF.length);
   assert.ok(made.includes('kwesi+clerk_test@example.com'));
 });

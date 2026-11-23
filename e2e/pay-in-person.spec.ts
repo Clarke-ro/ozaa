@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { signIn as signInStaff } from './signIn';
+import { SERVER } from './tags';
 
 // A venue without Paystack (Auntie Akos in the samples): guests pay in person and staff mark the
 // bill paid. Nothing a guest or
@@ -19,46 +20,50 @@ function watchErrors(page: Page): string[] {
   return errors;
 }
 
-test('guest at a venue with no Paystack: order, ask for the bill, and never see a payment screen', async ({
-  page,
-}) => {
-  const errors = watchErrors(page);
-  await page.goto('/auntie-akos/t/7', { waitUntil: 'domcontentloaded' });
-  await expect(page.getByText('Call waiter').first()).toBeVisible({ timeout: 15_000 });
-  await noPayWords(page);
-  await page.screenshot({ path: 'test-results/pay-in-person-guest-home.png' });
+test(
+  'guest at a venue with no Paystack: order, ask for the bill, and never see a payment screen',
+  SERVER,
+  async ({ page }) => {
+    const errors = watchErrors(page);
+    await page.goto('/auntie-akos/t/7', { waitUntil: 'domcontentloaded' });
+    await expect(page.getByText('Call waiter').first()).toBeVisible({ timeout: 15_000 });
+    await noPayWords(page);
+    await page.screenshot({ path: 'test-results/pay-in-person-guest-home.png' });
 
-  // Move inside the app: a full page load restarts the in-browser mock and forgets the table.
-  await page.getByRole('button', { name: /^Menu/ }).first().click();
-  await page
-    .getByRole('button', { name: /^Add .+ to your order$/ })
-    .first()
-    .click();
-  await page.getByRole('button', { name: /View order/ }).click();
-  await page.getByRole('button', { name: 'Send to kitchen' }).click();
+    // Move inside the app: a full page load restarts the in-browser mock and forgets the table.
+    await page.getByRole('button', { name: /^Menu/ }).first().click();
+    await page
+      .getByRole('button', { name: /^Add .+ to your order$/ })
+      .first()
+      .click();
+    await page.getByRole('button', { name: /View order/ }).click();
+    await page.getByRole('button', { name: 'Send to kitchen' }).click();
 
-  // The order lands on its status page as "pay at the counter", with no Pay button.
-  await expect(page.getByText('Pay at the counter, or ask your waiter for the bill.')).toBeVisible({
-    timeout: 15_000,
-  });
-  await noPayWords(page);
-  await page.screenshot({ path: 'test-results/pay-in-person-guest-status.png' });
+    // The order lands on its status page as "pay at the counter", with no Pay button.
+    await expect(
+      page.getByText('Pay at the counter, or ask your waiter for the bill.'),
+    ).toBeVisible({
+      timeout: 15_000,
+    });
+    await noPayWords(page);
+    await page.screenshot({ path: 'test-results/pay-in-person-guest-status.png' });
 
-  // Asking for the bill is a waiter call, nothing more.
-  await page.getByRole('button', { name: 'Call waiter' }).first().click();
-  await page.getByRole('checkbox', { name: 'The bill' }).click();
-  await page.getByRole('button', { name: 'Call waiter' }).last().click();
-  await expect(page.getByText('Your requests')).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByText(/^Waiting, sent/)).toBeVisible();
-  await noPayWords(page);
-  await page.screenshot({ path: 'test-results/pay-in-person-guest-bill.png' });
+    // Asking for the bill is a waiter call, nothing more.
+    await page.getByRole('button', { name: 'Call waiter' }).first().click();
+    await page.getByRole('checkbox', { name: 'The bill' }).click();
+    await page.getByRole('button', { name: 'Call waiter' }).last().click();
+    await expect(page.getByText('Your requests')).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText(/^Waiting, sent/)).toBeVisible();
+    await noPayWords(page);
+    await page.screenshot({ path: 'test-results/pay-in-person-guest-bill.png' });
 
-  // An old Pay link goes to the order instead of a 404.
-  await page.goto('/auntie-akos/pay', { waitUntil: 'domcontentloaded' });
-  await expect(page).toHaveURL(/\/auntie-akos\/status$/, { timeout: 15_000 });
+    // An old Pay link goes to the order instead of a 404.
+    await page.goto('/auntie-akos/pay', { waitUntil: 'domcontentloaded' });
+    await expect(page).toHaveURL(/\/auntie-akos\/status$/, { timeout: 15_000 });
 
-  expect(errors).toEqual([]);
-});
+    expect(errors).toEqual([]);
+  },
+);
 
 async function signInAsOwner(page: Page) {
   await signInStaff(page);

@@ -17,7 +17,10 @@ export const E2E_STAFF: readonly {
   role: StaffRole;
   slug: string;
 }[] = [
+  // Ama owns the business, so she is the owner at all three locations and can switch between them.
   { phone: '+233240000001', firstName: 'Ama', role: 'owner', slug: 'mamas-kitchen' },
+  { phone: '+233240000001', firstName: 'Ama', role: 'owner', slug: 'bean-there' },
+  { phone: '+233240000001', firstName: 'Ama', role: 'owner', slug: 'auntie-akos' },
   { phone: '+233240000002', firstName: 'Kwesi', role: 'waiter', slug: 'mamas-kitchen' },
   { phone: '+233240000003', firstName: 'Yaw', role: 'kitchen', slug: 'mamas-kitchen' },
   { phone: '+233240000004', firstName: 'Kojo', role: 'owner', slug: 'bean-there' },
@@ -51,7 +54,7 @@ export async function seedE2eStaff(
     await db
       .insert(staffMemberships)
       .values({
-        id: `mem_${id}`,
+        id: `mem_${id}_${person.slug}`,
         venueId: venue.id,
         userId: id,
         role: person.role,

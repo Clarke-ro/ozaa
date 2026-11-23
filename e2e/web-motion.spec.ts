@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
-import { signIn as signInStaff } from './signIn';
+import { REAL_SERVER, signIn as signInStaff } from './signIn';
+import { SERVER } from './tags';
 
 // On the web, buttons, switches and the notice banner animate without Reanimated (which kept
 // ~100 KB off every guest page). These check the motion still happens.
@@ -13,9 +14,12 @@ const go = (page: Page, path: string) =>
     dispatchEvent(new PopStateEvent('popstate'));
   }, path);
 
-test('a button shrinks under the finger and settles back', async ({ page }) => {
+test('a button shrinks under the finger and settles back', SERVER, async ({ page }) => {
   await page.goto('/owner/login', { waitUntil: 'domcontentloaded' });
-  await page.getByRole('textbox', { name: 'Phone number' }).fill('024 000 0001');
+  // Real builds sign in by email (Clerk); the mock by phone. The button is the same either way.
+  await page
+    .getByRole('textbox', { name: REAL_SERVER ? 'Email' : 'Phone number', exact: true })
+    .fill(REAL_SERVER ? 'ama+clerk_test@example.com' : '024 000 0001');
   const button = await page.getByRole('button', { name: 'Send code', exact: true }).elementHandle();
   const box = (await button!.boundingBox())!;
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
@@ -29,7 +33,7 @@ test('a button shrinks under the finger and settles back', async ({ page }) => {
     .toBe('matrix(1, 0, 0, 1, 0, 0)');
 });
 
-test('a switch slides its knob when tapped', async ({ page }) => {
+test('a switch slides its knob when tapped', SERVER, async ({ page }) => {
   await signIn(page);
   await go(page, '/owner/settings');
   const toggle = page.getByRole('switch').first();
@@ -40,7 +44,7 @@ test('a switch slides its knob when tapped', async ({ page }) => {
   await expect.poll(() => knob.evaluate((el) => getComputedStyle(el).transform)).not.toBe(before);
 });
 
-test("a long store notice scrolls across the guest's home page", async ({ page }) => {
+test("a long store notice scrolls across the guest's home page", SERVER, async ({ page }) => {
   await signIn(page);
   await go(page, '/owner/notice');
   await page
