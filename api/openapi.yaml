@@ -1424,6 +1424,9 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/VenueTransaction' }
         '409': { description: The charge cannot be refunded. }
+        '404':
+          description: "Always, since refunds moved to each venue's own Paystack dashboard (Clarke, 2026-11-08). Kept so older apps get a clear answer."
+          content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } }
   /owner/venues/{venueId}/written-reviews:
     get:
       tags: [owner-reviews]
