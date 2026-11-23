@@ -19,13 +19,6 @@ export const QR_PAPER = '#FFFFFF';
 /** The dark of a QR code and of printed table cards: near-black, never following dark mode. */
 export const QR_INK = '#111111';
 
-/**
- * The Sales card on Today: a warm off-white with near-black text and a grey edge, the same in
- * both schemes (Clarke, 2026-11-23; it was burgundy before). The ink on this fill is about 17:1,
- * far past the 4.5:1 text needs. The edge keeps the card visible on the cool grey canvas.
- */
-export const SALES_CARD = { fill: '#F3F3F0', ink: '#111111', edge: '#E4E4E7' } as const;
-
 /** Venue colours offered in Branding (canvas). Names come from ownerBranding.swatch.<id>. */
 export const VENUE_SWATCHES = [
   { id: 'clay', hex: '#B5432A' },
