@@ -14,8 +14,9 @@ test(
     await expect(page.getByText('No orders yet')).toBeVisible();
     await page.getByRole('button', { name: 'See the menu' }).click();
 
+    // By name: on the real server earlier orders can change which dish is listed first.
     await page
-      .getByRole('button', { name: /^Add .+ to your order$/ })
+      .getByRole('button', { name: 'Add Flat white to your order' })
       .first()
       .click({ timeout: 15_000 });
     await page.getByRole('button', { name: /View order/ }).click();
