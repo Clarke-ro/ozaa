@@ -11,7 +11,12 @@ import { staffMemberships, staffUsers, venues } from './schema.ts';
  * (src/mocks/demo.ts) as real staff, each signing in with a Clerk test email. Clerk's development
  * instance accepts the code 424242 for any `+clerk_test` address and sends no email.
  */
-export const E2E_STAFF: readonly { phone: string; firstName: string; role: StaffRole; slug: string }[] = [
+export const E2E_STAFF: readonly {
+  phone: string;
+  firstName: string;
+  role: StaffRole;
+  slug: string;
+}[] = [
   { phone: '+233240000001', firstName: 'Ama', role: 'owner', slug: 'mamas-kitchen' },
   { phone: '+233240000002', firstName: 'Kwesi', role: 'waiter', slug: 'mamas-kitchen' },
   { phone: '+233240000003', firstName: 'Yaw', role: 'kitchen', slug: 'mamas-kitchen' },
@@ -34,12 +39,24 @@ export async function seedE2eStaff(
   for (const person of E2E_STAFF) {
     const email = e2eEmail(person.firstName);
     const id = `usr_e2e_${person.firstName.toLowerCase()}`;
-    const [venue] = await db.select({ id: venues.id }).from(venues).where(eq(venues.slug, person.slug));
+    const [venue] = await db
+      .select({ id: venues.id })
+      .from(venues)
+      .where(eq(venues.slug, person.slug));
     if (!venue) throw new Error(`Seed the sample venues first: ${person.slug} is missing.`);
-    await db.insert(staffUsers).values({ id, phone: person.phone, email, firstName: person.firstName }).onConflictDoNothing();
+    await db
+      .insert(staffUsers)
+      .values({ id, phone: person.phone, email, firstName: person.firstName })
+      .onConflictDoNothing();
     await db
       .insert(staffMemberships)
-      .values({ id: `mem_${id}`, venueId: venue.id, userId: id, role: person.role, status: 'invited' })
+      .values({
+        id: `mem_${id}`,
+        venueId: venue.id,
+        userId: id,
+        role: person.role,
+        status: 'invited',
+      })
       .onConflictDoNothing();
     // The server links the Clerk user on first sign-in, by this verified email (owner/staff.ts).
     await clerk?.ensureUser({ email, firstName: person.firstName });
@@ -48,9 +65,11 @@ export async function seedE2eStaff(
 
 // `E2E_STAFF=true npm run db:seed-e2e-staff`, after db:seed. CLERK_SECRET_KEY makes the Clerk users.
 if (import.meta.url === `file://${process.argv[1]}`) {
-  if (process.env.E2E_STAFF !== 'true') throw new Error('Set E2E_STAFF=true: this is for the browser tests only.');
+  if (process.env.E2E_STAFF !== 'true')
+    throw new Error('Set E2E_STAFF=true: this is for the browser tests only.');
   const config = readConfig();
-  if (!isLocalDatabase(config.DATABASE_URL)) throw new Error('Test staff go only into a local database.');
+  if (!isLocalDatabase(config.DATABASE_URL))
+    throw new Error('Test staff go only into a local database.');
   const { db, close } = connect(config.DATABASE_URL, 1);
   try {
     await seedE2eStaff(db, config.CLERK_SECRET_KEY ? clerkAdmin(config.CLERK_SECRET_KEY) : null);
