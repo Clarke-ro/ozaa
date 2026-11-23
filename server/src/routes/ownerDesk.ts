@@ -51,14 +51,20 @@ async function ordersOf(
 /** Several staff phones poll the home page together. One answer serves them for a few seconds. */
 const DASHBOARD_TTL_MS = 4_000;
 
+/**
+ * The shared home-page answers. The app clears it after any staff change (app.ts), so the person
+ * who just acted sees the badges move at once; only plain polling shares the few-second answer.
+ */
+export const dashboardMemo = (now: () => number) =>
+  memoFor<Awaited<ReturnType<typeof dashboardOf>>>(DASHBOARD_TTL_MS, now);
+
 /** The owner home, the floor and Sales (api/openapi.yaml owner-desk). */
-export function ownerDeskRoutes(deps: OwnerDeps & { siteUrl: string }) {
+export function ownerDeskRoutes(
+  deps: OwnerDeps & { siteUrl: string; dashboardCache?: ReturnType<typeof dashboardMemo> },
+) {
   const app = new Hono();
   const { db } = deps;
-  const dashboardCache = memoFor<Awaited<ReturnType<typeof dashboardOf>>>(
-    DASHBOARD_TTL_MS,
-    deps.now,
-  );
+  const dashboardCache = deps.dashboardCache ?? dashboardMemo(deps.now);
 
   const venueFor = async (c: Context, allowed: StaffRole[]) => {
     roleAt(await signedIn(c, deps), c.req.param('venueId') ?? '', allowed);

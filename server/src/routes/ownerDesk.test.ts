@@ -55,13 +55,43 @@ test('the dashboard: live orders, visits, open calls, sold-out alerts; sales cou
 
   await call('POST', `/owner/orders/${order.id}/manual-payment`, { method: 'cash' }, owner);
   await call('PATCH', `/owner/venues/${mamas}/menu/items/${dish.id}`, { stockCount: 0 }, owner);
-  const cached = (await call('GET', `/owner/venues/${mamas}/dashboard`, undefined, owner)).json;
-  assert.equal(cached.salesTodayPesewas, 0, 'phones share the home page for a few seconds');
-  // The home page is shared for a few seconds. Move the clock past that, as the next poll would.
-  tick(4_000);
+  // A staff change shows on the next read, so the badges move as soon as someone acts.
   const after = (await call('GET', `/owner/venues/${mamas}/dashboard`, undefined, owner)).json;
   assert.equal(after.salesTodayPesewas, order.totalPesewas);
   assert.ok(JSON.stringify(after.alerts).includes(dish.name.en));
+});
+
+test('phones polling the dashboard share one answer for a few seconds', async () => {
+  const { call, mamas, guest, dish, tick } = await withOrder();
+  const read = async () =>
+    (await call('GET', `/owner/venues/${mamas}/dashboard`, undefined, owner)).json;
+  assert.equal((await read()).liveOrders, 1);
+  await call(
+    'POST',
+    '/orders',
+    { clientOrderId: randomUUID(), lines: [{ menuItemId: dish.id, quantity: 1 }] },
+    guest,
+  );
+  assert.equal((await read()).liveOrders, 1, 'a guest order waits for the next poll');
+  tick(4_000);
+  assert.equal((await read()).liveOrders, 2);
+});
+
+test('answering a call or accepting an order lowers the badges at once', async () => {
+  const { call, mamas, guest, order } = await withOrder();
+  await call('POST', '/waiter-calls', { reason: 'water' }, guest);
+  const read = async () =>
+    (await call('GET', `/owner/venues/${mamas}/dashboard`, undefined, owner)).json;
+  // The read after a guest acts may be a few seconds old; this one starts the shared window.
+  const before = await read();
+  assert.equal(before.pendingOrders, 1);
+  const calls = (await call('GET', `/owner/venues/${mamas}/waiter-calls`, undefined, owner)).json;
+  const open = calls.items.find((item: { status: string }) => item.status !== 'resolved');
+  await call('PATCH', `/owner/waiter-calls/${open.id}`, { status: 'resolved' }, owner);
+  await call('PUT', `/owner/orders/${order.id}/status`, { status: 'accepted' }, owner);
+  const after = await read();
+  assert.equal(after.openCalls, 0);
+  assert.equal(after.pendingOrders, 0);
 });
 
 test('sales: totals and top dishes for a range, owners and managers only', async () => {
