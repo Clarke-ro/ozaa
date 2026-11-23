@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { signIn as signInStaff } from './signIn';
 import { SERVER } from './tags';
+import { placeOrder } from './sampleData';
 
 // A venue without Paystack (Auntie Akos in the samples): guests pay in person and staff mark the
 // bill paid. Nothing a guest or
@@ -69,47 +70,50 @@ async function signInAsOwner(page: Page) {
   await signInStaff(page);
 }
 
-test('owner: Today leads with sales, and a served table is marked paid from Floor', async ({
-  page,
-}) => {
-  const errors = watchErrors(page);
-  await signInAsOwner(page);
-  await expect(page.getByText('Sales today').first()).toBeVisible({ timeout: 15_000 });
-  await page.screenshot({ path: 'test-results/pay-in-person-owner-today.png' });
+test(
+  'owner: Today leads with sales, and a served table is marked paid from Floor',
+  SERVER,
+  async ({ page, request }) => {
+    const errors = watchErrors(page);
+    await placeOrder(request, 'mamas-kitchen', '3');
+    await signInAsOwner(page);
+    await expect(page.getByText('Sales today').first()).toBeVisible({ timeout: 15_000 });
+    await page.screenshot({ path: 'test-results/pay-in-person-owner-today.png' });
 
-  // The old payout page is gone from the menu; payments are set up in Integrations.
-  await page.getByRole('tab', { name: 'More', exact: true }).click();
-  await expect(page.getByRole('button', { name: /^Payments/ })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: /^Integrations/ }).first()).toBeVisible();
-  await page
-    .getByRole('button', { name: /^Floor/ })
-    .first()
-    .click();
+    // The old payout page is gone from the menu; payments are set up in Integrations.
+    await page.getByRole('tab', { name: 'More', exact: true }).click();
+    await expect(page.getByRole('button', { name: /^Payments/ })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /^Integrations/ }).first()).toBeVisible();
+    await page
+      .getByRole('button', { name: /^Floor/ })
+      .first()
+      .click();
 
-  // Serve table 3's order from its sheet. Once served and unpaid, its card says it is waiting
-  // for the bill.
-  const table3 = page.getByRole('button', { name: /^Table 3,/ });
-  const waitingForBill = page.getByRole('button', { name: /^Table 3, Waiting for the bill/ });
-  await expect(table3).toBeVisible({ timeout: 15_000 });
-  await expect(waitingForBill).toHaveCount(0);
-  await table3.click();
-  for (const step of ['Accept order', 'Start cooking', 'Mark ready', 'Mark served']) {
-    await page.getByRole('button', { name: step }).click();
-  }
-  await expect(waitingForBill).toBeVisible({ timeout: 15_000 });
-  // The table's sheet is still open; its own Mark paid closes it and asks how it was paid.
-  await page.getByRole('dialog').getByRole('button', { name: 'Mark paid' }).click();
-  await expect(page.getByText(/^How did order #\d+ pay\?$/)).toBeVisible({ timeout: 15_000 });
-  await page.waitForTimeout(600); // let the sheet finish sliding in before the screenshot
-  await page.screenshot({ path: 'test-results/pay-in-person-owner-mark-paid.png' });
-  await page.getByRole('button', { name: 'Cash' }).click();
-  await expect(page.getByText(/^Order #\d+ marked paid$/)).toBeVisible({ timeout: 15_000 });
-  await expect(waitingForBill).toHaveCount(0, { timeout: 15_000 });
-  await page.screenshot({ path: 'test-results/pay-in-person-owner-floor.png' });
+    // Serve table 3's order from its sheet. Once served and unpaid, its card says it is waiting
+    // for the bill.
+    const table3 = page.getByRole('button', { name: /^Table 3,/ });
+    const waitingForBill = page.getByRole('button', { name: /^Table 3, Waiting for the bill/ });
+    await expect(table3).toBeVisible({ timeout: 15_000 });
+    await expect(waitingForBill).toHaveCount(0);
+    await table3.click();
+    for (const step of ['Accept order', 'Start cooking', 'Mark ready', 'Mark served']) {
+      await page.getByRole('button', { name: step }).click();
+    }
+    await expect(waitingForBill).toBeVisible({ timeout: 15_000 });
+    // The table's sheet is still open; its own Mark paid closes it and asks how it was paid.
+    await page.getByRole('dialog').getByRole('button', { name: 'Mark paid' }).click();
+    await expect(page.getByText(/^How did order #\d+ pay\?$/)).toBeVisible({ timeout: 15_000 });
+    await page.waitForTimeout(600); // let the sheet finish sliding in before the screenshot
+    await page.screenshot({ path: 'test-results/pay-in-person-owner-mark-paid.png' });
+    await page.getByRole('button', { name: 'Cash' }).click();
+    await expect(page.getByText(/^Order #\d+ marked paid$/)).toBeVisible({ timeout: 15_000 });
+    await expect(waitingForBill).toHaveCount(0, { timeout: 15_000 });
+    await page.screenshot({ path: 'test-results/pay-in-person-owner-floor.png' });
 
-  // Old links to the payout page land on Integrations.
-  await page.goto('/owner/payments', { waitUntil: 'domcontentloaded' });
-  await expect(page).toHaveURL(/\/owner\/(integrations|login)/, { timeout: 15_000 });
+    // Old links to the payout page land on Integrations.
+    await page.goto('/owner/payments', { waitUntil: 'domcontentloaded' });
+    await expect(page).toHaveURL(/\/owner\/(integrations|login)/, { timeout: 15_000 });
 
-  expect(errors).toEqual([]);
-});
+    expect(errors).toEqual([]);
+  },
+);

@@ -6,7 +6,7 @@ import { venuePaystack } from '../venues/venuePaystack.ts';
 import type { StaffRole } from '../shared/types.ts';
 import type { Db } from './client.ts';
 import { connect } from './client.ts';
-import { staffMemberships, staffUsers, venues } from './schema.ts';
+import { loyaltyMembers, staffMemberships, staffUsers, venues } from './schema.ts';
 
 /**
  * For the real-server browser tests only (.github/workflows/e2e-server.yml): the mock's demo staff
@@ -91,6 +91,30 @@ export async function seedE2ePaystack(
   }
 }
 
+/**
+ * Esi, the mock's sample loyalty member at Mama's Kitchen (src/mocks/seedMembers.ts), so the owner
+ * tests can find and stamp her. A real guest joins with a phone code by SMS, which CI can't send.
+ */
+export async function seedE2eLoyalty(db: Db): Promise<void> {
+  const [venue] = await db
+    .select({ id: venues.id })
+    .from(venues)
+    .where(eq(venues.slug, 'mamas-kitchen'));
+  if (!venue) throw new Error('Seed the sample venues first: mamas-kitchen is missing.');
+  await db
+    .insert(loyaltyMembers)
+    .values({
+      id: 'mbr_e2e_esi',
+      venueId: venue.id,
+      phone: '+233241000017',
+      firstName: 'Esi',
+      marketingConsent: true,
+      consentAt: new Date(),
+      consentTextVersion: 'consent-2026-10-v1',
+    })
+    .onConflictDoNothing();
+}
+
 // `E2E_STAFF=true npm run db:seed-e2e-staff`, after db:seed. CLERK_SECRET_KEY makes the Clerk users;
 // PAYSTACK_SECRET_KEY and PAYSTACK_PUBLIC_KEY (test keys) connect the mock's Paystack venues.
 if (import.meta.url === `file://${process.argv[1]}`) {
@@ -102,6 +126,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const { db, close } = connect(config.DATABASE_URL, 1);
   try {
     await seedE2eStaff(db, config.CLERK_SECRET_KEY ? clerkAdmin(config.CLERK_SECRET_KEY) : null);
+    await seedE2eLoyalty(db);
     // Test keys only: config refuses anything but sk_test_ and pk_test_.
     if (config.PAYSTACK_SECRET_KEY && config.PAYSTACK_PUBLIC_KEY) {
       await seedE2ePaystack(db, encryptionKey(config.ENCRYPTION_KEY), {
