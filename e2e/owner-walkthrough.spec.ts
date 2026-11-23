@@ -76,7 +76,7 @@ test('switching location changes the whole dashboard', SERVER, async ({ page }) 
   await signIn(page);
   await expect(page.getByText("Here's how Mama's Kitchen is doing today")).toBeVisible();
   await page.getByRole('button', { name: /^Location: / }).click();
-  await page.getByRole('radio', { name: /Bean There Cafe/ }).click();
+  await page.getByRole('radio', { name: /Bean There/ }).click();
   await expect(page.getByText(/Here's how Bean There/)).toBeVisible();
   // Mama's sample call is not Bean There's.
   await expect(page.getByText('Table 4 needs a waiter')).toHaveCount(0);
