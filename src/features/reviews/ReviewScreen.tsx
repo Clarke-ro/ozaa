@@ -12,7 +12,7 @@ import { Button } from '@/ui/Button';
 import { PageHeader } from '@/ui/PageHeader';
 import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
+import { guestFont, useTheme } from '@/ui/theme';
 import { guestHomeHref, useGuestSession } from '@/features/session';
 
 const HIGHLIGHTS = ['food', 'service', 'speed', 'value', 'vibe'] as const;
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
     minHeight: 96,
     padding: 12,
     fontSize: 16,
-    fontFamily: 'Inter_400',
+    fontFamily: guestFont.regular,
     textAlignVertical: 'top',
   },
   done: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 32 },

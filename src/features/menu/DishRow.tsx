@@ -5,7 +5,7 @@ import type { MenuItem } from '@/lib/api/types';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { VenueImage } from '@/ui/VenueImage';
-import { fontFamily, useTheme } from '@/ui/theme';
+import { guestFont, useTheme } from '@/ui/theme';
 import { DishPrice } from './DishPrice';
 
 /**
@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: tokens.space[4],
     justifyContent: 'center',
   },
-  name: { fontFamily: fontFamily.strong },
+  name: { fontFamily: guestFont.strong },
   photo: {
     width: PHOTO,
     minHeight: PHOTO,
@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
   },
   dim: { opacity: 0.45 },
   meta: { marginTop: tokens.space[1] },
-  tag: { fontFamily: fontFamily.strong },
+  tag: { fontFamily: guestFont.strong },
   add: {
     position: 'absolute',
     end: tokens.space[2],

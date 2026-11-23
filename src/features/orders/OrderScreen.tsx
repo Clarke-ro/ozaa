@@ -16,7 +16,7 @@ import { Button } from '@/ui/Button';
 import { PageHeader } from '@/ui/PageHeader';
 import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
-import { fontFamily, useTheme } from '@/ui/theme';
+import { guestFont, useTheme } from '@/ui/theme';
 import { pesewas } from '@/lib/brand';
 import { toMessageKey } from '@/lib/api/errors';
 import { onlineOrderingOf } from '@/lib/onlineOrdering';
@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
   summary: { padding: tokens.space[4], gap: tokens.space[2] },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   rule: { height: StyleSheet.hairlineWidth, marginVertical: tokens.space[1] },
-  num: { fontVariant: ['tabular-nums'], fontFamily: fontFamily.strong },
+  num: { fontVariant: ['tabular-nums'], fontFamily: guestFont.strong },
   footer: {
     paddingHorizontal: tokens.grid.mobile.margin,
     paddingTop: tokens.space[3],

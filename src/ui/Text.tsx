@@ -24,11 +24,15 @@ const VARIANT: Record<Variant, TextStyle> = {
   button: { fontSize: tokens.type.button.size, lineHeight: tokens.type.button.line },
 };
 
-// Inter ships in two weights (400 and 600). Any heavier weight asked for in a style maps to 600,
-// because a weight with no font file renders as faux bold on the web and is dropped on Android.
-function weightFamily(weight: TextStyle['fontWeight']): string | null {
+// Each app ships its body font in two weights (400 and 600). Any heavier weight asked for in a
+// style maps to 600, because a weight with no font file renders as faux bold on the web and is
+// dropped on Android.
+function weightFamily(
+  weight: TextStyle['fontWeight'],
+  fonts: { regular: string; strong: string },
+): string | null {
   if (weight == null) return null;
-  return Number(weight) >= 600 || weight === 'bold' ? 'Inter_600' : 'Inter_400';
+  return Number(weight) >= 600 || weight === 'bold' ? fonts.strong : fonts.regular;
 }
 
 export function Text({
@@ -41,7 +45,7 @@ export function Text({
   const display = variant === 'display-l' || variant === 'display-m';
   const strong = variant === 'title' || variant === 'body-strong' || variant === 'button';
   const flat = StyleSheet.flatten(style) ?? {};
-  const asked = display ? null : weightFamily(flat.fontWeight);
+  const asked = display ? null : weightFamily(flat.fontWeight, theme.fonts);
   const { fontWeight: _dropped, ...own } = flat;
   // A theme can carry its own scale (the owner app does); otherwise the brand scale applies.
   const scale = theme.type?.[variant];
@@ -53,7 +57,9 @@ export function Text({
         scale && { fontSize: scale.size, lineHeight: scale.line },
         {
           color: theme.text,
-          fontFamily: display ? theme.displayFont : (asked ?? (strong ? 'Inter_600' : 'Inter_400')),
+          fontFamily: display
+            ? theme.displayFont
+            : (asked ?? (strong ? theme.fonts.strong : theme.fonts.regular)),
         },
         display ? flat : own,
       ]}

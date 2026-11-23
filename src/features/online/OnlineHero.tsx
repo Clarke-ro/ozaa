@@ -7,7 +7,7 @@ import { onlineOrderingOf } from '@/lib/onlineOrdering';
 import { describeHours } from '@/lib/time';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
-import { fontFamily, useTheme } from '@/ui/theme';
+import { guestFont, useTheme } from '@/ui/theme';
 import { ActiveOrderStrip } from '@/features/history';
 import { OnlineBanner } from './OnlineBanner';
 
@@ -87,7 +87,7 @@ export function OnlineHero({ venue, topInset }: { venue: VenuePublic; topInset: 
 }
 
 const styles = StyleSheet.create({
-  strong: { fontFamily: fontFamily.strong },
+  strong: { fontFamily: guestFont.strong },
   sheet: {
     marginTop: -LIFT,
     borderTopLeftRadius: LIFT,

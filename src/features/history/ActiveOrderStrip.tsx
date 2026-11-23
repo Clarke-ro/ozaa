@@ -10,7 +10,7 @@ import { guestKeys } from '@/lib/queryKeys';
 import { useGuestSession } from '@/features/session';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
-import { fontFamily, useTheme } from '@/ui/theme';
+import { guestFont, useTheme } from '@/ui/theme';
 
 /** "Order #24 · Being prepared  Track ›" on the venue's page while an order is on its way. */
 export function ActiveOrderStrip({ slug }: { slug: string }) {
@@ -59,5 +59,5 @@ const styles = StyleSheet.create({
   },
   dot: { width: 8, height: 8, borderRadius: 4 },
   flex: { flex: 1 },
-  strong: { fontFamily: fontFamily.strong },
+  strong: { fontFamily: guestFont.strong },
 });

@@ -16,27 +16,29 @@ A summary of the brand Page for the coding agent. The numbers are in `tokens.jso
 
 ## 2. Colour
 
-| Token                     | Hex                                   | Use                                                                       |
-| ------------------------- | ------------------------------------- | ------------------------------------------------------------------------- |
-| brand                     | #FC5205                               | The logo only                                                             |
+| Token                     | Hex                                   | Use                                                                          |
+| ------------------------- | ------------------------------------- | ---------------------------------------------------------------------------- |
+| brand                     | #FC5205                               | The logo only                                                                |
 | primary                   | #D24000                               | Cravins buttons, icons, radio dots, focus rings (white text on it passes AA) |
-| hover                     | #BA3800                               | Hover on web                                                              |
-| pressed                   | #A33000                               | Pressed                                                                   |
-| tint                      | #FFF1EA                               | Icon-button fill, selected rows                                           |
-| text                      | #111111                               | All body text                                                             |
-| grey600 / 500 / 200 / 100 | #52525B / #6B6B73 / #E4E4E7 / #F4F4F5 | Secondary text, captions, borders, disabled fills                         |
-| success / error           | #15803D / #B91C1C                     | Status only                                                               |
-| white                     | #FFFFFF                               | Every background                                                          |
+| hover                     | #BA3800                               | Hover on web                                                                 |
+| pressed                   | #A33000                               | Pressed                                                                      |
+| tint                      | #FFF1EA                               | Icon-button fill, selected rows                                              |
+| text                      | #111111                               | All body text                                                                |
+| grey600 / 500 / 200 / 100 | #52525B / #6B6B73 / #E4E4E7 / #F4F4F5 | Secondary text, captions, borders, disabled fills                            |
+| success / error           | #15803D / #B91C1C                     | Status only                                                                  |
+| white                     | #FFFFFF                               | Every background                                                             |
 
 - Cards are white. Pages sit on the soft canvas (`palette.canvas`) so the white cards stand out, in the guest app as in the owner app (Clarke, 16 Nov 2026). No gradients, no coloured headers, no shadows. Two exceptions: the bottom-sheet shadow `0 -8px 24px rgba(0,0,0,.06)`, and the soft card shadow `0 4px 16px rgba(17,17,17,.07)` on the guest home service cards (Clarke, 2 Nov 2026).
 - Orange goes only on buttons, icons, radio dots and focus rings, never on large areas.
 
 ## 3. Type
 
-- **Unbounded** for display, **Inter** for everything else. Both cover ɛ ɔ ŋ ɖ ƒ ʋ ɣ ɓ ɗ ƙ ẹ ọ ṣ ₵ ₦. They are self-hosted as WOFF2 subsets (53 KB for three weights) with a Noto Sans fallback. Files are in `prototype/fonts/`; on native, load them with `expo-font`.
-- Scale (size/line height): display-l Unbounded 28/36 · display-m 22/28 · title Inter 600 18/24 · body 15/22 · caption 13/18 · button 16/20 600.
+- **Guest pages: Noto Sans** for everything (400 body, 600 bold, 800 headings), from 23 Nov 2026 (Clarke). It replaced Unbounded and Inter on guest pages. Of 20 fonts checked, only Noto Sans and Inter draw every Ghanaian letter (ɛ ɔ ŋ ɖ ƒ ʋ ɣ ɓ ɗ ƙ ẹ ọ ṣ) and ₵ ₦; Plus Jakarta Sans has no ɛ or ɔ.
+- **Owner app: Inter** (400 and 600).
+- All fonts are self-hosted subsets in `assets/fonts/` (WOFF2 for the web, TTF for native), loaded with `expo-font`.
+- Scale (size/line height): display-l 28/36 · display-m 22/28 · title 600 18/24 · body 15/22 · caption 13/18 · button 16/20 600.
 - Prices use tabular figures. The symbol comes from the venue currency. The Accra sample looks like `GH₵65` (whole cedis) or `GH₵65.50`.
-- A venue can pick a heading font: Unbounded, Noto Serif or Montserrat. Body text stays Inter.
+- A venue can pick a heading font: Noto Sans (the Cravins default), Noto Serif or Montserrat. Body text stays Noto Sans.
 
 ## 4. Space, grid, radius
 

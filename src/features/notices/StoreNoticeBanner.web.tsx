@@ -4,7 +4,7 @@ import { Megaphone } from 'lucide-react-native';
 import type { StoreNotice } from '@/lib/api/types';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
+import { guestFont, useTheme } from '@/ui/theme';
 import { useReducedMotion } from '@/ui/useReducedMotion.web';
 
 // Reading pace for scrolling text, in points per second (same as the phone version).
@@ -101,5 +101,5 @@ const styles = StyleSheet.create({
   track: { flex: 1, overflow: 'hidden', minHeight: 20, justifyContent: 'center' },
   row: { flexDirection: 'row' },
   measure: { width: 4000, flexDirection: 'row' },
-  text: { fontFamily: 'Inter_600' },
+  text: { fontFamily: guestFont.strong },
 });

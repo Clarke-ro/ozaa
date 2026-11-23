@@ -10,7 +10,7 @@ import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
 import { FilterChips } from '@/ui/FilterChips';
 import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
+import { guestFont, useTheme } from '@/ui/theme';
 import type { CheckoutCheck, CheckoutDraft } from './linkCheckout';
 
 /**
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: tokens.radius.md,
     paddingHorizontal: tokens.space[3],
-    fontFamily: 'Inter_400',
+    fontFamily: guestFont.regular,
     fontSize: 16,
   },
   multi: { minHeight: 72, paddingTop: tokens.space[2], textAlignVertical: 'top' },

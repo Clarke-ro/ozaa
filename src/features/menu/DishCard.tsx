@@ -5,7 +5,7 @@ import type { MenuItem } from '@/lib/api/types';
 import { Text } from '@/ui/Text';
 import { VenueImage } from '@/ui/VenueImage';
 import { tokens } from '@/theme/tokens';
-import { fontFamily, useTheme } from '@/ui/theme';
+import { guestFont, useTheme } from '@/ui/theme';
 import { DishPrice } from './DishPrice';
 
 /**
@@ -113,14 +113,14 @@ const styles = StyleSheet.create({
     borderRadius: tokens.radius.full,
     paddingHorizontal: tokens.space[2],
     paddingVertical: 2,
-    fontFamily: fontFamily.strong,
+    fontFamily: guestFont.strong,
   },
   body: {
     paddingVertical: tokens.space[2],
     paddingStart: tokens.space[3],
     paddingEnd: tokens.space[3] + ADD,
   },
-  name: { fontFamily: fontFamily.strong },
+  name: { fontFamily: guestFont.strong },
   // Sits over the card's bottom-right corner, level with the price.
   add: {
     position: 'absolute',

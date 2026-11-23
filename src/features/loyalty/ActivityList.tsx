@@ -5,7 +5,7 @@ import { pesewas } from '@/lib/brand';
 import { formatMoney } from '@/lib/money';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
-import { fontFamily, useTheme } from '@/ui/theme';
+import { guestFont, useTheme } from '@/ui/theme';
 import type { HistoryRow, Programme } from './facts';
 import { GroupCard } from './GroupCard';
 import { GroupRow } from './GroupRow';
@@ -84,5 +84,5 @@ export function ActivityList({
 
 const styles = StyleSheet.create({
   section: { gap: tokens.space[3] },
-  units: { fontFamily: fontFamily.strong, fontVariant: ['tabular-nums'] },
+  units: { fontFamily: guestFont.strong, fontVariant: ['tabular-nums'] },
 });

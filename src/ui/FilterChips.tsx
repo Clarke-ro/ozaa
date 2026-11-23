@@ -2,7 +2,7 @@ import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 're
 import { STATUS_TONES, type StatusTone } from '@/theme/palette';
 import { tokens } from '@/theme/tokens';
 import { Text } from './Text';
-import { fontFamily, useTheme } from './theme';
+import { useTheme } from './theme';
 
 export type FilterChip<T extends string> = {
   id: T;
@@ -96,7 +96,7 @@ export function FilterChips<T extends string>({
                 pill && styles.pillText,
                 slim && styles.slimText,
                 { color: on ? theme.white : pill || slim ? theme.muted : theme.text },
-                slim && on && { fontFamily: fontFamily.strong },
+                slim && on && { fontWeight: '600' },
               ]}
             >
               {item.label}
@@ -149,17 +149,17 @@ const styles = StyleSheet.create({
   },
   pillChipCount: { paddingRight: 6 },
   slimChip: { minHeight: 34, paddingHorizontal: tokens.space[3], gap: 6, borderWidth: 1 },
-  slimText: { fontSize: 14, lineHeight: 18, fontFamily: fontFamily.regular },
+  slimText: { fontSize: 14, lineHeight: 18, fontWeight: '400' },
   slimCount: {
     fontSize: 13,
     lineHeight: 18,
-    fontFamily: fontFamily.strong,
+    fontWeight: '600',
     fontVariant: ['tabular-nums'],
   },
-  pillText: { fontSize: 15, lineHeight: 20, fontFamily: fontFamily.regular },
+  pillText: { fontSize: 15, lineHeight: 20, fontWeight: '400' },
   pillCount: { minWidth: 28, height: 28, paddingHorizontal: tokens.space[2] },
   pillCountText: { fontSize: 13, lineHeight: 18 },
-  text: { fontFamily: fontFamily.strong },
+  text: { fontWeight: '600' },
   count: {
     minWidth: 20,
     height: 20,
@@ -168,5 +168,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  countText: { fontFamily: fontFamily.strong, fontVariant: ['tabular-nums'] },
+  countText: { fontWeight: '600', fontVariant: ['tabular-nums'] },
 });

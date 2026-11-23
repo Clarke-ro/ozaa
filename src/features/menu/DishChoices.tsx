@@ -5,7 +5,7 @@ import type { MenuItem } from '@/lib/api/types';
 import { pickOption } from '@/lib/dishLogic';
 import { hapticSelection } from '@/lib/haptics';
 import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
+import { guestFont, useTheme } from '@/ui/theme';
 
 /** The venue's add-on groups for one dish: one choice (radio) or several (tick boxes). */
 export function DishChoices({
@@ -37,7 +37,7 @@ export function DishChoices({
               </Text>
               <Text
                 variant="caption"
-                style={{ color: needed ? theme.error : theme.muted, fontFamily: 'Inter_600' }}
+                style={{ color: needed ? theme.error : theme.muted, fontFamily: guestFont.strong }}
               >
                 {group.min > 0
                   ? t('menu.required')

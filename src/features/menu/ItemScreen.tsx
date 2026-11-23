@@ -16,7 +16,7 @@ import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
 import { ErrorState, LoadingState } from '@/ui/states';
 import { tokens } from '@/theme/tokens';
-import { useTheme } from '@/ui/theme';
+import { guestFont, useTheme } from '@/ui/theme';
 import { addOnTotal, missingChoice } from '@/lib/dishLogic';
 import { DishPrice } from './DishPrice';
 import { DishChoices } from './DishChoices';
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
     minHeight: 48,
     paddingHorizontal: 12,
     fontSize: 16,
-    fontFamily: 'Inter_400',
+    fontFamily: guestFont.regular,
   },
   back: {
     position: 'absolute',

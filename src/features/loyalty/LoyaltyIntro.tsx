@@ -4,7 +4,7 @@ import { Gift } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
 import { Text } from '@/ui/Text';
-import { fontFamily, useTheme } from '@/ui/theme';
+import { guestFont, useTheme } from '@/ui/theme';
 import type { Programme } from './factsTypes';
 
 const STAMP = 44;
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
   },
   head: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
   venue: { flex: 1, fontSize: 18, lineHeight: 24 },
-  count: { fontSize: 14, fontFamily: fontFamily.strong },
+  count: { fontSize: 14, fontFamily: guestFont.strong },
   // Five across, like the canvas card.
   dots: {
     flexDirection: 'row',
