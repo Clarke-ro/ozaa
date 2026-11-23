@@ -5123,6 +5123,15 @@ export interface operations {
                     "application/json": components["schemas"]["VenueTransaction"];
                 };
             };
+            /** @description Always, since refunds moved to each venue's own Paystack dashboard (Clarke, 2026-11-08). Kept so older apps get a clear answer. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
             /** @description The charge cannot be refunded. */
             409: {
                 headers: {
