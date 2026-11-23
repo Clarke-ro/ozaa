@@ -56,9 +56,9 @@ A summary of the brand Page for the coding agent. The numbers are in `tokens.jso
 
 ## 6. Guest home (renders: home-mamas, home-mamas-scrolled, home-default, home-default-scrolled)
 
-1. **Banner:** an edge-to-edge photo under the status bar, with a dark gradient over the top 120 px so the status bar reads. Share (left) and language (right) are white circles on it.
-2. **Logo:** an 84 px circle with a 4 px white ring, 20 px from the left, half over the banner. With no logo, show the initials on the venue colour.
-3. Name (heading font), description, a pin with the location, and live hours ("Open now · until 10 PM" with a green dot). A "Table 12" pill sits on the right.
+1. **Banner:** an edge-to-edge photo, 150 px below the status bar and running up under it. It stays still while the page scrolls over it (Clarke, 23 Nov 2026). Share (left) and language (right) are white circles on it.
+2. **Header sheet:** a white sheet with 24 px rounded top corners rides 24 px up over the banner. It holds a 44 px logo circle (initials on the venue colour when there is no logo), the name in the heading font with the area under it, and the bell on the right.
+3. **Info boxes:** small grey boxes under the name: the table ("12 · your table") and the hours ("Open · until 10 PM" on green, or "Closed · opens …"). A thin grey gap separates the header from the services, which sit on white.
 4. **Story circles ("Guests are saying"):** video reviews. Unwatched rings use the venue colour; watched ones are grey. Tapping one opens the viewer: full screen, progress bars, tap left or right to move, swipe down to close, and "Add to order" for the dish.
 5. **Services** in four sections, each item opening its own screen:
    - **At your table:** Menu (a wide card), Call waiter, Order status, Pay & split bill, Wi-Fi (2-column cards)

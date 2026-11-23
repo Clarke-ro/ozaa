@@ -87,3 +87,16 @@ export function timeAgo(
   if (hours < 24) return t('time.hoursAgo', { count: hours });
   return t('time.daysAgo', { count: Math.floor(hours / 24) });
 }
+
+/**
+ * The same answer as describeHours, split for the two-line Open box on the guest home and menu:
+ * "Open" over "until 10 PM", or "Closed" over "opens Sunday 9 AM".
+ */
+export function hoursBox(
+  hours: OpeningHours,
+  now: Date,
+): { open: boolean; title: string; detail: string | null } {
+  const label = describeHours(hours, now);
+  const [, detail] = label.text.split(' · ');
+  return { open: label.open, title: label.open ? 'Open' : 'Closed', detail: detail ?? null };
+}

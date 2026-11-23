@@ -1,4 +1,4 @@
-import { describeHours, timeAgo, type OpeningHours } from './time';
+import { describeHours, hoursBox, timeAgo, type OpeningHours } from './time';
 
 const daily = (opens: string, closes: string): OpeningHours => ({
   timezone: 'Africa/Accra',
@@ -21,6 +21,31 @@ test('treats an empty day as closed', () => {
   hours.weekly[5] = [];
   const label = describeHours(hours, new Date('2026-10-31T12:00:00Z'));
   expect(label.text).toBe('Closed · opens Sunday 9 AM');
+});
+
+describe('hoursBox', () => {
+  test('open: "Open" over "until 10 PM"', () => {
+    expect(hoursBox(daily('09:00', '22:00'), new Date('2026-10-31T18:00:00Z'))).toEqual({
+      open: true,
+      title: 'Open',
+      detail: 'until 10 PM',
+    });
+  });
+  test('closed: "Closed" over when it opens next', () => {
+    expect(hoursBox(daily('09:00', '22:00'), new Date('2026-10-31T23:30:00Z'))).toEqual({
+      open: false,
+      title: 'Closed',
+      detail: 'opens Sunday 9 AM',
+    });
+  });
+  test('closed with no hours at all: no second line', () => {
+    const hours: OpeningHours = { timezone: 'Africa/Accra', weekly: [[], [], [], [], [], [], []] };
+    expect(hoursBox(hours, new Date('2026-10-31T12:00:00Z'))).toEqual({
+      open: false,
+      title: 'Closed',
+      detail: null,
+    });
+  });
 });
 
 describe('timeAgo', () => {

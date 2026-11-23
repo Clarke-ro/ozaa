@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Animated, Platform, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -29,6 +29,8 @@ export function HomeScreen({ slug }: { slug: string }) {
   const insets = useSafeAreaInsets();
   const [languageOpen, setLanguageOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  // The scroll offset drives the banner, so it stays still while the page slides over it.
+  const [scrollY] = useState(() => new Animated.Value(0));
   // "Link copied" shows for two seconds; the timer goes with the screen if the guest leaves.
   useEffect(() => {
     if (!copied) return;
@@ -54,7 +56,15 @@ export function HomeScreen({ slug }: { slug: string }) {
         <StoreNoticeBanner notice={storeNotice.banner} topInset={insets.top} />
       ) : null}
       {storeNotice.popup ? <StoreNoticePopup slug={slug} notice={storeNotice.popup} /> : null}
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 96 }}>
+      <Animated.ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ flexGrow: 1 }}
+        scrollEventThrottle={16}
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+          // The web has no native animation driver.
+          useNativeDriver: Platform.OS !== 'web',
+        })}
+      >
         <VenueHomeBody
           venue={place}
           tableCode={tableCode}
@@ -70,6 +80,7 @@ export function HomeScreen({ slug }: { slug: string }) {
           onNotices={() => router.push(`/${slug}/notifications`)}
           notices={notices.unseen}
           onOpen={(id) => router.push(serviceHref(slug, id))}
+          scrollY={scrollY}
           bannerNote={
             copied ? (
               <View
@@ -82,7 +93,7 @@ export function HomeScreen({ slug }: { slug: string }) {
         >
           <OfflineNote savedAt={venue.dataUpdatedAt} />
         </VenueHomeBody>
-      </ScrollView>
+      </Animated.ScrollView>
       <LanguagePicker
         open={languageOpen}
         selected={language.code}
