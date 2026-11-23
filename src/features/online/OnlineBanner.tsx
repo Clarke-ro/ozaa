@@ -7,7 +7,7 @@ import type { VenuePublic } from '@/lib/api/types';
 import { env } from '@/lib/env';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
-import { fontFamily, useTheme } from '@/ui/theme';
+import { guestFont, useTheme } from '@/ui/theme';
 import { VenueImage } from '@/ui/VenueImage';
 import { useGuestNotes } from '@/features/notices';
 import {
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: tokens.type.caption.size - 3,
     lineHeight: 12,
-    fontFamily: fontFamily.strong,
+    fontFamily: guestFont.strong,
   },
   copied: {
     position: 'absolute',
@@ -160,5 +160,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: tokens.space[2] + 2,
     paddingVertical: tokens.space[1] + 2,
   },
-  strong: { fontFamily: fontFamily.strong },
+  strong: { fontFamily: guestFont.strong },
 });

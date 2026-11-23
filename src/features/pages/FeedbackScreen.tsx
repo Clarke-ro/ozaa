@@ -13,7 +13,7 @@ import { Button } from '@/ui/Button';
 import { PageHeader } from '@/ui/PageHeader';
 import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
+import { guestFont, useTheme } from '@/ui/theme';
 import { guestHomeHref, useGuestSession } from '@/features/session';
 
 /**
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
     minHeight: 140,
     padding: 12,
     fontSize: 16,
-    fontFamily: 'Inter_400',
+    fontFamily: guestFont.regular,
     textAlignVertical: 'top',
   },
   field: {
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     minHeight: 48,
     paddingHorizontal: 12,
     fontSize: 16,
-    fontFamily: 'Inter_400',
+    fontFamily: guestFont.regular,
   },
   switchRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8 },
   flex: { flex: 1 },

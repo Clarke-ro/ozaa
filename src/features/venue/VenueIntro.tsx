@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import type { VenuePublic } from '@/lib/api/types';
 import { Text } from '@/ui/Text';
 import { tokens } from '@/theme/tokens';
-import { fontFamily, useTheme } from '@/ui/theme';
+import { guestFont, useTheme } from '@/ui/theme';
 
 // Two lines is enough to set the scene; the rest is one tap away, so the services stay above the fold.
 const DESCRIPTION_LINES = 2;
@@ -62,5 +62,5 @@ const styles = StyleSheet.create({
     fontSize: tokens.type.caption.size + 1,
     lineHeight: tokens.type.caption.line + 2,
   },
-  more: { fontFamily: fontFamily.strong, marginTop: 2 },
+  more: { fontFamily: guestFont.strong, marginTop: 2 },
 });

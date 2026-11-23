@@ -17,7 +17,7 @@ import { Button } from '@/ui/Button';
 import { PageHeader } from '@/ui/PageHeader';
 import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
-import { fontFamily, useTheme } from '@/ui/theme';
+import { guestFont, useTheme } from '@/ui/theme';
 import type { PastOrder } from './orderHistory';
 import { useOrderHistory } from './useOrderHistory';
 
@@ -173,6 +173,6 @@ const styles = StyleSheet.create({
   },
   copy: { flex: 1, gap: tokens.space[1] },
   row: { flexDirection: 'row', justifyContent: 'space-between', gap: tokens.space[2] },
-  strong: { fontFamily: fontFamily.strong },
+  strong: { fontFamily: guestFont.strong },
   num: { fontVariant: ['tabular-nums'] },
 });

@@ -13,7 +13,7 @@ import { Button } from '@/ui/Button';
 import { PageHeader } from '@/ui/PageHeader';
 import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
-import { fontFamily, useTheme } from '@/ui/theme';
+import { guestFont, useTheme } from '@/ui/theme';
 import { useGuestSession, useMyCalls } from '@/features/session';
 import { useVenue } from '@/features/venue';
 import { CallStatusCard } from './CallStatusCard';
@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
     padding: tokens.space[3],
     borderWidth: 1,
     borderRadius: tokens.radius.md,
-    fontFamily: fontFamily.regular,
+    fontFamily: guestFont.regular,
     fontSize: tokens.type.body.size,
     textAlignVertical: 'top',
   },

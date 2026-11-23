@@ -12,7 +12,7 @@ import type { Order } from '@/lib/api/types';
 import { finishWord, TIMELINE, timelineSteps } from '@/lib/orderTimeline';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
-import { fontFamily, useTheme } from '@/ui/theme';
+import { guestFont, useTheme } from '@/ui/theme';
 
 const STEPS = TIMELINE;
 const ICON: Record<(typeof STEPS)[number], LucideIcon> = {
@@ -85,7 +85,7 @@ export function StatusTimeline({
                 variant="body-strong"
                 style={{
                   color: done || on ? theme.text : theme.meta,
-                  fontFamily: done ? fontFamily.strong : undefined,
+                  fontFamily: done ? guestFont.strong : undefined,
                 }}
               >
                 {t(

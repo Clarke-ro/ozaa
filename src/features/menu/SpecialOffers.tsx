@@ -4,7 +4,7 @@ import { Percent, Plus, Tag } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { VenueImage } from '@/ui/VenueImage';
-import { fontFamily, useTheme } from '@/ui/theme';
+import { guestFont, useTheme } from '@/ui/theme';
 import { DishPrice } from './DishPrice';
 import type { SpecialOffer } from './specialOffers';
 
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
     paddingVertical: tokens.space[3],
     justifyContent: 'center',
   },
-  strong: { fontFamily: fontFamily.strong },
+  strong: { fontFamily: guestFont.strong },
   photo: { width: CARD_H, height: CARD_H },
   add: {
     position: 'absolute',

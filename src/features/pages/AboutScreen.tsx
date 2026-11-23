@@ -15,7 +15,7 @@ import { PageHeader } from '@/ui/PageHeader';
 import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { ErrorState, LoadingState } from '@/ui/states';
-import { useTheme } from '@/ui/theme';
+import { guestFont, useTheme } from '@/ui/theme';
 import { socialLinks } from './socialLinks';
 
 const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const;
@@ -161,7 +161,7 @@ function LinkLine({
 const styles = StyleSheet.create({
   body: { padding: 20, gap: 24, paddingBottom: 48 },
   group: { gap: 8 },
-  groupTitle: { fontFamily: 'Inter_600', letterSpacing: 0.8 },
+  groupTitle: { fontFamily: guestFont.strong, letterSpacing: 0.8 },
   card: { borderWidth: 1, borderRadius: 16, overflow: 'hidden', paddingHorizontal: 16 },
   hourRow: { flexDirection: 'row', alignItems: 'center', minHeight: 44, gap: 12 },
   linkRow: {

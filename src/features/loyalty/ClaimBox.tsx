@@ -2,7 +2,7 @@ import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
-import { fontFamily, useTheme } from '@/ui/theme';
+import { guestFont, useTheme } from '@/ui/theme';
 import type { Wallet } from './facts';
 
 /** While a reward is waiting for staff: its code, what it is, and until when. The card's back shows the QR. */
@@ -37,5 +37,5 @@ const styles = StyleSheet.create({
     gap: tokens.space[1],
   },
   code: { letterSpacing: 2, fontVariant: ['tabular-nums'] },
-  strong: { fontFamily: fontFamily.strong },
+  strong: { fontFamily: guestFont.strong },
 });

@@ -6,7 +6,7 @@ import type { VenuePublic } from '@/lib/api/types';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { VenueImage } from '@/ui/VenueImage';
-import { fontFamily, useTheme } from '@/ui/theme';
+import { guestFont, useTheme } from '@/ui/theme';
 import { canPayOnline } from '@/lib/payments';
 import { ServiceGrid } from './ServiceGrid';
 import { VenueIntro } from './VenueIntro';
@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: tokens.type.caption.size - 3,
     lineHeight: 12,
-    fontFamily: fontFamily.strong,
+    fontFamily: guestFont.strong,
   },
   lang: {
     end: tokens.space[4],
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     gap: tokens.space[1] + 2,
     paddingHorizontal: tokens.space[3],
   },
-  strong: { fontFamily: fontFamily.strong },
+  strong: { fontFamily: guestFont.strong },
   logo: {
     position: 'absolute',
     start: tokens.grid.mobile.margin,

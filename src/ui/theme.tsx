@@ -26,6 +26,8 @@ export type Theme = {
   tint: string;
   badgeInk: string;
   displayFont: string;
+  /** Body and bold text. Guest pages use Noto Sans, the owner app Inter. */
+  fonts: { regular: string; strong: string };
   /** Page background. */
   bg: string;
   /** Cards and grouped rows that sit on the page. */
@@ -54,9 +56,20 @@ export type Theme = {
   derived: DerivedTheme;
 };
 
+/**
+ * Guest pages use Noto Sans (Clarke, 2026-11-23). Of the fonts checked it is one of only two that
+ * draw every Ghanaian letter (ɛ ɔ ŋ ɖ ƒ ʋ ɣ ɓ ɗ ƙ ẹ ọ ṣ) and ₵ in all weights, so a dish like
+ * Kɛlɛwɛlɛ never mixes two fonts. Plus Jakarta Sans, the first pick, has no ɛ or ɔ.
+ */
+export const guestFont = {
+  regular: 'NotoSans_400',
+  strong: 'NotoSans_600',
+  heavy: 'NotoSans_800',
+} as const;
+
 /** The heading font each font pair loads. Branding shows these as the choices. */
 export const DISPLAY: Record<FontPair, string> = {
-  cravins: 'Unbounded_700',
+  cravins: guestFont.heavy,
   serif: 'NotoSerif_700',
   bold: 'Montserrat_800',
 };
@@ -79,6 +92,7 @@ export function themeFromAccent(
     tint: dark ? n.tint : derived.tint,
     badgeInk: dark ? n.badgeInk : derived.badgeInk,
     displayFont: DISPLAY[fontPair],
+    fonts: { regular: guestFont.regular, strong: guestFont.strong },
     // Pages sit on the soft canvas so white cards stand out, in the guest app as in the owner app
     // (Clarke, 2026-11-16). `white` below stays pure white for buttons on photos.
     bg: n.canvas,
@@ -121,7 +135,12 @@ const OWNER_TYPE: TypeScale = {
   caption: o.caption,
   button: o.button,
 };
-const owner = { type: OWNER_TYPE, displayFont: 'Inter_600', pill: true };
+const owner = {
+  type: OWNER_TYPE,
+  displayFont: 'Inter_600',
+  fonts: { regular: 'Inter_400', strong: 'Inter_600' },
+  pill: true,
+};
 export const cravinsOwnerTheme: Theme = { ...cravinsTheme, ...owner, bg: NEUTRALS.light.canvas };
 export const cravinsOwnerDarkTheme: Theme = {
   ...cravinsDarkTheme,
@@ -139,6 +158,7 @@ export function useTheme(): Theme {
   return useContext(ThemeContext);
 }
 
+/** The owner app's fonts, for styles that can't read the theme. Guest screens use guestFont. */
 export const fontFamily = {
   regular: 'Inter_400',
   strong: 'Inter_600',

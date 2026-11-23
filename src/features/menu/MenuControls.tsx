@@ -4,7 +4,7 @@ import { Search, X } from 'lucide-react-native';
 import type { MenuCategory } from '@/lib/api/types';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
-import { fontFamily, useTheme } from '@/ui/theme';
+import { guestFont, useTheme } from '@/ui/theme';
 
 export type MenuView = 'list' | 'grid';
 
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  tabOn: { fontFamily: fontFamily.strong },
+  tabOn: { fontFamily: guestFont.strong },
   underline: {
     position: 'absolute',
     bottom: 0,
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     minHeight: tokens.touchTarget,
-    fontFamily: fontFamily.regular,
+    fontFamily: guestFont.regular,
     fontSize: tokens.type.body.size,
   },
   icon: {

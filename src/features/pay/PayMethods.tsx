@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Clock, CreditCard, Smartphone } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
-import { fontFamily, useTheme } from '@/ui/theme';
+import { guestFont, useTheme } from '@/ui/theme';
 
 export type PayMethod = 'mtn' | 'vod' | 'atl' | 'card';
 /** A payment method, or the page's one "not now" option (laterOption.ts). */
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: tokens.radius.md,
     paddingHorizontal: tokens.space[3],
-    fontFamily: fontFamily.regular,
+    fontFamily: guestFont.regular,
     fontSize: tokens.type.body.size,
   },
 });

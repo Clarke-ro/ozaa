@@ -4179,3 +4179,31 @@ Everything looked fine online. Only switching the connection off showed what a w
 **Try it yourself**
 
 In Chrome's developer tools, go to Network → Offline, then tap through the owner app.
+
+## 2026-11-23 · A new font for guest pages
+
+**What we built**
+Every guest page now uses one font, Noto Sans: body text, bold labels and headings. The owner app keeps Inter.
+
+**How it works**
+
+```
+theme (guest) → fonts: NotoSans_400 / NotoSans_600, headings NotoSans_800
+theme (owner) → fonts: Inter_400 / Inter_600
+<Text> reads the theme, so the same component draws the right font in each app
+```
+
+Guest screens that style a text box directly use `guestFont` from `src/ui/theme.tsx`.
+
+**Files to look at**
+
+- `src/ui/theme.tsx`: `guestFont`, and the new `fonts` on each theme
+- `src/ui/Text.tsx`: picks the font from the theme
+- `src/theme/fonts.ts` and `fonts.web.ts`: load the font files
+- `assets/fonts/NotoSans-*.woff2`: the files the browser downloads
+
+**New idea: font subsets and glyph coverage**
+A font file only draws the letters it contains. Each letter shape is a glyph. Plus Jakarta Sans has no glyph for ɛ or ɔ, so "Kɛlɛwɛlɛ" would borrow those two letters from a backup font and look patchy. We checked 20 fonts; only Noto Sans and Inter had every Ghanaian letter plus ₵. A subset is a copy of the font with only the letters we need (about 230), which keeps each file near 13 KB instead of 500 KB.
+
+**Try it yourself**
+In `src/ui/theme.tsx`, change `guestFont.heavy` to `'NotoSans_600'`, run `npx expo start --web`, and watch the guest headings get lighter.

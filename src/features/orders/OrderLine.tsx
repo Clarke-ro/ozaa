@@ -7,7 +7,7 @@ import { hapticSelection } from '@/lib/haptics';
 import { formatMoney } from '@/lib/money';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
-import { fontFamily, useTheme } from '@/ui/theme';
+import { guestFont, useTheme } from '@/ui/theme';
 
 const STEP = 32;
 // Grows each 32 pt step button to the 44 pt minimum touch area (HIG).
@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
   count: {
     minWidth: 24,
     textAlign: 'center',
-    fontFamily: fontFamily.strong,
+    fontFamily: guestFont.strong,
     fontVariant: ['tabular-nums'],
   },
 });

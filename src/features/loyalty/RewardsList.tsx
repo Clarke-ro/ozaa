@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Gift } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
-import { fontFamily, useTheme } from '@/ui/theme';
+import { guestFont, useTheme } from '@/ui/theme';
 import type { Programme, Wallet } from './facts';
 import { GroupCard } from './GroupCard';
 import { GroupRow } from './GroupRow';
@@ -107,5 +107,5 @@ const styles = StyleSheet.create({
     height: 30,
     justifyContent: 'center',
   },
-  strong: { fontFamily: fontFamily.strong },
+  strong: { fontFamily: guestFont.strong },
 });
