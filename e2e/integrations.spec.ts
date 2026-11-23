@@ -38,7 +38,7 @@ test(
   },
 );
 
-test('passing fees closes once a share is picked', async ({ page }) => {
+test('passing fees closes once a share is picked', SERVER, async ({ page }) => {
   await signInAsKojo(page);
   // Click again until the switch reacts: a click before the settings load does nothing.
   const half = page.getByRole('radio', { name: '50%' });

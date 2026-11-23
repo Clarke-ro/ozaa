@@ -89,18 +89,6 @@ jobs:
       - run: npx playwright test --config playwright.server.config.ts
         env:
           CI: 'true'
-      # TEMPORARY (removed before merge): which payment tests already pass against Paystack's test mode.
-      - name: Survey the payment tests
-        if: always()
-        continue-on-error: true
-        run: >-
-          npx playwright test --config playwright.server.config.ts --reporter=list
-          e2e/payment-step.spec.ts e2e/guest-orders.spec.ts e2e/my-orders.spec.ts
-          e2e/online-ordering.spec.ts e2e/guest-pay-online.spec.ts e2e/fee-passing.spec.ts
-          e2e/integrations.spec.ts e2e/owner-setup.spec.ts e2e/pay-in-person.spec.ts
-        env:
-          CI: 'true'
-          E2E_ALL: '1'
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
