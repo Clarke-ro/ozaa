@@ -29,3 +29,13 @@ test('custom links: owners add, reorder, edit and delete; only web, email and ph
   assert.equal((await call('GET', base, undefined, owner)).json.items.length, 1);
   assert.equal((await call('PATCH', `${base}/${first.json.id}`, { title: 'x' }, owner)).status, 404);
 });
+
+test('an edit that changes nothing gives the link back as it was, not a server error', async () => {
+  const { call, mamas } = await ownerSetup();
+  const base = `/owner/venues/${mamas}/links`;
+  const link = (await call('POST', base, { title: 'Menu PDF', url: 'https://example.com/menu.pdf' }, owner)).json;
+  const same = await call('PATCH', `${base}/${link.id}`, {}, owner);
+  assert.equal(same.status, 200);
+  expectContract('ownerUpdateCustomLink', 200, same.json);
+  assert.equal(same.json.title, 'Menu PDF');
+});
