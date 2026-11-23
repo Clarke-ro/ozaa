@@ -1,17 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
+import { signIn as signInStaff } from './signIn';
 
 // Restaurant Wi-Fi drops. The owner app must say it is offline, never show a false empty state
 // ("No new orders") or the crash screen, and pick up again once the connection is back.
 
 async function signIn(page: Page) {
-  await page.goto('/owner/login', { waitUntil: 'domcontentloaded' });
-  await page.getByRole('textbox', { name: 'Phone number' }).fill('024 000 0001');
-  await page.getByRole('button', { name: 'Send code', exact: true }).click();
-  await page.getByRole('textbox', { name: 'Code', exact: true }).fill('123456');
-  await page.getByRole('button', { name: 'Enter', exact: true }).click();
-  await expect(page.getByRole('tab', { name: 'Today', exact: true })).toBeVisible({
-    timeout: 15_000,
-  });
+  await signInStaff(page);
 }
 
 test('offline, Orders says so instead of "No new orders"', async ({ page }) => {

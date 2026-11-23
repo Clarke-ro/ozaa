@@ -46,6 +46,10 @@ jobs:
       SEED_SAMPLES: 'true'
       # The sample photos are stored with this address, so it must be where the app is served.
       SITE_URL: http://127.0.0.1:4174
+      # Clerk's development instance. The publishable key is public (it ships in the live site);
+      # the secret key stays in the repository's secrets and only reaches the server.
+      EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_bG92ZWQtdGV0cmEtODgzLmNsZXJrLmFjY291bnRzLmRldiQ
+      CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -69,11 +73,29 @@ jobs:
         working-directory: server
         run: npm run db:migrate && npm run db:seed
 
+      # The mock's demo staff as real staff, with Clerk test emails (server/src/db/seedE2eStaff.ts).
+      - name: Test staff, here and in Clerk
+        working-directory: server
+        run: npm run db:seed-e2e-staff
+        env:
+          E2E_STAFF: 'true'
+
       - run: bash scripts/build-e2e-server.sh
       - run: npx playwright install --with-deps chromium
       - run: npx playwright test --config playwright.server.config.ts
         env:
           CI: 'true'
+      # TEMPORARY (removed before merge): which sign-in tests already pass against the real server.
+      - name: Survey the sign-in tests
+        if: always()
+        continue-on-error: true
+        run: >-
+          npx playwright test --config playwright.server.config.ts --reporter=list
+          e2e/owner.spec.ts e2e/owner-walkthrough.spec.ts e2e/owner-offline.spec.ts
+          e2e/nfc-tags.spec.ts e2e/integrations.spec.ts e2e/pay-in-person.spec.ts e2e/web-motion.spec.ts
+        env:
+          CI: 'true'
+          E2E_ALL: '1'
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

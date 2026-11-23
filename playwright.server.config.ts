@@ -8,6 +8,9 @@ import { defineConfig } from '@playwright/test';
 //
 // One test at a time: the database keeps what each test did, unlike the mock, which starts fresh
 // on every page load.
+// The tests read this to sign in through Clerk's test mode instead of the mock (e2e/signIn.ts).
+process.env.E2E_REAL_SERVER = '1';
+
 const API_PORT = 4000;
 const APP_PORT = 4174;
 

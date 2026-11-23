@@ -1,17 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
+import { signIn as signInStaff } from './signIn';
 
 // Integrations cards open when switched on and close back to their row once saved; the header
 // opens them again (Clarke, 2026-11-16). Kojo owns Bean There, which has Paystack test keys.
 
 async function signInAsKojo(page: Page) {
-  await page.goto('/owner/login', { waitUntil: 'domcontentloaded' });
-  await page.getByRole('textbox', { name: 'Phone number' }).fill('024 000 0004');
-  await page.getByRole('button', { name: 'Send code', exact: true }).click();
-  await page.getByRole('textbox', { name: 'Code', exact: true }).fill('123456');
-  await page.getByRole('button', { name: 'Enter', exact: true }).click();
-  await expect(page.getByRole('tab', { name: 'Today', exact: true })).toBeVisible({
-    timeout: 15_000,
-  });
+  await signInStaff(page, 'Kojo');
   await page.evaluate(() => {
     window.history.pushState({}, '', '/owner/integrations');
     window.dispatchEvent(new PopStateEvent('popstate'));

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { signIn as signInStaff } from './signIn';
 
 // A venue without Paystack (Auntie Akos in the samples): guests pay in person and staff mark the
 // bill paid. Nothing a guest or
@@ -60,13 +61,7 @@ test('guest at a venue with no Paystack: order, ask for the bill, and never see 
 });
 
 async function signInAsOwner(page: Page) {
-  await page.goto('/owner/login', { waitUntil: 'domcontentloaded' });
-  await page.getByRole('button', { name: 'Send code', exact: true }).click();
-  await page.getByRole('textbox', { name: 'Code', exact: true }).fill('123456');
-  await page.getByRole('button', { name: 'Enter', exact: true }).click();
-  await expect(page.getByRole('tab', { name: 'Today', exact: true })).toBeVisible({
-    timeout: 15_000,
-  });
+  await signInStaff(page);
 }
 
 test('owner: Today leads with sales, and a served table is marked paid from Floor', async ({

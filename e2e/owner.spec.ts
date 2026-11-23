@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { signIn as signInStaff } from './signIn';
 
 // The owner's phone tabs (see tabsFor in src/features/owner/chrome/nav.ts).
 const tabs = [
@@ -46,17 +47,7 @@ async function waitLoaded(page: Page) {
 }
 
 async function signInAsOwner(page: Page, wide = false) {
-  await page.goto('/owner/login', { waitUntil: 'domcontentloaded' });
-  await expect(page.getByText('Owner sign in')).toBeVisible();
-  await page.getByRole('button', { name: 'Send code', exact: true }).click();
-  const codeBox = page.getByRole('textbox', { name: 'Code', exact: true });
-  await expect(codeBox).toBeVisible();
-  await codeBox.fill('123456');
-  await page.getByRole('button', { name: 'Enter', exact: true }).click();
-  // Phones get a tab bar; wide screens get the sidebar, where items are plain buttons.
-  await expect(
-    page.getByRole(wide ? 'button' : 'tab', { name: 'Today', exact: true }),
-  ).toBeVisible();
+  await signInStaff(page, 'Ama', { wide });
   await waitLoaded(page);
 }
 

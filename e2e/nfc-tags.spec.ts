@@ -1,18 +1,12 @@
 import { expect, test, type Page } from '@playwright/test';
+import { signIn as signInStaff } from './signIn';
 
 // Tap to open: the owner writes a table's link onto an NFC tag from the Tables page. Chrome on
 // Android has NDEFReader; here a stand-in records what would be written, so the test can check
 // the tag gets the same link as the table's QR code.
 
 async function signIn(page: Page) {
-  await page.goto('/owner/login', { waitUntil: 'domcontentloaded' });
-  await page.getByRole('textbox', { name: 'Phone number' }).fill('024 000 0001');
-  await page.getByRole('button', { name: 'Send code', exact: true }).click();
-  await page.getByRole('textbox', { name: 'Code', exact: true }).fill('123456');
-  await page.getByRole('button', { name: 'Enter', exact: true }).click();
-  await expect(page.getByRole('tab', { name: 'Today', exact: true })).toBeVisible({
-    timeout: 15_000,
-  });
+  await signInStaff(page);
   await page.evaluate(() => {
     window.history.pushState({}, '', '/owner/tables');
     window.dispatchEvent(new PopStateEvent('popstate'));
