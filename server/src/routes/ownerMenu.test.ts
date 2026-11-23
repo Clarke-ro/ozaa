@@ -119,7 +119,9 @@ test("a manager cannot delete or reveal another venue's section", async () => {
   const [gone] = await db.select().from(menuCategories).where(eq(menuCategories.id, own.json.id));
   assert.equal(gone, undefined);
   const otherDish = beanMenu.items[0];
-  assert.equal((await call('DELETE', `/owner/venues/${mamas}/menu/items/${otherDish.id}`, undefined, manager)).status, 204);
+  const deleted = await call('DELETE', `/owner/venues/${mamas}/menu/items/${otherDish.id}`, undefined, manager);
+  assert.equal(deleted.status, 204);
+  expectContract('ownerDeleteItem', 204, deleted.json);
   assert.equal((await call('PATCH', `/owner/venues/${mamas}/menu/items/${otherDish.id}`, { pricePesewas: 1 }, manager)).status, 404);
   const still = (await call('GET', '/venues/bean-there/menu')).json.items.find((item: { id: string }) => item.id === otherDish.id);
   assert.equal(still.pricePesewas, otherDish.pricePesewas);

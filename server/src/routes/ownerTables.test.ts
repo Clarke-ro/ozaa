@@ -30,6 +30,7 @@ test('a table QR is an SVG of its table page; other formats and other venues are
   const table = (await call('GET', `/owner/venues/${mamas}/tables`, undefined, owner)).json.items[0];
   const qr = await call('GET', `/owner/venues/${mamas}/tables/${table.id}/qr`, undefined, owner);
   assert.equal(qr.status, 200);
+  expectContract('ownerGetTableQr', 200, qr.text);
   assert.equal(qr.type, 'image/svg+xml');
   assert.match(qr.text, /^<svg /);
   assert.equal((await call('GET', `/owner/venues/${mamas}/tables/${table.id}/qr?format=pdf`, undefined, owner)).json.code, 'format_not_ready');

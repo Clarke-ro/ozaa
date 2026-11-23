@@ -85,7 +85,9 @@ test('a claim opens once and waits for staff; leaving deletes the card and its l
   // Asking for another reward while a code waits is refused (the shared rules: one claim at a time).
   assert.equal((await call('POST', '/venues/mamas-kitchen/loyalty/me/redeem', { rewardId: 'rwd_mamas' }, { ...card(), 'Idempotency-Key': 'k2' })).json.code, 'claim_open');
 
-  assert.equal((await call('DELETE', '/venues/mamas-kitchen/loyalty/me', undefined, card())).status, 204);
+  const left = await call('DELETE', '/venues/mamas-kitchen/loyalty/me', undefined, card());
+  assert.equal(left.status, 204);
+  expectContract('leaveLoyalty', 204, left.json);
   assert.equal((await db.select().from(loyaltyMembers)).length, 0);
   assert.equal((await db.select().from(loyaltyFacts).where(eq(loyaltyFacts.kind, 'claim'))).length, 0);
 });

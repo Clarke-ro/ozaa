@@ -56,7 +56,9 @@ test('a review reaches the owner with the same thank-you for any stars; the owne
 
 test('a private note is scored for mood, hidden for two hours, then listed, searched, archived and summed up', async () => {
   const { call, mamas, guest, tick } = await setup();
-  assert.equal((await call('POST', '/feedback', { message: 'Food was cold and the waiter was rude', contactPhone: '+233241112222' }, guest)).status, 201);
+  const sent = await call('POST', '/feedback', { message: 'Food was cold and the waiter was rude', contactPhone: '+233241112222' }, guest);
+  assert.equal(sent.status, 201);
+  expectContract('sendFeedback', 201, sent.json);
   await call('POST', '/feedback', { message: 'Loved the jollof, great service!' }, guest);
   const list = () => call('GET', `/owner/venues/${mamas}/feedback`, undefined, owner);
   assert.equal((await list()).json.items.length, 0);

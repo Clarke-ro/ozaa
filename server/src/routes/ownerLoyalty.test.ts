@@ -62,7 +62,9 @@ test('at the counter: a scan stamps once an hour, a reward comes off, and the sc
 test('a guest code is confirmed by staff once; customers, detail, analytics and erasure', async () => {
   const { call, mamas, memberId, tick } = await withMember();
   for (let i = 0; i < 4; i += 1) {
-    await call('POST', `/owner/venues/${mamas}/loyalty/customers/${memberId}/stamp`, undefined, owner);
+    const stamped = await call('POST', `/owner/venues/${mamas}/loyalty/customers/${memberId}/stamp`, undefined, owner);
+    assert.equal(stamped.status, 200);
+    expectContract('ownerStampLoyaltyCustomer', 200, stamped.json);
     tick(61 * 60_000);
   }
   const claimed = (await call('POST', '/venues/mamas-kitchen/loyalty/me/redeem', { rewardId: 'rwd_sobolo' }, { ...guestCard('+233241234567'), 'Idempotency-Key': 'g1' })).json;
@@ -90,6 +92,8 @@ test('a guest code is confirmed by staff once; customers, detail, analytics and 
   assert.equal(stats.json.rewardsRedeemed, 1);
 
   assert.equal((await call('DELETE', `/owner/venues/${mamas}/loyalty/customers/${memberId}`, undefined, waiter)).status, 403);
-  assert.equal((await call('DELETE', `/owner/venues/${mamas}/loyalty/customers/${memberId}`, undefined, owner)).status, 204);
+  const erased = await call('DELETE', `/owner/venues/${mamas}/loyalty/customers/${memberId}`, undefined, owner);
+  assert.equal(erased.status, 204);
+  expectContract('ownerRemoveLoyaltyCustomer', 204, erased.json);
   assert.equal((await call('GET', `/owner/venues/${mamas}/loyalty/customers`, undefined, owner)).json.totalCount, 0);
 });

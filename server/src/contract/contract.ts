@@ -5,7 +5,7 @@ import { parse } from 'yaml';
 
 /**
  * For tests: checks a response against api/openapi.yaml, the fixed contract. Every server test
- * goes through `expectContract`, and `covered()` lists the operations no test has checked yet.
+ * goes through `expectContract`; coverage.test.ts fails when an operation has no such check.
  */
 type Doc = { paths: Record<string, Record<string, Op>>; components: { responses: Record<string, Res> } };
 type Op = { operationId?: string; responses?: Record<string, Res> };
@@ -24,7 +24,6 @@ for (const [path, methods] of Object.entries(doc.paths)) {
     if (op?.operationId) ops.set(op.operationId, { path, method, op });
   }
 }
-const seen = new Set<string>();
 
 /** Fails (throws) unless `body` is what the contract says `operationId` answers with `status`. */
 export function expectContract(operationId: string, status: number, body: unknown): void {
@@ -33,7 +32,6 @@ export function expectContract(operationId: string, status: number, body: unknow
   const responses = found.op.responses ?? {};
   const res = responses[String(status)];
   if (!res) throw new Error(`${operationId} doesn't answer ${status} in the contract`);
-  seen.add(operationId);
   let base = ['paths', found.path, found.method, 'responses', String(status)];
   let target: Res = res;
   if (res.$ref) {
@@ -52,7 +50,7 @@ export function expectContract(operationId: string, status: number, body: unknow
   }
 }
 
-/** Every operationId in the contract, and which a test has checked. */
-export function covered(): { all: string[]; seen: string[] } {
-  return { all: [...ops.keys()], seen: [...seen] };
+/** Every operationId in the contract. */
+export function operationIds(): string[] {
+  return [...ops.keys()];
 }
