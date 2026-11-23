@@ -18,5 +18,9 @@ export function memoFor<T>(ttlMs: number, now: () => number) {
       }
       return value;
     },
+    /** Forgets every key, so the next read of each loads fresh. */
+    clear(): void {
+      box.clear();
+    },
   };
 }

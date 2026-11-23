@@ -1,11 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { eq } from 'drizzle-orm';
-import { paymentSettings, staffMemberships, staffUsers, venues } from './schema.ts';
+import { loyaltyMembers, paymentSettings, staffMemberships, staffUsers, venues } from './schema.ts';
 import {
   E2E_STAFF,
   e2eEmail,
   isLocalDatabase,
+  seedE2eLoyalty,
   seedE2ePaystack,
   seedE2eStaff,
 } from './seedE2eStaff.ts';
@@ -61,4 +62,16 @@ test('Paystack test keys connect the venues the mock connects, and only those', 
     .map((row) => row.slug)
     .sort();
   assert.deepEqual(connected, ['bean-there', 'mamas-kitchen']);
+});
+
+test("Esi joins Mama's Kitchen loyalty, as in the mock, once however often it runs", async () => {
+  const db = await testDb();
+  await seedSamples(db);
+  await seedE2eLoyalty(db);
+  await seedE2eLoyalty(db);
+  const members = await db.select().from(loyaltyMembers);
+  assert.deepEqual(
+    members.map((m) => [m.venueId, m.firstName]),
+    [['ven_mamas', 'Esi']],
+  );
 });
