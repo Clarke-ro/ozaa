@@ -16,6 +16,7 @@ export const NOW = Date.parse('2026-11-16T12:00:00Z');
 /** A fake Paystack that remembers which secret key each call used, and what verify should say. */
 export function fakePaystack() {
   const used: string[] = [];
+  const channels: string[][] = [];
   let answer: (amount: number) => PaystackTransaction = (amount) => ({
     status: 'ongoing',
     amount,
@@ -32,8 +33,9 @@ export function fakePaystack() {
         display_text: 'Approve on your phone',
       };
     },
-    initializeCard: async (input) => {
+    initializeCheckout: async (input) => {
       used.push(secret);
+      channels.push(input.channels);
       amounts.set(input.reference, input.amountPesewas);
       return { authorization_url: 'https://checkout.paystack.com/abc', reference: input.reference };
     },
@@ -46,6 +48,7 @@ export function fakePaystack() {
   return {
     client,
     used,
+    channels,
     succeed: () => (answer = (amount) => ({ status: 'success', amount, currency: 'GHS' })),
     // Paystack not answering at all.
     down: () =>

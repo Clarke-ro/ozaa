@@ -54,7 +54,8 @@ export function paymentRoutes(deps: PaymentRouteDeps) {
     const key = c.req.header('Idempotency-Key');
     if (!key) throw new Problem(400, 'idempotency_key_missing', 'Missing Idempotency-Key.');
     const input = startBody.safeParse(await c.req.json().catch(() => null));
-    if (!input.success || (input.data.method === 'momo' && !input.data.momo)) {
+    // MoMo may come without a phone: then Paystack's page asks for it (Clarke, 2026-11-23).
+    if (!input.success) {
       throw new Problem(422, 'validation', 'Check the payment details and try again.');
     }
     const [quote] = await db.select().from(billQuotes).where(eq(billQuotes.id, input.data.quoteId));

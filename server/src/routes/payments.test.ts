@@ -67,13 +67,33 @@ test('a hold that already ended cannot be paid, so the dish is not sold twice', 
   assert.equal((await call('GET', `/orders/${order.id}`, undefined, auth)).json.status, 'cancelled');
 });
 
+test('MoMo without a phone opens Paystack’s page for mobile money only (Clarke, 2026-11-23)', async () => {
+  const { call, fake, tableBill } = await setup();
+  const { auth, quote } = await tableBill();
+  const started = await call('POST', '/payments', { quoteId: quote.quoteId, method: 'momo' }, { ...auth, 'Idempotency-Key': 'page' });
+  expectContract('initializePayment', 201, started.json);
+  assert.equal(started.json.method, 'momo');
+  assert.equal(started.json.status, 'open_url');
+  assert.match(started.json.authorizationUrl, /^https:\/\/checkout\.paystack\.com\//);
+  // The guest picks the network and approves on Paystack's page, so the card channel stays off.
+  assert.deepEqual(fake.channels.at(-1), ['mobile_money']);
+});
+
+test('card opens Paystack’s page for cards only', async () => {
+  const { call, fake, tableBill } = await setup();
+  const { auth, quote } = await tableBill();
+  const started = await call('POST', '/payments', { quoteId: quote.quoteId, method: 'card' }, { ...auth, 'Idempotency-Key': 'card' });
+  assert.equal(started.json.status, 'open_url');
+  assert.deepEqual(fake.channels.at(-1), ['card']);
+});
+
 test('refusals: no key, no token, a quote from another table, an expired quote, Paystack not connected', async () => {
   const { db, call, tableBill, momo, tick, venueId } = await setup();
   const { auth, quote } = await tableBill();
   assert.equal((await call('POST', '/payments', momo(quote.quoteId), auth)).status, 400);
   assert.equal((await call('POST', '/payments', momo(quote.quoteId), { 'Idempotency-Key': 'a' })).status, 401);
-  const noPhone = await call('POST', '/payments', { quoteId: quote.quoteId, method: 'momo' }, { ...auth, 'Idempotency-Key': 'b' });
-  assert.equal(noPhone.status, 422);
+  const unknown = await call('POST', '/payments', { quoteId: quote.quoteId, method: 'cash' }, { ...auth, 'Idempotency-Key': 'b' });
+  assert.equal(unknown.status, 422);
 
   const other = await tableBill('3');
   const stolen = await call('POST', '/payments', momo(quote.quoteId), { ...other.auth, 'Idempotency-Key': 'c' });

@@ -27,7 +27,7 @@ function fakePaystack(verify: () => PaystackTransaction) {
         display_text: 'Approve on your phone',
       };
     },
-    initializeCard: async (input) => {
+    initializeCheckout: async (input) => {
       calls.push(`card ${input.callbackUrl}`);
       return { authorization_url: 'https://checkout.paystack.com/abc', reference: input.reference };
     },
@@ -70,7 +70,7 @@ test('a slow Paystack check leaves the payment as it was, and a slow charge stay
     chargeMomo: async () => {
       throw new PaystackError('Paystack took too long. Try again.', 503);
     },
-    initializeCard: async () => ({
+    initializeCheckout: async () => ({
       authorization_url: 'https://checkout.paystack.com/abc',
       reference: 'x',
     }),

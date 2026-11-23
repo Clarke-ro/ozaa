@@ -127,11 +127,13 @@ export function paymentService(deps: {
         });
         payment = { ...base, status: 'pay_offline', displayText: res.display_text };
       } else {
-        const res = await paystack.initializeCard({
+        // Card, and MoMo sent without a phone: Paystack's page takes the details and the approval.
+        const res = await paystack.initializeCheckout({
           email,
           amountPesewas: base.amountPesewas,
           reference: base.reference,
           callbackUrl: `${deps.siteUrl.replace(/\/+$/, '')}/${input.charge.venueSlug}/pay`,
+          channels: input.method === 'momo' ? ['mobile_money'] : ['card'],
         });
         payment = { ...base, status: 'open_url', authorizationUrl: res.authorization_url };
       }

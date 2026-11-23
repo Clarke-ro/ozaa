@@ -86,12 +86,17 @@ export function paystackClient(
       return chargeData.parse(data);
     },
 
-    /** Card: Paystack's own checkout page, which sends the guest back to `callbackUrl`. */
-    async initializeCard(input: {
+    /**
+     * Paystack's own checkout page, which sends the guest back to `callbackUrl`. `channels` limits
+     * what the page offers: ['card'] for card, ['mobile_money'] for MoMo, where the guest picks
+     * the network and approves on Paystack's page (Clarke, 2026-11-23).
+     */
+    async initializeCheckout(input: {
       email: string;
       amountPesewas: number;
       reference: string;
       callbackUrl: string;
+      channels: ['card'] | ['mobile_money'];
     }) {
       const data = await call('/transaction/initialize', {
         method: 'POST',
@@ -101,7 +106,7 @@ export function paystackClient(
           currency: 'GHS',
           reference: input.reference,
           callback_url: input.callbackUrl,
-          channels: ['card'],
+          channels: input.channels,
         },
       });
       return initData.parse(data);

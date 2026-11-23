@@ -142,6 +142,9 @@ export function mockGuestCalls(ctx: MockContext) {
           throw new ApiError(409, 'online_pay_off', 'This venue takes payment in person.');
         const reference = nextId(world, 'pay');
         const createdAt = new Date(now()).toISOString();
+        // MoMo with a phone is charged straight to it; MoMo without one (what the guest app sends
+        // since 2026-11-23) and card go to the checkout page, like Paystack's hosted page.
+        const direct = body.method === 'momo' && body.momo != null;
         const payment: Payment = {
           id: reference,
           reference,
@@ -152,14 +155,12 @@ export function mockGuestCalls(ctx: MockContext) {
           tipPesewas: quote.tip,
           feePesewas: quote.fee,
           currency: 'GHS',
-          status: body.method === 'momo' ? 'pay_offline' : 'open_url',
-          displayText:
-            body.method === 'momo' ? 'Check your phone and enter your PIN to approve.' : undefined,
-          authorizationUrl:
-            body.method === 'card'
-              ? mockCheckoutUrl(reference, venueById(world, venueId)?.slug ?? '')
-              : undefined,
-          approveBy: body.method === 'momo' ? new Date(now() + 180_000).toISOString() : null,
+          status: direct ? 'pay_offline' : 'open_url',
+          displayText: direct ? 'Check your phone and enter your PIN to approve.' : undefined,
+          authorizationUrl: direct
+            ? undefined
+            : mockCheckoutUrl(reference, venueById(world, venueId)?.slug ?? ''),
+          approveBy: direct ? new Date(now() + 180_000).toISOString() : null,
           createdAt,
           paidAt: null,
           testMode: paystack.mode === 'test',
