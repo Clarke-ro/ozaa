@@ -18,7 +18,7 @@ after:  switch on → save → stays open
         pick 50%  → save → close (that's the only thing that closes it)
 ```
 
-The mock's sample venues happen to have "Pass fees" saved already, so the mock never hit the empty case. A brand-new real venue does.
+The mock had the same bug. Its browser test hid it: it clicked the switch "again until it reacts", and by the third click a share was saved, so the card stayed open. The new unit test clicks once, so it can't be fooled that way.
 
 **Files to look at**
 
