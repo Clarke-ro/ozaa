@@ -1,7 +1,7 @@
 import createClient from 'openapi-fetch';
 import type { paths } from './schema';
 import type { TokenSource } from './client';
-import { ApiError } from './errors';
+import { ApiError, OfflineError } from './errors';
 import type { Call } from './types';
 
 /** Turns a Problem Details body (or anything else) into an ApiError. */
@@ -42,7 +42,21 @@ export function createHttpContext(baseUrl: string, tokens: TokenSource) {
   async function ok<T>(
     pending: Promise<{ data?: T; error?: unknown; response: Response }>,
   ): Promise<T> {
-    const result = await pending;
+    let result: Awaited<typeof pending>;
+    try {
+      result = await pending;
+    } catch (error) {
+      // fetch fails with a TypeError when the request never reaches the server. If the phone
+      // says it has no connection, that's "offline", which tells the guest what to do.
+      if (
+        error instanceof TypeError &&
+        typeof navigator !== 'undefined' &&
+        navigator.onLine === false
+      ) {
+        throw new OfflineError();
+      }
+      throw error;
+    }
     if (result.response.status === 304) throw new ApiError(304, 'not_modified', 'Not modified');
     if (result.data === undefined) throw problem(result.error, result.response.status);
     return result.data;

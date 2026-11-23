@@ -38,6 +38,11 @@ const DEFAULTS = {
    * is meant to be public. Empty: no reports.
    */
   EXPO_PUBLIC_SENTRY_DSN: '',
+  /**
+   * '1' only in the browser-test build that runs against a server on this machine
+   * (playwright.server.config.ts). A release never sets it.
+   */
+  EXPO_PUBLIC_ALLOW_LOCAL_API: '0' as '0' | '1',
 };
 
 export type Env = typeof DEFAULTS;
@@ -62,6 +67,7 @@ const fromBuild: Source = {
   EXPO_PUBLIC_DEMO_URL: process.env.EXPO_PUBLIC_DEMO_URL,
   EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY,
   EXPO_PUBLIC_SENTRY_DSN: process.env.EXPO_PUBLIC_SENTRY_DSN,
+  EXPO_PUBLIC_ALLOW_LOCAL_API: process.env.EXPO_PUBLIC_ALLOW_LOCAL_API,
 };
 
 const LOCAL = /^(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+)$/;
@@ -70,7 +76,7 @@ const LOCAL = /^(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+)$/;
  * A real-server build must point somewhere real. While developing, a local server is fine; a
  * production build must use https and not localhost, or every phone would call itself and fail.
  */
-function checkApiUrl(url: string, production: boolean): void {
+function checkApiUrl(url: string, production: boolean, allowLocal: boolean): void {
   let parsed: URL;
   try {
     parsed = new URL(url);
@@ -78,6 +84,8 @@ function checkApiUrl(url: string, production: boolean): void {
     throw new Error(`EXPO_PUBLIC_API_URL is not a URL: "${url}"`);
   }
   if (!production) return;
+  // The browser tests build a release that talks to a server on the same machine, over http.
+  if (allowLocal && LOCAL.test(parsed.hostname)) return;
   if (LOCAL.test(parsed.hostname))
     throw new Error(
       'EXPO_PUBLIC_API_URL points at this machine; set the real server for a release',
@@ -122,6 +130,12 @@ function parseEnv(source: Source): Env {
     out.EXPO_PUBLIC_MOCK_FAIL_RATE = number('EXPO_PUBLIC_MOCK_FAIL_RATE', failRate, 0, 1);
   const fast = given('EXPO_PUBLIC_MOCK_FAST');
   if (fast) out.EXPO_PUBLIC_MOCK_FAST = oneOf('EXPO_PUBLIC_MOCK_FAST', fast, ['0', '1'] as const);
+  const allowLocal = given('EXPO_PUBLIC_ALLOW_LOCAL_API');
+  if (allowLocal)
+    out.EXPO_PUBLIC_ALLOW_LOCAL_API = oneOf('EXPO_PUBLIC_ALLOW_LOCAL_API', allowLocal, [
+      '0',
+      '1',
+    ] as const);
   const site = given('EXPO_PUBLIC_SITE_URL');
   if (site) out.EXPO_PUBLIC_SITE_URL = url('EXPO_PUBLIC_SITE_URL', site);
   for (const name of [
@@ -144,7 +158,8 @@ export function readEnv(
   production = process.env.NODE_ENV === 'production',
 ): Env {
   const parsed = parseEnv(source);
-  if (parsed.EXPO_PUBLIC_API_MODE === 'http') checkApiUrl(parsed.EXPO_PUBLIC_API_URL, production);
+  if (parsed.EXPO_PUBLIC_API_MODE === 'http')
+    checkApiUrl(parsed.EXPO_PUBLIC_API_URL, production, parsed.EXPO_PUBLIC_ALLOW_LOCAL_API === '1');
   return parsed;
 }
 

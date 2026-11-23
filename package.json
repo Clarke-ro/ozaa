@@ -88,6 +88,7 @@
     "typecheck": "tsc --noEmit",
     "test": "jest",
     "e2e": "expo export -p web && playwright test",
+    "e2e:server": "bash scripts/build-e2e-server.sh && playwright test --config playwright.server.config.ts",
     "prepare": "husky",
     "sync:server-shared": "node scripts/sync-server-shared.mjs"
   },
