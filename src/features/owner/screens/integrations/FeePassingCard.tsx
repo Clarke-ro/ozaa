@@ -44,11 +44,12 @@ export function FeePassingCard({
   // Bumped after a share is picked, so the card closes back to its row.
   const [closeSignal, setCloseSignal] = useState(0);
   const save = useMutation({
-    mutationFn: (body: FeePassing) => api.ownerSetFeePassing(venueId, body),
-    onSuccess: (result, body) => {
-      if (body.enabled && body.percent !== (settings.feePassing?.percent ?? null)) {
-        setCloseSignal((n) => n + 1);
-      }
+    mutationFn: ({ body }: { body: FeePassing; picked: boolean }) =>
+      api.ownerSetFeePassing(venueId, body),
+    onSuccess: (result, { picked }) => {
+      // Only a picked share closes the card. Turning the switch on must leave the shares open:
+      // a venue that never set fee passing has none saved, so comparing with that closed it.
+      if (picked) setCloseSignal((n) => n + 1);
       client.setQueryData(ownerKeys.paymentSettings(venueId), result);
       // Guests read the share from the venue, so their Pay screen shows the new fee line.
       void client.invalidateQueries({ queryKey: guestKeys.venueAll() });
@@ -59,9 +60,9 @@ export function FeePassingCard({
       toast.error(t(toMessageKey(error)));
     },
   });
-  const change = (next: FeePassing) => {
+  const change = (next: FeePassing, picked = false) => {
     setDraft(next);
-    save.mutate(next);
+    save.mutate({ body: next, picked });
   };
   const example = formatMoney(pesewas(passedFee(EXAMPLE_BILL, draft.percent)), DEFAULT_CURRENCY);
 
@@ -84,7 +85,7 @@ export function FeePassingCard({
             selected={[String(draft.percent)]}
             onChange={(ids) => {
               const percent = Number(ids[0]);
-              if (percent && percent !== draft.percent) change({ ...draft, percent });
+              if (percent && percent !== draft.percent) change({ ...draft, percent }, true);
             }}
           />
           <Text style={[styles.note, { color: theme.meta }]}>

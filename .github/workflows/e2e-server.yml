@@ -79,12 +79,23 @@ jobs:
         run: npm run db:seed-e2e-staff
         env:
           E2E_STAFF: 'true'
+          # Paystack test mode: Mama's Kitchen and Bean There take payments in the app, as in the
+          # mock. The public key is public; the secret key stays in the repository's secrets.
+          PAYSTACK_PUBLIC_KEY: pk_test_c559938c73c3cab77625005794aa0cab3becf7b3
+          PAYSTACK_SECRET_KEY: ${{ secrets.PAYSTACK_TEST_SECRET_KEY }}
 
       - run: bash scripts/build-e2e-server.sh
       - run: npx playwright install --with-deps chromium
       - run: npx playwright test --config playwright.server.config.ts
         env:
           CI: 'true'
+      # What each failing page showed, in the log itself (Playwright's accessibility snapshot).
+      - name: Show the pages of failed tests
+        if: failure()
+        run: |
+          for f in test-results/*/error-context.md; do
+            [ -f "$f" ] && { echo "=== $f"; head -c 6000 "$f"; echo; }
+          done
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

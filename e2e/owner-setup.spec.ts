@@ -1,18 +1,16 @@
 import { expect, test } from '@playwright/test';
+import { signIn } from './signIn';
+import { SERVER } from './tags';
 
 // Setup: four short steps, Wi-Fi and online payments can be skipped, then a summary that says
 // what was set up. Guests can always pay in person, so skipping payments is fine.
 
-test('owner setup: skip Wi-Fi and payments, then see what was set up', async ({ page }) => {
+test('owner setup: skip Wi-Fi and payments, then see what was set up', SERVER, async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
 
   // Akosua runs Auntie Akos, the sample with no Paystack yet, so the payments step offers to connect.
-  await page.goto('/owner/login', { waitUntil: 'domcontentloaded' });
-  await page.getByRole('textbox', { name: 'Phone number' }).fill('024 000 0005');
-  await page.getByRole('button', { name: 'Send code', exact: true }).click();
-  await page.getByRole('textbox', { name: 'Code', exact: true }).fill('123456');
-  await page.getByRole('button', { name: 'Enter', exact: true }).click();
+  await signIn(page, 'Akosua');
   // Setup isn't in the menu any more; the owner reaches it from "Complete your setup" or a link.
   await page.getByRole('tab', { name: 'More', exact: true }).waitFor();
   await page.goto('/owner/setup', { waitUntil: 'domcontentloaded' });

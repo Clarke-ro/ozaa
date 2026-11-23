@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { signIn } from './signIn';
 
 // BUILD.md 2.10: the owner passes Paystack's fee to guests, and a guest sees it as its own line
 // before paying and on the receipt. Bean There is the sample venue with Paystack test keys; Kojo
@@ -18,14 +19,7 @@ test('owner passes the whole fee; the guest sees a Payment fee line before payin
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
 
-  await page.goto('/owner/login', { waitUntil: 'domcontentloaded' });
-  await page.getByRole('textbox', { name: 'Phone number' }).fill('024 000 0004');
-  await page.getByRole('button', { name: 'Send code', exact: true }).click();
-  await page.getByRole('textbox', { name: 'Code', exact: true }).fill('123456');
-  await page.getByRole('button', { name: 'Enter', exact: true }).click();
-  await expect(page.getByRole('tab', { name: 'Today', exact: true })).toBeVisible({
-    timeout: 15_000,
-  });
+  await signIn(page, 'Kojo');
 
   await goInApp(page, '/owner/integrations');
   await expect(page.getByText('Pass fees to customers')).toBeVisible({ timeout: 15_000 });

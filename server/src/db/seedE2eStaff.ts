@@ -1,6 +1,8 @@
 import { eq } from 'drizzle-orm';
 import { readConfig } from '../config.ts';
 import { clerkAdmin } from '../owner/clerkAdmin.ts';
+import { encryptionKey } from '../secrets/sealed.ts';
+import { venuePaystack } from '../venues/venuePaystack.ts';
 import type { StaffRole } from '../shared/types.ts';
 import type { Db } from './client.ts';
 import { connect } from './client.ts';
@@ -66,7 +68,31 @@ export async function seedE2eStaff(
   }
 }
 
-// `E2E_STAFF=true npm run db:seed-e2e-staff`, after db:seed. CLERK_SECRET_KEY makes the Clerk users.
+/** The venues the mock has on Paystack (src/mocks/worldSamples.ts). Auntie Akos takes payment in person. */
+export const E2E_PAYSTACK_SLUGS = ['mamas-kitchen', 'bean-there'] as const;
+
+/** Connects those venues to one Paystack test account, sealed like an owner's own keys. */
+export async function seedE2ePaystack(
+  db: Db,
+  key: Buffer,
+  keys: { publicKey: string; secretKey: string },
+): Promise<void> {
+  const store = venuePaystack({
+    db,
+    key,
+    client: () => {
+      throw new Error('Not used while saving keys.');
+    },
+  });
+  for (const slug of E2E_PAYSTACK_SLUGS) {
+    const [venue] = await db.select({ id: venues.id }).from(venues).where(eq(venues.slug, slug));
+    if (!venue) throw new Error(`Seed the sample venues first: ${slug} is missing.`);
+    await store.save(venue.id, { mode: 'test', ...keys }, Date.now());
+  }
+}
+
+// `E2E_STAFF=true npm run db:seed-e2e-staff`, after db:seed. CLERK_SECRET_KEY makes the Clerk users;
+// PAYSTACK_SECRET_KEY and PAYSTACK_PUBLIC_KEY (test keys) connect the mock's Paystack venues.
 if (import.meta.url === `file://${process.argv[1]}`) {
   if (process.env.E2E_STAFF !== 'true')
     throw new Error('Set E2E_STAFF=true: this is for the browser tests only.');
@@ -76,6 +102,13 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const { db, close } = connect(config.DATABASE_URL, 1);
   try {
     await seedE2eStaff(db, config.CLERK_SECRET_KEY ? clerkAdmin(config.CLERK_SECRET_KEY) : null);
+    // Test keys only: config refuses anything but sk_test_ and pk_test_.
+    if (config.PAYSTACK_SECRET_KEY && config.PAYSTACK_PUBLIC_KEY) {
+      await seedE2ePaystack(db, encryptionKey(config.ENCRYPTION_KEY), {
+        publicKey: config.PAYSTACK_PUBLIC_KEY,
+        secretKey: config.PAYSTACK_SECRET_KEY,
+      });
+    }
   } finally {
     await close();
   }

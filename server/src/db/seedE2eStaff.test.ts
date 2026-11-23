@@ -1,8 +1,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { eq } from 'drizzle-orm';
-import { staffMemberships, staffUsers } from './schema.ts';
-import { E2E_STAFF, e2eEmail, isLocalDatabase, seedE2eStaff } from './seedE2eStaff.ts';
+import { paymentSettings, staffMemberships, staffUsers, venues } from './schema.ts';
+import {
+  E2E_STAFF,
+  e2eEmail,
+  isLocalDatabase,
+  seedE2ePaystack,
+  seedE2eStaff,
+} from './seedE2eStaff.ts';
+import { TEST_KEY } from '../routes/testHelpers.ts';
 import { seedSamples } from './seedSamples.ts';
 import { testDb } from './testDb.ts';
 
@@ -39,4 +46,19 @@ test('the demo staff become real staff with Clerk test emails, once, however oft
   assert.equal((await db.select().from(staffUsers)).length, people);
   assert.equal((await db.select().from(staffMemberships)).length, E2E_STAFF.length);
   assert.ok(made.includes('kwesi+clerk_test@example.com'));
+});
+
+test('Paystack test keys connect the venues the mock connects, and only those', async () => {
+  const db = await testDb();
+  await seedSamples(db);
+  await seedE2ePaystack(db, TEST_KEY, { publicKey: 'pk_test_public', secretKey: 'sk_test_secret' });
+  const rows = await db
+    .select({ slug: venues.slug, mode: paymentSettings.paystackMode })
+    .from(paymentSettings)
+    .innerJoin(venues, eq(venues.id, paymentSettings.venueId));
+  const connected = rows
+    .filter((row) => row.mode === 'test')
+    .map((row) => row.slug)
+    .sort();
+  assert.deepEqual(connected, ['bean-there', 'mamas-kitchen']);
 });

@@ -4,6 +4,36 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-23 · A bug only real data could show
+
+**What we built**
+
+The browser tests now pay through Paystack's test mode against the real server. Two sample venues get a Paystack test account in CI, as in the mock. Running them found a real bug in the owner app: on a venue that had never used "Pass fees to customers", turning the switch on closed the card at once, so the owner could never pick a share. That's fixed.
+
+**How it works**
+
+```
+before: switch on → save {on, 100%} → "100% differs from what was saved (nothing)" → close
+after:  switch on → save → stays open
+        pick 50%  → save → close (that's the only thing that closes it)
+```
+
+The mock had the same bug. Its browser test hid it: it clicked the switch "again until it reacts", and by the third click a share was saved, so the card stayed open. The new unit test clicks once, so it can't be fooled that way.
+
+**Files to look at**
+
+- `src/features/owner/screens/integrations/FeePassingCard.tsx`: `picked` decides whether a save closes the card.
+- `src/features/owner/screens/integrations/FeePassingCard.test.tsx`: the test that failed before the fix.
+- `server/src/db/seedE2eStaff.ts`: `seedE2ePaystack`, the CI-only Paystack set-up.
+
+**New idea: "empty" is a state too**
+
+Code is often written against data that's already filled in. A new user, a new venue or a setting never touched is its own case. Ask "what if this was never set?" whenever code compares against a saved value.
+
+**Try it yourself**
+
+In `FeePassingCard.tsx`, change `if (picked)` to `if (true)`. Run `npx jest src/features/owner/screens/integrations/FeePassingCard.test.tsx` and watch it fail: switching on closes the card again. Put it back.
+
 ## 2026-11-23 · Signing in for real, in a test
 
 **What we built**
