@@ -21,7 +21,7 @@ import { ownerFeedbackRoutes } from './routes/ownerFeedback.ts';
 import { ownerRoutes, type OwnerRouteDeps } from './routes/owner.ts';
 import { staffPinRoutes } from './routes/staffPin.ts';
 import { mediaRoutes } from './routes/media.ts';
-import { ownerDeskRoutes } from './routes/ownerDesk.ts';
+import { dashboardMemo, ownerDeskRoutes } from './routes/ownerDesk.ts';
 import { ownerLoyaltyRoutes } from './routes/ownerLoyalty.ts';
 import { ownerLinkRoutes } from './routes/ownerLinks.ts';
 import { ownerMenuRoutes } from './routes/ownerMenu.ts';
@@ -190,6 +190,16 @@ export function createApp(deps: {
     }
   });
 
+  // A staff change (an answered call, an accepted order, a payment) clears the shared home page,
+  // so the sidebar badges move as soon as someone acts instead of a few seconds later.
+  const dashboardCache = deps.owner ? dashboardMemo(deps.owner.now) : null;
+  if (dashboardCache) {
+    app.use('/owner/*', async (c, next) => {
+      await next();
+      if (c.req.method !== 'GET' && c.res.status < 400) dashboardCache.clear();
+    });
+  }
+
   if (deps.guest) {
     app.route('/', guestRoutes(deps.guest));
     app.route('/', guestExtraRoutes(deps.guest));
@@ -202,7 +212,8 @@ export function createApp(deps: {
   if (deps.owner) app.route('/', ownerMenuRoutes(deps.owner));
   if (deps.owner) app.route('/', mediaRoutes(deps.owner));
   if (deps.owner) app.route('/', ownerTablesRoutes(deps.owner));
-  if (deps.owner) app.route('/', ownerDeskRoutes(deps.owner));
+  if (deps.owner)
+    app.route('/', ownerDeskRoutes({ ...deps.owner, dashboardCache: dashboardCache ?? undefined }));
   if (deps.owner) app.route('/', ownerStaffRoutes(deps.owner));
   if (deps.owner) app.route('/', ownerFeedbackRoutes(deps.owner));
   if (deps.owner) app.route('/', ownerLoyaltyRoutes(deps.owner));
