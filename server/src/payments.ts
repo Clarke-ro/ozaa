@@ -54,6 +54,12 @@ const REFRESH_MS = 5_000;
 // Paystack needs an email; guests don't give one, so the contract allows a placeholder.
 const PLACEHOLDER_EMAIL = 'guest@cravins.app';
 const MISMATCH = 'The amount did not match, so nothing was counted.';
+// The re-check (BUILD.md 5.4): a payment still open 5 minutes after it started, or since it was
+// last asked about, is checked with Paystack. A MoMo approval times out after 3 minutes, so by
+// then Paystack has usually decided. After a day we stop: the webhook or the guest covers it.
+const RECHECK_QUIET_MS = 5 * 60_000;
+const RECHECK_MAX_AGE_MS = 24 * 60 * 60_000;
+const RECHECK_BATCH = 50;
 
 /**
  * Payments, kept in Postgres (store) so a restart or another copy of the server still knows them.
@@ -203,6 +209,29 @@ export function paymentService(deps: {
     async verify(reference: string): Promise<Payment | null> {
       const found = await store.get(reference);
       return found ? ask(found.payment, found.venueSlug) : null;
+    },
+
+    /**
+     * Asks Paystack about payments that are still open after 5 minutes, because the guest left
+     * or the webhook never arrived. Uses the same rules as the guest's own check, so only a
+     * matching success counts and the money is added once. One failure doesn't stop the rest.
+     */
+    async recheckStale(onError?: (error: unknown) => void): Promise<{ checked: number; errors: number }> {
+      const due = await store.stale(now(), {
+        quietMs: RECHECK_QUIET_MS,
+        maxAgeMs: RECHECK_MAX_AGE_MS,
+        limit: RECHECK_BATCH,
+      });
+      let errors = 0;
+      for (const { payment, venueSlug } of due) {
+        try {
+          await ask(payment, venueSlug);
+        } catch (error) {
+          errors += 1;
+          onError?.(error);
+        }
+      }
+      return { checked: due.length, errors };
     },
 
     /** The secret of the venue a payment belongs to: Paystack signs that venue's webhooks with it. */

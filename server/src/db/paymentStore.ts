@@ -1,4 +1,4 @@
-import { and, eq, inArray, ne, sql } from 'drizzle-orm';
+import { and, asc, eq, gt, inArray, isNull, lte, ne, or, sql } from 'drizzle-orm';
 import type { Payment } from '../payments.ts';
 import type { Db } from './client.ts';
 import { billQuotes, orderLines, orders, payments } from './schema.ts';
@@ -140,6 +140,31 @@ export function paymentStore(db: Db) {
           await stampPaidOrder(tx, order.id, payment.paidAt ? Date.parse(payment.paidAt) : Date.now());
         }
       });
+    },
+
+    /**
+     * Open payments worth asking Paystack about again: started at least `quietMs` ago, not asked
+     * in the last `quietMs`, and less than `maxAgeMs` old. Oldest first, at most `limit`.
+     */
+    async stale(
+      now: number,
+      { quietMs, maxAgeMs, limit }: { quietMs: number; maxAgeMs: number; limit: number },
+    ): Promise<{ payment: Payment; venueSlug: string }[]> {
+      const quietSince = new Date(now - quietMs);
+      const rows = await db
+        .select()
+        .from(payments)
+        .where(
+          and(
+            inArray(payments.status, ['pending', 'pay_offline', 'open_url']),
+            lte(payments.createdAt, quietSince),
+            gt(payments.createdAt, new Date(now - maxAgeMs)),
+            or(isNull(payments.lastAskedAt), lte(payments.lastAskedAt, quietSince)),
+          ),
+        )
+        .orderBy(asc(payments.createdAt))
+        .limit(limit);
+      return rows.map((row) => ({ payment: toPayment(row), venueSlug: row.venueSlug }));
     },
 
     async asked(reference: string, when: number): Promise<void> {

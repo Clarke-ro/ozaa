@@ -4,6 +4,37 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-23 · A payment nobody came back for still gets counted
+
+**What we built**
+
+Every minute, the server looks for payments that are still open 5 minutes after they started and asks Paystack how they ended. If Paystack says they succeeded, the order is marked paid, exactly as if the guest had waited.
+
+**How it works**
+
+```
+guest approves MoMo → closes the page → webhook lost
+        ↓ 5 minutes later
+server: "still open?" → asks Paystack → success → order paid (once)
+                                      → still waiting → ask again in 5 minutes
+                                      → Paystack down → counted, tried again next round
+after a day → stop asking
+```
+
+**Files to look at**
+
+- `server/src/payments.ts`: `recheckStale`, which reuses the same `ask()` the guest's own check uses.
+- `server/src/db/paymentStore.ts`: `stale()`, the query that picks which payments are due.
+- `server/src/index.ts`: the one-minute timer, which never runs two rounds at once.
+
+**New idea: reconciliation**
+
+Webhooks are messages, and messages get lost. Reconciliation means regularly comparing your own records with the source of truth (here, Paystack) and fixing the gaps. It's safe to run again and again because saving a success only counts the money once.
+
+**Try it yourself**
+
+In `server/src/routes/paymentRecheck.test.ts`, change the first `tick(4 * MINUTE)` to `tick(6 * MINUTE)`. Run `npm test -- src/routes/paymentRecheck.test.ts` from `server/` and watch it fail: the payment is now old enough to be checked. Put it back.
+
 ## 2026-11-22 · A ceiling for the guest page, and a second visit that's nearly free
 
 **What we built**

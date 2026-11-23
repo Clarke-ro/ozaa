@@ -88,6 +88,32 @@ const app = createApp({
   },
 });
 
+// Every minute, ask Paystack about payments still open after 5 minutes (BUILD.md 5.4), in case
+// the guest left or the webhook never came. One round at a time; the logs carry counts only.
+let rechecking = false;
+const recheck = setInterval(() => {
+  if (rechecking) return;
+  rechecking = true;
+  payments
+    .recheckStale((error) =>
+      report?.(error instanceof Error ? error : new Error('Payment re-check failed')),
+    )
+    .then(({ checked, errors }) => {
+      if (checked > 0) log({ event: 'payments_rechecked', checked, errors });
+    })
+    .catch((error: unknown) => {
+      log({
+        event: 'payments_recheck_failed',
+        name: error instanceof Error ? error.name : 'unknown',
+      });
+      report?.(error instanceof Error ? error : new Error('Payment re-check failed'));
+    })
+    .finally(() => {
+      rechecking = false;
+    });
+}, 60_000);
+recheck.unref();
+
 const server = serve({ fetch: app.fetch, port: config.PORT }, ({ port }) => {
   log({ event: 'server_started', port, mode: 'paystack_test' });
 });
@@ -97,6 +123,7 @@ const server = serve({ fetch: app.fetch, port: config.PORT }, ({ port }) => {
 // then close the database connections.
 process.once('SIGTERM', () => {
   log({ event: 'server_stopping' });
+  clearInterval(recheck);
   server.close(() => {
     void close().finally(() => process.exit(0));
   });
