@@ -1,20 +1,19 @@
-import { Image, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { PressableScale } from '@/ui/PressableScale';
 import { ChevronRight } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
-import { fontFamily, useTheme } from '@/ui/theme';
+import { fontFamily } from '@/ui/theme';
 
 const c = tokens.owner.controls;
-// A 128 px tile of faint dark and light specks, repeated across the card.
-const GRAIN = require('../../../../../assets/images/grain.png');
+const CHARCOAL = '#2A2A2D';
 
 /**
- * The day's main number on a black card with white text, the first thing on Today ("Sales today
- * GH₵1,250"; Clarke, 2026-11-23). White on #111111 is about 19:1. The card stays black in dark
- * mode, with a 1 px edge so it doesn't sink into the near-black page.
- * A small pill opens the page behind the number when this person may. A fine grain sits over the
- * colour for texture (Clarke, 2026-11-17); it is faint, so the text keeps its contrast.
+ * The day's main number on a charcoal card with white text, the first thing on Today ("Sales
+ * today GH₵1,250"; Clarke, 2026-11-23). Charcoal, not the #111111 text black, so it reads as a
+ * soft dark surface. White on it is about 14:1. In dark mode it is lighter than the other cards
+ * (#1A1A1D), so it still stands out without an edge.
+ * A small pill opens the page behind the number when this person may.
  */
 export function HeroCard({
   label,
@@ -34,23 +33,11 @@ export function HeroCard({
   /** Phones: no 192 px minimum and tighter padding, so the card is only as tall as its words. */
   compact?: boolean;
 }) {
-  const theme = useTheme();
-  const bg = tokens.color.black.hex;
+  const bg = CHARCOAL;
   const ink = tokens.color.white.hex;
-  const edge = theme.scheme === 'dark' ? theme.line : bg;
 
   return (
-    <View
-      style={[styles.card, compact && styles.compact, { backgroundColor: bg, borderColor: edge }]}
-    >
-      <Image
-        source={GRAIN}
-        resizeMode="repeat"
-        accessibilityIgnoresInvertColors
-        aria-hidden
-        pointerEvents="none"
-        style={[StyleSheet.absoluteFill, styles.grain]}
-      />
+    <View style={[styles.card, compact && styles.compact, { backgroundColor: bg }]}>
       <View style={styles.top}>
         <Text variant="body-strong" style={{ color: ink }} numberOfLines={1}>
           {label}
@@ -63,7 +50,7 @@ export function HeroCard({
             hitSlop={tokens.space[2]}
             style={({ pressed }) => [styles.pill, { opacity: pressed ? 0.7 : 1 }]}
           >
-            {/* A see-through layer of the ink, so the pill reads on the black. */}
+            {/* A see-through layer of the ink, so the pill reads on the charcoal. */}
             <View style={[StyleSheet.absoluteFill, styles.pillFill, { backgroundColor: ink }]} />
             <Text variant="caption" style={[styles.pillText, { color: ink }]}>
               {link}
@@ -98,12 +85,8 @@ const styles = StyleSheet.create({
     borderCurve: 'continuous',
     padding: c.statPadding,
     gap: c.statGap,
-    borderWidth: 1,
     overflow: 'hidden',
   },
-  // On black only the tile's light specks show (the dark ones vanish), so it can sit at 0.6 and
-  // still read as a fine texture without greying the card.
-  grain: { width: '100%', height: '100%', opacity: 0.6 },
   top: {
     flexDirection: 'row',
     alignItems: 'center',
