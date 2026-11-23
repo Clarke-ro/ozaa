@@ -9,7 +9,12 @@ export type ClerkAdmin = {
   revokeSessions(clerkUserId: string): Promise<void>;
   /** Removes their Clerk sign-in (account deletion). */
   deleteUser(clerkUserId: string): Promise<void>;
+  /** A one-time sign-in token (Clerk's `ticket` strategy) for PIN sign-in. Never logged. */
+  signInToken(clerkUserId: string): Promise<string>;
 };
+
+// Long enough for the app to hand it straight to Clerk; useless soon after (contract: PinSignIn).
+const SIGN_IN_TOKEN_SECONDS = 300;
 
 /**
  * Real Clerk, with the server's secret key. Users are made with their email only: Clerk can't
@@ -40,6 +45,15 @@ export function clerkAdmin(secretKey: string, timeoutMs?: number): ClerkAdmin {
     },
     async deleteUser(clerkUserId) {
       await wait(clerk.users.deleteUser(clerkUserId));
+    },
+    async signInToken(clerkUserId) {
+      const made = await wait(
+        clerk.signInTokens.createSignInToken({
+          userId: clerkUserId,
+          expiresInSeconds: SIGN_IN_TOKEN_SECONDS,
+        }),
+      );
+      return made.token;
     },
   };
 }

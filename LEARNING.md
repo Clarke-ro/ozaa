@@ -4,6 +4,36 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-23 · A 4-digit PIN that can't be guessed
+
+**What we built**
+
+The server side of quick staff sign-in. Someone who signed in by code once can set a 4-digit PIN for that one device. Next time, the right phone + PIN + device gets a one-time Clerk token, and the app finishes signing in with it. The app has no PIN screens yet; this is the part they'll call.
+
+**How it works**
+
+```
+PIN login → take one of 5 tries in the database (fails + 1, only while under 5)
+          → then compare the PIN with its slow hash
+              right → tries back to 0 → one-time Clerk token (5 minutes)
+              wrong → the 5th miss clears the PIN → sign in by code, set a new one
+wrong device, unknown number, removed staff → the same "didn't work" answer
+```
+
+**Files to look at**
+
+- `server/src/routes/staffPin.ts`: the two routes.
+- `server/src/owner/pinHash.ts`: the salted scrypt hash.
+- `server/src/routes/staffPin.test.ts`: every rule above, as a test.
+
+**New idea: reserve, then check**
+
+A PIN has only 10,000 values, so the five-tries rule is what really protects it. If the server read the count, compared, and then wrote "one more miss", twenty guesses sent at the same moment would all be compared before any were counted. Taking the try first, in one database update, means each guess must win a try before it's even looked at.
+
+**Try it yourself**
+
+In `staffPin.ts`, change `MAX_TRIES` to `3`. From `server/`, run `npm test -- src/routes/staffPin.test.ts`. The five-misses test fails. Put it back to 5.
+
 ## 2026-11-23 · Who may do what, tested for every call
 
 **What we built**

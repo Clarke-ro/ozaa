@@ -19,6 +19,7 @@ import { guestRoutes, type GuestDeps } from './routes/guest.ts';
 import { guestExtraRoutes } from './routes/guestExtras.ts';
 import { ownerFeedbackRoutes } from './routes/ownerFeedback.ts';
 import { ownerRoutes, type OwnerRouteDeps } from './routes/owner.ts';
+import { staffPinRoutes } from './routes/staffPin.ts';
 import { mediaRoutes } from './routes/media.ts';
 import { ownerDeskRoutes } from './routes/ownerDesk.ts';
 import { ownerLoyaltyRoutes } from './routes/ownerLoyalty.ts';
@@ -211,6 +212,7 @@ export function createApp(deps: {
   if (deps.owner) app.route('/', ownerOrderEntryRoutes(deps.owner));
   if (deps.owner) app.route('/', ownerBusinessRoutes(deps.owner));
   if (deps.owner) app.route('/', meRoutes(deps.owner));
+  if (deps.owner) app.route('/', staffPinRoutes(deps.owner));
   if (deps.owner) app.route('/', ownerVenueRoutes(deps.owner));
   if (deps.guest && deps.owner) app.route('/', waiterRoutes({ ...deps.guest, ...deps.owner }));
 
