@@ -141,6 +141,7 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
         setSection(id);
         jumpTop();
       }}
+      background={hero ? undefined : theme.white}
     />
   );
   const listHeader = (
@@ -216,8 +217,9 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
   };
 
   return (
-    <SafeScreen includeTop={!hero}>
-      {hero ? null : <PageHeader title={t('menu.title')} subtitle={venue.data?.name ?? ''} />}
+    <SafeScreen includeTop={!hero} background={hero ? undefined : theme.white}>
+      {/* A table guest's menu: a back arrow and the venue's name, on white (design canvas). */}
+      {hero ? null : <PageHeader plain title={venue.data?.name ?? t('menu.title')} />}
       {storeNotice.banner ? <StoreNoticeBanner notice={storeNotice.banner} /> : null}
       {hero ? null : controls}
       <ScrollView

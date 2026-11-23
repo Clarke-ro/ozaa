@@ -4232,3 +4232,23 @@ Anything inside a scroll view moves when you scroll. To make the banner look fix
 
 **Try it yourself**
 In `HomeScreen.tsx`, remove the `scrollY={scrollY}` line, run the web app, and scroll: the banner now leaves with the page.
+
+## 2026-11-23 · Menu cards with a description
+
+**What we built**
+The walk-in menu from the design canvas: a back arrow and the venue's name at the top, a white page, and each dish as a white card with its name, two lines of description, the price, and the photo on the right with a round add button.
+
+**How it works**
+`MenuScreen` draws one `DishRow` per dish. `DishRow` lays the words out on the left and the photo on the right, and cuts the description off after two lines so every card stays about the same height.
+
+**Files to look at**
+
+- `src/features/menu/DishRow.tsx`: one dish card
+- `src/features/menu/MenuScreen.tsx`: the page, the header and the white background
+- `src/ui/PageHeader.tsx`: the new `plain` header (no line, bold title on the left)
+
+**New idea: `numberOfLines`**
+A long description would make one card much taller than the rest. `numberOfLines={2}` tells the text to stop after two lines and end with "…". The guest still sees the full text on the dish's own page.
+
+**Try it yourself**
+In `DishRow.tsx`, change the description's `numberOfLines={2}` to `{1}` and look at the menu: every card gets shorter.
