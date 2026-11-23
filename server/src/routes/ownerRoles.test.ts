@@ -21,6 +21,7 @@ const ALLOWED: Record<string, StaffRole[]> = {
   // Your own account: everyone signed in.
   getMe: EVERYONE,
   updateMyProfile: EVERYONE,
+  setStaffPin: EVERYONE,
   deleteAccount: EVERYONE,
   ownerListNotifications: EVERYONE,
   ownerMarkNotificationsRead: EVERYONE,
@@ -105,7 +106,6 @@ const ALLOWED: Record<string, StaffRole[]> = {
 
 // Left out of the grid, each for a reason.
 const NOT_IN_GRID: Record<string, string> = {
-  setStaffPin: 'staff PIN sign-in is not built on the server yet (BUILD.md 5.2)',
   ownerRefundTransaction: 'always 404: venues refund in their own Paystack dashboard',
 };
 
@@ -113,6 +113,7 @@ const NOT_IN_GRID: Record<string, string> = {
 const OWN_SCOPE = new Set([
   'getMe',
   'updateMyProfile',
+  'setStaffPin',
   'deleteAccount',
   'ownerGetBusiness',
   'ownerUpdateBusiness',
