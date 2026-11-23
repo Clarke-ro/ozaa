@@ -4207,3 +4207,32 @@ A font file only draws the letters it contains. Each letter shape is a glyph. Pl
 
 **Try it yourself**
 In `src/ui/theme.tsx`, change `guestFont.heavy` to `'NotoSans_600'`, run `npx expo start --web`, and watch the guest headings get lighter.
+
+## 2026-11-23 · Smaller photos for guests (BUILD.md box 5.5)
+
+**What we built**
+When an owner adds a dish photo, logo or banner, the server now makes a smaller copy, and guests load that copy instead of the phone's full-size photo.
+
+**How it works**
+
+```
+owner's phone → uploads the photo straight to storage (4000×3000 JPEG, about 4 MB)
+owner saves it on a dish → server downloads it once
+  → turns it upright, shrinks it to 1080 px wide, saves it as WebP (about 100 KB)
+  → uploads the copy next to the original and remembers it
+guests → load the copy
+```
+
+The size depends on the kind: dishes 1080 px wide, banners 1600, logos 512. A photo already smaller than that is never blown up.
+
+**Files to look at**
+
+- `server/src/media/shrink.ts`: the resize, in one short function, with the sizes and why
+- `server/src/media/images.ts`: makes the copy the first time a photo is used, then just reads it
+- `server/src/media/storage.ts`: downloads the original and uploads the copy
+
+**New idea: EXIF, the hidden data in a photo**
+A phone stores extra facts inside every photo, called EXIF: the camera model, the time, often the GPS location, and which way up the phone was held. The phone saves the picture sideways and adds a note saying "turn me". Making the copy, we turn the picture properly and throw all that data away. That fixes sideways dishes and means a guest can never read where the owner's phone was.
+
+**Try it yourself**
+In `server/src/media/shrink.ts`, change `dish_photo: 1080` to `600`, then run `npm test` in `server/`. Watch which tests fail and what sizes they expected.

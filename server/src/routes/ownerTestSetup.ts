@@ -9,6 +9,14 @@ import { venuePaystack } from '../venues/venuePaystack.ts';
 import type { MediaStorage } from '../media/storage.ts';
 import type { ClerkAdmin } from '../owner/clerkAdmin.ts';
 import { TEST_KEY } from './testHelpers.ts';
+import sharp from 'sharp';
+
+/** What a phone camera uploads: a 2400×1800 JPEG. Made once for every test. */
+const PHONE_PHOTO = await sharp({
+  create: { width: 2400, height: 1800, channels: 3, background: '#B5432A' },
+})
+  .jpeg()
+  .toBuffer();
 
 /**
  * A whole app for owner and staff tests: the sample venues, an owner (Ama, at all three), a waiter
@@ -26,13 +34,20 @@ export const fakeClerk: VerifyOwner = async (token) => {
   const email = address.includes('@') ? address : null;
   return { clerkUserId, email, phone: email ? null : address || null, firstName: null };
 };
-export const as = (clerkUserId: string, phone = '') => ({ Authorization: `Bearer clerk:${clerkUserId}:${phone}` });
+export const as = (clerkUserId: string, phone = '') => ({
+  Authorization: `Bearer clerk:${clerkUserId}:${phone}`,
+});
 
 export async function ownerSetup(options: { verify?: VerifyOwner | null } = {}) {
   let clock = NOW;
   const db = await testDb();
   const { venueIds } = await seedSamples(db);
-  await seedOwner(db, { phone: '020 000 0001', email: 'Ama@Example.com', firstName: 'Ama', venueIds });
+  await seedOwner(db, {
+    phone: '020 000 0001',
+    email: 'Ama@Example.com',
+    firstName: 'Ama',
+    venueIds,
+  });
   const mamas = venueIds.find((id) => id.includes('mama')) ?? venueIds[0]!;
   // A waiter and a cook at Mama's Kitchen only.
   for (const [id, phone, role] of [
@@ -40,25 +55,36 @@ export async function ownerSetup(options: { verify?: VerifyOwner | null } = {}) 
     ['usr_kitchen', KITCHEN, 'kitchen'],
   ] as const) {
     await db.insert(staffUsers).values({ id, phone, firstName: role });
-    await db.insert(staffMemberships).values({ id: `mem_${id}`, venueId: mamas, userId: id, role, status: 'invited' });
+    await db
+      .insert(staffMemberships)
+      .values({ id: `mem_${id}`, venueId: mamas, userId: id, role, status: 'invited' });
   }
   // Paystack accepts only the key "sk_test_goodkey12345".
   const client = (secret: string): Paystack => ({
     chargeMomo: async () => ({ status: 'pay_offline', reference: 'x' }),
-    initializeCheckout: async () => ({ authorization_url: 'https://checkout.paystack.com/x', reference: 'x' }),
+    initializeCheckout: async () => ({
+      authorization_url: 'https://checkout.paystack.com/x',
+      reference: 'x',
+    }),
     verify: async () => ({ status: 'ongoing', amount: 0, currency: 'GHS' }),
     checkKey: async () => {
       if (secret !== 'sk_test_goodkey12345') throw new PaystackError('Invalid key', 401);
     },
   });
-  // Storage: a file "arrives" once the test calls `upload(uploadUrl)`; it then measures 800×600.
-  const arrived = new Set<string>();
+  // Storage: a file "arrives" once the test calls `upload(uploadUrl)`. Unless the test passes its
+  // own bytes, it is a 2400×1800 phone photo. Files the server saves land in `stored`.
+  const stored = new Map<string, Uint8Array | 'phone photo'>();
   const storage: MediaStorage = {
     signUpload: async (path) => `https://storage.test/upload/${path}?token=t`,
     publicUrl: (path) => `https://storage.test/public/${path}`,
-    measure: async (path) => (arrived.has(path) ? { width: 800, height: 600 } : null),
+    download: async (path) => {
+      const file = stored.get(path);
+      return file === 'phone photo' ? PHONE_PHOTO : (file ?? null);
+    },
+    put: async (path, bytes) => void stored.set(path, bytes),
   };
-  const upload = (uploadUrl: string) => arrived.add(new URL(uploadUrl).pathname.replace('/upload/', ''));
+  const upload = (uploadUrl: string, bytes?: Uint8Array) =>
+    stored.set(new URL(uploadUrl).pathname.replace('/upload/', ''), bytes ?? 'phone photo');
   // Clerk's admin side: remembers the users it made and the sign-outs it was asked for.
   const clerkCalls: string[] = [];
   const clerkAdmin: ClerkAdmin = {
@@ -75,7 +101,12 @@ export async function ownerSetup(options: { verify?: VerifyOwner | null } = {}) 
   };
   const logs: Record<string, unknown>[] = [];
   const app = createApp({
-    guest: { db, guestSecret: 'test-guest-secret-that-is-long-enough', now: () => clock, loyaltyKey: TEST_KEY },
+    guest: {
+      db,
+      guestSecret: 'test-guest-secret-that-is-long-enough',
+      now: () => clock,
+      loyaltyKey: TEST_KEY,
+    },
     owner: {
       db,
       verify: options.verify === undefined ? fakeClerk : options.verify,
@@ -91,7 +122,12 @@ export async function ownerSetup(options: { verify?: VerifyOwner | null } = {}) 
     log: (event) => logs.push(event),
     ping: async () => undefined,
   });
-  const call = async (method: string, path: string, body?: unknown, headers: Record<string, string> = {}) => {
+  const call = async (
+    method: string,
+    path: string,
+    body?: unknown,
+    headers: Record<string, string> = {},
+  ) => {
     const res = await app.request(`/v1${path}`, {
       method,
       headers: { 'Content-Type': 'application/json', ...headers },
@@ -107,5 +143,5 @@ export async function ownerSetup(options: { verify?: VerifyOwner | null } = {}) 
     }
     return { status: res.status, json, text, type: res.headers.get('Content-Type') ?? '' };
   };
-  return { db, call, logs, mamas, upload, clerkCalls, tick: (ms: number) => (clock += ms) };
+  return { db, call, logs, mamas, upload, stored, clerkCalls, tick: (ms: number) => (clock += ms) };
 }

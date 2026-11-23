@@ -1,4 +1,3 @@
-import { imageSize } from 'image-size';
 import { isTimeout, outboundSignal } from '../http/outbound.ts';
 
 /** Where photo files live. The real one is Supabase Storage; tests pass a small fake. */
@@ -7,13 +6,17 @@ export type MediaStorage = {
   signUpload(path: string): Promise<string>;
   /** The public address guests load the photo from. */
   publicUrl(path: string): string;
-  /** The photo's size in pixels, or null when no file was uploaded there. */
-  measure(path: string): Promise<{ width: number; height: number } | null>;
+  /** The uploaded file, or null when nothing (or something far too big) is there. */
+  download(path: string): Promise<Uint8Array | null>;
+  /** Saves a file the server made (the resized copy) with the secret key. */
+  put(path: string, bytes: Uint8Array, contentType: string): Promise<void>;
 };
 
-// Enough of the file to find its size: JPEG puts it after the EXIF block, which phones can make
-// large, so read a generous start rather than the whole photo.
-const HEAD_BYTES = 512 * 1024;
+// Uploads ask for 5 MB at most, but the signed URL can't enforce it. Refuse to read anything far
+// bigger rather than hold it in memory.
+const MAX_DOWNLOAD_BYTES = 12 * 1024 * 1024;
+// Each saved copy has its own name and never changes, so phones and CDNs may keep it for a year.
+const ONE_YEAR = 'max-age=31536000';
 
 /**
  * Supabase Storage over its REST API. The bucket is public to read (guests load menu photos with
@@ -56,15 +59,25 @@ export function supabaseStorage(options: {
       return `${base}${data.url}`;
     },
     publicUrl,
-    async measure(path) {
-      const res = await call(publicUrl(path), { headers: { Range: `bytes=0-${HEAD_BYTES - 1}` } });
+    async download(path) {
+      const res = await call(publicUrl(path), {});
       if (!res.ok) return null;
-      try {
-        const size = imageSize(new Uint8Array(await res.arrayBuffer()));
-        return size.width && size.height ? { width: size.width, height: size.height } : null;
-      } catch {
-        return null;
-      }
+      if (Number(res.headers.get('content-length') ?? 0) > MAX_DOWNLOAD_BYTES) return null;
+      const bytes = new Uint8Array(await res.arrayBuffer());
+      return bytes.byteLength > MAX_DOWNLOAD_BYTES ? null : bytes;
+    },
+    async put(path, bytes, contentType) {
+      const res = await call(`${base}/object/${options.bucket}/${path}`, {
+        method: 'POST',
+        headers: {
+          ...auth,
+          'Content-Type': contentType,
+          'cache-control': ONE_YEAR,
+          'x-upsert': 'true',
+        },
+        body: new Blob([bytes as Uint8Array<ArrayBuffer>]),
+      });
+      if (!res.ok) throw new Error(`Storage refused the resized photo (${res.status})`);
     },
   };
 }
