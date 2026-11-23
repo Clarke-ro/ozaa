@@ -89,6 +89,13 @@ jobs:
       - run: npx playwright test --config playwright.server.config.ts
         env:
           CI: 'true'
+      # What each failing page showed, in the log itself (Playwright's accessibility snapshot).
+      - name: Show the pages of failed tests
+        if: failure()
+        run: |
+          for f in test-results/*/error-context.md; do
+            [ -f "$f" ] && { echo "=== $f"; head -c 6000 "$f"; echo; }
+          done
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
