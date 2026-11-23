@@ -25,7 +25,9 @@ test('custom links: owners add, reorder, edit and delete; only web, email and ph
   const list = await call('GET', base, undefined, owner);
   expectContract('ownerListCustomLinks', 200, list.json);
   assert.deepEqual(list.json.items.map((l: { title: string }) => l.title), ['Call us', 'Menu PDF']);
-  assert.equal((await call('DELETE', `${base}/${first.json.id}`, undefined, owner)).status, 204);
+  const removed = await call('DELETE', `${base}/${first.json.id}`, undefined, owner);
+  assert.equal(removed.status, 204);
+  expectContract('ownerDeleteCustomLink', 204, removed.json);
   assert.equal((await call('GET', base, undefined, owner)).json.items.length, 1);
   assert.equal((await call('PATCH', `${base}/${first.json.id}`, { title: 'x' }, owner)).status, 404);
 });

@@ -45,7 +45,9 @@ test('a coupon code takes money off the order, counts its use, then ends at its 
   const off = await call('PATCH', `/owner/venues/${mamas}/promos/${promo.id}`, { enabled: false, usageLimit: null }, owner);
   expectContract('ownerUpdatePromo', 200, off.json);
   assert.equal(off.json.state, 'off');
-  assert.equal((await call('DELETE', `/owner/venues/${mamas}/promos/${promo.id}`, undefined, owner)).status, 204);
+  const removed = await call('DELETE', `/owner/venues/${mamas}/promos/${promo.id}`, undefined, owner);
+  assert.equal(removed.status, 204);
+  expectContract('ownerDeletePromo', 204, removed.json);
   assert.equal((await call('GET', `/owner/venues/${mamas}/promos`, undefined, owner)).json.items.length, 0);
   // Its old order keeps the discount.
   assert.equal((await call('GET', `/orders/${first.id}`, undefined, guest)).json.promoDiscounts.length, 1);

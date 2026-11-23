@@ -14,9 +14,9 @@ Connected today: Supabase "Cravins" (migrations 0000–0001), Clerk "Cravins" (d
 
 4. [x] **Tables for everything in the contract**: venues, tables, menu, orders, lines, quotes, waiter calls, staff, loyalty facts, reviews, feedback, promos, notifications, links, devices, settings. One migration, Row Level Security on every table, no public read.
 5. [x] **Seed from `api/fixtures/`**: the three sample venues, menus and staff, so the server and the mock start the same.
-6. [ ] **Contract test harness** _(partly, 2026-11-22: `expectContract` checks answers for 87 of 104 operations; nothing fails yet for an untested one)_: load `openapi.yaml`, check every response body against its schema, and fail if any `operationId` has no test. Runs on PGlite like the payment tests.
+6. [x] **Contract test harness** _(done 2026-11-23: `coverage.test.ts`)_: load `openapi.yaml`, check every response body against its schema, and fail if any `operationId` has no test. Runs on PGlite like the payment tests.
 7. [x] **Who is calling**: Clerk token check (`@clerk/backend`, offline with Clerk's public key), guest tokens (signed, bound to one venue and table, 4 hours), loyalty tokens.
-8. [ ] **Who may do what** _(partly, 2026-11-22: the role table exists and is spot-tested; the full role × call and venue A/B grids aren't written)_: one table of operation → roles, from `StaffRole` in the contract. Tests: every owner call × every role, and staff of venue A get 403 on venue B's venue, orders, tables, calls, menu and loyalty (audit N6).
+8. [x] **Who may do what** _(done 2026-11-23: `ownerRoles.test.ts`)_: one table of operation → roles, from `StaffRole` in the contract. Tests: every owner call × every role, and staff of venue A get 403 on venue B's venue, orders, tables, calls, menu and loyalty (audit N6).
 9. [x] **Guest calls**: guest session, venue, menu (ETag), wifi, offers, orders, bill quote (server works out money, tax, promos and the Paystack fee), waiter calls, reviews, feedback, game.
 10. [x] **Payments on the real bill**: `POST /payments` reads the quote from the database; the sandbox quote header goes away.
 11. [x] **Owner: venue and menu**: venue, theme, services, staff (creates the Clerk user on invite, revokes Clerk sessions on sign-out), categories, items, tables and QR.

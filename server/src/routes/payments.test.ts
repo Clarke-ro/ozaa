@@ -115,10 +115,12 @@ test('webhooks are checked with the venue’s key: forged ones are refused, real
 
   const forged = await call('POST', '/webhooks/paystack', body, { 'x-paystack-signature': sign('sk_test_someoneelse') });
   assert.equal(forged.status, 401);
+  expectContract('paystackWebhook', 401, forged.json);
   assert.equal((await call('GET', `/orders/${order.id}`, undefined, auth)).json.paymentStatus, 'unpaid');
 
   const real = await call('POST', '/webhooks/paystack', body, { 'x-paystack-signature': sign(VENUE_SECRET) });
   assert.equal(real.status, 200);
+  expectContract('paystackWebhook', 200, real.json);
   assert.equal((await call('GET', `/orders/${order.id}`, undefined, auth)).json.paymentStatus, 'paid');
 
   // The venue's other Paystack sales aren't ours: accepted and ignored, so Paystack stops retrying.

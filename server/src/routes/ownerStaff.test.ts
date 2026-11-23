@@ -49,12 +49,18 @@ test('role and tables change, a PIN resets, and removing someone signs them out;
   assert.equal((await call('PATCH', `${base}/${ownerRow.id}`, { role: 'manager' }, owner)).json.code, 'owner_role');
   assert.equal((await call('PATCH', `${base}/${esi.id}`, {}, owner)).status, 400);
 
-  assert.equal((await call('POST', `${base}/${esi.id}/reset-pin`, undefined, owner)).status, 204);
+  const reset = await call('POST', `${base}/${esi.id}/reset-pin`, undefined, owner);
+  assert.equal(reset.status, 204);
+  expectContract('ownerResetStaffPin', 204, reset.json);
   assert.equal((await call('POST', `${base}/${ownerRow.id}/sign-out`, undefined, owner)).json.code, 'owner_sign_out');
-  assert.equal((await call('POST', `${base}/${esi.id}/sign-out`, undefined, owner)).status, 204);
+  const signedOut = await call('POST', `${base}/${esi.id}/sign-out`, undefined, owner);
+  assert.equal(signedOut.status, 204);
+  expectContract('ownerSignOutStaff', 204, signedOut.json);
   assert.equal(clerkCalls.at(-1), 'sign out user_clerk_esi');
 
-  assert.equal((await call('DELETE', `${base}/${esi.id}`, undefined, owner)).status, 204);
+  const revoked = await call('DELETE', `${base}/${esi.id}`, undefined, owner);
+  assert.equal(revoked.status, 204);
+  expectContract('ownerRevokeStaff', 204, revoked.json);
   assert.equal((await call('GET', '/me', undefined, as('user_clerk_esi', 'esi@example.com'))).json.code, 'not_staff');
   assert.equal((await call('PATCH', `${base}/${esi.id}`, { role: 'waiter' }, owner)).status, 404);
   // Invited again later, she comes back.

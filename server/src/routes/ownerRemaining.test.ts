@@ -27,7 +27,9 @@ test('staff take orders: for a table, at the counter, or a pickup with details; 
   const id = randomUUID();
   const once = (await call('POST', base, { clientOrderId: id, lines }, waiter)).json.id;
   assert.equal((await call('POST', base, { clientOrderId: id, lines }, waiter)).json.id, once);
-  assert.equal((await call('POST', '/owner/transactions/txn_1/refund', undefined, owner)).status, 404);
+  const refund = await call('POST', '/owner/transactions/txn_1/refund', undefined, owner);
+  assert.equal(refund.status, 404);
+  expectContract('ownerRefundTransaction', 404, refund.json);
 });
 
 test('insights for a range: orders, visits and the funnel', async () => {
@@ -72,7 +74,9 @@ test('scanner devices: pair with a code, list, revoke', async () => {
   const list = await call('GET', `/owner/venues/${mamas}/devices`, undefined, owner);
   expectContract('ownerListScannerDevices', 200, list.json);
   assert.equal(list.json.items.length, 1);
-  assert.equal((await call('DELETE', `/owner/venues/${mamas}/devices/${paired.json.id}`, undefined, owner)).status, 204);
+  const revoked = await call('DELETE', `/owner/venues/${mamas}/devices/${paired.json.id}`, undefined, owner);
+  assert.equal(revoked.status, 204);
+  expectContract('ownerRevokeScannerDevice', 204, revoked.json);
   assert.equal((await call('GET', `/owner/venues/${mamas}/devices`, undefined, owner)).json.items.length, 0);
   assert.equal((await call('POST', `/owner/venues/${mamas}/devices/pair`, { name: 'x' }, waiter)).status, 403);
 });
@@ -88,7 +92,9 @@ test('my profile, and deleting an account: staff can; an owner is sent to suppor
 
   assert.equal((await call('DELETE', '/auth/account', { confirmText: 'nope' }, waiter)).status, 400);
   assert.equal((await call('DELETE', '/auth/account', { confirmText: 'DELETE MY ACCOUNT' }, owner)).json.code, 'owner_has_venues');
-  assert.equal((await call('DELETE', '/auth/account', { confirmText: 'DELETE MY ACCOUNT' }, waiter)).status, 204);
+  const deleted = await call('DELETE', '/auth/account', { confirmText: 'DELETE MY ACCOUNT' }, waiter);
+  assert.equal(deleted.status, 204);
+  expectContract('deleteAccount', 204, deleted.json);
   assert.ok(clerkCalls.includes('delete user_waiter'));
   assert.equal((await call('GET', '/me', undefined, waiter)).json.code, 'not_staff');
 });
