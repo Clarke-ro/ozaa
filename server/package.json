@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx --env-file-if-exists=.env src/db/migrate.ts",
-    "db:seed": "tsx --env-file-if-exists=.env src/db/seed.ts"
+    "db:seed": "tsx --env-file-if-exists=.env src/db/seed.ts",
+    "db:seed-e2e-staff": "tsx --env-file-if-exists=.env src/db/seedE2eStaff.ts"
   },
   "dependencies": {
     "@clerk/backend": "^2.33.9",

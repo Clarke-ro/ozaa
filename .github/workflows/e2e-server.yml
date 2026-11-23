@@ -46,6 +46,10 @@ jobs:
       SEED_SAMPLES: 'true'
       # The sample photos are stored with this address, so it must be where the app is served.
       SITE_URL: http://127.0.0.1:4174
+      # Clerk's development instance. The publishable key is public (it ships in the live site);
+      # the secret key stays in the repository's secrets and only reaches the server.
+      EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_bG92ZWQtdGV0cmEtODgzLmNsZXJrLmFjY291bnRzLmRldiQ
+      CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -68,6 +72,13 @@ jobs:
       - name: Database, then the sample venues
         working-directory: server
         run: npm run db:migrate && npm run db:seed
+
+      # The mock's demo staff as real staff, with Clerk test emails (server/src/db/seedE2eStaff.ts).
+      - name: Test staff, here and in Clerk
+        working-directory: server
+        run: npm run db:seed-e2e-staff
+        env:
+          E2E_STAFF: 'true'
 
       - run: bash scripts/build-e2e-server.sh
       - run: npx playwright install --with-deps chromium
