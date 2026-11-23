@@ -79,12 +79,28 @@ jobs:
         run: npm run db:seed-e2e-staff
         env:
           E2E_STAFF: 'true'
+          # Paystack test mode: Mama's Kitchen and Bean There take payments in the app, as in the
+          # mock. The public key is public; the secret key stays in the repository's secrets.
+          PAYSTACK_PUBLIC_KEY: pk_test_c559938c73c3cab77625005794aa0cab3becf7b3
+          PAYSTACK_SECRET_KEY: ${{ secrets.PAYSTACK_TEST_SECRET_KEY }}
 
       - run: bash scripts/build-e2e-server.sh
       - run: npx playwright install --with-deps chromium
       - run: npx playwright test --config playwright.server.config.ts
         env:
           CI: 'true'
+      # TEMPORARY (removed before merge): which payment tests already pass against Paystack's test mode.
+      - name: Survey the payment tests
+        if: always()
+        continue-on-error: true
+        run: >-
+          npx playwright test --config playwright.server.config.ts --reporter=list
+          e2e/payment-step.spec.ts e2e/guest-orders.spec.ts e2e/my-orders.spec.ts
+          e2e/online-ordering.spec.ts e2e/guest-pay-online.spec.ts e2e/fee-passing.spec.ts
+          e2e/integrations.spec.ts e2e/owner-setup.spec.ts e2e/pay-in-person.spec.ts
+        env:
+          CI: 'true'
+          E2E_ALL: '1'
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
