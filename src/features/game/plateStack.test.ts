@@ -1,12 +1,4 @@
-import { DEMO_BOARD } from '@/mocks/demo';
-import {
-  createStack,
-  dropAligned,
-  dropPlate,
-  plateSpeed,
-  stepStack,
-  topOfBoard,
-} from './plateStack';
+import { createStack, dropAligned, dropPlate, plateSpeed, stepStack } from './plateStack';
 
 test('sixteen aligned drops score 16 and earn the stamp', () => {
   let state = dropPlate(createStack());
@@ -31,23 +23,10 @@ test('a complete miss ends the round and keeps the score', () => {
   expect(state.score).toBe(16);
 });
 
-test('speed climbs with the score and the board mixes a saved name with the samples', () => {
+test('speed climbs with the score, and the plate moves', () => {
   expect(plateSpeed(0)).toBe(150);
   expect(plateSpeed(11)).toBe(271);
   expect(plateSpeed(100)).toBe(420);
-  const board = topOfBoard([{ nickname: 'Clarke', score: 16, mine: true }], DEMO_BOARD);
-  expect(board.map((row) => `${row.nickname}:${row.score}`)).toEqual([
-    'Kwame:23',
-    'Ama:19',
-    'Clarke:16',
-    'Yaw:16',
-    'Esi:12',
-  ]);
   const moved = stepStack(dropPlate(createStack()), 0.016);
   expect(moved.current?.x).not.toBe(dropPlate(createStack()).current?.x);
-});
-
-test('without sample rows (a real build) the board shows only real scores', () => {
-  const board = topOfBoard([{ nickname: 'Clarke', score: 16, mine: true }]);
-  expect(board.map((row) => row.nickname)).toEqual(['Clarke']);
 });

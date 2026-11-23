@@ -112,3 +112,33 @@ test('the game: scores rank this week, impossible ones are refused, the board sh
   assert.deepEqual(board.json.entries.map((e: { nickname: string; score: number }) => `${e.nickname} ${e.score}`), ['Esi 20', 'Kwame 15']);
   assert.equal((await play(1)).json.rank, 5);
 });
+
+test('a name typed after the round is added to that same score, once, by the same visit only', async () => {
+  const { call, guest } = await setup();
+  const runId = randomUUID();
+  const send = (body: Record<string, unknown>, who = guest) =>
+    call('POST', '/venues/mamas-kitchen/game/scores', { runId, durationMs: 60_000, score: 18, ...body }, who);
+  const board = async () =>
+    (await call('GET', '/venues/mamas-kitchen/game/leaderboard')).json.entries.map(
+      (e: { nickname: string; score: number }) => `${e.nickname} ${e.score}`,
+    );
+  // The round ends: the score is saved with no name yet, so the board has nothing to show.
+  assert.equal((await send({})).status, 201);
+  assert.deepEqual(await board(), []);
+
+  // Someone at another table can't name this visit's score.
+  const other = {
+    Authorization: `Bearer ${(await call('POST', '/guest-sessions', { venueSlug: 'mamas-kitchen', tableCode: '7' })).json.guestToken}`,
+  };
+  await send({ nickname: 'Hijack' }, other);
+  assert.deepEqual(await board(), []);
+
+  // The guest types a name and taps Save: the same round, now named.
+  const named = await send({ nickname: 'Adwoa' });
+  assert.equal(named.status, 201);
+  expectContract('submitScore', 201, named.json);
+  assert.deepEqual(await board(), ['Adwoa 18']);
+  // A name, once given, stays; and the score can't be raised by sending the round again.
+  await send({ nickname: 'Renamed', score: 99 });
+  assert.deepEqual(await board(), ['Adwoa 18']);
+});

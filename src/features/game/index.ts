@@ -8,7 +8,5 @@ export {
   PLAY_HEIGHT,
   PLAY_WIDTH,
   stepStack,
-  topOfBoard,
-  type BoardRow,
   type StackState,
 } from './plateStack';

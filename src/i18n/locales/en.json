@@ -394,6 +394,7 @@
     "newBest": "New best",
     "again": "Play again",
     "save": "Save",
+    "saved": "Saved as {{name}}",
     "nick": "Nickname (optional)",
     "board": "Top scores at {{name}}",
     "week": "This week",

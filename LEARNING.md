@@ -4,6 +4,36 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-23 · The game board is the venue's, not just your phone's
+
+**What we built**
+
+The "Top scores" list under Plate Stack now comes from the server: this week's best five at the venue. Before, it only showed names saved on this phone, and the names never reached the server at all. When you type a nickname after a round and tap Save, that round's score gets your name, and you see "Saved as …".
+
+**How it works**
+
+```
+round ends → send { runId, score, time }            (no name yet; may earn a stamp)
+tap Save   → send the same runId again + nickname    → server adds the name to that score
+board      → GET leaderboard → best score per name this week, top 5
+```
+
+The same runId is the trick: the server already counts a round once, so sending it again can only add a name. It can't raise the score, rename someone else's round, or change a name already given.
+
+**Files to look at**
+
+- `src/features/game/GameScreen.tsx`: keeps the round, saves the name, reads the board.
+- `server/src/routes/guestExtras.ts`: the "add a name to the same round" rule.
+- `src/features/game/leaderboard.ts`: the same board rules for the demo's mock.
+
+**New idea: an idempotency key**
+
+`runId` is made once per round on the phone. Whatever happens to the network, the server counts that round once. Here it also lets a second message refer back to the first.
+
+**Try it yourself**
+
+In `src/features/game/leaderboard.test.ts`, give the "Hijack" row the same visit as the others (`'v1'`). Run `npx jest src/features/game/leaderboard.test.ts` and watch it fail: now the name sticks. Put it back.
+
 ## 2026-11-23 · A 4-digit PIN that can't be guessed
 
 **What we built**
