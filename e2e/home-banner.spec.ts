@@ -1,8 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { SERVER } from './tags';
 
 test.use({ permissions: ['clipboard-read', 'clipboard-write'] });
 
-test('the banner photo shows and share and language respond', async ({ page }) => {
+test('the banner photo shows and share and language respond', SERVER, async ({ page }) => {
   await page.goto('/mamas-kitchen/t/12', { waitUntil: 'domcontentloaded' });
   await expect(page.getByText("Mama's Kitchen")).toBeVisible();
 

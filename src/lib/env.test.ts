@@ -7,6 +7,7 @@ describe('readEnv', () => {
       EXPO_PUBLIC_API_URL: 'http://localhost:4000/v1',
       EXPO_PUBLIC_MOCK_LATENCY_MS: 400,
       EXPO_PUBLIC_SENTRY_DSN: '',
+      EXPO_PUBLIC_ALLOW_LOCAL_API: '0',
       EXPO_PUBLIC_MOCK_FAIL_RATE: 0,
       EXPO_PUBLIC_MOCK_FAST: '0',
       EXPO_PUBLIC_SITE_URL: 'https://cravins.app',
@@ -43,6 +44,21 @@ describe('the API address for a real-server build', () => {
   it('may be localhost while developing', () => {
     expect(readEnv({ EXPO_PUBLIC_API_MODE: 'http' }, false).EXPO_PUBLIC_API_URL).toBe(
       'http://localhost:4000/v1',
+    );
+  });
+  it('allows a local server in a production build only when the browser tests ask for it', () => {
+    const local = {
+      EXPO_PUBLIC_API_MODE: 'http',
+      EXPO_PUBLIC_API_URL: 'http://127.0.0.1:4000/v1',
+      EXPO_PUBLIC_ALLOW_LOCAL_API: '1',
+    };
+    expect(readEnv(local, true).EXPO_PUBLIC_API_URL).toBe('http://127.0.0.1:4000/v1');
+    // It opens this machine only: a plain-http address anywhere else is still refused.
+    expect(() =>
+      readEnv({ ...local, EXPO_PUBLIC_API_URL: 'http://api.cravins.app/v1' }, true),
+    ).toThrow(/https/);
+    expect(() => readEnv({ ...local, EXPO_PUBLIC_ALLOW_LOCAL_API: 'yes' }, true)).toThrow(
+      /EXPO_PUBLIC_ALLOW_LOCAL_API/,
     );
   });
   it('must be https, and not localhost, in a production build', () => {

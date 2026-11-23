@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { SERVER } from './tags';
 
 // The venue's own link (/slug) is online ordering, menu first; a table's QR (/slug/t/7) is the
 // table guest's home with its services list. Neither may land on the other (Clarke, 2026-11-16).
@@ -41,41 +42,51 @@ test('the menu link opens the menu first, and a pickup order reaches its status 
   expect(errors).toEqual([]);
 });
 
-test('a table QR opens the table home with its list first, and stays on the table address', async ({
-  page,
-}) => {
-  await page.goto('/bean-there/t/7', { waitUntil: 'domcontentloaded' });
-  await expect(page.getByText('At your table')).toBeVisible({ timeout: 15_000 });
-  await expect(page).toHaveURL(/\/bean-there\/t\/7$/);
-  await page.getByRole('button', { name: /^Menu/ }).first().click();
-  await expect(page).toHaveURL(/\/bean-there\/menu$/, { timeout: 15_000 });
-  await page.getByRole('button', { name: 'Back', exact: true }).click();
-  await expect(page).toHaveURL(/\/bean-there\/t\/7$/, { timeout: 15_000 });
-  await expect(page.getByText('At your table')).toBeVisible({ timeout: 15_000 });
-});
+test(
+  'a table QR opens the table home with its list first, and stays on the table address',
+  SERVER,
+  async ({ page }) => {
+    await page.goto('/bean-there/t/7', { waitUntil: 'domcontentloaded' });
+    await expect(page.getByText('At your table')).toBeVisible({ timeout: 15_000 });
+    await expect(page).toHaveURL(/\/bean-there\/t\/7$/);
+    await page.getByRole('button', { name: /^Menu/ }).first().click();
+    await expect(page).toHaveURL(/\/bean-there\/menu$/, { timeout: 15_000 });
+    await page.getByRole('button', { name: 'Back', exact: true }).click();
+    await expect(page).toHaveURL(/\/bean-there\/t\/7$/, { timeout: 15_000 });
+    await expect(page.getByText('At your table')).toBeVisible({ timeout: 15_000 });
+  },
+);
 
-test('opening the menu link after a table scan orders online, never to that table', async ({
-  page,
-}) => {
-  await page.goto('/bean-there/t/7', { waitUntil: 'domcontentloaded' });
-  await expect(page.getByText('At your table')).toBeVisible({ timeout: 15_000 });
-  await page.goto('/bean-there', { waitUntil: 'domcontentloaded' });
-  await addFirstDish(page);
-  await page.getByRole('button', { name: /View order/ }).click();
-  // The online checkout asks for contact details; a table order wouldn't.
-  await expect(page.getByRole('textbox', { name: 'Your name' })).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByText(/Table 7/)).toHaveCount(0);
-});
+test(
+  'opening the menu link after a table scan orders online, never to that table',
+  SERVER,
+  async ({ page }) => {
+    await page.goto('/bean-there/t/7', { waitUntil: 'domcontentloaded' });
+    await expect(page.getByText('At your table')).toBeVisible({ timeout: 15_000 });
+    await page.goto('/bean-there', { waitUntil: 'domcontentloaded' });
+    await addFirstDish(page);
+    await page.getByRole('button', { name: /View order/ }).click();
+    // The online checkout asks for contact details; a table order wouldn't.
+    await expect(page.getByRole('textbox', { name: 'Your name' })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText(/Table 7/)).toHaveCount(0);
+  },
+);
 
-test('a venue that takes no online orders: its link is a menu to browse, with no basket', async ({
-  page,
-}) => {
-  await page.goto('/auntie-akos', { waitUntil: 'domcontentloaded' });
-  await expect(page.getByRole('tab', { name: 'All categories' })).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByRole('tab', { name: 'All categories' })).toBeVisible();
-  await expect(page.getByRole('button', { name: /^Add .+ to your order$/ })).toHaveCount(0);
-  // The same dish from a table scan can be ordered.
-  await page.goto('/auntie-akos/t/7', { waitUntil: 'domcontentloaded' });
-  await page.getByRole('button', { name: /^Menu/ }).first().click({ timeout: 15_000 });
-  await expect(page.getByRole('button', { name: /^Add .+ to your order$/ }).first()).toBeVisible();
-});
+test(
+  'a venue that takes no online orders: its link is a menu to browse, with no basket',
+  SERVER,
+  async ({ page }) => {
+    await page.goto('/auntie-akos', { waitUntil: 'domcontentloaded' });
+    await expect(page.getByRole('tab', { name: 'All categories' })).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page.getByRole('tab', { name: 'All categories' })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Add .+ to your order$/ })).toHaveCount(0);
+    // The same dish from a table scan can be ordered.
+    await page.goto('/auntie-akos/t/7', { waitUntil: 'domcontentloaded' });
+    await page.getByRole('button', { name: /^Menu/ }).first().click({ timeout: 15_000 });
+    await expect(
+      page.getByRole('button', { name: /^Add .+ to your order$/ }).first(),
+    ).toBeVisible();
+  },
+);

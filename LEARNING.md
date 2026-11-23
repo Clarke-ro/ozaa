@@ -4,6 +4,37 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-23 · Testing against the real server, not just the pretend one
+
+**What we built**
+
+A second way to run the browser tests. Until now they always used the mock, a pretend server that lives in the browser. Now 12 guest tests also run against the real server, with a real database, inside GitHub Actions. Running them there found a real bug: with no signal, a guest who tapped "Send to kitchen" read "Something went wrong" instead of "You're offline. Connect and try again." That's fixed.
+
+**How it works**
+
+```
+GitHub Actions job (.github/workflows/e2e-server.yml)
+  empty Postgres → migrations → the 3 sample venues
+  the server from this PR, on port 4000
+  the app built for a real server, on port 4174
+  Playwright runs every test tagged @server
+everything is thrown away when the job ends
+```
+
+**Files to look at**
+
+- `playwright.server.config.ts`: starts the server and the app, and picks the `@server` tests.
+- `e2e/tags.ts`: the tag. Add it to a test once it passes against the real server.
+- `src/lib/api/httpContext.ts`: the offline fix. A request that fails while the phone has no connection becomes "offline".
+
+**New idea: a test double**
+
+The mock is a "test double": it stands in for the real server so tests are fast and need nothing else running. The risk is that the double and the real thing slowly disagree. Running the same test against both is how you catch that.
+
+**Try it yourself**
+
+Open `e2e/offline.spec.ts`. It's tagged `SERVER`, so it runs both ways. In `httpContext.ts`, delete the `throw new OfflineError();` line, then follow the "Locally" steps at the top of `playwright.server.config.ts`. The offline test fails against the real server and still passes against the mock, which is exactly the bug it found. Put the line back.
+
 ## 2026-11-23 · The game board is the venue's, not just your phone's
 
 **What we built**

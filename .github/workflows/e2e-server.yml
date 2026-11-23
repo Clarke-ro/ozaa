@@ -1,0 +1,83 @@
+name: E2E (real server)
+
+# The browser tests tagged @server, run against the real server instead of the mock (BUILD.md 5.6).
+# Everything is throwaway: an empty Postgres in this job, the PR's own server, and a real-server
+# build of the app. Nothing here touches the live database or the live server.
+on:
+  pull_request:
+    paths:
+      - 'server/**'
+      - 'src/lib/api/**'
+      - 'api/openapi.yaml'
+      - 'e2e/**'
+      - 'playwright.server.config.ts'
+      - 'scripts/build-e2e-server.sh'
+      - '.github/workflows/e2e-server.yml'
+  push:
+    branches: [main]
+  schedule:
+    # Nightly, 02:17 UTC, so a change on a path not listed above is still caught within a day.
+    - cron: '17 2 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-server-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e-server:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/postgres
+      SEED_SAMPLES: 'true'
+      # The sample photos are stored with this address, so it must be where the app is served.
+      SITE_URL: http://127.0.0.1:4174
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            server/package-lock.json
+      - run: npm ci
+      - run: npm ci
+        working-directory: server
+
+      # Made fresh for this run and thrown away with it. Not secrets of any real system.
+      - name: One-off keys for this run
+        run: |
+          echo "ENCRYPTION_KEY=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+          echo "GUEST_TOKEN_SECRET=$(openssl rand -hex 24)" >> "$GITHUB_ENV"
+
+      - name: Database, then the sample venues
+        working-directory: server
+        run: npm run db:migrate && npm run db:seed
+
+      - run: bash scripts/build-e2e-server.sh
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test --config playwright.server.config.ts
+        env:
+          CI: 'true'
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-real-server
+          path: |
+            playwright-report/
+            test-results/
