@@ -22,6 +22,13 @@ describe('ticketHtml', () => {
     expect(html).toContain('Jollof &lt;b&gt;&amp; chicken&lt;/b&gt;');
     expect(html).not.toContain('<b>');
   });
+  it("shows the guest's order note under the time, escaped", () => {
+    const html = ticketHtml({ ...words, note: 'Less <i>salt</i>' });
+    expect(html).toContain('<div class="o">Less &lt;i&gt;salt&lt;/i&gt;</div>');
+  });
+  it('leaves the order note out when there is none', () => {
+    expect(ticketHtml(words)).not.toContain('class="o"');
+  });
   it('keeps every line, extra, note and the total', () => {
     const html = ticketHtml(words);
     for (const text of ['2×', 'Extra shito', 'No pepper', 'GH₵130', 'Table 3 · #25']) {

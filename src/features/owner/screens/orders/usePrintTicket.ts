@@ -31,6 +31,7 @@ export function usePrintTicket(currency: string) {
           minute: '2-digit',
         }),
       }),
+      note: order.note,
       lines: order.lines.map((l) => ({
         qty: l.quantity,
         name: l.name,

@@ -18,6 +18,8 @@ const QUEUE: {
   status: Order['status'];
   minutesAgo: number;
   lines: Line[];
+  /** The guest's note for the whole order. */
+  note?: string;
 }[] = [
   {
     table: '3',
@@ -27,6 +29,7 @@ const QUEUE: {
       ['Waakye special', 'itm_mamas1', 2, 4500, 'Extra egg', 'One without shito'],
       ['Sobolo', 'itm_mamas4', 2, 1500],
     ],
+    note: 'Bring it all at once, please',
   },
   {
     table: null,
@@ -85,6 +88,7 @@ export function kitchenQueue(now: number, firstNumber: number): LiveOrder[] {
         createdAt: at,
         updatedAt: at,
         readyAt: ticket.status === 'ready' ? at : null,
+        note: ticket.note ?? null,
       },
     } as LiveOrder;
   });

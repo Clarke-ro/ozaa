@@ -7,10 +7,11 @@ import { formatMoney } from '@/lib/money';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
+import { OrderNote } from './OrderNote';
 import { amountDue } from './orderSteps';
 
 /**
- * Every dish on an order with its price, add-ons and the guest's note, then the sums the server
+ * Every dish on an order with its price, add-ons and the guest's notes, then the sums the server
  * worked out: subtotal, sale savings, taxes, delivery, total, paid and still to pay. Nothing here
  * is added up on the phone; the server total wins (AGENTS.md, money rules).
  */
@@ -73,6 +74,11 @@ export function OrderBill({
             </Text>
           </View>
         ))}
+      {part !== 'sums' && order.note ? (
+        <View style={styles.orderNote}>
+          <OrderNote note={order.note} />
+        </View>
+      ) : null}
 
       {part === 'lines' ? null : (
         <View style={[styles.sums, part === 'all' && styles.ruled, { borderTopColor: theme.line }]}>
@@ -138,6 +144,7 @@ const styles = StyleSheet.create({
     paddingVertical: tokens.space[1],
     borderRadius: tokens.radius.sm,
   },
+  orderNote: { paddingBottom: tokens.space[3] },
   sums: { gap: tokens.space[2] },
   ruled: { paddingTop: tokens.space[3], borderTopWidth: StyleSheet.hairlineWidth },
   sum: { flexDirection: 'row', justifyContent: 'space-between', gap: tokens.space[3] },

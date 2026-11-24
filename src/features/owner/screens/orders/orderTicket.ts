@@ -4,6 +4,8 @@ import type { Order } from '@/lib/api/types';
 export type TicketWords = {
   title: string;
   placed: string;
+  /** The guest's note for the whole order (Order.note), such as "Less salt". */
+  note?: string | null;
   lines: { qty: number; name: string; extras: string[]; note?: string; price: string }[];
   sums: { label: string; value: string; strong?: boolean }[];
   footer: string;
@@ -45,10 +47,12 @@ h1 { font-size: 18px; margin: 0 0 2px; } .m { color: #333; margin-bottom: 8px; }
 table { width: 100%; border-collapse: collapse; } td { padding: 3px 0; vertical-align: top; }
 .q { width: 28px; font-weight: 700; } .p { text-align: right; white-space: nowrap; }
 .x { font-size: 12px; color: #333; } .n { font-size: 12px; font-style: italic; }
+.o { font-weight: 700; border: 1px solid #000; padding: 4px 6px; margin-bottom: 8px; }
 .t td { border-top: 1px dashed #000; } .s td { font-weight: 700; }
 footer { margin-top: 10px; text-align: center; font-size: 11px; }
 </style></head><body>
 <h1>${escape(words.title)}</h1><div class="m">${escape(words.placed)}</div>
+${words.note ? `<div class="o">${escape(words.note)}</div>` : ''}
 <table>${lines}<tr class="t"><td colspan="3"></td></tr>${sums}</table>
 <footer>${escape(words.footer)}</footer>
 </body></html>`;

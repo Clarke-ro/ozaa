@@ -114,3 +114,21 @@ test('the folded sidebar stays folded on the next page', SERVER, async ({ page }
   await expect(page.getByRole('button', { name: 'Expand sidebar', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Expand sidebar', exact: true }).click();
 });
+
+// Mock only: the noted ticket is the mock's lunch queue (src/mocks/kitchenQueue.ts).
+test("staff see the guest's order note on the ticket and on the order", async ({ page }) => {
+  await signInAsOwner(page);
+  await page.getByRole('tab', { name: 'Orders', exact: true }).click();
+  await waitLoaded(page);
+  const note = page.getByLabel('Order note: Bring it all at once, please');
+  await expect(note.first()).toBeVisible();
+  await page.screenshot({ path: 'test-results/owner-order-note-board.png' });
+  await page
+    .getByRole('button', { name: /^Table 3, #/ })
+    .first()
+    .click();
+  await waitLoaded(page);
+  // The board stays mounted, hidden, under the order page.
+  await expect(note.last()).toBeVisible();
+  await page.screenshot({ path: 'test-results/owner-order-note-detail.png' });
+});

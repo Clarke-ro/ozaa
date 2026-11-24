@@ -12,6 +12,7 @@ import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
 import { cardStyle } from '../../kit';
 import { ticketAge } from '../../desk/ops';
+import { OrderNote } from './OrderNote';
 import { orderPlace, paidLabel, waitedLabel } from './orderPlace';
 
 // Enough dishes to cook from at a glance; the rest are one tap away on the order's page.
@@ -159,6 +160,7 @@ export function OrderCard({
             </Text>
           ) : null}
         </View>
+        <OrderNote note={order.note} lines={compact ? 2 : 3} />
       </Pressable>
 
       <View style={[styles.sum, { borderTopColor: theme.wash }]}>
