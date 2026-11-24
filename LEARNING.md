@@ -4208,6 +4208,31 @@ A font file only draws the letters it contains. Each letter shape is a glyph. Pl
 **Try it yourself**
 In `src/ui/theme.tsx`, change `guestFont.heavy` to `'NotoSans_600'`, run `npx expo start --web`, and watch the guest headings get lighter.
 
+## 2026-11-23 · A table home whose banner stays still
+
+**What we built**
+The table home from the design canvas. The banner photo is a little taller and stays put while the page slides up over it on a white sheet. Under the name, two small boxes show the table and whether the venue is open.
+
+**How it works**
+
+```
+guest scrolls 60 px → ScrollView reports y = 60 → banner moves down 60 px → it looks still
+                                                → the white sheet moves up 60 px over it
+```
+
+**Files to look at**
+
+- `src/features/venue/VenueHomeBody.tsx`: banner, white sheet, header, gap and services
+- `src/features/venue/HomeScreen.tsx`: the scroll view that reports how far the guest scrolled
+- `src/features/venue/InfoBoxes.tsx`: the row of small boxes
+- `src/lib/time.ts`: `hoursBox`, which splits "Open now · until 10 PM" into two lines
+
+**New idea: moving with the scroll to stay still**
+Anything inside a scroll view moves when you scroll. To make the banner look fixed, we move it down by exactly the distance the guest scrolled, so the two cancel out. `Animated.event` copies the scroll distance straight into the banner's position, frame by frame, without waiting for React to re-render.
+
+**Try it yourself**
+In `HomeScreen.tsx`, remove the `scrollY={scrollY}` line, run the web app, and scroll: the banner now leaves with the page.
+
 ## 2026-11-23 · Smaller photos for guests (BUILD.md box 5.5)
 
 **What we built**

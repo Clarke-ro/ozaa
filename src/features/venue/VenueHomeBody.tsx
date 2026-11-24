@@ -1,28 +1,32 @@
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
-import { Bell, Globe, Share2, Utensils } from 'lucide-react-native';
+import { Animated, Pressable, StyleSheet, View } from 'react-native';
+import { Bell, Globe, Share2 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import type { VenuePublic } from '@/lib/api/types';
+import { hoursBox } from '@/lib/time';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { VenueImage } from '@/ui/VenueImage';
 import { guestFont, useTheme } from '@/ui/theme';
 import { canPayOnline } from '@/lib/payments';
+import { InfoBoxes, type InfoBox } from './InfoBoxes';
 import { ServiceGrid } from './ServiceGrid';
-import { VenueIntro } from './VenueIntro';
 
-// Banner height below the status bar; the logo hangs half over its bottom edge.
-const BANNER = 140;
-const LOGO = 64;
-// The table pill's height; the bell matches it.
-const PILL = 30;
-// Grows the bell's touch area from 30 to the 44 pt minimum (HIG).
-const BELL_SLOP = (44 - PILL) / 2;
+// Banner height below the status bar: 140 plus about 0.25 cm (Clarke, 2026-11-23).
+export const BANNER = 150;
+// How far the white sheet rides up over the banner, under its rounded corners.
+const OVERLAP = 24;
+const LOGO = 44;
+const BELL = 40;
 
 /**
- * Everything a guest sees on the venue home, with no data loading of its own: banner, share and
- * language, logo, table pill and notifications bell, name, the service cards and the footer. The guest page
- * and the owner's Branding preview both draw this, so the preview is exactly the guest layout.
+ * Everything a guest sees on the venue home, with no data loading of its own: the banner with
+ * share and language, then a white sheet with the logo, name, bell and info boxes, a thin grey
+ * gap, the service cards and the footer. The guest page and the owner's previews all draw this,
+ * so a preview is exactly the guest layout.
+ *
+ * `scrollY` is the page's scroll offset. The banner moves down by exactly that much, so it stays
+ * still while the sheet scrolls up over it. Previews don't scroll and leave it out.
  */
 export function VenueHomeBody({
   venue,
@@ -35,6 +39,8 @@ export function VenueHomeBody({
   notices = 0,
   onOpen,
   bannerNote,
+  scrollY,
+  now = new Date(),
   children,
 }: {
   venue: VenuePublic;
@@ -49,15 +55,27 @@ export function VenueHomeBody({
   onOpen: (serviceId: string) => void;
   /** A small note over the banner, such as "Link copied". */
   bannerNote?: ReactNode;
-  /** Anything between the intro and the services, such as the offline note. */
+  scrollY?: Animated.Value;
+  now?: Date;
+  /** Anything between the info boxes and the services, such as the offline note. */
   children?: ReactNode;
 }) {
   const { t } = useTranslation();
   const theme = useTheme();
   const fab = [styles.fab, { backgroundColor: theme.surface, top: topInset + tokens.space[3] }];
+  const hours = hoursBox(venue.hours, now);
+  const boxes: InfoBox[] = [
+    ...(tableCode ? [{ key: 'table', title: tableCode, detail: t('home.yourTable') }] : []),
+    { key: 'hours', title: hours.title, detail: hours.detail, good: hours.open },
+  ];
   return (
     <>
-      <View style={[styles.banner, { height: BANNER + topInset, backgroundColor: theme.wash }]}>
+      <Animated.View
+        style={[
+          { height: BANNER + topInset, backgroundColor: theme.wash },
+          scrollY ? { transform: [{ translateY: scrollY }] } : null,
+        ]}
+      >
         <VenueImage
           url={venue.banner.url}
           alt={venue.banner.alt ?? venue.name}
@@ -83,81 +101,83 @@ export function VenueHomeBody({
           </Text>
         </Pressable>
         {bannerNote}
-        <View style={[styles.logo, { borderColor: theme.white, backgroundColor: theme.fill }]}>
-          {venue.logo ? (
-            <VenueImage
-              url={venue.logo.url}
-              alt={venue.logo.alt ?? venue.name}
-              style={styles.logoImage}
-            />
-          ) : (
-            <Text variant="title" style={{ color: theme.onFill }}>
-              {venue.initials ?? venue.name.slice(0, 2).toUpperCase()}
-            </Text>
-          )}
-        </View>
-      </View>
-      <View style={styles.identity}>
-        {/* The table pill, then the bell on its right, level with the venue name. */}
-        <View style={styles.actions}>
-          {tableCode ? (
-            <View
-              style={[styles.pill, { borderColor: theme.line, backgroundColor: theme.surface }]}
-            >
-              <Utensils color={theme.ink} size={14} strokeWidth={2} />
-              <Text variant="caption" style={styles.strong}>
-                {t('home.table', { code: tableCode })}
-              </Text>
+      </Animated.View>
+
+      <View style={[styles.sheet, { backgroundColor: theme.white }]}>
+        <View style={styles.header}>
+          <View style={styles.identity}>
+            <View style={[styles.logo, { backgroundColor: theme.fill }]}>
+              {venue.logo ? (
+                <VenueImage
+                  url={venue.logo.url}
+                  alt={venue.logo.alt ?? venue.name}
+                  style={styles.logoImage}
+                />
+              ) : (
+                <Text variant="body-strong" style={{ color: theme.onFill }}>
+                  {venue.initials ?? venue.name.slice(0, 2).toUpperCase()}
+                </Text>
+              )}
             </View>
-          ) : null}
-          {onNotices ? (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={t('notices.bellA11y', { count: notices })}
-              onPress={onNotices}
-              hitSlop={BELL_SLOP}
-              style={({ pressed }) => [
-                styles.bell,
-                { borderColor: theme.line, backgroundColor: pressed ? theme.wash : theme.surface },
-              ]}
-            >
-              <Bell color={theme.black} size={16} strokeWidth={2} />
-              {notices > 0 ? (
-                <View
-                  style={[
-                    styles.badge,
-                    { backgroundColor: theme.fill, borderColor: theme.surface },
-                  ]}
-                >
-                  <Text variant="caption" style={[styles.badgeText, { color: theme.onFill }]}>
-                    {notices > 9 ? '9+' : notices}
-                  </Text>
-                </View>
+            <View style={styles.names}>
+              <Text variant="display-m" accessibilityRole="header" numberOfLines={2}>
+                {venue.name}
+              </Text>
+              {venue.location.label ? (
+                <Text variant="caption" numberOfLines={1} style={{ color: theme.muted }}>
+                  {venue.location.label}
+                </Text>
               ) : null}
-            </Pressable>
-          ) : null}
+            </View>
+            {onNotices ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t('notices.bellA11y', { count: notices })}
+                onPress={onNotices}
+                style={({ pressed }) => [
+                  styles.bell,
+                  { backgroundColor: pressed ? theme.line : theme.wash },
+                ]}
+              >
+                <Bell color={theme.black} size={18} strokeWidth={2} />
+                {notices > 0 ? (
+                  <View
+                    style={[
+                      styles.badge,
+                      { backgroundColor: theme.fill, borderColor: theme.white },
+                    ]}
+                  >
+                    <Text variant="caption" style={[styles.badgeText, { color: theme.onFill }]}>
+                      {notices > 9 ? '9+' : notices}
+                    </Text>
+                  </View>
+                ) : null}
+              </Pressable>
+            ) : null}
+          </View>
+          <InfoBoxes items={boxes} />
         </View>
-        <VenueIntro venue={venue} />
-      </View>
-      {children}
-      <ServiceGrid
-        slug={venue.slug}
-        services={venue.services}
-        payOnline={canPayOnline(venue)}
-        sectionOrder={venue.sectionOrder}
-        onOpen={onOpen}
-      />
-      <View style={styles.powered}>
-        <Text variant="caption" style={{ color: theme.meta }}>
-          {t('home.powered')}
-        </Text>
+        {/* The thin grey gap between the header and the services (design canvas). */}
+        <View style={[styles.gap, { backgroundColor: theme.bg }]} />
+        {children}
+        <ServiceGrid
+          slug={venue.slug}
+          services={venue.services}
+          payOnline={canPayOnline(venue)}
+          sectionOrder={venue.sectionOrder}
+          onOpen={onOpen}
+        />
+        <View style={styles.powered}>
+          <Text variant="caption" style={{ color: theme.meta }}>
+            {t('home.powered')}
+          </Text>
+        </View>
       </View>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  banner: {},
   fab: {
     position: 'absolute',
     zIndex: 2,
@@ -167,10 +187,50 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   share: { start: tokens.space[4], width: 40 },
+  lang: {
+    end: tokens.space[4],
+    flexDirection: 'row',
+    gap: tokens.space[1] + 2,
+    paddingHorizontal: tokens.space[3],
+  },
+  strong: { fontFamily: guestFont.strong },
+  sheet: {
+    flexGrow: 1,
+    marginTop: -OVERLAP,
+    borderTopLeftRadius: tokens.radius.xl,
+    borderTopRightRadius: tokens.radius.xl,
+    borderCurve: 'continuous',
+    // Room under the last card for anything pinned to the bottom of the screen.
+    paddingBottom: 96,
+  },
+  header: {
+    paddingHorizontal: tokens.grid.mobile.margin,
+    paddingTop: tokens.space[5],
+    paddingBottom: tokens.space[4] + 2,
+    gap: tokens.space[4],
+  },
+  identity: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
+  logo: {
+    width: LOGO,
+    height: LOGO,
+    borderRadius: LOGO / 2,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoImage: { width: '100%', height: '100%' },
+  names: { flex: 1, minWidth: 0 },
+  bell: {
+    width: BELL,
+    height: BELL,
+    borderRadius: BELL / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   badge: {
     position: 'absolute',
-    top: -4,
-    right: -4,
+    top: -2,
+    right: -2,
     minWidth: 18,
     height: 18,
     paddingHorizontal: tokens.space[1],
@@ -184,55 +244,6 @@ const styles = StyleSheet.create({
     lineHeight: 12,
     fontFamily: guestFont.strong,
   },
-  lang: {
-    end: tokens.space[4],
-    flexDirection: 'row',
-    gap: tokens.space[1] + 2,
-    paddingHorizontal: tokens.space[3],
-  },
-  strong: { fontFamily: guestFont.strong },
-  logo: {
-    position: 'absolute',
-    start: tokens.grid.mobile.margin,
-    bottom: -LOGO / 2,
-    width: LOGO,
-    height: LOGO,
-    borderRadius: LOGO / 2,
-    borderWidth: 3,
-    overflow: 'hidden',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoImage: { width: '100%', height: '100%' },
-  identity: {
-    paddingHorizontal: tokens.grid.mobile.margin,
-    paddingTop: LOGO / 2 + tokens.space[2],
-    paddingBottom: tokens.space[2],
-  },
-  actions: {
-    position: 'absolute',
-    end: tokens.grid.mobile.margin,
-    top: tokens.space[2] + 2,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[2],
-  },
-  bell: {
-    width: PILL,
-    height: PILL,
-    borderRadius: tokens.radius.full,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  pill: {
-    height: PILL,
-    borderRadius: tokens.radius.full,
-    borderWidth: 1,
-    paddingHorizontal: tokens.space[3],
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[1] + 2,
-  },
+  gap: { height: tokens.space[2] },
   powered: { alignItems: 'center', marginTop: tokens.space[6] + 4 },
 });
