@@ -39,9 +39,7 @@ export function PhotoField({
 
   return (
     <View style={styles.wrap}>
-      <Text variant="body-strong" style={styles.label}>
-        {label ?? 'Photo'}
-      </Text>
+      {/* The section title above names it (design/brand.md section 8); `label` is the alt text. */}
       <View style={styles.row}>
         <View style={[styles.preview, { backgroundColor: theme.wash, borderColor: theme.line }]}>
           {url ? (
@@ -93,7 +91,6 @@ export function PhotoField({
 
 const styles = StyleSheet.create({
   wrap: { gap: tokens.space[2] },
-  label: { fontSize: 14 },
   row: { flexDirection: 'row', gap: tokens.space[3], alignItems: 'center' },
   preview: {
     width: 96,

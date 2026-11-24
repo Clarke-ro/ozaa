@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { SearchX } from 'lucide-react-native';
-import type { MenuCategory, MenuItem } from '@/lib/api/types';
+import type { MenuCategory, MenuItem, ModifierGroup } from '@/lib/api/types';
 import { pesewas } from '@/lib/brand';
 import { formatMoney } from '@/lib/money';
 import { useOwnerSession } from '@/features/session';
@@ -52,6 +52,8 @@ export function DishEditScreen({ dishId, sectionId }: { dishId: string; sectionI
             defaultSectionId={sectionId ?? sections[0]?.id ?? ''}
             venueId={venueId}
             currency={desk.currency}
+            library={desk.menu.data?.modifierGroups ?? []}
+            timeZone={desk.timeZone}
             onDone={() => {
               void desk.refresh();
               back();
@@ -95,6 +97,8 @@ function DishBody({
   defaultSectionId: string;
   venueId: string;
   currency: string;
+  library: ModifierGroup[];
+  timeZone: string;
   onDone: () => void;
   onCancel: () => void;
   onDelete?: () => void;
