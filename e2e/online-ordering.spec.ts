@@ -36,9 +36,9 @@ test(
     await page.getByRole('button', { name: /View order/ }).click();
     await page.getByRole('textbox', { name: 'Your name' }).fill('Ama');
     await page.getByRole('textbox', { name: 'Phone number' }).fill('024 123 4567');
-    // Pickup is paid in the app: the order goes, then the Payment step (payment-step.spec.ts).
-    await page.getByRole('button', { name: /^Continue to payment/ }).click();
-    await expect(page).toHaveURL(/\/bean-there\/pay$/, { timeout: 15_000 });
+    // Pickup is paid in the app: the order goes, then the payment page (payment-step.spec.ts).
+    await page.getByRole('button', { name: 'Place order', exact: true }).click();
+    await expect(page).toHaveURL(/\/dev\/mock-checkout/, { timeout: 15_000 });
     await expect(page.getByText(/unauthori[sz]ed|errors\./i)).toHaveCount(0);
     expect(errors).toEqual([]);
   },

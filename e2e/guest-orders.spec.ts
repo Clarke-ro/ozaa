@@ -32,9 +32,9 @@ test(
     ).toBeVisible();
     await page.reload({ waitUntil: 'domcontentloaded' });
     await addFirstDishAndOpenOrder(page);
-    // Bean There takes payments in the app, so the order goes and the Payment step opens.
-    await page.getByRole('button', { name: /^Continue to payment/ }).click();
-    await expect(page).toHaveURL(/\/bean-there\/pay$/, { timeout: 15_000 });
+    // Bean There takes payments in the app, so the order goes and the payment page opens.
+    await page.getByRole('button', { name: 'Place order', exact: true }).click();
+    await expect(page).toHaveURL(/\/dev\/mock-checkout/, { timeout: 15_000 });
     await expect(page.getByText(/unauthori[sz]ed|errors\./i)).toHaveCount(0);
     expect(errors).toEqual([]);
   },

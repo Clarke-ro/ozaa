@@ -2506,7 +2506,12 @@
     "more": "One more {{name}}",
     "emptyTitle": "Nothing in your order yet",
     "emptyBody": "Add dishes from the menu, then send them to the kitchen.",
-    "browse": "Browse the menu"
+    "browse": "Browse the menu",
+    "summary": "Order summary",
+    "edit": "Edit",
+    "remove": "Remove {{name}}",
+    "clear": "Clear your order",
+    "itemTotal": "Item total"
   },
   "ownerChrome": {
     "brand": "Cravins",
@@ -2668,7 +2673,16 @@
     "onDelivery": "Pay on delivery",
     "requestBill": "Request the bill",
     "confirmDelivery": "Confirm, pay on delivery",
-    "payNow": "Pay now"
+    "payNow": "Pay now",
+    "momo": "MoMo",
+    "momoNets": "MTN · Telecel · AT",
+    "cash": "Cash",
+    "cashTable": "Pay at the table",
+    "cashDelivery": "On delivery",
+    "card": "Card",
+    "cardKinds": "Visa · Mastercard",
+    "next": "Next, a secure payment page opens.",
+    "secure": "You pay on Paystack's secure page. Your money goes straight to {{venue}}."
   },
   "linkOrder": {
     "title": "How do you want it?",

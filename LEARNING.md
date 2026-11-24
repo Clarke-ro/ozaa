@@ -4,6 +4,31 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-24 · Order and pay on one page
+
+**What we built**
+The order page now takes payment too. The guest checks their dishes, picks Whole bill, Split equally or My items, a tip, and MoMo, Cash or Card, then taps Place order once. MoMo and card open Paystack's own page; Cash at a table asks the waiter for the bill.
+
+**How it works**
+```
+Place order → make the order → MoMo or card: get the bill quote → start the payment → Paystack's page
+                             → Cash at a table: call the waiter for the bill → order status
+Paystack's page → back to /{venue}/pay?reference=… → the app checks the payment → paid, or not paid
+```
+
+**Files to look at**
+- `src/features/orders/OrderScreen.tsx`: the page
+- `src/features/orders/usePlaceOrder.ts`: what Place order does, step by step
+- `src/features/pay/payPick.ts`: which boxes to show, and what each one does (with tests)
+- `src/features/pay/MethodBoxes.tsx`: the MoMo, Cash and Card boxes
+- `src/features/orders/OrderItemCard.tsx`: one dish in the order
+
+**New idea: a payment you can't trust from the browser**
+When Paystack sends the guest back, the address says which payment it was, but anyone could type that address. So the app never believes it: it asks our server, and the server asks Paystack. Only a payment Paystack confirms as `succeeded` counts.
+
+**Try it yourself**
+In `payPick.ts`, make `payMethodsFor` return `['momo', 'card']` every time, run `npm test`, and read which tests now fail and why.
+
 ## 2026-11-23 · Smaller photos for guests (BUILD.md box 5.5)
 
 **What we built**
