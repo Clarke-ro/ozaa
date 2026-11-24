@@ -118,3 +118,4 @@ export type Call = {
 };
 export type OrderStatus = Schemas['OrderStatus'];
 export type ModifierGroupInput = Schemas['ModifierGroupInput'];
+export type SyncProblem = Schemas['SyncProblem'];
