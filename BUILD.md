@@ -2,7 +2,7 @@
 
 This is the master document for the coding agent. Read it all once, then follow the checklist in section 13. If something here conflicts with a render in `design/renders/`, the render wins for layout and this file wins for rules. Section 17 lists what to ask Clarke.
 
-**Owner app layout (Clarke, 2026-11-07):** the owner app follows the MenuRite dashboard's layout with Cravins's colours, type, icons and words (`design/reference/menurite-comparison.md`). For owner screens, that layout plus Clarke's written approval of the screenshots replaces the owner renders in `design/renders/`. Guest screens still match their renders.
+**Owner app layout (Clarke, 2026-11-07):** the owner app uses a sidebar dashboard layout with Cravins's colours, type, icons and words. For owner screens, that layout plus Clarke's written approval of the screenshots replaces the owner renders in `design/renders/`. Guest screens still match their renders.
 
 Contents:
 
@@ -90,13 +90,13 @@ These are settled. Do not reopen them.
 - **Sign-in** _(2026-11-16)_: **Clerk**, paid from Clarke's Clerk credit, with our own screens built on Clerk's custom-flow APIs (no Clerk-drawn screens). Clerk sends the phone codes; Arkesel (about GH₵0.035 a code) is the fallback if Clerk's SMS to Ghana proves slow or costly. If Google sign-in is added, Sign in with Apple must be added too (App Store guideline 4.8). Moving sign-in to Clerk changes the contract's auth calls, so that goes in its own contract PR first.
 - **Legal checks** _(2026-11-16)_: the PSP-licence question and DPC registration are done after the backend is built, before real phone numbers or real money.
 - **Plans:** the owner plan badge and Billing page use the placeholder plans from `landing/src/content/pricing.ts` until real prices are set.
-- **Build order:** frontend first against a fixed API contract and a mock. The backend comes only after Clarke approves the UI. _2026-11-03:_ Clarke approved the MenuRite-gap work (`docs/menurite-gap-table.md`): build all of its UI on the mock first, then hook in the backend.
+- **Build order:** frontend first against a fixed API contract and a mock. The backend comes only after Clarke approves the UI. _2026-11-03:_ Clarke approved the Phase 4b feature work: build all of its UI on the mock first, then hook in the backend.
 - **Hosting** _(2026-11-16)_: the server (`server/`, Hono on Node) runs on **Heroku**, paid from Clarke's Heroku credit, on a Basic dyno ($7/month, always on; Clarke, 2026-11-16). A GitHub Actions workflow sends `server/` to Heroku on each merge to `main`. Migrations run in Heroku's release phase, once per deploy. Heroku Scheduler runs the payment check. The database is **Supabase** Postgres (project "Cravins", eu-west-1), reached through its pooled connection, with Row Level Security on every table so Supabase's public web API can't read them. Photos go in Supabase Storage. The web app stays on Vercel, but Vercel's free Hobby plan is for non-commercial use, so it moves to Vercel Pro or a free host that allows business use before launch.
-- **Code style:** Clarke is learning, so code must be simple, readable, and commented where it is not obvious. Every feature gets a LEARNING.md entry.
+- **Code style:** Clarke is learning, so code must be simple, readable, and commented where it is not obvious.
 
 ## 5. Stack and why
 
-Checked on npm on 31 Oct 2026. **Do not pin these by hand.** Create the app with `npx create-expo-app@latest`, then add every Expo-related package with `npx expo install <pkg>` so the versions match the SDK. Before writing SDK code, read the docs for the installed version, as `agent-skills/expo-agents-md/AGENTS.md` says.
+Checked on npm on 31 Oct 2026. **Do not pin these by hand.** Create the app with `npx create-expo-app@latest`, then add every Expo-related package with `npx expo install <pkg>` so the versions match the SDK. Before writing SDK code, read the docs for the installed version.
 
 | Need                           | Choice                                                                                  | Version seen                      | Why                                                                                                                                                                                                                                                       |
 | ------------------------------ | --------------------------------------------------------------------------------------- | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -109,19 +109,18 @@ Checked on npm on 31 Oct 2026. **Do not pin these by hand.** Create the app with
 | Persistence                    | `@react-native-async-storage/async-storage` + `@tanstack/query-async-storage-persister` | 3.1.1 / 5.105.0                   | Works on web (localStorage) and native. Keeps the menu for offline use.                                                                                                                                                                                   |
 | Secure tokens                  | expo-secure-store (native only)                                                         | 58.0.2                            | Owner tokens on the phone. On web, keep tokens in memory and sessionStorage (section 12.6).                                                                                                                                                               |
 | API types                      | openapi-typescript + openapi-fetch                                                      | 7.13.0 / 0.17.0                   | Types come straight from `api/openapi.yaml`, so the app cannot drift from the contract.                                                                                                                                                                   |
-| Runtime checks                 | zod                                                                                     | 4.6.7                             | Parse untrusted input at the edges: route params, storage, payment responses (pstack-principle-boundary-discipline).                                                                                                                                      |
+| Runtime checks                 | zod                                                                                     | 4.6.7                             | Parse untrusted input at the edges: route params, storage, payment responses.                                                                                                                                                                             |
 | Mock API                       | Our own in-memory mock client (section 10)                                              | —                                 | The same interface as the real client, so swapping is one env var. Optional MSW (3.0.3) for web tests.                                                                                                                                                    |
 | Styling                        | `StyleSheet` + typed tokens from `design/tokens.json`                                   | —                                 | Nothing extra to learn or configure, and it works on web and native. NativeWind (4.2.7) was considered and rejected: it adds another build layer and a second way to style for a beginner.                                                                |
 | Icons                          | lucide-react-native + react-native-svg                                                  | 1.66.0 / 15.16.0                  | Matches the brand (Lucide, 2 px stroke).                                                                                                                                                                                                                  |
 | Images                         | expo-image                                                                              | 58.0.18                           | Caching, blurhash placeholders, WebP.                                                                                                                                                                                                                     |
 | Video                          | expo-video                                                                              | 58.0.13                           | Story viewer and review playback.                                                                                                                                                                                                                         |
 | Camera                         | expo-camera                                                                             | 58.0.14                           | Front-camera video reviews. **Check whether video recording works on web in this SDK.** If it doesn't, use a web-only `<input type="file" accept="video/*" capture="user">` fallback in `RecordVideo.web.tsx`.                                            |
-| Lists                          | @shopify/flash-list                                                                     | 2.3.3                             | Smooth long menus on cheap phones.                                                                                                                                                                                                                        |
 | Animation                      | react-native-reanimated                                                                 | 4.7.1                             | Sheets, banner slide, the game. Interaction motion stays at 200 ms or less.                                                                                                                                                                               |
 | Fonts                          | expo-font                                                                               | 58.0.11                           | Loads the WOFF2 subsets from `design/prototype/fonts/` (convert to TTF/OTF for native if needed).                                                                                                                                                         |
 | i18n                           | i18next + react-i18next + expo-localization                                             | 26.5.12 / 17.1.9 / 58.0.5         | English is the only language a guest can select today. French, Portuguese, Spanish, Arabic and Swahili files exist from day one and show as Coming soon until native speakers fill them. Arabic is right-to-left. Never machine-translate without review. |
 | Haptics                        | expo-haptics                                                                            | 58.0.7                            | A light tick on add-to-order and in the game (native only).                                                                                                                                                                                               |
-| Unit and component tests       | jest-expo + @testing-library/react-native                                               | 58.0.13 / 14.1.0                  | Standard for Expo (callstack-react-native-testing).                                                                                                                                                                                                       |
+| Unit and component tests       | jest-expo + @testing-library/react-native                                               | 58.0.13 / 14.1.0                  | Standard for Expo.                                                                                                                                                                                                                                        |
 | Web end-to-end and screenshots | @playwright/test                                                                        | 1.64.1                            | Drives the guest web build at 390×844 and compares it with `design/renders/`.                                                                                                                                                                             |
 | Native end-to-end              | Maestro (later, owner app)                                                              | —                                 | Simple YAML flows on an Android emulator.                                                                                                                                                                                                                 |
 | Lint and format                | `npx expo lint` (eslint-config-expo 58.0.4) + Prettier                                  | —                                 | Expo's own config. Add rules from section 7.                                                                                                                                                                                                              |
@@ -129,7 +128,7 @@ Checked on npm on 31 Oct 2026. **Do not pin these by hand.** Create the app with
 | CI                             | GitHub Actions (+ EAS Workflows for builds)                                             | —                                 | See section 16.                                                                                                                                                                                                                                           |
 | Backend (Phase 5)              | Node + TypeScript, Hono, Postgres with Drizzle, in `server/` in the same repo           | —                                 | The same language as the app. Hono is small. Postgres for money. The final host is Clarke's call (section 17).                                                                                                                                            |
 
-**Expo Go note:** Expo Go on phones can lag behind the newest SDK. Use a development build (`agent-skills/expo-dev-client`) for the owner app and test the guest app in the browser.
+**Expo Go note:** Expo Go on phones can lag behind the newest SDK. Use a development build (expo-dev-client) for the owner app and test the guest app in the browser.
 
 ## 6. Repo layout
 
@@ -137,9 +136,8 @@ Group code by **feature**, not by file type. Each feature folder owns its screen
 
 ```
 cravins/
-├─ AGENTS.md                 # copied from this kit (kit root AGENTS.md), then kept up to date
+├─ AGENTS.md                 # rules for every coding agent, kept up to date
 ├─ BUILD.md                  # this file
-├─ LEARNING.md               # plain-language notes for Clarke, one entry per feature
 ├─ api/openapi.yaml          # the contract (source of truth for all endpoints)
 ├─ design/                   # renders, tokens, brand.md, logo (copied from the kit)
 ├─ assets/                   # app icon, splash, fonts (from design/logo/expo, design/prototype/fonts)
@@ -231,19 +229,19 @@ The prototype in `design/prototype/` runs these screens in a browser. Run `npx s
 
 Simple and readable beats clever. Clarke reads this code to learn.
 
-- **TypeScript strict.** No `any`, no `@ts-ignore` and no non-null `!` without a comment saying why. Model states as unions (pstack-principle-type-system-discipline). For example, `type PayState = { kind: 'idle' } | { kind: 'awaiting_approval'; reference: string; expiresAt: number } | …`
+- **TypeScript strict.** No `any`, no `@ts-ignore` and no non-null `!` without a comment saying why. Model states as unions. For example, `type PayState = { kind: 'idle' } | { kind: 'awaiting_approval'; reference: string; expiresAt: number } | …`
 - **Money is always integer minor units** (`number` that is a whole number, branded `Pesewas` because Ghana's minor unit is the pesewa). 100 units is 1 major unit. Format only at the edge with `formatMoney(amount, currency)`. The Accra sample is `GHS`, shown as `GH₵65` or `GH₵65.50`. Never use floats for money, and never trust a price the client computed: the server's total wins.
 - **Names say what things are.** `placeOrder`, `useOrderStatus`, `splitEqually`. No `utils.ts` junk drawers and no `data2`.
-- **Comments explain why, not what.** Add a short comment wherever a rule comes from outside the code: Paystack behaviour, Ghana law, contrast maths, game tuning. Remove comments that repeat the code (pstack-no-comments).
-- **Small functions, early returns, no deep nesting.** Prefer deleting code to adding layers (pstack-principle-laziness-protocol).
+- **Comments explain why, not what.** Add a short comment wherever a rule comes from outside the code: Paystack behaviour, Ghana law, contrast maths, game tuning. Remove comments that repeat the code.
+- **Small functions, early returns, no deep nesting.** Prefer deleting code to adding layers.
 - **No magic numbers** in components: spacing, colours and sizes come from `theme/tokens.ts`. Game tuning numbers live at the top of the engine file with comments.
-- **All user-facing text goes through i18n** (`t('menu.title')`). Run copy through `pstack-unslop` and match `design/brand.md` section 10.
-- **Accessibility:** every touchable has a role and a label, targets are at least 44 px, text contrast reaches 4.5:1, focus is visible on web, and reduced motion is respected (`ui-skills-fixing-accessibility`).
+- **All user-facing text goes through i18n** (`t('menu.title')`). Keep copy plain and match `design/brand.md` section 10.
+- **Accessibility:** every touchable has a role and a label, targets are at least 44 px, text contrast reaches 4.5:1, focus is visible on web, and reduced motion is respected.
 - **Errors:** every network call shows one of three states: loading (skeleton), error (plain sentence + Try again), or empty (helpful sentence). Never a blank screen or a raw error code.
 - **No new dependency** without a line in the PR saying why and what it costs in bundle size.
 - **Lint rules to add** on top of eslint-config-expo: `@typescript-eslint/no-explicit-any: error`, `no-console: warn` (allow `warn`/`error`), `import/no-cycle: error`, `react-hooks/exhaustive-deps: error`, and a `no-restricted-imports` pattern that blocks deep imports into other features.
 - **Commits:** a conventional-commit title (`feat(menu): add category chips`). The body is in plain words: what changed, why, and how it was checked. One change per commit. No "WIP" on main.
-- **Branches and PRs:** one feature per PR, with the PR template in `templates/`. Run `pstack-blast-radius` before merging and paste its summary in the PR.
+- **Branches and PRs:** one feature per PR, with the PR template in `.github/`. Before merging, write a short blast-radius summary (what else the change can affect) in the PR.
 
 ## 8. Design system
 
@@ -256,7 +254,7 @@ Everything visual comes from `design/tokens.json` and `design/brand.md`. Build t
   - `IconButton`, `Card`, `ListRow`, `Chip`, `Badge`, `Sheet` (bottom sheet), `Screen` (safe area + scroll + header), `Skeleton`, `Toast`, `Switch`, `TextField`, `PhoneField`, `PriceText`, `Stepper` (quantity), `EmptyState`, `ErrorState`
 - Every `ui/` component takes colours from the **current theme** (Cravins or venue), never from hard-coded hex values. `VenueThemeProvider` wraps guest routes with the output of `deriveTheme(venue.theme)`. Owner routes always get the Cravins theme.
 - Add a dev-only route `src/app/_dev/ui.tsx` (excluded from production builds) that shows every component in every state, for all three sample venues. Screenshots of this page are the design-system review for Clarke.
-- Taste rules, from `anthropic-frontend-design`, `impeccable`, `taste-skill`, `no-slop-ui`, `stop-slop`, `ui-skills-baseline-ui`, `emil-design-eng` and `rauno-interfaces`. Apply them, then re-check with `cursor-team-kit-deslop`:
+- Taste rules. Apply them, then re-check each screen against them:
   - One filled button per screen. White space instead of boxes inside boxes.
   - No gradients, glows, emoji icons, random shadows, or "✨ AI" decorations.
   - No purple. Orange stays small.
@@ -266,7 +264,7 @@ Everything visual comes from `design/tokens.json` and `design/brand.md`. Build t
 
 ### Theming (port first, test first)
 
-Port `design/prototype/theme.js` to `src/features/theming/deriveTheme.ts` using pstack-tdd. Write these tests before the code:
+Port `design/prototype/theme.js` to `src/features/theming/deriveTheme.ts`. Write these tests before the code:
 
 | Venue colour                       | Button text | Expected ratio | Notes                                                                               |
 | ---------------------------------- | ----------- | -------------- | ----------------------------------------------------------------------------------- |
@@ -280,7 +278,7 @@ Also test that every returned pair reaches 4.5:1. Use a property-style loop over
 
 ## 9. State machines
 
-Write each as a pure reducer in its feature folder (`orderMachine.ts`, `paymentMachine.ts`, `waiterCallMachine.ts`), with tests for every legal and illegal move. The UI reads the state and never invents one. `pstack-statechart` can check these with TLA+ if a flow gets tricky.
+Write each as a pure reducer in its feature folder (`orderMachine.ts`, `paymentMachine.ts`, `waiterCallMachine.ts`), with tests for every legal and illegal move. The UI reads the state and never invents one.
 
 ### Order (server-owned, the guest app only displays it)
 
@@ -418,7 +416,7 @@ Most guests are on mobile data with a 2–3 GB phone. Treat these as requirement
   - Order status every 10 s while visible.
   - Payment every 3 s backing off to 10 s.
   - Stop when the tab or app is hidden, and resume on focus.
-- **Lists:** FlashList for menus. Don't re-render the whole list when one item's quantity changes.
+- **Lists:** the menu is a plain scroll view (FlashList v2 never drew it on phones, see `MenuScreen.tsx`). Don't re-render the whole list when one item's quantity changes.
 - **Fonts:** seven WOFF2 subsets only (Noto Sans ×3 for guests, Inter ×2 for owners, two venue heading fonts). `font-display: swap` on web.
 - **Game:** 60 fps target, but it must stay playable at 30. No allocations inside the frame loop.
 
@@ -499,22 +497,22 @@ Ghana is the first launch market and the default sample: cedis, `+233`, and `Afr
 
 ## 13. Phases and the ordered checklist
 
-Work top to bottom. Each box is one small PR that ends in a verifiable state (pstack-principle-sequence-verifiable-units). Before each feature, run `pstack-architect`: sketch the types, function signatures and files, and post them in the PR description. Then build. Tick the box in this file in the same PR.
+Work top to bottom. Each box is one small PR that ends in a verifiable state. Before each feature, sketch the types, function signatures and files, and post them in the PR description. Then build. Tick the box in this file in the same PR.
 
 **The UI approval gate:** the backend starts only after Clarke has seen the screenshots for Phases 0–4 and said yes. Until then, `EXPO_PUBLIC_API_MODE=mock`. The one exception is the Paystack sandbox slice in Phase 2b.
 
 ### Phase 0: Setup and design system
 
-- [x] 0.1 `npx create-expo-app@latest cravins` (TypeScript template). Move routes to `src/app/`. Copy `AGENTS.md`, `BUILD.md`, `api/` and `design/` from the kit. Create `LEARNING.md` from `templates/LEARNING.template.md`.
+- [x] 0.1 `npx create-expo-app@latest cravins` (TypeScript template). Move routes to `src/app/`. Copy `AGENTS.md`, `BUILD.md`, `api/` and `design/` from the kit.
 - [x] 0.2 Tooling:
-  - strict tsconfig (`templates/tsconfig.json`)
+  - strict tsconfig
   - `npx expo lint` plus the extra rules (section 7)
   - Prettier, Husky, lint-staged and commitlint
   - `.env.example`
-  - CI workflow (`templates/ci.yml`)
+  - CI workflow
 - [x] 0.3 App config:
   - name "Cravins", slug `cravins`, scheme `cravins`
-  - icons and splash from `design/logo/expo/` (`templates/app.config.snippet.ts`)
+  - icons and splash from `design/logo/expo/`
   - web favicon
   - `experiments.typedRoutes: true`
 - [x] 0.4 Fonts: Inter 400/600, Unbounded 700, Noto Serif 700 and Montserrat 800, loaded with expo-font. Keep the splash up until they load.
@@ -531,7 +529,7 @@ Work top to bottom. Each box is one small PR that ends in a verifiable state (ps
 - [x] 0.9 `lib/money.ts`, `lib/phone.ts` and `lib/time.ts`, with tests first.
 - [x] 0.10 i18n setup with `en.json`, plus empty `tw/ga/ee` files that fall back to English.
 - [x] 0.11 Playwright set-up: a 390×844 viewport at DPR 2, against `npx expo export -p web` served locally. One smoke test.
-- [ ] **Review:** gallery screenshots for all 3 venues go to Clarke, with a LEARNING.md entry on "how the app is put together".
+- [ ] **Review:** gallery screenshots for all 3 venues go to Clarke.
 
 ### Phase 1: Table (product 1), guest side, on mocks
 
@@ -600,16 +598,16 @@ Work top to bottom. Each box is one small PR that ends in a verifiable state (ps
 - [x] 4.2 ~~Video review~~ **Dropped.** Video reviews were removed from the contract (`c02efe4`), so there is nothing to build.
 - [x] 4.3 Owner moderation: To check, Featured and Hidden tabs, with Hide and Feature buttons and the private-reply hint for low ratings. Featured videos become guest stories. Render: `owner-reviews.png`.
 - [x] 4.4 Full polish pass (2026-11-16; `e2e/a11y.spec.ts` now checks names, target size and contrast on every page, light and dark; Lighthouse accessibility 100, best practices 100, SEO 100, and performance about 55 on the mock build, which is set by the mock bundle and demo photos and is re-measured on staging in 5.6):
-  - `cursor-team-kit-deslop`, `impeccable`, `ui-skills-improve-ui`
-  - accessibility (`ui-skills-fixing-accessibility`)
-  - motion (`ui-skills-fixing-motion-performance`)
-  - copy (`pstack-unslop`)
+  - design clean-up against the taste rules
+  - accessibility
+  - motion
+  - copy
   - Lighthouse
 - [x] **UI APPROVAL GATE:** Clarke gets screenshots of every screen side by side with the renders, for all 3 venues, plus a short screen recording of the guest flow (scan → order → pay → stamp → review) and the owner flow. **Wait for his written yes.** _Approved by Clarke in writing on 2026-11-16 ("approved"), after the UI approval pack: every guest screen beside its render for all 3 venues, all 31 owner pages in desktop light, desktop dark and phone, and recordings of both flows. 2.10 (fee screens) was still to build, and 1.15 (JS budget) waits on his call._
 
 ### Phase 4b: Owner dashboard and online ordering (gap table, on mocks)
 
-Approved by Clarke on 2026-11-03. Details and file locations are in `docs/menurite-gap-table.md`. One PR per box. Contract boxes (marked _contract_) go first in their own PR.
+Approved by Clarke on 2026-11-03. One PR per box. Contract boxes (marked _contract_) go first in their own PR.
 
 - [x] 4b.1 Sidebar in Main / Sales / Settings, collapsible, plan badge at the top (landing placeholder plans), help, profile and log out at the bottom. Pages with no screen yet open a "Coming soon" page.
 - [x] 4b.2 Home: "Complete your setup" checklist with a % bar, worked out from data the app already loads.
@@ -653,7 +651,7 @@ Approved by Clarke on 2026-11-12: build the canvas redesign on the mock first, b
   - Role checks: each owner call is tested with every `StaffRole` in the contract (owner, manager, waiter, kitchen, viewer, staff_scanner) against what that role may do.
 - [x] 5.3 Auth (Clerk on our own screens, section 4), roles, rate limits, idempotency store. _Done 2026-11-22: Clerk tokens checked on the server (`src/owner/clerk.ts`), a role table per call (`ROLES` in `src/owner/staff.ts`), rate limits (`src/http/rateLimit.ts`) and idempotency keys for payments, orders and manual payments. The rate limits live in memory: move them to the database before running a second dyno._
 - [x] 5.4 Money: Paystack live-ready (still test keys), each venue's own keys stored encrypted, a webhook URL per venue checked with that venue's secret, reconciliation job (verify pending payments older than 5 min). _Done 2026-11-23: test keys only (config refuses a live key), each venue's key sealed (`src/secrets/sealed.ts`), one webhook address for every venue that finds the venue from the payment and checks the signature with that venue's key, and a re-check every minute inside the server (`recheckStale` in `src/payments.ts`) for payments still open after 5 minutes, up to a day old. It runs in the web dyno, not Heroku Scheduler, so there's no add-on to sign up for; a second dyno would only repeat a harmless check._
-- [ ] 5.5 Media: object storage with pre-signed uploads, image resizing, video transcoding to 480p and a poster. _Status 2026-11-23: pre-signed uploads to Supabase Storage are done. Image resizing is done: the first time a photo is used, the server saves an upright WebP copy with no EXIF, at most 1080 px wide for dishes, 1600 for banners and 512 for logos (`server/src/media/shrink.ts`), and guests load that copy. Photos saved before this keep their original file until they are uploaded again. Video (480p and a poster) is not started; video reviews aren't built in the app yet either._
+- [x] 5.5 Media: object storage with pre-signed uploads and image resizing. _Done 2026-11-24: pre-signed uploads to Supabase Storage, and the first time a photo is used the server saves an upright WebP copy with no EXIF, at most 1080 px wide for dishes, 1600 for banners and 512 for logos (`server/src/media/shrink.ts`). Video (480p and a poster) is out of scope (Clarke, 2026-11-24), and so is resizing photos saved before this, since no real venue has any yet._
 - [ ] 5.6 Switch the app to `EXPO_PUBLIC_API_MODE=http` in staging. The Playwright suite must pass against staging. _Status 2026-11-22: the live app (cravins-app.vercel.app) already runs on the real server, with the three sample venues; the demo stays on the mock. The game board reads the server's weekly top five, and a name typed after a round is saved with that round (2026-11-23). Real-server browser tests (2026-11-23): `.github/workflows/e2e-server.yml` runs the tests tagged `@server` against a throwaway Postgres and the PR's own server: 12 guest tests (phase 1), 16 that sign in through Clerk's test mode (phase 2) and 9 that pay or set payments through Paystack's test mode (phase 3), and 4 that make their own waiter call, orders and loyalty member instead of using the mock's (`e2e/sampleData.ts`, `seedE2eLoyalty`), 40 in all. Mock-only for good: the mock's pretend Paystack outcomes and card page, and fee-passing's instant MoMo success. Still to come: a required check (phase 4)._
   - The live Vercel site runs on sample data until this step (audit N3). Don't show it to real venues as the product before then.
   - The game board reads `GET …/leaderboard` from the server instead of this phone's scores (audit N2).
@@ -690,38 +688,37 @@ Phase 6 is kept for launch hardening: E-VAT receipts, error monitoring, app stor
 
 ## 14. Testing and verification
 
-- **Unit tests (jest-expo)** cover every pure module, written test-first with `pstack-tdd`:
+- **Unit tests (jest-expo)** cover every pure module, written test-first:
   - money, phone, hours
   - totals, bill split, tips
   - loyalty rules
   - deriveTheme and contrast
   - the payment, order and waiter-call machines
   - the game engine
-- **Component tests (RNTL)** test behaviour, not internals (`pstack-principle-test-behavior-not-implementation`). Example: "tapping Add twice shows 2 in the bar".
+- **Component tests (RNTL)** test behaviour, not internals. Example: "tapping Add twice shows 2 in the bar".
 - **Contract checks:**
   - `redocly lint`
   - `api/fixtures/check-fixtures.mjs` in CI
   - the mock client's responses validated against the schema in a test
 - **Web end-to-end (Playwright):** the guest flow on each sample venue. Then compare a screenshot with each render in `design/renders/`. The renders came from the HTML prototype, so expect small font-rendering differences. Use `maxDiffPixelRatio` of about 0.03 and look at the diff images yourself.
-- **Prove it works** (`pstack-principle-prove-it-works`, `cursor-team-kit-verify-this`): before you say a screen is done, run the tests, the type check and lint. Screenshots are optional (Clarke, 2026-11-09).
+- **Prove it works:** before you say a screen is done, run the tests, the type check and lint. Screenshots are optional (Clarke, 2026-11-09).
 - **Native:** in Phase 1b and later, a Maestro smoke flow on an Android emulator for owner login → orders → services.
-- **Before merging:** run `pstack-blast-radius` on the diff, plus lint, typecheck, tests and the Playwright run.
+- **Before merging:** write the blast-radius summary, and run lint, typecheck, tests and the Playwright run.
 
 ## 15. Definition of done (every PR)
 
 - [ ] It does what the checklist item says, and nothing more.
 - [ ] `npx tsc --noEmit`, `npx expo lint` and `npm test` pass. Playwright passes for touched screens.
 - [ ] Every state is covered: loading, empty, error, offline and success. Works at 320 px wide and with 200% text size.
-- [ ] Copy is in i18n, matches `brand.md` section 10, and has been through `pstack-unslop`.
+- [ ] Copy is in i18n, matches `brand.md` section 10, and reads plainly.
 - [ ] Accessibility labels, 44 px targets and 4.5:1 contrast. No new contrast failures from venue colours.
 - [ ] No secrets, no console logs of personal data, no TakeOrder anywhere.
 - [ ] The contract is unchanged, or was changed in its own PR first.
-- [ ] A LEARNING.md entry, written with `pstack-teach`: what was built, how it works in plain words, one thing to try.
-- [ ] A plain-language commit and PR description with the `pstack-blast-radius` summary.
+- [ ] A plain-language commit and PR description with the blast-radius summary.
 
 ## 16. CI, environments and release
 
-- **GitHub Actions `ci.yml`** (template in `templates/`) runs on every PR:
+- **GitHub Actions `ci.yml`** runs on every PR:
   - `npm ci`
   - check that the generated types are up to date
   - `tsc`
@@ -739,7 +736,7 @@ Phase 6 is kept for launch hardening: E-VAT receipts, error monitoring, app stor
   - `EXPO_PUBLIC_MOCK_FAIL_RATE`
   - Server-only, never with the EXPO_PUBLIC prefix: `PAYSTACK_SECRET_KEY`, `DATABASE_URL`, `CLERK_SECRET_KEY`. The app gets only Clerk's publishable key (`EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY`), which is safe to ship.
 - **Guest web hosting:**
-  - `npx expo export -p web`, deployed to EAS Hosting (`agent-skills/expo-eas-hosting`) or any static host with SPA fallback to `index.html`.
+  - `npx expo export -p web`, deployed to EAS Hosting or any static host with SPA fallback to `index.html`.
   - The domain is `cravins.app` if Clarke buys it. Nothing has been bought.
 - **Owner app:**
   - dev builds first (`expo-dev-client`)

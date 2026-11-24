@@ -2,13 +2,13 @@
 
 Cravins is a QR code table app for restaurants in Ghana, starting in Accra. A guest scans the code on the table and gets that venue's page in the phone browser. They can read the menu, call the waiter, pay with MoMo or card, collect stamps, leave a review, and play a short game while the food is on the way.
 
-The owner uses the same app to watch orders, switch services on and off, and moderate video reviews. Money is settled to the venue by Paystack. Cravins does not hold it.
+The owner uses the same app to watch orders, switch services on and off, and moderate reviews. Money is settled to the venue by Paystack. Cravins does not hold it.
 
 ## Where to start
 
 - `BUILD.md` is the plan, the stack, and the order of work.
 - `AGENTS.md` is how a coding agent should work in this repo.
-- `LEARNING.md` explains the code in plain language.
+- `docs/ARCHITECTURE.md` explains how the app and the server fit together.
 - `api/openapi.yaml` is the fixed contract. The app talks to an in-memory mock until the UI is approved.
 - `design/renders/` are the screens to match.
 
@@ -33,11 +33,11 @@ Each restaurant connects its own Paystack account in Integrations. Guests pay in
 
 ### The sample venues
 
-| Venue | Payments in the app | Online ordering (`/slug`) |
-|---|---|---|
-| Mama's Kitchen (`/mamas-kitchen`) | Yes (Paystack test) | Pickup and delivery |
-| Bean There (`/bean-there`) | Yes (Paystack test) | Pickup |
-| Auntie Akos (`/auntie-akos`) | No: pays in person | Off (the link is a menu to browse) |
+| Venue                             | Payments in the app | Online ordering (`/slug`)          |
+| --------------------------------- | ------------------- | ---------------------------------- |
+| Mama's Kitchen (`/mamas-kitchen`) | Yes (Paystack test) | Pickup and delivery                |
+| Bean There (`/bean-there`)        | Yes (Paystack test) | Pickup                             |
+| Auntie Akos (`/auntie-akos`)      | No: pays in person  | Off (the link is a menu to browse) |
 
 Owner sample logins (code `123456`): `0240000001` Ama (Mama's Kitchen), `0240000004` Kojo (Bean There), `0240000005` Akosua (Auntie Akos).
 

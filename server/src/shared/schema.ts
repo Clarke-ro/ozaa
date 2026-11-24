@@ -328,7 +328,7 @@ export interface paths {
          * @description Check `x-paystack-signature` = HMAC-SHA512(raw body, secret key) before reading the body.
          *     Handle `charge.success` idempotently (the same event can arrive twice). Re-verify the
          *     reference with Paystack and compare amount and currency before marking anything paid.
-         *     Answer 200 fast. Port the logic from design/reference/table-qr-server.js.
+         *     Answer 200 fast.
          */
         post: operations["paystackWebhook"];
         delete?: never;

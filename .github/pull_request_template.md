@@ -5,6 +5,7 @@
 ## Architect sketch
 
 ## How I checked it
+
 - [ ] `npx tsc --noEmit`, `npx expo lint` and `npm test` pass
 - [ ] Playwright passes for the touched screens
 - [ ] Loading, empty, error and offline states seen
@@ -12,5 +13,3 @@
 - [ ] No secrets or personal data in code or logs
 
 ## Blast radius
-
-## LEARNING.md

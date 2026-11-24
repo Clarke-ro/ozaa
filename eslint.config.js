@@ -12,7 +12,6 @@ module.exports = defineConfig([
       'src/mocks/media.ts',
       'server/*',
       'design/*',
-      'agent-skills/*',
       'api/*',
     ],
   },

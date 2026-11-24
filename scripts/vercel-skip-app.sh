@@ -15,7 +15,7 @@ if [ -z "$base" ]; then echo "No earlier commit to compare with: building."; exi
 
 # Files that never reach the app's web build.
 git diff --quiet "$base" HEAD -- . \
-  ':!landing' ':!docs' ':!server' ':!e2e' ':!.github' ':!agent-skills' ':!templates' ':!*.md' \
+  ':!landing' ':!docs' ':!server' ':!e2e' ':!.github' ':!*.md' \
   || exit 1
 
 # The owner's billing page imports the landing page's prices, so they change the app too.

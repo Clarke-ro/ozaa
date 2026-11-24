@@ -33,7 +33,7 @@ export interface ModalSheetProps {
 
 // On a tablet or desktop a full-screen form would stretch edge to edge, so it becomes a large centred panel.
 const WIDE = 840;
-// iOS's sheet curve: quick to start, long gentle landing, never an ease-in (emil-animate-expo).
+// iOS's sheet curve: quick to start, long gentle landing, never an ease-in.
 const SHEET_EASE = Easing.bezier(0.32, 0.72, 0, 1);
 
 export function ModalSheet({
