@@ -133,6 +133,11 @@ export function StatusScreen({ slug }: { slug: string }) {
               <PriceText amount={line.totalPesewas} currency={currency} />
             </View>
           ))}
+          {o.note ? (
+            <Text variant="caption" style={{ color: theme.muted }}>
+              {t('status.note', { note: o.note })}
+            </Text>
+          ) : null}
           {o.deliveryFeePesewas ? (
             <View style={styles.row}>
               <Text variant="body" style={styles.flex}>

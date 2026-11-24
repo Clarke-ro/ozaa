@@ -29,7 +29,9 @@
     },
     "more": "More",
     "less": "Less",
-    "moreHint": "Shows the full description"
+    "moreHint": "Shows the full description",
+    "ratings_one": "{{count}} rating",
+    "ratings_other": "{{count}} ratings"
   },
   "services": {
     "menu": {
@@ -215,7 +217,8 @@
       "part_paid": "Part paid",
       "paid": "Paid. Thank you!",
       "refunded": "Refunded"
-    }
+    },
+    "note": "Your note: {{note}}"
   },
   "ready": {
     "title": "Your food is ready!",
@@ -2518,7 +2521,10 @@
     "edit": "Edit",
     "remove": "Remove {{name}}",
     "clear": "Clear your order",
-    "itemTotal": "Item total"
+    "itemTotal": "Item total",
+    "instructions": "Add instructions",
+    "instructionsLabel": "Instructions for the kitchen",
+    "instructionsHint": "Allergies, how spicy, when to bring it…"
   },
   "ownerChrome": {
     "brand": "Cravins",
