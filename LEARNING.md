@@ -4,12 +4,40 @@ Plain-language notes for Clarke. Newest at the top.
 
 ---
 
+## 2026-11-24 · The rest of the guest screens
+
+**What we built**
+The last screens from the design canvas: the online menu's header (name, Info ›, and boxes for pickup time, delivery and hours), the checkout fields as white boxes under their labels, the Pay & split bill page with the same choices as the order page, "Order paid" and "Not paid" with a round badge, and the order status page with a step bar.
+
+**How it works**
+
+```
+Pay & split bill → Pay → Paystack's page → back to /{venue}/pay?reference=… → Order paid, or Not paid → Try again
+```
+
+Every payment now goes through Paystack's page, so there is no MoMo number box and no "approve on your phone" countdown on our side.
+
+**Files to look at**
+
+- `src/features/pay/PayProgress.tsx`: Order paid, Not paid and Didn't go through
+- `src/features/pay/PayScreen.tsx`: the Pay & split bill page
+- `src/features/online/OnlineHero.tsx`: the online menu's header
+- `src/features/orders/LinkCheckoutCard.tsx`: pickup or delivery, name, phone, address
+- `src/features/orders/StatusScreen.tsx`: the order status page
+
+**New idea: one component, many states**
+`PayProgress` draws every screen after Pay from one layout (a badge, a headline, details, buttons) and only swaps the colour, icon and words for each state. Changing the layout once changes all of them.
+
+**Try it yourself**
+In `PayProgress.tsx`, change `RINGS = 176` to `140` and look at Order paid: the soft rings get tighter.
+
 ## 2026-11-24 · Order and pay on one page
 
 **What we built**
 The order page now takes payment too. The guest checks their dishes, picks Whole bill, Split equally or My items, a tip, and MoMo, Cash or Card, then taps Place order once. MoMo and card open Paystack's own page; Cash at a table asks the waiter for the bill.
 
 **How it works**
+
 ```
 Place order → make the order → MoMo or card: get the bill quote → start the payment → Paystack's page
                              → Cash at a table: call the waiter for the bill → order status
@@ -17,6 +45,7 @@ Paystack's page → back to /{venue}/pay?reference=… → the app checks the pa
 ```
 
 **Files to look at**
+
 - `src/features/orders/OrderScreen.tsx`: the page
 - `src/features/orders/usePlaceOrder.ts`: what Place order does, step by step
 - `src/features/pay/payPick.ts`: which boxes to show, and what each one does (with tests)

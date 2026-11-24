@@ -1,11 +1,11 @@
 import { useEffect } from 'react';
-import { statusKey } from '@/lib/orderTimeline';
+import { statusKey, timelineSteps } from '@/lib/orderTimeline';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { OfflineNote } from '@/ui/OfflineNote';
-import { ClipboardList } from 'lucide-react-native';
+import { Check, ClipboardList } from 'lucide-react-native';
 import { api } from '@/lib/api';
 import { useGuestSession } from '@/features/session';
 import { useVenue } from '@/features/venue';
@@ -70,10 +70,11 @@ export function StatusScreen({ slug }: { slug: string }) {
   const payOnline = canPayOnline(venue.data);
   // Staff can mark an order paid at any venue, so a paid order says so even without online pay.
   const showPaid = payOnline || o.paymentStatus !== 'unpaid';
-  const card = [styles.card, { backgroundColor: theme.surface }];
+  const card = [styles.card, { backgroundColor: theme.wash }];
+  const steps = timelineSteps(o.status);
 
   return (
-    <SafeScreen>
+    <SafeScreen background={theme.white}>
       <PageHeader
         title={t('status.title', { number: o.number })}
         subtitle={
@@ -88,7 +89,7 @@ export function StatusScreen({ slug }: { slug: string }) {
       />
       <OfflineNote savedAt={order.dataUpdatedAt} />
       <ScrollView contentContainerStyle={styles.page}>
-        <View style={card}>
+        <View style={styles.now}>
           <Text variant="caption" style={{ color: theme.meta }}>
             {t('status.now')}
           </Text>
@@ -108,9 +109,18 @@ export function StatusScreen({ slug }: { slug: string }) {
               {t('linkOrder.status.to', { address: o.deliveryAddress })}
             </Text>
           ) : null}
-          <View style={styles.timeline}>
-            <StatusTimeline order={o} />
-          </View>
+        </View>
+        {/* One bar per step, filled up to the one the kitchen is on (design canvas). */}
+        <View style={styles.bars} accessibilityElementsHidden importantForAccessibility="no">
+          {steps.map((state, index) => (
+            <View
+              key={index}
+              style={[styles.bar, { backgroundColor: state === 'todo' ? theme.line : theme.fill }]}
+            />
+          ))}
+        </View>
+        <View style={card}>
+          <StatusTimeline order={o} />
         </View>
 
         <View style={card}>
@@ -137,8 +147,15 @@ export function StatusScreen({ slug }: { slug: string }) {
             </Text>
             <PriceText amount={o.totalPesewas} currency={currency} size="title" />
           </View>
-          {showPaid ? (
-            <Text variant="caption" style={{ color: unpaid ? theme.muted : theme.success }}>
+          {showPaid && !unpaid ? (
+            <View style={[styles.pill, { backgroundColor: theme.successTint }]}>
+              <Check size={14} color={theme.success} strokeWidth={3} />
+              <Text variant="caption" style={[styles.strong, { color: theme.success }]}>
+                {t(`status.paid.${o.paymentStatus}`)}
+              </Text>
+            </View>
+          ) : showPaid ? (
+            <Text variant="caption" style={{ color: theme.muted }}>
               {t(`status.paid.${o.paymentStatus}`)}
             </Text>
           ) : (
@@ -197,9 +214,20 @@ const styles = StyleSheet.create({
     padding: tokens.space[4],
     borderRadius: tokens.radius.lg,
     borderCurve: 'continuous',
-    boxShadow: tokens.shadow.card,
   },
-  timeline: { marginTop: tokens.space[3] },
+  now: { gap: tokens.space[1] },
+  bars: { flexDirection: 'row', gap: 6 },
+  bar: { flex: 1, height: 6, borderRadius: 3 },
+  pill: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: tokens.space[3],
+    paddingVertical: tokens.space[1],
+    borderRadius: tokens.radius.full,
+  },
+  strong: { fontWeight: '600' },
   row: { flexDirection: 'row', alignItems: 'baseline', gap: tokens.space[3] },
   total: {
     borderTopWidth: StyleSheet.hairlineWidth,

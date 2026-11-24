@@ -1,13 +1,6 @@
 import type { ReactNode } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
-import {
-  CircleCheck,
-  CircleX,
-  Clock,
-  CreditCard,
-  Smartphone,
-  type LucideIcon,
-} from 'lucide-react-native';
+import { Check, Clock, Smartphone, X, type LucideIcon } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { pesewas } from '@/lib/brand';
 import { formatMoney } from '@/lib/money';
@@ -21,20 +14,23 @@ import { clock } from './paymentWatch';
 export type Charge = {
   amountPesewas: number;
   currency: string;
-  /** "MTN Mobile Money" */
+  /** "MoMo" or "Card" */
   method: string;
-  /** "024 123 4567", for MoMo. */
+  /** "024 123 4567", for a MoMo charge sent straight to a phone. */
   phone?: string;
-  /** Paid on Paystack's card page, so "time ran out" means the guest cancelled or left it. */
+  /** Paid on Paystack's page, so "time ran out" means the guest cancelled or left it. */
   card: boolean;
   testMode: boolean;
   /** Paystack's own words for the prompt, when it sent some. */
   displayText?: string;
+  /** "Mama's Kitchen · Order #24", over the badge. */
+  heading: string;
 };
 
 /**
- * What the guest sees after tapping Pay with MoMo: approve on the phone with a countdown, then
- * paid, failed or timed out. Only a server "succeeded" ever shows as paid (paymentMachine).
+ * What the guest sees once a payment has started, as the design canvas draws it (Clarke,
+ * 2026-11-23): a small venue and order line, a round badge with soft rings, a bold headline,
+ * then details and buttons. Only a server "succeeded" ever shows as paid (paymentMachine).
  */
 export function PayProgress({
   state,
@@ -67,15 +63,15 @@ export function PayProgress({
     case 'awaiting_approval':
       return (
         <Stage
+          heading={charge.heading}
           icon={Smartphone}
           tone="ink"
           title={t('pay.approveTitle')}
           body={charge.displayText ?? t('pay.waiting')}
-          charge={charge}
-          amount={amount}
+          details={<ChargeCard charge={charge} amount={amount} />}
         >
           <View style={styles.timer} accessible accessibilityLiveRegion="polite">
-            <Text variant="display-m" style={styles.clock}>
+            <Text variant="display-m" style={styles.num}>
               {clock(left)}
             </Text>
             <Text variant="caption" style={{ color: theme.muted }}>
@@ -96,23 +92,35 @@ export function PayProgress({
         </Stage>
       );
     case 'opening_checkout':
-      return (
-        <Stage tone="ink" title={t('pay.openingCard')} charge={charge} amount={amount}>
-          <ActivityIndicator color={theme.ink} />
-        </Stage>
-      );
     case 'checking':
       return (
-        <Stage tone="ink" title={t('pay.checking')} charge={charge} amount={amount}>
+        <Stage
+          heading={charge.heading}
+          tone="ink"
+          title={t(state.kind === 'checking' ? 'pay.checking' : 'pay.openingCard')}
+          details={<ChargeCard charge={charge} amount={amount} />}
+        >
           <ActivityIndicator color={theme.ink} />
         </Stage>
       );
     case 'paid':
       return (
-        <Stage icon={CircleCheck} tone="success" title={amount} body={t('pay.paid')}>
-          <Button label={t('pay.backToOrder')} onPress={onDone} />
+        <Stage
+          heading={charge.heading}
+          icon={Check}
+          tone="success"
+          title={t('pay.orderPaid')}
+          body={t('pay.paidBody', { amount })}
+          details={
+            <View style={[styles.card, { backgroundColor: theme.wash }]}>
+              <Row label={t('pay.paidWith')} value={charge.method} />
+              <Row label={t('pay.reference')} value={state.reference} />
+            </View>
+          }
+        >
+          <Button label={t('pay.done')} onPress={onDone} />
           <Button
-            label={t('pay.seeReceipt')}
+            label={t('pay.getReceipt')}
             tone="ghost"
             onPress={() => onReceipt(state.reference)}
           />
@@ -121,12 +129,17 @@ export function PayProgress({
     case 'failed':
       return (
         <Stage
-          icon={CircleX}
+          heading={charge.heading}
+          icon={X}
           tone="error"
           title={t('pay.failedTitle')}
-          body={state.message}
-          charge={charge}
-          amount={amount}
+          // Some reasons already say nothing was taken; don't say it twice.
+          body={
+            state.message.includes(t('pay.nothingTaken'))
+              ? state.message
+              : t('pay.failedBody', { reason: state.message })
+          }
+          details={<ChargeCard charge={charge} amount={amount} />}
         >
           {again}
         </Stage>
@@ -134,12 +147,12 @@ export function PayProgress({
     case 'timed_out':
       return (
         <Stage
-          icon={charge.card ? CreditCard : Clock}
-          tone="ink"
+          heading={charge.heading}
+          icon={charge.card ? X : Clock}
+          tone={charge.card ? 'error' : 'ink'}
           title={t(charge.card ? 'pay.cardCancelledTitle' : 'pay.timedOutTitle')}
           body={t(charge.card ? 'pay.cardCancelledBody' : 'pay.timedOutBody')}
-          charge={charge}
-          amount={amount}
+          details={<ChargeCard charge={charge} amount={amount} />}
         >
           {again}
         </Stage>
@@ -149,97 +162,131 @@ export function PayProgress({
   }
 }
 
-/** One centred step: an icon, a heading, a line, what is being paid, then the step's own parts. */
+/** One step: the venue and order, a ringed badge, a headline and a line, details, then buttons. */
 function Stage({
+  heading,
   icon: Icon,
   tone,
   title,
   body,
-  charge,
-  amount,
+  details,
   children,
 }: {
+  heading: string;
   icon?: LucideIcon;
   tone: 'ink' | 'success' | 'error';
   title: string;
   body?: string;
-  charge?: Charge;
-  amount?: string;
+  details?: ReactNode;
   children?: ReactNode;
 }) {
-  const { t } = useTranslation();
   const theme = useTheme();
-  const color = { ink: theme.ink, success: theme.success, error: theme.error }[tone];
+  const solid = { ink: theme.fill, success: theme.success, error: theme.error }[tone];
   const wash = { ink: theme.tint, success: theme.successTint, error: theme.errorTint }[tone];
   return (
     <View style={styles.stage}>
-      {Icon ? (
-        <View style={[styles.badge, { backgroundColor: wash }]}>
-          <Icon size={tokens.space[8]} color={color} />
-        </View>
-      ) : null}
-      <Text variant="display-m" accessibilityRole="header" style={styles.center}>
-        {title}
+      <Text variant="caption" style={[styles.center, styles.strong, { color: theme.muted }]}>
+        {heading}
       </Text>
-      {body ? (
-        <Text variant="body" style={[styles.center, { color: theme.muted }]}>
-          {body}
-        </Text>
-      ) : null}
-      {charge && amount ? (
-        <View style={[styles.charge, { backgroundColor: theme.surface }]}>
-          <View style={styles.flex}>
-            <Text variant="body-strong" numberOfLines={1}>
-              {charge.method}
-            </Text>
-            {charge.phone ? (
-              <Text variant="caption" style={{ color: theme.muted }}>
-                {charge.phone}
-              </Text>
-            ) : null}
+      {Icon ? (
+        <View style={styles.rings} accessibilityElementsHidden importantForAccessibility="no">
+          <View style={[styles.ring, styles.outer, { backgroundColor: wash }]} />
+          <View style={[styles.ring, styles.inner, { backgroundColor: wash }]} />
+          <View style={[styles.badge, { backgroundColor: solid }]}>
+            <Icon size={40} color={theme.white} strokeWidth={2.6} />
           </View>
-          <Text variant="title">{amount}</Text>
         </View>
       ) : null}
-      {children}
-      {charge?.testMode ? (
-        <Text variant="caption" style={[styles.center, { color: theme.meta }]}>
-          {t('pay.test')}
+      <View style={styles.words}>
+        <Text variant="display-m" accessibilityRole="header" style={styles.center}>
+          {title}
         </Text>
-      ) : null}
+        {body ? (
+          <Text variant="body" style={[styles.center, { color: theme.muted }]}>
+            {body}
+          </Text>
+        ) : null}
+      </View>
+      {details}
+      <View style={styles.buttons}>{children}</View>
     </View>
   );
 }
 
-const BADGE = tokens.space[16] + tokens.space[4];
+function ChargeCard({ charge, amount }: { charge: Charge; amount: string }) {
+  const { t } = useTranslation();
+  const theme = useTheme();
+  return (
+    <View style={[styles.card, styles.charge, { backgroundColor: theme.wash }]}>
+      <View style={styles.flex}>
+        <Text variant="body-strong" numberOfLines={1}>
+          {charge.method}
+        </Text>
+        {charge.phone ? (
+          <Text variant="caption" style={{ color: theme.muted }}>
+            {charge.phone}
+          </Text>
+        ) : charge.testMode ? (
+          <Text variant="caption" style={{ color: theme.meta }}>
+            {t('pay.test')}
+          </Text>
+        ) : null}
+      </View>
+      <Text variant="title" style={styles.num}>
+        {amount}
+      </Text>
+    </View>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  const theme = useTheme();
+  return (
+    <View style={styles.row}>
+      <Text variant="body" style={[styles.flex, { color: theme.muted }]}>
+        {label}
+      </Text>
+      <Text variant="body-strong" numberOfLines={1} style={styles.value}>
+        {value}
+      </Text>
+    </View>
+  );
+}
+
+const RINGS = 176;
+const BADGE = 88;
 
 const styles = StyleSheet.create({
-  stage: {
-    alignItems: 'stretch',
-    gap: tokens.space[4],
-    paddingTop: tokens.space[8],
+  stage: { gap: tokens.space[5], paddingTop: tokens.space[6] },
+  center: { textAlign: 'center' },
+  strong: { fontWeight: '600' },
+  rings: {
+    width: RINGS,
+    height: RINGS,
+    alignSelf: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
+  ring: { position: 'absolute', borderRadius: RINGS / 2 },
+  outer: { width: RINGS, height: RINGS, opacity: 0.5 },
+  inner: { width: RINGS - 44, height: RINGS - 44 },
   badge: {
     width: BADGE,
     height: BADGE,
-    borderRadius: tokens.radius.full,
+    borderRadius: BADGE / 2,
     alignItems: 'center',
     justifyContent: 'center',
-    alignSelf: 'center',
+    boxShadow: '0 8px 20px rgba(17, 17, 17, 0.15)',
   },
-  center: { textAlign: 'center' },
-  charge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[3],
-    padding: tokens.space[4],
-    borderRadius: tokens.radius.lg,
-    borderCurve: 'continuous',
-    boxShadow: tokens.shadow.card,
-  },
+  words: { gap: tokens.space[2] },
+  card: { padding: tokens.space[4], borderRadius: tokens.radius.lg, gap: tokens.space[2] },
+  charge: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
+  row: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3] },
+  value: { maxWidth: '60%', textAlign: 'right' },
   flex: { flex: 1 },
-  timer: { alignItems: 'center', gap: tokens.space[2], paddingVertical: tokens.space[2] },
-  clock: { fontVariant: ['tabular-nums'] },
+  num: { fontVariant: ['tabular-nums'] },
+  buttons: { gap: tokens.space[2] },
+  timer: { alignItems: 'center', gap: tokens.space[2] },
   track: {
     alignSelf: 'stretch',
     height: tokens.space[1],

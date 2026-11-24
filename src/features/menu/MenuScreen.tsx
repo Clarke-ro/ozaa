@@ -141,7 +141,7 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
         setSection(id);
         jumpTop();
       }}
-      background={hero ? undefined : theme.white}
+      background={theme.white}
     />
   );
   const listHeader = (
@@ -217,7 +217,7 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
   };
 
   return (
-    <SafeScreen includeTop={!hero} background={hero ? undefined : theme.white}>
+    <SafeScreen includeTop={!hero} background={theme.white}>
       {/* A table guest's menu: a back arrow and the venue's name, on white (design canvas). */}
       {hero ? null : <PageHeader plain title={venue.data?.name ?? t('menu.title')} />}
       {storeNotice.banner ? <StoreNoticeBanner notice={storeNotice.banner} /> : null}
@@ -252,7 +252,7 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
           <View key="header">{listHeader}</View>
         )}
         {hero ? (
-          <View key="controls" collapsable={false} style={{ backgroundColor: theme.bg }}>
+          <View key="controls" collapsable={false} style={{ backgroundColor: theme.white }}>
             {pastHero ? (
               <View style={[styles.nameInBar, { height: pinnedAt, paddingTop: insets.top }]}>
                 <Text variant="title" numberOfLines={1} accessibilityRole="header">

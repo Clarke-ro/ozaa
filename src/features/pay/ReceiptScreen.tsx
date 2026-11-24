@@ -14,7 +14,7 @@ import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { ErrorState, LoadingState } from '@/ui/states';
 import { useTheme } from '@/ui/theme';
-import { PAY_METHODS } from './PayMethods';
+import { payMethodLabel } from './payLabels';
 import { payStyles } from './payStyles';
 import { receiptFigures } from './receiptFigures';
 
@@ -76,10 +76,7 @@ export function ReceiptScreen({ slug, reference }: { slug: string; reference: st
     timeStyle: 'short',
     timeZone: venue.data?.hours.timezone,
   });
-  const method = t(
-    PAY_METHODS.find((m) => m.id === (p.method === 'card' ? 'card' : p.provider))?.label ??
-      'pay.card',
-  );
+  const method = t(payMethodLabel(p));
   const card = [payStyles.card, { backgroundColor: theme.surface }];
   const where = [
     t('receipt.order', { number: o.number }),

@@ -50,10 +50,10 @@ test('owner passes the whole fee; the guest sees a Payment fee line before payin
   await page.getByRole('button', { name: 'Place order', exact: true }).click();
   // The mock's stand-in for Paystack's page.
   await page.getByRole('button', { name: 'Pay', exact: true }).click({ timeout: 15_000 });
-  await expect(page.getByText('Paid. Your order is with the kitchen.')).toBeVisible({
+  await expect(page.getByRole('heading', { name: 'Order paid' })).toBeVisible({
     timeout: 25_000,
   });
-  await page.getByRole('button', { name: 'See receipt' }).click();
+  await page.getByRole('button', { name: 'Get the receipt' }).click();
   await expect(page.getByText('Payment fee')).toBeVisible({ timeout: 15_000 });
   await page.screenshot({ path: 'test-results/fee-passing-receipt.png', fullPage: true });
 

@@ -27,7 +27,7 @@ test(
       timeout: 15_000,
     });
     await expect(page.getByRole('tab', { name: 'All categories' })).toBeVisible();
-    await expect(page.getByText('Pickup in 15 min')).toBeVisible();
+    await expect(page.getByText('15 min', { exact: true })).toBeVisible();
     // No table home here: the services list belongs to table guests.
     await expect(page.getByText('At your table')).toHaveCount(0);
     await page.screenshot({ path: 'test-results/online-menu.png' });

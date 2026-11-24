@@ -28,13 +28,13 @@ test('guest at a venue with Paystack: order, pay by MoMo in test mode, and see i
   await page.getByRole('button', { name: 'Place order', exact: true }).click();
   // The mock's stand-in for Paystack's page, where the guest approves MoMo.
   await page.getByRole('button', { name: 'Pay', exact: true }).click({ timeout: 15_000 });
-  await expect(page.getByText('Paid. Your order is with the kitchen.')).toBeVisible({
+  await expect(page.getByRole('heading', { name: 'Order paid' })).toBeVisible({
     timeout: 20_000,
   });
   await page.screenshot({ path: 'test-results/pay-online-paid.png' });
 
   // The receipt: the bill, what this guest paid, and a clear test label.
-  await page.getByRole('button', { name: 'See receipt' }).click();
+  await page.getByRole('button', { name: 'Get the receipt' }).click();
   await expect(page.getByText('Test payment. No money moved.')).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText('You paid')).toBeVisible();
   await expect(page.getByText(/^Reference pay_/)).toBeVisible();
@@ -45,11 +45,7 @@ test('guest at a venue with Paystack: order, pay by MoMo in test mode, and see i
   expect(errors).toEqual([]);
 });
 
-/**
- * Order at Bean There, then come back from the payment page without paying, so the Pay page
- * offers a direct MoMo charge (approve on your phone). That path stays for paying an order later.
- */
-async function openPayForm(page: import('@playwright/test').Page) {
+test('a guest who leaves the payment page can pay later from the Pay page', async ({ page }) => {
   await page.goto('/bean-there/t/7', { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: /^Menu/ }).first().click();
   await page
@@ -58,48 +54,18 @@ async function openPayForm(page: import('@playwright/test').Page) {
     .click();
   await page.getByRole('button', { name: /View order/ }).click();
   await page.getByRole('button', { name: 'Place order', exact: true }).click();
+  // The mock's stand-in for Paystack's page: leave without paying.
   await page.getByRole('button', { name: 'Cancel', exact: true }).click({ timeout: 15_000 });
-  await page.getByRole('button', { name: 'Try again' }).click({ timeout: 20_000 });
-}
-
-test('guest MoMo payment that fails: says why, nothing taken, and Try again goes back', async ({
-  page,
-}) => {
-  await openPayForm(page);
-
-  // The mock fails any MoMo number ending in 0 ("Not enough money in the wallet.").
-  await page.getByRole('textbox', { name: 'MoMo number' }).fill('0241234560');
-  await page.getByRole('button', { name: /^Pay GH/ }).click();
-  await expect(page.getByText("That didn't go through")).toBeVisible({ timeout: 20_000 });
-  await expect(page.getByText('Not enough money in the wallet.')).toBeVisible();
-  await page.screenshot({ path: 'test-results/pay-online-failed.png' });
-
+  await expect(page.getByRole('heading', { name: 'Not paid', exact: true })).toBeVisible({
+    timeout: 20_000,
+  });
   await page.getByRole('button', { name: 'Try again' }).click();
-  await expect(page.getByRole('button', { name: /^Pay GH/ })).toBeVisible();
-});
-
-test('guest MoMo payment nobody approves: after 0:00 the app checks, then Time ran out', async ({
-  page,
-}) => {
-  // A fake clock lets the test jump past the 3-minute countdown instead of waiting for it.
-  await page.clock.install();
-  await openPayForm(page);
-
-  // The mock never approves a MoMo number ending in 9; it expires at 3:00.
-  await page.getByRole('textbox', { name: 'MoMo number' }).fill('0241234569');
+  // The Pay page: the same choices as the order page, then Paystack's page again.
+  await expect(page.getByRole('radio', { name: /^MoMo/ })).toBeChecked();
   await page.getByRole('button', { name: /^Pay GH/ }).click();
-  await expect(page.getByText('Approve on your phone')).toBeVisible({ timeout: 15_000 });
-
-  await page.clock.runFor('02:59');
-  await expect(page.getByText('0:01')).toBeVisible();
-  // At 0:00 the app checks with the server (Still checking…), which can be too quick to catch
-  // when the mock answers at once. What matters is where it ends up.
-  await page.clock.runFor(1_000);
-
-  await page.clock.runFor('00:20');
-  await expect(page.getByText('Time ran out')).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByRole('button', { name: 'Try again' })).toBeVisible();
-  await page.screenshot({ path: 'test-results/pay-online-timed-out.png' });
+  await page.getByRole('button', { name: 'Pay', exact: true }).click({ timeout: 15_000 });
+  await expect(page.getByRole('heading', { name: 'Order paid' })).toBeVisible({ timeout: 20_000 });
+  await page.screenshot({ path: 'test-results/pay-online-retry-paid.png', fullPage: true });
 });
 
 // Order at Bean There and pay by card on the order page.
@@ -125,7 +91,7 @@ test('guest pays by card: the card page sends them back and the app shows it pai
   // The mock's stand-in for Paystack's card page, then back to /bean-there/pay?reference=…
   await page.getByRole('button', { name: 'Pay', exact: true }).click();
   await expect(page).toHaveURL(/\/bean-there\/pay\?reference=/, { timeout: 15_000 });
-  await expect(page.getByText('Paid. Your order is with the kitchen.')).toBeVisible({
+  await expect(page.getByRole('heading', { name: 'Order paid' })).toBeVisible({
     timeout: 20_000,
   });
   await page.screenshot({ path: 'test-results/pay-card-paid.png' });
@@ -138,7 +104,7 @@ test('guest cancels on the card page: Not paid, nothing taken, Try again', async
   await expect(page.getByRole('heading', { name: 'Not paid', exact: true })).toBeVisible({
     timeout: 20_000,
   });
-  await expect(page.getByText("The card payment didn't finish. Nothing was taken.")).toBeVisible();
+  await expect(page.getByText("The payment didn't finish. Nothing was taken.")).toBeVisible();
   await page.screenshot({ path: 'test-results/pay-card-cancelled.png' });
   await page.getByRole('button', { name: 'Try again' }).click();
   await expect(page.getByRole('button', { name: /^Pay GH/ })).toBeVisible();

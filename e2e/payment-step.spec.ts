@@ -29,7 +29,7 @@ test('table: the order page has the payment choices, and MoMo opens the payment 
   await page.getByRole('button', { name: 'Place order', exact: true }).click();
   await page.getByRole('button', { name: 'Pay', exact: true }).click({ timeout: 15_000 });
   await expect(page).toHaveURL(/\/mamas-kitchen\/pay\?reference=/, { timeout: 15_000 });
-  await expect(page.getByText('Paid. Your order is with the kitchen.')).toBeVisible({
+  await expect(page.getByRole('heading', { name: 'Order paid' })).toBeVisible({
     timeout: 20_000,
   });
 });
