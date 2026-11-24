@@ -84,9 +84,9 @@ A summary of the brand Page for the coding agent. The numbers are in `tokens.jso
 ## 8. Owner side (Cravins chrome: always Cravins orange, never the venue colour)
 
 - **Clean screens (Clarke, 24 Nov 2026), on every owner page:**
-  - Each part of a page sits in its own card.
-  - Its title goes above the card, never inside it (`TitledSection`).
-  - Keep inline text to a minimum: no explaining sentences under titles or controls when the label already says it. A placeholder or one short line is enough.
+  - A section is a title, then its controls straight on the page. No card behind a group of controls (`TitledSection plain`).
+  - The controls are the only boxes: fields, buttons, chips, segmented controls, and a switch row in its own card.
+  - No helper lines under titles, fields, switches or segmented controls. The label says it. Error messages still show.
   - Sheets: a short title, at most a short count or name under it.
 
 - **Video reviews** (render: owner-reviews): tabs To check, Featured and Hidden. Each card shows the thumbnail and length, first name, stars, dish, quote and consent state, with Hide and Feature buttons. Low ratings get a note suggesting a private reply.

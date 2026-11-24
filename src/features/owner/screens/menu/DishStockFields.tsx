@@ -32,7 +32,6 @@ export function DishStockFields({
     <View style={styles.stack}>
       <Field
         label={t('ownerMenu.salePrice', { currency })}
-        hint={t('ownerMenu.salePriceHint')}
         value={draft.salePrice}
         onChangeText={set('salePrice')}
         placeholder="55.00"
@@ -41,7 +40,6 @@ export function DishStockFields({
       />
       <Field
         label={t('ownerMenu.stock')}
-        hint={t('ownerMenu.stockHint')}
         value={draft.stock}
         onChangeText={set('stock')}
         placeholder={t('ownerMenu.stockPlaceholder')}

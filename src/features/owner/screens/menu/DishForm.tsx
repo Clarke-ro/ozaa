@@ -5,7 +5,7 @@ import type { MenuCategory, MenuItem, ModifierGroup } from '@/lib/api/types';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
-import { Chips, Field, PhotoField, SwitchRow, TitledSection } from '../../kit';
+import { cardStyle, Chips, Field, PhotoField, SwitchRow, TitledSection } from '../../kit';
 import { AddOnsEditor } from './AddOnsEditor';
 import { DishStatusFields } from './DishStatusFields';
 import { DishStockFields } from './DishStockFields';
@@ -45,7 +45,7 @@ export function DishForm({
   const { fields: f, set, error } = form;
   return (
     <View style={styles.stack}>
-      <TitledSection title={t('ownerMenu.photo')} cardStyle={styles.pad}>
+      <TitledSection plain title={t('ownerMenu.photo')}>
         <PhotoField
           venueId={venueId}
           url={f.photoUrl}
@@ -54,7 +54,7 @@ export function DishForm({
         />
       </TitledSection>
 
-      <TitledSection title={t('ownerMenu.details')} cardStyle={styles.pad}>
+      <TitledSection plain title={t('ownerMenu.details')}>
         <View style={styles.row}>
           <View style={styles.wide}>
             <Field
@@ -104,7 +104,7 @@ export function DishForm({
       </TitledSection>
 
       {library.length > 0 ? (
-        <TitledSection title={t('ownerMenu.shared.title')} cardStyle={styles.pad}>
+        <TitledSection plain title={t('ownerMenu.shared.title')}>
           <Chips
             label={t('ownerMenu.shared.title')}
             options={library.map((g) => ({ id: g.id, label: g.name.en }))}
@@ -114,21 +114,24 @@ export function DishForm({
         </TitledSection>
       ) : null}
 
-      <TitledSection title={t('ownerMenu.extras')} cardStyle={styles.pad}>
-        <Text variant="caption" style={{ color: error('addOns') ? theme.error : theme.muted }}>
-          {error('addOns') ?? t('ownerMenu.addOnsNote')}
-        </Text>
+      <TitledSection plain title={t('ownerMenu.extras')}>
+        {error('addOns') ? (
+          <Text variant="caption" style={{ color: theme.error }}>
+            {error('addOns')}
+          </Text>
+        ) : null}
         <AddOnsEditor groups={f.groups} onChange={set.groups} />
       </TitledSection>
 
-      <TitledSection title={t('ownerMenu.showTitle')} cardStyle={styles.bare}>
+      <TitledSection plain title={t('ownerMenu.showTitle')}>
         {/* Popular puts a tag on the dish for guests; the guest menu can sort by it. */}
-        <SwitchRow
-          label={t('ownerMenu.popular')}
-          hint={t('ownerMenu.popularHint')}
-          value={f.badges.includes('popular')}
-          onChange={set.togglePopular}
-        />
+        <View style={cardStyle(theme)}>
+          <SwitchRow
+            label={t('ownerMenu.popular')}
+            value={f.badges.includes('popular')}
+            onChange={set.togglePopular}
+          />
+        </View>
       </TitledSection>
 
       <DishStatusFields
@@ -139,7 +142,7 @@ export function DishForm({
         back={f.back}
       />
 
-      <TitledSection title={t('ownerMenu.pricingStock')} cardStyle={styles.pad}>
+      <TitledSection plain title={t('ownerMenu.pricingStock')}>
         <DishStockFields
           draft={f.stockDraft}
           onDraft={set.stockDraft}
@@ -171,8 +174,6 @@ export function DishForm({
 
 const styles = StyleSheet.create({
   stack: { gap: tokens.owner.controls.sectionGap },
-  pad: { padding: tokens.owner.controls.cardPadding, gap: tokens.space[4] },
-  bare: { padding: 0, overflow: 'hidden' },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.space[4] },
   wide: { flexGrow: 2, flexBasis: 240, minWidth: 0 },
   narrow: { flexGrow: 1, flexBasis: 140, minWidth: 0 },

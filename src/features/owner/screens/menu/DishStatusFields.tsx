@@ -1,14 +1,10 @@
-import { StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { DishStatus } from '@/lib/dishRules';
-import { tokens } from '@/theme/tokens';
-import { Text } from '@/ui/Text';
-import { useTheme } from '@/ui/theme';
 import { Chips, Segmented, TitledSection } from '../../kit';
 import type { SnoozePick } from './useDishForm';
 
 /**
- * The dish's status, in its own card. Out of stock adds a second card, "For how long?", so a
+ * The dish status, straight on the page. Out of stock adds "For how long?", so a
  * dish can be sold out for a while and come back by itself (snoozedUntil).
  */
 export function DishStatusFields({
@@ -25,11 +21,10 @@ export function DishStatusFields({
   /** "17:00" when the dish is snoozed now, so that time can be kept. */
   back: string | null;
 }) {
-  const theme = useTheme();
   const { t } = useTranslation();
   return (
     <>
-      <TitledSection title={t('ownerMenu.status')} cardStyle={styles.pad}>
+      <TitledSection plain title={t('ownerMenu.status')}>
         <Segmented
           label={t('ownerMenu.status')}
           value={status}
@@ -40,12 +35,9 @@ export function DishStatusFields({
             { id: 'hidden', label: t('ownerMenu.statusHidden') },
           ]}
         />
-        <Text variant="caption" style={{ color: theme.meta }}>
-          {t(`ownerMenu.statusHint.${status}`)}
-        </Text>
       </TitledSection>
       {status === 'sold_out' ? (
-        <TitledSection title={t('ownerMenu.snooze.title')} cardStyle={styles.pad}>
+        <TitledSection plain title={t('ownerMenu.snooze.title')}>
           <Chips<SnoozePick>
             single
             label={t('ownerMenu.snooze.title')}
@@ -66,7 +58,3 @@ export function DishStatusFields({
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  pad: { padding: tokens.owner.controls.cardPadding, gap: tokens.space[3] },
-});
