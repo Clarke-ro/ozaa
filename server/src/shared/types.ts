@@ -93,6 +93,12 @@ export type StaffProfilePatch = Schemas['StaffProfilePatch'];
 export type Image = Schemas['Image'];
 export type OpeningHours = Schemas['OpeningHours'];
 export type TaxLine = Schemas['TaxLine'];
+export type Channel = Schemas['Channel'];
+export type ChannelKind = Schemas['ChannelKind'];
+export type ChannelPatch = Schemas['ChannelPatch'];
+export type ChannelSync = Schemas['ChannelSync'];
+export type ChowdeckConnection = Schemas['ChowdeckConnection'];
+export type ChowdeckKeysInput = Schemas['ChowdeckKeysInput'];
 /** Owners and staff sign in with Clerk, so the server's own codes are for loyalty only. */
 export type OtpPurpose = 'guest_loyalty';
 
@@ -111,3 +117,5 @@ export type Call = {
   deleteToken?: string;
 };
 export type OrderStatus = Schemas['OrderStatus'];
+export type ModifierGroupInput = Schemas['ModifierGroupInput'];
+export type SyncProblem = Schemas['SyncProblem'];

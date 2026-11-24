@@ -6,6 +6,7 @@ import { httpOwnerVenueCalls } from './httpOwnerVenueCalls';
 import { httpOwnerOrderCalls } from './httpOwnerOrderCalls';
 import { httpOwnerMoreCalls } from './httpOwnerMoreCalls';
 import { httpOwnerExtraCalls } from './httpOwnerExtraCalls';
+import { httpOwnerChannelCalls } from './httpOwnerChannelCalls';
 
 /** The app's client for the real server, one file per area. Every call is typed by api/openapi.yaml. */
 export function createHttpClient(baseUrl: string, tokens: TokenSource): ApiClient {
@@ -17,5 +18,6 @@ export function createHttpClient(baseUrl: string, tokens: TokenSource): ApiClien
     ...httpOwnerOrderCalls(ctx),
     ...httpOwnerMoreCalls(ctx),
     ...httpOwnerExtraCalls(ctx),
+    ...httpOwnerChannelCalls(ctx),
   };
 }

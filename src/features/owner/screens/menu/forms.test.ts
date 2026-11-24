@@ -1,5 +1,5 @@
 // Imported directly: the menu feature index pulls in storage that Jest does not load.
-import { isCategoryAvailable } from '../../../menu/menuSchedule';
+import { isCategoryAvailable } from '@/lib/menuSchedule';
 import { checkDish, checkSection, checkStock, dayNumber, WEEK } from './forms';
 
 describe('days', () => {

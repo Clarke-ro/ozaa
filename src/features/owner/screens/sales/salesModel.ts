@@ -40,6 +40,7 @@ const METHODS = [
   'bank_transfer',
   'online_card',
   'online_momo',
+  'chowdeck',
 ] as const;
 
 /** Every payment method's share of order value in a fixed order (zeros included), then not paid. */

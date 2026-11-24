@@ -650,6 +650,47 @@ export interface paths {
         patch: operations["ownerUpdateItem"];
         trace?: never;
     };
+    "/owner/venues/{venueId}/menu/modifier-groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add a group to the venue's add-on library (for example "Spice level"), for many dishes to share.
+         * @description The library comes back in Menu.modifierGroups. A dish uses a group by listing its id in modifierGroupIds. Options without an id get one.
+         */
+        post: operations["ownerCreateModifierGroup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/menu/modifier-groups/{groupId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Replace a library group. Every dish that uses it changes at once.
+         * @description Options that keep their id stay the same option; options without an id are new. Past orders keep the names and prices they were placed with.
+         */
+        put: operations["ownerUpdateModifierGroup"];
+        post?: never;
+        /** Remove a library group. It is taken off every dish that used it. */
+        delete: operations["ownerDeleteModifierGroup"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/owner/venues/{venueId}/tables": {
         parameters: {
             query?: never;
@@ -827,6 +868,91 @@ export interface paths {
         /** Check the saved keys still work with Paystack, without taking any money. */
         post: operations["ownerTestPaystack"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/channels": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Every channel this venue's menu can go to: the table QR, the online menu link and Chowdeck. Always all three, in that order.
+         * @description `table` and `online` are built in and always `synced`; `online.enabled` mirrors Online ordering
+         *     (change it there). Only `chowdeck` is set here. Development only: Chowdeck takes test keys, and
+         *     nothing is sent to Chowdeck until the server's connector is switched on (BUILD.md 5b.11).
+         */
+        get: operations["ownerListChannels"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/channels/{channel}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Switch an outside channel on or off, set its price rule and the dishes it leaves out.
+         * @description Only `chowdeck` for now. `table` and `online` fail with 422 channel_built_in. Turning Chowdeck on without its keys fails with 409 channel_not_connected.
+         */
+        patch: operations["ownerUpdateChannel"];
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/channels/{channel}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send the current menu to an outside channel. The answer comes back `pending`; `sync` moves to `synced` or `failed` when the work is done.
+         * @description Only `chowdeck`. Fails with 409 channel_not_connected without keys, and 409 channel_off while the channel is switched off.
+         */
+        post: operations["ownerPublishChannel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/channels/chowdeck/keys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Save the venue's own Chowdeck store keys (from the Chowdeck dashboard, Settings > Developers). Owner only.
+         * @description The secret key and webhook secret are stored encrypted on the server only, like the Paystack
+         *     key. They are never returned, logged or sent to an app. Test keys only for now: Chowdeck's keys
+         *     don't show their mode, so the owner confirms `mode: test`.
+         */
+        put: operations["ownerConnectChowdeck"];
+        post?: never;
+        /** Remove the Chowdeck keys and switch the channel off. Dishes already on Chowdeck stay there until the owner removes them in Chowdeck. */
+        delete: operations["ownerDisconnectChowdeck"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1979,6 +2105,18 @@ export interface components {
                 pricePesewas: components["schemas"]["Pesewas"];
             }[];
         };
+        /** @description A library group as the owner saves it. min 1 and max 1 is a required single choice (a size, for example). */
+        ModifierGroupInput: {
+            name: components["schemas"]["LocalizedText"];
+            min: number;
+            max: number;
+            options: {
+                /** @description Keep it to keep the same option. Leave it out for a new one. */
+                id?: string;
+                name: components["schemas"]["LocalizedText"];
+                pricePesewas: components["schemas"]["Pesewas"];
+            }[];
+        };
         MenuItem: {
             id: components["schemas"]["MenuItemId"];
             categoryId: string;
@@ -1994,12 +2132,20 @@ export interface components {
             /** @description Diet labels the owner typed in beyond the standard set (for example "Keto"). Shown as tags on the dish; the guest diet filters use `dietary` only. */
             dietaryCustom?: string[];
             badges: ("popular" | "new" | "chef_pick")[];
+            /** @description Every add-on group a guest sees on this dish: the library groups in modifierGroupIds first, in that order, then the dish's own. Guests and pricing read only this. */
             modifierGroups: components["schemas"]["ModifierGroup"][];
+            /** @description Library groups (Menu.modifierGroups) this dish uses, in order. Missing means none. */
+            modifierGroupIds?: string[];
             allergens?: string[];
             calories?: number;
             prepMinutes?: number;
             /** @description True keeps the dish off the guest menu without deleting it. Like a hidden category, it is still sent (the owner menu editor reads the same menu) and guest screens leave it out. Orders for it fail with item_sold_out. Missing means false. */
             hidden?: boolean;
+            /**
+             * Format: date-time
+             * @description Sold out until this time on every channel, then on sale again by itself ("Back at 17:00"). Orders fail with item_sold_out until then. Null, missing or past means not snoozed.
+             */
+            snoozedUntil?: string | null;
             /** @description A promo price below pricePesewas. When set, the server charges it (plus add-ons) and guests see the normal price struck through. Null or missing means no sale. */
             salePricePesewas?: components["schemas"]["Pesewas"] | null;
             /** @description How many are left. Null or missing means unlimited. Each order takes away its quantity; at 0 the server sets available to false. An order for more than is left fails with item_sold_out. */
@@ -2022,12 +2168,20 @@ export interface components {
             /** @description Diet labels the owner typed in beyond the standard set (for example "Keto"). Shown as tags on the dish; the guest diet filters use `dietary` only. */
             dietaryCustom?: string[];
             badges?: ("popular" | "new" | "chef_pick")[];
+            /** @description The dish's own groups only. A group whose id is in the library is dropped, so sending back what was read never copies a library group. */
             modifierGroups?: components["schemas"]["ModifierGroup"][];
+            /** @description Library groups (Menu.modifierGroups) this dish uses, in order. Missing means none. */
+            modifierGroupIds?: string[];
             allergens?: string[];
             calories?: number;
             prepMinutes?: number;
             /** @description True keeps the dish off the guest menu without deleting it. Like a hidden category, it is still sent (the owner menu editor reads the same menu) and guest screens leave it out. Orders for it fail with item_sold_out. Missing means false. */
             hidden?: boolean;
+            /**
+             * Format: date-time
+             * @description Sold out until this time on every channel, then on sale again by itself ("Back at 17:00"). Orders fail with item_sold_out until then. Null, missing or past means not snoozed.
+             */
+            snoozedUntil?: string | null;
             /** @description A promo price below pricePesewas. When set, the server charges it (plus add-ons) and guests see the normal price struck through. Null or missing means no sale. */
             salePricePesewas?: components["schemas"]["Pesewas"] | null;
             /** @description How many are left. Null or missing means unlimited. Each order takes away its quantity; at 0 the server sets available to false. An order for more than is left fails with item_sold_out. */
@@ -2045,6 +2199,97 @@ export interface components {
             updatedAt: string;
             categories: components["schemas"]["MenuCategory"][];
             items: components["schemas"]["MenuItem"][];
+            /** @description The venue's add-on library, shared by dishes through modifierGroupIds. Guests can ignore it: each dish's modifierGroups already holds the groups it uses. Missing means none. */
+            modifierGroups?: components["schemas"]["ModifierGroup"][];
+        };
+        /**
+         * @description Where the menu is published and orders come from. table: the table QR. online: the venue's menu link. chowdeck: the Chowdeck delivery app.
+         * @enum {string}
+         */
+        ChannelKind: "table" | "online" | "chowdeck";
+        /** @description A channel's price compared with the menu. 20 means 20% more (to cover the channel's commission), rounded up to `roundToPesewas`. 0 means the menu price. */
+        PriceRule: {
+            percent: number;
+            /**
+             * @description Round the raised price up to this step. 50 means to the next GH₵0.50.
+             * @enum {integer}
+             */
+            roundToPesewas: 1 | 10 | 50 | 100;
+        };
+        SyncProblem: {
+            /**
+             * @description needs_addons: the dish has a required add-on the channel can't take yet, so it isn't sent. photo_missing: the channel needs a photo. rejected: the channel refused it (see message). not_connected: the keys don't work.
+             * @enum {string}
+             */
+            code: "needs_addons" | "photo_missing" | "rejected" | "not_connected";
+            /** @description The dish, when the problem is about one dish. */
+            itemId?: string;
+            /** @description Plain words, safe to show the owner. */
+            message: string;
+        };
+        ChannelSync: {
+            /**
+             * @description off: never sent. pending: queued or being sent. synced: the channel has the menu from `menuUpdatedAt`. failed: the last send failed; see problems.
+             * @enum {string}
+             */
+            state: "off" | "pending" | "synced" | "failed";
+            /**
+             * Format: date-time
+             * @description When the state last changed. Null while off.
+             */
+            at: string | null;
+            /**
+             * Format: date-time
+             * @description The Menu.updatedAt the channel has. When the menu's updatedAt is later, the channel is out of date.
+             */
+            menuUpdatedAt: string | null;
+            problems: components["schemas"]["SyncProblem"][];
+        };
+        ChowdeckConnection: {
+            /** @enum {string} */
+            mode: "test";
+            /** @description The store's reference on Chowdeck. Safe to show. */
+            merchantReference: string;
+            /**
+             * @description The last 4 characters only. The keys themselves are never returned.
+             * @example ••••1a2b
+             */
+            secretKeyHint: string;
+            /**
+             * Format: uri
+             * @description Paste this into the Chowdeck dashboard (Settings > Developers) so orders reach Cravins.
+             */
+            webhookUrl: string;
+            /** Format: date-time */
+            connectedAt: string;
+        };
+        Channel: {
+            kind: components["schemas"]["ChannelKind"];
+            /** @description table: always true. online: Online ordering's switch. chowdeck: the owner's switch here. */
+            enabled: boolean;
+            priceRule: components["schemas"]["PriceRule"];
+            /** @description Dishes this channel leaves out, on top of hidden and sold-out ones. Always empty for table and online. */
+            hiddenItemIds: string[];
+            sync: components["schemas"]["ChannelSync"];
+            /** @description chowdeck only, once keys are saved. Null otherwise. */
+            chowdeck: components["schemas"]["ChowdeckConnection"] | null;
+        };
+        ChannelPatch: {
+            enabled?: boolean;
+            priceRule?: components["schemas"]["PriceRule"];
+            hiddenItemIds?: string[];
+        };
+        ChowdeckKeysInput: {
+            /**
+             * @description Test keys only until Clarke says otherwise (AGENTS.md rule 5).
+             * @enum {string}
+             */
+            mode: "test";
+            merchantReference: string;
+            /** @description Sent once over HTTPS and stored encrypted. Never returned. */
+            secretKey: string;
+            /** @description Checks that webhooks really come from Chowdeck (x-chowdeck-signature). Stored encrypted. Never returned. */
+            webhookSecret: string;
         };
         /**
          * @description Legal moves received->accepted->preparing->ready->served, and received, accepted or preparing->cancelled. `received` is a new order nobody has accepted yet; staff accept it before the kitchen starts cooking, and the guest sees it as accepted.
@@ -2144,6 +2389,15 @@ export interface components {
             totalPesewas: components["schemas"]["Pesewas"];
             paidPesewas: components["schemas"]["Pesewas"];
             source?: components["schemas"]["OrderSource"];
+            /** @description Which channel the order came in on. Missing on older orders: `table` when source is table, else `online`. A Chowdeck order has channel chowdeck and source delivery. */
+            channel?: components["schemas"]["ChannelKind"];
+            /** @description The outside channel's own order reference (Chowdeck's `reference`). Null for table and online orders. */
+            externalRef?: string | null;
+            /**
+             * Format: date-time
+             * @description Outside channels only: the outside channel rejects the order itself if nobody accepts it by then. Null otherwise.
+             */
+            acceptBy?: string | null;
             /** @description Set when the order is paid. Null while unpaid. */
             paymentMethod?: components["schemas"]["PaymentMethodUsed"] | null;
             /** @description Menu-link orders only. */
@@ -2440,10 +2694,10 @@ export interface components {
         /** @enum {string} */
         ManualPaymentMethod: "cash" | "card_machine" | "bank_transfer" | "momo_merchant";
         /**
-         * @description How an order was paid. Online ones come from Paystack (through the venue's own account); the rest are marked by staff.
+         * @description How an order was paid. Online ones come from Paystack (through the venue's own account). `chowdeck`: the customer paid Chowdeck, which pays the venue; it never goes through Paystack. The rest are marked by staff.
          * @enum {string}
          */
-        PaymentMethodUsed: "online_card" | "online_momo" | "cash" | "card_machine" | "bank_transfer" | "momo_merchant";
+        PaymentMethodUsed: "online_card" | "online_momo" | "cash" | "card_machine" | "bank_transfer" | "momo_merchant" | "chowdeck";
         ManualPayments: {
             cash: boolean;
             /** @description A card machine (POS terminal) at the counter. */
@@ -3204,6 +3458,8 @@ export interface components {
         WaiterCallId: string;
         CategoryId: string;
         MenuItemIdParam: components["schemas"]["MenuItemId"];
+        ModifierGroupIdParam: string;
+        ChannelKindParam: components["schemas"]["ChannelKind"];
         TableId: string;
         Cursor: string;
     };
@@ -4480,6 +4736,86 @@ export interface operations {
             };
         };
     };
+    ownerCreateModifierGroup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModifierGroupInput"];
+            };
+        };
+        responses: {
+            /** @description Created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModifierGroup"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    ownerUpdateModifierGroup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+                groupId: components["parameters"]["ModifierGroupIdParam"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModifierGroupInput"];
+            };
+        };
+        responses: {
+            /** @description Saved. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModifierGroup"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    ownerDeleteModifierGroup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+                groupId: components["parameters"]["ModifierGroupIdParam"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            403: components["responses"]["Forbidden"];
+        };
+    };
     ownerListTables: {
         parameters: {
             query?: never;
@@ -4835,6 +5171,141 @@ export interface operations {
                     };
                 };
             };
+        };
+    };
+    ownerListChannels: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        channels: components["schemas"]["Channel"][];
+                    };
+                };
+            };
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    ownerUpdateChannel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+                channel: components["parameters"]["ChannelKindParam"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChannelPatch"];
+            };
+        };
+        responses: {
+            /** @description Saved. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Channel"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
+        };
+    };
+    ownerPublishChannel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+                channel: components["parameters"]["ChannelKindParam"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Queued. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Channel"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
+        };
+    };
+    ownerConnectChowdeck: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChowdeckKeysInput"];
+            };
+        };
+        responses: {
+            /** @description Saved. The channel stays off until the owner turns it on. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Channel"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    ownerDisconnectChowdeck: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Channel"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
         };
     };
     ownerRecordManualPayment: {

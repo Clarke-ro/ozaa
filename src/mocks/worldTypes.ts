@@ -1,4 +1,5 @@
 import type { VenueLoyalty } from '../features/loyalty/facts';
+import type { ChowdeckState } from '@/lib/channels';
 import type {
   Business,
   CustomLink,
@@ -56,6 +57,8 @@ export type World = {
   customLinks: (CustomLink & { venueId: string })[];
   business: { business: Business; locations: Location[] };
   devices: (ScannerDevice & { venueId: string })[];
+  /** Chowdeck channel settings by venue id. Like the real server, never the keys themselves. */
+  chowdeck: Record<string, ChowdeckState>;
   /** E-VAT setup by venue id. Kept off the public venue: the TIN is the owner's business. */
   tax: Record<string, TaxSetup>;
   /** Owner-only, by venue id: the WhatsApp number for order alerts. Never on the public venue. */

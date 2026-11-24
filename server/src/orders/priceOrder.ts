@@ -52,9 +52,11 @@ export function priceOrder(input: {
 
   const lines = body.lines.map((line): OrderLine => {
     const item = items.find((candidate) => candidate.id === line.menuItemId);
-    if (!item || item.hidden) throw new Problem(422, 'item_sold_out', 'That dish is not on the menu.');
-    const check = checkLine(item, line.quantity);
-    if (check === 'sold_out') throw new Problem(422, 'item_sold_out', `${item.name.en} is sold out.`);
+    if (!item || item.hidden)
+      throw new Problem(422, 'item_sold_out', 'That dish is not on the menu.');
+    const check = checkLine(item, line.quantity, input.now);
+    if (check === 'sold_out')
+      throw new Problem(422, 'item_sold_out', `${item.name.en} is sold out.`);
     if (check === 'out_of_range') {
       throw new Problem(422, 'quantity_out_of_range', `Change how many ${item.name.en} you want.`);
     }
@@ -83,25 +85,51 @@ export function priceOrder(input: {
   const subtotal = lines.reduce((sum, line) => sum + line.totalPesewas, 0);
 
   // A table order, or a menu-link order with the customer's details and pickup or delivery.
-  let online: Omit<PricedOrder, 'lines' | 'subtotalPesewas' | 'taxes' | 'promoDiscounts' | 'totalPesewas' | 'stock'>;
+  let online: Omit<
+    PricedOrder,
+    'lines' | 'subtotalPesewas' | 'taxes' | 'promoDiscounts' | 'totalPesewas' | 'stock'
+  >;
   if (tableCode) {
-    online = { source: 'table', contact: null, deliveryAddress: null, deliveryFeePesewas: 0, etaMinutes: 12 };
+    online = {
+      source: 'table',
+      contact: null,
+      deliveryAddress: null,
+      deliveryFeePesewas: 0,
+      etaMinutes: 12,
+    };
   } else if (input.counter && !body.fulfilment) {
-    online = { source: 'pickup', contact: null, deliveryAddress: null, deliveryFeePesewas: 0, etaMinutes: 15 };
+    online = {
+      source: 'pickup',
+      contact: null,
+      deliveryAddress: null,
+      deliveryFeePesewas: 0,
+      etaMinutes: 15,
+    };
   } else {
-    if (!body.fulfilment) throw new Problem(400, 'missing_contact', 'Add your name and phone number.');
+    if (!body.fulfilment)
+      throw new Problem(400, 'missing_contact', 'Add your name and phone number.');
     const pin =
       venue.location.lat != null && venue.location.lng != null
         ? { lat: venue.location.lat, lng: venue.location.lng }
         : null;
-    const check = checkFulfilment(onlineOrderingOf(venue.onlineOrdering), pin, body.fulfilment, subtotal);
+    const check = checkFulfilment(
+      onlineOrderingOf(venue.onlineOrdering),
+      pin,
+      body.fulfilment,
+      subtotal,
+    );
     if (!check.ok) {
-      throw new Problem(check.code === 'missing_contact' ? 400 : 422, check.code, 'This order cannot be taken.');
+      throw new Problem(
+        check.code === 'missing_contact' ? 400 : 422,
+        check.code,
+        'This order cannot be taken.',
+      );
     }
     online = {
       source: check.source,
       contact: { name: body.fulfilment.contact.name.trim(), phone: body.fulfilment.contact.phone },
-      deliveryAddress: check.source === 'delivery' ? (body.fulfilment.address?.trim() ?? null) : null,
+      deliveryAddress:
+        check.source === 'delivery' ? (body.fulfilment.address?.trim() ?? null) : null,
       deliveryFeePesewas: check.deliveryFeePesewas,
       etaMinutes: check.etaMinutes,
     };
@@ -130,7 +158,8 @@ export function priceOrder(input: {
 
   // Two lines of the same dish count together against what's left.
   const stock = new Map<string, number>();
-  for (const line of body.lines) stock.set(line.menuItemId, (stock.get(line.menuItemId) ?? 0) + line.quantity);
+  for (const line of body.lines)
+    stock.set(line.menuItemId, (stock.get(line.menuItemId) ?? 0) + line.quantity);
   for (const [id, quantity] of stock) {
     const item = items.find((candidate) => candidate.id === id);
     if (item?.stockCount != null && quantity > item.stockCount) {

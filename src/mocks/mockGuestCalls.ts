@@ -3,6 +3,7 @@ import { quoteBill } from '../features/pay/quoteBill';
 import { passedFee } from '@/lib/paystackFee';
 import { pesewas } from '@/lib/brand';
 import type { ApiClient } from '@/lib/api/client';
+import { resolveMenu } from '@/lib/addOns';
 import { ApiError } from '@/lib/api/errors';
 import type { Payment } from '@/lib/api/types';
 import { findOrder, nextId, publicVenue, venueById, venueBySlug } from './world';
@@ -39,7 +40,8 @@ export function mockGuestCalls(ctx: MockContext) {
       if (visit && visit.slug === slug && !visit.menuOpenedAt)
         visit.menuOpenedAt = new Date(now()).toISOString();
       if (call?.ifNoneMatch === etag(menu)) throw new ApiError(304, 'not_modified', 'Not modified');
-      return { ...menu, venueId: venue.id };
+      // Each dish's modifierGroups already holds its library groups, as on the real server.
+      return resolveMenu({ ...menu, venueId: venue.id });
     },
     async getWifi(slug) {
       await gate();

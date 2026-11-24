@@ -42,6 +42,7 @@ test('payment shares list every method in canvas order, zeros included, then not
     { key: 'bank_transfer', percent: 0 },
     { key: 'online_card', percent: 0 },
     { key: 'online_momo', percent: 0 },
+    { key: 'chowdeck', percent: 0 },
     { key: 'unpaid', percent: 22 },
   ]);
 });
