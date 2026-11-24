@@ -80,3 +80,17 @@ test(
     await expect(page).toHaveURL(/\/mamas-kitchen$/, { timeout: 15_000 });
   },
 );
+
+test('table: instructions for the whole order go with it', async ({ page }) => {
+  await page.goto('/mamas-kitchen/t/12', { waitUntil: 'domcontentloaded' });
+  await page.getByRole('button', { name: /^Menu/ }).first().click({ timeout: 15_000 });
+  await basket(page);
+  await page.getByRole('button', { name: 'Add instructions' }).click();
+  await page
+    .getByRole('textbox', { name: 'Instructions for the kitchen' })
+    .fill('No pepper, please');
+  await page.getByRole('radio', { name: /^Cash/ }).click();
+  await page.getByRole('button', { name: 'Place order', exact: true }).click();
+  await expect(page).toHaveURL(/\/mamas-kitchen\/status$/, { timeout: 15_000 });
+  await expect(page.getByText('Your note: No pepper, please')).toBeVisible({ timeout: 15_000 });
+});

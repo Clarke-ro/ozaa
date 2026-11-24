@@ -11,7 +11,7 @@ import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { guestFont, useTheme } from '@/ui/theme';
 import { ActiveOrderStrip } from '@/features/history';
-import { InfoBoxes, type InfoBox } from '@/features/venue';
+import { InfoBoxes, ratingBox, type InfoBox } from '@/features/venue';
 import { OnlineBanner } from './OnlineBanner';
 
 // The white sheet rises over the banner's bottom edge by this much.
@@ -30,7 +30,9 @@ export function OnlineHero({ venue, topInset }: { venue: VenuePublic; topInset: 
   const ordering = onlineOrderingOf(venue.onlineOrdering);
   const hours = hoursBox(venue.hours, new Date());
 
+  // Three boxes, as on the design canvas: the rating, how soon, and the hours.
   const boxes: InfoBox[] = [
+    ...ratingBox(venue, t),
     ...(ordering.enabled && ordering.pickup.enabled
       ? [
           {
@@ -40,7 +42,7 @@ export function OnlineHero({ venue, topInset }: { venue: VenuePublic; topInset: 
           },
         ]
       : []),
-    ...(ordering.enabled && ordering.delivery.enabled
+    ...(ordering.enabled && ordering.delivery.enabled && !ordering.pickup.enabled
       ? [
           {
             key: 'delivery',
