@@ -13,7 +13,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
 import { pesewas } from '@/lib/brand';
-import { isOnGuestMenu, quantityLimits, unitPrice } from '@/lib/dishRules';
+import { asGuestSees, isOnGuestMenu, quantityLimits, unitPrice } from '@/lib/dishRules';
 import { menuStyleOf, sortDishes } from '@/lib/menuStyle';
 import { hapticImpactLight } from '@/lib/haptics';
 import { DEFAULT_CURRENCY } from '@/lib/money';
@@ -89,7 +89,7 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
     .filter((c) => !c.hidden)
     .sort((a, b) => (a.kind === b.kind ? a.position - b.position : a.kind === 'food' ? -1 : 1));
   const active = section === 'all' || sections.some((c) => c.id === section) ? section : 'all';
-  const visible = sortDishes(menu.data.items, style.itemSort).filter(
+  const visible = sortDishes(asGuestSees(menu.data.items, now), style.itemSort).filter(
     (i) => isOnGuestMenu(i) && sections.some((c) => c.id === i.categoryId),
   );
   const searching = query.trim().length > 0;

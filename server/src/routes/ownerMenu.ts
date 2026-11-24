@@ -8,10 +8,13 @@ import { imageFor } from '../media/images.ts';
 import type { MediaStorage } from '../media/storage.ts';
 import { body, Problem } from '../http/problem.ts';
 import { roleAt, ROLES, signedIn, type OwnerDeps } from '../owner/staff.ts';
-import type { MenuCategory, MenuItem } from '../shared/types.ts';
-import { itemFromRow, menuOf, venueRowById } from '../venues/venueData.ts';
+import type { MenuCategory, MenuItem, ModifierGroup } from '../shared/types.ts';
+import { ownGroups, resolveDish } from '../shared/addOns.ts';
+import { itemFromRow, libraryOf, menuOf, venueRowById } from '../venues/venueData.ts';
 
-const text = z.record(z.string(), z.string().max(400)).refine((t) => typeof t.en === 'string', 'English is required');
+const text = z
+  .record(z.string(), z.string().max(400))
+  .refine((t) => typeof t.en === 'string', 'English is required');
 const name = z.record(z.string(), z.string().max(80)).refine((t) => !!t.en?.trim(), 'Add a name');
 const pesewas = z.number().int().min(0).max(100_000_000);
 const modifierGroup = z
@@ -35,8 +38,14 @@ const categoryBody = z.object({
   schedule: z
     .object({
       days: z.array(z.number().int().min(0).max(6)).optional(),
-      startTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
-      endTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
+      startTime: z
+        .string()
+        .regex(/^\d{2}:\d{2}$/)
+        .optional(),
+      endTime: z
+        .string()
+        .regex(/^\d{2}:\d{2}$/)
+        .optional(),
     })
     .nullable()
     .optional(),
@@ -64,6 +73,9 @@ const itemBody = z.object({
   // Add-on prices are added to the dish. They have to be real pesewas, or a negative price
   // would shrink the bill. The shape is the one the dish form saves.
   modifierGroups: z.array(modifierGroup).max(12).optional(),
+  modifierGroupIds: z.array(z.string().min(1).max(80)).max(12).optional(),
+  // Sold out until then; null takes the snooze off.
+  snoozedUntil: z.iso.datetime({ offset: true }).nullable().optional(),
   prepMinutes: z.number().int().min(0).max(600).optional(),
 });
 type ItemInput = z.infer<typeof itemBody>;
@@ -78,10 +90,25 @@ function checkItem(item: MenuItem): void {
   }
 }
 
-/** A dish with the edit applied. `photo` is already resolved from photoMediaId by the caller. */
-function applyItem(current: MenuItem, input: ItemInput, photo: MenuItem['photo']): MenuItem {
+/**
+ * A dish with the edit applied. `photo` is already resolved from photoMediaId by the caller.
+ * Only the dish's own add-on groups are stored: library groups are kept by id (shared/addOns.ts),
+ * so sending back a dish as it was read never copies a library group into it.
+ */
+function applyItem(
+  current: MenuItem,
+  input: ItemInput,
+  photo: MenuItem['photo'],
+  library: ModifierGroup[],
+): MenuItem {
   const { photoMediaId: _id, ...fields } = input;
+  if (fields.modifierGroupIds?.some((id) => !library.some((group) => group.id === id))) {
+    throw new Problem(422, 'validation', 'That add-on group is gone.');
+  }
   const next = { ...current, ...fields, photo } as MenuItem;
+  // The zod check above already made sure each name has English.
+  if (fields.modifierGroups)
+    next.modifierGroups = ownGroups(fields.modifierGroups as ModifierGroup[], library);
   // Setting the stock to 0 sells the dish out; giving stock back puts it on sale again.
   if (input.stockCount === 0) next.available = false;
   return next;
@@ -115,7 +142,10 @@ export function ownerMenuRoutes(deps: OwnerDeps & { storage: MediaStorage | null
   app.post('/owner/venues/:venueId/menu/categories', async (c) => {
     const venueId = await editorAt(c);
     const input = await body(c, categoryBody);
-    const [{ n } = { n: 0 }] = await db.select({ n: count() }).from(menuCategories).where(eq(menuCategories.venueId, venueId));
+    const [{ n } = { n: 0 }] = await db
+      .select({ n: count() })
+      .from(menuCategories)
+      .where(eq(menuCategories.venueId, venueId));
     const [row] = await db
       .insert(menuCategories)
       .values({
@@ -143,7 +173,9 @@ export function ownerMenuRoutes(deps: OwnerDeps & { storage: MediaStorage | null
         ...(input.hidden !== undefined ? { hidden: input.hidden } : {}),
         ...(input.schedule !== undefined ? { schedule: input.schedule } : {}),
       })
-      .where(and(eq(menuCategories.id, c.req.param('categoryId')), eq(menuCategories.venueId, venueId)))
+      .where(
+        and(eq(menuCategories.id, c.req.param('categoryId')), eq(menuCategories.venueId, venueId)),
+      )
       .returning();
     if (!row) throw new Problem(404, 'not_found', 'That section is gone.');
     return c.json(categoryFromRow(row));
@@ -167,15 +199,34 @@ export function ownerMenuRoutes(deps: OwnerDeps & { storage: MediaStorage | null
     const [{ n } = { n: 0 }] = await db
       .select({ n: count() })
       .from(menuItems)
-      .where(and(eq(menuItems.categoryId, categoryId), eq(menuItems.venueId, venueId), isNull(menuItems.deletedAt)));
-    if (n > 0) throw new Problem(409, 'category_not_empty', 'Move or delete the dishes in this section first.');
+      .where(
+        and(
+          eq(menuItems.categoryId, categoryId),
+          eq(menuItems.venueId, venueId),
+          isNull(menuItems.deletedAt),
+        ),
+      );
+    if (n > 0)
+      throw new Problem(
+        409,
+        'category_not_empty',
+        'Move or delete the dishes in this section first.',
+      );
     await db.transaction(async (tx) => {
       // Dishes deleted earlier still point at the section. Past orders keep their own copy of the
       // name and price, so these rows can go now.
       await tx
         .delete(menuItems)
-        .where(and(eq(menuItems.categoryId, categoryId), eq(menuItems.venueId, venueId), isNotNull(menuItems.deletedAt)));
-      await tx.delete(menuCategories).where(and(eq(menuCategories.id, categoryId), eq(menuCategories.venueId, venueId)));
+        .where(
+          and(
+            eq(menuItems.categoryId, categoryId),
+            eq(menuItems.venueId, venueId),
+            isNotNull(menuItems.deletedAt),
+          ),
+        );
+      await tx
+        .delete(menuCategories)
+        .where(and(eq(menuCategories.id, categoryId), eq(menuCategories.venueId, venueId)));
     });
     return c.body(null, 204);
   });
@@ -190,7 +241,13 @@ export function ownerMenuRoutes(deps: OwnerDeps & { storage: MediaStorage | null
     const [{ n } = { n: 0 }] = await db
       .select({ n: count() })
       .from(menuItems)
-      .where(and(eq(menuItems.categoryId, input.categoryId), eq(menuItems.venueId, venueId), isNull(menuItems.deletedAt)));
+      .where(
+        and(
+          eq(menuItems.categoryId, input.categoryId),
+          eq(menuItems.venueId, venueId),
+          isNull(menuItems.deletedAt),
+        ),
+      );
     const blank: MenuItem = {
       id: `itm_${crypto.randomUUID().replaceAll('-', '')}`,
       categoryId: input.categoryId,
@@ -205,10 +262,11 @@ export function ownerMenuRoutes(deps: OwnerDeps & { storage: MediaStorage | null
       // A new dish goes to the end of its section.
       position: n,
     } as unknown as MenuItem;
-    const item = applyItem(blank, input, await photoFor(venueId, input, null));
+    const library = await libraryOf(db, venueId);
+    const item = applyItem(blank, input, await photoFor(venueId, input, null), library);
     checkItem(item);
     const [row] = await db.insert(menuItems).values(itemRow(venueId, item)).returning();
-    return c.json(itemFromRow(row!), 201);
+    return c.json(resolveDish(itemFromRow(row!), library), 201);
   });
 
   app.patch('/owner/venues/:venueId/menu/items/:menuItemId', async (c) => {
@@ -217,15 +275,31 @@ export function ownerMenuRoutes(deps: OwnerDeps & { storage: MediaStorage | null
     const [current] = await db
       .select()
       .from(menuItems)
-      .where(and(eq(menuItems.id, c.req.param('menuItemId')), eq(menuItems.venueId, venueId), isNull(menuItems.deletedAt)));
+      .where(
+        and(
+          eq(menuItems.id, c.req.param('menuItemId')),
+          eq(menuItems.venueId, venueId),
+          isNull(menuItems.deletedAt),
+        ),
+      );
     if (!current) throw new Problem(404, 'not_found', 'That dish is gone.');
     if (input.categoryId) await categoryAt(db, venueId, input.categoryId);
     const existing = itemFromRow(current);
-    const item = applyItem(existing, input, await photoFor(venueId, input, existing.photo ?? null));
+    const library = await libraryOf(db, venueId);
+    const item = applyItem(
+      existing,
+      input,
+      await photoFor(venueId, input, existing.photo ?? null),
+      library,
+    );
     checkItem(item);
     const { id: _id, venueId: _venue, ...values } = itemRow(venueId, item);
-    const [row] = await db.update(menuItems).set(values).where(eq(menuItems.id, current.id)).returning();
-    return c.json(itemFromRow(row!));
+    const [row] = await db
+      .update(menuItems)
+      .set(values)
+      .where(eq(menuItems.id, current.id))
+      .returning();
+    return c.json(resolveDish(itemFromRow(row!), library));
   });
 
   /** Kept as a deleted row: past orders and sales still name it. */

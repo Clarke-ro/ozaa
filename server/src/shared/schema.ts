@@ -651,6 +651,47 @@ export interface paths {
         patch: operations["ownerUpdateItem"];
         trace?: never;
     };
+    "/owner/venues/{venueId}/menu/modifier-groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add a group to the venue's add-on library (for example "Spice level"), for many dishes to share.
+         * @description The library comes back in Menu.modifierGroups. A dish uses a group by listing its id in modifierGroupIds. Options without an id get one.
+         */
+        post: operations["ownerCreateModifierGroup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/owner/venues/{venueId}/menu/modifier-groups/{groupId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Replace a library group. Every dish that uses it changes at once.
+         * @description Options that keep their id stay the same option; options without an id are new. Past orders keep the names and prices they were placed with.
+         */
+        put: operations["ownerUpdateModifierGroup"];
+        post?: never;
+        /** Remove a library group. It is taken off every dish that used it. */
+        delete: operations["ownerDeleteModifierGroup"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/owner/venues/{venueId}/tables": {
         parameters: {
             query?: never;
@@ -2065,6 +2106,18 @@ export interface components {
                 pricePesewas: components["schemas"]["Pesewas"];
             }[];
         };
+        /** @description A library group as the owner saves it. min 1 and max 1 is a required single choice (a size, for example). */
+        ModifierGroupInput: {
+            name: components["schemas"]["LocalizedText"];
+            min: number;
+            max: number;
+            options: {
+                /** @description Keep it to keep the same option. Leave it out for a new one. */
+                id?: string;
+                name: components["schemas"]["LocalizedText"];
+                pricePesewas: components["schemas"]["Pesewas"];
+            }[];
+        };
         MenuItem: {
             id: components["schemas"]["MenuItemId"];
             categoryId: string;
@@ -2080,12 +2133,20 @@ export interface components {
             /** @description Diet labels the owner typed in beyond the standard set (for example "Keto"). Shown as tags on the dish; the guest diet filters use `dietary` only. */
             dietaryCustom?: string[];
             badges: ("popular" | "new" | "chef_pick")[];
+            /** @description Every add-on group a guest sees on this dish: the library groups in modifierGroupIds first, in that order, then the dish's own. Guests and pricing read only this. */
             modifierGroups: components["schemas"]["ModifierGroup"][];
+            /** @description Library groups (Menu.modifierGroups) this dish uses, in order. Missing means none. */
+            modifierGroupIds?: string[];
             allergens?: string[];
             calories?: number;
             prepMinutes?: number;
             /** @description True keeps the dish off the guest menu without deleting it. Like a hidden category, it is still sent (the owner menu editor reads the same menu) and guest screens leave it out. Orders for it fail with item_sold_out. Missing means false. */
             hidden?: boolean;
+            /**
+             * Format: date-time
+             * @description Sold out until this time on every channel, then on sale again by itself ("Back at 17:00"). Orders fail with item_sold_out until then. Null, missing or past means not snoozed.
+             */
+            snoozedUntil?: string | null;
             /** @description A promo price below pricePesewas. When set, the server charges it (plus add-ons) and guests see the normal price struck through. Null or missing means no sale. */
             salePricePesewas?: components["schemas"]["Pesewas"] | null;
             /** @description How many are left. Null or missing means unlimited. Each order takes away its quantity; at 0 the server sets available to false. An order for more than is left fails with item_sold_out. */
@@ -2108,12 +2169,20 @@ export interface components {
             /** @description Diet labels the owner typed in beyond the standard set (for example "Keto"). Shown as tags on the dish; the guest diet filters use `dietary` only. */
             dietaryCustom?: string[];
             badges?: ("popular" | "new" | "chef_pick")[];
+            /** @description The dish's own groups only. A group whose id is in the library is dropped, so sending back what was read never copies a library group. */
             modifierGroups?: components["schemas"]["ModifierGroup"][];
+            /** @description Library groups (Menu.modifierGroups) this dish uses, in order. Missing means none. */
+            modifierGroupIds?: string[];
             allergens?: string[];
             calories?: number;
             prepMinutes?: number;
             /** @description True keeps the dish off the guest menu without deleting it. Like a hidden category, it is still sent (the owner menu editor reads the same menu) and guest screens leave it out. Orders for it fail with item_sold_out. Missing means false. */
             hidden?: boolean;
+            /**
+             * Format: date-time
+             * @description Sold out until this time on every channel, then on sale again by itself ("Back at 17:00"). Orders fail with item_sold_out until then. Null, missing or past means not snoozed.
+             */
+            snoozedUntil?: string | null;
             /** @description A promo price below pricePesewas. When set, the server charges it (plus add-ons) and guests see the normal price struck through. Null or missing means no sale. */
             salePricePesewas?: components["schemas"]["Pesewas"] | null;
             /** @description How many are left. Null or missing means unlimited. Each order takes away its quantity; at 0 the server sets available to false. An order for more than is left fails with item_sold_out. */
@@ -2131,6 +2200,8 @@ export interface components {
             updatedAt: string;
             categories: components["schemas"]["MenuCategory"][];
             items: components["schemas"]["MenuItem"][];
+            /** @description The venue's add-on library, shared by dishes through modifierGroupIds. Guests can ignore it: each dish's modifierGroups already holds the groups it uses. Missing means none. */
+            modifierGroups?: components["schemas"]["ModifierGroup"][];
         };
         /**
          * @description Where the menu is published and orders come from. table: the table QR. online: the venue's menu link. chowdeck: the Chowdeck delivery app.
@@ -2152,9 +2223,9 @@ export interface components {
              * @enum {string}
              */
             code: "needs_addons" | "photo_missing" | "rejected" | "not_connected";
-            /** @description The dish */
+            /** @description The dish, when the problem is about one dish. */
             itemId?: string;
-            /** @description Plain words */
+            /** @description Plain words, safe to show the owner. */
             message: string;
         };
         ChannelSync: {
@@ -3388,6 +3459,7 @@ export interface components {
         WaiterCallId: string;
         CategoryId: string;
         MenuItemIdParam: components["schemas"]["MenuItemId"];
+        ModifierGroupIdParam: string;
         ChannelKindParam: components["schemas"]["ChannelKind"];
         TableId: string;
         Cursor: string;
@@ -4663,6 +4735,86 @@ export interface operations {
                     "application/json": components["schemas"]["MenuItem"];
                 };
             };
+        };
+    };
+    ownerCreateModifierGroup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModifierGroupInput"];
+            };
+        };
+        responses: {
+            /** @description Created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModifierGroup"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    ownerUpdateModifierGroup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+                groupId: components["parameters"]["ModifierGroupIdParam"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModifierGroupInput"];
+            };
+        };
+        responses: {
+            /** @description Saved. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModifierGroup"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    ownerDeleteModifierGroup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: components["parameters"]["VenueId"];
+                groupId: components["parameters"]["ModifierGroupIdParam"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            403: components["responses"]["Forbidden"];
         };
     };
     ownerListTables: {

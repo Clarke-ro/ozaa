@@ -25,6 +25,7 @@ import { dashboardMemo, ownerDeskRoutes } from './routes/ownerDesk.ts';
 import { ownerLoyaltyRoutes } from './routes/ownerLoyalty.ts';
 import { ownerLinkRoutes } from './routes/ownerLinks.ts';
 import { ownerChannelRoutes } from './routes/ownerChannels.ts';
+import { ownerAddOnRoutes } from './routes/ownerAddOns.ts';
 import { ownerMenuRoutes } from './routes/ownerMenu.ts';
 import { ownerBusinessRoutes } from './routes/ownerBusiness.ts';
 import { meRoutes } from './routes/me.ts';
@@ -211,6 +212,7 @@ export function createApp(deps: {
   if (deps.otp) app.route('/', otpRoutes({ ...deps.otp, log: deps.log }));
   if (deps.owner) app.route('/', ownerRoutes({ ...deps.owner, log: deps.log }));
   if (deps.owner) app.route('/', ownerMenuRoutes(deps.owner));
+  if (deps.owner) app.route('/', ownerAddOnRoutes(deps.owner));
   if (deps.owner) app.route('/', mediaRoutes(deps.owner));
   if (deps.owner) app.route('/', ownerTablesRoutes(deps.owner));
   if (deps.owner)

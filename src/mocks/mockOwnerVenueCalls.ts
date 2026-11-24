@@ -1,5 +1,7 @@
 import { mockUploadedImage } from './mediaRegistry';
 import type { ApiClient } from '@/lib/api/client';
+import type { ModifierGroup } from '@/lib/api/types';
+import { ownGroups, resolveDish } from '@/lib/addOns';
 import { ApiError } from '@/lib/api/errors';
 import { qrSvg } from '@/lib/qrSvg';
 import { nextId, serviceSettings, venueById } from './world';
@@ -179,6 +181,8 @@ export function mockOwnerVenueCalls(ctx: MockContext) {
       if (!menu || !body.categoryId || !body.name || body.pricePesewas === undefined) {
         throw new ApiError(400, 'bad_request', 'Add a name, price and category');
       }
+      const library = menu.modifierGroups ?? [];
+      checkGroupIds(body.modifierGroupIds, library);
       const item = {
         id: nextId(world, 'itm'),
         categoryId: body.categoryId,
@@ -192,7 +196,9 @@ export function mockOwnerVenueCalls(ctx: MockContext) {
         allergens: body.allergens ?? [],
         calories: body.calories,
         badges: body.badges ?? [],
-        modifierGroups: body.modifierGroups ?? [],
+        modifierGroups: ownGroups(body.modifierGroups ?? [], library),
+        ...(body.modifierGroupIds ? { modifierGroupIds: body.modifierGroupIds } : {}),
+        snoozedUntil: body.snoozedUntil ?? null,
         prepMinutes: body.prepMinutes,
         // A new dish goes to the end of its section.
         position:
@@ -207,7 +213,7 @@ export function mockOwnerVenueCalls(ctx: MockContext) {
         ...(body.stockCount === 0 ? { available: false } : {}),
       };
       menu.items.push(item);
-      return item;
+      return resolveDish(item, library);
     },
     async ownerUpdateItem(venueId, itemId, body) {
       await gate();
@@ -225,11 +231,15 @@ export function mockOwnerVenueCalls(ctx: MockContext) {
             ? null
             : (mockUploadedImage(body.photoMediaId) ?? current.photo);
       const { photoMediaId: _photoMediaId, ...fields } = body;
+      const library = menu.modifierGroups ?? [];
+      checkGroupIds(body.modifierGroupIds, library);
       const next = { ...current, ...fields, photo };
+      // Only the dish's own groups are stored; library groups are listed by id.
+      if (body.modifierGroups) next.modifierGroups = ownGroups(body.modifierGroups, library);
       // Setting the stock to 0 sells the dish out, as the server does.
       if (body.stockCount === 0) next.available = false;
       menu.items[index] = next;
-      return next;
+      return resolveDish(next, library);
     },
     async ownerDeleteItem(venueId, itemId) {
       await gate();
@@ -261,4 +271,10 @@ export function mockOwnerVenueCalls(ctx: MockContext) {
       return qrSvg(table.qrUrl, 256);
     },
   } satisfies Partial<ApiClient>;
+}
+
+/** A dish may only list groups that are in the venue's library. */
+function checkGroupIds(ids: string[] | undefined, library: readonly ModifierGroup[]): void {
+  if (ids?.some((id) => !library.some((group) => group.id === id)))
+    throw new ApiError(422, 'validation', 'That add-on group is gone');
 }

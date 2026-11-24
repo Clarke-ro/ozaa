@@ -116,3 +116,4 @@ export type Call = {
   deleteToken?: string;
 };
 export type OrderStatus = Schemas['OrderStatus'];
+export type ModifierGroupInput = Schemas['ModifierGroupInput'];

@@ -36,6 +36,8 @@ import type {
   MenuCategoryInput,
   MenuItem,
   MenuItemInput,
+  ModifierGroup,
+  ModifierGroupInput,
   Offer,
   Order,
   OtpPurpose,
@@ -182,6 +184,15 @@ export type ApiClient = {
   ownerDeleteCategory(venueId: string, categoryId: string): Promise<void>;
   ownerCreateItem(venueId: string, body: MenuItemInput): Promise<MenuItem>;
   ownerUpdateItem(venueId: string, itemId: string, body: MenuItemInput): Promise<MenuItem>;
+  /** The add-on library: groups many dishes share. It comes back in Menu.modifierGroups. */
+  ownerCreateModifierGroup(venueId: string, body: ModifierGroupInput): Promise<ModifierGroup>;
+  ownerUpdateModifierGroup(
+    venueId: string,
+    groupId: string,
+    body: ModifierGroupInput,
+  ): Promise<ModifierGroup>;
+  /** Also takes the group off every dish that used it. */
+  ownerDeleteModifierGroup(venueId: string, groupId: string): Promise<void>;
   ownerDeleteItem(venueId: string, itemId: string): Promise<void>;
   ownerListTables(venueId: string): Promise<{ items: Table[] }>;
   ownerCreateTables(venueId: string, body: { codes: string[] }): Promise<{ items: Table[] }>;

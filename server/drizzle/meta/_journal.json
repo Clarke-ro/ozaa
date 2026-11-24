@@ -92,6 +92,13 @@
       "when": 1795545637837,
       "tag": "0012_chowdeck_channels",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1795546647056,
+      "tag": "0013_addon_library_and_snooze",
+      "breakpoints": true
     }
   ]
 }

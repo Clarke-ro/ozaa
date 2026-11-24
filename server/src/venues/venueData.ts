@@ -6,18 +6,21 @@ import {
   loyaltyPrograms,
   menuCategories,
   menuItems,
+  modifierGroups,
   paymentSettings,
   venues,
   writtenReviews,
 } from '../db/schema.ts';
 import { Problem } from '../http/problem.ts';
 import { liveNotices } from '../shared/notices.ts';
+import { resolveDish } from '../shared/addOns.ts';
 import { guestPayMethods } from '../shared/payments.ts';
 import type {
   ManualPayments,
   Menu,
   MenuCategory,
   MenuItem,
+  ModifierGroup,
   Offer,
   PaymentSettings,
   StoreNotices,
@@ -157,14 +160,42 @@ export function itemFromRow(row: ItemRow): MenuItem {
     minQuantity: row.minQuantity,
     maxQuantity: row.maxQuantity,
     ...(row.position === null ? {} : { position: row.position }),
+    snoozedUntil: row.snoozedUntil?.toISOString() ?? null,
     dietary: (row.details as Partial<MenuItem>).dietary ?? [],
     badges: (row.details as Partial<MenuItem>).badges ?? [],
     modifierGroups: (row.details as Partial<MenuItem>).modifierGroups ?? [],
   };
 }
 
-/** The whole menu: owner and guests read the same one; guest screens leave hidden dishes out. */
+type GroupRow = typeof modifierGroups.$inferSelect;
+
+export function groupFromRow(row: GroupRow): ModifierGroup {
+  return {
+    id: row.id,
+    name: row.name as ModifierGroup['name'],
+    min: row.min,
+    max: row.max,
+    options: row.options as ModifierGroup['options'],
+  };
+}
+
+/** The venue's add-on library, oldest first. */
+export async function libraryOf(db: Db, venueId: string): Promise<ModifierGroup[]> {
+  const rows = await db
+    .select()
+    .from(modifierGroups)
+    .where(eq(modifierGroups.venueId, venueId))
+    .orderBy(asc(modifierGroups.createdAt), asc(modifierGroups.id));
+  return rows.map(groupFromRow);
+}
+
+/**
+ * The whole menu: owner and guests read the same one; guest screens leave hidden dishes out.
+ * Each dish's modifierGroups already holds its library groups, so orders are priced from the
+ * same add-ons the guest saw (shared/addOns.ts).
+ */
 export async function menuOf(db: Db, venueId: string): Promise<Menu> {
+  const library = await libraryOf(db, venueId);
   const categories = await db
     .select()
     .from(menuCategories)
@@ -185,7 +216,8 @@ export async function menuOf(db: Db, venueId: string): Promise<Menu> {
       hidden: c.hidden,
       ...(c.schedule ? { schedule: c.schedule as MenuCategory['schedule'] } : {}),
     })),
-    items: items.map(itemFromRow),
+    items: items.map((row) => resolveDish(itemFromRow(row), library)),
+    modifierGroups: library,
   };
 }
 

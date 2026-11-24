@@ -2,6 +2,7 @@ import type { TokenSource } from '@/lib/api/client';
 import { ApiError, OfflineError } from '@/lib/api/errors';
 import { bestPromo } from '@/lib/promos';
 import { orderChannel } from '@/lib/channels';
+import { resolveDish } from '@/lib/addOns';
 import { taxLines } from '@/lib/tax';
 import type { AppliedPromo, Menu, Order, OrderLineInput, VenuePublic } from '@/lib/api/types';
 import { checkLine, takeStock, unitPrice } from '@/lib/dishRules';
@@ -64,9 +65,11 @@ export function createMockContext(options: MockOptions = {}) {
       throw new ApiError(400, 'validation', 'Add at least one dish');
     }
     const lines = body.lines.map((line) => {
-      const item = menu.items.find((candidate) => candidate.id === line.menuItemId);
-      if (!item) throw new ApiError(422, 'item_sold_out', 'That dish is not on the menu');
-      const check = checkLine(item, line.quantity);
+      const found = menu.items.find((candidate) => candidate.id === line.menuItemId);
+      if (!found) throw new ApiError(422, 'item_sold_out', 'That dish is not on the menu');
+      // Library add-ons count, exactly as the guest saw them on the dish.
+      const item = resolveDish(found, menu.modifierGroups ?? []);
+      const check = checkLine(item, line.quantity, now());
       if (check === 'sold_out') throw new ApiError(422, 'item_sold_out', 'Sold out');
       if (check === 'out_of_range') {
         throw new ApiError(422, 'quantity_out_of_range', 'Change how many you want of this dish');

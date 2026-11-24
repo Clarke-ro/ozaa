@@ -947,6 +947,58 @@ paths:
       responses:
         '204': { description: Deleted. }
 
+  /owner/venues/{venueId}/menu/modifier-groups:
+    post:
+      tags: [owner-menu]
+      operationId: ownerCreateModifierGroup
+      security: [{ ownerAuth: [] }]
+      summary: Add a group to the venue's add-on library (for example "Spice level"), for many dishes to share.
+      description: "The library comes back in Menu.modifierGroups. A dish uses a group by listing its id in modifierGroupIds. Options without an id get one."
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ModifierGroupInput' }
+      responses:
+        '201':
+          description: Created.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ModifierGroup' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /owner/venues/{venueId}/menu/modifier-groups/{groupId}:
+    put:
+      tags: [owner-menu]
+      operationId: ownerUpdateModifierGroup
+      security: [{ ownerAuth: [] }]
+      summary: Replace a library group. Every dish that uses it changes at once.
+      description: "Options that keep their id stay the same option; options without an id are new. Past orders keep the names and prices they were placed with."
+      parameters: [{ $ref: '#/components/parameters/VenueId' }, { $ref: '#/components/parameters/ModifierGroupIdParam' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ModifierGroupInput' }
+      responses:
+        '200':
+          description: Saved.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ModifierGroup' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [owner-menu]
+      operationId: ownerDeleteModifierGroup
+      security: [{ ownerAuth: [] }]
+      summary: Remove a library group. It is taken off every dish that used it.
+      parameters: [{ $ref: '#/components/parameters/VenueId' }, { $ref: '#/components/parameters/ModifierGroupIdParam' }]
+      responses:
+        '204': { description: Removed. }
+        '403': { $ref: '#/components/responses/Forbidden' }
   /owner/venues/{venueId}/tables:
     get:
       tags: [owner-tables]
@@ -2405,6 +2457,11 @@ components:
       name: menuItemId
       required: true
       schema: { $ref: '#/components/schemas/MenuItemId' }
+    ModifierGroupIdParam:
+      in: path
+      name: groupId
+      required: true
+      schema: { type: string }
     ChannelKindParam:
       name: channel
       in: path
@@ -2909,6 +2966,25 @@ components:
               id: { type: string }
               name: { $ref: '#/components/schemas/LocalizedText' }
               pricePesewas: { $ref: '#/components/schemas/Pesewas' }
+    ModifierGroupInput:
+      type: object
+      required: [name, min, max, options]
+      description: A library group as the owner saves it. min 1 and max 1 is a required single choice (a size, for example).
+      properties:
+        name: { $ref: '#/components/schemas/LocalizedText' }
+        min: { type: integer, minimum: 0, maximum: 80 }
+        max: { type: integer, minimum: 1, maximum: 80 }
+        options:
+          type: array
+          minItems: 1
+          maxItems: 80
+          items:
+            type: object
+            required: [name, pricePesewas]
+            properties:
+              id: { type: string, description: Keep it to keep the same option. Leave it out for a new one. }
+              name: { $ref: '#/components/schemas/LocalizedText' }
+              pricePesewas: { $ref: '#/components/schemas/Pesewas' }
     MenuItem:
       type: object
       required: [id, categoryId, name, description, pricePesewas, available, dietary, badges, modifierGroups]
@@ -2933,13 +3009,25 @@ components:
           description: Diet labels the owner typed in beyond the standard set (for example "Keto"). Shown as tags on the dish; the guest diet filters use `dietary` only.
           items: { type: string, minLength: 1, maxLength: 24 }
         badges: { type: array, items: { type: string, enum: [popular, new, chef_pick] } }
-        modifierGroups: { type: array, items: { $ref: '#/components/schemas/ModifierGroup' } }
+        modifierGroups:
+          type: array
+          items: { $ref: '#/components/schemas/ModifierGroup' }
+          description: "Every add-on group a guest sees on this dish: the library groups in modifierGroupIds first, in that order, then the dish's own. Guests and pricing read only this."
+        modifierGroupIds:
+          type: array
+          maxItems: 12
+          items: { type: string }
+          description: "Library groups (Menu.modifierGroups) this dish uses, in order. Missing means none."
         allergens: { type: array, items: { type: string } }
         calories: { type: integer }
         prepMinutes: { type: integer }
         hidden:
           type: boolean
           description: True keeps the dish off the guest menu without deleting it. Like a hidden category, it is still sent (the owner menu editor reads the same menu) and guest screens leave it out. Orders for it fail with item_sold_out. Missing means false.
+        snoozedUntil:
+          type: ['string', 'null']
+          format: date-time
+          description: "Sold out until this time on every channel, then on sale again by itself (\"Back at 17:00\"). Orders fail with item_sold_out until then. Null, missing or past means not snoozed."
         salePricePesewas:
           oneOf: [{ $ref: '#/components/schemas/Pesewas' }, { type: 'null' }]
           description: A promo price below pricePesewas. When set, the server charges it (plus add-ons) and guests see the normal price struck through. Null or missing means no sale.
@@ -2977,13 +3065,25 @@ components:
           description: Diet labels the owner typed in beyond the standard set (for example "Keto"). Shown as tags on the dish; the guest diet filters use `dietary` only.
           items: { type: string, minLength: 1, maxLength: 24 }
         badges: { type: array, items: { type: string, enum: [popular, new, chef_pick] } }
-        modifierGroups: { type: array, items: { $ref: '#/components/schemas/ModifierGroup' } }
+        modifierGroups:
+          type: array
+          items: { $ref: '#/components/schemas/ModifierGroup' }
+          description: "The dish's own groups only. A group whose id is in the library is dropped, so sending back what was read never copies a library group."
+        modifierGroupIds:
+          type: array
+          maxItems: 12
+          items: { type: string }
+          description: "Library groups (Menu.modifierGroups) this dish uses, in order. Missing means none."
         allergens: { type: array, items: { type: string } }
         calories: { type: integer }
         prepMinutes: { type: integer }
         hidden:
           type: boolean
           description: True keeps the dish off the guest menu without deleting it. Like a hidden category, it is still sent (the owner menu editor reads the same menu) and guest screens leave it out. Orders for it fail with item_sold_out. Missing means false.
+        snoozedUntil:
+          type: ['string', 'null']
+          format: date-time
+          description: "Sold out until this time on every channel, then on sale again by itself (\"Back at 17:00\"). Orders fail with item_sold_out until then. Null, missing or past means not snoozed."
         salePricePesewas:
           oneOf: [{ $ref: '#/components/schemas/Pesewas' }, { type: 'null' }]
           description: A promo price below pricePesewas. When set, the server charges it (plus add-ons) and guests see the normal price struck through. Null or missing means no sale.
@@ -3013,6 +3113,10 @@ components:
         updatedAt: { type: string, format: date-time }
         categories: { type: array, items: { $ref: '#/components/schemas/MenuCategory' } }
         items: { type: array, items: { $ref: '#/components/schemas/MenuItem' } }
+        modifierGroups:
+          type: array
+          items: { $ref: '#/components/schemas/ModifierGroup' }
+          description: "The venue's add-on library, shared by dishes through modifierGroupIds. Guests can ignore it: each dish's modifierGroups already holds the groups it uses. Missing means none."
 
     ChannelKind:
       type: string

@@ -41,6 +41,7 @@ const FILES = {
   'src/lib/insights.ts': 'insights.ts',
   'src/lib/guestServices.ts': 'guestServices.ts',
   'src/lib/channels.ts': 'channels.ts',
+  'src/lib/addOns.ts': 'addOns.ts',
   'src/lib/api/types.ts': 'types.ts',
   'src/lib/api/schema.ts': 'schema.ts',
 };

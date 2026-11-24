@@ -15,6 +15,7 @@ import { mockOwnerBusinessCalls } from './mockOwnerBusinessCalls';
 import { mockOwnerPromoCalls } from './mockOwnerPromoCalls';
 import { mockOwnerNotificationCalls } from './mockOwnerNotificationCalls';
 import { mockOwnerChannelCalls } from './mockOwnerChannelCalls';
+import { mockOwnerAddOnCalls } from './mockOwnerAddOnCalls';
 
 export type { MockOptions } from './mockContext';
 
@@ -70,6 +71,7 @@ export function createMockApi(options: MockOptions & { remember?: boolean } = {}
     ...mockOwnerPromoCalls(ctx),
     ...mockOwnerNotificationCalls(ctx),
     ...mockOwnerChannelCalls(ctx),
+    ...mockOwnerAddOnCalls(ctx),
   };
   return {
     api: options.remember ? rememberOwnerChanges(api, world) : api,

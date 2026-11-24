@@ -7,7 +7,8 @@ import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Clock, Flame, Minus, Plus } from 'lucide-react-native';
 import { api } from '@/lib/api';
 import { pesewas } from '@/lib/brand';
-import { isOnGuestMenu, quantityLimits, unitPrice } from '@/lib/dishRules';
+import { asGuestSees, isOnGuestMenu, quantityLimits, unitPrice } from '@/lib/dishRules';
+import { useNow } from '@/lib/useNow';
 import { hapticImpactLight } from '@/lib/haptics';
 import { DEFAULT_CURRENCY, formatMoney } from '@/lib/money';
 import { useCart } from '@/features/cart';
@@ -42,7 +43,9 @@ export function ItemScreen({ slug, itemId }: { slug: string; itemId: string }) {
   const [note, setNote] = useState('');
   const [picks, setPicks] = useState<Record<string, string[]>>({});
   const [showMissing, setShowMissing] = useState(false);
-  const item = menu.data?.items.find((candidate) => candidate.id === itemId);
+  const now = useNow(60_000);
+  const dishes = asGuestSees(menu.data?.items ?? [], now);
+  const item = dishes.find((candidate) => candidate.id === itemId);
 
   if (menu.isLoading) return <LoadingState />;
   if (!item || !isOnGuestMenu(item)) return <ErrorState onRetry={() => router.back()} />;
@@ -55,7 +58,7 @@ export function ItemScreen({ slug, itemId }: { slug: string; itemId: string }) {
   const count = Math.min(limits.max, Math.max(limits.min, quantity));
   const total = (unitPrice(item) + extra) * count;
   const missing = missingChoice(item.modifierGroups, picks);
-  const related = (menu.data?.items ?? [])
+  const related = dishes
     .filter(
       (i) =>
         i.categoryId === item.categoryId && i.id !== item.id && i.available && isOnGuestMenu(i),

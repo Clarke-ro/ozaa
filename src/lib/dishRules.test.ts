@@ -1,7 +1,9 @@
 import {
+  asGuestSees,
   checkLine,
   dishStatus,
   isOnGuestMenu,
+  isSoldOut,
   onSale,
   quantityLimits,
   statusFields,
@@ -10,6 +12,7 @@ import {
 } from './dishRules';
 
 const dish = { pricePesewas: 5000, available: true };
+const NOW = Date.parse('2026-11-24T12:00:00.000Z');
 
 describe('price', () => {
   test('without a sale the guest pays the normal price', () => {
@@ -36,14 +39,14 @@ describe('quantity', () => {
     expect(quantityLimits({ ...dish, maxQuantity: 6, stockCount: 3 })).toEqual({ min: 1, max: 3 });
   });
   test('a line inside the limits is fine; outside them it is refused', () => {
-    expect(checkLine({ ...dish, minQuantity: 2 }, 2)).toBe('ok');
-    expect(checkLine({ ...dish, minQuantity: 2 }, 1)).toBe('out_of_range');
-    expect(checkLine({ ...dish, maxQuantity: 4 }, 5)).toBe('out_of_range');
+    expect(checkLine({ ...dish, minQuantity: 2 }, 2, NOW)).toBe('ok');
+    expect(checkLine({ ...dish, minQuantity: 2 }, 1, NOW)).toBe('out_of_range');
+    expect(checkLine({ ...dish, maxQuantity: 4 }, 5, NOW)).toBe('out_of_range');
   });
   test('asking for more than is left, or anything when sold out or hidden, is sold out', () => {
-    expect(checkLine({ ...dish, stockCount: 2 }, 3)).toBe('sold_out');
-    expect(checkLine({ ...dish, available: false }, 1)).toBe('sold_out');
-    expect(checkLine({ ...dish, hidden: true }, 1)).toBe('sold_out');
+    expect(checkLine({ ...dish, stockCount: 2 }, 3, NOW)).toBe('sold_out');
+    expect(checkLine({ ...dish, available: false }, 1, NOW)).toBe('sold_out');
+    expect(checkLine({ ...dish, hidden: true }, 1, NOW)).toBe('sold_out');
   });
 });
 
@@ -72,4 +75,26 @@ describe('status for the owner', () => {
     expect(isOnGuestMenu({ ...dish, available: false })).toBe(true);
     expect(isOnGuestMenu({ ...dish, hidden: true })).toBe(false);
   });
+});
+
+describe('snooze', () => {
+  const at = (iso: string) => ({ ...dish, snoozedUntil: iso });
+  test('a snoozed dish is sold out until the time, then on sale again by itself', () => {
+    expect(isSoldOut(at('2026-11-24T17:00:00.000Z'), NOW)).toBe(true);
+    expect(checkLine(at('2026-11-24T17:00:00.000Z'), 1, NOW)).toBe('sold_out');
+    expect(isSoldOut(at('2026-11-24T11:59:00.000Z'), NOW)).toBe(false);
+    expect(checkLine(at('2026-11-24T11:59:00.000Z'), 1, NOW)).toBe('ok');
+  });
+  test('no snooze, or null, changes nothing; the sold-out switch still wins', () => {
+    expect(isSoldOut(dish, NOW)).toBe(false);
+    expect(isSoldOut({ ...dish, snoozedUntil: null }, NOW)).toBe(false);
+    expect(isSoldOut({ ...dish, available: false }, NOW)).toBe(true);
+  });
+});
+
+test('asGuestSees shows a snoozed dish as sold out and leaves the rest alone', () => {
+  const snoozed = { ...dish, snoozedUntil: '2026-11-24T17:00:00.000Z' };
+  const [a, b] = asGuestSees([snoozed, dish], NOW);
+  expect(a!.available).toBe(false);
+  expect(b).toBe(dish);
 });
