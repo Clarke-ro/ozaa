@@ -27,18 +27,18 @@ test(
     await expect(page).toHaveURL(PAYMENT_PAGE, {
       timeout: 15_000,
     });
-    // Against the real server that is Paystack's own site: come back to the app first. The
-    // order is on the server, so the page load that brings us back loses nothing.
-    if (page.url().startsWith('https://checkout.paystack.com/')) {
-      await page.goBack({ waitUntil: 'domcontentloaded' });
-    }
-
     // Back on the venue page: the order is followed live.
-    // Moved inside the app: a full page load restarts the demo's in-browser data.
-    await page.evaluate(() => {
-      window.history.pushState({}, '', '/bean-there');
-      window.dispatchEvent(new PopStateEvent('popstate'));
-    });
+    if (page.url().startsWith('https://checkout.paystack.com/')) {
+      // Against the real server that is Paystack's own site. The order is on the server and in
+      // this browser's order list, so a page load back to the venue loses nothing.
+      await page.goto('/bean-there', { waitUntil: 'domcontentloaded' });
+    } else {
+      // On the mock, move inside the app: a full page load restarts the demo's in-browser data.
+      await page.evaluate(() => {
+        window.history.pushState({}, '', '/bean-there');
+        window.dispatchEvent(new PopStateEvent('popstate'));
+      });
+    }
     await expect(page.getByRole('button', { name: /^Order #\d+ · / })).toBeVisible({
       timeout: 15_000,
     });
