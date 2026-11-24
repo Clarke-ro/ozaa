@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { SERVER } from './tags';
+import { PAYMENT_PAGE, SERVER } from './tags';
 
 // The venue's own link (/slug) is online ordering, menu first; a table's QR (/slug/t/7) is the
 // table guest's home with its services list. Neither may land on the other (Clarke, 2026-11-16).
@@ -38,7 +38,8 @@ test(
     await page.getByRole('textbox', { name: 'Phone number' }).fill('024 123 4567');
     // Pickup is paid in the app: the order goes, then the payment page (payment-step.spec.ts).
     await page.getByRole('button', { name: 'Place order', exact: true }).click();
-    await expect(page).toHaveURL(/\/dev\/mock-checkout/, { timeout: 15_000 });
+    // The mock's stand-in page, or Paystack's real test page against the real server.
+    await expect(page).toHaveURL(PAYMENT_PAGE, { timeout: 15_000 });
     await expect(page.getByText(/unauthori[sz]ed|errors\./i)).toHaveCount(0);
     expect(errors).toEqual([]);
   },
