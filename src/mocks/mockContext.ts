@@ -52,7 +52,7 @@ export function createMockContext(options: MockOptions = {}) {
   function placeOrder(
     venue: VenuePublic,
     menu: Menu,
-    body: { lines: OrderLineInput[]; promoCode?: string },
+    body: { lines: OrderLineInput[]; promoCode?: string; note?: string },
     tableCode: string | null,
     manual: boolean,
     /** Runs once the food total is known, before any stock is taken; throws to refuse. */
@@ -150,6 +150,7 @@ export function createMockContext(options: MockOptions = {}) {
       paidPesewas: 0,
       source: extra.source,
       contact: extra.contact ?? null,
+      note: body.note?.trim() || null,
       deliveryAddress: extra.deliveryAddress ?? null,
       deliveryFeePesewas: deliveryFee,
       etaMinutes: extra.etaMinutes ?? 12,

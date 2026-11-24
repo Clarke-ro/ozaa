@@ -167,3 +167,21 @@ test('MoMo without a phone opens the checkout page, like card (Clarke, 2026-11-2
   decideMockCard(payment.reference, 'succeeded');
   expect((await api.verifyPayment(payment.reference)).status).toBe('succeeded');
 });
+
+test('the venue shows its rating from written reviews, and an order keeps its note', async () => {
+  const { api, setGuest } = await signedInMock(Date.now(), AKOSUA);
+  const dish = (await api.getMenu('auntie-akos')).items[0]!;
+  setGuest((await api.createGuestSession({ venueSlug: 'auntie-akos', tableCode: '4' })).guestToken);
+  expect((await api.getVenue('auntie-akos')).rating ?? null).toBeNull();
+  const order = await api.createOrder(
+    {
+      clientOrderId: crypto.randomUUID(),
+      lines: [{ menuItemId: dish.id, quantity: 1 }],
+      note: 'No pepper, please',
+    },
+    { idempotencyKey: crypto.randomUUID() },
+  );
+  expect(order.note).toBe('No pepper, please');
+  await api.createReview({ stars: 4, orderId: order.id }, { idempotencyKey: crypto.randomUUID() });
+  expect((await api.getVenue('auntie-akos')).rating).toEqual({ average: 4, count: 1 });
+});

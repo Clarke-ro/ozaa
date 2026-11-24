@@ -35,7 +35,11 @@ export type GuestDeps = {
 };
 
 const slug = z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/);
-const sessionBody = z.object({ venueSlug: slug, tableCode: z.string().min(1).max(12).optional(), language: z.string().optional() });
+const sessionBody = z.object({
+  venueSlug: slug,
+  tableCode: z.string().min(1).max(12).optional(),
+  language: z.string().optional(),
+});
 const phone = z.string().regex(/^\+233\d{9}$/);
 const orderBody = z.object({
   clientOrderId: z.string().uuid(),
@@ -51,13 +55,21 @@ const orderBody = z.object({
     .min(1)
     .max(60),
   note: z.string().max(200).optional(),
-  promoCode: z.string().regex(/^[A-Z0-9]{3,20}$/).optional(),
+  promoCode: z
+    .string()
+    .regex(/^[A-Z0-9]{3,20}$/)
+    .optional(),
   fulfilment: z
     .object({
       type: z.enum(['pickup', 'delivery']),
       contact: z.object({ name: z.string().min(1).max(60), phone }),
       address: z.string().max(200).optional(),
-      location: z.object({ lat: z.number().finite().min(-90).max(90), lng: z.number().finite().min(-180).max(180) }).optional(),
+      location: z
+        .object({
+          lat: z.number().finite().min(-90).max(90),
+          lng: z.number().finite().min(-180).max(180),
+        })
+        .optional(),
     })
     .optional(),
 });
@@ -78,7 +90,8 @@ const quoteBody = z.object({
 export function guestOf(c: Context, deps: GuestDeps): GuestClaims {
   const header = c.req.header('Authorization');
   const claims = readGuestToken(deps.guestSecret, header?.replace(/^Bearer /, ''), deps.now());
-  if (!claims) throw new Problem(401, 'unauthorized', 'Start again from the venue’s QR code or link.');
+  if (!claims)
+    throw new Problem(401, 'unauthorized', 'Start again from the venue’s QR code or link.');
   return claims;
 }
 
@@ -89,7 +102,12 @@ export function canSeeOrder(
 ): boolean {
   if (row.venueId !== guest.venueId) return false;
   if (row.guestSessionId === guest.sid) return true;
-  return guest.tableCode !== null && row.tableCode === guest.tableCode && row.status !== 'served' && row.status !== 'cancelled';
+  return (
+    guest.tableCode !== null &&
+    row.tableCode === guest.tableCode &&
+    row.status !== 'served' &&
+    row.status !== 'cancelled'
+  );
 }
 
 /** Guest calls (api/openapi.yaml: guest-session, venues, menu, orders). No personal data in logs. */
@@ -101,7 +119,11 @@ const ORDER_WINDOW_MS = 10 * 60_000;
 export function guestRoutes(deps: GuestDeps) {
   const app = new Hono();
   const { db } = deps;
-  const ordersPerVisit = slidingWindow({ limit: ORDERS_PER_VISIT, windowMs: ORDER_WINDOW_MS, now: deps.now });
+  const ordersPerVisit = slidingWindow({
+    limit: ORDERS_PER_VISIT,
+    windowMs: ORDER_WINDOW_MS,
+    now: deps.now,
+  });
 
   app.post('/guest-sessions', async (c) => {
     const input = await body(c, sessionBody);
@@ -109,7 +131,8 @@ export function guestRoutes(deps: GuestDeps) {
     let table = null;
     if (input.tableCode) {
       table = await tableOf(db, row.id, input.tableCode);
-      if (!table) throw new Problem(404, 'venue_not_found', 'That table code is not at this venue.');
+      if (!table)
+        throw new Problem(404, 'venue_not_found', 'That table code is not at this venue.');
     }
     // One row per scan or opened link, for "visitors today". No personal data: venue, table, time.
     await db.insert(visits).values({
@@ -120,7 +143,11 @@ export function guestRoutes(deps: GuestDeps) {
       startedAt: new Date(deps.now()),
     });
     const exp = deps.now() + GUEST_TTL_MS;
-    const guestToken = signGuestToken(deps.guestSecret, { venueId: row.id, tableCode: table?.code ?? null, exp });
+    const guestToken = signGuestToken(deps.guestSecret, {
+      venueId: row.id,
+      tableCode: table?.code ?? null,
+      exp,
+    });
     return c.json(
       {
         guestToken,
@@ -146,7 +173,8 @@ export function guestRoutes(deps: GuestDeps) {
   app.get('/venues/:slug/wifi', async (c) => {
     const row = await venueRowBySlug(db, c.req.param('slug'));
     // The password isn't public on the web: only guests in a session at this venue get it.
-    if (guestOf(c, deps).venueId !== row.id) throw new Problem(404, 'not_found', 'No Wi-Fi details here.');
+    if (guestOf(c, deps).venueId !== row.id)
+      throw new Problem(404, 'not_found', 'No Wi-Fi details here.');
     const wifi = wifiOf(row);
     if (!wifi) throw new Problem(404, 'not_found', 'This venue has no Wi-Fi to share.');
     return c.json(wifi);
@@ -159,12 +187,18 @@ export function guestRoutes(deps: GuestDeps) {
 
   app.post('/orders', async (c) => {
     const guest = guestOf(c, deps);
-    if (!ordersPerVisit.hit(guest.sid)) throw new Problem(429, 'rate_limited', 'Too many orders at once. Ask a waiter if something is wrong.');
+    if (!ordersPerVisit.hit(guest.sid))
+      throw new Problem(
+        429,
+        'rate_limited',
+        'Too many orders at once. Ask a waiter if something is wrong.',
+      );
     await releaseExpiredHolds(db, deps.now(), guest.venueId);
     const input = await body(c, orderBody);
     const row = await venueRowById(db, guest.venueId);
     const venue = await publicVenue(db, row, deps.now());
-    if (venue.published === false) throw new Problem(409, 'venue_not_published', "This menu isn't open yet.");
+    if (venue.published === false)
+      throw new Problem(409, 'venue_not_published', "This menu isn't open yet.");
     const menu = await menuOf(db, row.id);
     const rules = await db.select().from(promos).where(eq(promos.venueId, row.id));
     const priced = priceOrder({
@@ -172,19 +206,32 @@ export function guestRoutes(deps: GuestDeps) {
       venue,
       promos: rules
         .filter((rule) => !rule.deletedAt)
-        .map((rule) => ({ ...(rule.rule as PromoRule), id: rule.id, usageCount: rule.usageCount, enabled: rule.enabled, code: rule.code })),
+        .map((rule) => ({
+          ...(rule.rule as PromoRule),
+          id: rule.id,
+          usageCount: rule.usageCount,
+          enabled: rule.enabled,
+          code: rule.code,
+        })),
       tax: (row.tax as TaxSetup | null) ?? null,
       body: input,
       tableCode: guest.tableCode,
       now: deps.now(),
     });
-    const loyaltyMemberId = await memberForOrder(db, deps.loyaltyKey, c.req.header('X-Loyalty-Token'), row.id, deps.now());
+    const loyaltyMemberId = await memberForOrder(
+      db,
+      deps.loyaltyKey,
+      c.req.header('X-Loyalty-Token'),
+      row.id,
+      deps.now(),
+    );
     const order = await saveOrder(db, {
       venueId: row.id,
       loyaltyMemberId,
       guestSessionId: guest.sid,
       clientOrderId: input.clientOrderId,
       tableCode: guest.tableCode,
+      note: input.note,
       priced,
       now: deps.now(),
     });
@@ -196,7 +243,8 @@ export function guestRoutes(deps: GuestDeps) {
     const guest = guestOf(c, deps);
     await releaseExpiredHolds(db, deps.now(), guest.venueId);
     const found = await orderById(db, c.req.param('orderId') ?? '');
-    if (!found || !canSeeOrder(guest, found.row)) throw new Problem(404, 'order_not_found', 'We could not find that order.');
+    if (!found || !canSeeOrder(guest, found.row))
+      throw new Problem(404, 'order_not_found', 'We could not find that order.');
     return found;
   }
 
@@ -204,7 +252,8 @@ export function guestRoutes(deps: GuestDeps) {
 
   app.post('/orders/:orderId/bill', async (c) => {
     const { order } = await visibleOrder(c);
-    if (order.status === 'cancelled') throw new Problem(409, 'quote_expired', 'This order was cancelled. Place it again.');
+    if (order.status === 'cancelled')
+      throw new Problem(409, 'quote_expired', 'This order was cancelled. Place it again.');
     const input = await body(c, quoteBody);
     // A custom tip arrives as a plain number; the shared rules want it marked as whole pesewas.
     const request = {
@@ -212,13 +261,22 @@ export function guestRoutes(deps: GuestDeps) {
       tip: input.tip
         ? {
             ...(input.tip.percent !== undefined ? { percent: input.tip.percent } : {}),
-            ...(input.tip.customPesewas !== undefined ? { customPesewas: pesewas(input.tip.customPesewas) } : {}),
+            ...(input.tip.customPesewas !== undefined
+              ? { customPesewas: pesewas(input.tip.customPesewas) }
+              : {}),
           }
         : undefined,
     };
     const pay = await paymentSettingsOf(db, order.venueId);
-    if (!pay.paystack) throw new Problem(409, 'online_pay_off', 'Pay at the counter, or ask your waiter for the bill.');
-    return c.json(await makeQuote(db, { order, request, feePassing: pay.feePassing, now: deps.now() }));
+    if (!pay.paystack)
+      throw new Problem(
+        409,
+        'online_pay_off',
+        'Pay at the counter, or ask your waiter for the bill.',
+      );
+    return c.json(
+      await makeQuote(db, { order, request, feePassing: pay.feePassing, now: deps.now() }),
+    );
   });
 
   return app;

@@ -1811,6 +1811,12 @@ export interface components {
             banner?: components["schemas"]["StoreNotice"] | null;
             popup?: components["schemas"]["StoreNotice"] | null;
         };
+        /** @description The average of guests' written reviews (every star count, kept private or not), and how many there are. Null when there are none yet. */
+        VenueRating: {
+            /** @description Rounded to one decimal, like 4.7. */
+            average: number;
+            count: number;
+        } | null;
         VenuePublic: {
             id: string;
             slug: components["schemas"]["Slug"];
@@ -1845,6 +1851,7 @@ export interface components {
             languages: components["schemas"]["Language"][];
             /** Format: uri */
             googleReviewUrl?: string | null;
+            rating?: components["schemas"]["VenueRating"];
             /** @description Older field, same as payMethods.online: true when the venue's own Paystack is connected. */
             payEnabled: boolean;
             payMethods?: components["schemas"]["GuestPayMethods"];
@@ -2059,6 +2066,7 @@ export interface components {
              */
             clientOrderId: string;
             lines: components["schemas"]["OrderLineInput"][];
+            /** @description Instructions for the whole order. The kitchen sees them on the order (Order.note). */
             note?: string;
             /** @description A promo code the guest typed. Fails with promo_not_valid when it doesn't apply now. Promos without a code apply on their own. */
             promoCode?: string;
@@ -2125,6 +2133,8 @@ export interface components {
             number: number;
             venueId: string;
             tableCode: string | null;
+            /** @description The guest's instructions for the whole order (Add instructions on the order page). */
+            note?: string | null;
             status: components["schemas"]["OrderStatus"];
             paymentStatus: components["schemas"]["PaymentStatusSummary"];
             lines: components["schemas"]["OrderLine"][];

@@ -22,6 +22,7 @@ export function mockGuestCalls(ctx: MockContext) {
         now(),
         world.paymentSettings[found.id],
         setupOf(world, found),
+        world.written.filter((review) => review.venueId === found.id).map((review) => review.stars),
       );
       const tag = etag(venue);
       if (call?.ifNoneMatch === tag) throw new ApiError(304, 'not_modified', 'Not modified');

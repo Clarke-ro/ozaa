@@ -8,13 +8,23 @@ const owner = as('user_owner', OWNER);
 
 async function setup() {
   const app = await ownerSetup();
-  const token = (await app.call('POST', '/guest-sessions', { venueSlug: 'mamas-kitchen', tableCode: '4' })).json.guestToken;
+  const token = (
+    await app.call('POST', '/guest-sessions', { venueSlug: 'mamas-kitchen', tableCode: '4' })
+  ).json.guestToken;
   return { ...app, guest: { Authorization: `Bearer ${token}` } };
 }
 
-async function placeOrder(call: Awaited<ReturnType<typeof setup>>['call'], guest: { Authorization: string }) {
+async function placeOrder(
+  call: Awaited<ReturnType<typeof setup>>['call'],
+  guest: { Authorization: string },
+) {
   const dish = (await call('GET', '/venues/mamas-kitchen/menu')).json.items[0];
-  const made = await call('POST', '/orders', { clientOrderId: randomUUID(), lines: [{ menuItemId: dish.id, quantity: 1 }] }, guest);
+  const made = await call(
+    'POST',
+    '/orders',
+    { clientOrderId: randomUUID(), lines: [{ menuItemId: dish.id, quantity: 1 }] },
+    guest,
+  );
   assert.equal(made.status, 201);
   return made.json.id as string;
 }
@@ -24,8 +34,16 @@ test('a review reaches the owner with the same thank-you for any stars; the owne
   const firstOrder = await placeOrder(call, guest);
   const secondOrder = await placeOrder(call, guest);
   const made = [];
-  for (const [stars, orderId] of [[1, firstOrder], [5, secondOrder]] as const) {
-    const review = await call('POST', '/reviews', { stars, highlights: ['food'], text: 'Jollof!', orderId }, guest);
+  for (const [stars, orderId] of [
+    [1, firstOrder],
+    [5, secondOrder],
+  ] as const) {
+    const review = await call(
+      'POST',
+      '/reviews',
+      { stars, highlights: ['food'], text: 'Jollof!', orderId },
+      guest,
+    );
     expectContract('createReview', 201, review.json);
     assert.equal(review.json.googleReviewUrl, null);
     made.push(review.json.id);
@@ -35,11 +53,23 @@ test('a review reaches the owner with the same thank-you for any stars; the owne
   assert.equal(again.status, 201);
   assert.equal(again.json.id, made[0]);
   // No order yet: nothing to review. An order id from somewhere else is the same answer.
-  const fresh = (await call('POST', '/guest-sessions', { venueSlug: 'mamas-kitchen', tableCode: '5' })).json.guestToken;
+  const fresh = (
+    await call('POST', '/guest-sessions', { venueSlug: 'mamas-kitchen', tableCode: '5' })
+  ).json.guestToken;
   const none = await call('POST', '/reviews', { stars: 4 }, { Authorization: `Bearer ${fresh}` });
   assert.equal(none.status, 422);
   assert.equal(none.json.code, 'review_needs_order');
-  assert.equal((await call('POST', '/reviews', { stars: 4, orderId: firstOrder }, { Authorization: `Bearer ${fresh}` })).json.code, 'review_needs_order');
+  assert.equal(
+    (
+      await call(
+        'POST',
+        '/reviews',
+        { stars: 4, orderId: firstOrder },
+        { Authorization: `Bearer ${fresh}` },
+      )
+    ).json.code,
+    'review_needs_order',
+  );
   // An older app sends no order id. The visit's latest order is used.
   await placeOrder(call, guest);
   const inferred = await call('POST', '/reviews', { stars: 4, text: 'No id sent' }, guest);
@@ -48,15 +78,35 @@ test('a review reaches the owner with the same thank-you for any stars; the owne
   const list = await call('GET', `/owner/venues/${mamas}/written-reviews`, undefined, owner);
   expectContract('ownerListWrittenReviews', 200, list.json);
   assert.equal(list.json.items.length, 3);
-  assert.equal((await call('GET', `/owner/venues/${mamas}/written-reviews`, undefined, as('user_kitchen', KITCHEN))).status, 403);
-  const replied = await call('POST', `/owner/written-reviews/${list.json.items[0].id}/reply`, { text: 'Thank you, come again!' }, owner);
+  assert.equal(
+    (
+      await call(
+        'GET',
+        `/owner/venues/${mamas}/written-reviews`,
+        undefined,
+        as('user_kitchen', KITCHEN),
+      )
+    ).status,
+    403,
+  );
+  const replied = await call(
+    'POST',
+    `/owner/written-reviews/${list.json.items[0].id}/reply`,
+    { text: 'Thank you, come again!' },
+    owner,
+  );
   expectContract('ownerReplyToReview', 200, replied.json);
   assert.equal(replied.json.reply, 'Thank you, come again!');
 });
 
 test('a private note is scored for mood, hidden for two hours, then listed, searched, archived and summed up', async () => {
   const { call, mamas, guest, tick } = await setup();
-  const sent = await call('POST', '/feedback', { message: 'Food was cold and the waiter was rude', contactPhone: '+233241112222' }, guest);
+  const sent = await call(
+    'POST',
+    '/feedback',
+    { message: 'Food was cold and the waiter was rude', contactPhone: '+233241112222' },
+    guest,
+  );
   assert.equal(sent.status, 201);
   expectContract('sendFeedback', 201, sent.json);
   await call('POST', '/feedback', { message: 'Loved the jollof, great service!' }, guest);
@@ -65,16 +115,37 @@ test('a private note is scored for mood, hidden for two hours, then listed, sear
   tick(2 * 60 * 60 * 1000);
   const notes = await list();
   expectContract('ownerListFeedback', 200, notes.json);
-  assert.deepEqual(notes.json.items.map((n: { sentiment: string }) => n.sentiment).sort(), ['negative', 'positive']);
+  assert.deepEqual(notes.json.items.map((n: { sentiment: string }) => n.sentiment).sort(), [
+    'negative',
+    'positive',
+  ]);
   const cold = notes.json.items.find((n: { sentiment: string }) => n.sentiment === 'negative');
-  assert.equal((await call('GET', `/owner/venues/${mamas}/feedback?search=cold`, undefined, owner)).json.items.length, 1);
+  assert.equal(
+    (await call('GET', `/owner/venues/${mamas}/feedback?search=cold`, undefined, owner)).json.items
+      .length,
+    1,
+  );
 
-  const archived = await call('PATCH', `/owner/venues/${mamas}/feedback/${cold.id}/archive`, { archived: true }, owner);
+  const archived = await call(
+    'PATCH',
+    `/owner/venues/${mamas}/feedback/${cold.id}/archive`,
+    { archived: true },
+    owner,
+  );
   expectContract('ownerArchiveFeedback', 200, archived.json);
   assert.equal((await list()).json.items.length, 1);
-  assert.equal((await call('GET', `/owner/venues/${mamas}/feedback?state=archived`, undefined, owner)).json.items.length, 1);
+  assert.equal(
+    (await call('GET', `/owner/venues/${mamas}/feedback?state=archived`, undefined, owner)).json
+      .items.length,
+    1,
+  );
 
-  const answer = await call('POST', `/owner/venues/${mamas}/feedback/ask`, { question: 'What are my biggest complaints?' }, owner);
+  const answer = await call(
+    'POST',
+    `/owner/venues/${mamas}/feedback/ask`,
+    { question: 'What are my biggest complaints?' },
+    owner,
+  );
   expectContract('ownerAskFeedbackAi', 200, answer.json);
   assert.match(answer.json.reply, /2 notes/);
   assert.match(answer.json.reply, /cold/);
@@ -83,9 +154,18 @@ test('a private note is scored for mood, hidden for two hours, then listed, sear
 test('a visit can leave a few notes, and then no more', async () => {
   const { call, guest } = await setup();
   for (let i = 0; i < 3; i += 1) {
-    assert.equal((await call('POST', '/feedback', { message: `Note number ${i} from the table` }, guest)).status, 201);
+    assert.equal(
+      (await call('POST', '/feedback', { message: `Note number ${i} from the table` }, guest))
+        .status,
+      201,
+    );
   }
-  const extra = await call('POST', '/feedback', { message: 'And another note on top of those' }, guest);
+  const extra = await call(
+    'POST',
+    '/feedback',
+    { message: 'And another note on top of those' },
+    guest,
+  );
   assert.equal(extra.status, 429);
   assert.equal(extra.json.code, 'feedback_limit');
 });
@@ -93,7 +173,12 @@ test('a visit can leave a few notes, and then no more', async () => {
 test('the game: scores rank this week, impossible ones are refused, the board shows the best per nickname', async () => {
   const { call, guest } = await setup();
   const play = (score: number, nickname?: string, durationMs = 60_000) =>
-    call('POST', '/venues/mamas-kitchen/game/scores', { score, runId: randomUUID(), durationMs, ...(nickname ? { nickname } : {}) }, guest);
+    call(
+      'POST',
+      '/venues/mamas-kitchen/game/scores',
+      { score, runId: randomUUID(), durationMs, ...(nickname ? { nickname } : {}) },
+      guest,
+    );
   const first = await play(12, 'Kwame');
   expectContract('submitScore', 201, first.json);
   assert.equal(first.json.rank, 1);
@@ -109,7 +194,10 @@ test('the game: scores rank this week, impossible ones are refused, the board sh
 
   const board = await call('GET', '/venues/mamas-kitchen/game/leaderboard');
   expectContract('getLeaderboard', 200, board.json);
-  assert.deepEqual(board.json.entries.map((e: { nickname: string; score: number }) => `${e.nickname} ${e.score}`), ['Esi 20', 'Kwame 15']);
+  assert.deepEqual(
+    board.json.entries.map((e: { nickname: string; score: number }) => `${e.nickname} ${e.score}`),
+    ['Esi 20', 'Kwame 15'],
+  );
   assert.equal((await play(1)).json.rank, 5);
 });
 
@@ -117,7 +205,12 @@ test('a name typed after the round is added to that same score, once, by the sam
   const { call, guest } = await setup();
   const runId = randomUUID();
   const send = (body: Record<string, unknown>, who = guest) =>
-    call('POST', '/venues/mamas-kitchen/game/scores', { runId, durationMs: 60_000, score: 18, ...body }, who);
+    call(
+      'POST',
+      '/venues/mamas-kitchen/game/scores',
+      { runId, durationMs: 60_000, score: 18, ...body },
+      who,
+    );
   const board = async () =>
     (await call('GET', '/venues/mamas-kitchen/game/leaderboard')).json.entries.map(
       (e: { nickname: string; score: number }) => `${e.nickname} ${e.score}`,
@@ -141,4 +234,39 @@ test('a name typed after the round is added to that same score, once, by the sam
   // A name, once given, stays; and the score can't be raised by sending the round again.
   await send({ nickname: 'Renamed', score: 99 });
   assert.deepEqual(await board(), ['Adwoa 18']);
+});
+
+test('the venue shows the average of its written reviews, or no rating before the first one', async () => {
+  const { call, guest } = await setup();
+  const before = await call('GET', '/venues/mamas-kitchen');
+  expectContract('getVenue', 200, before.json);
+  assert.equal(before.json.rating ?? null, null);
+  for (const stars of [5, 4, 4]) {
+    const orderId = await placeOrder(call, guest);
+    assert.equal((await call('POST', '/reviews', { stars, orderId }, guest)).status, 201);
+  }
+  const after = await call('GET', '/venues/mamas-kitchen');
+  expectContract('getVenue', 200, after.json);
+  // 13 / 3 = 4.33…, shown to one decimal.
+  assert.deepEqual(after.json.rating, { average: 4.3, count: 3 });
+});
+
+test('a note for the whole order reaches the order', async () => {
+  const { call, guest } = await setup();
+  const dish = (await call('GET', '/venues/mamas-kitchen/menu')).json.items[0];
+  const made = await call(
+    'POST',
+    '/orders',
+    {
+      clientOrderId: randomUUID(),
+      lines: [{ menuItemId: dish.id, quantity: 1 }],
+      note: 'No pepper, please',
+    },
+    guest,
+  );
+  assert.equal(made.status, 201);
+  expectContract('createOrder', 201, made.json);
+  assert.equal(made.json.note, 'No pepper, please');
+  const read = await call('GET', `/orders/${made.json.id}`, undefined, guest);
+  assert.equal(read.json.note, 'No pepper, please');
 });

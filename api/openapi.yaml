@@ -2624,6 +2624,13 @@ components:
       properties:
         banner: { oneOf: [{ $ref: '#/components/schemas/StoreNotice' }, { type: 'null' }] }
         popup: { oneOf: [{ $ref: '#/components/schemas/StoreNotice' }, { type: 'null' }] }
+    VenueRating:
+      type: ['object', 'null']
+      required: [average, count]
+      description: The average of guests' written reviews (every star count, kept private or not), and how many there are. Null when there are none yet.
+      properties:
+        average: { type: number, minimum: 1, maximum: 5, description: 'Rounded to one decimal, like 4.7.' }
+        count: { type: integer, minimum: 1 }
     VenuePublic:
       type: object
       required: [id, slug, name, description, location, hours, theme, banner, services, currency, languages, payEnabled]
@@ -2659,6 +2666,7 @@ components:
         currency: { $ref: '#/components/schemas/Currency' }
         languages: { type: array, items: { $ref: '#/components/schemas/Language' } }
         googleReviewUrl: { type: ['string', 'null'], format: uri }
+        rating: { $ref: '#/components/schemas/VenueRating' }
         payEnabled: { type: boolean, description: "Older field, same as payMethods.online: true when the venue's own Paystack is connected." }
         payMethods: { $ref: '#/components/schemas/GuestPayMethods' }
         tagline: { type: string, maxLength: 100 }
@@ -2922,7 +2930,7 @@ components:
       properties:
         clientOrderId: { type: string, format: uuid, description: Made on the phone so an offline retry never creates two orders. }
         lines: { type: array, minItems: 1, maxItems: 60, items: { $ref: '#/components/schemas/OrderLineInput' } }
-        note: { type: string, maxLength: 200 }
+        note: { type: string, maxLength: 200, description: Instructions for the whole order. The kitchen sees them on the order (Order.note). }
         promoCode:
           type: string
           pattern: '^[A-Z0-9]{3,20}$'
@@ -3004,6 +3012,7 @@ components:
         number: { type: integer, example: 24, description: Short number shown to guests and staff. Resets daily. }
         venueId: { type: string }
         tableCode: { type: ['string', 'null'] }
+        note: { type: ['string', 'null'], maxLength: 200, description: "The guest's instructions for the whole order (Add instructions on the order page)." }
         status: { $ref: '#/components/schemas/OrderStatus' }
         paymentStatus: { $ref: '#/components/schemas/PaymentStatusSummary' }
         lines: { type: array, items: { $ref: '#/components/schemas/OrderLine' } }
