@@ -265,9 +265,9 @@
     "timedOutTitle": "Time ran out",
     "timedOutBody": "The request on your phone expired before you approved it. Nothing was taken.",
     "backToOrder": "Back to your order",
-    "openingCard": "Opening the card page…",
+    "openingCard": "Opening the payment page…",
     "cardCancelledTitle": "Not paid",
-    "cardCancelledBody": "The card payment didn't finish. Nothing was taken.",
+    "cardCancelledBody": "The payment didn't finish. Nothing was taken.",
     "offline": "You're offline. Connect to pay.",
     "tryAgain": "Try again",
     "testNumber": "Test mode: any valid number works and nothing is charged.",
@@ -282,7 +282,14 @@
     "feeLine": "Payment fee",
     "due": "To pay",
     "payNow": "Pay {{amount}}",
-    "seeReceipt": "See receipt"
+    "seeReceipt": "See receipt",
+    "orderPaid": "Order paid",
+    "paidBody": "{{amount}} paid. Your order is with the kitchen.",
+    "done": "Done",
+    "getReceipt": "Get the receipt",
+    "paidWith": "Paid with",
+    "reference": "Reference",
+    "failedBody": "{{reason}} Nothing was taken."
   },
   "receipt": {
     "title": "Receipt",
@@ -2654,7 +2661,10 @@
     "info": "Info",
     "infoLabel": "About {{name}}: address, hours and phone",
     "pickupIn": "Pickup in {{minutes}} min",
-    "delivery": "Delivery"
+    "delivery": "Delivery",
+    "minutes": "{{minutes}} min",
+    "pickupShort": "pickup",
+    "from": "from {{amount}}"
   },
   "myOrders": {
     "title": "Your orders",

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { SERVER } from './tags';
+import { PAYMENT_PAGE, SERVER } from './tags';
 
 // The order and its payment are one page (Clarke, 2026-11-23): MoMo, Cash or Card, then Place
 // order. MoMo and card open Paystack's page (the mock's stand-in here); Cash at a table asks the
@@ -29,7 +29,7 @@ test('table: the order page has the payment choices, and MoMo opens the payment 
   await page.getByRole('button', { name: 'Place order', exact: true }).click();
   await page.getByRole('button', { name: 'Pay', exact: true }).click({ timeout: 15_000 });
   await expect(page).toHaveURL(/\/mamas-kitchen\/pay\?reference=/, { timeout: 15_000 });
-  await expect(page.getByText('Paid. Your order is with the kitchen.')).toBeVisible({
+  await expect(page.getByRole('heading', { name: 'Order paid' })).toBeVisible({
     timeout: 20_000,
   });
 });
@@ -54,7 +54,8 @@ test('online pickup: paid in the app, so no Cash and no split', async ({ page })
   await expect(page.getByRole('radio', { name: /^Cash/ })).toHaveCount(0);
   await expect(page.getByText(/Split equally/)).toHaveCount(0);
   await page.getByRole('button', { name: 'Place order', exact: true }).click();
-  await expect(page).toHaveURL(/\/dev\/mock-checkout/, { timeout: 15_000 });
+  // The mock's stand-in page, or Paystack's real test page against the real server.
+  await expect(page).toHaveURL(PAYMENT_PAGE, { timeout: 15_000 });
 });
 
 test(

@@ -9,8 +9,8 @@ import { guestFont, useTheme } from '@/ui/theme';
 export type MenuView = 'list' | 'grid';
 
 /**
- * The menu's bar: the sections as text tabs with an underline under the one you're on, and a
- * search button at the end that opens a field above the tabs. List or grid is the venue's choice.
+ * The menu's bar: a small grey search square, then the sections as text tabs with an underline
+ * under the one you're on (design canvas, Clarke 2026-11-23). Search opens a field above the tabs.
  */
 export function MenuControls({
   query,
@@ -42,10 +42,6 @@ export function MenuControls({
   const tabs = [
     { id: 'all', label: t('menu.allSections') },
     ...sections.map((s) => ({ id: s.id, label: s.name.en })),
-  ];
-  const icon = (pressed: boolean) => [
-    styles.icon,
-    { backgroundColor: pressed ? theme.tint : 'transparent' },
   ];
 
   return (
@@ -79,6 +75,19 @@ export function MenuControls({
         </View>
       ) : null}
       <View style={styles.row}>
+        {searchOpen ? null : (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('menu.search')}
+            onPress={() => onSearchOpen(true)}
+            style={({ pressed }) => [
+              styles.square,
+              { backgroundColor: pressed ? theme.line : theme.wash },
+            ]}
+          >
+            <Search size={18} color={theme.text} />
+          </Pressable>
+        )}
         {/* While searching, results come from every section, so the tabs step aside. */}
         {searching ? (
           <Text variant="caption" style={[styles.flex, styles.searchNote, { color: theme.muted }]}>
@@ -121,18 +130,6 @@ export function MenuControls({
             })}
           </ScrollView>
         )}
-        <View style={styles.icons}>
-          {searchOpen ? null : (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={t('menu.search')}
-              onPress={() => onSearchOpen(true)}
-              style={({ pressed }) => icon(pressed)}
-            >
-              <Search size={20} color={theme.text} />
-            </Pressable>
-          )}
-        </View>
       </View>
     </View>
   );
@@ -162,7 +159,15 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   searchNote: { paddingStart: tokens.grid.mobile.margin },
-  icons: { flexDirection: 'row', paddingEnd: tokens.space[2] },
+  square: {
+    width: 40,
+    height: 40,
+    marginStart: tokens.grid.mobile.margin,
+    marginEnd: tokens.space[1],
+    borderRadius: tokens.radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   search: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -178,12 +183,5 @@ const styles = StyleSheet.create({
     minHeight: tokens.touchTarget,
     fontFamily: guestFont.regular,
     fontSize: tokens.type.body.size,
-  },
-  icon: {
-    width: tokens.touchTarget,
-    height: tokens.touchTarget,
-    borderRadius: tokens.radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { SERVER } from './tags';
+import { PAYMENT_PAGE, SERVER } from './tags';
 
 // Online customers can follow their order, see notifications, and find past orders on this
 // phone, without an account (Clarke, 2026-11-16).
@@ -24,16 +24,21 @@ test(
     await page.getByRole('textbox', { name: 'Phone number' }).fill('024 123 4567');
     await page.getByRole('button', { name: 'Place order', exact: true }).click();
     // MoMo is picked to start, so the payment page opens (the mock's stand-in for Paystack's).
-    await expect(page).toHaveURL(/\/dev\/mock-checkout|\/bean-there\/(status|pay)$/, {
+    await expect(page).toHaveURL(PAYMENT_PAGE, {
       timeout: 15_000,
     });
-
     // Back on the venue page: the order is followed live.
-    // Moved inside the app: a full page load restarts the demo's in-browser data.
-    await page.evaluate(() => {
-      window.history.pushState({}, '', '/bean-there');
-      window.dispatchEvent(new PopStateEvent('popstate'));
-    });
+    if (page.url().startsWith('https://checkout.paystack.com/')) {
+      // Against the real server that is Paystack's own site. The order is on the server and in
+      // this browser's order list, so a page load back to the venue loses nothing.
+      await page.goto('/bean-there', { waitUntil: 'domcontentloaded' });
+    } else {
+      // On the mock, move inside the app: a full page load restarts the demo's in-browser data.
+      await page.evaluate(() => {
+        window.history.pushState({}, '', '/bean-there');
+        window.dispatchEvent(new PopStateEvent('popstate'));
+      });
+    }
     await expect(page.getByRole('button', { name: /^Order #\d+ · / })).toBeVisible({
       timeout: 15_000,
     });

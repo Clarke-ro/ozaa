@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { SERVER } from './tags';
+import { PAYMENT_PAGE, SERVER } from './tags';
 
 // Guests never sign in, so sending an order must never say "unauthorized" (bug seen 2026-11-16:
 // a reload made the demo forget the table's session, and Send showed "errors.unauthorized").
@@ -34,7 +34,8 @@ test(
     await addFirstDishAndOpenOrder(page);
     // Bean There takes payments in the app, so the order goes and the payment page opens.
     await page.getByRole('button', { name: 'Place order', exact: true }).click();
-    await expect(page).toHaveURL(/\/dev\/mock-checkout/, { timeout: 15_000 });
+    // The mock's stand-in page, or Paystack's real test page against the real server.
+    await expect(page).toHaveURL(PAYMENT_PAGE, { timeout: 15_000 });
     await expect(page.getByText(/unauthori[sz]ed|errors\./i)).toHaveCount(0);
     expect(errors).toEqual([]);
   },

@@ -18,7 +18,8 @@ import {
   type LanguageCode,
 } from '@/features/venue';
 
-export const BANNER = 220;
+// Matches the table home's banner (Clarke, 2026-11-23).
+export const BANNER = 150;
 
 /**
  * The online page's banner photo with its round buttons: share on the left; My orders, the bell

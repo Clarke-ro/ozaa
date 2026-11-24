@@ -8,8 +8,6 @@ import { previewFee } from '@/lib/paystackFee';
 import { Redirect, useRouter, type Href } from 'expo-router';
 import { api } from '@/lib/api';
 import type { Payment } from '@/lib/api/types';
-import { DEMO } from '@/lib/demo';
-import { asGhanaPhone, countryForVenue, formatPhone, parsePhone } from '@/lib/phone';
 import { DEFAULT_CURRENCY, formatMoney } from '@/lib/money';
 import { canPayOnline } from '@/lib/payments';
 import { useVenue } from '@/features/venue';
@@ -20,7 +18,6 @@ import { PageHeader } from '@/ui/PageHeader';
 import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { ErrorState, LoadingState } from '@/ui/states';
-import { FilterChips } from '@/ui/FilterChips';
 import { tokens } from '@/theme/tokens';
 import { useTheme } from '@/ui/theme';
 import { payInitial, payTransition } from './paymentMachine';
@@ -28,17 +25,20 @@ import { secondsLeft } from './paymentWatch';
 import { BillLines } from './BillLines';
 import { openCheckout } from './openCheckout';
 import { useCardReturn } from './useCardReturn';
-import { PAY_METHODS, PayMethods, type PayChoice, type PayMethod } from './PayMethods';
+import { BillSplit } from './BillSplit';
+import { MethodBoxes } from './MethodBoxes';
+import { payMethodLabel } from './payLabels';
+import { payMethodsFor, type PayPick, type TipPercent } from './payPick';
+import { TipBoxes } from './TipBoxes';
 import { laterOption } from './laterOption';
 import { PayProgress } from './PayProgress';
 import { PaySummary } from './PaySummary';
 import { payStyles } from './payStyles';
 import { quoteBill } from './quoteBill';
-import { SplitChoice, type SplitMode } from './SplitChoice';
+import type { SplitMode } from './SplitChoice';
 import { usePaymentWatch } from './usePaymentWatch';
 import { guestKeys } from '@/lib/queryKeys';
 
-const TIPS = [0, 5, 10, 15] as const;
 // Screens shown in place of the form once a payment has started (PayProgress).
 const IN_PROGRESS = [
   'awaiting_approval',
@@ -56,10 +56,6 @@ export function PayScreen({ slug }: { slug: string }) {
   const client = useQueryClient();
   const venue = useVenue(slug);
   const currency = venue.data?.currency ?? DEFAULT_CURRENCY;
-  const country = countryForVenue({
-    timezone: venue.data?.hours.timezone,
-    currency: venue.data?.currency,
-  });
   const orderId = useGuestSession((state) => (state.slug === slug ? state.orderId : null));
   const hydrated = useGuestSession((state) => state.hydrated);
   const order = useQuery({
@@ -69,10 +65,9 @@ export function PayScreen({ slug }: { slug: string }) {
   });
   const [mode, setMode] = useState<SplitMode>('whole');
   const [parts, setParts] = useState(2);
-  // No tip and an empty number to start: the guest chooses, nothing is decided for them.
-  const [tip, setTip] = useState<(typeof TIPS)[number]>(0);
-  const [phone, setPhone] = useState('');
-  const [method, setMethod] = useState<PayChoice>('mtn');
+  // Whole bill, no tip and MoMo to start (Clarke, 2026-11-23).
+  const [tip, setTip] = useState<TipPercent>(0);
+  const [pick, setPick] = useState<PayPick>('momo');
   const [deferring, setDeferring] = useState(false);
   const rememberCalls = useMyCalls((s) => s.add);
   const [mine, setMine] = useState<string[]>([]);
@@ -145,7 +140,6 @@ export function PayScreen({ slug }: { slug: string }) {
 
   const start = async () => {
     send({ type: 'request_quote' });
-    const parsed = asGhanaPhone(parsePhone(phone, country));
     const quote = await api.quoteBill(order.data.id, {
       mode,
       parts: mode === 'equal' ? parts : undefined,
@@ -156,14 +150,8 @@ export function PayScreen({ slug }: { slug: string }) {
     send({ type: 'confirm' });
     const idempotencyKey = Crypto.randomUUID();
     const started = await api.initializePayment(
-      {
-        quoteId: quote.quoteId,
-        method: method === 'card' ? 'card' : 'momo',
-        momo:
-          method === 'card' || method === 'later' || !parsed
-            ? undefined
-            : { phone: parsed, provider: method },
-      },
+      // No phone and no network: Paystack's page asks for them (contract, 2026-11-23).
+      { quoteId: quote.quoteId, method: pick === 'card' ? 'card' : 'momo' },
       { idempotencyKey },
     );
     setStarted(started);
@@ -182,17 +170,15 @@ export function PayScreen({ slug }: { slug: string }) {
     }
   };
 
-  // What is being paid, for the steps after Pay: the server's amount once it has one.
-  const typed = asGhanaPhone(parsePhone(phone, country));
-  const chosen: PayMethod = method === 'later' ? 'mtn' : method;
-  const paidWith: PayMethod = shown
-    ? shown.method === 'card'
-      ? 'card'
-      : (shown.provider ?? chosen)
-    : chosen;
-  // The page's one "not now" option: the bill after the meal at a table, or pay on delivery.
+  // Cash means paying in person later: the bill after the meal, or to the rider on delivery.
   const laterKey = laterOption(order.data);
-  const later = method === 'later' && laterKey !== null;
+  const methods = payMethodsFor({
+    table: Boolean(order.data.tableCode),
+    delivery: order.data.source === 'delivery',
+    cash: laterKey !== null && (venue.data?.payMethods?.cash ?? false),
+  });
+  const chosen = methods.includes(pick) ? pick : 'momo';
+  const later = chosen === 'cash';
   const defer = async () => {
     setDeferring(true);
     try {
@@ -207,22 +193,25 @@ export function PayScreen({ slug }: { slug: string }) {
       setDeferring(false);
     }
   };
-  const card = paidWith === 'card';
+  // What is being paid, for the steps after Pay: the server's payment once there is one.
   const charge = {
     amountPesewas: shown?.amountPesewas ?? due,
     currency,
-    method: t(PAY_METHODS.find((m) => m.id === paidWith)?.label ?? 'pay.card'),
-    phone: typed && !card ? formatPhone(typed) : undefined,
-    card,
+    method: t(payMethodLabel(shown ?? { method: chosen === 'card' ? 'card' : 'momo' })),
+    // Only a MoMo charge sent straight to a phone waits on the phone; the rest is Paystack's page.
+    card: shown ? shown.status !== 'pay_offline' : true,
     testMode: shown?.testMode ?? venue.data?.payMethods?.testMode ?? false,
     displayText: shown?.displayText,
+    heading: [venue.data?.name, t('status.title', { number: order.data.number })]
+      .filter(Boolean)
+      .join(' · '),
   };
   const total = shown
     ? secondsLeft(Date.parse(shown.approveBy ?? ''), Date.parse(shown.createdAt))
     : 0;
 
   return (
-    <SafeScreen>
+    <SafeScreen background={theme.white}>
       <PageHeader
         title={t('pay.title')}
         subtitle={
@@ -254,37 +243,31 @@ export function PayScreen({ slug }: { slug: string }) {
               currency={currency}
             />
             {/* Splitting is for a table sharing a bill; a pickup or delivery order is paid whole. */}
-            {order.data.tableCode ? (
-              <SplitChoice mode={mode} onMode={setMode} parts={parts} onParts={setParts} />
+            {order.data.tableCode && !later ? (
+              <BillSplit
+                mode={mode}
+                onMode={setMode}
+                parts={parts}
+                onParts={setParts}
+                // My items ticks the dishes in the bill above.
+                dishes={[]}
+                mine={mine}
+                onMine={setMine}
+                currency={currency}
+              />
             ) : null}
 
-            {later ? null : (
-              <View style={payStyles.block}>
-                <Text variant="title">{t('pay.tip')}</Text>
-                <FilterChips
-                  label={t('pay.tip')}
-                  value={String(tip)}
-                  onChange={(id) => setTip(Number(id) as (typeof TIPS)[number])}
-                  items={TIPS.map((v) => ({
-                    id: String(v),
-                    label: v === 0 ? t('pay.noTip') : `${v}%`,
-                  }))}
-                />
-              </View>
-            )}
+            {later ? null : <TipBoxes value={tip} onChange={setTip} />}
 
             <View style={payStyles.block}>
               <Text variant="title" accessibilityRole="header">
-                {t('payment.title')}
+                {t('pay.with')}
               </Text>
-              <PayMethods
-                value={method}
-                onChange={setMethod}
-                phone={phone}
-                onPhone={setPhone}
-                // Demo builds only: the mock accepts any valid number and charges nothing.
-                hint={DEMO ? t('pay.testNumber') : undefined}
-                later={laterKey ? t(laterKey) : null}
+              <MethodBoxes
+                methods={methods}
+                value={chosen}
+                onChange={setPick}
+                delivery={order.data.source === 'delivery'}
               />
             </View>
 
