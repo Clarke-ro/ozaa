@@ -19,7 +19,10 @@ export function SplitChoice({
   onMode,
   parts,
   onParts,
+  modes = ['whole', 'equal', 'items'],
 }: {
+  /** Which choices to offer. The order page has no dishes to tick yet, so it leaves out My items. */
+  modes?: readonly SplitMode[];
   mode: SplitMode;
   onMode: (mode: SplitMode) => void;
   parts: number;
@@ -34,7 +37,7 @@ export function SplitChoice({
         label={t('pay.how')}
         value={mode}
         onChange={onMode}
-        items={(['whole', 'equal', 'items'] as const).map((id) => ({
+        items={modes.map((id) => ({
           id,
           label: t(`pay.${id}`),
         }))}

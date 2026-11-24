@@ -75,7 +75,7 @@ A summary of the brand Page for the coding agent. The numbers are in `tokens.jso
 
 - **Waiter:** pick a reason (Water, The bill, Cutlery, Order more, Clean the table, Something else), then see "Kwesi is on the way. Usually under 3 minutes."
 - **Order status:** four steps (Received, Being prepared, Ready, Served) with the ETA.
-- **Pay:** choose Whole bill, Split equally or My items; add a tip; pay with MTN MoMo, Telecel Cash, AT Money or card. MoMo shows the "approve on your phone" wait state.
+- **Your order and payment (one page, 24 Nov 2026):** dish cards, Add more dishes, then How are you paying (a grey segmented control: Whole bill, Split equally, My items; tables only), the tip as four equal boxes (No tip to start), and MoMo, Cash or Card as three square boxes. Place order opens Paystack's own page for MoMo or card; Cash at a table asks the waiter for the bill. Pay & split bill on the table home still pays an order later.
 - **Review:** stars, "what stood out" chips and text, or record a 15–30 s video on the front camera. Done unlocks at 15 s. The feature-consent box is ticked by default and the guest can untick it.
 - **Game (Plate Stack):** one point per plate, with your best score kept on the phone. The leaderboard shows this week's top 5 at the venue, and a nickname is optional. A stamp can be earned at the owner's target score (for example 15), once per visit. The game works offline and has no ads.
 - **Food ready:** a black banner slides down over any screen, the game included, with a View button.

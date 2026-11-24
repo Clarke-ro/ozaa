@@ -1,36 +1,38 @@
-import { Fragment, useState } from 'react';
+import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRetryKey } from '@/lib/retryKey';
+import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { OfflineNote } from '@/ui/OfflineNote';
-import { Plus, ShoppingBag } from 'lucide-react-native';
+import { Plus, Trash2 } from 'lucide-react-native';
 import { api } from '@/lib/api';
-import { cartCount, cartEstimate, linesFor, useCart } from '@/features/cart';
+import { pesewas } from '@/lib/brand';
+import { DEFAULT_CURRENCY, formatMoney } from '@/lib/money';
+import { onlineOrderingOf } from '@/lib/onlineOrdering';
+import { canPayOnline } from '@/lib/payments';
+import { guestKeys } from '@/lib/queryKeys';
+import { cartEstimate, linesFor, useCart } from '@/features/cart';
+import { OrderPayment, payMethodsFor, previewPay, type PayInput } from '@/features/pay';
 import { useGuestSession } from '@/features/session';
 import { useVenue } from '@/features/venue';
-import { DEFAULT_CURRENCY, formatMoney } from '@/lib/money';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
+import { IconButton } from '@/ui/IconButton';
+import { OfflineNote } from '@/ui/OfflineNote';
 import { PageHeader } from '@/ui/PageHeader';
 import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
-import { guestFont, useTheme } from '@/ui/theme';
-import { pesewas } from '@/lib/brand';
-import { toMessageKey } from '@/lib/api/errors';
-import { onlineOrderingOf } from '@/lib/onlineOrdering';
+import { useTheme } from '@/ui/theme';
+import { EmptyOrder } from './EmptyOrder';
 import { LinkCheckoutCard } from './LinkCheckoutCard';
 import { checkCheckout, type CheckoutDraft } from './linkCheckout';
-import { OrderLine } from './OrderLine';
-import { pastOrderFrom, useOrderHistory } from '@/features/history';
-import { canPayOnline } from '@/lib/payments';
-
-const EMPTY_ICON = 64;
+import { OrderItemCard } from './OrderItemCard';
+import { usePlaceOrder } from './usePlaceOrder';
 
 /**
- * The guest's order before it goes to the kitchen: each dish with − / +, the total, and one
- * Send button pinned at the bottom. The kitchen's own total replaces this estimate once sent.
+ * The guest's order and its payment on one page (design canvas, Clarke 2026-11-23): the dishes
+ * as grey cards, Add more dishes, the pickup or delivery details for a menu-link order, then how
+ * to pay, and one Place order button pinned at the bottom.
  */
 export function OrderScreen({ slug }: { slug: string }) {
   const { t } = useTranslation();
@@ -41,11 +43,8 @@ export function OrderScreen({ slug }: { slug: string }) {
   const setQuantity = useCart((state) => state.setQuantity);
   const clear = useCart((state) => state.clear);
   const venue = useVenue(slug);
+  const menu = useQuery({ queryKey: guestKeys.menu(slug), queryFn: () => api.getMenu(slug) });
   const table = useGuestSession((state) => (state.slug === slug ? state.tableCode : null));
-  const setOrderId = useGuestSession((state) => state.setOrderId);
-  const saveGuest = useGuestSession((state) => state.saveGuest);
-  const remember = useOrderHistory((state) => state.remember);
-  const hasSession = useGuestSession((state) => state.slug === slug && Boolean(state.token));
   // No table means the guest came from the menu link: pickup or delivery, with contact details.
   const online = table === null;
   const ordering = onlineOrderingOf(venue.data?.onlineOrdering);
@@ -61,12 +60,16 @@ export function OrderScreen({ slug }: { slug: string }) {
     location: null,
   });
   const [tried, setTried] = useState(false);
-  const [errorKey, setErrorKey] = useState('errors.generic');
+  // Whole bill, no tip and MoMo to start (Clarke, 2026-11-23).
+  const [pay, setPay] = useState<PayInput>({
+    pick: 'momo',
+    mode: 'whole',
+    parts: 2,
+    tip: 0,
+    mine: [],
+  });
   const currency = venue.data?.currency ?? DEFAULT_CURRENCY;
-  const [sending, setSending] = useState(false);
-  const keyFor = useRetryKey();
-  const [error, setError] = useState(false);
-  const count = cartCount(lines);
+  const place = venue.data?.name ?? '';
   const food = cartEstimate(lines);
   // Only offer what the venue offers; pickup first when both are on.
   const type =
@@ -76,114 +79,95 @@ export function OrderScreen({ slug }: { slug: string }) {
         ? 'delivery'
         : 'pickup';
   const check = checkCheckout({ ...draft, type }, ordering, venuePin, food);
-  // Venues with payments in the app take the guest to the Payment page after sending.
-  const payNext = canPayOnline(venue.data);
   const fee = online && check.ok ? check.deliveryFeePesewas : 0;
-  const total = formatMoney(pesewas(food + fee), currency);
   const canOrderHere = !online || ordering.enabled;
-  const place = venue.data?.name ?? '';
+  // Venues with payments in the app take payment here; the others send the order straight in.
+  const payNext = canPayOnline(venue.data);
+  const delivery = online && type === 'delivery';
+  const methods = payMethodsFor({
+    table: !online,
+    delivery,
+    cash: venue.data?.payMethods?.cash ?? false,
+  });
+  const input = methods.includes(pay.pick) ? pay : { ...pay, pick: methods[0] ?? 'momo' };
+  const cash = input.pick === 'cash';
+  const dishes = lines.map((line) => ({
+    key: line.key,
+    name: line.name,
+    totalPesewas: pesewas((line.unitPricePesewas + line.modifierPesewas) * line.quantity),
+  }));
+  const summary = previewPay(
+    dishes.map((dish) => ({ id: dish.key, totalPesewas: dish.totalPesewas })),
+    food + fee,
+    input,
+    venue.data?.payMethods,
+  );
+  const { placeOrder, sending, errorKey } = usePlaceOrder({
+    slug,
+    online,
+    table: !online,
+    place,
+    currency,
+    payNext,
+  });
+  const photos = new Map((menu.data?.items ?? []).map((item) => [item.id, item.photo]));
 
-  const send = async () => {
+  const send = () => {
     if (online && !check.ok) {
       setTried(true);
       return;
     }
-    setSending(true);
-    setError(false);
-    const body = {
-      lines: lines.map((line) => ({
-        menuItemId: line.menuItemId,
-        quantity: line.quantity,
-        modifierOptionIds: line.modifierOptionIds,
-        note: line.note,
-      })),
-      ...(online && check.ok ? { fulfilment: check.fulfilment } : {}),
-    };
-    // A retry of the same basket reuses the id, so a lost reply never makes a second order.
-    const clientOrderId = keyFor(body);
-    // A menu-link visit has no table scan to start a session, so start one now (no personal data).
-    if (online && !hasSession) {
-      try {
-        const session = await api.createGuestSession({ venueSlug: slug });
-        saveGuest({ token: session.guestToken, slug, tableCode: null });
-      } catch (failure) {
-        setErrorKey(toMessageKey(failure));
-        setSending(false);
-        setError(true);
-        return;
-      }
-    }
-    api
-      .createOrder({ clientOrderId, ...body }, { idempotencyKey: clientOrderId })
-      .then((order) => {
-        // Online customers find it again under My orders (no account, no personal data kept).
-        if (online) remember(pastOrderFrom(order, slug, place, currency));
-        setOrderId(order.id);
-        clear();
-        router.replace(payNext ? `/${slug}/pay` : `/${slug}/status`);
-      })
-      .catch((failure) => {
-        setErrorKey(toMessageKey(failure));
-        setSending(false);
-        setError(true);
-      });
+    void placeOrder(lines, online && check.ok ? check.fulfilment : undefined, input);
   };
 
   return (
-    <SafeScreen includeBottom={false}>
+    <SafeScreen includeBottom={false} background={theme.white}>
       <PageHeader
         title={t('basket.title')}
         subtitle={table ? `${t('home.table', { code: table })} · ${place}` : place}
+        right={
+          lines.length > 0 ? (
+            <IconButton plain label={t('basket.clear')} onPress={clear}>
+              <Trash2 color={theme.black} size={22} strokeWidth={2} />
+            </IconButton>
+          ) : null
+        }
       />
       <OfflineNote sending />
       {lines.length === 0 ? (
-        <View style={styles.empty}>
-          <View style={[styles.emptyIcon, { backgroundColor: theme.tint }]}>
-            <ShoppingBag size={28} color={theme.ink} strokeWidth={2} />
-          </View>
-          <Text variant="title" style={styles.center}>
-            {t('basket.emptyTitle')}
-          </Text>
-          <Text variant="body" style={[styles.center, { color: theme.muted }]}>
-            {t('basket.emptyBody')}
-          </Text>
-          <Button
-            label={t('basket.browse')}
-            onPress={() => router.replace(`/${slug}/menu`)}
-            style={styles.stretch}
-          />
-        </View>
+        <EmptyOrder onBrowse={() => router.replace(`/${slug}/menu`)} />
       ) : (
         <>
-          <ScrollView contentContainerStyle={styles.page}>
-            <View style={[styles.card, { backgroundColor: theme.surface }]}>
-              {lines.map((line, index) => (
-                <Fragment key={line.key}>
-                  {index > 0 ? (
-                    <View style={[styles.line, { backgroundColor: theme.line }]} />
-                  ) : null}
-                  <OrderLine
-                    line={line}
-                    currency={currency}
-                    onQuantity={(quantity) => setQuantity(line.key, quantity)}
-                  />
-                </Fragment>
+          <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
+            <View style={styles.section}>
+              <Text variant="title" accessibilityRole="header">
+                {t('basket.summary')}
+              </Text>
+              {lines.map((line) => (
+                <OrderItemCard
+                  key={line.key}
+                  line={line}
+                  photo={photos.get(line.menuItemId)}
+                  currency={currency}
+                  onQuantity={(quantity) => setQuantity(line.key, quantity)}
+                  onEdit={() => router.push(`/${slug}/menu/${line.menuItemId}`)}
+                />
               ))}
-              <View style={[styles.line, { backgroundColor: theme.line }]} />
               <Pressable
                 accessibilityRole="button"
                 onPress={() => router.back()}
                 style={({ pressed }) => [
                   styles.addMore,
-                  pressed && { backgroundColor: theme.wash },
+                  { backgroundColor: pressed ? theme.pressed : theme.fill },
                 ]}
               >
-                <Plus size={18} color={theme.ink} strokeWidth={2} />
-                <Text variant="body-strong" style={{ color: theme.ink }}>
+                <Plus size={16} color={theme.onFill} strokeWidth={2.5} />
+                <Text variant="body-strong" style={{ color: theme.onFill }}>
                   {t('basket.addMore')}
                 </Text>
               </Pressable>
             </View>
+            <View style={[styles.rule, { backgroundColor: theme.tint }]} />
 
             {online && canOrderHere ? (
               <LinkCheckoutCard
@@ -196,65 +180,55 @@ export function OrderScreen({ slug }: { slug: string }) {
               />
             ) : null}
 
-            <View style={[styles.card, styles.summary, { backgroundColor: theme.surface }]}>
-              <View style={styles.summaryRow}>
-                <Text variant="body" style={{ color: theme.muted }}>
-                  {t('basket.items')}
-                </Text>
-                <Text variant="body" style={[styles.num, { color: theme.muted }]}>
-                  {count}
-                </Text>
-              </View>
-              {fee > 0 ? (
-                <View style={styles.summaryRow}>
-                  <Text variant="body" style={{ color: theme.muted }}>
-                    {t('linkOrder.deliveryFee')}
-                  </Text>
-                  <Text variant="body" style={[styles.num, { color: theme.muted }]}>
-                    {formatMoney(pesewas(fee), currency)}
-                  </Text>
-                </View>
-              ) : null}
-              <View style={[styles.rule, { backgroundColor: theme.line }]} />
-              <View style={styles.summaryRow}>
+            {payNext && canOrderHere ? (
+              <OrderPayment
+                input={input}
+                onInput={setPay}
+                methods={methods}
+                dishes={dishes}
+                table={!online}
+                delivery={delivery}
+                summary={summary}
+                venueName={place}
+                currency={currency}
+                testMode={venue.data?.payMethods?.testMode ?? false}
+              />
+            ) : (
+              <View style={[styles.total, { backgroundColor: theme.wash }]}>
                 <Text variant="title">{t('status.total')}</Text>
                 <Text variant="title" style={styles.num}>
-                  {total}
+                  {formatMoney(pesewas(food + fee), currency)}
                 </Text>
               </View>
-              <Text variant="caption" style={{ color: theme.meta }}>
-                {t('basket.estimate')}
-              </Text>
-            </View>
+            )}
+            <Text variant="caption" style={[styles.center, { color: theme.meta }]}>
+              {t('basket.estimate')}
+            </Text>
           </ScrollView>
 
           <View
-            style={[
-              styles.footer,
-              {
-                paddingBottom: Math.max(insets.bottom, tokens.space[3]),
-                backgroundColor: theme.white,
-                borderTopColor: theme.line,
-              },
-            ]}
+            style={[styles.footer, { paddingBottom: Math.max(insets.bottom, tokens.space[3]) }]}
           >
-            {error ? (
+            {errorKey ? (
               <Text variant="caption" accessibilityRole="alert" style={{ color: theme.error }}>
                 {t(errorKey)}
               </Text>
             ) : null}
             {canOrderHere ? (
-              <Button
-                label={
-                  payNext
-                    ? t('payment.continue', { amount: total })
-                    : online
-                      ? t('linkOrder.place')
-                      : t('menu.send')
-                }
-                loading={sending}
-                onPress={() => void send()}
-              />
+              <>
+                <Button
+                  label={payNext || online ? t('linkOrder.place') : t('menu.send')}
+                  loading={sending}
+                  // My items needs at least one dish ticked.
+                  disabled={!cash && input.mode === 'items' && input.mine.length === 0}
+                  onPress={send}
+                />
+                {payNext && !cash ? (
+                  <Text variant="caption" style={[styles.center, { color: theme.muted }]}>
+                    {t('payment.next')}
+                  </Text>
+                ) : null}
+              </>
             ) : (
               <Text variant="body" style={{ color: theme.muted }}>
                 {t('linkOrder.tableOnly')}
@@ -270,47 +244,35 @@ export function OrderScreen({ slug }: { slug: string }) {
 const styles = StyleSheet.create({
   page: {
     padding: tokens.grid.mobile.margin,
-    gap: tokens.space[4],
+    gap: tokens.space[5],
     paddingBottom: tokens.space[8],
   },
-  card: {
-    borderRadius: tokens.radius.lg,
-    borderCurve: 'continuous',
-    boxShadow: tokens.shadow.card,
-    overflow: 'hidden',
-  },
-  line: { height: StyleSheet.hairlineWidth, marginStart: tokens.space[4] },
+  section: { gap: tokens.space[3] },
   addMore: {
+    alignSelf: 'center',
+    minWidth: 224,
+    minHeight: 44,
+    marginTop: tokens.space[2],
+    paddingHorizontal: tokens.space[5],
+    borderRadius: tokens.radius.full,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: tokens.space[2],
-    padding: tokens.space[4],
-    minHeight: 44,
   },
-  summary: { padding: tokens.space[4], gap: tokens.space[2] },
-  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  rule: { height: StyleSheet.hairlineWidth, marginVertical: tokens.space[1] },
-  num: { fontVariant: ['tabular-nums'], fontFamily: guestFont.strong },
+  rule: { height: 1, marginHorizontal: -tokens.grid.mobile.margin },
+  total: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: tokens.space[4],
+    borderRadius: tokens.radius.md,
+  },
+  num: { fontVariant: ['tabular-nums'] },
   footer: {
     paddingHorizontal: tokens.grid.mobile.margin,
     paddingTop: tokens.space[3],
     gap: tokens.space[2],
-    borderTopWidth: StyleSheet.hairlineWidth,
-  },
-  empty: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: tokens.space[8],
-    gap: tokens.space[3],
-  },
-  emptyIcon: {
-    width: EMPTY_ICON,
-    height: EMPTY_ICON,
-    borderRadius: EMPTY_ICON / 2,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   center: { textAlign: 'center' },
-  stretch: { alignSelf: 'stretch', marginTop: tokens.space[2] },
 });

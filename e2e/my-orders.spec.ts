@@ -22,8 +22,11 @@ test(
     await page.getByRole('button', { name: /View order/ }).click();
     await page.getByRole('textbox', { name: 'Your name' }).fill('Ama');
     await page.getByRole('textbox', { name: 'Phone number' }).fill('024 123 4567');
-    await page.getByRole('button', { name: /^Continue to payment/ }).click();
-    await expect(page).toHaveURL(/\/bean-there\/(status|pay)$/, { timeout: 15_000 });
+    await page.getByRole('button', { name: 'Place order', exact: true }).click();
+    // MoMo is picked to start, so the payment page opens (the mock's stand-in for Paystack's).
+    await expect(page).toHaveURL(/\/dev\/mock-checkout|\/bean-there\/(status|pay)$/, {
+      timeout: 15_000,
+    });
 
     // Back on the venue page: the order is followed live.
     // Moved inside the app: a full page load restarts the demo's in-browser data.
