@@ -1915,6 +1915,7 @@
     "openHint": "Opens the full order",
     "moreDishes_one": "+ {{count}} more dish",
     "moreDishes_other": "+ {{count}} more dishes",
+    "orderNote": "Note: {{note}}",
     "detail": {
       "title": "Order #{{number}}",
       "next": "Next",

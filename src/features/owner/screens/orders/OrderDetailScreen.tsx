@@ -24,6 +24,7 @@ import { orderPlace } from './orderPlace';
 import { orderSteps } from './orderSteps';
 import { StepRows } from './StepRows';
 import { OrderHead } from './OrderHead';
+import { OrderNote } from './OrderNote';
 import { OrderPayment } from './OrderPayment';
 import { useOrderMove } from './useOrderMove';
 import { useVenuePay } from './useVenuePay';
@@ -114,6 +115,11 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
               />
               <View style={[cardStyle(theme), styles.card]}>
                 <OrderBill order={order} currency={currency} part="lines" />
+                {order.note ? (
+                  <View style={styles.noteGap}>
+                    <OrderNote note={order.note} />
+                  </View>
+                ) : null}
               </View>
             </View>
             <TitledSection title={t('ownerOrders.detail.total')} cardStyle={styles.cardPad}>
@@ -190,6 +196,8 @@ const styles = StyleSheet.create({
   },
   pills: { flexDirection: 'row', gap: tokens.space[2] },
   card: { paddingVertical: 2, paddingHorizontal: tokens.owner.controls.cardPadding },
+  // The card's own padding is 2 px top and bottom, sized for dish rows; give the note room below.
+  noteGap: { paddingBottom: tokens.space[4] },
   cardPad: { padding: tokens.owner.controls.cardPadding },
   row: { flexDirection: 'row', alignItems: 'center', gap: tokens.space[3], minHeight: 60 },
   flex: { flex: 1, minWidth: 0, gap: 2 },

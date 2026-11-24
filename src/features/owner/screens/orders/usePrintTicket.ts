@@ -38,6 +38,7 @@ export function usePrintTicket(currency: string) {
         note: l.note,
         price: money(l.totalPesewas),
       })),
+      note: order.note ? t('ownerOrders.orderNote', { note: order.note }) : undefined,
       sums: [
         { label: t('ownerOrders.detail.subtotal'), value: money(order.subtotalPesewas) },
         ...order.taxes.map((tax) => ({ label: tax.label, value: money(tax.amountPesewas) })),

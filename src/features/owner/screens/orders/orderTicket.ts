@@ -5,6 +5,8 @@ export type TicketWords = {
   title: string;
   placed: string;
   lines: { qty: number; name: string; extras: string[]; note?: string; price: string }[];
+  /** The guest's instructions for the whole order, already worded ("Note: …"). */
+  note?: string;
   sums: { label: string; value: string; strong?: boolean }[];
   footer: string;
 };
@@ -31,6 +33,7 @@ export function ticketHtml(words: TicketWords): string {
           )}${l.note ? `<div class="n">${escape(l.note)}</div>` : ''}</td><td class="p">${escape(l.price)}</td></tr>`,
     )
     .join('');
+  const note = words.note ? `<tr class="o"><td colspan="3">${escape(words.note)}</td></tr>` : '';
   const sums = words.sums
     .map(
       (s) =>
@@ -45,11 +48,12 @@ h1 { font-size: 18px; margin: 0 0 2px; } .m { color: #333; margin-bottom: 8px; }
 table { width: 100%; border-collapse: collapse; } td { padding: 3px 0; vertical-align: top; }
 .q { width: 28px; font-weight: 700; } .p { text-align: right; white-space: nowrap; }
 .x { font-size: 12px; color: #333; } .n { font-size: 12px; font-style: italic; }
+.o td { font-weight: 700; padding-top: 6px; }
 .t td { border-top: 1px dashed #000; } .s td { font-weight: 700; }
 footer { margin-top: 10px; text-align: center; font-size: 11px; }
 </style></head><body>
 <h1>${escape(words.title)}</h1><div class="m">${escape(words.placed)}</div>
-<table>${lines}<tr class="t"><td colspan="3"></td></tr>${sums}</table>
+<table>${lines}${note}<tr class="t"><td colspan="3"></td></tr>${sums}</table>
 <footer>${escape(words.footer)}</footer>
 </body></html>`;
 }
