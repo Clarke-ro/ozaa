@@ -28,6 +28,15 @@ describe('ticketHtml', () => {
       expect(html).toContain(text);
     }
   });
+  it("prints the guest's note for the whole order, escaped, under the dishes", () => {
+    const html = ticketHtml({ ...words, note: 'Note: All at <once>' });
+    expect(html).toContain('Note: All at &lt;once&gt;');
+    expect(html.indexOf('Note: All')).toBeGreaterThan(html.indexOf('No pepper'));
+    expect(html.indexOf('Note: All')).toBeLessThan(html.indexOf('Total'));
+  });
+  it('prints no note row when the order has none', () => {
+    expect(ticketHtml(words)).not.toContain('class="o"');
+  });
 });
 
 describe('canPrint', () => {

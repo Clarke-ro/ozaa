@@ -81,6 +81,23 @@ test(
   },
 );
 
+test(
+  "the guest's note for the whole order shows on the ticket and on the order's page",
+  SERVER,
+  async ({ page, request }) => {
+    const note = 'Bring everything out together, please';
+    await placeOrder(request, 'mamas-kitchen', '7', note);
+    await signIn(page);
+    await nav(page, 'Orders');
+    const ticket = page.getByRole('button', { name: /, #\d+/ }).filter({ hasText: note });
+    await expect(ticket.getByText(`Note: ${note}`)).toBeVisible();
+    await ticket.first().click();
+    await expect(page).toHaveURL(/\/owner\/orders\/ord_/);
+    // The board stays mounted under the order's page, so look for the copy you can see.
+    await expect(page.getByText(`Note: ${note}`).filter({ visible: true })).toBeVisible();
+  },
+);
+
 test('switching location changes the whole dashboard', SERVER, async ({ page }) => {
   await signIn(page);
   await expect(page.getByText("Here's how Mama's Kitchen is doing today")).toBeVisible();

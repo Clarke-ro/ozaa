@@ -28,11 +28,15 @@ export async function callWaiter(
   expect(res.ok(), 'waiter call').toBeTruthy();
 }
 
-/** A guest at this table orders one of the first dish, so the kitchen has a new ticket. */
+/**
+ * A guest at this table orders one of the first dish, so the kitchen has a new ticket. `note` is
+ * the guest's instructions for the whole order (the mock's sample: table 5 at Mama's).
+ */
 export async function placeOrder(
   request: APIRequestContext,
   venueSlug: string,
   tableCode: string,
+  note?: string,
 ): Promise<void> {
   if (!REAL_SERVER) return;
   const headers = await guestAt(request, venueSlug, tableCode);
@@ -43,7 +47,7 @@ export async function placeOrder(
   expect(dish, `a dish on ${venueSlug}'s menu`).toBeTruthy();
   const res = await request.post(`${API}/orders`, {
     headers,
-    data: { clientOrderId: randomUUID(), lines: [{ menuItemId: dish!.id, quantity: 1 }] },
+    data: { clientOrderId: randomUUID(), lines: [{ menuItemId: dish!.id, quantity: 1 }], note },
   });
   expect(res.ok(), 'order').toBeTruthy();
 }
