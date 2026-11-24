@@ -4,7 +4,8 @@ import type { DishStatus } from '@/lib/dishRules';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
-import { Field, Segmented } from '../../kit';
+import { Chips, Field, Segmented } from '../../kit';
+import type { SnoozePick } from './useDishForm';
 
 export type StockDraft = {
   salePrice: string;
@@ -17,6 +18,9 @@ export type StockDraft = {
 export function DishStockFields({
   status,
   onStatus,
+  snooze,
+  onSnooze,
+  back,
   draft,
   onDraft,
   currency,
@@ -24,6 +28,10 @@ export function DishStockFields({
 }: {
   status: DishStatus;
   onStatus: (status: DishStatus) => void;
+  snooze: SnoozePick;
+  onSnooze: (pick: SnoozePick) => void;
+  /** "17:00" when the dish is snoozed now, so that time can be kept. */
+  back: string | null;
   draft: StockDraft;
   onDraft: (draft: StockDraft) => void;
   currency: string;
@@ -51,6 +59,31 @@ export function DishStockFields({
           {t(`ownerMenu.statusHint.${status}`)}
         </Text>
       </View>
+      {status === 'sold_out' ? (
+        <View style={styles.stack}>
+          <Text variant="body-strong">{t('ownerMenu.snooze.title')}</Text>
+          <Chips<SnoozePick>
+            single
+            label={t('ownerMenu.snooze.title')}
+            options={[
+              ...(back
+                ? [{ id: 'keep' as const, label: t('ownerMenu.snooze.keep', { time: back }) }]
+                : []),
+              { id: 'off', label: t('ownerMenu.snooze.off') },
+              { id: '1h', label: t('ownerMenu.snooze.1h') },
+              { id: '2h', label: t('ownerMenu.snooze.2h') },
+              { id: 'today', label: t('ownerMenu.snooze.today') },
+            ]}
+            selected={[snooze]}
+            onChange={(ids) => onSnooze(ids[0] ?? 'off')}
+          />
+          {snooze === 'off' ? null : (
+            <Text variant="caption" style={{ color: theme.meta }}>
+              {t('ownerMenu.snooze.hint')}
+            </Text>
+          )}
+        </View>
+      ) : null}
       <Field
         label={t('ownerMenu.salePrice', { currency })}
         hint={t('ownerMenu.salePriceHint')}

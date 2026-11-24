@@ -21,6 +21,7 @@ export function MenuListView({
   sections,
   dishes,
   currency,
+  timeZone,
   busy,
   onAddDish,
   onEditDish,
@@ -29,11 +30,14 @@ export function MenuListView({
   onSections,
   onAllOff,
   onAllOn,
+  onPrices,
+  onLibrary,
   onReorder,
 }: {
   sections: MenuCategory[];
   dishes: MenuItem[];
   currency: string;
+  timeZone: string;
   busy: boolean;
   onAddDish: (sectionId: string) => void;
   onEditDish: (item: MenuItem) => void;
@@ -43,6 +47,9 @@ export function MenuListView({
   /** With the dishes the list shows right now. */
   onAllOff: (shown: MenuItem[]) => void;
   onAllOn: (shown: MenuItem[]) => void;
+  /** Change prices, for the dishes the list shows right now. */
+  onPrices: (shown: MenuItem[]) => void;
+  onLibrary: () => void;
   /** A dish dragged to a new place in its section. */
   onReorder: (dishes: MenuItem[], orderedIds: string[]) => void;
 }) {
@@ -83,6 +90,8 @@ export function MenuListView({
         onSections={onSections}
         onAllOff={() => onAllOff(shown)}
         onAllOn={() => onAllOn(shown)}
+        onPrices={() => onPrices(shown)}
+        onLibrary={onLibrary}
       />
       {filtering ? (
         <Text variant="caption" style={{ color: theme.muted }}>
@@ -111,6 +120,7 @@ export function MenuListView({
               total={total(sectionId)}
               dishes={inSection}
               currency={currency}
+              timeZone={timeZone}
               draggable={query.trim() === ''}
               onAddDish={() => onAddDish(sectionId)}
               onEditDish={onEditDish}

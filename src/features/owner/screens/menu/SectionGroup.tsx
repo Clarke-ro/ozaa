@@ -22,6 +22,7 @@ export function SectionGroup({
   total,
   dishes,
   currency,
+  timeZone,
   draggable,
   onAddDish,
   onEditDish,
@@ -35,6 +36,8 @@ export function SectionGroup({
   total: number;
   dishes: MenuItem[];
   currency: string;
+  /** The venue's clock, for "Back at 17:00". */
+  timeZone: string;
   /** Off while a search is narrowing the list, when a dragged place would mean nothing. */
   draggable: boolean;
   onAddDish: () => void;
@@ -54,6 +57,7 @@ export function SectionGroup({
       key={item.id}
       item={item}
       currency={currency}
+      timeZone={timeZone}
       onToggle={() => onToggleDish(item)}
       onEdit={() => onEditDish(item)}
       bare={bare}

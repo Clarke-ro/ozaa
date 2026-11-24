@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import type { MenuCategory, MenuItem } from '@/lib/api/types';
+import type { MenuCategory, MenuItem, ModifierGroup } from '@/lib/api/types';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
@@ -23,6 +23,8 @@ export function DishForm({
   defaultSectionId,
   venueId,
   currency,
+  library,
+  timeZone,
   onDone,
   children,
 }: {
@@ -31,12 +33,14 @@ export function DishForm({
   defaultSectionId: string;
   venueId: string;
   currency: string;
+  library: ModifierGroup[];
+  timeZone: string;
   onDone: () => void;
   children: (form: Form) => ReactNode;
 }) {
   const theme = useTheme();
   const { t } = useTranslation();
-  const form = useDishForm({ item, venueId, defaultSectionId, onSaved: onDone });
+  const form = useDishForm({ item, venueId, defaultSectionId, library, timeZone, onSaved: onDone });
   const { fields: f, set, error } = form;
   return (
     <View style={styles.stack}>
@@ -102,6 +106,22 @@ export function DishForm({
         <Text variant="caption" style={{ color: error('addOns') ? theme.error : theme.muted }}>
           {error('addOns') ?? t('ownerMenu.addOnsNote')}
         </Text>
+        {library.length > 0 ? (
+          <View style={styles.block}>
+            <Text variant="body-strong" style={[styles.label, { color: theme.muted }]}>
+              {t('ownerMenu.shared.title')}
+            </Text>
+            <Chips
+              label={t('ownerMenu.shared.title')}
+              options={library.map((g) => ({ id: g.id, label: g.name.en }))}
+              selected={f.groupIds}
+              onChange={set.groupIds}
+            />
+            <Text variant="caption" style={{ color: theme.meta }}>
+              {t('ownerMenu.shared.hint')}
+            </Text>
+          </View>
+        ) : null}
         <AddOnsEditor groups={f.groups} onChange={set.groups} />
       </TitledSection>
 
@@ -119,6 +139,9 @@ export function DishForm({
         <DishStockFields
           status={f.status}
           onStatus={set.status}
+          snooze={f.snooze}
+          onSnooze={set.snooze}
+          back={f.back}
           draft={f.stockDraft}
           onDraft={set.stockDraft}
           currency={currency}

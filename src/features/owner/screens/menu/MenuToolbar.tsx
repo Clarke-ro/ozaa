@@ -1,13 +1,22 @@
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { CircleCheck, CircleOff, ListOrdered, Search, X } from 'lucide-react-native';
+import {
+  CircleCheck,
+  CircleOff,
+  Layers,
+  ListOrdered,
+  Percent,
+  Search,
+  X,
+} from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
 import { fontFamily, useTheme } from '@/ui/theme';
 import { ChipRow, RowMenu } from '../../kit';
 
 /**
  * Above the dish list (design canvas): a rounded search box with a ⋮ menu beside it for the
- * rarer jobs (manage sections, mark everything listed sold out or back on), then one chip per
+ * rarer jobs (manage sections, add-on groups, change prices, mark everything listed sold out or
+ * back on), then one chip per
  * section with its dish count.
  */
 export function MenuToolbar({
@@ -20,6 +29,8 @@ export function MenuToolbar({
   onSections,
   onAllOff,
   onAllOn,
+  onPrices,
+  onLibrary,
 }: {
   query: string;
   onQuery: (next: string) => void;
@@ -31,6 +42,8 @@ export function MenuToolbar({
   onSections: () => void;
   onAllOff: () => void;
   onAllOn: () => void;
+  onPrices: () => void;
+  onLibrary: () => void;
 }) {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -63,6 +76,13 @@ export function MenuToolbar({
           label={t('ownerMenu.moreActions')}
           actions={[
             { label: t('ownerMenu.sections'), icon: ListOrdered, onPress: onSections },
+            { label: t('ownerMenu.library.action'), icon: Layers, onPress: onLibrary },
+            {
+              label: t('ownerMenu.prices.action'),
+              icon: Percent,
+              onPress: onPrices,
+              disabled: busy,
+            },
             {
               label: t('ownerMenu.allOffShort'),
               icon: CircleOff,

@@ -5,6 +5,18 @@ import type { Menu, MenuCategory, MenuItem } from '@/lib/api/types';
 import { ownerKeys } from '../../data/keys';
 import { toast } from '../../kit';
 import { dishPositions, moveSection, sortSections } from './reorder';
+import { bulkPrices } from './bulkPrices';
+import { backAt } from './snooze';
+
+const isSnoozed = (item: MenuItem, now: number, timeZone: string) =>
+  backAt(item, now, timeZone) !== null;
+
+/** What the switch shows right after a tap, before the server answers. */
+function flipped(item: MenuItem, timeZone: string): MenuItem {
+  return isSnoozed(item, Date.now(), timeZone)
+    ? { ...item, available: true, snoozedUntil: null }
+    : { ...item, available: !item.available };
+}
 
 /** Menu data and every change the menu builder can make. Each change refetches the menu when it lands. */
 export function useMenuDesk(venueId: string) {
@@ -25,10 +37,15 @@ export function useMenuDesk(venueId: string) {
   const refresh = () => client.invalidateQueries({ queryKey: key });
   const failed = () => toast.error(t('ownerKit.saveFailed'));
 
-  // The switch flips at once; if the save fails it flips back and says so.
+  const timeZone = venue.data?.hours?.timezone ?? 'Africa/Accra';
+
+  // The switch flips at once; if the save fails it flips back and says so. A snoozed dish reads
+  // as off, so switching it on ends the snooze too.
   const toggle = useMutation({
     mutationFn: (item: MenuItem) =>
-      api.ownerUpdateItem(venueId, item.id, { available: !item.available }),
+      isSnoozed(item, Date.now(), timeZone)
+        ? api.ownerUpdateItem(venueId, item.id, { available: true, snoozedUntil: null })
+        : api.ownerUpdateItem(venueId, item.id, { available: !item.available }),
     onMutate: async (item) => {
       await client.cancelQueries({ queryKey: key });
       const before = client.getQueryData<Menu>(key);
@@ -36,7 +53,7 @@ export function useMenuDesk(venueId: string) {
         m
           ? {
               ...m,
-              items: m.items.map((i) => (i.id === item.id ? { ...i, available: !i.available } : i)),
+              items: m.items.map((i) => (i.id === item.id ? flipped(i, timeZone) : i)),
             }
           : m,
       );
@@ -58,6 +75,27 @@ export function useMenuDesk(venueId: string) {
     },
     onSuccess: (_d, { available }) =>
       toast.success(available ? t('ownerMenu.allBack') : t('ownerMenu.allSoldOut')),
+    onError: failed,
+    onSettled: refresh,
+  });
+
+  // Change prices: every listed dish by the same percent (bulkPrices.ts), one save each.
+  const setPrices = useMutation({
+    mutationFn: async ({
+      items,
+      percent,
+      step,
+    }: {
+      items: MenuItem[];
+      percent: number;
+      step: number;
+    }) => {
+      for (const update of bulkPrices(items, percent, step)) {
+        const { id, ...prices } = update;
+        await api.ownerUpdateItem(venueId, id, prices);
+      }
+    },
+    onSuccess: () => toast.success(t('ownerMenu.prices.done')),
     onError: failed,
     onSettled: refresh,
   });
@@ -160,11 +198,13 @@ export function useMenuDesk(venueId: string) {
     venue,
     menu,
     currency: venue.data?.currency ?? 'GHS',
+    timeZone,
     sectionsOf: (kind: 'food' | 'drinks') =>
       sortSections((menu.data?.categories ?? []).filter((c) => c.kind === kind)),
     refresh,
     toggle,
     setAll,
+    setPrices,
     removeItem,
     removeSection,
     hideSection,

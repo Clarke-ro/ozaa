@@ -11,6 +11,8 @@ import { VenueImage } from '@/ui/VenueImage';
 import { fontFamily, useTheme } from '@/ui/theme';
 import { STATUS_TONES } from '@/theme/palette';
 import { cardStyle, StatusPill, Toggle } from '../../kit';
+import { useNow } from '@/lib/useNow';
+import { backAt } from './snooze';
 
 const LOW_STOCK = 5;
 const THUMB = 52;
@@ -26,23 +28,29 @@ export const DISH_ROW = 72;
 export function MenuItemRow({
   item,
   currency,
+  timeZone,
   onToggle,
   onEdit,
   bare,
 }: {
   item: MenuItem;
   currency: string;
+  timeZone: string;
   onToggle: () => void;
   onEdit: () => void;
   bare?: boolean;
 }) {
   const theme = useTheme();
   const { t } = useTranslation();
-  const off = !item.available || item.hidden === true;
+  const now = useNow(60_000);
+  // Snoozed: sold out until a time, shown as "Back at 17:00" with the switch off.
+  const back = backAt(item, now, timeZone);
+  const on = item.available && back === null;
+  const off = !on || item.hidden === true;
   const money = (amount: number) => formatMoney(pesewas(amount), currency);
   const sale = onSale(item);
   const few =
-    item.available && item.stockCount != null && item.stockCount <= LOW_STOCK
+    on && item.stockCount != null && item.stockCount <= LOW_STOCK
       ? t('ownerMenu.left', { count: item.stockCount })
       : null;
   const popular = STATUS_TONES[theme.scheme].order;
@@ -76,12 +84,22 @@ export function MenuItemRow({
               </Text>
             ) : null}
             {/* Red only for sold out, which guests notice; hidden is the owner's choice. */}
-            {!item.available ? <StatusPill label={t('owner.soldOut')} tone="error" boxed /> : null}
+            {back ? (
+              <StatusPill
+                label={t('ownerMenu.backAt', { time: back })}
+                tone="error"
+                boxed
+                icon={false}
+              />
+            ) : !item.available ? (
+              <StatusPill label={t('owner.soldOut')} tone="error" boxed />
+            ) : null}
             {item.hidden ? (
               <StatusPill label={t('ownerMenu.statusHidden')} tone="neutral" boxed />
             ) : null}
             {few ? <StatusPill label={few} tone="waiting" boxed /> : null}
-            {item.badges.includes('popular') ? (
+            {/* Like the guest menu: no Popular tag on a dish guests can't order right now. */}
+            {item.badges.includes('popular') && !off ? (
               <View style={[styles.tag, { backgroundColor: popular.bg }]}>
                 <Text style={[styles.tagText, { color: popular.ink }]} numberOfLines={1}>
                   {t('ownerMenu.filter.popular')}
@@ -92,7 +110,7 @@ export function MenuItemRow({
         </View>
       </Pressable>
       <Toggle
-        value={item.available}
+        value={on}
         onChange={onToggle}
         label={t('ownerMenu.availableA11y', { name: item.name.en })}
       />

@@ -9,7 +9,9 @@ import { tokens } from '@/theme/tokens';
 import { DeskWait, OwnerPage } from '../../chrome/OwnerPage';
 import { ConfirmDialog, HeaderAdd, Segmented } from '../../kit';
 import { LiveMenu, type Audience } from './live/LiveMenu';
+import { AddOnLibrarySheet } from './AddOnLibrarySheet';
 import { MenuListView } from './MenuListView';
+import { PricesSheet } from './PricesSheet';
 import { SectionEditor } from './SectionEditor';
 import { SectionsSheet } from './SectionsSheet';
 import { useMenuDesk } from './useMenuDesk';
@@ -44,6 +46,9 @@ export function MenuScreen() {
   const [editingSection, setEditingSection] = useState<MenuCategory | null | undefined>(undefined);
   const [sectionsOpen, setSectionsOpen] = useState(false);
   const [pending, setPending] = useState<Pending | null>(null);
+  // The dishes "Change prices" works on: the ones listed when it was opened.
+  const [pricing, setPricing] = useState<MenuItem[] | null>(null);
+  const [libraryOpen, setLibraryOpen] = useState(false);
 
   const all = desk.menu.data?.items ?? [];
   // Food sections first, then drinks, each in the order guests see them.
@@ -67,7 +72,8 @@ export function MenuScreen() {
       sections={sections}
       dishes={all}
       currency={desk.currency}
-      busy={desk.setAll.isPending}
+      timeZone={desk.timeZone}
+      busy={desk.setAll.isPending || desk.setPrices.isPending}
       onAddDish={addDish}
       onEditDish={editDish}
       onToggleDish={(item) => desk.toggle.mutate(item)}
@@ -75,6 +81,8 @@ export function MenuScreen() {
       onSections={() => setSectionsOpen(true)}
       onAllOff={(items) => setPending({ kind: 'soldOut', items })}
       onAllOn={(items) => desk.setAll.mutate({ items, available: true })}
+      onPrices={setPricing}
+      onLibrary={() => setLibraryOpen(true)}
       onReorder={(dishes, orderedIds) => desk.reorderDishes.mutate({ dishes, orderedIds })}
     />
   );
@@ -175,6 +183,29 @@ export function MenuScreen() {
             setEditingSection(undefined);
             void desk.refresh();
           }}
+        />
+      ) : null}
+      {pricing ? (
+        <PricesSheet
+          dishes={pricing}
+          currency={desk.currency}
+          busy={desk.setPrices.isPending}
+          onClose={() => setPricing(null)}
+          onApply={(percent, step) =>
+            desk.setPrices.mutate(
+              { items: pricing, percent, step },
+              { onSuccess: () => setPricing(null) },
+            )
+          }
+        />
+      ) : null}
+      {libraryOpen && desk.venue.data ? (
+        <AddOnLibrarySheet
+          venueId={venueId}
+          slug={desk.venue.data.slug}
+          library={desk.menu.data?.modifierGroups ?? []}
+          dishes={all}
+          onClose={() => setLibraryOpen(false)}
         />
       ) : null}
       <ConfirmDialog

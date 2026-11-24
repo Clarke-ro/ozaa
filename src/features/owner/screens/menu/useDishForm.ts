@@ -4,20 +4,47 @@ import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
 import type { MenuItem, ModifierGroup } from '@/lib/api/types';
 import { dishStatus, statusFields, type DishStatus } from '@/lib/dishRules';
+import { ownGroups } from '@/lib/addOns';
+import { backAt, snoozeUntil, type SnoozeChoice } from './snooze';
 import { toast } from '../../kit';
 import { checkDish, checkStock } from './forms';
 import type { StockDraft } from './DishStockFields';
+
+/** Sold out until switched on ('off'), for a while, or keeping the snooze it already has. */
+export type SnoozePick = 'off' | 'keep' | SnoozeChoice;
+
+/**
+ * The status fields to save. Sold out for a while stays `available` with a time: the server
+ * treats it as sold out until then, and it comes back by itself.
+ */
+function availability(
+  status: DishStatus,
+  snooze: SnoozePick,
+  current: string | null,
+  timeZone: string,
+) {
+  if (status !== 'sold_out' || snooze === 'off')
+    return { ...statusFields(status), snoozedUntil: null };
+  const snoozedUntil = snooze === 'keep' ? current : snoozeUntil(snooze, Date.now(), timeZone);
+  return { available: true, hidden: false, snoozedUntil };
+}
 
 /** Everything the dish page edits, its checks, and the save. A null item is a new dish. */
 export function useDishForm({
   item,
   venueId,
   defaultSectionId,
+  library,
+  timeZone,
   onSaved,
 }: {
   item: MenuItem | null;
   venueId: string;
   defaultSectionId: string;
+  /** The menu's add-on library: groups a dish can share. */
+  library: ModifierGroup[];
+  /** The venue's clock, for snooze times. */
+  timeZone: string;
   onSaved: () => void;
 }) {
   const { t } = useTranslation();
@@ -25,7 +52,12 @@ export function useDishForm({
   const [description, setDescription] = useState(item?.description?.en ?? '');
   const [price, setPrice] = useState(item ? (item.pricePesewas / 100).toFixed(2) : '');
   const [sectionId, setSectionId] = useState(item?.categoryId ?? defaultSectionId);
-  const [status, setStatus] = useState<DishStatus>(item ? dishStatus(item) : 'available');
+  // A snoozed dish is sold out for now, so it opens on Sold out with its time kept.
+  const [back] = useState(() => (item ? backAt(item, Date.now(), timeZone) : null));
+  const [status, setStatus] = useState<DishStatus>(
+    back ? 'sold_out' : item ? dishStatus(item) : 'available',
+  );
+  const [snooze, setSnooze] = useState<SnoozePick>(back ? 'keep' : 'off');
   const [stockDraft, setStockDraft] = useState<StockDraft>({
     salePrice: item?.salePricePesewas != null ? (item.salePricePesewas / 100).toFixed(2) : '',
     stock: item?.stockCount != null ? String(item.stockCount) : '',
@@ -37,7 +69,11 @@ export function useDishForm({
   const [badges, setBadges] = useState<MenuItem['badges']>(item?.badges ?? []);
   const [dietaryCustom, setDietaryCustom] = useState<string[]>(item?.dietaryCustom ?? []);
   const [allergens, setAllergens] = useState<string[]>(item?.allergens ?? []);
-  const [groups, setGroups] = useState<ModifierGroup[]>(item?.modifierGroups ?? []);
+  // A read dish lists its library groups too; only its own are edited here.
+  const [groups, setGroups] = useState<ModifierGroup[]>(
+    ownGroups(item?.modifierGroups ?? [], library),
+  );
+  const [groupIds, setGroupIds] = useState<string[]>(item?.modifierGroupIds ?? []);
   // undefined keeps the current photo; null removes it; a string is a new upload.
   const [photoMediaId, setPhotoMediaId] = useState<string | null | undefined>(undefined);
   const [photoUrl, setPhotoUrl] = useState<string | null>(item?.photo?.url ?? null);
@@ -58,7 +94,7 @@ export function useDishForm({
         description: { ...item?.description, en: description.trim() },
         pricePesewas: dish.pricePesewas,
         categoryId: sectionId,
-        ...statusFields(status),
+        ...availability(status, snooze, item?.snoozedUntil ?? null, timeZone),
         salePricePesewas: stock.salePricePesewas,
         stockCount: stock.stockCount,
         minQuantity: stock.minQuantity,
@@ -69,6 +105,7 @@ export function useDishForm({
         allergens,
         calories: calories.trim() ? Number.parseInt(calories, 10) || undefined : undefined,
         modifierGroups: groups,
+        modifierGroupIds: groupIds,
         ...(photoMediaId === undefined ? {} : { photoMediaId }),
       };
       return item
@@ -92,6 +129,8 @@ export function useDishForm({
       price,
       sectionId,
       status,
+      snooze,
+      back,
       stockDraft,
       calories,
       dietary,
@@ -99,6 +138,7 @@ export function useDishForm({
       dietaryCustom,
       allergens,
       groups,
+      groupIds,
       photoUrl,
     },
     set: {
@@ -107,12 +147,14 @@ export function useDishForm({
       price: setPrice,
       sectionId: setSectionId,
       status: setStatus,
+      snooze: setSnooze,
       stockDraft: setStockDraft,
       calories: setCalories,
       dietary: setDietary,
       dietaryCustom: setDietaryCustom,
       allergens: setAllergens,
       groups: setGroups,
+      groupIds: setGroupIds,
       togglePopular,
       photo: (mediaId: string | null, url: string | null) => {
         setPhotoMediaId(mediaId);
