@@ -48,6 +48,8 @@ export const orders = pgTable(
     paidPesewas: money('paid_pesewas').notNull().default(0),
     paymentMethod: text('payment_method'),
     contact: jsonb('contact'),
+    // The guest's instructions for the whole order (Add instructions, 2026-11-24).
+    note: text('note'),
     deliveryAddress: text('delivery_address'),
     etaMinutes: integer('eta_minutes'),
     cancelReason: text('cancel_reason'),

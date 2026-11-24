@@ -16,11 +16,21 @@ const orderBody = z.object({
   clientOrderId: z.string().uuid(),
   tableCode: z.string().min(1).max(12).nullish(),
   lines: z
-    .array(z.object({ menuItemId: z.string().min(1), quantity: z.number().int().min(1).max(50), modifierOptionIds: z.array(z.string()).optional(), note: z.string().max(140).optional() }))
+    .array(
+      z.object({
+        menuItemId: z.string().min(1),
+        quantity: z.number().int().min(1).max(50),
+        modifierOptionIds: z.array(z.string()).optional(),
+        note: z.string().max(140).optional(),
+      }),
+    )
     .min(1)
     .max(60),
   note: z.string().max(200).optional(),
-  promoCode: z.string().regex(/^[A-Z0-9]{3,20}$/).optional(),
+  promoCode: z
+    .string()
+    .regex(/^[A-Z0-9]{3,20}$/)
+    .optional(),
   fulfilment: z
     .object({
       type: z.enum(['pickup', 'delivery']),
@@ -48,13 +58,26 @@ export function ownerOrderEntryRoutes(deps: OwnerDeps) {
     const input = await body(c, orderBody);
     const row = await venueRowById(db, venueId);
     const tableCode = input.tableCode ?? null;
-    if (tableCode && !(await tableOf(db, venueId, tableCode))) throw new Problem(422, 'validation', 'That table is not at this venue.');
+    if (tableCode && !(await tableOf(db, venueId, tableCode)))
+      throw new Problem(422, 'validation', 'That table is not at this venue.');
     await releaseExpiredHolds(db, deps.now(), venueId);
-    const [venue, menu, rules] = await Promise.all([publicVenue(db, row, deps.now()), menuOf(db, venueId), db.select().from(promos).where(eq(promos.venueId, venueId))]);
+    const [venue, menu, rules] = await Promise.all([
+      publicVenue(db, row, deps.now()),
+      menuOf(db, venueId),
+      db.select().from(promos).where(eq(promos.venueId, venueId)),
+    ]);
     const priced = priceOrder({
       items: menu.items,
       venue,
-      promos: rules.filter((r) => !r.deletedAt).map((r) => ({ ...(r.rule as PromoRule), id: r.id, usageCount: r.usageCount, enabled: r.enabled, code: r.code })),
+      promos: rules
+        .filter((r) => !r.deletedAt)
+        .map((r) => ({
+          ...(r.rule as PromoRule),
+          id: r.id,
+          usageCount: r.usageCount,
+          enabled: r.enabled,
+          code: r.code,
+        })),
       tax: (row.tax as TaxSetup | null) ?? null,
       body: input,
       tableCode,
@@ -63,7 +86,15 @@ export function ownerOrderEntryRoutes(deps: OwnerDeps) {
     });
     const membership = who.memberships.find((m) => m.venueId === venueId);
     // The Idempotency-Key scope is the staff member, so a double tap saves one order.
-    const order = await saveOrder(db, { venueId, guestSessionId: `staff:${membership?.id ?? who.user.id}`, clientOrderId: input.clientOrderId, tableCode, priced, now: deps.now() });
+    const order = await saveOrder(db, {
+      venueId,
+      guestSessionId: `staff:${membership?.id ?? who.user.id}`,
+      clientOrderId: input.clientOrderId,
+      tableCode,
+      note: input.note,
+      priced,
+      now: deps.now(),
+    });
     return c.json(order, 201);
   });
 

@@ -150,6 +150,9 @@ export function mockAuthCalls(ctx: MockContext) {
           now(),
           world.paymentSettings[venue.id],
           setupOf(world, venue),
+          world.written
+            .filter((review) => review.venueId === venue.id)
+            .map((review) => review.stars),
         ),
         table,
       };

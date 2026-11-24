@@ -1,7 +1,15 @@
 import { guestServices } from '../shared/guestServices.ts';
-import { and, asc, eq, isNull } from 'drizzle-orm';
+import { and, asc, avg, count, eq, isNull } from 'drizzle-orm';
 import type { Db } from '../db/client.ts';
-import { diningTables, loyaltyPrograms, menuCategories, menuItems, paymentSettings, venues } from '../db/schema.ts';
+import {
+  diningTables,
+  loyaltyPrograms,
+  menuCategories,
+  menuItems,
+  paymentSettings,
+  venues,
+  writtenReviews,
+} from '../db/schema.ts';
 import { Problem } from '../http/problem.ts';
 import { liveNotices } from '../shared/notices.ts';
 import { guestPayMethods } from '../shared/payments.ts';
@@ -24,7 +32,15 @@ import type {
  */
 export type VenueProfile = Omit<
   VenuePublic,
-  'id' | 'slug' | 'name' | 'currency' | 'published' | 'services' | 'payMethods' | 'payEnabled' | 'notices'
+  | 'id'
+  | 'slug'
+  | 'name'
+  | 'currency'
+  | 'published'
+  | 'services'
+  | 'payMethods'
+  | 'payEnabled'
+  | 'notices'
 > & { noticeSettings?: StoreNotices; offers?: Offer[] };
 
 type VenueRow = typeof venues.$inferSelect;
@@ -42,7 +58,11 @@ export async function paymentSettingsOf(db: Db, venueId: string): Promise<Paymen
   if (!row) return { paystack: null, manual: NO_MANUAL };
   return {
     paystack:
-      row.paystackMode && row.paystackPublicKey && row.paystackSecretEncrypted && row.paystackSecretHint && row.paystackConnectedAt
+      row.paystackMode &&
+      row.paystackPublicKey &&
+      row.paystackSecretEncrypted &&
+      row.paystackSecretHint &&
+      row.paystackConnectedAt
         ? {
             mode: row.paystackMode,
             publicKey: row.paystackPublicKey,
@@ -59,7 +79,14 @@ export async function paymentSettingsOf(db: Db, venueId: string): Promise<Paymen
 export async function publicVenue(db: Db, row: VenueRow, now: number): Promise<VenuePublic> {
   const { noticeSettings, offers: _offers, ...profile } = row.profile as VenueProfile;
   const pay = await paymentSettingsOf(db, row.id);
-  const [loyalty] = await db.select({ programme: loyaltyPrograms.programme }).from(loyaltyPrograms).where(eq(loyaltyPrograms.venueId, row.id));
+  const [loyalty] = await db
+    .select({ programme: loyaltyPrograms.programme })
+    .from(loyaltyPrograms)
+    .where(eq(loyaltyPrograms.venueId, row.id));
+  const [stars] = await db
+    .select({ average: avg(writtenReviews.stars), count: count() })
+    .from(writtenReviews)
+    .where(eq(writtenReviews.venueId, row.id));
   return {
     ...profile,
     id: row.id,
@@ -77,7 +104,19 @@ export async function publicVenue(db: Db, row: VenueRow, now: number): Promise<V
     notices: liveNotices(noticeSettings, now),
     payMethods: guestPayMethods(pay),
     payEnabled: pay.paystack !== null,
+    rating: ratingOf(stars),
   };
+}
+
+/**
+ * Every written review counts, the private 1 to 3 stars too, so the number is honest. Shown to
+ * one decimal; none yet means no rating rather than a zero.
+ */
+export function ratingOf(
+  stars: { average: string | null; count: number } | undefined,
+): VenuePublic['rating'] {
+  if (!stars || stars.count === 0 || stars.average === null) return null;
+  return { average: Math.round(Number(stars.average) * 10) / 10, count: stars.count };
 }
 
 export async function venueRowBySlug(db: Db, slug: string): Promise<VenueRow> {
@@ -138,16 +177,14 @@ export async function menuOf(db: Db, venueId: string): Promise<Menu> {
   return {
     venueId,
     updatedAt: new Date().toISOString(),
-    categories: categories.map(
-      (c): MenuCategory => ({
-        id: c.id,
-        name: c.name as MenuCategory['name'],
-        kind: c.kind,
-        position: c.position,
-        hidden: c.hidden,
-        ...(c.schedule ? { schedule: c.schedule as MenuCategory['schedule'] } : {}),
-      }),
-    ),
+    categories: categories.map((c): MenuCategory => ({
+      id: c.id,
+      name: c.name as MenuCategory['name'],
+      kind: c.kind,
+      position: c.position,
+      hidden: c.hidden,
+      ...(c.schedule ? { schedule: c.schedule as MenuCategory['schedule'] } : {}),
+    })),
     items: items.map(itemFromRow),
   };
 }

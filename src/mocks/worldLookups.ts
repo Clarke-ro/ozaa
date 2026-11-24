@@ -6,6 +6,7 @@ import { liveNotices } from '@/lib/notices';
 import { guestPayMethods } from '@/lib/payments';
 import type { PaymentSettings, ServiceSettings, StoreNotices, VenuePublic } from '@/lib/api/types';
 import type { LiveOrder, World } from './worldTypes';
+import { ratingOf } from '@/lib/venueRating';
 
 /** Finding things in the world, with the same errors the real server sends. */
 
@@ -69,6 +70,7 @@ export function publicVenue(
   now: number,
   payment: PaymentSettings = defaultPaymentSettings(),
   setup: ServiceSetup = { wifi: true, loyalty: true, offers: true },
+  stars: readonly number[] = [],
 ): VenuePublic {
   return {
     ...venue,
@@ -79,6 +81,7 @@ export function publicVenue(
     // Guests learn how they can pay; never a key.
     payMethods: guestPayMethods(payment),
     payEnabled: payment.paystack !== null,
+    rating: ratingOf(stars),
   };
 }
 

@@ -4,7 +4,13 @@ import type { Db } from '../db/client.ts';
 import { idempotencyKeys, orderLines, orders } from '../db/schema.ts';
 import { Problem } from '../http/problem.ts';
 import type { Order } from '../shared/types.ts';
-import { claimPromos, MAX_OPEN_UNPAID_ORDERS, releaseExpiredHolds, restoreInventory, takeStock } from './orderInventory.ts';
+import {
+  claimPromos,
+  MAX_OPEN_UNPAID_ORDERS,
+  releaseExpiredHolds,
+  restoreInventory,
+  takeStock,
+} from './orderInventory.ts';
 import { retryOnDailyNumberCollision } from './orderNumber.ts';
 import type { PricedOrder } from './priceOrder.ts';
 
@@ -12,7 +18,9 @@ type OrderRow = typeof orders.$inferSelect;
 type LineRow = typeof orderLines.$inferSelect;
 
 /** unpaid → part_paid → paid, from the food paid off so far (tips and fees never count). */
-function paymentStatus(row: Pick<OrderRow, 'paidPesewas' | 'totalPesewas'>): Order['paymentStatus'] {
+function paymentStatus(
+  row: Pick<OrderRow, 'paidPesewas' | 'totalPesewas'>,
+): Order['paymentStatus'] {
   if (row.paidPesewas <= 0) return 'unpaid';
   return row.paidPesewas >= row.totalPesewas ? 'paid' : 'part_paid';
 }
@@ -23,6 +31,7 @@ export function orderFromRows(row: OrderRow, lines: LineRow[]): Order {
     number: row.number,
     venueId: row.venueId,
     tableCode: row.tableCode,
+    note: row.note,
     status: row.status,
     paymentStatus: paymentStatus(row),
     lines: lines
@@ -58,10 +67,17 @@ export function orderFromRows(row: OrderRow, lines: LineRow[]): Order {
   };
 }
 
-export async function orderById(db: Db, orderId: string): Promise<{ order: Order; row: OrderRow } | null> {
+export async function orderById(
+  db: Db,
+  orderId: string,
+): Promise<{ order: Order; row: OrderRow } | null> {
   const [row] = await db.select().from(orders).where(eq(orders.id, orderId));
   if (!row) return null;
-  const lines = await db.select().from(orderLines).where(eq(orderLines.orderId, orderId)).orderBy(asc(orderLines.position));
+  const lines = await db
+    .select()
+    .from(orderLines)
+    .where(eq(orderLines.orderId, orderId))
+    .orderBy(asc(orderLines.position));
   return { order: orderFromRows(row, lines), row };
 }
 
@@ -72,6 +88,8 @@ type SaveInput = {
   guestSessionId: string;
   clientOrderId: string;
   tableCode: string | null;
+  /** Instructions for the whole order, if the guest wrote any. */
+  note?: string | null;
   priced: PricedOrder;
   now: number;
 };
@@ -104,14 +122,26 @@ async function insertOrder(db: Db, input: SaveInput): Promise<string> {
     // cap exact, and stock updates can't deadlock by locking dishes in different orders.
     // A clash on the unique index still retries the whole insert.
     const businessDay = new Date(input.now).toISOString().slice(0, 10);
-    await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${`${input.venueId}:${businessDay}`}))`);
+    await tx.execute(
+      sql`select pg_advisory_xact_lock(hashtext(${`${input.venueId}:${businessDay}`}))`,
+    );
     if (!input.guestSessionId.startsWith('staff:')) {
       const [{ n } = { n: 0 }] = await tx
         .select({ n: count() })
         .from(orders)
-        .where(and(eq(orders.guestSessionId, input.guestSessionId), eq(orders.status, 'received'), eq(orders.paidPesewas, 0)));
+        .where(
+          and(
+            eq(orders.guestSessionId, input.guestSessionId),
+            eq(orders.status, 'received'),
+            eq(orders.paidPesewas, 0),
+          ),
+        );
       if (n >= MAX_OPEN_UNPAID_ORDERS) {
-        throw new Problem(429, 'too_many_open_orders', 'You already have a few orders waiting. Ask a waiter if one of them is yours.');
+        throw new Problem(
+          429,
+          'too_many_open_orders',
+          'You already have a few orders waiting. Ask a waiter if one of them is yours.',
+        );
       }
     }
     await takeStock(tx, input.priced.stock);
@@ -136,6 +166,7 @@ async function insertOrder(db: Db, input: SaveInput): Promise<string> {
       deliveryFeePesewas: p.deliveryFeePesewas,
       totalPesewas: p.totalPesewas,
       contact: p.contact,
+      note: input.note?.trim() || null,
       deliveryAddress: p.deliveryAddress,
       etaMinutes: p.etaMinutes,
       guestSessionId: input.guestSessionId,
@@ -159,7 +190,9 @@ async function insertOrder(db: Db, input: SaveInput): Promise<string> {
       })),
     );
     await claimPromos(tx, p.promoDiscounts);
-    await tx.insert(idempotencyKeys).values({ scope, key: input.clientOrderId, status: 201, body: { orderId: id } });
+    await tx
+      .insert(idempotencyKeys)
+      .values({ scope, key: input.clientOrderId, status: 201, body: { orderId: id } });
     return id;
   });
 }
@@ -190,7 +223,13 @@ export async function cancelOrder(
         updatedAt: at,
         inventoryReleasedAt: at,
       })
-      .where(and(eq(orders.id, input.id), eq(orders.status, input.fromStatus), isNull(orders.inventoryReleasedAt)))
+      .where(
+        and(
+          eq(orders.id, input.id),
+          eq(orders.status, input.fromStatus),
+          isNull(orders.inventoryReleasedAt),
+        ),
+      )
       .returning({ id: orders.id });
     if (!moved) return false;
     await restoreInventory(tx, input.id);
