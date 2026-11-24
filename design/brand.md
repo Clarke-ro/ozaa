@@ -98,7 +98,7 @@ A venue picks one colour, which goes on buttons, the active category chip, add b
 5. **Warning:** if the colour is within CIE76 ΔE 20 of Cravins orange, Customise warns the owner.
 6. Customise shows the ratios and any fallback as soon as the owner picks a colour.
 
-Port this function to `src/features/theming/deriveTheme.ts` with tests first (pstack-tdd). The renders show the results for #B5432A, #1F5C3F and #FFC21A.
+Port this function to `src/features/theming/deriveTheme.ts` with tests first. The renders show the results for #B5432A, #1F5C3F and #FFC21A.
 
 ## 10. Words
 
