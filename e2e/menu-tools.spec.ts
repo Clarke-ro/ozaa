@@ -71,6 +71,9 @@ test('sold out for a while: the dish says when it is back', async ({ page }) => 
   await page.getByText('2 hours', { exact: true }).click();
   await shot(page, 'dish-snooze');
   await page.getByRole('button', { name: 'Save dish', exact: true }).click();
-  await expect(page.getByText(/^Back \d\d:\d\d$/).first()).toBeVisible({ timeout: 15_000 });
+  // After 22:00, two hours later is tomorrow, so the label adds the day ("Back Wed 00:29").
+  await expect(page.getByText(/^Back (\w{3} )?\d\d:\d\d$/).first()).toBeVisible({
+    timeout: 15_000,
+  });
   await shot(page, 'menu-back-at');
 });

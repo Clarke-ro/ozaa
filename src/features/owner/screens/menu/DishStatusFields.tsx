@@ -1,11 +1,14 @@
+import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { DishStatus } from '@/lib/dishRules';
-import { Chips, Segmented, TitledSection } from '../../kit';
+import { Chips, Segmented } from '../../kit';
+import { FormLabel } from './FormLabel';
 import type { SnoozePick } from './useDishForm';
+import { fieldStyles } from './fieldStyles';
 
 /**
- * The dish status, straight on the page. Out of stock adds "For how long?", so a
- * dish can be sold out for a while and come back by itself (snoozedUntil).
+ * Status, and "For how long?" when the dish is out of stock, so it can be sold out for a while
+ * and come back by itself (snoozedUntil). Sits inside the "Show on the menu" section.
  */
 export function DishStatusFields({
   status,
@@ -24,7 +27,8 @@ export function DishStatusFields({
   const { t } = useTranslation();
   return (
     <>
-      <TitledSection plain title={t('ownerMenu.status')}>
+      <View style={fieldStyles.block}>
+        <FormLabel>{t('ownerMenu.status')}</FormLabel>
         <Segmented
           label={t('ownerMenu.status')}
           value={status}
@@ -35,9 +39,10 @@ export function DishStatusFields({
             { id: 'hidden', label: t('ownerMenu.statusHidden') },
           ]}
         />
-      </TitledSection>
+      </View>
       {status === 'sold_out' ? (
-        <TitledSection plain title={t('ownerMenu.snooze.title')}>
+        <View style={fieldStyles.block}>
+          <FormLabel>{t('ownerMenu.snooze.title')}</FormLabel>
           <Chips<SnoozePick>
             single
             label={t('ownerMenu.snooze.title')}
@@ -53,7 +58,7 @@ export function DishStatusFields({
             selected={[snooze]}
             onChange={(ids) => onSnooze(ids[0] ?? 'off')}
           />
-        </TitledSection>
+        </View>
       ) : null}
     </>
   );

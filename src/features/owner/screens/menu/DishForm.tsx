@@ -8,6 +8,8 @@ import { useTheme } from '@/ui/theme';
 import { cardStyle, Chips, Field, PhotoField, SwitchRow, TitledSection } from '../../kit';
 import { AddOnsEditor } from './AddOnsEditor';
 import { DishStatusFields } from './DishStatusFields';
+import { FormLabel } from './FormLabel';
+import { fieldStyles } from './fieldStyles';
 import { DishStockFields } from './DishStockFields';
 import { DishTags } from './DishTags';
 import { useDishForm } from './useDishForm';
@@ -43,6 +45,7 @@ export function DishForm({
   const { t } = useTranslation();
   const form = useDishForm({ item, venueId, defaultSectionId, library, timeZone, onSaved: onDone });
   const { fields: f, set, error } = form;
+  const sectionError = error('section');
   return (
     <View style={styles.stack}>
       <TitledSection plain title={t('ownerMenu.photo')}>
@@ -55,18 +58,48 @@ export function DishForm({
       </TitledSection>
 
       <TitledSection plain title={t('ownerMenu.details')}>
-        <View style={styles.row}>
-          <View style={styles.wide}>
-            <Field
-              label={t('ownerMenu.dishName')}
-              value={f.name}
-              onChangeText={set.name}
-              placeholder={t('ownerMenu.dishNameHint')}
-              error={error('name')}
-              autoCapitalize="sentences"
-            />
-          </View>
-          <View style={styles.narrow}>
+        <Field
+          label={t('ownerMenu.dishName')}
+          value={f.name}
+          onChangeText={set.name}
+          placeholder={t('ownerMenu.dishNameHint')}
+          error={error('name')}
+          autoCapitalize="sentences"
+        />
+        <Field
+          label={t('ownerMenu.description')}
+          value={f.description}
+          onChangeText={set.description}
+          placeholder={t('ownerMenu.descriptionHint')}
+          multiline
+        />
+        <View style={fieldStyles.block}>
+          <FormLabel>{t('ownerMenu.section')}</FormLabel>
+          <Chips
+            single
+            label={t('ownerMenu.section')}
+            options={sections.map((s) => ({ id: s.id, label: s.name.en }))}
+            selected={[f.sectionId]}
+            onChange={(ids) => set.sectionId(ids[0] ?? '')}
+          />
+          {sectionError ? (
+            <Text variant="caption" style={{ color: theme.error }}>
+              {sectionError}
+            </Text>
+          ) : null}
+        </View>
+        <Field
+          label={t('ownerMenu.calories')}
+          value={f.calories}
+          onChangeText={set.calories}
+          placeholder="520"
+          keyboardType="number-pad"
+        />
+      </TitledSection>
+
+      <TitledSection plain title={t('ownerMenu.priceTitle')}>
+        <View style={fieldStyles.pair}>
+          <View style={fieldStyles.half}>
             <Field
               label={t('ownerMenu.price', { currency })}
               value={f.price}
@@ -76,54 +109,27 @@ export function DishForm({
               error={error('price')}
             />
           </View>
+          <View style={fieldStyles.half}>
+            <Field
+              label={t('ownerMenu.salePrice', { currency })}
+              value={f.stockDraft.salePrice}
+              onChangeText={(salePrice) => set.stockDraft({ ...f.stockDraft, salePrice })}
+              placeholder="55.00"
+              keyboardType="decimal-pad"
+              error={error('salePrice')}
+            />
+          </View>
         </View>
-        <Field
-          label={t('ownerMenu.description')}
-          value={f.description}
-          onChangeText={set.description}
-          placeholder={t('ownerMenu.descriptionHint')}
-          multiline
-        />
-        <View style={styles.block}>
-          <Text variant="body-strong" style={[styles.label, { color: theme.muted }]}>
-            {t('ownerMenu.section')}
-          </Text>
-          <Chips
-            single
-            label={t('ownerMenu.section')}
-            options={sections.map((s) => ({ id: s.id, label: s.name.en }))}
-            selected={[f.sectionId]}
-            onChange={(ids) => set.sectionId(ids[0] ?? '')}
-          />
-          {error('section') ? (
-            <Text variant="caption" style={{ color: theme.error }}>
-              {error('section')}
-            </Text>
-          ) : null}
-        </View>
-      </TitledSection>
-
-      {library.length > 0 ? (
-        <TitledSection plain title={t('ownerMenu.shared.title')}>
-          <Chips
-            label={t('ownerMenu.shared.title')}
-            options={library.map((g) => ({ id: g.id, label: g.name.en }))}
-            selected={f.groupIds}
-            onChange={set.groupIds}
-          />
-        </TitledSection>
-      ) : null}
-
-      <TitledSection plain title={t('ownerMenu.extras')}>
-        {error('addOns') ? (
-          <Text variant="caption" style={{ color: theme.error }}>
-            {error('addOns')}
-          </Text>
-        ) : null}
-        <AddOnsEditor groups={f.groups} onChange={set.groups} />
       </TitledSection>
 
       <TitledSection plain title={t('ownerMenu.showTitle')}>
+        <DishStatusFields
+          status={f.status}
+          onStatus={set.status}
+          snooze={f.snooze}
+          onSnooze={set.snooze}
+          back={f.back}
+        />
         {/* Popular puts a tag on the dish for guests; the guest menu can sort by it. */}
         <View style={cardStyle(theme)}>
           <SwitchRow
@@ -134,28 +140,28 @@ export function DishForm({
         </View>
       </TitledSection>
 
-      <DishStatusFields
-        status={f.status}
-        onStatus={set.status}
-        snooze={f.snooze}
-        onSnooze={set.snooze}
-        back={f.back}
-      />
+      <TitledSection plain title={t('ownerMenu.addOnsTitle')}>
+        {library.length > 0 ? (
+          <View style={fieldStyles.block}>
+            <FormLabel>{t('ownerMenu.shared.title')}</FormLabel>
+            <Chips
+              label={t('ownerMenu.shared.title')}
+              options={library.map((g) => ({ id: g.id, label: g.name.en }))}
+              selected={f.groupIds}
+              onChange={set.groupIds}
+            />
+          </View>
+        ) : null}
+        {error('addOns') ? (
+          <Text variant="caption" style={{ color: theme.error }}>
+            {error('addOns')}
+          </Text>
+        ) : null}
+        <AddOnsEditor groups={f.groups} onChange={set.groups} />
+      </TitledSection>
 
-      <TitledSection plain title={t('ownerMenu.pricingStock')}>
-        <DishStockFields
-          draft={f.stockDraft}
-          onDraft={set.stockDraft}
-          currency={currency}
-          error={error}
-        />
-        <Field
-          label={t('ownerMenu.calories')}
-          value={f.calories}
-          onChangeText={set.calories}
-          placeholder="520"
-          keyboardType="number-pad"
-        />
+      <TitledSection plain title={t('ownerMenu.stockTitle')}>
+        <DishStockFields draft={f.stockDraft} onDraft={set.stockDraft} error={error} />
       </TitledSection>
 
       <DishTags
@@ -174,9 +180,4 @@ export function DishForm({
 
 const styles = StyleSheet.create({
   stack: { gap: tokens.owner.controls.sectionGap },
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.space[4] },
-  wide: { flexGrow: 2, flexBasis: 240, minWidth: 0 },
-  narrow: { flexGrow: 1, flexBasis: 140, minWidth: 0 },
-  block: { gap: tokens.space[2] },
-  label: { fontSize: 14, lineHeight: 20 },
 });

@@ -56,5 +56,5 @@ const styles = StyleSheet.create({
   card: { flex: 1, padding: tokens.space[6] },
   sectionPhone: { gap: 10 },
   cardPhone: { padding: tokens.space[4] },
-  plain: { gap: tokens.space[3] },
+  plain: { gap: tokens.space[4] },
 });

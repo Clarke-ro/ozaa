@@ -1131,7 +1131,6 @@
     "sizeMedium": "Medium",
     "sizeLarge": "Large",
     "ruleOneHint": "Guests must pick one. Each price here is added to the dish price, so leave the smallest at 0.",
-    "pricingStock": "Pricing and stock",
     "status": "Status",
     "statusAvailable": "Available",
     "statusSoldOut": "Out of stock",
@@ -1227,7 +1226,9 @@
     },
     "shared": {
       "title": "Shared add-ons"
-    }
+    },
+    "priceTitle": "Price",
+    "stockTitle": "Stock"
   },
   "ownerBranding": {
     "lead": "How your page looks to guests: colour, words, photos and the order of the buttons.",

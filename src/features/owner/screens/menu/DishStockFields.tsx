@@ -1,9 +1,9 @@
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { Field } from '../../kit';
+import { fieldStyles } from './fieldStyles';
 
 export type StockDraft = {
   salePrice: string;
@@ -12,16 +12,14 @@ export type StockDraft = {
   maxQuantity: string;
 };
 
-/** The dish's sale price, stock and per-order limits. All text; `checkStock` reads it. */
+/** The dish's stock and per-order limits. All text; `checkStock` reads it (with the sale price). */
 export function DishStockFields({
   draft,
   onDraft,
-  currency,
   error,
 }: {
   draft: StockDraft;
   onDraft: (draft: StockDraft) => void;
-  currency: string;
   /** The message for a field that failed, already translated. */
   error: (field: 'salePrice' | 'stock' | 'quantity') => string | undefined;
 }) {
@@ -29,15 +27,7 @@ export function DishStockFields({
   const { t } = useTranslation();
   const set = (key: keyof StockDraft) => (text: string) => onDraft({ ...draft, [key]: text });
   return (
-    <View style={styles.stack}>
-      <Field
-        label={t('ownerMenu.salePrice', { currency })}
-        value={draft.salePrice}
-        onChangeText={set('salePrice')}
-        placeholder="55.00"
-        keyboardType="decimal-pad"
-        error={error('salePrice')}
-      />
+    <>
       <Field
         label={t('ownerMenu.stock')}
         value={draft.stock}
@@ -46,8 +36,8 @@ export function DishStockFields({
         keyboardType="number-pad"
         error={error('stock')}
       />
-      <View style={styles.row}>
-        <View style={styles.flex}>
+      <View style={fieldStyles.pair}>
+        <View style={fieldStyles.half}>
           <Field
             label={t('ownerMenu.minQuantity')}
             value={draft.minQuantity}
@@ -56,7 +46,7 @@ export function DishStockFields({
             keyboardType="number-pad"
           />
         </View>
-        <View style={styles.flex}>
+        <View style={fieldStyles.half}>
           <Field
             label={t('ownerMenu.maxQuantity')}
             value={draft.maxQuantity}
@@ -71,13 +61,6 @@ export function DishStockFields({
           {error('quantity')}
         </Text>
       ) : null}
-    </View>
+    </>
   );
 }
-
-const styles = StyleSheet.create({
-  stack: { gap: tokens.space[2] },
-  row: { flexDirection: 'row', gap: tokens.space[3] },
-  // minWidth 0 lets the two fields share a phone-width row on the web.
-  flex: { flex: 1, minWidth: 0 },
-});
