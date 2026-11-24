@@ -11,16 +11,25 @@ export function PageHeader({
   title,
   subtitle,
   right,
+  plain = false,
 }: {
   title: string;
   subtitle?: string;
   right?: ReactNode;
+  /** No line under it, and a bold title next to the back arrow (the guest menu, 2026-11-23). */
+  plain?: boolean;
 }) {
   const { t } = useTranslation();
   const theme = useTheme();
   const router = useRouter();
   return (
-    <View style={[styles.bar, { borderColor: theme.line, backgroundColor: theme.white }]}>
+    <View
+      style={[
+        styles.bar,
+        { borderColor: theme.line, backgroundColor: theme.white },
+        plain && styles.plainBar,
+      ]}
+    >
       <IconButton
         plain
         label={t('common.back')}
@@ -29,8 +38,15 @@ export function PageHeader({
       >
         <ArrowLeft color={theme.black} size={22} strokeWidth={2} />
       </IconButton>
-      <View pointerEvents="none" style={styles.titles}>
-        <Text variant="body-strong">{title}</Text>
+      <View pointerEvents="none" style={plain ? styles.plainTitles : styles.titles}>
+        <Text
+          variant="body-strong"
+          numberOfLines={1}
+          accessibilityRole={plain ? 'header' : undefined}
+          style={plain ? styles.plainTitle : null}
+        >
+          {title}
+        </Text>
         {subtitle ? (
           <Text variant="caption" numberOfLines={1} style={{ color: theme.meta }}>
             {subtitle}
@@ -66,4 +82,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   control: { zIndex: 1 },
+  plainBar: { borderBottomWidth: 0 },
+  plainTitles: { flex: 1, justifyContent: 'center', paddingStart: 2 },
+  plainTitle: { fontSize: 19, lineHeight: 24, fontWeight: '700' },
 });

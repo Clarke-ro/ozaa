@@ -10,3 +10,4 @@ export { TableEntryScreen } from './TableEntryScreen';
 export { HOME_SECTIONS, orderSections, type HomeSection } from './sectionOrder';
 export { LanguagePicker } from './LanguagePicker';
 export { shareVenueLink } from './shareVenue';
+export { InfoBoxes, type InfoBox } from './InfoBoxes';

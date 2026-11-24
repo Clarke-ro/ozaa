@@ -65,7 +65,7 @@ export function StatusTimeline({
                 style={[
                   styles.mark,
                   {
-                    backgroundColor: done ? theme.fill : on ? theme.tint : theme.surface,
+                    backgroundColor: done ? theme.fill : on ? theme.tint : theme.white,
                     borderColor: done || on ? theme.fill : theme.line,
                   },
                 ]}

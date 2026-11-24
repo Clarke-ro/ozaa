@@ -9,10 +9,9 @@ import { guestFont, useTheme } from '@/ui/theme';
 import { DishPrice } from './DishPrice';
 
 /**
- * One dish in the list view (the default), as a card: name and price on the left; the photo
- * fills the right side, with the round add button on its corner. The description is on the
- * dish's own page.
- * Sold out dims the photo and says so in words.
+ * One dish in the list view (the default), as a card: name, two lines of description and the
+ * price on the left; the photo fills the right side, with the round add button on its corner
+ * (design canvas, Clarke 2026-11-23). Sold out dims the photo and says so in words.
  */
 export function DishRow({
   item,
@@ -30,7 +29,7 @@ export function DishRow({
   const off = !item.available;
   const popular = item.badges.includes('popular') && !off;
   return (
-    <View style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.line }]}>
+    <View style={[styles.card, { backgroundColor: theme.white, borderColor: theme.line }]}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={off ? `${item.name.en}, ${t('menu.soldOut')}` : item.name.en}
@@ -41,6 +40,11 @@ export function DishRow({
           <Text variant="body" numberOfLines={2} style={styles.name}>
             {item.name.en}
           </Text>
+          {item.description?.en ? (
+            <Text variant="caption" numberOfLines={2} style={{ color: theme.muted }}>
+              {item.description.en}
+            </Text>
+          ) : null}
           <View style={styles.meta}>
             <DishPrice item={item} currency={currency} />
           </View>
@@ -77,38 +81,41 @@ export function DishRow({
             { backgroundColor: pressed ? theme.pressed : theme.fill },
           ]}
         >
-          <Plus size={20} color={theme.onFill} strokeWidth={2.5} />
+          <Plus size={18} color={theme.onFill} strokeWidth={2.5} />
         </Pressable>
       ) : null}
     </View>
   );
 }
 
-// The photo is a square as tall as the card; the add button sits on its lower corner.
-const PHOTO = 104;
-const ADD = 40;
+// The photo fills the card's right side; the add button sits on its lower corner.
+const CARD = 124;
+const PHOTO = 100;
+const ADD = 32;
 
 const styles = StyleSheet.create({
   card: {
-    minHeight: PHOTO,
+    minHeight: CARD,
     borderRadius: tokens.radius.lg,
     borderCurve: 'continuous',
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
     overflow: 'hidden',
+    boxShadow: '0 2px 8px rgba(17, 17, 17, 0.05)',
   },
   open: { flex: 1, flexDirection: 'row', alignItems: 'stretch' },
   pressed: { opacity: 0.85 },
   copy: {
     flex: 1,
-    gap: tokens.space[1],
+    gap: 2,
     paddingVertical: tokens.space[3],
-    paddingHorizontal: tokens.space[4],
+    paddingStart: tokens.space[4],
+    paddingEnd: tokens.space[3],
     justifyContent: 'center',
   },
   name: { fontFamily: guestFont.strong },
   photo: {
     width: PHOTO,
-    minHeight: PHOTO,
+    minHeight: CARD,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -117,8 +124,8 @@ const styles = StyleSheet.create({
   tag: { fontFamily: guestFont.strong },
   add: {
     position: 'absolute',
-    end: tokens.space[2],
-    bottom: tokens.space[2],
+    end: tokens.space[2] + 1,
+    bottom: tokens.space[2] + 1,
     width: ADD,
     height: ADD,
     borderRadius: ADD / 2,
