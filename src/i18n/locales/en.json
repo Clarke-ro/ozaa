@@ -1201,15 +1201,15 @@
       "1h": "1 hour",
       "2h": "2 hours",
       "today": "Rest of today",
-      "keep": "Back at {{time}}",
-      "hint": "It comes back on sale by itself."
+      "keep": "Back at {{time}}"
     },
     "prices": {
       "action": "Change prices",
       "title": "Change prices",
-      "lead_one": "For the {{count}} dish listed. Use a minus to lower prices.",
-      "lead_other": "For the {{count}} dishes listed. Use a minus to lower prices.",
+      "lead_one": "{{count}} dish listed",
+      "lead_other": "{{count}} dishes listed",
       "percent": "Change by (%)",
+      "placeholder": "10, or -5 to lower",
       "round": "Round to",
       "example": "{{name}}: {{from}} becomes {{to}}",
       "none": "No price changes at this percent.",
@@ -1221,8 +1221,7 @@
     "library": {
       "action": "Add-on groups",
       "title": "Add-on groups",
-      "lead": "Groups many dishes share, like Spice level. Change one here and every dish that uses it changes.",
-      "empty": "No groups yet. Add one, then pick it on each dish.",
+      "empty": "No groups yet.",
       "options_one": "{{count}} option",
       "options_other": "{{count}} options",
       "usedBy_one": "on {{count}} dish",
@@ -1238,8 +1237,7 @@
       "err": "Check the group: it needs a name, named options, and a rule guests can meet."
     },
     "shared": {
-      "title": "Shared add-ons",
-      "hint": "From Add-on groups on the menu page. Edit them there."
+      "title": "Shared add-ons"
     }
   },
   "ownerBranding": {

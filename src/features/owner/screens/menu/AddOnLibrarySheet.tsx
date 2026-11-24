@@ -96,7 +96,6 @@ export function AddOnLibrarySheet({
       visible
       onClose={onClose}
       title={editing ? t('ownerMenu.library.edit') : t('ownerMenu.library.title')}
-      subtitle={editing ? undefined : t('ownerMenu.library.lead')}
       footer={footer}
     >
       {editing ? (

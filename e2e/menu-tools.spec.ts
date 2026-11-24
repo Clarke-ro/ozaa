@@ -28,7 +28,7 @@ test.beforeEach(async ({ page }) => {
 
 test('add-on groups: add a shared group, then pick it on a dish', async ({ page }) => {
   await openMenuAction(page, 'Add-on groups');
-  await expect(page.getByText('No groups yet. Add one, then pick it on each dish.')).toBeVisible();
+  await expect(page.getByText('No groups yet.', { exact: true })).toBeVisible();
   await shot(page, 'library-empty');
 
   await page.getByRole('button', { name: 'New group', exact: true }).click();

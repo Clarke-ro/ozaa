@@ -7,6 +7,7 @@ import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { Chips, Field, PhotoField, SwitchRow, TitledSection } from '../../kit';
 import { AddOnsEditor } from './AddOnsEditor';
+import { DishStatusFields } from './DishStatusFields';
 import { DishStockFields } from './DishStockFields';
 import { DishTags } from './DishTags';
 import { useDishForm } from './useDishForm';
@@ -102,26 +103,21 @@ export function DishForm({
         </View>
       </TitledSection>
 
+      {library.length > 0 ? (
+        <TitledSection title={t('ownerMenu.shared.title')} cardStyle={styles.pad}>
+          <Chips
+            label={t('ownerMenu.shared.title')}
+            options={library.map((g) => ({ id: g.id, label: g.name.en }))}
+            selected={f.groupIds}
+            onChange={set.groupIds}
+          />
+        </TitledSection>
+      ) : null}
+
       <TitledSection title={t('ownerMenu.extras')} cardStyle={styles.pad}>
         <Text variant="caption" style={{ color: error('addOns') ? theme.error : theme.muted }}>
           {error('addOns') ?? t('ownerMenu.addOnsNote')}
         </Text>
-        {library.length > 0 ? (
-          <View style={styles.block}>
-            <Text variant="body-strong" style={[styles.label, { color: theme.muted }]}>
-              {t('ownerMenu.shared.title')}
-            </Text>
-            <Chips
-              label={t('ownerMenu.shared.title')}
-              options={library.map((g) => ({ id: g.id, label: g.name.en }))}
-              selected={f.groupIds}
-              onChange={set.groupIds}
-            />
-            <Text variant="caption" style={{ color: theme.meta }}>
-              {t('ownerMenu.shared.hint')}
-            </Text>
-          </View>
-        ) : null}
         <AddOnsEditor groups={f.groups} onChange={set.groups} />
       </TitledSection>
 
@@ -135,13 +131,16 @@ export function DishForm({
         />
       </TitledSection>
 
+      <DishStatusFields
+        status={f.status}
+        onStatus={set.status}
+        snooze={f.snooze}
+        onSnooze={set.snooze}
+        back={f.back}
+      />
+
       <TitledSection title={t('ownerMenu.pricingStock')} cardStyle={styles.pad}>
         <DishStockFields
-          status={f.status}
-          onStatus={set.status}
-          snooze={f.snooze}
-          onSnooze={set.snooze}
-          back={f.back}
           draft={f.stockDraft}
           onDraft={set.stockDraft}
           currency={currency}

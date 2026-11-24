@@ -69,7 +69,7 @@ export function PricesSheet({
           label={t('ownerMenu.prices.percent')}
           value={text}
           onChangeText={setText}
-          placeholder="10"
+          placeholder={t('ownerMenu.prices.placeholder')}
           keyboardType="numbers-and-punctuation"
           error={text.trim() !== '' && percent === null ? t('ownerMenu.prices.err') : undefined}
         />
