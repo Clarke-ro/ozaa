@@ -1,4 +1,5 @@
 import { StyleSheet, View } from 'react-native';
+import { Star } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
@@ -9,6 +10,8 @@ export type InfoBox = {
   detail: string | null;
   /** Green, for "Open". */
   good?: boolean;
+  /** A gold star before the title, for the rating. */
+  star?: boolean;
 };
 
 /**
@@ -28,9 +31,12 @@ export function InfoBoxes({ items }: { items: InfoBox[] }) {
             accessibilityLabel={item.detail ? `${item.title}, ${item.detail}` : item.title}
             style={[styles.box, { backgroundColor: item.good ? theme.successTint : theme.wash }]}
           >
-            <Text variant="body-strong" numberOfLines={1} style={[styles.title, { color: ink }]}>
-              {item.title}
-            </Text>
+            <View style={styles.titleRow}>
+              {item.star ? <Star size={13} color={STAR} fill={STAR} strokeWidth={1.5} /> : null}
+              <Text variant="body-strong" numberOfLines={1} style={[styles.title, { color: ink }]}>
+                {item.title}
+              </Text>
+            </View>
             {item.detail ? (
               <Text
                 variant="caption"
@@ -47,6 +53,9 @@ export function InfoBoxes({ items }: { items: InfoBox[] }) {
   );
 }
 
+// The rating star's gold, as on the design canvas. Decoration next to the number, not text.
+const STAR = '#F5A524';
+
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: tokens.space[2] },
   box: {
@@ -59,6 +68,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  title: { fontSize: 15, lineHeight: 20 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  title: { fontSize: 15, lineHeight: 20, fontVariant: ['tabular-nums'] },
   detail: { fontSize: 11, lineHeight: 14 },
 });

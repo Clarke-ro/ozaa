@@ -5,7 +5,7 @@ export { formatWifiQrString, type WifiSecurity } from './wifiQr';
 export { chooseLanguage, LANGUAGES, languageByCode, type LanguageCode } from './languages';
 export { mapsLink } from './mapsLink';
 export { NOT_BUILT } from './ServiceGrid';
-export { VenueHomeBody } from './VenueHomeBody';
+export { ratingBox, VenueHomeBody } from './VenueHomeBody';
 export { TableEntryScreen } from './TableEntryScreen';
 export { HOME_SECTIONS, orderSections, type HomeSection } from './sectionOrder';
 export { LanguagePicker } from './LanguagePicker';

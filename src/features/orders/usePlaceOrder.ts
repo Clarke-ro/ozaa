@@ -69,6 +69,7 @@ export function usePlaceOrder({
     lines: readonly CartLine[],
     fulfilment: CreateOrderRequest['fulfilment'] | undefined,
     input: PayInput,
+    note = '',
   ) => {
     setSending(true);
     setErrorKey(null);
@@ -80,6 +81,7 @@ export function usePlaceOrder({
         note: line.note,
       })),
       ...(fulfilment ? { fulfilment } : {}),
+      ...(note.trim() ? { note: note.trim() } : {}),
     };
     // A retry of the same basket reuses the id, so a lost reply never makes a second order.
     const clientOrderId = keyFor(body);

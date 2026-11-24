@@ -65,6 +65,7 @@ export function VenueHomeBody({
   const fab = [styles.fab, { backgroundColor: theme.surface, top: topInset + tokens.space[3] }];
   const hours = hoursBox(venue.hours, now);
   const boxes: InfoBox[] = [
+    ...ratingBox(venue, t),
     ...(tableCode ? [{ key: 'table', title: tableCode, detail: t('home.yourTable') }] : []),
     { key: 'hours', title: hours.title, detail: hours.detail, good: hours.open },
   ];
@@ -175,6 +176,22 @@ export function VenueHomeBody({
       </View>
     </>
   );
+}
+
+/** The venue's rating as an info box, or nothing before its first review. */
+export function ratingBox(
+  venue: Pick<VenuePublic, 'rating'>,
+  t: (key: string, options?: Record<string, unknown>) => string,
+): InfoBox[] {
+  if (!venue.rating) return [];
+  return [
+    {
+      key: 'rating',
+      title: venue.rating.average.toFixed(1),
+      detail: t('home.ratings', { count: venue.rating.count }),
+      star: true,
+    },
+  ];
 }
 
 const styles = StyleSheet.create({

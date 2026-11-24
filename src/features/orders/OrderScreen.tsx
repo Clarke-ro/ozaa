@@ -26,6 +26,7 @@ import { useTheme } from '@/ui/theme';
 import { EmptyOrder } from './EmptyOrder';
 import { LinkCheckoutCard } from './LinkCheckoutCard';
 import { checkCheckout, type CheckoutDraft } from './linkCheckout';
+import { OrderInstructions } from './OrderInstructions';
 import { OrderItemCard } from './OrderItemCard';
 import { usePlaceOrder } from './usePlaceOrder';
 
@@ -60,6 +61,7 @@ export function OrderScreen({ slug }: { slug: string }) {
     location: null,
   });
   const [tried, setTried] = useState(false);
+  const [note, setNote] = useState('');
   // Whole bill, no tip and MoMo to start (Clarke, 2026-11-23).
   const [pay, setPay] = useState<PayInput>({
     pick: 'momo',
@@ -117,7 +119,7 @@ export function OrderScreen({ slug }: { slug: string }) {
       setTried(true);
       return;
     }
-    void placeOrder(lines, online && check.ok ? check.fulfilment : undefined, input);
+    void placeOrder(lines, online && check.ok ? check.fulfilment : undefined, input, note);
   };
 
   return (
@@ -168,6 +170,7 @@ export function OrderScreen({ slug }: { slug: string }) {
               </Pressable>
             </View>
             <View style={[styles.rule, { backgroundColor: theme.tint }]} />
+            <OrderInstructions value={note} onChange={setNote} />
 
             {online && canOrderHere ? (
               <LinkCheckoutCard
