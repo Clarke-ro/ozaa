@@ -93,6 +93,7 @@ These are settled. Do not reopen them.
 - **Build order:** frontend first against a fixed API contract and a mock. The backend comes only after Clarke approves the UI. _2026-11-03:_ Clarke approved the Phase 4b feature work: build all of its UI on the mock first, then hook in the backend.
 - **Hosting** _(2026-11-16)_: the server (`server/`, Hono on Node) runs on **Heroku**, paid from Clarke's Heroku credit, on a Basic dyno ($7/month, always on; Clarke, 2026-11-16). A GitHub Actions workflow sends `server/` to Heroku on each merge to `main`. Migrations run in Heroku's release phase, once per deploy. Heroku Scheduler runs the payment check. The database is **Supabase** Postgres (project "Cravins", eu-west-1), reached through its pooled connection, with Row Level Security on every table so Supabase's public web API can't read them. Photos go in Supabase Storage. The web app stays on Vercel, but Vercel's free Hobby plan is for non-commercial use, so it moves to Vercel Pro or a free host that allows business use before launch.
 - **Code style:** Clarke is learning, so code must be simple, readable, and commented where it is not obvious.
+- **Menu hub and connectors** _(2026-11-24)_: the digital menu is the centre of Cravins. The table QR menu, the online ordering site and delivery apps are all channels that read one menu and send orders into one inbox. Chowdeck is the first outside channel. Everything stays in development (mock first, a Chowdeck test merchant only, `CONNECTORS_ENABLED` off) until Clarke says otherwise. The plan is `docs/connectors-plan.md`.
 
 ## 5. Stack and why
 
@@ -319,7 +320,6 @@ stateDiagram-v2
 - On the guest side, `paymentMachine.ts` wraps these with UI steps:
 
   `choosing → quoting → confirming → starting → awaiting_approval (countdown from approveBy) → checking → paid | failed | timed_out`
-
   - In `awaiting_approval`, poll `GET /payments/{reference}` every 3 s, backing off to 10 s.
   - When the countdown ends, call `POST /payments/{reference}/verify` once.
   - Then show "That didn't go through and nothing was taken. Try again?" with a new quote.
@@ -657,6 +657,24 @@ Approved by Clarke on 2026-11-12: build the canvas redesign on the mock first, b
   - The game board reads `GET …/leaderboard` from the server instead of this phone's scores (audit N2).
 - [ ] 5.7 Privacy page, consent records, data deletion, backups. _Status 2026-11-22: loyalty consent is stored with its text version, and leaving loyalty and deleting an account work on the server. The privacy page on the landing site is still a placeholder (its wording is Clarke's call, section 17). Backups: not checked yet (Supabase plan)._
 
+### Phase 5b: Menu hub and connectors (development only)
+
+Asked for by Clarke on 2026-11-24. The plan, with what Chowdeck's API offers and what it lacks, is `docs/connectors-plan.md`. Contract box first, then one PR per box, each from `main`. Nothing here uses live keys or real orders.
+
+- [ ] 5b.1 _contract_ + mock: channels (`table`, `online`, `chowdeck`) with a price rule, hidden dishes and sync status; add-on library (`modifierGroupIds`); snooze (`snoozedUntil`); `Menu.version`; `Order.channel`, `externalRef` and `acceptBy`; payment method `chowdeck`.
+- [ ] 5b.2 Channel menu logic, tdd: `channelMenu` (price rule with rounding, hidden dishes, snooze), and the size split with the `needs_addons` problem for other required add-ons.
+- [ ] 5b.3 Owner menu editor: add-on library, bulk edit (price by %, sold out) and snooze.
+- [ ] 5b.4 Owner Channels page on the mock: a card per channel, price rule, Publish, last sync and problems. Chowdeck's card takes the merchant reference, secret key and webhook secret, and shows the webhook address.
+- [ ] 5b.5 Owner Orders: channel tag and the accept-by countdown, with a Chowdeck order in the mock.
+- [ ] 5b.6 Guest menu redesign: one page with a scroll-following section bar, no Food/Drinks tabs, only what's on now, snoozed dishes greyed with "Back at", a "Most ordered" row and the new dish row.
+- [ ] 5b.7 Online site starts with Pickup or Delivery (wait time, fee, minimum order).
+- [ ] 5b.8 Setup gets a Menu step.
+- [ ] **Review:** Clarke sees the 5b screens and says yes.
+- [ ] 5b.9 Server: channels, add-on library, snooze and menu version, with migrations and contract tests.
+- [ ] 5b.10 Server: connector interface, `connector_jobs` outbox and `connector_events` inbox (idempotent). Table and online orders go through it.
+- [ ] 5b.11 Server: Chowdeck adapter against a **test merchant**: publish (bulk-upload first, bulk-update after), availability, webhook with `x-chowdeck-signature` checked, accept, reject and ready. Keys sealed per venue. Behind `CONNECTORS_ENABLED`, off.
+- [ ] **Review:** Clarke places a test order on Chowdeck's test store and handles it in Cravins.
+
 ### Phases 6–13: the rest, in Clarke's order
 
 Do each product the same way:
@@ -765,6 +783,9 @@ The agent must ask these, not guess. Until he answers, build behind a setting or
 15. The average spend per guest shown under each price range (₵ to ₵₵₵₵). _Default: under GH₵ 50, 50 to 120, 120 to 250, over 250 (`ownerBusiness.spend` in `en.json`)._
 16. Which tips count as a waiter's "Tips today". _Default (contract): tips on succeeded payments for orders at their tables today._
 17. Printing from the phone app (order tickets and table cards) needs `expo-print`. _Default: printing works in the web app only._
+18. Chowdeck (5b): a test merchant account for Ghana, and answers to the gaps in `docs/connectors-plan.md` section 1 (writing add-ons and variants, test mode, GHS, auto-reject time). Clarke asks Chowdeck; the agent doesn't contact them. _Default: sizes become separate dishes and dishes with other required add-ons are not sent._
+19. The default Chowdeck price rule (Chowdeck's commission). _Default: same price as the menu; the owner sets a % on the Channels page._
+20. Server rendering for the online ordering site, so Google can read the menu. It is held back by the 1.15 decision (a JS budget ceiling, not static rendering). _Default: unchanged._
 
 ## 18. Owner app
 
