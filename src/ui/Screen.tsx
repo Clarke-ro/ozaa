@@ -8,10 +8,13 @@ export function SafeScreen({
   children,
   includeTop = true,
   includeBottom = true,
+  background,
 }: {
   children: ReactNode;
   includeTop?: boolean;
   includeBottom?: boolean;
+  /** Missing = the soft canvas. The guest menu is white. */
+  background?: string;
 }) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
@@ -21,7 +24,7 @@ export function SafeScreen({
         styles.screen,
         {
           // The page is the soft canvas; cards on it are white (theme.surface).
-          backgroundColor: theme.bg,
+          backgroundColor: background ?? theme.bg,
           paddingTop: includeTop ? insets.top : 0,
           paddingBottom: includeBottom ? insets.bottom : 0,
         },

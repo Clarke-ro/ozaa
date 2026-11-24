@@ -21,6 +21,7 @@ export function MenuControls({
   sections,
   active,
   onSection,
+  background,
 }: {
   query: string;
   onQuery: (text: string) => void;
@@ -32,6 +33,8 @@ export function MenuControls({
   /** A section id, or 'all'. */
   active: string;
   onSection: (id: string) => void;
+  /** Missing = the soft canvas. */
+  background?: string;
 }) {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -46,7 +49,9 @@ export function MenuControls({
   ];
 
   return (
-    <View style={[styles.bar, { backgroundColor: theme.bg, borderColor: theme.line }]}>
+    <View
+      style={[styles.bar, { backgroundColor: background ?? theme.bg, borderColor: theme.line }]}
+    >
       {searchOpen ? (
         <View style={[styles.search, { backgroundColor: theme.wash }]}>
           <Search size={18} color={theme.muted} />
