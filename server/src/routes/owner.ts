@@ -17,6 +17,7 @@ import { moveFor, orderTransition } from '../shared/orderMachine.ts';
 import { checkManualPayments, checkPaystackKeys } from '../shared/payments.ts';
 import type { ManualPayments, OrderStatus } from '../shared/types.ts';
 import { paymentSettingsOf, venueRowById } from '../venues/venueData.ts';
+import type { VenueChowdeckStore } from '../venues/venueChowdeck.ts';
 import type { VenuePaystackStore } from '../venues/venuePaystack.ts';
 
 export type OwnerRouteDeps = OwnerDeps & {
@@ -27,6 +28,8 @@ export type OwnerRouteDeps = OwnerDeps & {
   /** The real app's address, for table QR codes (SITE_URL). */
   siteUrl: string;
   venueKeys: VenuePaystackStore;
+  /** Each venue's Chowdeck channel and its sealed keys (docs/connectors-plan.md). */
+  chowdeckKeys: VenueChowdeckStore;
   /** A Paystack client for a key being connected, before it is saved. */
   paystackClient: (secret: string) => Paystack;
   log: Log;
@@ -222,7 +225,11 @@ export function ownerRoutes(deps: OwnerRouteDeps) {
         now: deps.now(),
       });
       if (!order) {
-        throw new Problem(409, 'illegal_move', 'Someone else just changed this order. Refresh and try again.');
+        throw new Problem(
+          409,
+          'illegal_move',
+          'Someone else just changed this order. Refresh and try again.',
+        );
       }
       return c.json(order);
     }

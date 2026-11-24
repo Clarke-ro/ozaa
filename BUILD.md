@@ -661,7 +661,8 @@ Approved by Clarke on 2026-11-12: build the canvas redesign on the mock first, b
 
 Asked for by Clarke on 2026-11-24. The plan, with what Chowdeck's API offers and what it lacks, is `docs/connectors-plan.md`. Contract box first, then one PR per box, each from `main`. Nothing here uses live keys or real orders.
 
-- [ ] 5b.1 _contract_ + mock: channels (`table`, `online`, `chowdeck`) with a price rule, hidden dishes and sync status; add-on library (`modifierGroupIds`); snooze (`snoozedUntil`); `Menu.version`; `Order.channel`, `externalRef` and `acceptBy`; payment method `chowdeck`.
+- [x] 5b.1 _contract_ + mock + server: channels (`table`, `online`, `chowdeck`) with a price rule, hidden dishes and sync status (`owner-channels`: list, update, publish, connect and disconnect Chowdeck keys); `Order.channel`, `externalRef` and `acceptBy`; payment method `chowdeck`. _Done 2026-11-24: the rules are in `src/lib/channels.ts` (tdd, shared with the server). The server seals the Chowdeck keys like the Paystack key (`chowdeck_channels`, migration 0012). Publish only queues (`pending`); nothing is sent to Chowdeck until 5b.11. The menu's `updatedAt` marks what a channel has, instead of a new `Menu.version`._
+- [ ] 5b.1b _contract_ + mock + server: add-on library (`modifierGroupIds`) and snooze (`snoozedUntil`).
 - [ ] 5b.2 Channel menu logic, tdd: `channelMenu` (price rule with rounding, hidden dishes, snooze), and the size split with the `needs_addons` problem for other required add-ons.
 - [ ] 5b.3 Owner menu editor: add-on library, bulk edit (price by %, sold out) and snooze.
 - [ ] 5b.4 Owner Channels page on the mock: a card per channel, price rule, Publish, last sync and problems. Chowdeck's card takes the merchant reference, secret key and webhook secret, and shows the webhook address.

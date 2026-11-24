@@ -53,6 +53,7 @@ tags:
   - name: owner-promos
   - name: owner-notifications
   - name: owner-profile
+  - name: owner-channels
   - name: webhooks
 security: []
 paths:
@@ -1208,6 +1209,108 @@ paths:
                   ok: { type: boolean }
                   checkedAt: { type: string, format: date-time }
                   message: { type: string, description: "Plain words, safe to show, when ok is false." }
+  # ---------------------------------------------------------------- channels (where the menu is published; docs/connectors-plan.md)
+  /owner/venues/{venueId}/channels:
+    get:
+      tags: [owner-channels]
+      operationId: ownerListChannels
+      security: [{ ownerAuth: [] }]
+      summary: "Every channel this venue's menu can go to: the table QR, the online menu link and Chowdeck. Always all three, in that order."
+      description: |
+        `table` and `online` are built in and always `synced`; `online.enabled` mirrors Online ordering
+        (change it there). Only `chowdeck` is set here. Development only: Chowdeck takes test keys, and
+        nothing is sent to Chowdeck until the server's connector is switched on (BUILD.md 5b.11).
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [channels]
+                properties:
+                  channels: { type: array, items: { $ref: '#/components/schemas/Channel' } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /owner/venues/{venueId}/channels/{channel}:
+    patch:
+      tags: [owner-channels]
+      operationId: ownerUpdateChannel
+      security: [{ ownerAuth: [] }]
+      summary: Switch an outside channel on or off, set its price rule and the dishes it leaves out.
+      description: "Only `chowdeck` for now. `table` and `online` fail with 422 channel_built_in. Turning Chowdeck on without its keys fails with 409 channel_not_connected."
+      parameters: [{ $ref: '#/components/parameters/VenueId' }, { $ref: '#/components/parameters/ChannelKindParam' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ChannelPatch' }
+      responses:
+        '200':
+          description: Saved.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Channel' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+  /owner/venues/{venueId}/channels/{channel}/publish:
+    post:
+      tags: [owner-channels]
+      operationId: ownerPublishChannel
+      security: [{ ownerAuth: [] }]
+      summary: Send the current menu to an outside channel. The answer comes back `pending`; `sync` moves to `synced` or `failed` when the work is done.
+      description: "Only `chowdeck`. Fails with 409 channel_not_connected without keys, and 409 channel_off while the channel is switched off."
+      parameters: [{ $ref: '#/components/parameters/VenueId' }, { $ref: '#/components/parameters/ChannelKindParam' }]
+      responses:
+        '202':
+          description: Queued.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Channel' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+  /owner/venues/{venueId}/channels/chowdeck/keys:
+    put:
+      tags: [owner-channels]
+      operationId: ownerConnectChowdeck
+      security: [{ ownerAuth: [] }]
+      summary: "Save the venue's own Chowdeck store keys (from the Chowdeck dashboard, Settings > Developers). Owner only."
+      description: |
+        The secret key and webhook secret are stored encrypted on the server only, like the Paystack
+        key. They are never returned, logged or sent to an app. Test keys only for now: Chowdeck's keys
+        don't show their mode, so the owner confirms `mode: test`.
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ChowdeckKeysInput' }
+      responses:
+        '200':
+          description: Saved. The channel stays off until the owner turns it on.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Channel' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    delete:
+      tags: [owner-channels]
+      operationId: ownerDisconnectChowdeck
+      security: [{ ownerAuth: [] }]
+      summary: Remove the Chowdeck keys and switch the channel off. Dishes already on Chowdeck stay there until the owner removes them in Chowdeck.
+      parameters: [{ $ref: '#/components/parameters/VenueId' }]
+      responses:
+        '200':
+          description: Removed.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Channel' }
+        '403': { $ref: '#/components/responses/Forbidden' }
   /owner/orders/{orderId}/manual-payment:
     post:
       tags: [owner-orders]
@@ -2302,6 +2405,11 @@ components:
       name: menuItemId
       required: true
       schema: { $ref: '#/components/schemas/MenuItemId' }
+    ChannelKindParam:
+      name: channel
+      in: path
+      required: true
+      schema: { $ref: '#/components/schemas/ChannelKind' }
     TableId:
       in: path
       name: tableId
@@ -2906,6 +3014,81 @@ components:
         categories: { type: array, items: { $ref: '#/components/schemas/MenuCategory' } }
         items: { type: array, items: { $ref: '#/components/schemas/MenuItem' } }
 
+    ChannelKind:
+      type: string
+      enum: [table, online, chowdeck]
+      description: "Where the menu is published and orders come from. table: the table QR. online: the venue's menu link. chowdeck: the Chowdeck delivery app."
+    PriceRule:
+      type: object
+      required: [percent, roundToPesewas]
+      description: "A channel's price compared with the menu. 20 means 20% more (to cover the channel's commission), rounded up to `roundToPesewas`. 0 means the menu price."
+      properties:
+        percent: { type: integer, minimum: 0, maximum: 100 }
+        roundToPesewas: { type: integer, enum: [1, 10, 50, 100], description: "Round the raised price up to this step. 50 means to the next GH₵0.50." }
+    SyncProblem:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          enum: [needs_addons, photo_missing, rejected, not_connected]
+          description: "needs_addons: the dish has a required add-on the channel can't take yet, so it isn't sent. photo_missing: the channel needs a photo. rejected: the channel refused it (see message). not_connected: the keys don't work."
+        itemId: { type: string, description: "The dish, when the problem is about one dish." }
+        message: { type: string, maxLength: 200, description: "Plain words, safe to show the owner." }
+    ChannelSync:
+      type: object
+      required: [state, at, menuUpdatedAt, problems]
+      properties:
+        state:
+          type: string
+          enum: [off, pending, synced, failed]
+          description: "off: never sent. pending: queued or being sent. synced: the channel has the menu from `menuUpdatedAt`. failed: the last send failed; see problems."
+        at: { type: ['string', 'null'], format: date-time, description: When the state last changed. Null while off. }
+        menuUpdatedAt:
+          type: ['string', 'null']
+          format: date-time
+          description: "The Menu.updatedAt the channel has. When the menu's updatedAt is later, the channel is out of date."
+        problems: { type: array, items: { $ref: '#/components/schemas/SyncProblem' } }
+    ChowdeckConnection:
+      type: object
+      required: [mode, merchantReference, secretKeyHint, webhookUrl, connectedAt]
+      properties:
+        mode: { type: string, enum: [test] }
+        merchantReference: { type: string, description: "The store's reference on Chowdeck. Safe to show." }
+        secretKeyHint: { type: string, example: '••••1a2b', description: The last 4 characters only. The keys themselves are never returned. }
+        webhookUrl: { type: string, format: uri, description: "Paste this into the Chowdeck dashboard (Settings > Developers) so orders reach Cravins." }
+        connectedAt: { type: string, format: date-time }
+    Channel:
+      type: object
+      required: [kind, enabled, priceRule, hiddenItemIds, sync, chowdeck]
+      properties:
+        kind: { $ref: '#/components/schemas/ChannelKind' }
+        enabled: { type: boolean, description: "table: always true. online: Online ordering's switch. chowdeck: the owner's switch here." }
+        priceRule: { $ref: '#/components/schemas/PriceRule' }
+        hiddenItemIds:
+          type: array
+          maxItems: 500
+          items: { type: string }
+          description: Dishes this channel leaves out, on top of hidden and sold-out ones. Always empty for table and online.
+        sync: { $ref: '#/components/schemas/ChannelSync' }
+        chowdeck:
+          oneOf: [{ $ref: '#/components/schemas/ChowdeckConnection' }, { type: 'null' }]
+          description: "chowdeck only, once keys are saved. Null otherwise."
+    ChannelPatch:
+      type: object
+      properties:
+        enabled: { type: boolean }
+        priceRule: { $ref: '#/components/schemas/PriceRule' }
+        hiddenItemIds: { type: array, maxItems: 500, items: { type: string } }
+    ChowdeckKeysInput:
+      type: object
+      required: [mode, merchantReference, secretKey, webhookSecret]
+      properties:
+        mode: { type: string, enum: [test], description: "Test keys only until Clarke says otherwise (AGENTS.md rule 5)." }
+        merchantReference: { type: string, minLength: 1, maxLength: 64, pattern: '^[A-Za-z0-9_-]+$' }
+        secretKey: { type: string, writeOnly: true, minLength: 10, maxLength: 200, description: "Sent once over HTTPS and stored encrypted. Never returned." }
+        webhookSecret: { type: string, writeOnly: true, minLength: 10, maxLength: 200, description: "Checks that webhooks really come from Chowdeck (x-chowdeck-signature). Stored encrypted. Never returned." }
+
     OrderStatus:
       type: string
       enum: [received, accepted, preparing, ready, served, cancelled]
@@ -3024,6 +3207,14 @@ components:
         totalPesewas: { $ref: '#/components/schemas/Pesewas' }
         paidPesewas: { $ref: '#/components/schemas/Pesewas' }
         source: { $ref: '#/components/schemas/OrderSource' }
+        channel:
+          allOf: [{ $ref: '#/components/schemas/ChannelKind' }]
+          description: "Which channel the order came in on. Missing on older orders: `table` when source is table, else `online`. A Chowdeck order has channel chowdeck and source delivery."
+        externalRef: { type: ['string', 'null'], maxLength: 64, description: "The outside channel's own order reference (Chowdeck's `reference`). Null for table and online orders." }
+        acceptBy:
+          type: ['string', 'null']
+          format: date-time
+          description: "Outside channels only: the outside channel rejects the order itself if nobody accepts it by then. Null otherwise."
         paymentMethod:
           oneOf: [{ $ref: '#/components/schemas/PaymentMethodUsed' }, { type: 'null' }]
           description: Set when the order is paid. Null while unpaid.
@@ -3329,8 +3520,8 @@ components:
       enum: [cash, card_machine, bank_transfer, momo_merchant]
     PaymentMethodUsed:
       type: string
-      enum: [online_card, online_momo, cash, card_machine, bank_transfer, momo_merchant]
-      description: How an order was paid. Online ones come from Paystack (through the venue's own account); the rest are marked by staff.
+      enum: [online_card, online_momo, cash, card_machine, bank_transfer, momo_merchant, chowdeck]
+      description: "How an order was paid. Online ones come from Paystack (through the venue's own account). `chowdeck`: the customer paid Chowdeck, which pays the venue; it never goes through Paystack. The rest are marked by staff."
     ManualPayments:
       type: object
       required: [cash, cardMachine, bankTransfer, momo]

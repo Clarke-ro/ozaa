@@ -6,6 +6,7 @@ import type { VerifyOwner } from '../owner/clerk.ts';
 import type { PaymentService } from '../payments.ts';
 import { PaystackError, type Paystack } from '../paystack.ts';
 import { venuePaystack } from '../venues/venuePaystack.ts';
+import { venueChowdeck } from '../venues/venueChowdeck.ts';
 import type { MediaStorage } from '../media/storage.ts';
 import type { ClerkAdmin } from '../owner/clerkAdmin.ts';
 import { TEST_KEY } from './testHelpers.ts';
@@ -112,6 +113,7 @@ export async function ownerSetup(options: { verify?: VerifyOwner | null } = {}) 
       verify: options.verify === undefined ? fakeClerk : options.verify,
       now: () => clock,
       venueKeys: venuePaystack({ db, key: TEST_KEY, client }),
+      chowdeckKeys: venueChowdeck({ db, key: TEST_KEY }),
       paystackClient: client,
       storage,
       siteUrl: 'https://cravins-app.vercel.app',

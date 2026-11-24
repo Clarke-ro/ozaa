@@ -58,7 +58,9 @@ Location menu (what exists today)   every dish, section, photo and base price
 
 A brand-wide catalog shared by many locations is a later step. Chowdeck has one `merchantReference` per store, so the per-location menu fits it now.
 
-### Contract sketch (the first box makes these exact)
+### Contract sketch
+
+The first sketch is below. 5b.1 made the channel and order parts exact in `api/openapi.yaml` (`Channel`, `PriceRule`, `ChannelSync`, `ChowdeckConnection`), with two changes: a price rule is always `{ percent, roundToPesewas }` (0% is the menu price), and a channel records the menu's `updatedAt` it has instead of a new `Menu.version`. The add-on library and snooze come in 5b.1b.
 
 ```ts
 type ChannelKind = 'table' | 'online' | 'chowdeck';
@@ -86,9 +88,6 @@ type Channel = {
 // New on MenuItem
 modifierGroupIds?: string[];    // from the add-on library; the embedded copy stays for older clients
 snoozedUntil?: string | null;   // sold out until then, on every channel
-
-// New on Menu
-version: number;                 // goes up by one on each publish
 
 // New on Order
 channel: ChannelKind;           // replaces `source` over time; pickup and delivery stay in fulfilment
@@ -161,7 +160,7 @@ Payment: Chowdeck collects it, so a Chowdeck order is marked paid by method `cho
 
 Each box is one PR from `main`, following AGENTS.md: contract first, then mock, then UI, then Clarke's yes, then server.
 
-1. **Contract + mock:** channels, add-on library, snooze, menu version, `Order.channel`, `externalRef`, `acceptBy`, and method `chowdeck`.
+1. **Contract + mock + server:** channels, `Order.channel`, `externalRef`, `acceptBy` and method `chowdeck` (5b.1). Then the add-on library and snooze (5b.1b).
 2. **Logic (tdd):** `channelMenu`, the size split, price rules and rounding.
 3. **Owner:** add-on library, bulk edit and snooze in the menu editor.
 4. **Owner:** Channels page on the mock, with a mock Chowdeck sync and its problems.

@@ -1,5 +1,9 @@
 import type {
   BillQuote,
+  Channel,
+  ChannelKind,
+  ChannelPatch,
+  ChowdeckKeysInput,
   BillQuoteRequest,
   Business,
   Call,
@@ -267,6 +271,14 @@ export type ApiClient = {
   ownerConnectPaystack(venueId: string, body: PaystackKeysInput): Promise<PaymentSettings>;
   ownerDisconnectPaystack(venueId: string): Promise<PaymentSettings>;
   ownerTestPaystack(venueId: string): Promise<{ ok: boolean; checkedAt: string; message?: string }>;
+  /** Table, online and Chowdeck, always in that order (docs/connectors-plan.md). */
+  ownerListChannels(venueId: string): Promise<{ channels: Channel[] }>;
+  ownerUpdateChannel(venueId: string, channel: ChannelKind, body: ChannelPatch): Promise<Channel>;
+  /** Queues the menu for an outside channel; the answer's sync state is `pending`. */
+  ownerPublishChannel(venueId: string, channel: ChannelKind): Promise<Channel>;
+  /** Owner only. The keys are never returned, only `secretKeyHint`. */
+  ownerConnectChowdeck(venueId: string, body: ChowdeckKeysInput): Promise<Channel>;
+  ownerDisconnectChowdeck(venueId: string): Promise<Channel>;
   /** Real order figures; `since` (inclusive) and `until` (exclusive) are ISO times. */
   ownerGetSales(venueId: string, filter?: { since?: string; until?: string }): Promise<SalesReport>;
   ownerListFeedback(

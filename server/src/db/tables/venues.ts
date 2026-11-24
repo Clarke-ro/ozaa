@@ -9,7 +9,9 @@ import { at } from './columns.ts';
 export const businesses = pgTable('businesses', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
-  plan: text('plan', { enum: ['free', 'pro', 'business'] }).notNull().default('free'),
+  plan: text('plan', { enum: ['free', 'pro', 'business'] })
+    .notNull()
+    .default('free'),
   // Business profile fields (description, categories, cuisines, price range, website, TIN…),
   // always read and saved together, so one JSON value instead of ten columns.
   profile: jsonb('profile').notNull().default({}),
@@ -25,10 +27,14 @@ export const venues = pgTable(
   'venues',
   {
     id: text('id').primaryKey(),
-    businessId: text('business_id').notNull().references(() => businesses.id),
+    businessId: text('business_id')
+      .notNull()
+      .references(() => businesses.id),
     slug: text('slug').notNull().unique(),
     name: text('name').notNull(),
-    currency: text('currency', { enum: ['GHS', 'NGN', 'KES', 'ZAR', 'XOF', 'USD'] }).notNull().default('GHS'),
+    currency: text('currency', { enum: ['GHS', 'NGN', 'KES', 'ZAR', 'XOF', 'USD'] })
+      .notNull()
+      .default('GHS'),
     // IANA zone for "today", opening hours and daily order numbers. Ghana is UTC all year.
     timeZone: text('time_zone').notNull().default('Africa/Accra'),
     published: boolean('published').notNull().default(true),
@@ -52,7 +58,9 @@ export const venues = pgTable(
  * here (5.4) and is never sent back; only its last 4 characters are (secretKeyHint).
  */
 export const paymentSettings = pgTable('payment_settings', {
-  venueId: text('venue_id').primaryKey().references(() => venues.id, { onDelete: 'cascade' }),
+  venueId: text('venue_id')
+    .primaryKey()
+    .references(() => venues.id, { onDelete: 'cascade' }),
   paystackMode: text('paystack_mode', { enum: ['test', 'live'] }),
   paystackPublicKey: text('paystack_public_key'),
   paystackSecretEncrypted: text('paystack_secret_encrypted'),
@@ -63,12 +71,35 @@ export const paymentSettings = pgTable('payment_settings', {
   updatedAt: at('updated_at').notNull().defaultNow(),
 }).enableRLS();
 
+/**
+ * A venue's Chowdeck channel (Channel in the contract, docs/connectors-plan.md). Like the Paystack
+ * secret, the Chowdeck secret key and webhook secret are sealed by the server before they get here
+ * and are never sent back; only the key's last 4 characters are (secretKeyHint). Test keys only.
+ */
+export const chowdeckChannels = pgTable('chowdeck_channels', {
+  venueId: text('venue_id')
+    .primaryKey()
+    .references(() => venues.id, { onDelete: 'cascade' }),
+  enabled: boolean('enabled').notNull().default(false),
+  priceRule: jsonb('price_rule').notNull(),
+  hiddenItemIds: jsonb('hidden_item_ids').notNull().default([]),
+  sync: jsonb('sync').notNull(),
+  merchantReference: text('merchant_reference'),
+  secretEncrypted: text('secret_encrypted'),
+  secretHint: text('secret_hint'),
+  webhookSecretEncrypted: text('webhook_secret_encrypted'),
+  connectedAt: at('connected_at'),
+  updatedAt: at('updated_at').notNull().defaultNow(),
+}).enableRLS();
+
 /** Tables with a QR code. The code is what the QR holds: /{venueSlug}/t/{code}. */
 export const diningTables = pgTable(
   'dining_tables',
   {
     id: text('id').primaryKey(),
-    venueId: text('venue_id').notNull().references(() => venues.id, { onDelete: 'cascade' }),
+    venueId: text('venue_id')
+      .notNull()
+      .references(() => venues.id, { onDelete: 'cascade' }),
     code: text('code').notNull(),
     label: text('label'),
     createdAt: at('created_at').notNull().defaultNow(),

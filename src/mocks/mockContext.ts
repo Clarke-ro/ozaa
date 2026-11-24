@@ -1,6 +1,7 @@
 import type { TokenSource } from '@/lib/api/client';
 import { ApiError, OfflineError } from '@/lib/api/errors';
 import { bestPromo } from '@/lib/promos';
+import { orderChannel } from '@/lib/channels';
 import { taxLines } from '@/lib/tax';
 import type { AppliedPromo, Menu, Order, OrderLineInput, VenuePublic } from '@/lib/api/types';
 import { checkLine, takeStock, unitPrice } from '@/lib/dishRules';
@@ -149,6 +150,7 @@ export function createMockContext(options: MockOptions = {}) {
       promoDiscounts: applied ? [applied] : [],
       paidPesewas: 0,
       source: extra.source,
+      channel: orderChannel({ source: extra.source }),
       contact: extra.contact ?? null,
       note: body.note?.trim() || null,
       deliveryAddress: extra.deliveryAddress ?? null,

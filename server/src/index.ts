@@ -9,6 +9,7 @@ import { paymentService } from './payments.ts';
 import { paystackClient } from './paystack.ts';
 import { encryptionKey } from './secrets/sealed.ts';
 import { venuePaystack } from './venues/venuePaystack.ts';
+import { venueChowdeck } from './venues/venueChowdeck.ts';
 import { clerkVerifier } from './owner/clerk.ts';
 import { clerkAdmin } from './owner/clerkAdmin.ts';
 import { arkeselSender } from './sms/arkesel.ts';
@@ -68,6 +69,7 @@ const app = createApp({
       : null,
     now: Date.now,
     venueKeys,
+    chowdeckKeys: venueChowdeck({ db, key: encryptionKey(config.ENCRYPTION_KEY) }),
     paystackClient: (secret) => paystackClient(secret),
     siteUrl: config.SITE_URL,
     clerkAdmin: config.CLERK_SECRET_KEY ? clerkAdmin(config.CLERK_SECRET_KEY) : null,

@@ -163,6 +163,7 @@ export function createWorld(now: number): World {
     wifi,
     notices: {},
     paymentSettings: samplePaymentSettings(venues, now),
+    chowdeck: {},
     offers,
     orders,
     calls: [],

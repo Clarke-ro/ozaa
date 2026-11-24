@@ -2804,7 +2804,8 @@
       "cash": "Cash",
       "card_machine": "Card machine",
       "bank_transfer": "Bank transfer",
-      "momo_merchant": "MoMo to your number"
+      "momo_merchant": "MoMo to your number",
+      "chowdeck": "Chowdeck"
     },
     "byHour": "By hour",
     "byStaff": "By staff",

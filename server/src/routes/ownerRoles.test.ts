@@ -100,6 +100,12 @@ const ALLOWED: Record<string, StaffRole[]> = {
   ownerResetStaffPin: OWNER,
   ownerSignOutStaff: OWNER,
   ownerListScannerDevices: DESK,
+  // Channels (docs/connectors-plan.md): the keys are the owner's, like Paystack's.
+  ownerListChannels: DESK,
+  ownerUpdateChannel: DESK,
+  ownerPublishChannel: DESK,
+  ownerConnectChowdeck: OWNER,
+  ownerDisconnectChowdeck: OWNER,
   ownerPairScannerDevice: DESK,
   ownerRevokeScannerDevice: DESK,
 };

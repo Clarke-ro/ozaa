@@ -24,6 +24,7 @@ import { mediaRoutes } from './routes/media.ts';
 import { dashboardMemo, ownerDeskRoutes } from './routes/ownerDesk.ts';
 import { ownerLoyaltyRoutes } from './routes/ownerLoyalty.ts';
 import { ownerLinkRoutes } from './routes/ownerLinks.ts';
+import { ownerChannelRoutes } from './routes/ownerChannels.ts';
 import { ownerMenuRoutes } from './routes/ownerMenu.ts';
 import { ownerBusinessRoutes } from './routes/ownerBusiness.ts';
 import { meRoutes } from './routes/me.ts';
@@ -220,6 +221,7 @@ export function createApp(deps: {
   if (deps.owner) app.route('/', ownerPromoRoutes(deps.owner));
   if (deps.owner) app.route('/', ownerNotificationRoutes(deps.owner));
   if (deps.owner) app.route('/', ownerLinkRoutes(deps.owner));
+  if (deps.owner) app.route('/', ownerChannelRoutes(deps.owner));
   if (deps.owner) app.route('/', ownerOrderEntryRoutes(deps.owner));
   if (deps.owner) app.route('/', ownerBusinessRoutes(deps.owner));
   if (deps.owner) app.route('/', meRoutes(deps.owner));

@@ -4,6 +4,7 @@ import type { Db } from '../db/client.ts';
 import { idempotencyKeys, orderLines, orders } from '../db/schema.ts';
 import { Problem } from '../http/problem.ts';
 import type { Order } from '../shared/types.ts';
+import { orderChannel } from '../shared/channels.ts';
 import {
   claimPromos,
   MAX_OPEN_UNPAID_ORDERS,
@@ -53,6 +54,7 @@ export function orderFromRows(row: OrderRow, lines: LineRow[]): Order {
     totalPesewas: row.totalPesewas,
     paidPesewas: row.paidPesewas,
     source: row.source,
+    channel: orderChannel({ source: row.source }),
     paymentMethod: (row.paymentMethod as Order['paymentMethod']) ?? null,
     contact: (row.contact as Order['contact']) ?? null,
     deliveryAddress: row.deliveryAddress,
