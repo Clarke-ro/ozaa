@@ -2202,6 +2202,8 @@ export interface components {
             items: components["schemas"]["MenuItem"][];
             /** @description The venue's add-on library, shared by dishes through modifierGroupIds. Guests can ignore it: each dish's modifierGroups already holds the groups it uses. Missing means none. */
             modifierGroups?: components["schemas"]["ModifierGroup"][];
+            /** @description The dishes guests ordered most in the last 30 days, most first, from real sales (cancelled orders don't count). Only dishes still on the guest menu. Missing or empty means not enough sales yet. */
+            mostOrderedIds?: string[];
         };
         /**
          * @description Where the menu is published and orders come from. table: the table QR. online: the venue's menu link. chowdeck: the Chowdeck delivery app.

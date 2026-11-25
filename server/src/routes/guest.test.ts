@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import { createApp } from '../app.ts';
 import { expectContract } from '../contract/contract.ts';
-import { menuItems, paymentSettings } from '../db/schema.ts';
+import { menuItems, orders, paymentSettings } from '../db/schema.ts';
 import { seedSamples } from '../db/seedSamples.ts';
 import { testDb } from '../db/testDb.ts';
 import type { PaymentService } from '../payments.ts';
@@ -35,7 +35,10 @@ async function setup() {
     return { status: res.status, json: text ? JSON.parse(text) : null };
   };
   const session = async (venueSlug: string, tableCode?: string) => {
-    const res = await call('POST', '/guest-sessions', { venueSlug, ...(tableCode ? { tableCode } : {}) });
+    const res = await call('POST', '/guest-sessions', {
+      venueSlug,
+      ...(tableCode ? { tableCode } : {}),
+    });
     expectContract('createGuestSession', res.status, res.json);
     return res.json.guestToken as string;
   };
@@ -61,7 +64,10 @@ test('a table scan starts a session, and the venue, menu, offers and Wi-Fi follo
 
   const missing = await call('POST', '/guest-sessions', { venueSlug: 'no-such-place' });
   expectContract('createGuestSession', 404, missing.json);
-  assert.equal((await call('POST', '/guest-sessions', { venueSlug: 'mamas-kitchen', tableCode: '99' })).status, 404);
+  assert.equal(
+    (await call('POST', '/guest-sessions', { venueSlug: 'mamas-kitchen', tableCode: '99' })).status,
+    404,
+  );
 });
 
 test('an order is priced by the server, a retry returns the same order, and numbers count up', async () => {
@@ -70,16 +76,31 @@ test('an order is priced by the server, a retry returns the same order, and numb
   const menu = (await call('GET', '/venues/mamas-kitchen/menu')).json;
   const dish = menu.items[0];
   const clientOrderId = randomUUID();
-  const order = await call('POST', '/orders', { clientOrderId, lines: [{ menuItemId: dish.id, quantity: 2 }] }, token);
+  const order = await call(
+    'POST',
+    '/orders',
+    { clientOrderId, lines: [{ menuItemId: dish.id, quantity: 2 }] },
+    token,
+  );
   expectContract('createOrder', 201, order.json);
   assert.equal(order.json.totalPesewas, dish.pricePesewas * 2);
   assert.equal(order.json.tableCode, '12');
   assert.equal(order.json.status, 'received');
   assert.equal(order.json.paymentStatus, 'unpaid');
 
-  const again = await call('POST', '/orders', { clientOrderId, lines: [{ menuItemId: dish.id, quantity: 2 }] }, token);
+  const again = await call(
+    'POST',
+    '/orders',
+    { clientOrderId, lines: [{ menuItemId: dish.id, quantity: 2 }] },
+    token,
+  );
   assert.equal(again.json.id, order.json.id);
-  const second = await call('POST', '/orders', { clientOrderId: randomUUID(), lines: [{ menuItemId: dish.id, quantity: 1 }] }, token);
+  const second = await call(
+    'POST',
+    '/orders',
+    { clientOrderId: randomUUID(), lines: [{ menuItemId: dish.id, quantity: 1 }] },
+    token,
+  );
   assert.equal(second.json.number, order.json.number + 1);
 
   const read = await call('GET', `/orders/${order.json.id}`, undefined, token);
@@ -88,8 +109,19 @@ test('an order is priced by the server, a retry returns the same order, and numb
   const other = await session('mamas-kitchen', '3');
   const hidden = await call('GET', `/orders/${order.json.id}`, undefined, other);
   expectContract('getOrder', 404, hidden.json);
-  assert.equal((await call('POST', '/orders', { clientOrderId: randomUUID(), lines: [] }, token)).status, 400);
-  assert.equal((await call('POST', '/orders', { clientOrderId: randomUUID(), lines: [{ menuItemId: dish.id, quantity: 1 }] })).status, 401);
+  assert.equal(
+    (await call('POST', '/orders', { clientOrderId: randomUUID(), lines: [] }, token)).status,
+    400,
+  );
+  assert.equal(
+    (
+      await call('POST', '/orders', {
+        clientOrderId: randomUUID(),
+        lines: [{ menuItemId: dish.id, quantity: 1 }],
+      })
+    ).status,
+    401,
+  );
 });
 
 test('a menu-link order needs contact details, and is saved for pickup with them', async () => {
@@ -103,7 +135,11 @@ test('a menu-link order needs contact details, and is saved for pickup with them
   const ok = await call(
     'POST',
     '/orders',
-    { clientOrderId: randomUUID(), lines, fulfilment: { type: 'pickup', contact: { name: 'Ama', phone: '+233241234567' } } },
+    {
+      clientOrderId: randomUUID(),
+      lines,
+      fulfilment: { type: 'pickup', contact: { name: 'Ama', phone: '+233241234567' } },
+    },
     token,
   );
   expectContract('createOrder', 201, ok.json);
@@ -120,9 +156,16 @@ test('stock runs out safely: the last one goes to one order, and the dish shows 
   const lines = [{ menuItemId: dish.id, quantity: 2 }];
   const tooMany = await call('POST', '/orders', { clientOrderId: randomUUID(), lines }, token);
   expectContract('createOrder', 422, tooMany.json);
-  const last = await call('POST', '/orders', { clientOrderId: randomUUID(), lines: [{ menuItemId: dish.id, quantity: 1 }] }, token);
+  const last = await call(
+    'POST',
+    '/orders',
+    { clientOrderId: randomUUID(), lines: [{ menuItemId: dish.id, quantity: 1 }] },
+    token,
+  );
   assert.equal(last.status, 201);
-  const after = (await call('GET', '/venues/mamas-kitchen/menu')).json.items.find((i: { id: string }) => i.id === dish.id);
+  const after = (await call('GET', '/venues/mamas-kitchen/menu')).json.items.find(
+    (i: { id: string }) => i.id === dish.id,
+  );
   assert.equal(after.available, false);
   assert.equal(after.stockCount, 0);
 });
@@ -131,7 +174,14 @@ test('the bill quote: refused without Paystack; with it, the share, tip and pass
   const { db, call, session } = await setup();
   const token = await session('mamas-kitchen', '12');
   const dish = (await call('GET', '/venues/mamas-kitchen/menu')).json.items[0];
-  const order = (await call('POST', '/orders', { clientOrderId: randomUUID(), lines: [{ menuItemId: dish.id, quantity: 1 }] }, token)).json;
+  const order = (
+    await call(
+      'POST',
+      '/orders',
+      { clientOrderId: randomUUID(), lines: [{ menuItemId: dish.id, quantity: 1 }] },
+      token,
+    )
+  ).json;
 
   const off = await call('POST', `/orders/${order.id}/bill`, { mode: 'whole' }, token);
   expectContract('quoteBill', 409, off.json);
@@ -139,20 +189,46 @@ test('the bill quote: refused without Paystack; with it, the share, tip and pass
 
   const venueId = (await call('GET', '/venues/mamas-kitchen')).json.id;
   await connectTestPaystack(db, venueId);
-  await db.update(paymentSettings).set({ feePassing: { enabled: true, percent: 100 } }).where(eq(paymentSettings.venueId, venueId));
-  const quote = await call('POST', `/orders/${order.id}/bill`, { mode: 'whole', tip: { percent: 10 } }, token);
+  await db
+    .update(paymentSettings)
+    .set({ feePassing: { enabled: true, percent: 100 } })
+    .where(eq(paymentSettings.venueId, venueId));
+  const quote = await call(
+    'POST',
+    `/orders/${order.id}/bill`,
+    { mode: 'whole', tip: { percent: 10 } },
+    token,
+  );
   expectContract('quoteBill', 200, quote.json);
   assert.equal(quote.json.sharePesewas, order.totalPesewas);
   assert.equal(quote.json.tipPesewas, Math.round(order.totalPesewas * 0.1));
   assert.ok(quote.json.feePesewas > 0);
-  assert.equal(quote.json.totalPesewas, quote.json.sharePesewas + quote.json.tipPesewas + quote.json.feePesewas);
+  assert.equal(
+    quote.json.totalPesewas,
+    quote.json.sharePesewas + quote.json.tipPesewas + quote.json.feePesewas,
+  );
 
-  const atCap = await call('POST', `/orders/${order.id}/bill`, { mode: 'whole', tip: { customPesewas: 1_000_000 } }, token);
+  const atCap = await call(
+    'POST',
+    `/orders/${order.id}/bill`,
+    { mode: 'whole', tip: { customPesewas: 1_000_000 } },
+    token,
+  );
   assert.equal(atCap.status, 200);
   assert.equal(atCap.json.tipPesewas, 1_000_000);
-  const over = await call('POST', `/orders/${order.id}/bill`, { mode: 'whole', tip: { customPesewas: 1_000_001 } }, token);
+  const over = await call(
+    'POST',
+    `/orders/${order.id}/bill`,
+    { mode: 'whole', tip: { customPesewas: 1_000_001 } },
+    token,
+  );
   assert.equal(over.status, 400);
-  const overflow = await call('POST', `/orders/${order.id}/bill`, { mode: 'whole', tip: { customPesewas: 2_000_000_000 } }, token);
+  const overflow = await call(
+    'POST',
+    `/orders/${order.id}/bill`,
+    { mode: 'whole', tip: { customPesewas: 2_000_000_000 } },
+    token,
+  );
   assert.equal(overflow.status, 400);
 });
 
@@ -176,4 +252,29 @@ test('a delivery pin that is not a place on the map is refused', async () => {
     token,
   );
   assert.equal(order.status, 400);
+});
+
+test('the menu ranks the dishes ordered most, and cancelled orders do not count', async () => {
+  const { db, call, session } = await setup();
+  const token = await session('mamas-kitchen', '12');
+  const empty = await call('GET', '/venues/mamas-kitchen/menu');
+  expectContract('getMenu', 200, empty.json);
+  assert.deepEqual(empty.json.mostOrderedIds, []);
+
+  const [a, b, c] = empty.json.items as { id: string }[];
+  const order = (menuItemId: string, quantity: number) =>
+    call(
+      'POST',
+      '/orders',
+      { clientOrderId: randomUUID(), lines: [{ menuItemId, quantity }] },
+      token,
+    );
+  await order(a!.id, 1);
+  await order(b!.id, 3);
+  const cancelled = await order(c!.id, 9);
+  await db.update(orders).set({ status: 'cancelled' }).where(eq(orders.id, cancelled.json.id));
+
+  const menu = await call('GET', '/venues/mamas-kitchen/menu');
+  expectContract('getMenu', 200, menu.json);
+  assert.deepEqual(menu.json.mostOrderedIds, [b!.id, a!.id]);
 });

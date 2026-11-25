@@ -1,5 +1,5 @@
 import type { MenuCategory, ModifierGroup } from '@/lib/api/types';
-import { activeSection, priceFrom, sectionsOnNow, soldOutLast } from './guestMenu';
+import { activeSection, mostOrderedRow, priceFrom, sectionsOnNow, soldOutLast } from './guestMenu';
 
 const NOW = new Date('2026-11-25T12:00:00.000Z'); // a Wednesday, noon in Accra
 const section = (id: string, over: Partial<MenuCategory> = {}): MenuCategory => ({
@@ -93,5 +93,27 @@ describe('activeSection', () => {
   });
   test('none when there are no sections', () => {
     expect(activeSection([], 100)).toBeNull();
+  });
+});
+
+describe('mostOrderedRow', () => {
+  const dish = (id: string, available = true) => ({ id, available });
+  const shown = [dish('a'), dish('b'), dish('c'), dish('d'), dish('off', false)];
+
+  it('shows the ranked dishes in rank order', () => {
+    expect(mostOrderedRow(['c', 'a', 'b'], shown).map((d) => d.id)).toEqual(['c', 'a', 'b']);
+  });
+
+  it('skips dishes the guest cannot see or order now', () => {
+    expect(mostOrderedRow(['c', 'gone', 'off', 'a', 'b'], shown).map((d) => d.id)).toEqual([
+      'c',
+      'a',
+      'b',
+    ]);
+  });
+
+  it('is empty under three dishes, so a new venue gets no thin row', () => {
+    expect(mostOrderedRow(['a', 'b', 'off'], shown)).toEqual([]);
+    expect(mostOrderedRow(undefined, shown)).toEqual([]);
   });
 });

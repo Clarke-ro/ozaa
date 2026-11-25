@@ -1,6 +1,7 @@
 import type { MenuCategory, MenuItem } from '@/lib/api/types';
 import { unitPrice } from '@/lib/dishRules';
 import { isCategoryAvailable } from '@/lib/menuSchedule';
+import { MOST_ORDERED_MIN } from '@/lib/mostOrdered';
 
 /**
  * Plain rules for the guest menu (BUILD.md 5b.6): one scrolling page of the sections that are on
@@ -51,4 +52,20 @@ export function activeSection(
   let active: string | null = headings[0]?.id ?? null;
   for (const heading of headings) if (heading.y <= y) active = heading.id;
   return active;
+}
+
+/**
+ * The "Most ordered" row (BUILD.md 5b.6b): the server's ranking, keeping only dishes the guest can
+ * see and order now. Under three left, no row, so a new venue doesn't get a thin one.
+ */
+export function mostOrderedRow<T extends { id: string; available: boolean }>(
+  ids: readonly string[] | undefined,
+  shown: readonly T[],
+): T[] {
+  const byId = new Map(shown.map((d) => [d.id, d]));
+  const row = (ids ?? []).flatMap((id) => {
+    const dish = byId.get(id);
+    return dish?.available ? [dish] : [];
+  });
+  return row.length >= MOST_ORDERED_MIN ? row : [];
 }

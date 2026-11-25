@@ -11,6 +11,7 @@ const FILES = {
   'src/lib/brand.ts': 'brand.ts',
   'src/lib/money.ts': 'money.ts',
   'src/lib/dishRules.ts': 'dishRules.ts',
+  'src/lib/mostOrdered.ts': 'mostOrdered.ts',
   'src/lib/promos.ts': 'promos.ts',
   'src/lib/tax.ts': 'tax.ts',
   'src/lib/geo.ts': 'geo.ts',

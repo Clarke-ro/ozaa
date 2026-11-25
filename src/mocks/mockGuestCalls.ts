@@ -4,6 +4,7 @@ import { passedFee } from '@/lib/paystackFee';
 import { pesewas } from '@/lib/brand';
 import type { ApiClient } from '@/lib/api/client';
 import { resolveMenu } from '@/lib/addOns';
+import { countsForMostOrdered, mostOrdered } from '@/lib/mostOrdered';
 import { ApiError } from '@/lib/api/errors';
 import type { Payment } from '@/lib/api/types';
 import { findOrder, nextId, publicVenue, venueById, venueBySlug } from './world';
@@ -39,9 +40,22 @@ export function mockGuestCalls(ctx: MockContext) {
       const visit = token ? world.sessions.get(token) : undefined;
       if (visit && visit.slug === slug && !visit.menuOpenedAt)
         visit.menuOpenedAt = new Date(now()).toISOString();
-      if (call?.ifNoneMatch === etag(menu)) throw new ApiError(304, 'not_modified', 'Not modified');
+      // "Most ordered" comes from real orders, as on the server (BUILD.md 5b.6b).
+      const hiddenSections = new Set(menu.categories.filter((c) => c.hidden).map((c) => c.id));
+      const onMenu = new Set(
+        menu.items
+          .filter((item) => !item.hidden && !hiddenSections.has(item.categoryId))
+          .map((item) => item.id),
+      );
+      const lines = world.orders
+        .map(({ order }) => order)
+        .filter((order) => order.venueId === venue.id && countsForMostOrdered(order, now()))
+        .flatMap((order) => order.lines);
+      const withRanking = { ...menu, mostOrderedIds: mostOrdered(lines, (id) => onMenu.has(id)) };
+      if (call?.ifNoneMatch === etag(withRanking))
+        throw new ApiError(304, 'not_modified', 'Not modified');
       // Each dish's modifierGroups already holds its library groups, as on the real server.
-      return resolveMenu({ ...menu, venueId: venue.id });
+      return resolveMenu({ ...withRanking, venueId: venue.id });
     },
     async getWifi(slug) {
       await gate();
