@@ -20,6 +20,7 @@ import { DEFAULT_CURRENCY } from '@/lib/money';
 import { useCart } from '@/features/cart';
 import { useOffers, useVenue } from '@/features/venue';
 import { useNow } from '@/lib/useNow';
+import { backTime } from '@/lib/snooze';
 import { PageHeader } from '@/ui/PageHeader';
 import { SafeScreen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
@@ -31,7 +32,7 @@ import { SpecialOffers } from './SpecialOffers';
 import { specialOffers } from './specialOffers';
 import { DishCard } from './DishCard';
 import { canQuickAdd, searchItems } from '@/lib/dishLogic';
-import { filterMenuItems } from './filterMenu';
+import { activeSection, sectionsOnNow, soldOutLast } from './guestMenu';
 import { MenuCartBar } from './MenuCartBar';
 import { DishRow } from './DishRow';
 import { MenuControls, type MenuView } from './MenuControls';
@@ -41,8 +42,9 @@ import { StoreNoticeBanner, useLiveNotices } from '@/features/notices';
 import { canOrderHere, useAtTable } from '@/features/session';
 
 /**
- * The guest menu: a bar to search and pick a section, then the dishes as a list (the default)
- * or a grid of photo cards. With every section shown, each gets a heading.
+ * The guest menu (BUILD.md 5b.6): one scrolling page of the sections that are on now, each with
+ * its heading, as a list (the default) or a grid of photo cards. The bar jumps to a section and
+ * follows the one being read; search looks across every section. Sold-out dishes go last.
  *
  * With a `hero` (the online-ordering page), the banner scrolls away and the tab bar stays.
  * Without one (a table guest's Menu page), there's a header with a back button.
@@ -65,7 +67,14 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
   const add = useCart((state) => state.add);
   // Browse only from the venue link when the venue takes no online orders.
   const canOrder = canOrderHere(useAtTable(slug), venue.data);
-  const [section, setSection] = useState('all');
+  // The section being read: picked from the bar, or followed while scrolling (scroll-spy).
+  const [current, setCurrent] = useState<string | null>(null);
+  // Where each section's heading sits in the list, so the bar can jump to it and follow it.
+  const headingY = useRef(new Map<string, number>());
+  // Online menu: the height of the sticky bar, which a jump must land below.
+  const [barHeight, setBarHeight] = useState(0);
+  // After a tap on the bar, the picked section stays chosen while the list scrolls to it.
+  const jumpingUntil = useRef(0);
   const [query, setQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   // True once the banner block has scrolled off and the tab bar is held at the top.
@@ -84,28 +93,26 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
   const style = menuStyleOf(venue.data?.menuStyle);
   // List or photo grid is the venue's choice (Customise > menu style), not the guest's.
   const view: MenuView = style.layout;
-  // Food sections first, then drinks, each in the venue's order.
-  const sections = menu.data.categories
-    .filter((c) => !c.hidden)
-    .sort((a, b) => (a.kind === b.kind ? a.position - b.position : a.kind === 'food' ? -1 : 1));
-  const active = section === 'all' || sections.some((c) => c.id === section) ? section : 'all';
-  const visible = sortDishes(asGuestSees(menu.data.items, now), style.itemSort).filter(
-    (i) => isOnGuestMenu(i) && sections.some((c) => c.id === i.categoryId),
+  // One page of the sections that are on now (a Brunch section only during brunch), food first.
+  const sections = sectionsOnNow(menu.data.categories, new Date(now));
+  const active =
+    current && sections.some((c) => c.id === current) ? current : (sections[0]?.id ?? '');
+  // Dishes guests can't order right now go last in their section.
+  const visible = soldOutLast(
+    sortDishes(asGuestSees(menu.data.items, now), style.itemSort).filter(
+      (i) => isOnGuestMenu(i) && sections.some((c) => c.id === i.categoryId),
+    ),
   );
   const searching = query.trim().length > 0;
-  // Searching looks across every section; otherwise show the picked one (or all of them).
-  const shown = searching
-    ? searchItems(filterMenuItems(visible, 'all', []), query)
-    : filterMenuItems(visible, active, []);
-  // Only on the full menu: searching or a single section is about finding one thing.
-  const deals =
-    searching || active !== 'all' ? [] : specialOffers(visible, offers.data?.items ?? [], now);
+  // Searching looks across every section; otherwise the whole menu, section by section.
+  const shown = searching ? searchItems(visible, query) : visible;
+  const deals = searching ? [] : specialOffers(visible, offers.data?.items ?? [], now);
   const columns = width >= 700 ? 3 : 2;
-  const rows = menuRows(shown, sections, {
-    grouped: active === 'all' && !searching,
-    view,
-    columns,
-  });
+  const rows = menuRows(shown, sections, { grouped: !searching, view, columns });
+  const timeZone = venue.data?.hours?.timezone ?? 'Africa/Accra';
+  // "Back at 17:00" for a dish that is sold out for a while and comes back by itself.
+  const back = (item: (typeof shown)[number]) =>
+    item.available ? null : backTime(item.snoozedUntil, now, timeZone);
 
   const quickAdd = (item: (typeof shown)[number]) => {
     void hapticImpactLight();
@@ -126,6 +133,15 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
     scrollRef.current?.scrollTo({ y: 0, animated: false });
     setPastHero(false);
   };
+  // On the online menu the bar is pinned inside the list, so a jump lands just below it.
+  const barOffset = hero ? barHeight : 0;
+  const jumpTo = (id: string) => {
+    setCurrent(id);
+    jumpingUntil.current = Date.now() + JUMP_MS;
+    const y = headingY.current.get(id);
+    if (y !== undefined)
+      scrollRef.current?.scrollTo({ y: Math.max(0, y - barOffset), animated: true });
+  };
   const controls = (
     <MenuControls
       query={query}
@@ -135,12 +151,11 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
       }}
       searchOpen={searchOpen}
       onSearchOpen={setSearchOpen}
-      sections={sections}
+      // A tab for every section with something in it: an empty one would jump nowhere.
+      sections={sections.filter((c) => visible.some((d) => d.categoryId === c.id))}
       active={active}
-      onSection={(id) => {
-        setSection(id);
-        jumpTop();
-      }}
+      onSection={jumpTo}
+      allTab={false}
       background={theme.white}
     />
   );
@@ -164,7 +179,13 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
   const rowView = (row: MenuRow<(typeof shown)[number]>) => {
     if (row.type === 'heading') {
       return (
-        <Text key={row.key} variant="title" accessibilityRole="header" style={styles.heading}>
+        <Text
+          key={row.key}
+          variant="title"
+          accessibilityRole="header"
+          style={styles.heading}
+          onLayout={(event) => headingY.current.set(row.key.slice(2), event.nativeEvent.layout.y)}
+        >
           {row.title}
         </Text>
       );
@@ -177,6 +198,7 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
             currency={currency}
             onOpen={() => open(row.item.id)}
             onAdd={canOrder && canQuickAdd(row.item) ? () => quickAdd(row.item) : null}
+            back={back(row.item)}
           />
         </View>
       );
@@ -190,6 +212,7 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
             currency={currency}
             onOpen={() => open(item.id)}
             onAdd={canOrder && canQuickAdd(item) ? () => quickAdd(item) : null}
+            back={back(item)}
           />
         ))}
         {/* Keep the last row's cards the same width as the rows above. */}
@@ -210,10 +233,23 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
         ];
 
   const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    if (!hero) return;
     const y = event.nativeEvent.contentOffset.y;
-    const stuck = heroHeight > 0 && y >= heroHeight;
-    setPastHero((on) => (on === stuck ? on : stuck));
+    if (hero) {
+      const stuck = heroHeight > 0 && y >= heroHeight;
+      setPastHero((on) => (on === stuck ? on : stuck));
+    }
+    // The bar follows the section being read: the last heading that has reached it. A short last
+    // section can never reach the top, so at the very bottom the last section is the one.
+    if (searching || Date.now() < jumpingUntil.current) return;
+    const headings = [...headingY.current]
+      .map(([id, at]) => ({ id, y: at }))
+      .sort((a, b) => a.y - b.y);
+    const { contentSize, layoutMeasurement } = event.nativeEvent;
+    const atEnd = y + layoutMeasurement.height >= contentSize.height - tokens.space[1];
+    const reading = atEnd
+      ? (headings[headings.length - 1]?.id ?? null)
+      : activeSection(headings, y + barOffset + tokens.space[2]);
+    if (reading && reading !== active) setCurrent(reading);
   };
 
   return (
@@ -232,7 +268,7 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
         keyboardShouldPersistTaps="handled"
         nestedScrollEnabled
         scrollEventThrottle={16}
-        onScroll={hero ? onScroll : undefined}
+        onScroll={onScroll}
         // Child 0 is the banner block. Child 1 is the tab bar, so it stays under the venue name.
         stickyHeaderIndices={hero ? [1] : undefined}
       >
@@ -252,7 +288,15 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
           <View key="header">{listHeader}</View>
         )}
         {hero ? (
-          <View key="controls" collapsable={false} style={{ backgroundColor: theme.white }}>
+          <View
+            key="controls"
+            collapsable={false}
+            style={{ backgroundColor: theme.white }}
+            onLayout={(event) => {
+              const next = event.nativeEvent.layout.height;
+              setBarHeight((height) => (height === next ? height : next));
+            }}
+          >
             {pastHero ? (
               <View style={[styles.nameInBar, { height: pinnedAt, paddingTop: insets.top }]}>
                 <Text variant="title" numberOfLines={1} accessibilityRole="header">
@@ -272,6 +316,8 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
 
 // The slim strip with the venue's name that the tab bar stops under once the banner has gone.
 const NAME_STRIP = 44;
+// Long enough for the jump to a section to finish before the bar follows the scroll again.
+const JUMP_MS = 800;
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },

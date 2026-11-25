@@ -34,7 +34,17 @@ export function canQuickAdd(item: {
   return item.available && item.modifierGroups.every((g) => g.min === 0);
 }
 
-const fold = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+// Lower case, no accents, Ghanaian letters as plain ones (ɛ e, ɔ o, ŋ n), and doubled letters as
+// one, so "wakye" finds "Waakye" and "kelewele" finds "Kɛlɛwɛlɛ" the way guests type them.
+const fold = (s: string) =>
+  s
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/ɛ/g, 'e')
+    .replace(/ɔ/g, 'o')
+    .replace(/ŋ/g, 'n')
+    .replace(/(.)\1+/g, '$1');
 
 /** Dishes whose name or description contains the query. An empty query keeps them all. */
 export function searchItems<T extends { name: { en: string }; description: { en?: string } }>(

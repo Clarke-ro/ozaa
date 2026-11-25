@@ -55,3 +55,14 @@ test('search matches name or description, ignoring case and accents', () => {
   expect(searchItems(items, 'PLANTAIN').map((i) => i.name.en)).toEqual(['Kelewele']);
   expect(searchItems(items, '  ')).toEqual(items);
 });
+
+test('search forgives spelling: doubled letters and Ghanaian letters match plain ones', () => {
+  const dishes = [
+    { name: { en: 'Waakye special' }, description: { en: '' } },
+    { name: { en: 'Kɛlɛwɛlɛ' }, description: { en: '' } },
+    { name: { en: 'Banku & tilapia' }, description: { en: '' } },
+  ];
+  expect(searchItems(dishes, 'wakye').map((d) => d.name.en)).toEqual(['Waakye special']);
+  expect(searchItems(dishes, 'kelewele').map((d) => d.name.en)).toEqual(['Kɛlɛwɛlɛ']);
+  expect(searchItems(dishes, 'TILLAPIA').map((d) => d.name.en)).toEqual(['Banku & tilapia']);
+});

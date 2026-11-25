@@ -7,6 +7,7 @@ import { Text } from '@/ui/Text';
 import { VenueImage } from '@/ui/VenueImage';
 import { guestFont, useTheme } from '@/ui/theme';
 import { DishPrice } from './DishPrice';
+import { priceFrom } from './guestMenu';
 
 /**
  * One dish in the list view (the default), as a card: name, two lines of description and the
@@ -18,11 +19,14 @@ export function DishRow({
   currency,
   onOpen,
   onAdd,
+  back = null,
 }: {
   item: MenuItem;
   currency: string;
   onOpen: () => void;
   onAdd: (() => void) | null;
+  /** "17:00" when a sold-out dish comes back by itself (snoozed), shown instead of Sold out. */
+  back?: string | null;
 }) {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -32,7 +36,11 @@ export function DishRow({
     <View style={[styles.card, { backgroundColor: theme.white, borderColor: theme.line }]}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={off ? `${item.name.en}, ${t('menu.soldOut')}` : item.name.en}
+        accessibilityLabel={
+          off
+            ? `${item.name.en}, ${back ? t('menu.backAt', { time: back }) : t('menu.soldOut')}`
+            : item.name.en
+        }
         onPress={onOpen}
         style={({ pressed }) => [styles.open, pressed && styles.pressed]}
       >
@@ -46,14 +54,18 @@ export function DishRow({
             </Text>
           ) : null}
           <View style={styles.meta}>
-            <DishPrice item={item} currency={currency} />
+            <DishPrice item={item} currency={currency} from={priceFrom(item)} />
           </View>
           {popular || off ? (
             <Text
               variant="caption"
               style={[styles.tag, { color: off ? theme.error : theme.badgeInk }]}
             >
-              {off ? t('menu.soldOut') : t('menu.popular')}
+              {off
+                ? back
+                  ? t('menu.backAt', { time: back })
+                  : t('menu.soldOut')
+                : t('menu.popular')}
             </Text>
           ) : null}
         </View>

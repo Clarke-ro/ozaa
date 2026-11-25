@@ -1,4 +1,4 @@
-import { backAt, snoozeUntil } from './snooze';
+import { backAt, backTime, snoozeUntil } from './snooze';
 
 const NOW = Date.parse('2026-11-24T14:20:00.000Z');
 
@@ -33,4 +33,10 @@ describe('backAt', () => {
       backAt({ available: false, snoozedUntil: '2026-11-24T17:00:00.000Z' }, NOW, 'Africa/Accra'),
     ).toBeNull();
   });
+});
+
+test('backTime reads the snooze alone, for guests who already see the dish as off', () => {
+  expect(backTime('2026-11-24T17:00:00.000Z', NOW, 'Africa/Accra')).toBe('17:00');
+  expect(backTime(null, NOW, 'Africa/Accra')).toBeNull();
+  expect(backTime('2026-11-24T14:00:00.000Z', NOW, 'Africa/Accra')).toBeNull();
 });

@@ -12,7 +12,7 @@ import { fontFamily, useTheme } from '@/ui/theme';
 import { STATUS_TONES } from '@/theme/palette';
 import { cardStyle, StatusPill, Toggle } from '../../kit';
 import { useNow } from '@/lib/useNow';
-import { backAt } from './snooze';
+import { backAt } from '@/lib/snooze';
 
 const LOW_STOCK = 5;
 const THUMB = 52;

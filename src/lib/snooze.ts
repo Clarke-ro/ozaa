@@ -40,8 +40,21 @@ export function backAt(
   now: number,
   timeZone: string,
 ): string | null {
-  if (!item.available || !item.snoozedUntil) return null;
-  const until = Date.parse(item.snoozedUntil);
+  if (!item.available) return null;
+  return backTime(item.snoozedUntil, now, timeZone);
+}
+
+/**
+ * The same time from the snooze alone. Guest screens use it: they already see a snoozed dish as
+ * switched off (asGuestSees), so they can't ask the switch.
+ */
+export function backTime(
+  snoozedUntil: string | null | undefined,
+  now: number,
+  timeZone: string,
+): string | null {
+  if (!snoozedUntil) return null;
+  const until = Date.parse(snoozedUntil);
   if (!(until > now)) return null;
   const time = new Intl.DateTimeFormat('en-GB', {
     timeZone,
