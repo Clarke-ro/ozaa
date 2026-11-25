@@ -16,6 +16,9 @@ const nav = (page: Page, name: string) =>
   page.getByRole('button', { name, exact: true }).first().click();
 
 // The number shown after a sidebar item's name ("Calls 1"); none shown means 0.
+// The badges refresh every 5 s (POLL_MS.owner), so a 5 s wait races the refresh. Three cycles.
+const BADGE_WAIT = { timeout: 15_000 };
+
 async function badge(page: Page, name: string): Promise<number> {
   const text = await page.getByRole('button', { name, exact: true }).first().innerText();
   const match = /(\d+)\s*$/.exec(text.trim());
@@ -32,7 +35,7 @@ test(
     await signIn(page);
     await expect(page.getByRole('button', { name: 'Today', exact: true })).toBeVisible();
     await expect(page.getByText('Table 4 needs a waiter')).toBeVisible();
-    await expect.poll(() => badge(page, 'Calls')).toBeGreaterThan(0);
+    await expect.poll(() => badge(page, 'Calls'), BADGE_WAIT).toBeGreaterThan(0);
     const callsBefore = await badge(page, 'Calls');
 
     await nav(page, 'Calls');
@@ -42,7 +45,7 @@ test(
       .click();
     await page.getByRole('button', { name: 'Coming now', exact: true }).click();
     // Back on the board, the call has left Waiting and the count dropped by one.
-    await expect.poll(() => badge(page, 'Calls')).toBe(callsBefore - 1);
+    await expect.poll(() => badge(page, 'Calls'), BADGE_WAIT).toBe(callsBefore - 1);
 
     await nav(page, 'Floor');
     await expect(page.getByText('Needs a waiter')).toHaveCount(0);
@@ -60,12 +63,12 @@ test(
     await signIn(page);
     await expect(page.getByRole('button', { name: 'Today', exact: true })).toBeVisible();
     // The badge appears once the orders have loaded.
-    await expect.poll(() => badge(page, 'Orders')).toBeGreaterThan(0);
+    await expect.poll(() => badge(page, 'Orders'), BADGE_WAIT).toBeGreaterThan(0);
     const before = await badge(page, 'Orders');
     await nav(page, 'Orders');
     await page.getByRole('button', { name: 'Accept order', exact: true }).first().click();
     // The sample kitchen moves other tickets on its own over time, so only "fewer" is certain.
-    await expect.poll(() => badge(page, 'Orders')).toBeLessThan(before);
+    await expect.poll(() => badge(page, 'Orders'), BADGE_WAIT).toBeLessThan(before);
     // An accepted ticket stays under New, with Start cooking as its next step.
     await expect(
       page.getByRole('button', { name: 'Start cooking', exact: true }).first(),
