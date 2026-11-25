@@ -49,14 +49,19 @@ jest.mock('../../kit', () => {
 const mockSave = jest.fn((_venueId: string, body: unknown) =>
   Promise.resolve({ feePassing: body }),
 );
+const mockPush = jest.fn();
+jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush }) }));
+jest.mock('../../chrome/layout', () => ({ useOwnerLayout: () => ({ wide: true, cardPad: 24 }) }));
 jest.mock('@/lib/api', () => ({
-  api: { ownerSetFeePassing: (venueId: string, body: unknown) => mockSave(venueId, body) },
+  api: {
+    ownerSetFeePassing: (venueId: string, body: unknown) => mockSave(venueId, body),
+    ownerGetPaymentSettings: () => new Promise(() => undefined),
+  },
 }));
 
-// A venue that has never set fee passing has no feePassing in its settings (the real server
-// leaves it out). Turning the switch on used to close the card at once, so no share could be
-// picked: only picking a share should close it.
-test('turning fee passing on keeps the shares open until one is picked', async () => {
+// The share is picked on the fee page (Clarke, 25 Nov 2026: settings on their own pages), so the
+// card's switch saves straight away, keeping the share, and tapping the card opens the page.
+test('the switch saves at once with the share kept; the card opens the fee page', async () => {
   // No clean-up timers: a saved mutation otherwise keeps Jest running for five minutes.
   const client = new QueryClient({
     defaultOptions: { queries: { gcTime: Infinity }, mutations: { gcTime: Infinity } },
@@ -70,13 +75,10 @@ test('turning fee passing on keeps the shares open until one is picked', async (
     fireEvent(screen.getByRole('switch', { name: 'Pass fees to customers' }), 'press');
   });
   expect(mockSave).toHaveBeenCalledWith('ven_bean', { enabled: true, percent: 100 });
-  expect(screen.getByRole('radio', { name: '50%' })).toBeTruthy();
-
-  await act(async () => {
-    fireEvent.press(screen.getByRole('radio', { name: '50%' }));
-  });
-  expect(mockSave).toHaveBeenLastCalledWith('ven_bean', { enabled: true, percent: 50 });
   expect(screen.queryByRole('radio', { name: '50%' })).toBeNull();
+
+  fireEvent.press(screen.getByRole('button', { name: 'Open Pass fees to customers settings' }));
+  expect(mockPush).toHaveBeenCalledWith('/owner/integrations/fees');
   view.unmount();
   client.clear();
 });

@@ -91,6 +91,7 @@ A summary of the brand Page for the coding agent. The numbers are in `tokens.jso
   - One direction, top to bottom: what it is, what it costs, how it shows, then the extras. On the dish page: Photo, Details, Price, Show on the menu, Add-ons, Stock, Diet, Allergens, then the buttons.
   - One rhythm: section titles (18 px), then small grey labels (14 px) above each control, 16 px between fields, a wide gap between sections. Related pairs sit side by side (price and sale price, min and max) and stack on a narrow phone.
 
+- **Integrations (Clarke, 25 Nov 2026):** a list of cards, each integration's settings on its own page, never a drop-down. Desktop: Payments in two columns of three, Delivery apps beside Messages, then Reviews and listings; all cards one height (108 px), 20 px apart. Phones: one column.
 - **Video reviews** (render: owner-reviews): tabs To check, Featured and Hidden. Each card shows the thumbnail and length, first name, stars, dish, quote and consent state, with Hide and Feature buttons. Low ratings get a note suggesting a private reply.
 - **Services** (render: owner-services): an on/off switch for every service, plus a game-stamp switch with its target score.
 - **Customise** (renders: v4-reference/customise*.png): banner, logo, colour (presets or hex) with a live contrast note and preview, heading font, name, description, location and hours, then "Save and publish".

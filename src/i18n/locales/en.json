@@ -2972,7 +2972,13 @@
     "soon": "Coming soon",
     "notConnected": "Not connected",
     "connectedMode": "Connected · {{mode}}",
-    "deliveryTitle": "Delivery apps"
+    "deliveryTitle": "Delivery apps",
+    "openSettings": "Open {{name}} settings",
+    "noSuchIntegration": "Nothing here",
+    "noSuchIntegrationBody": "That integration doesn’t exist.",
+    "account": "Account",
+    "connectedOn": "Connected on",
+    "feesShareOn": "Guests pay {{percent}}%"
   },
   "ownerPromos": {
     "lead": "Discounts and codes. They come off the bill before the guest pays.",
@@ -3149,6 +3155,10 @@
       "reference": "Use letters, numbers, - or _.",
       "key": "Paste the full key.",
       "percent": "A whole number from 0 to 100."
-    }
+    },
+    "sendTitle": "Send to Chowdeck",
+    "status": "Status",
+    "settingsTitle": "Menu on Chowdeck",
+    "keysTitle": "Your Chowdeck keys"
   }
 }

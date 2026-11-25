@@ -21,26 +21,43 @@ test('connect Chowdeck, switch it on, set a price rule and publish the menu', as
   await expect(page.getByText('Delivery apps', { exact: true })).toBeVisible({ timeout: 15_000 });
   await shot(page, 'integrations');
 
+  // Not connected: the switch opens Chowdeck's own page for the keys.
   await page.getByRole('switch', { name: 'Chowdeck' }).click();
+  await expect(page).toHaveURL(/\/owner\/integrations\/chowdeck$/);
   await page.getByRole('textbox', { name: 'Store reference' }).fill('mamas-osu');
   await page.getByRole('textbox', { name: 'Secret key', exact: true }).fill('chowtestkey12345');
   await page.getByRole('textbox', { name: 'Webhook secret' }).fill('hooktestsecret12');
   await shot(page, 'chowdeck-keys');
   await page.getByRole('button', { name: 'Connect Chowdeck' }).click();
   await expect(page.getByText('Chowdeck connected')).toBeVisible();
-  // Connected, but switched off until the owner turns it on.
-  await expect(page.getByRole('switch', { name: 'Chowdeck' })).not.toBeChecked();
 
-  await page.getByRole('switch', { name: 'Chowdeck' }).click();
-  await expect(page.getByText('Not sent yet')).toBeVisible();
-  // Switching it on opens the details, like the other cards.
-  await expect(page.getByText(/\/webhooks\/chowdeck$/)).toBeVisible();
+  // Connected, on the same page: off until switched on, then the settings and Publish. The list
+  // stays loaded behind the page on the web, so checks look only at what is visible.
+  const send = page.getByRole('switch', { name: 'Chowdeck' }).filter({ visible: true });
+  await expect(send).not.toBeChecked();
+  await send.click();
+  await expect(page.getByText('Not sent yet').filter({ visible: true })).toBeVisible();
+  await expect(page.getByText(/\/webhooks\/chowdeck$/).filter({ visible: true })).toBeVisible();
   await page.getByRole('textbox', { name: 'Add to prices (%)' }).fill('20');
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(page.getByRole('textbox', { name: 'Add to prices (%)' })).toHaveValue('20');
 
   await page.getByRole('button', { name: 'Publish menu' }).click();
-  await expect(page.getByText('Sending…', { exact: true })).toBeVisible();
-  await expect(page.getByText(/^Sent \d\d:\d\d$/)).toBeVisible({ timeout: 15_000 });
-  await shot(page, 'chowdeck-sent');
+  await expect(page.getByText('Sending…', { exact: true }).filter({ visible: true })).toBeVisible();
+  await expect(page.getByText(/^Sent \d\d:\d\d$/).filter({ visible: true })).toBeVisible({
+    timeout: 15_000,
+  });
+  await shot(page, 'chowdeck-page');
+
+  // Back on Integrations, the card says the same.
+  // Wide screens have a Back link; phones use the system back gesture (Clarke, 14 Nov 2026).
+  if ((page.viewportSize()?.width ?? 0) >= 1024) {
+    await page.getByRole('button', { name: 'Integrations', exact: true }).first().click();
+  } else {
+    await page.goBack();
+  }
+  await expect(page.getByText(/^Sent \d\d:\d\d$/).filter({ visible: true })).toBeVisible({
+    timeout: 15_000,
+  });
+  await shot(page, 'integrations-after');
 });
