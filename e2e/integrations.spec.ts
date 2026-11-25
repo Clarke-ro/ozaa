@@ -42,5 +42,4 @@ test('passing fees: picking a share on its page turns it on', SERVER, async ({ p
   await page.getByRole('radio', { name: '50%' }).click();
   await expect(page).toHaveURL(/\/owner\/integrations$/, { timeout: 15_000 });
   await expect(page.getByRole('switch', { name: 'Pass fees to customers' })).toBeChecked();
-  await expect(page.getByText('Guests pay 50%')).toBeVisible();
 });

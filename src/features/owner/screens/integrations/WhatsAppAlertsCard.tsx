@@ -20,7 +20,6 @@ export function WhatsAppAlertsCard({ venue }: { venue: VenueSettings }) {
       logo={<WhatsAppLogo />}
       title={t('ownerPay.whatsapp')}
       subtitle={t('ownerPay.alertsSub')}
-      status={on ? t('ownerPay.on') : t('ownerPay.off')}
       on={on}
       // Off saves straight away, so alerts stop the moment the owner asks.
       onToggle={(next) => (next ? open() : save.mutate({ whatsappAlerts: null }))}

@@ -9,7 +9,7 @@ import { Button } from '@/ui/Button';
 import { DeskWait } from '../../../chrome/OwnerPage';
 import { ownerKeys } from '../../../data/keys';
 import { useSaveVenue } from '../../../data/useSaveVenue';
-import { Field, TitledSection } from '../../../kit';
+import { Field, Section, SectionBody } from '../../../kit';
 import { alertsPatch } from '../whatsappAlerts';
 import type { PageProps } from './IntegrationPage';
 
@@ -35,26 +35,31 @@ function AlertsForm({ venue, done }: { venue: VenueSettings; done: () => void })
   const save = useSaveVenue(venue.id);
   const check = alertsPatch(true, typed);
   return (
-    <TitledSection plain title={t('ownerPay.alertsNumber')}>
-      <Field
-        label={t('ownerPay.alertsNumber')}
-        value={typed}
-        onChangeText={setTyped}
-        keyboardType="phone-pad"
-        autoComplete="tel"
-        placeholder="024 123 4567"
-        error={tried && !check.ok ? t('ownerPay.alertsError') : undefined}
-      />
-      <Button
-        label={t('ownerPay.alertsSave')}
-        loading={save.isPending}
-        style={styles.save}
-        onPress={() => (check.ok ? save.mutate(check.patch, { onSuccess: done }) : setTried(true))}
-      />
-    </TitledSection>
+    <Section>
+      <SectionBody>
+        <Field
+          label={t('ownerPay.alertsNumber')}
+          value={typed}
+          onChangeText={setTyped}
+          keyboardType="phone-pad"
+          autoComplete="tel"
+          placeholder="024 123 4567"
+          error={tried && !check.ok ? t('ownerPay.alertsError') : undefined}
+        />
+        <Button
+          label={t('ownerPay.alertsSave')}
+          loading={save.isPending}
+          size="md"
+          style={styles.save}
+          onPress={() =>
+            check.ok ? save.mutate(check.patch, { onSuccess: done }) : setTried(true)
+          }
+        />
+      </SectionBody>
+    </Section>
   );
 }
 
 const styles = StyleSheet.create({
-  save: { alignSelf: 'flex-start' },
+  save: { alignSelf: 'flex-end' },
 });

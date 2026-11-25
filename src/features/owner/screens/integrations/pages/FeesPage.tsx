@@ -6,7 +6,7 @@ import { passedFee } from '@/lib/paystackFee';
 import { Text } from '@/ui/Text';
 import { useTheme } from '@/ui/theme';
 import { DeskWait } from '../../../chrome/OwnerPage';
-import { Chips, TitledSection } from '../../../kit';
+import { Chips, Section, SectionBody } from '../../../kit';
 import { usePayments } from '../usePayments';
 import type { PageProps } from './IntegrationPage';
 
@@ -31,26 +31,28 @@ export function FeesPage({ venueId, done }: PageProps) {
       error={pay.settings.isError}
       onRetry={() => void pay.settings.refetch()}
     >
-      <TitledSection plain title={t('ownerPay.feesShare')}>
-        <Chips
-          single
-          label={t('ownerPay.feesShare')}
-          options={SHARES.map((share) => ({ id: String(share), label: `${share}%` }))}
-          selected={fees.enabled ? [String(fees.percent)] : []}
-          onChange={(ids) => {
-            const percent = Number(ids[0]);
-            if (percent) pay.setFees.mutate({ enabled: true, percent }, { onSuccess: done });
-          }}
-        />
-        {fees.enabled ? (
-          <Text variant="caption" style={{ color: theme.meta }}>
-            {t('ownerPay.feesExample', {
-              bill: formatMoney(pesewas(EXAMPLE_BILL), DEFAULT_CURRENCY),
-              fee: example,
-            })}
-          </Text>
-        ) : null}
-      </TitledSection>
+      <Section title={t('ownerPay.feesShare')}>
+        <SectionBody>
+          <Chips
+            single
+            label={t('ownerPay.feesShare')}
+            options={SHARES.map((share) => ({ id: String(share), label: `${share}%` }))}
+            selected={fees.enabled ? [String(fees.percent)] : []}
+            onChange={(ids) => {
+              const percent = Number(ids[0]);
+              if (percent) pay.setFees.mutate({ enabled: true, percent }, { onSuccess: done });
+            }}
+          />
+          {fees.enabled ? (
+            <Text variant="caption" style={{ color: theme.meta }}>
+              {t('ownerPay.feesExample', {
+                bill: formatMoney(pesewas(EXAMPLE_BILL), DEFAULT_CURRENCY),
+                fee: example,
+              })}
+            </Text>
+          ) : null}
+        </SectionBody>
+      </Section>
     </DeskWait>
   );
 }

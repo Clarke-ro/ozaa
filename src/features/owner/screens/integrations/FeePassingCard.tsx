@@ -27,9 +27,6 @@ export function FeePassingCard({
       icon={Percent}
       title={t('ownerPay.feesTitle')}
       subtitle={t('ownerPay.feesSub')}
-      status={
-        fees.enabled ? t('ownerPay.feesShareOn', { percent: fees.percent }) : t('ownerPay.off')
-      }
       on={fees.enabled}
       onToggle={(enabled) => setFees.mutate({ ...fees, enabled })}
       onOpen={open}

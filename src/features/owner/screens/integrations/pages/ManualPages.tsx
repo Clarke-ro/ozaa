@@ -7,7 +7,7 @@ import { checkManualPayments } from '@/lib/payments';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
 import { DeskWait } from '../../../chrome/OwnerPage';
-import { Chips, Field, TitledSection } from '../../../kit';
+import { Chips, Field, Section, SectionBody } from '../../../kit';
 import { FormLabel } from '../../menu/FormLabel';
 import { fieldStyles } from '../../menu/fieldStyles';
 import { usePayments } from '../usePayments';
@@ -46,41 +46,44 @@ function BankForm({
   const next: ManualPayments = { ...saved, bankTransfer: { ...bank, enabled: true } };
   const check = checkManualPayments(next);
   return (
-    <TitledSection plain title={t('ownerPay.account')}>
-      <Field
-        label={t('ownerPay.bankName')}
-        value={bank.bankName ?? ''}
-        onChangeText={(bankName) => setBank({ ...bank, bankName })}
-        placeholder="GCB Bank"
-      />
-      <View style={fieldStyles.pair}>
-        <View style={fieldStyles.half}>
-          <Field
-            label={t('ownerPay.accountName')}
-            value={bank.accountName ?? ''}
-            onChangeText={(accountName) => setBank({ ...bank, accountName })}
-          />
+    <Section title={t('ownerPay.account')}>
+      <SectionBody>
+        <Field
+          label={t('ownerPay.bankName')}
+          value={bank.bankName ?? ''}
+          onChangeText={(bankName) => setBank({ ...bank, bankName })}
+          placeholder="GCB Bank"
+        />
+        <View style={fieldStyles.pair}>
+          <View style={fieldStyles.half}>
+            <Field
+              label={t('ownerPay.accountName')}
+              value={bank.accountName ?? ''}
+              onChangeText={(accountName) => setBank({ ...bank, accountName })}
+            />
+          </View>
+          <View style={fieldStyles.half}>
+            <Field
+              label={t('ownerPay.accountNumber')}
+              value={bank.accountNumber ?? ''}
+              onChangeText={(accountNumber) => setBank({ ...bank, accountNumber })}
+              keyboardType="number-pad"
+              placeholder="1234567890"
+              error={tried && !check.ok ? t('ownerPay.err.bank') : undefined}
+            />
+          </View>
         </View>
-        <View style={fieldStyles.half}>
-          <Field
-            label={t('ownerPay.accountNumber')}
-            value={bank.accountNumber ?? ''}
-            onChangeText={(accountNumber) => setBank({ ...bank, accountNumber })}
-            keyboardType="number-pad"
-            placeholder="1234567890"
-            error={tried && !check.ok ? t('ownerPay.err.bank') : undefined}
-          />
-        </View>
-      </View>
-      <Button
-        label={t('ownerPay.saveBank')}
-        loading={pay.setManual.isPending}
-        style={styles.save}
-        onPress={() =>
-          check.ok ? pay.setManual.mutate(next, { onSuccess: done }) : setTried(true)
-        }
-      />
-    </TitledSection>
+        <Button
+          label={t('ownerPay.saveBank')}
+          loading={pay.setManual.isPending}
+          size="md"
+          style={styles.save}
+          onPress={() =>
+            check.ok ? pay.setManual.mutate(next, { onSuccess: done }) : setTried(true)
+          }
+        />
+      </SectionBody>
+    </Section>
   );
 }
 
@@ -117,48 +120,51 @@ function MomoForm({
   const next: ManualPayments = { ...saved, momo: { ...momo, number, enabled: true } };
   const check = checkManualPayments(next);
   return (
-    <TitledSection plain title={t('ownerPay.account')}>
-      <View style={fieldStyles.block}>
-        <FormLabel>{t('ownerPay.network')}</FormLabel>
-        <Chips
-          single
-          label={t('ownerPay.network')}
-          options={NETWORKS.map((id) => ({ id, label: t(`ownerPay.networks.${id}`) }))}
-          selected={momo.network ? [momo.network] : []}
-          onChange={(ids) => setMomo({ ...momo, network: ids[0] })}
+    <Section title={t('ownerPay.account')}>
+      <SectionBody>
+        <View style={fieldStyles.block}>
+          <FormLabel>{t('ownerPay.network')}</FormLabel>
+          <Chips
+            single
+            label={t('ownerPay.network')}
+            options={NETWORKS.map((id) => ({ id, label: t(`ownerPay.networks.${id}`) }))}
+            selected={momo.network ? [momo.network] : []}
+            onChange={(ids) => setMomo({ ...momo, network: ids[0] })}
+          />
+        </View>
+        <View style={fieldStyles.pair}>
+          <View style={fieldStyles.half}>
+            <Field
+              label={t('ownerPay.momoNumber')}
+              value={text}
+              onChangeText={setText}
+              keyboardType="phone-pad"
+              placeholder="024 123 4567"
+              error={tried && !check.ok ? t('ownerPay.err.momo') : undefined}
+            />
+          </View>
+          <View style={fieldStyles.half}>
+            <Field
+              label={t('ownerPay.momoName')}
+              value={momo.name ?? ''}
+              onChangeText={(name) => setMomo({ ...momo, name })}
+            />
+          </View>
+        </View>
+        <Button
+          label={t('ownerPay.saveMomo')}
+          loading={pay.setManual.isPending}
+          size="md"
+          style={styles.save}
+          onPress={() =>
+            check.ok ? pay.setManual.mutate(next, { onSuccess: done }) : setTried(true)
+          }
         />
-      </View>
-      <View style={fieldStyles.pair}>
-        <View style={fieldStyles.half}>
-          <Field
-            label={t('ownerPay.momoNumber')}
-            value={text}
-            onChangeText={setText}
-            keyboardType="phone-pad"
-            placeholder="024 123 4567"
-            error={tried && !check.ok ? t('ownerPay.err.momo') : undefined}
-          />
-        </View>
-        <View style={fieldStyles.half}>
-          <Field
-            label={t('ownerPay.momoName')}
-            value={momo.name ?? ''}
-            onChangeText={(name) => setMomo({ ...momo, name })}
-          />
-        </View>
-      </View>
-      <Button
-        label={t('ownerPay.saveMomo')}
-        loading={pay.setManual.isPending}
-        style={styles.save}
-        onPress={() =>
-          check.ok ? pay.setManual.mutate(next, { onSuccess: done }) : setTried(true)
-        }
-      />
-    </TitledSection>
+      </SectionBody>
+    </Section>
   );
 }
 
 const styles = StyleSheet.create({
-  save: { alignSelf: 'flex-start', marginTop: tokens.space[2] },
+  save: { alignSelf: 'flex-end', marginTop: tokens.space[2] },
 });

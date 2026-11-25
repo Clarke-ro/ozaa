@@ -18,13 +18,6 @@ export function PaystackCard({ settings }: { settings: PaymentSettings }) {
       logo={<PaystackLogo />}
       title={t('ownerPay.paystack')}
       subtitle={t('ownerPay.ownAccount')}
-      status={
-        paystack
-          ? t('ownerPay.connectedMode', {
-              mode: paystack.mode === 'test' ? t('ownerPay.testMode') : t('ownerPay.liveMode'),
-            })
-          : t('ownerPay.notConnected')
-      }
       on={Boolean(paystack)}
       onToggle={open}
       onOpen={open}

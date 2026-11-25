@@ -1,8 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { ChevronRight, type LucideIcon } from 'lucide-react-native';
+import type { LucideIcon } from 'lucide-react-native';
 import type { ReactNode } from 'react';
-import { STATUS_TONES } from '@/theme/palette';
 import { tokens } from '@/theme/tokens';
 import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
@@ -11,19 +10,18 @@ import { cardStyle, Toggle } from '../../kit';
 
 /**
  * One integration on the Integrations list: a brand mark or plain icon, the name and what it does,
- * its status in words and a switch. Its settings live on their own page (Clarke, 25 Nov 2026),
- * so a card with `onOpen` shows a chevron and opens that page when tapped. A card with no switch
- * can show a grey badge instead, e.g. "Coming soon".
+ * and a switch, which says on or off by itself (Clarke, 25 Nov 2026: no status words, no arrow).
+ * Its settings live on their own page, so a card with `onOpen` opens that page when tapped. A card
+ * with no switch can show a grey badge instead, e.g. "Coming soon".
  *
- * Phones keep the switch top right like an iOS settings row, set the mark in a 44 px soft tile,
- * and put the status or badge under the name.
+ * Desktops get taller cards (Clarke, 25 Nov 2026); phones keep the original size, with the mark
+ * in a 44 px soft tile and the badge under the name.
  */
 export function IntegrationCard({
   icon: Icon,
   logo,
   title,
   subtitle,
-  status,
   on,
   onToggle,
   badge,
@@ -34,8 +32,6 @@ export function IntegrationCard({
   logo?: ReactNode;
   title: string;
   subtitle: string;
-  /** "On", "Off", "Connected"… shown before the switch. */
-  status?: string;
   on?: boolean;
   onToggle?: (next: boolean) => void;
   badge?: string;
@@ -45,13 +41,6 @@ export function IntegrationCard({
   const theme = useTheme();
   const { t } = useTranslation();
   const { wide, cardPad } = useOwnerLayout();
-  const statusText = status ? (
-    <Text
-      style={[styles.status, { color: on ? STATUS_TONES[theme.scheme].success.line : theme.meta }]}
-    >
-      {status}
-    </Text>
-  ) : null;
   const badgeTag = badge ? (
     <View style={[styles.badge, { backgroundColor: theme.wash }]}>
       <Text style={[styles.badgeText, { color: theme.muted }]}>{badge}</Text>
@@ -59,7 +48,14 @@ export function IntegrationCard({
   ) : null;
 
   return (
-    <View style={[cardStyle(theme), styles.card, { paddingHorizontal: cardPad }]}>
+    <View
+      style={[
+        cardStyle(theme),
+        styles.card,
+        wide && styles.cardTall,
+        { paddingHorizontal: cardPad },
+      ]}
+    >
       <Pressable
         disabled={!onOpen}
         accessibilityRole={onOpen ? 'button' : undefined}
@@ -80,16 +76,9 @@ export function IntegrationCard({
           >
             {subtitle}
           </Text>
-          {!wide && (statusText || badgeTag) ? (
-            <View style={styles.meta}>
-              {statusText}
-              {badgeTag}
-            </View>
-          ) : null}
+          {!wide && badgeTag ? <View style={styles.meta}>{badgeTag}</View> : null}
         </View>
-        {wide ? statusText : null}
         {wide ? badgeTag : null}
-        {onOpen ? <ChevronRight size={18} color={theme.meta} /> : null}
       </Pressable>
       {onToggle ? <Toggle value={Boolean(on)} label={title} onChange={onToggle} /> : null}
     </View>
@@ -97,14 +86,16 @@ export function IntegrationCard({
 }
 
 const styles = StyleSheet.create({
-  // Taller cards with room to breathe (Clarke, 25 Nov 2026).
+  // The original card on phones: 52 px of content and 12 px above and below.
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: tokens.space[4],
-    minHeight: 108,
-    paddingVertical: tokens.space[5],
+    gap: tokens.space[3],
+    minHeight: 76,
+    paddingVertical: tokens.space[3],
   },
+  // Desktops: taller cards with room to breathe (Clarke, 25 Nov 2026).
+  cardTall: { gap: tokens.space[4], minHeight: 108, paddingVertical: tokens.space[5] },
   main: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: tokens.space[4] },
   icon: { width: 32, alignItems: 'center' },
   iconPhone: {
@@ -120,7 +111,6 @@ const styles = StyleSheet.create({
   sub: { fontSize: 14, lineHeight: 20 },
   titlePhone: { fontSize: 15, lineHeight: 20 },
   subPhone: { fontSize: 13, lineHeight: 18 },
-  status: { fontSize: 13, lineHeight: 18, fontFamily: fontFamily.strong },
   badge: {
     alignSelf: 'flex-start',
     paddingHorizontal: 10,

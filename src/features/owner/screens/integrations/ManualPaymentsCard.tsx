@@ -33,7 +33,6 @@ export function CashCard({ venueId, settings }: Props) {
       icon={Banknote}
       title={t('ownerPay.cash')}
       subtitle={t('ownerPay.cashSub')}
-      status={on ? t('ownerPay.on') : t('ownerPay.off')}
       on={on}
       onToggle={(cash) => flip({ cash })}
     />
@@ -49,7 +48,6 @@ export function CardMachineCard({ venueId, settings }: Props) {
       icon={CreditCard}
       title={t('ownerPay.cardMachine')}
       subtitle={t('ownerPay.cardMachineHint')}
-      status={on ? t('ownerPay.on') : t('ownerPay.off')}
       on={on}
       onToggle={(cardMachine) => flip({ cardMachine })}
     />
@@ -67,7 +65,6 @@ export function BankCard({ venueId, settings }: Props) {
       icon={Landmark}
       title={t('ownerPay.bank')}
       subtitle={t('ownerPay.bankSub')}
-      status={bank.enabled ? t('ownerPay.on') : t('ownerPay.notConnected')}
       on={bank.enabled}
       onToggle={(enabled) => {
         if (flip({ bankTransfer: { ...bank, enabled } }, 'bank')) open();
@@ -88,7 +85,6 @@ export function MomoCard({ venueId, settings }: Props) {
       icon={Smartphone}
       title={t('ownerPay.momo')}
       subtitle={t('ownerPay.momoHint')}
-      status={momo.enabled ? t('ownerPay.on') : t('ownerPay.notConnected')}
       on={momo.enabled}
       onToggle={(enabled) => {
         if (flip({ momo: { ...momo, enabled } }, 'momo')) open();

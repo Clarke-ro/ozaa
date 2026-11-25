@@ -1,14 +1,14 @@
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Bike } from 'lucide-react-native';
-import { chowdeckState, type ChowdeckState } from './chowdeck';
+import type { ChowdeckState } from './chowdeck';
 import { IntegrationCard } from './IntegrationCard';
 import { useChowdeck } from './useChowdeck';
 
 const timeOf = (iso: string | null) =>
   iso ? new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '';
 
-/** The status words beside the switch, the same on the list and on Chowdeck's page. */
+/** Chowdeck's status in words, shown on its own page. */
 export function useChowdeckWords() {
   const { t } = useTranslation();
   return (state: ChowdeckState): string => {
@@ -40,20 +40,14 @@ export function ChowdeckCard({ venueId }: { venueId: string }) {
   const { t } = useTranslation();
   const router = useRouter();
   const chowdeck = useChowdeck(venueId);
-  const words = useChowdeckWords();
   const channel = chowdeck.channel;
   if (!channel) return null;
-  const state = chowdeckState(
-    channel,
-    chowdeck.menu?.updatedAt ?? channel.sync.menuUpdatedAt ?? '',
-  );
   const open = () => router.push('/owner/integrations/chowdeck');
   return (
     <IntegrationCard
       icon={Bike}
       title={t('ownerChannels.chowdeck')}
       subtitle={t('ownerChannels.chowdeckSub')}
-      status={words(state)}
       on={channel.chowdeck ? channel.enabled : false}
       onToggle={(enabled) => (channel.chowdeck ? chowdeck.update.mutate({ enabled }) : open())}
       onOpen={open}

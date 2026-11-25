@@ -49,15 +49,15 @@ test('connect Chowdeck, switch it on, set a price rule and publish the menu', as
   });
   await shot(page, 'chowdeck-page');
 
-  // Back on Integrations, the card says the same.
+  // Back on Integrations, the card's switch is on (cards show no status words).
   // Wide screens have a Back link; phones use the system back gesture (Clarke, 14 Nov 2026).
   if ((page.viewportSize()?.width ?? 0) >= 1024) {
     await page.getByRole('button', { name: 'Integrations', exact: true }).first().click();
   } else {
     await page.goBack();
   }
-  await expect(page.getByText(/^Sent \d\d:\d\d$/).filter({ visible: true })).toBeVisible({
-    timeout: 15_000,
-  });
+  await expect(
+    page.getByRole('switch', { name: 'Chowdeck' }).filter({ visible: true }),
+  ).toBeChecked();
   await shot(page, 'integrations-after');
 });

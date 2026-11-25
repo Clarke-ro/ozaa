@@ -2949,8 +2949,6 @@
     "paymentsTitle": "Payments",
     "whereShort": "Your keys are in Paystack under Settings → API Keys & Webhooks.",
     "secretNote": "Sent once to Cravins’s server, kept encrypted, and never shown again.",
-    "on": "On",
-    "off": "Off",
     "cashSub": "Staff mark the order paid at the table",
     "bankSub": "Guests see your account details to send to",
     "saveBank": "Save bank details",
@@ -2971,14 +2969,13 @@
     "alertsSave": "Save number",
     "soon": "Coming soon",
     "notConnected": "Not connected",
-    "connectedMode": "Connected · {{mode}}",
     "deliveryTitle": "Delivery apps",
     "openSettings": "Open {{name}} settings",
     "noSuchIntegration": "Nothing here",
     "noSuchIntegrationBody": "That integration doesn’t exist.",
     "account": "Account",
     "connectedOn": "Connected on",
-    "feesShareOn": "Guests pay {{percent}}%"
+    "keysTitle": "Your Paystack keys"
   },
   "ownerPromos": {
     "lead": "Discounts and codes. They come off the bill before the guest pays.",
