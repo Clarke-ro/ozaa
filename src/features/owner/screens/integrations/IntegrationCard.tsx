@@ -32,6 +32,7 @@ export function IntegrationCard({
   badge,
   children,
   closeSignal = 0,
+  canOpen = false,
 }: {
   icon?: LucideIcon;
   /** A brand mark drawn instead of a plain icon (Paystack, Google…). */
@@ -46,6 +47,8 @@ export function IntegrationCard({
   children?: ReactNode;
   /** Bump after a save succeeds to close the details back to the plain row. */
   closeSignal?: number;
+  /** The details can open while the switch is off (a connected Chowdeck that is turned off). */
+  canOpen?: boolean;
 }) {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -62,7 +65,7 @@ export function IntegrationCard({
     setSeenSignal(closeSignal);
     setOpen(false);
   }
-  const expandable = Boolean(on && children);
+  const expandable = Boolean((on || canOpen) && children);
   const { wide, cardPad } = useOwnerLayout();
   const statusText = status ? (
     <Text

@@ -10,19 +10,42 @@ import {
   type ChowdeckState,
 } from '@/lib/channels';
 import { env } from '@/lib/env';
+import { channelMenu } from '@/lib/channelMenu';
+import { resolveMenu } from '@/lib/addOns';
 import { keyHint } from '@/lib/payments';
 import { venueById } from './world';
 import { staffRole } from './mockRules';
 import type { MockContext } from './mockContext';
 
 /**
- * Mock calls: where the menu is published. Like the real server, nothing is sent to Chowdeck
- * yet: publishing leaves the channel `pending` until the connector exists (BUILD.md 5b.11).
+ * Mock calls: where the menu is published. Publishing is `pending` at first. So the owner screens
+ * can be tried, the mock then acts as the connector will (BUILD.md 5b.11): after 3 s the send is
+ * `synced`, with a problem for each dish Chowdeck can't take (channelMenu). The real server
+ * stays `pending` until the connector exists.
  */
+const SEND_MS = 3_000;
 export function mockOwnerChannelCalls(ctx: MockContext) {
   const { world, tokens, now, gate } = ctx;
 
-  const stateOf = (venueId: string): ChowdeckState => world.chowdeck[venueId] ?? emptyChowdeck();
+  const stateOf = (venueId: string): ChowdeckState => {
+    const state = world.chowdeck[venueId] ?? emptyChowdeck();
+    const since = state.sync.at ? Date.parse(state.sync.at) : 0;
+    if (state.sync.state !== 'pending' || now() - since < SEND_MS) return state;
+    const menu = world.menus[venueById(world, venueId).slug];
+    if (!menu) return state;
+    const sent = channelMenu(resolveMenu(menu), state, now());
+    const done: ChowdeckState = {
+      ...state,
+      sync: {
+        state: 'synced',
+        at: new Date(now()).toISOString(),
+        menuUpdatedAt: menu.updatedAt,
+        problems: sent.problems,
+      },
+    };
+    world.chowdeck[venueId] = done;
+    return done;
+  };
   const listFor = (venueId: string) =>
     channelList({
       onlineEnabled: venueById(world, venueId).onlineOrdering?.enabled ?? false,

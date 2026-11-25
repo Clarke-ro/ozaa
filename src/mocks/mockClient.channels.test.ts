@@ -1,4 +1,5 @@
 import { ApiError } from '@/lib/api/errors';
+import { createMockApi } from './mockClient';
 import { signedInMock } from './testOwner';
 
 const keys = {
@@ -73,4 +74,26 @@ test('only the owner may save or remove the Chowdeck keys', async () => {
   const { id } = await api.getVenue('mamas-kitchen');
   expect(await codeOf(api.ownerConnectChowdeck(id, keys))).toBe('forbidden');
   expect(await codeOf(api.ownerDisconnectChowdeck(id))).toBe('forbidden');
+});
+
+test('the mock finishes a send after 3 s, naming dishes Chowdeck cannot take', async () => {
+  let clock = Date.parse('2026-11-24T12:00:00.000Z');
+  let access: string | null = null;
+  const { api, auth } = createMockApi({
+    now: () => clock,
+    tokens: { guest: () => null, access: () => access },
+  });
+  await auth.sendCode('+233240000001');
+  await auth.verifyCode('123456');
+  access = await auth.getToken();
+  const { id } = await api.getVenue('mamas-kitchen');
+  await api.ownerConnectChowdeck(id, keys);
+  await api.ownerUpdateChannel(id, 'chowdeck', { enabled: true });
+  await api.ownerPublishChannel(id, 'chowdeck');
+  expect((await api.ownerListChannels(id)).channels[2]!.sync.state).toBe('pending');
+  clock += 3_000;
+  const done = (await api.ownerListChannels(id)).channels[2]!;
+  expect(done.sync.state).toBe('synced');
+  expect(done.sync.menuUpdatedAt).toBe((await api.getMenu('mamas-kitchen')).updatedAt);
+  expect(done.sync.problems.every((p) => p.code === 'needs_addons')).toBe(true);
 });
