@@ -151,7 +151,7 @@ Payment: Chowdeck collects it, so a Chowdeck order is marked paid by method `cho
 
 ## 6. Owner screens
 
-- **Channels** (Sales → Channels): one card per channel with its switch, price rule, last sync, problems and Publish. Chowdeck's card asks for the merchant reference, secret key and webhook secret, like Paystack, and shows the webhook address to paste into Chowdeck.
+- **Chowdeck on Integrations** (Clarke, 25 Nov 2026: not a separate page): a card in the Delivery apps group, beside Payments. The card shows the status and the on/off switch; its own page (`/owner/integrations/chowdeck`) holds the keys (store reference, secret key, webhook secret, like Paystack), the webhook address to paste into Chowdeck, the price rule, dishes left off, Publish and the dishes a send couldn't take. Table and online need no card: they read the menu directly.
 - **Menu editor:** an add-on library, bulk edit (price by %, sold out), snooze ("for 2 hours", "until close"), and a channel price preview on each dish.
 - **Orders:** a channel tag on each order, and an accept-by countdown for Chowdeck orders.
 - **Setup:** a Menu step (add sections and dishes, or skip).

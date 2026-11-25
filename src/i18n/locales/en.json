@@ -2949,8 +2949,6 @@
     "paymentsTitle": "Payments",
     "whereShort": "Your keys are in Paystack under Settings → API Keys & Webhooks.",
     "secretNote": "Sent once to Cravins’s server, kept encrypted, and never shown again.",
-    "on": "On",
-    "off": "Off",
     "cashSub": "Staff mark the order paid at the table",
     "bankSub": "Guests see your account details to send to",
     "saveBank": "Save bank details",
@@ -2971,7 +2969,13 @@
     "alertsSave": "Save number",
     "soon": "Coming soon",
     "notConnected": "Not connected",
-    "connectedMode": "Connected · {{mode}}"
+    "deliveryTitle": "Delivery apps",
+    "openSettings": "Open {{name}} settings",
+    "noSuchIntegration": "Nothing here",
+    "noSuchIntegrationBody": "That integration doesn’t exist.",
+    "account": "Account",
+    "connectedOn": "Connected on",
+    "keysTitle": "Your Paystack keys"
   },
   "ownerPromos": {
     "lead": "Discounts and codes. They come off the bill before the guest pays.",
@@ -3114,5 +3118,44 @@
     "calls": "Calls",
     "reply": "Avg reply",
     "orders": "Orders"
+  },
+  "ownerChannels": {
+    "chowdeck": "Chowdeck",
+    "chowdeckSub": "Your menu and delivery orders on Chowdeck",
+    "state": {
+      "off": "Off",
+      "notSent": "Not sent yet",
+      "sending": "Sending…",
+      "sent": "Sent {{time}}",
+      "changed": "Menu changed",
+      "failed": "Didn’t send"
+    },
+    "reference": "Store reference",
+    "secretKey": "Secret key",
+    "webhookSecret": "Webhook secret",
+    "openChowdeck": "Open Chowdeck",
+    "connect": "Connect Chowdeck",
+    "connected": "Chowdeck connected",
+    "webhook": "Webhook address",
+    "copy": "Copy",
+    "copied": "Copied",
+    "percent": "Add to prices (%)",
+    "round": "Round up to",
+    "leaveOff": "Leave off Chowdeck",
+    "problems": "Not sent",
+    "publish": "Publish menu",
+    "queued": "Sending your menu to Chowdeck",
+    "disconnect": "Disconnect",
+    "disconnectTitle": "Disconnect Chowdeck?",
+    "disconnectBody": "Your keys are removed and Chowdeck is switched off.",
+    "err": {
+      "reference": "Use letters, numbers, - or _.",
+      "key": "Paste the full key.",
+      "percent": "A whole number from 0 to 100."
+    },
+    "sendTitle": "Send to Chowdeck",
+    "status": "Status",
+    "settingsTitle": "Menu on Chowdeck",
+    "keysTitle": "Your Chowdeck keys"
   }
 }
