@@ -5,7 +5,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
+import * as prettier from 'prettier';
 import { fileURLToPath } from 'node:url';
+import { LOYALTY } from './loyalty-data.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const proto = path.join(here, '../../design/prototype');
@@ -39,6 +41,13 @@ const DIET = {
 const slugs = { mamas: 'mamas-kitchen', bean: 'bean-there', akos: 'auntie-akos' };
 const hoursUntil = { mamas: '22:00', bean: '20:00', akos: '21:00' };
 const LANG = { EN: 'en', TWI: 'tw' };
+// Sample holiday hours, so the guest app can show "closed today" and "special hours".
+const HOLIDAYS = {
+  mamas: [
+    { date: '2026-12-25', closed: true, name: 'Christmas Day' },
+    { date: '2027-01-01', closed: false, name: "New Year's Day", opens: '14:00', closes: '22:00' },
+  ],
+};
 const now = new Date('2026-10-31T12:41:00Z');
 const daysAgo = s => {
   const n = /Yesterday/.test(s) ? 1 : /(\d+) days?/.test(s) ? +RegExp.$1 : /(\d+) weeks?/.test(s) ? 7 * RegExp.$1 : 0;
@@ -61,7 +70,10 @@ for (const [key, v] of Object.entries(W.VENUES)) {
     id: venueId, slug, name: v.name, initials: v.initials,
     description: { en: v.about },
     location: { label: v.place },
-    hours: { timezone: 'Africa/Accra', weekly: [day, day, day, day, day, day, day] },
+    hours: {
+      timezone: 'Africa/Accra', weekly: [day, day, day, day, day, day, day],
+      ...(HOLIDAYS[key] ? { exceptions: HOLIDAYS[key] } : {}),
+    },
     theme: { accent: v.accent, fontPair: v.font, derived },
     banner: img(v.banner.replace(/^img\//, 'img/'), 1170, 720, v.name),
     logo: null,
@@ -91,12 +103,7 @@ for (const [key, v] of Object.entries(W.VENUES)) {
     entries: [['Ama', 41], ['Kojo', 37], ['Efua', 29], ['Yaw', 24], ['Akua', 19]].map(([nickname, score], i) => ({ rank: i + 1, nickname, score, sample: true })),
     stampRule: { enabled: v.game.stampReward, minScore: v.game.stampScore },
   };
-  out.loyaltyCards[slug] = {
-    venueId, stamps: v.loyalty.have, stampsNeeded: v.loyalty.need,
-    reward: { id: `rwd_${key}`, title: v.loyalty.reward, stampsNeeded: v.loyalty.need },
-    rewardReady: v.loyalty.have >= v.loyalty.need, memberSince: '2026-03-14', history: [],
-    consent: { marketing: false, at: '2026-03-14T18:02:00Z' },
-  };
+  out.loyaltyCards[slug] = LOYALTY[key];
   out.offers[slug] = { items: v.offerNote ? [
     { id: `ofr_${key}1`, title: { en: 'Jollof Tuesday' }, detail: { en: 'Second plate half price' }, menuItemId: items[0].id, endsAt: null },
     { id: `ofr_${key}2`, title: { en: 'Happy hour drinks' }, detail: { en: 'Sobolo GH₵10 from 4 to 6 PM' }, endsAt: null },
@@ -116,7 +123,11 @@ for (const [key, v] of Object.entries(W.VENUES)) {
   };
 }
 
+// Format with prettier, as the commit hook does, so a rebuild matches the committed files exactly.
 for (const [name, data] of Object.entries(out)) {
-  fs.writeFileSync(path.join(here, name + '.json'), JSON.stringify(data, null, 2) + '\n');
+  const file = path.join(here, name + '.json');
+  const options = await prettier.resolveConfig(file);
+  const json = JSON.stringify(data, null, 2);
+  fs.writeFileSync(file, await prettier.format(json, { ...options, filepath: file }));
 }
 console.log('fixtures written:', Object.keys(out).join(', '));
