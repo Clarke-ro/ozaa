@@ -3117,6 +3117,11 @@ components:
           type: array
           items: { $ref: '#/components/schemas/ModifierGroup' }
           description: "The venue's add-on library, shared by dishes through modifierGroupIds. Guests can ignore it: each dish's modifierGroups already holds the groups it uses. Missing means none."
+        mostOrderedIds:
+          type: array
+          maxItems: 5
+          items: { type: string }
+          description: "The dishes guests ordered most in the last 30 days, most first, from real sales (cancelled orders don't count). Only dishes still on the guest menu. Missing or empty means not enough sales yet."
 
     ChannelKind:
       type: string

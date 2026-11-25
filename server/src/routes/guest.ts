@@ -167,7 +167,7 @@ export function guestRoutes(deps: GuestDeps) {
   app.get('/venues/:slug/menu', async (c) => {
     const row = await venueRowBySlug(db, c.req.param('slug'));
     await releaseExpiredHolds(db, deps.now(), row.id);
-    return c.json(await menuOf(db, row.id));
+    return c.json(await menuOf(db, row.id, deps.now()));
   });
 
   app.get('/venues/:slug/wifi', async (c) => {

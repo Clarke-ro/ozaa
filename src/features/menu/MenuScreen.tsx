@@ -29,10 +29,11 @@ import { OfflineNote } from '@/ui/OfflineNote';
 import { tokens } from '@/theme/tokens';
 import { useTheme } from '@/ui/theme';
 import { SpecialOffers } from './SpecialOffers';
+import { MostOrdered } from './MostOrdered';
 import { specialOffers } from './specialOffers';
 import { DishCard } from './DishCard';
 import { canQuickAdd, searchItems } from '@/lib/dishLogic';
-import { activeSection, sectionsOnNow, soldOutLast } from './guestMenu';
+import { activeSection, mostOrderedRow, sectionsOnNow, soldOutLast } from './guestMenu';
 import { MenuCartBar } from './MenuCartBar';
 import { DishRow } from './DishRow';
 import { MenuControls, type MenuView } from './MenuControls';
@@ -107,6 +108,7 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
   // Searching looks across every section; otherwise the whole menu, section by section.
   const shown = searching ? searchItems(visible, query) : visible;
   const deals = searching ? [] : specialOffers(visible, offers.data?.items ?? [], now);
+  const popular = searching ? [] : mostOrderedRow(menu.data.mostOrderedIds, visible);
   const columns = width >= 700 ? 3 : 2;
   const rows = menuRows(shown, sections, { grouped: !searching, view, columns });
   const timeZone = venue.data?.hours?.timezone ?? 'Africa/Accra';
@@ -162,6 +164,12 @@ export function MenuScreen({ slug, hero }: { slug: string; hero?: ReactNode }) {
   const listHeader = (
     <View style={styles.header}>
       <OfflineNote savedAt={menu.dataUpdatedAt} />
+      <MostOrdered
+        dishes={popular}
+        currency={currency}
+        onOpen={open}
+        onAdd={(item) => (canOrder && canQuickAdd(item) ? () => quickAdd(item) : null)}
+      />
       <SpecialOffers
         offers={deals}
         currency={currency}

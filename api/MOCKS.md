@@ -95,6 +95,7 @@ If a Playwright or RNTL test needs to stub the network at the HTTP layer instead
 ## Seeded history (owner screens)
 
 - `src/mocks/seedHistory.ts` adds 30 days of paid, served orders and guest visits for Mama's Kitchen, plus a visit for each of today's orders. Sales, Insights, Today's "vs yesterday" and the visit funnel all read these records, so they agree. Bean There and Auntie Ako's have no history, so they show what a new venue sees.
+- The guest menu's `mostOrderedIds` comes from these same orders, with `src/lib/mostOrdered.ts`, the rule the server uses. Mama's Kitchen shows a "Most ordered" row; the other venues have too few sales, so they show none.
 - `src/mocks/seedMembers.ts` adds loyalty members whose stamps come from those same orders. Customers, Loyalty and Insights' repeat guests count the same people.
 - Promos (`mockOwnerPromoCalls.ts`) are applied when an order is placed, with `src/lib/promos.ts`, the same rules the server will use. Tax lines come from `src/lib/tax.ts` once a venue switches tax on.
 - Notifications (`mockOwnerNotificationCalls.ts`) are built from the last day's orders, calls, notes and reviews, with read state per staff member and kinds limited by role.

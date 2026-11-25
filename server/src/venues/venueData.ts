@@ -1,5 +1,5 @@
 import { guestServices } from '../shared/guestServices.ts';
-import { and, asc, avg, count, eq, isNull } from 'drizzle-orm';
+import { and, asc, avg, count, eq, gte, isNull, ne, sum } from 'drizzle-orm';
 import type { Db } from '../db/client.ts';
 import {
   diningTables,
@@ -7,6 +7,8 @@ import {
   menuCategories,
   menuItems,
   modifierGroups,
+  orderLines,
+  orders,
   paymentSettings,
   venues,
   writtenReviews,
@@ -14,6 +16,7 @@ import {
 import { Problem } from '../http/problem.ts';
 import { liveNotices } from '../shared/notices.ts';
 import { resolveDish } from '../shared/addOns.ts';
+import { MOST_ORDERED_SINCE_MS, mostOrdered } from '../shared/mostOrdered.ts';
 import { guestPayMethods } from '../shared/payments.ts';
 import type {
   ManualPayments,
@@ -194,7 +197,7 @@ export async function libraryOf(db: Db, venueId: string): Promise<ModifierGroup[
  * Each dish's modifierGroups already holds its library groups, so orders are priced from the
  * same add-ons the guest saw (shared/addOns.ts).
  */
-export async function menuOf(db: Db, venueId: string): Promise<Menu> {
+export async function menuOf(db: Db, venueId: string, now = Date.now()): Promise<Menu> {
   const library = await libraryOf(db, venueId);
   const categories = await db
     .select()
@@ -218,7 +221,42 @@ export async function menuOf(db: Db, venueId: string): Promise<Menu> {
     })),
     items: items.map((row) => resolveDish(itemFromRow(row), library)),
     modifierGroups: library,
+    mostOrderedIds: await mostOrderedOf(db, venueId, categories, items, now),
   };
+}
+
+/**
+ * "Most ordered" (BUILD.md 5b.6b): dish totals from the last 30 days of orders, cancelled ones
+ * left out (the same rule as shared/mostOrdered.ts), then ranked by the shared rule.
+ */
+async function mostOrderedOf(
+  db: Db,
+  venueId: string,
+  categories: { id: string; hidden: boolean }[],
+  items: { id: string; categoryId: string; hidden: boolean }[],
+  now: number,
+): Promise<string[]> {
+  const since = new Date(now - MOST_ORDERED_SINCE_MS);
+  const totals = await db
+    .select({
+      menuItemId: orderLines.menuItemId,
+      quantity: sum(orderLines.quantity).mapWith(Number),
+    })
+    .from(orderLines)
+    .innerJoin(orders, eq(orders.id, orderLines.orderId))
+    .where(
+      and(
+        eq(orders.venueId, venueId),
+        ne(orders.status, 'cancelled'),
+        gte(orders.createdAt, since),
+      ),
+    )
+    .groupBy(orderLines.menuItemId);
+  const hiddenSections = new Set(categories.filter((c) => c.hidden).map((c) => c.id));
+  const onMenu = new Set(
+    items.filter((i) => !i.hidden && !hiddenSections.has(i.categoryId)).map((i) => i.id),
+  );
+  return mostOrdered(totals, (id) => onMenu.has(id));
 }
 
 export async function tableOf(db: Db, venueId: string, code: string): Promise<Table | null> {
