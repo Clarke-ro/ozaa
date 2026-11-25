@@ -68,12 +68,8 @@
           }
         ],
         "available": true,
-        "dietary": [
-          "halal"
-        ],
-        "badges": [
-          "popular"
-        ],
+        "dietary": ["halal"],
+        "badges": ["popular"],
         "modifierGroups": [],
         "prepMinutes": 12
       },
@@ -108,9 +104,7 @@
           }
         ],
         "available": true,
-        "dietary": [
-          "halal"
-        ],
+        "dietary": ["halal"],
         "badges": [],
         "modifierGroups": [],
         "prepMinutes": 12
@@ -146,13 +140,8 @@
           }
         ],
         "available": true,
-        "dietary": [
-          "gluten_free",
-          "spicy"
-        ],
-        "badges": [
-          "popular"
-        ],
+        "dietary": ["gluten_free", "spicy"],
+        "badges": ["popular"],
         "modifierGroups": [],
         "prepMinutes": 12
       },
@@ -187,12 +176,7 @@
           }
         ],
         "available": true,
-        "dietary": [
-          "vegetarian",
-          "vegan",
-          "gluten_free",
-          "spicy"
-        ],
+        "dietary": ["vegetarian", "vegan", "gluten_free", "spicy"],
         "badges": [],
         "modifierGroups": [],
         "prepMinutes": 12
@@ -228,11 +212,7 @@
           }
         ],
         "available": true,
-        "dietary": [
-          "vegetarian",
-          "vegan",
-          "gluten_free"
-        ],
+        "dietary": ["vegetarian", "vegan", "gluten_free"],
         "badges": [],
         "modifierGroups": [],
         "prepMinutes": 12
@@ -309,9 +289,7 @@
         ],
         "available": true,
         "dietary": [],
-        "badges": [
-          "popular"
-        ],
+        "badges": ["popular"],
         "modifierGroups": [],
         "prepMinutes": 12
       },
@@ -383,9 +361,7 @@
         ],
         "available": true,
         "dietary": [],
-        "badges": [
-          "popular"
-        ],
+        "badges": ["popular"],
         "modifierGroups": [],
         "prepMinutes": 12
       },
@@ -497,9 +473,7 @@
         ],
         "available": true,
         "dietary": [],
-        "badges": [
-          "popular"
-        ],
+        "badges": ["popular"],
         "modifierGroups": [],
         "prepMinutes": 12
       },
@@ -534,13 +508,8 @@
           }
         ],
         "available": true,
-        "dietary": [
-          "gluten_free",
-          "spicy"
-        ],
-        "badges": [
-          "popular"
-        ],
+        "dietary": ["gluten_free", "spicy"],
+        "badges": ["popular"],
         "modifierGroups": [],
         "prepMinutes": 12
       },

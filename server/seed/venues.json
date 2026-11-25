@@ -174,9 +174,7 @@
       "rewardTitle": "Free jollof & chicken"
     },
     "currency": "GHS",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "googleReviewUrl": "https://g.page/r/sample-mamas/review",
     "payEnabled": true
   },
@@ -320,9 +318,7 @@
       "rewardTitle": "Free flat white"
     },
     "currency": "GHS",
-    "languages": [
-      "en"
-    ],
+    "languages": ["en"],
     "googleReviewUrl": "https://g.page/r/sample-bean/review",
     "payEnabled": true
   },
@@ -459,10 +455,7 @@
       "rewardTitle": "Free fufu & light soup"
     },
     "currency": "GHS",
-    "languages": [
-      "en",
-      "tw"
-    ],
+    "languages": ["en", "tw"],
     "googleReviewUrl": "https://g.page/r/sample-akos/review",
     "payEnabled": true
   }

@@ -5,6 +5,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
+import * as prettier from 'prettier';
 import { fileURLToPath } from 'node:url';
 import { LOYALTY } from './loyalty-data.mjs';
 
@@ -119,7 +120,11 @@ for (const [key, v] of Object.entries(W.VENUES)) {
   };
 }
 
+// Format with prettier, as the commit hook does, so a rebuild matches the committed files exactly.
 for (const [name, data] of Object.entries(out)) {
-  fs.writeFileSync(path.join(here, name + '.json'), JSON.stringify(data, null, 2) + '\n');
+  const file = path.join(here, name + '.json');
+  const options = await prettier.resolveConfig(file);
+  const json = JSON.stringify(data, null, 2);
+  fs.writeFileSync(file, await prettier.format(json, { ...options, filepath: file }));
 }
 console.log('fixtures written:', Object.keys(out).join(', '));
