@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { finishWord } from '@/lib/orderTimeline';
+import { orderChannel } from '@/lib/channels';
 import { StyleSheet, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
@@ -77,7 +78,12 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
   const live = order != null && order.status !== 'served' && order.status !== 'cancelled';
   const mayCancel = live && (role === 'owner' || role === 'manager');
   const items = order ? order.lines.reduce((sum, line) => sum + line.quantity, 0) : 0;
-  const source = order?.source && order.source !== 'table' ? order.source : 'table';
+  const source =
+    order && orderChannel(order) === 'chowdeck'
+      ? 'chowdeck'
+      : order?.source && order.source !== 'table'
+        ? order.source
+        : 'table';
 
   return (
     <OwnerPage

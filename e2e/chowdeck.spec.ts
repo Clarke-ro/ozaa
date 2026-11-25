@@ -61,3 +61,23 @@ test('connect Chowdeck, switch it on, set a price rule and publish the menu', as
   ).toBeChecked();
   await shot(page, 'integrations-after');
 });
+
+test('a Chowdeck order says where it came from and counts down to accept it', async ({ page }) => {
+  const wide = (page.viewportSize()?.width ?? 0) >= 1024;
+  await signIn(page, 'Ama', { wide });
+  await page.evaluate(() => {
+    window.history.pushState({}, '', '/owner/orders');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  });
+  const ticket = page.getByRole('button', { name: /^Chowdeck for Kofi, #\d+$/ });
+  await expect(ticket).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText(/^Accept in \d+ min$/)).toBeVisible();
+  await shot(page, 'orders-chowdeck');
+
+  await ticket.click();
+  await expect(page).toHaveURL(/\/owner\/orders\/ord_chowdeck$/);
+  await expect(page.getByText('Delivery, from Chowdeck').filter({ visible: true })).toBeVisible();
+  await expect(page.getByText('Paid · Chowdeck').filter({ visible: true }).first()).toBeVisible();
+  await expect(page.getByText(/^Accept in \d+ min$/).filter({ visible: true })).toBeVisible();
+  await shot(page, 'order-chowdeck');
+});

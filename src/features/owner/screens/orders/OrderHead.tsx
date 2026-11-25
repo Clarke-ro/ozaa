@@ -6,6 +6,8 @@ import type { StatusTone } from '@/theme/palette';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
 import { toast, ToneTag } from '../../kit';
+import { useNow } from '@/lib/useNow';
+import { acceptLeft } from './acceptBy';
 import { paidLabel } from './orderPlace';
 import { canPrint } from './orderTicket';
 import { usePrintTicket } from './usePrintTicket';
@@ -41,12 +43,24 @@ export function OrderHead({
   currency: string;
 }) {
   const { t } = useTranslation();
+  // A new Chowdeck order counts down to when Chowdeck would reject it, as on its ticket.
+  const deadline = acceptLeft(order, useNow(30_000));
   const printer = usePrintTicket(currency);
   return (
     <View style={styles.head}>
       <View style={styles.row}>
         <ToneTag label={t(statusKey(order))} tone={STAGE_TAG[order.status]} />
         <ToneTag label={paidLabel(order, t)} tone={PAID_TAG[order.paymentStatus]} />
+        {deadline ? (
+          <ToneTag
+            label={
+              deadline.kind === 'left'
+                ? t('ownerOrders.accept.left', { count: deadline.minutes })
+                : t(`ownerOrders.accept.${deadline.kind}`)
+            }
+            tone={deadline.kind === 'left' ? 'bill' : 'alert'}
+          />
+        ) : null}
       </View>
       <View style={styles.row}>
         {printer.available && canPrint(order) ? (

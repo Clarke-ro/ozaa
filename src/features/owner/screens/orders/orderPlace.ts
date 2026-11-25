@@ -1,5 +1,6 @@
 import type { TFunction } from 'i18next';
 import type { Order } from '@/lib/api/types';
+import { orderChannel } from '@/lib/channels';
 import type { PillTone } from '../../kit';
 
 /** Pill colour for how long a live ticket has waited (tones from ticketAge in desk/ops). */
@@ -7,9 +8,20 @@ export const AGE_TONE = { ok: 'neutral', late: 'waiting', very_late: 'error' } a
 
 /**
  * Where an order goes, in words ("Table 3", "Pickup for Kofi") and as the short code on its tile
- * ("3", "PU"). Table orders show the table; menu-link orders say pickup or delivery, and who for.
+ * ("3", "PU"). Table orders show the table; menu-link orders say pickup or delivery, and who for;
+ * Chowdeck orders say Chowdeck, and who for.
  */
 export function orderPlace(order: Order, t: TFunction): { where: string; tile: string } {
+  // An outside channel says where it came from ("Chowdeck for Kofi"), so staff know whose rider
+  // collects it and whose app the customer is watching.
+  if (orderChannel(order) === 'chowdeck') {
+    return {
+      where: order.contact
+        ? t('ownerOrders.source.chowdeckFor', { name: order.contact.name })
+        : t('ownerOrders.source.chowdeck'),
+      tile: t('ownerOrders.source.chowdeckCode'),
+    };
+  }
   const where = order.tableCode
     ? t('ownerOrders.table', { code: order.tableCode })
     : order.source === 'delivery' || order.source === 'pickup'

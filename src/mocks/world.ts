@@ -21,7 +21,7 @@ import { DEMO_LOYALTY_PHONES, STAFF } from './demo';
 import { seedHistory } from './seedHistory';
 import { seedMembers } from './seedMembers';
 import { seedPromos } from './seedPromos';
-import { kitchenQueue } from './kitchenQueue';
+import { chowdeckOrder, kitchenQueue } from './kitchenQueue';
 import type { LiveOrder, World } from './worldTypes';
 import { seedOwnerDesk } from './seedOwnerDesk';
 import {
@@ -124,6 +124,7 @@ export function createWorld(now: number): World {
 
   // Tickets after #24 (the guest's own sample order) so the numbers read as one lunch service.
   orders.push(...kitchenQueue(now, 25));
+  orders.push(chowdeckOrder(now, 25 + orders.filter((o) => o.order.id.startsWith('ord_q')).length));
 
   const loyalty: Record<string, VenueLoyalty> = {};
   const tables: Record<string, Table[]> = {};

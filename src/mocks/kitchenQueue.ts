@@ -93,3 +93,52 @@ export function kitchenQueue(now: number, firstNumber: number): LiveOrder[] {
     } as LiveOrder;
   });
 }
+
+/**
+ * A new Chowdeck order for the Orders screen (BUILD.md 5b.5): delivery, paid on Chowdeck (the
+ * customer pays Chowdeck, which pays the venue), with 6 minutes left to accept before Chowdeck
+ * rejects it. `manual: true` keeps it waiting until staff accept it.
+ */
+export function chowdeckOrder(now: number, number: number): LiveOrder {
+  const at = new Date(now - 60_000).toISOString();
+  const lines = [
+    { id: 'oln_cd_0', menuItemId: 'itm_mamas0', name: 'Jollof & chicken', quantity: 2, unit: 6500 },
+    { id: 'oln_cd_1', menuItemId: 'itm_mamas4', name: 'Sobolo', quantity: 2, unit: 1500 },
+  ].map(({ unit, ...line }) => ({
+    ...line,
+    modifiers: [],
+    unitPricePesewas: unit,
+    totalPesewas: unit * line.quantity,
+    paid: true,
+  }));
+  const total = lines.reduce((sum, line) => sum + line.totalPesewas, 0);
+  return {
+    manual: true,
+    receivedAt: now - 60_000,
+    order: {
+      id: 'ord_chowdeck',
+      number,
+      venueId: 'ven_mamas',
+      tableCode: null,
+      status: 'received',
+      paymentStatus: 'paid',
+      paymentMethod: 'chowdeck',
+      source: 'delivery',
+      channel: 'chowdeck',
+      externalRef: 'CHW-48213',
+      acceptBy: new Date(now + 6 * 60_000).toISOString(),
+      contact: { name: 'Kofi', phone: '+233241234567' },
+      deliveryAddress: 'East Legon, near the A&C Mall',
+      lines,
+      note: null,
+      subtotalPesewas: total,
+      taxes: [],
+      totalPesewas: total,
+      paidPesewas: total,
+      etaMinutes: 25,
+      createdAt: at,
+      updatedAt: at,
+      readyAt: null,
+    },
+  };
+}
