@@ -26,6 +26,8 @@ const img = (p, w = 800, h = 600, alt = '') => ({ url: MEDIA + p, width: w, heig
 // Two close-up crops of each dish photo (img/<dish>-2.jpg, -3.jpg) stand in for extra photos.
 const closeUps = (p, alt) =>
   [2, 3].map(n => img(p.replace(/\.jpg$/, `-${n}.jpg`), 800, 800, `${alt}, close up`));
+// Which section a sample dish sits in, by name. Others go in the venue's first section.
+const SECTION = { 'Kɛlɛwɛlɛ': 'Sides', Sobolo: 'Drinks' };
 // Sample diet tags by dish name, so the guest diet filter has something to offer.
 const DIET = {
   'Jollof & chicken': ['halal'],
@@ -73,10 +75,11 @@ for (const [key, v] of Object.entries(W.VENUES)) {
   };
   out.wifi[slug] = { ssid: v.wifi.ssid, password: v.wifi.pass, security: v.wifi.sec };
 
-  // Menu: categories from v.cats; prototype items all sit in the first category.
+  // Menu: categories from v.cats. Dishes sit in the first category unless SECTION names another
+  // (BUILD.md 5b.6: the guest menu scrolls section by section, so the sample needs more than one).
   const categories = v.cats.map((c, i) => ({ id: `cat_${key}${i}`, name: { en: c }, kind: /drink|coffee/i.test(c) ? 'drinks' : 'food', position: i }));
   const items = v.items.map((it, i) => ({
-    id: `itm_${key}${i}`, categoryId: categories[0].id,
+    id: `itm_${key}${i}`, categoryId: (categories.find(c => c.name.en === SECTION[it.n]) ?? categories[0]).id,
     name: { en: it.n }, description: { en: it.d }, pricePesewas: Math.round(it.p * 100),
     photo: img(it.img, 800, 800, it.n), gallery: closeUps(it.img, it.n), available: true, dietary: DIET[it.n] ?? [], badges: it.pop ? ['popular'] : [],
     modifierGroups: [], prepMinutes: 12,

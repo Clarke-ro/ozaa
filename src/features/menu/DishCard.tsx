@@ -7,6 +7,7 @@ import { VenueImage } from '@/ui/VenueImage';
 import { tokens } from '@/theme/tokens';
 import { guestFont, useTheme } from '@/ui/theme';
 import { DishPrice } from './DishPrice';
+import { priceFrom } from './guestMenu';
 
 /**
  * One dish in the menu grid: photo, name, price and an add button. The description lives on
@@ -18,12 +19,15 @@ export function DishCard({
   currency,
   onOpen,
   onAdd,
+  back = null,
 }: {
   item: MenuItem;
   currency?: string;
   onOpen: () => void;
   /** Null when the dish needs a choice first or is sold out. */
   onAdd: (() => void) | null;
+  /** "17:00" when a sold-out dish comes back by itself (snoozed), shown instead of Sold out. */
+  back?: string | null;
 }) {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -60,7 +64,7 @@ export function DishCard({
               variant="caption"
               style={[styles.tag, { color: theme.error, backgroundColor: theme.white }]}
             >
-              {t('menu.soldOut')}
+              {back ? t('menu.backAt', { time: back }) : t('menu.soldOut')}
             </Text>
           ) : null}
         </View>
@@ -69,7 +73,7 @@ export function DishCard({
           <Text variant="caption" numberOfLines={1} style={styles.name}>
             {item.name.en}
           </Text>
-          <DishPrice item={item} currency={currency} />
+          <DishPrice item={item} currency={currency} from={priceFrom(item)} />
         </View>
       </Pressable>
       {onAdd ? (

@@ -17,14 +17,27 @@ export function DishPrice({
   item,
   currency = DEFAULT_CURRENCY,
   size = 'body',
+  from,
 }: {
   item: Pick<MenuItem, 'pricePesewas' | 'available' | 'salePricePesewas'>;
   currency?: string;
   size?: 'body' | 'title';
+  /** A dish with a required choice (sizes): its lowest price, shown as "from GH₵45". */
+  from?: { from: boolean; pesewas: number };
 }) {
   const theme = useTheme();
   const { t } = useTranslation();
   const now = unitPrice(item);
+  if (from?.from) {
+    return (
+      <View style={styles.row}>
+        <Text variant="caption" style={{ color: theme.muted }}>
+          {t('menu.from')}
+        </Text>
+        <PriceText amount={from.pesewas} currency={currency} size={size} />
+      </View>
+    );
+  }
   if (!onSale(item)) return <PriceText amount={now} currency={currency} size={size} />;
   const money = (amount: number) => formatMoney(pesewas(amount), currency);
   return (
