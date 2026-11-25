@@ -26,7 +26,7 @@ test(
     await expect(page.getByRole('link', { name: /About Bean There/ })).toBeVisible({
       timeout: 15_000,
     });
-    await expect(page.getByRole('tab', { name: 'All categories' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Coffee', exact: true })).toBeVisible();
     await expect(page.getByText('15 min', { exact: true })).toBeVisible();
     // No table home here: the services list belongs to table guests.
     await expect(page.getByText('At your table')).toHaveCount(0);
@@ -80,10 +80,9 @@ test(
   SERVER,
   async ({ page }) => {
     await page.goto('/auntie-akos', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByRole('tab', { name: 'All categories' })).toBeVisible({
+    await expect(page.getByRole('tab', { name: 'Fufu', exact: true })).toBeVisible({
       timeout: 15_000,
     });
-    await expect(page.getByRole('tab', { name: 'All categories' })).toBeVisible();
     await expect(page.getByRole('button', { name: /^Add .+ to your order$/ })).toHaveCount(0);
     // The same dish from a table scan can be ordered.
     await page.goto('/auntie-akos/t/7', { waitUntil: 'domcontentloaded' });

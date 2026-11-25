@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Search, X } from 'lucide-react-native';
@@ -22,6 +23,7 @@ export function MenuControls({
   active,
   onSection,
   background,
+  allTab = true,
 }: {
   query: string;
   onQuery: (text: string) => void;
@@ -35,14 +37,28 @@ export function MenuControls({
   onSection: (id: string) => void;
   /** Missing = the soft canvas. */
   background?: string;
+  /**
+   * The guest menu scrolls to a section instead of filtering (BUILD.md 5b.6), so it has no "All"
+   * tab. The owner's live preview still filters, and keeps it.
+   */
+  allTab?: boolean;
 }) {
   const { t } = useTranslation();
   const theme = useTheme();
   const searching = query.trim().length > 0;
   const tabs = [
-    { id: 'all', label: t('menu.allSections') },
+    ...(allTab ? [{ id: 'all', label: t('menu.allSections') }] : []),
     ...sections.map((s) => ({ id: s.id, label: s.name.en })),
   ];
+  // As the guest scrolls, the tab for the section they're reading slides into view.
+  const tabRow = useRef<{ scrollTo: (options: { x: number; animated?: boolean }) => void } | null>(
+    null,
+  );
+  const tabX = useRef(new Map<string, number>());
+  useEffect(() => {
+    const x = tabX.current.get(active);
+    if (x !== undefined) tabRow.current?.scrollTo({ x: Math.max(0, x - 48), animated: true });
+  }, [active]);
 
   return (
     <View
@@ -95,6 +111,10 @@ export function MenuControls({
           </Text>
         ) : (
           <ScrollView
+            ref={(node) => {
+              // Keep only the call we use; the scroll view's own type is the native instance.
+              tabRow.current = node ? { scrollTo: (options) => node.scrollTo(options) } : null;
+            }}
             horizontal
             nestedScrollEnabled
             showsHorizontalScrollIndicator={false}
@@ -113,6 +133,7 @@ export function MenuControls({
                   // React Native Web doesn't turn accessibilityState into aria-selected for tabs.
                   aria-selected={on}
                   onPress={() => onSection(tab.id)}
+                  onLayout={(event) => tabX.current.set(tab.id, event.nativeEvent.layout.x)}
                   style={styles.tab}
                 >
                   <Text

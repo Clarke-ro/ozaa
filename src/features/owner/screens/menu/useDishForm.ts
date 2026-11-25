@@ -5,7 +5,7 @@ import { api } from '@/lib/api';
 import type { MenuItem, ModifierGroup } from '@/lib/api/types';
 import { dishStatus, statusFields, type DishStatus } from '@/lib/dishRules';
 import { ownGroups } from '@/lib/addOns';
-import { backAt, snoozeUntil, type SnoozeChoice } from './snooze';
+import { backAt, snoozeUntil, type SnoozeChoice } from '@/lib/snooze';
 import { toast } from '../../kit';
 import { checkDish, checkStock } from './forms';
 import type { StockDraft } from './DishStockFields';

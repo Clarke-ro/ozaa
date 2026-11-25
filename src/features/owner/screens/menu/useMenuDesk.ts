@@ -6,7 +6,7 @@ import { ownerKeys } from '../../data/keys';
 import { toast } from '../../kit';
 import { dishPositions, moveSection, sortSections } from './reorder';
 import { bulkPrices } from './bulkPrices';
-import { backAt } from './snooze';
+import { backAt } from '@/lib/snooze';
 
 const isSnoozed = (item: MenuItem, now: number, timeZone: string) =>
   backAt(item, now, timeZone) !== null;

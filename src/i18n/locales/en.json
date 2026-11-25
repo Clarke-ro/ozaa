@@ -151,7 +151,9 @@
     "sectionsLabel": "Menu sections",
     "allSections": "All categories",
     "salePrice": "Now {{now}}, was {{was}}",
-    "limits": "Order {{min}} to {{max}}"
+    "limits": "Order {{min}} to {{max}}",
+    "from": "from",
+    "backAt": "Back at {{time}}"
   },
   "dietary": {
     "vegetarian": "Vegetarian",
