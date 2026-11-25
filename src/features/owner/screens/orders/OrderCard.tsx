@@ -12,6 +12,7 @@ import { Text } from '@/ui/Text';
 import { fontFamily, useTheme } from '@/ui/theme';
 import { cardStyle } from '../../kit';
 import { ticketAge } from '../../desk/ops';
+import { acceptLeft } from './acceptBy';
 import { OrderNote } from './OrderNote';
 import { orderPlace, paidLabel, waitedLabel } from './orderPlace';
 
@@ -31,7 +32,8 @@ const NEXT_TINT: Record<Order['status'], StatusTone> = {
 };
 
 /**
- * One ticket, as on the design canvas: where it goes and how long it has waited, the dishes with
+ * One ticket, as on the design canvas: where it goes and how long it has waited (or, for a new
+ * Chowdeck order, how long is left to accept it), the dishes with
  * their quantity on the right, the total and whether it is paid, then the next step as a tinted
  * button and "Mark paid" beside it. The top of the card opens the full order.
  */
@@ -81,6 +83,9 @@ export function OrderCard({
   const ageInk =
     age.tone === 'very_late' ? tones.alert.line : age.tone === 'late' ? tones.bill.line : null;
   const paid = order.paymentStatus === 'paid';
+  // An outside channel's new order counts down to when it would reject it (acceptBy).
+  const deadline = acceptLeft(order, now);
+  const deadlineInk = deadline?.kind === 'left' ? tones.bill.line : tones.alert.line;
 
   return (
     <View style={[cardStyle(theme), styles.card, compact && styles.compact]}>
@@ -111,7 +116,13 @@ export function OrderCard({
               {order.status === 'accepted' ? ` · ${t('statusLabel.accepted')}` : ''}
             </Text>
           </View>
-          {live ? (
+          {deadline ? (
+            <Text style={[styles.sub, { color: deadlineInk, fontFamily: fontFamily.strong }]}>
+              {deadline.kind === 'left'
+                ? t('ownerOrders.accept.left', { count: deadline.minutes })
+                : t(`ownerOrders.accept.${deadline.kind}`)}
+            </Text>
+          ) : live ? (
             <Text
               accessibilityLabel={t('ownerOrders.waitedLabel', { count: age.minutes })}
               style={[

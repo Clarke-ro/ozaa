@@ -1932,14 +1932,18 @@
       "deliveryFor": "Delivery · {{name}}",
       "pickupCode": "PU",
       "deliveryCode": "DL",
-      "table": "Table"
+      "table": "Table",
+      "chowdeck": "Chowdeck",
+      "chowdeckFor": "Chowdeck for {{name}}",
+      "chowdeckCode": "CD"
     },
     "call": "Call {{name}}",
     "method": {
       "cash": "Cash",
       "card_machine": "Card machine",
       "bank_transfer": "Bank transfer",
-      "momo_merchant": "MoMo to your number"
+      "momo_merchant": "MoMo to your number",
+      "chowdeck": "Chowdeck"
     },
     "markPaid": {
       "open": "Mark paid",
@@ -1996,7 +2000,8 @@
       "from": {
         "table": "From the table QR code",
         "pickup": "Pickup, from the menu link",
-        "delivery": "Delivery, from the menu link"
+        "delivery": "Delivery, from the menu link",
+        "chowdeck": "Delivery, from Chowdeck"
       }
     },
     "view": {
@@ -2017,6 +2022,12 @@
       "placed": "Ordered {{time}}",
       "footer": "Printed from Cravins",
       "blocked": "Your browser blocked the print window. Allow pop-ups for Cravins and try again."
+    },
+    "accept": {
+      "left_one": "Accept in {{count}} min",
+      "left_other": "Accept in {{count}} min",
+      "now": "Accept now",
+      "late": "Too late to accept"
     }
   },
   "ownerCalls": {

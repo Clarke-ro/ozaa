@@ -22,7 +22,11 @@ test('an owner connects Paystack, and after a reload guests can pay in the app',
   await page.getByRole('textbox', { name: 'Public key' }).fill('pk_test_auntieakos000001');
   await page.getByRole('textbox', { name: 'Secret key' }).fill('sk_test_auntieakos000001');
   await page.getByRole('button', { name: 'Connect Paystack' }).click();
-  await expect(page.getByText(/Connected/).first()).toBeVisible({ timeout: 15_000 });
+  // Connecting returns to Integrations, where the Paystack switch is now on (cards show no status
+  // words since 25 Nov 2026). The list stays loaded behind pages on the web, so only the shown one.
+  await expect(
+    page.getByRole('switch', { name: 'Paystack' }).filter({ visible: true }),
+  ).toBeChecked({ timeout: 15_000 });
   // Saving happens a moment after the change.
   await page.waitForTimeout(800);
 
